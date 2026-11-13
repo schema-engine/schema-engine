@@ -49,27 +49,39 @@ export const nestedGuestLayout = {
 /** A viewport width past the host's `md` (48rem) and short of the guest's (60rem). */
 const BETWEEN_BREAKPOINTS_PX = 800;
 
+/** Which variant of the embedded form {@link nestedThemeForm} authors. */
+export interface NestedThemeFormOptions {
+	/**
+	 * Puts {@link NESTED_AUTHOR_CLASS} on the `step` (which carries a pick but no theme) or on the `form`
+	 * (the element that carries the theme and a pick together).
+	 */
+	authorClass?: 'step' | 'form';
+	/** Leaves the form and its step with no pick of their own, so only an outer pick can reach them. */
+	unpicked?: boolean;
+}
+
 /**
  * Config of the embedded form, authored once for both renderers.
  *
  * @param type The `$type` of the renderer's fixture input.
- * @param authorClass Puts {@link NESTED_AUTHOR_CLASS} on the step, for the author-class scenario.
  * @remarks
  * The form picks `tone: brand` and its step picks `tone: muted`, so the form element carries the
  * theme and a pick on one element, and the step carries a different pick of its own but no theme.
  * The field host below it carries the theme and inherits the step's pick.
  */
-export function nestedThemeForm(type: string, authorClass = false) {
+export function nestedThemeForm(type: string, options: NestedThemeFormOptions = {}) {
+	const picks = !options.unpicked;
 	return {
 		id: 'nested-theme-acceptance',
 		title: 'Nested theme acceptance',
-		appearance: { tone: 'brand' },
+		...(picks ? { appearance: { tone: 'brand' } } : {}),
+		className: options.authorClass === 'form' ? NESTED_AUTHOR_CLASS : undefined,
 		steps: [
 			{
 				id: 'main',
 				title: 'Main',
-				appearance: { tone: 'muted' },
-				className: authorClass ? NESTED_AUTHOR_CLASS : undefined,
+				...(picks ? { appearance: { tone: 'muted' } } : {}),
+				className: options.authorClass === 'step' ? NESTED_AUTHOR_CLASS : undefined,
 				elements: [{ $type: type, id: 'nested', name: 'nested', label: 'Nested field' }],
 			},
 		],
@@ -84,13 +96,15 @@ type StylesheetOrder = 'host-first' | 'host-last';
  * @remarks
  * The guest's stylesheet travels inside its markup. The host's goes in the head (`host-first`, so
  * the guest's comes later) or after the grid (`host-last`). The two bare items pick `tone: brand`
- * on the host's own theme, to show the host keeps its tokens.
+ * on the host's own theme, to show the host keeps its tokens. `guestItemPick` is an attribute string
+ * written on the item that holds the guest form.
  */
 function nestedThemeDocument(
 	guestHtml: string,
 	host: LayoutThemeLike,
 	order: StylesheetOrder,
 	authorCss: string,
+	guestItemPick = '',
 ): string {
 	const hostStyle = `<style>${host.css}</style>`;
 	const author = authorCss ? `<style>${authorCss}</style>` : '';
@@ -102,7 +116,7 @@ function nestedThemeDocument(
 		`<div class="se-grid" data-se-theme="${host.id}">`,
 		`<div class="se-grid-item" data-se-theme="${host.id}" data-se-tone="brand" id="host-self"></div>`,
 		`<div class="se-grid-item" data-se-theme="${host.id}"><div id="host-descendant" data-se-tone="brand"></div></div>`,
-		`<div class="se-grid-item" data-se-theme="${host.id}">${guestHtml}</div>`,
+		`<div class="se-grid-item" data-se-theme="${host.id}"${guestItemPick}>${guestHtml}</div>`,
 		'</div>',
 		order === 'host-last' ? hostStyle : '',
 		'</body></html>',
@@ -330,4 +344,188 @@ export async function expectNestedGuestIgnoresHostSlots(
 	} finally {
 		frame.remove();
 	}
+}
+
+async function inFrame(html: string, run: (doc: Document) => void): Promise<void> {
+	const { frame, doc } = await loadSsrFrame(html, 800);
+	try {
+		run(doc);
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that a form nested in a grid item of its own theme (A in A) still takes that theme's tokens.
+ *
+ * @param guestHtml The renderer's server output for {@link nestedThemeForm} on the guest theme.
+ * @param guest The theme of the page's grid and of the form.
+ * @remarks
+ * The enclosing item picks `muted` itself, so a wrong result shows as the outer pick reaching the form
+ * instead of the form's own `brand`. The step and the field below it must still read `muted`: a rule
+ * that treated the outer grid of the same theme as "another theme" would drop them. It runs with and
+ * without the `@scope` rules, since the plain rules are what a browser without `@scope` relies on.
+ */
+export async function expectFormNestedInItsOwnThemeUsesItsTokens(
+	guestHtml: string,
+	guest: LayoutThemeLike,
+): Promise<void> {
+	expect(guestHtml).toContain(`data-se-theme="${guest.id}"`);
+	for (const scoped of [true, false]) {
+		const variant = scoped ? 'with @scope' : 'without @scope';
+		const html = [
+			'<!DOCTYPE html><html><head><meta charset="utf-8">',
+			`<style>${scoped ? guest.css : withoutScopeRules(guest.css)}</style>`,
+			'</head><body>',
+			`<div class="se-grid" data-se-theme="${guest.id}">`,
+			`<div class="se-grid-item" data-se-theme="${guest.id}" data-se-tone="muted" id="outer">`,
+			scoped ? guestHtml : withoutScopeRules(guestHtml),
+			'</div></div></body></html>',
+		].join('');
+		await inFrame(html, (doc) => {
+			expect(accentOf(required(doc, '#outer')), `enclosing item ${variant}`).toBe(ACCENTS.guest.muted);
+			const form = required(doc, `form[data-se-tone="brand"], rui-form[data-se-tone="brand"]`);
+			expect(accentOf(form), `form element ${variant}`).toBe(ACCENTS.guest.brand);
+			const step = required(doc, '[data-se-step][data-se-tone="muted"]');
+			expect(accentOf(step), `step ${variant}`).toBe(ACCENTS.guest.muted);
+			expect(accentOf(required(doc, '.se-form-field')), `field ${variant}`).toBe(ACCENTS.guest.muted);
+		});
+	}
+}
+
+/**
+ * Asserts that a pick reaches its theme's tokens through plain wrapper elements, inside another theme's item.
+ *
+ * @param host The theme of the page's grid.
+ * @param guest The theme of the element that carries the pick's root.
+ * @remarks
+ * The page is written here rather than rendered, since the case is about the selector, not about
+ * a renderer's markup: a theme root, two wrappers that carry no theme or pick, and an element that
+ * picks `muted`. A rule written for a direct child would miss it, and so would one that read the
+ * wrappers as another theme. It runs with and without the `@scope` rules.
+ */
+export async function expectPlainWrapperKeepsThemeTokens(host: LayoutThemeLike, guest: LayoutThemeLike): Promise<void> {
+	expect(host.id).not.toBe(guest.id);
+	for (const scoped of [true, false]) {
+		const css = (theme: LayoutThemeLike) => (scoped ? theme.css : withoutScopeRules(theme.css));
+		const variant = scoped ? 'with @scope' : 'without @scope';
+		await inEachOrder(
+			(order) =>
+				nestedThemeDocument(
+					[
+						`<style>${css(guest)}</style>`,
+						`<div data-se-theme="${guest.id}" id="guest-root">`,
+						'<div id="wrapper-one"><section id="wrapper-two">',
+						'<div id="picked" data-se-tone="muted"><span id="leaf"></span></div>',
+						'</section></div></div>',
+					].join(''),
+					{ id: host.id, css: css(host) },
+					order,
+					'',
+				),
+			(order, doc) => {
+				const where = `${variant}, host stylesheet ${order === 'host-first' ? 'first' : 'last'}`;
+				expect(accentOf(required(doc, '#picked')), `picked element ${where}`).toBe(ACCENTS.guest.muted);
+				expect(accentOf(required(doc, '#leaf')), `its child ${where}`).toBe(ACCENTS.guest.muted);
+			},
+		);
+	}
+}
+
+/**
+ * Asserts that an outer host pick reaches a guest form that makes no pick of its own.
+ *
+ * @param unpickedHtml The renderer's server output for {@link nestedThemeForm} with `unpicked` on the guest theme.
+ * @remarks
+ * Tokens are custom properties, so an outer pick on an axis inherits across a theme boundary until a
+ * nested form picks a value that declares those tokens. Here the host item holding the form picks
+ * `tone: brand`, so the form, its step and its field read the host's red accent; the guest theme's own
+ * `brand` (blue) would mean a guest rule matched an element that picked nothing.
+ */
+export async function expectOuterPickReachesUnpickedGuest(
+	unpickedHtml: string,
+	host: LayoutThemeLike,
+	guest: LayoutThemeLike,
+): Promise<void> {
+	expect(host.id).not.toBe(guest.id);
+	expect(unpickedHtml).toContain(`data-se-theme="${guest.id}"`);
+	expect(unpickedHtml.replaceAll(/<style[\s\S]*?<\/style>/g, '')).not.toContain('data-se-tone');
+	await inEachOrder(
+		(order) => nestedThemeDocument(unpickedHtml, host, order, '', ' data-se-tone="brand" id="host-picked"'),
+		(order, doc) => {
+			expect(accentOf(required(doc, '#host-picked')), describeOrder('host item', order)).toBe(ACCENTS.host.brand);
+			const form = required(doc, `form[data-se-theme="${guest.id}"], rui-form[data-se-theme="${guest.id}"]`);
+			expect(accentOf(form), describeOrder('guest form', order)).toBe(ACCENTS.host.brand);
+			expect(accentOf(required(doc, '[data-se-step]')), describeOrder('guest step', order)).toBe(
+				ACCENTS.host.brand,
+			);
+			expect(accentOf(required(doc, '.se-form-field')), describeOrder('guest field', order)).toBe(
+				ACCENTS.host.brand,
+			);
+		},
+	);
+}
+
+/**
+ * Asserts that an author class on the element that carries the theme and a pick together outranks the
+ * token rules, and that the pick of a step below it still applies.
+ *
+ * @param formClassHtml The renderer's server output for {@link nestedThemeForm} with the author class on the `form`.
+ * @remarks
+ * The form element is where a token rule can match twice, as the theme root itself and as a descendant
+ * selector of another theme's grid, so this is the place a specificity slip would show. The class sets
+ * one custom property on one element, so the step below, which picks `muted`, keeps its own accent.
+ */
+export async function expectAuthorClassOutranksTokensOnThemeRoot(
+	formClassHtml: string,
+	host: LayoutThemeLike,
+	guest: LayoutThemeLike,
+): Promise<void> {
+	expect(formClassHtml).toContain(`data-se-theme="${guest.id}"`);
+	await inEachOrder(
+		(order) =>
+			nestedThemeDocument(formClassHtml, host, order, `.${NESTED_AUTHOR_CLASS}{--se-accent:${AUTHOR_ACCENT};}`),
+		(order, doc) => {
+			const form = required(doc, `.${NESTED_AUTHOR_CLASS}`);
+			expect(form.getAttribute('data-se-theme'), describeOrder('form element', order)).toBe(guest.id);
+			expect(form.getAttribute('data-se-tone'), describeOrder('form element pick', order)).toBe('brand');
+			expect(accentOf(form), describeOrder('form element', order)).toBe(AUTHOR_ACCENT);
+			const step = required(doc, '[data-se-step][data-se-tone="muted"]');
+			expect(accentOf(step), describeOrder('step', order)).toBe(ACCENTS.guest.muted);
+		},
+	);
+}
+
+/**
+ * Pins what A in B in A reads without `@scope`: the documented limit of the plain rules.
+ *
+ * @param hostFormHtml The renderer's server output for {@link nestedThemeForm} on the host theme.
+ * @remarks
+ * The plain rules cannot say "no other theme between" for a theme re-entered below another, so the
+ * step, which sits below the guest theme's item, matches no host rule and inherits the form's `brand`
+ * accent instead of its own `muted` one. With `@scope` ({@link expectReenteredThemeUsesOwnTokens}) it
+ * is `muted`. A change that makes the plain rules exact, or breaks them further, must change this
+ * test and the layout README ("Nested themes") together.
+ */
+export async function expectReenteredThemeFallsBackWithoutScope(
+	hostFormHtml: string,
+	host: LayoutThemeLike,
+	guest: LayoutThemeLike,
+): Promise<void> {
+	expect(host.id).not.toBe(guest.id);
+	expect(hostFormHtml).toContain(`data-se-theme="${host.id}"`);
+	const plainHtml = withoutScopeRules(hostFormHtml);
+	expect(plainHtml).not.toBe(hostFormHtml);
+	const plainHost = { id: host.id, css: withoutScopeRules(host.css) };
+	const plainGuest = { id: guest.id, css: withoutScopeRules(guest.css) };
+	await inEachOrder(
+		(order) => reenteredThemeDocument(plainHtml, plainHost, plainGuest, order),
+		(order, doc) => {
+			const form = required(doc, `form[data-se-tone="brand"], rui-form[data-se-tone="brand"]`);
+			expect(accentOf(form), describeOrder('form element', order)).toBe(ACCENTS.host.brand);
+			const step = required(doc, '[data-se-step][data-se-tone="muted"]');
+			expect(accentOf(step), describeOrder('step', order)).toBe(ACCENTS.host.brand);
+			expect(accentOf(required(doc, '.se-form-field')), describeOrder('field', order)).toBe(ACCENTS.host.brand);
+		},
+	);
 }

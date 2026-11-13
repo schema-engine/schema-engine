@@ -22,6 +22,8 @@ declare module 'vitest' {
 		ssrLayoutTheme: { id: string; css: string };
 		ssrNestedThemeHtml: string;
 		ssrNestedThemeAuthorHtml: string;
+		ssrNestedThemeFormClassHtml: string;
+		ssrNestedThemeUnpickedHtml: string;
 		ssrNestedTheme: { id: string; css: string };
 		ssrReenteredThemeHtml: string;
 		ssrArrayHtml: string;
@@ -50,9 +52,11 @@ export default function setup(project: TestProject): void {
 		renderSsrNestedWidthsAcceptanceHtml().replaceAll('</script>', '<\\/script>'),
 	);
 	project.provide('ssrLayoutTheme', { id, css });
-	const nested = renderNestedThemeGuestHtml(false);
+	const nested = renderNestedThemeGuestHtml();
 	project.provide('ssrNestedThemeHtml', nested.html);
-	project.provide('ssrNestedThemeAuthorHtml', renderNestedThemeGuestHtml(true).html);
+	project.provide('ssrNestedThemeAuthorHtml', renderNestedThemeGuestHtml({ authorClass: 'step' }).html);
+	project.provide('ssrNestedThemeFormClassHtml', renderNestedThemeGuestHtml({ authorClass: 'form' }).html);
+	project.provide('ssrNestedThemeUnpickedHtml', renderNestedThemeGuestHtml({ unpicked: true }).html);
 	project.provide('ssrNestedTheme', nested.layout);
 	project.provide('ssrReenteredThemeHtml', renderReenteredThemeHtml());
 	const arrayHtml = renderArraySsrAcceptanceHtml().replaceAll('</script>', '<\\/script>');

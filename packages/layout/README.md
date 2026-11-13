@@ -93,6 +93,8 @@ Plain selectors cannot say "no other theme between" for a theme re-entered below
 
 `@scope` changes one cascade detail: scope proximity outranks source order, and an unscoped rule is the farthest from any scope root. A zero-specificity author rule such as `:where(.x)` therefore loses to a token rule in a browser with `@scope`, where it won on order alone before. A class with any specificity still wins.
 
+Both renderers run the same Chromium cases (`test-utils/nested-theme-acceptance.ts`), so each statement above is pinned, including the A in B in A fallback without `@scope`: change that behaviour and the test and this section together.
+
 Tokens are custom properties, so they still inherit like any other: an outer pick on an axis reaches a nested form that picks nothing on that axis, until that form picks a value that declares those tokens (the built-in `size.default` and `surface.elevated` set theirs to `initial`, which hands them back to the component).
 
 ## The stylesheet hooks
