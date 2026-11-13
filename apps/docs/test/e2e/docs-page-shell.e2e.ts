@@ -64,7 +64,7 @@ test('a heading fragment link lands on its heading', async () => {
 	try {
 		const page = await browser.newPage();
 		const html = await (await fetch(`${baseUrl}${pagePath}`)).text();
-		const id = /<h2 id="([^"]+)"/.exec(html)?.[1];
+		const id = /<h2 id="([^"]+)"/.exec(html)?.[1] ?? '';
 		expect(id).toBeTruthy();
 
 		await page.goto(`${baseUrl}${pagePath}#${id}`, { waitUntil: 'networkidle' });
