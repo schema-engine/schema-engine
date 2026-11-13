@@ -137,3 +137,36 @@ Utility type for compile-time type discrimination (erased at runtime):
 ```typescript
 type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
 ```
+
+## YAML subpath
+
+`@schema-engine/registry/yaml` parses YAML documents and validates them with any validator that reports
+Standard Schema issues, then points each issue at a line and column. It needs the optional peer dependency
+`yaml`; the root entry never imports it.
+
+```typescript
+parseYaml<T>(text: string, validate: YamlValidate<T>, options?: { filename?: string }): T; // throws YamlDocumentError
+safeParseYaml<T>(text: string, validate: YamlValidate<T>, options?: { filename?: string }): { success: true; data: T } | { success: false; issues: YamlIssue[] };
+stringifyYaml(value: unknown, options?: { schemaUrl?: string }): string;
+
+type YamlIssue = { message: string; path: PropertyKey[]; line: number; column: number; filename?: string };
+
+type YamlValidate<T> = (
+	value: unknown,
+) =>
+	| { success: true; data: T }
+	| {
+			success: false;
+			issues: ReadonlyArray<{ message: string; path?: ReadonlyArray<PropertyKey | { key: PropertyKey }> }>;
+	  };
+
+class YamlDocumentError extends Error {
+	issues: YamlIssue[];
+}
+```
+
+`YamlValidate` is any synchronous function that returns Standard Schema issues: `engine.safeValidateForm` from
+`@schema-engine/forms` fits as it is, and a Standard Schema's `~standard.validate` fits once wrapped.
+`YamlDocumentError` is what `parseYaml` throws; its `message` lists one `file:line:column path: message` line per issue.
+
+See [YAML Forms](/docs/forms/yaml) for recipes, and the package README for the caveats.
