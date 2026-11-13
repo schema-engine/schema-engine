@@ -1,16 +1,11 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import {
-	checkAppearance,
-	mergeAppearance,
-	pickSupportedAppearance,
-	type CompiledAppearance,
-	type SlotAppearanceAxes,
-} from '../lib/appearance';
+import { checkAppearance, mergeAppearance, pickSupportedAppearance, type SlotAppearanceAxes } from '../lib/appearance';
+import type { LayoutTheme } from '../lib/layout-theme';
 import { mergeSlotDefaults } from './merge-slot-defaults';
 
 /** Appearance picks a view inherits: the theme's vocabulary, and what the containing document picked. */
 export interface RecipeViewScope {
-	readonly axes: CompiledAppearance['axes'];
+	readonly axes: LayoutTheme['axes'];
 	readonly inherited: Readonly<Record<string, string>>;
 }
 

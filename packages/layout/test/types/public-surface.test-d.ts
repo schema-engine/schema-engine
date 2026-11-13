@@ -29,6 +29,7 @@ import type {
 	LayoutAxes,
 	LayoutInput,
 	LayoutTheme,
+	LayoutThemeCompilerOptions,
 	LayoutThemeOptions,
 	NormalizedGridTheme,
 	ProtocolRecipeRegistration,
@@ -66,6 +67,13 @@ const unexported: [
 
 void unexported;
 
+// @ts-expect-error DeepReadonly stays internal
+export type LeakedDeepReadonly = import('@/index').DeepReadonly<string>;
+// @ts-expect-error CompiledAppearance stays internal
+export type LeakedCompiledAppearance = import('@/index').CompiledAppearance;
+// @ts-expect-error NamedPlacement stays internal
+export type LeakedNamedPlacement = import('@/index').NamedPlacement;
+
 declare const supportedTypes: [
 	AnyAxisRegistration,
 	AppearanceAxisList,
@@ -96,6 +104,7 @@ declare const supportedTypes: [
 	LayoutAxes<LayoutTheme>,
 	LayoutInput,
 	LayoutTheme,
+	LayoutThemeCompilerOptions,
 	LayoutThemeOptions,
 	NormalizedGridTheme,
 	ProtocolRecipeRegistration,

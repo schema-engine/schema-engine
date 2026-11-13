@@ -3,7 +3,6 @@ import {
 	compileAppearance,
 	getAppearanceCss,
 	type AnyAxisRegistration,
-	type AppearanceCompilerOptions,
 	type AxisRegistry,
 	type CompiledAppearance,
 	type ResolvedAppearanceAxes,
@@ -34,7 +33,16 @@ export interface LayoutThemeOptions<
 }
 
 /** Inputs to {@link createLayoutTheme} that come from the domain rather than the author. */
-export type LayoutThemeCompilerOptions = AppearanceCompilerOptions;
+export interface LayoutThemeCompilerOptions {
+	/**
+	 * Suffixes of the `data-se-*` attributes the domain's renderers already write, which an axis cannot reuse.
+	 *
+	 * @remarks
+	 * `getAppearanceAttributes` spreads after a renderer's own attributes on the same elements, so
+	 * an axis named like one would overwrite it. Each domain lists its own, so this package hard-codes none.
+	 */
+	readonly reservedNames?: readonly string[];
+}
 
 /**
  * A compiled layout theme: the grid vocabulary and the appearance vocabulary, with one id and one

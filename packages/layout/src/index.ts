@@ -82,7 +82,13 @@ export { GRID_CLASS, GRID_ITEM_CLASS, getGridItemVariables, getGridVariables } f
 export type { CssVariables, GridGapScale, GridThemeOptions, NormalizedGridTheme } from './lib/grid-styles';
 
 export { assertAxesNotReserved, createLayoutTheme, getDefaultLayoutTheme, isLayoutTheme } from './lib/layout-theme';
-export type { LayoutAxes, LayoutInput, LayoutTheme, LayoutThemeOptions } from './lib/layout-theme';
+export type {
+	LayoutAxes,
+	LayoutInput,
+	LayoutTheme,
+	LayoutThemeCompilerOptions,
+	LayoutThemeOptions,
+} from './lib/layout-theme';
 
 export { bindRecipe } from './recipes/bind-recipe';
 export { defineProtocolRecipeSpec } from './recipes/define-recipe-spec';

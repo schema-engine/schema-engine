@@ -14,8 +14,6 @@ type NormalizedFormProvenance = {
 	readonly owner: object;
 };
 
-export type { DeepReadonly };
-
 /** Readable form shape. Accepts authoring config and frozen normalized output. */
 export type FormConfigView<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
