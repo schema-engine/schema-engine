@@ -1,4 +1,3 @@
-/** @jsxImportSource @ecopages/jsx */
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { unsafeHtml } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
@@ -51,11 +50,6 @@ const COPY_STATUS_TIMEOUT_MS = 2000;
  * `RuiTab` and `RuiTabPanel` stamp their key as a literal DOM id, so `name`
  * prefixes every key to keep ids unique when several instances share a page.
  * `name` must be unique per page and id-safe.
- *
- * The `@jsxImportSource` pragma is load-bearing: on `forms-react` pages the
- * client build merges this module into the React graph, which compiled it with
- * React's JSX runtime and made `render()` return a React element that Radiant
- * stringified to `[object Object]`.
  */
 @customElement('radiant-code-tabs')
 export class RadiantCodeTabs extends RadiantElement {
