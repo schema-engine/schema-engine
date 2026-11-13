@@ -47,9 +47,10 @@ context values and errors, constraints, and submission use the engine's nested v
 `se-form-instance` coordinates one submission per form instance: it owns the
 submitting state and the submission events, and runs the configured form actions
 through a plain `FormActions` object built for its config and engine, not through
-elements that find each other in the document. The app binds the client engine to
-`se-form-renderer` before the renderer's children connect, and the instance and
-fields resolve it once, at connect; they do not catch up with an engine that arrives later.
+elements that find each other in the document. The app binds the client engine by
+assigning `engine` to `se-form-renderer`, before or after it upgrades, and the instance,
+array and fields follow the renderer's context, so they catch up with an engine that
+arrives or changes later.
 
 ## React form state
 

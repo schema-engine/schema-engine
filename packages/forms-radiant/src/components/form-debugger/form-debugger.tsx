@@ -1,13 +1,12 @@
 import { FormController, formController } from '@/adapters/radiant/controller';
 import './form-debugger.css';
-import { prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { contextSelector } from '@ecopages/radiant/context';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import type { FormMeta } from '@/lib/instance-view';
-import { formElement } from '@/lib/define-element';
 
 function BugIcon() {
 	return (
@@ -233,7 +232,7 @@ export interface FormDebuggerProps {
 }
 
 /** Opt-in floating inspector for values, errors, and multi-step progress. */
-@formElement('se-form-debugger')
+@customElement('se-form-debugger')
 export class FormDebuggerElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: FormDebuggerProps;
 

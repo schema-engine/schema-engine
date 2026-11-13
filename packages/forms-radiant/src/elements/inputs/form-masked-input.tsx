@@ -1,15 +1,12 @@
 import './form-masked-input.css';
-import { bindTo, onUpdated, prop, query, state } from '@ecopages/radiant';
+import { customElement, bindTo, onUpdated, prop, query, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import {
-	emitControlChange,
-	fieldControlHostAttributes,
-	registerValueControl,
-	syncFieldControl,
-} from '@/lib/field-control';
+import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import {
 	createPatternMaskOptions,
@@ -19,7 +16,6 @@ import {
 	readMaskValue,
 } from '@/lib/mask-options';
 import type { MaskedInputFieldProps } from './form-masked-input.types';
-import { formElement } from '@/lib/define-element';
 
 /**
  * @remarks
@@ -27,7 +23,9 @@ import { formElement } from '@/lib/define-element';
  * typed value, as `unmask` selects. IMask owns the visible text, so a write to
  * `value` is pushed into the mask instance instead of rendered.
  */
-@formElement('se-masked-input', { hostAttributes: fieldControlHostAttributes('[data-ref="input"]') })
+@customElement('se-masked-input', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': '[data-ref="input"]' },
+})
 export class SeMaskedInput extends FormAssociatedElement {
 	declare readonly [JSX_PROPS]?: Partial<
 		Pick<
@@ -63,6 +61,9 @@ export class SeMaskedInput extends FormAssociatedElement {
 	@prop({ type: Object }) definitions?: Record<string, string>;
 
 	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
+	@contextSelector({ context: fieldContext })
+	@state
+	protected field?: FieldContextValue = undefined;
 
 	@query({ ref: 'input' }) input!: HTMLInputElement | null;
 
@@ -79,7 +80,6 @@ export class SeMaskedInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		syncFieldControl(this);
 		void this.attachMask();
 		this.registerCleanupCallback(() => {
 			this.attachGeneration += 1;
@@ -174,6 +174,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 			<div class="se-masked">
 				<input
 					id={this.inputId || undefined}
+					{...fieldAria(this.field)}
 					data-ref="input"
 					class="rui-input se-masked__input"
 					type="text"

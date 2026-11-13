@@ -1,4 +1,4 @@
-import { onUpdated, prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, onUpdated, prop, RadiantElement } from '@ecopages/radiant';
 import {
 	ContextSubscriptionRequestEvent,
 	onContextUpdate,
@@ -15,7 +15,6 @@ import {
 	type ConstraintState,
 	type FormValuesContextValue,
 } from '@/contexts/constraint-context';
-import { formElement } from '@/lib/define-element';
 
 const NO_CONSTRAINTS: ConstraintState = { disabled: false, required: false };
 
@@ -37,7 +36,7 @@ const NO_CONSTRAINTS: ConstraintState = { disabled: false, required: false };
  *
  * @element se-constraint
  */
-@formElement('se-constraint')
+@customElement('se-constraint')
 export class ConstraintElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: {
 		'data-se-constraint-field': string;

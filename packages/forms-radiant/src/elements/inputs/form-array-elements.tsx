@@ -1,10 +1,14 @@
 import './form-array-elements.css';
-import { onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { RuiButton } from '@ecopages/radiant-ui/button';
+import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
+import { MapItems } from '@ecopages/jsx/client';
+import { computed, peek, state as createState, type State } from '@ecopages/signals';
 import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import { formEngineContext } from '@/components/provider';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
@@ -18,7 +22,6 @@ import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
 import { GRID_CLASS, GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
 import { readValue } from '@/adapters/radiant/controller/values';
-import { formElement } from '@/lib/define-element';
 
 function TrashIcon() {
 	return (
@@ -71,10 +74,25 @@ function createInitialArrayValue(config: ArrayElementsProps, values: Record<stri
 	return rows.length || configuredRows ? rows : undefined;
 }
 
+/**
+ * One row of the array, as `MapItems` receives it.
+ *
+ * @remarks
+ * `index` is part of the row because the row's field names (`contacts.0.role`) and its remove label
+ * are built from it, and `config` and `engine` because the row callback runs once per item. A row whose
+ * index, config or engine changes is a new object under the same key, so the renderer patches its nodes
+ * in place; an unchanged row stays the same object and is skipped.
+ */
+interface ArrayRow {
+	readonly id: string;
+	readonly index: number;
+	readonly config: ArrayElementsProps;
+	readonly engine?: FormEngine;
+}
+
 interface ArrayContentProps {
 	config: ArrayElementsProps;
-	engine?: FormEngine;
-	ids: readonly string[];
+	rows: State<readonly ArrayRow[]>;
 	initialValues: Record<string, unknown>;
 	renderValues: Record<string, unknown>;
 	fieldError?: string;
@@ -82,9 +100,9 @@ interface ArrayContentProps {
 
 /**
  * @remarks
- * The error region stamps the contract `RuiFieldError` does, by hand: that view passes its children
- * through but is always rendered hidden, and no `rui-field` wraps the array to reveal it. Its `id`
- * is what the owning fieldset's `aria-describedby` points at while the array has an error.
+ * The error region is a controlled `RuiFieldError`: no `rui-field` wraps the array to fill it, so the
+ * array passes its message as `error`. Its `id` is what the owning fieldset's `aria-describedby` points
+ * at while the array has an error.
  *
  * A disabled array, authored or by a constraint, renders its rows and its add
  * and remove buttons disabled, and its rows get the required marker as a
@@ -94,78 +112,80 @@ function arrayErrorId(config: ArrayElementsProps): string {
 	return `${config.instanceId ?? config.id ?? config.name}-error`;
 }
 
-function renderArrayContent({ config, engine, ids, initialValues, renderValues, fieldError }: ArrayContentProps) {
-	const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
-	const canAdd = !config.maxItems || ids.length < config.maxItems;
-	const canRemove = ids.length > (config.minItems ?? 0);
-	const removeLabel = config.removeButtonText || 'Remove item';
+function renderArrayContent({ config, rows, initialValues, renderValues, fieldError }: ArrayContentProps) {
+	const count = computed(() => rows.get().length);
+	const maxItems = config.maxItems;
 	const disabled = config.disabled === true;
-	const elements = withContainerState(config, config.elements);
-	const childrenHost = mergeChildrenGridHost(config.elements, engine);
 
 	return (
 		<div class="se-form-array">
-			{ids.length === 0 ? (
-				<p class="se-form-array__empty">{config.emptyStateMessage || 'No items added yet'}</p>
-			) : null}
-			{ids.map((id, index) => {
-				const scope = arrayItemScope(config.name, index, id, {
-					scalar: isSingleField,
-					parentInstanceId: config.instanceId,
-				});
-				return (
-					<div class="se-form-array__item" key={id} data-se-row-id={id}>
-						<div
-							class={`se-form-array__fields se-form-grid ${GRID_CLASS}`}
-							data-se-theme={childrenHost.themeId}
-							style={childrenHost.style}
-						>
-							<FormElements
-								elements={elements}
-								engine={engine}
-								initialValues={initialValues}
-								values={renderValues}
-								namePrefix={scope.namePrefix}
-								nameStrategy={scope.nameStrategy}
-								instanceId={scope.instanceId}
-							/>
-						</div>
-						{canRemove ? (
-							<RuiButton
-								type="button"
-								class="se-form-array__remove"
-								variant="outline"
-								size="sm"
-								square
-								disabled={disabled}
-								aria-label={`${removeLabel} ${index + 1}`}
+			{computed(() =>
+				count.get() === 0 ? (
+					<p class="se-form-array__empty">{config.emptyStateMessage || 'No items added yet'}</p>
+				) : null,
+			)}
+			<MapItems each={rows}>
+				{({ id, index, config, engine }) => {
+					const removeLabel = config.removeButtonText || 'Remove item';
+					const disabled = config.disabled === true;
+					const elements = withContainerState(config, config.elements);
+					const minItems = config.minItems ?? 0;
+					const childrenHost = mergeChildrenGridHost(config.elements, engine);
+					const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
+					const scope = arrayItemScope(config.name, index, id, {
+						scalar: isSingleField,
+						parentInstanceId: config.instanceId,
+					});
+					return (
+						<div class="se-form-array__item" key={id} data-se-row-id={id}>
+							<div
+								class={`se-form-array__fields se-form-grid ${GRID_CLASS}`}
+								data-se-theme={childrenHost.themeId}
+								style={childrenHost.style}
 							>
-								<TrashIcon />
-							</RuiButton>
-						) : null}
-					</div>
-				);
-			})}
-			{canAdd ? (
-				<RuiButton type="button" class="se-form-array__add" variant="outline" disabled={disabled}>
-					<PlusIcon />
-					{config.addButtonText || 'Add item'}
-				</RuiButton>
-			) : null}
-			<p
-				class="rui-field__error"
-				id={arrayErrorId(config)}
-				data-rui-field-error
-				role="alert"
-				hidden={!fieldError}
-			>
-				{fieldError}
-			</p>
+								<FormElements
+									elements={elements}
+									engine={engine}
+									initialValues={initialValues}
+									values={renderValues}
+									namePrefix={scope.namePrefix}
+									nameStrategy={scope.nameStrategy}
+									instanceId={scope.instanceId}
+								/>
+							</div>
+							{computed(() =>
+								count.get() > minItems ? (
+									<RuiButton
+										type="button"
+										class="se-form-array__remove"
+										variant="outline"
+										size="sm"
+										square
+										disabled={disabled}
+										aria-label={`${removeLabel} ${index + 1}`}
+									>
+										<TrashIcon />
+									</RuiButton>
+								) : null,
+							)}
+						</div>
+					);
+				}}
+			</MapItems>
+			{computed(() =>
+				!maxItems || count.get() < maxItems ? (
+					<RuiButton type="button" class="se-form-array__add" variant="outline" disabled={disabled}>
+						<PlusIcon />
+						{config.addButtonText || 'Add item'}
+					</RuiButton>
+				) : null,
+			)}
+			<RuiFieldError id={arrayErrorId(config)} error={fieldError ?? ''} />
 		</div>
 	);
 }
 
-@formElement('se-form-array')
+@customElement('se-form-array')
 export class SeFormArray extends RadiantElement {
 	declare readonly [JSX_PROPS]?: { config: ArrayElementsProps };
 
@@ -177,12 +197,15 @@ export class SeFormArray extends RadiantElement {
 	private isArrayFieldRegistered = false;
 	private initialized = false;
 	private preservedHydratedContainer = false;
-	private renderedIds: string[] = [];
+	private readonly rows = createState<readonly ArrayRow[]>([]);
+	private viewHoldsServerRows = false;
 
 	@state private fieldError?: string;
+	private formContextValue?: FormContextValue;
 
 	@onContextUpdate({ context: formContext, requestUpdate: false })
 	onFormContext(value: FormContextValue): void {
+		this.formContextValue = value;
 		this.fieldError = value.fields[this.config?.name ?? '']?.error;
 		this.describeGroup();
 		if (!value.ready || !this.config?.name) {
@@ -191,7 +214,24 @@ export class SeFormArray extends RadiantElement {
 			this.isArrayFieldRegistered = false;
 			return;
 		}
-		this.scheduleSync(this.renderedIds.length ? this.renderedIds : this.initialIds());
+		this.scheduleSync(this.renderedIds().length ? this.renderedIds() : this.initialIds());
+		this.registerArrayField(value);
+	}
+
+	/**
+	 * Follows the engine the enclosing renderer publishes, including one bound after this host connected.
+	 *
+	 * @remarks
+	 * The array registers with the form and seeds its rows only once it has an engine, so the
+	 * form context it already received is replayed when the engine arrives.
+	 */
+	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
+	onRendererEngine(engine: FormEngine | undefined): void {
+		if (!engine || this.engine === engine) return;
+		this.engine = engine;
+		const value = this.formContextValue;
+		if (!value?.ready || !this.config?.name) return;
+		this.scheduleSync(this.renderedIds().length ? this.renderedIds() : this.initialIds());
 		this.registerArrayField(value);
 	}
 
@@ -250,7 +290,7 @@ export class SeFormArray extends RadiantElement {
 
 	/**
 	 * @remarks
-	 * Resolved once, in `onConnected`, like the other hosts. A host that is not connected is
+	 * Read from the renderer's context (see {@link onRendererEngine}). A host that is not connected is
 	 * being rendered by the owning render, which is the only place its engine can come from.
 	 */
 	private resolveEngine(): FormEngine | undefined {
@@ -280,6 +320,7 @@ export class SeFormArray extends RadiantElement {
 	private preserveHydratedContainer(): boolean {
 		if (this.preservedHydratedContainer || !this.isConnected || !this.isServerRendered) return false;
 		this.preservedHydratedContainer = this.slotted !== null;
+		this.viewHoldsServerRows = this.preservedHydratedContainer;
 		return this.preservedHydratedContainer;
 	}
 
@@ -298,8 +339,38 @@ export class SeFormArray extends RadiantElement {
 			}
 		}
 		const ids = this.ids;
-		if (ids.length !== this.renderedIds.length || ids.some((id, index) => id !== this.renderedIds[index])) {
-			this.renderedIds = ids;
+		this.setRows(ids);
+	}
+
+	private renderedIds(): string[] {
+		return peek(this.rows).map(({ id }) => id);
+	}
+
+	/**
+	 * Publishes the row ids to the list signal.
+	 *
+	 * @remarks
+	 * A row whose id, index, config and engine are unchanged keeps its object, so `MapItems` skips it. The first
+	 * hydrated render places the server rows through `this.slotted` and has no list mounted, so the first
+	 * change of the ids after it renders the host once to mount the list in their place. A config or engine
+	 * change alone leaves the server rows in place.
+	 */
+	private setRows(ids: readonly string[]): void {
+		const { config } = this;
+		const engine = this.resolveEngine();
+		const current = peek(this.rows);
+		const known = new Map(current.map((row) => [row.id, row]));
+		const next = ids.map((id, index) => {
+			const row = known.get(id);
+			return row?.index === index && row.config === config && row.engine === engine
+				? row
+				: { id, index, config, engine };
+		});
+		if (next.length === current.length && next.every((row, index) => row === current[index])) return;
+		this.rows.set(next);
+		const sameShape = next.length === current.length && next.every((row, index) => row.id === current[index]?.id);
+		if (this.viewHoldsServerRows && !sameShape) {
+			this.viewHoldsServerRows = false;
 			this.requestUpdate();
 		}
 	}
@@ -315,7 +386,7 @@ export class SeFormArray extends RadiantElement {
 	protected override onConnected(): void {
 		this.engine ??= resolveFormEngine(this);
 		const initialIds = this.initialIds();
-		this.renderedIds = initialIds;
+		this.setRows(initialIds);
 		if (this.form.ready) this.scheduleSync(initialIds);
 	}
 
@@ -330,7 +401,7 @@ export class SeFormArray extends RadiantElement {
 		this.unregisterArrayField = undefined;
 		this.isArrayFieldRegistered = false;
 		this.initialized = false;
-		this.renderedIds = [];
+		this.rows.set([]);
 		super.disconnectedCallback();
 	}
 
@@ -373,15 +444,14 @@ export class SeFormArray extends RadiantElement {
 		if (this.preserveHydratedContainer()) return this.slotted;
 		const engine = this.resolveEngine();
 		if (!engine && !this.isConnected) return this.slotted;
-		const ids = this.ids;
-		if (ids.length > 0 && !engine) return null;
+		if (!engine && this.renderedIds().length > 0) return null;
+		this.setRows(this.renderedIds());
 		const renderValues = this.currentValues();
 		const initialValues = this.rowInitialValues();
 
 		return renderArrayContent({
 			config,
-			engine,
-			ids,
+			rows: this.rows,
 			initialValues,
 			renderValues,
 			fieldError: this.fieldError,
@@ -410,8 +480,14 @@ export function FormArrayElements(config: ArrayElementsProps) {
 	const children = engine
 		? renderArrayContent({
 				config: arrayConfig,
-				engine,
-				ids: (initialRows ?? []).map((_, index) => `seed-${index}`),
+				rows: createState<readonly ArrayRow[]>(
+					(initialRows ?? []).map((_, index) => ({
+						id: `seed-${index}`,
+						index,
+						config: arrayConfig,
+						engine,
+					})),
+				),
 				initialValues,
 				renderValues: initialValues,
 			})

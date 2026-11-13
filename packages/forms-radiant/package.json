@@ -30,10 +30,10 @@
 		"test:storybook": "vitest run --project storybook"
 	},
 	"peerDependencies": {
-		"@ecopages/jsx": ">=0.8.2",
-		"@ecopages/radiant": ">=0.8.2",
-		"@ecopages/radiant-ui": ">=0.3.4",
-		"@ecopages/signals": ">=0.8.2",
+		"@ecopages/jsx": ">=0.8.3",
+		"@ecopages/radiant": ">=0.8.3",
+		"@ecopages/radiant-ui": ">=0.3.5",
+		"@ecopages/signals": ">=0.8.3",
 		"@schema-engine/forms": "workspace:*",
 		"@schema-engine/layout": "workspace:*",
 		"typescript": "^5.4",
@@ -44,10 +44,10 @@
 		"@babel/plugin-proposal-decorators": "^7.28.0",
 		"@babel/plugin-syntax-typescript": "^7.28.0",
 		"@babel/plugin-transform-class-properties": "^7.28.0",
-		"@ecopages/jsx": "0.8.2",
-		"@ecopages/radiant": "0.8.2",
-		"@ecopages/radiant-ui": "0.3.4",
-		"@ecopages/signals": "0.8.2",
+		"@ecopages/jsx": "0.8.3",
+		"@ecopages/radiant": "0.8.3",
+		"@ecopages/radiant-ui": "0.3.5",
+		"@ecopages/signals": "0.8.3",
 		"@ecopages/storybook-radiant-vite": "0.2.2",
 		"@ecopages/vite-plugin-radiant": "0.2.2",
 		"@rolldown/plugin-babel": "^0.2.1",
@@ -88,10 +88,6 @@
 			"import": "./dist/index.js"
 		},
 		"./index.css": "./dist/index.css",
-		"./define": {
-			"types": "./dist/define.d.ts",
-			"import": "./dist/define.js"
-		},
 		"./primitives": {
 			"types": "./dist/primitives.d.ts",
 			"import": "./dist/primitives.js"
