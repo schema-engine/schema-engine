@@ -297,7 +297,7 @@ describe('Radiant form engine resolution', () => {
 		const engine = createArrayEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		renderer.engine = engine;
-		const form = document.createElement('rui-form');
+		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
 		const formProvider = provideTestFormStore(form, undefined, false);
@@ -320,7 +320,7 @@ describe('Radiant form engine resolution', () => {
 		const engine = createArrayEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
-		const form = document.createElement('rui-form');
+		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
 		provideTestFormStore(
@@ -343,7 +343,7 @@ describe('Radiant form engine resolution', () => {
 		const engine = createArrayEngine();
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
-		const form = document.createElement('rui-form');
+		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
 		provideTestFormStore(
