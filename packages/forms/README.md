@@ -85,7 +85,9 @@ schemas only when the host shares forms' Zod instance; schemas the host builds f
 `id` of each element, step or action the path passes
 (`steps[0] (main).elements[2] (email).grid.width: Expected one of full, three-quarters, ...`), and the bare
 message for an issue about the whole form. The ids only decorate the message; `issue.path` and
-`issue.message` stay clean. `formatIssuePath(path, source?)` makes the same text, with the ids when you
+`issue.message` stay clean. An issue a schema reported also carries `code` and `params` (Zod's code and its
+details, such as `too_small` and `{ minimum: 3 }`) for an editor that localizes diagnostics; a failed union is
+reported at the key that failed in the closest branch. `formatIssuePath(path, source?)` makes the same text, with the ids when you
 pass the config. `FormValidationIssue` and `FormValidationResult` are exported.
 
 `engine.safeValidateForm(config)` runs the same validation and returns a result instead of throwing:

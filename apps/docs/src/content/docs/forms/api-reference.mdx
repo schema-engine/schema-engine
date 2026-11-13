@@ -108,6 +108,8 @@ engine.describeViewCatalog();
 type FormValidationIssue = {
 	message: string;
 	path: ReadonlyArray<PropertyKey>; // ['steps', 0, 'elements', 2, 'grid', 'width']
+	code?: string; // the schema's code on a schema issue, such as 'too_small'
+	params?: Readonly<Record<string, unknown>>; // its details, such as { minimum: 3 }
 };
 
 type FormValidationResult<T> = { success: true; data: T } | { success: false; issues: FormValidationIssue[] };

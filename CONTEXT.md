@@ -168,6 +168,25 @@ touched state follow their row through every field-array operation, an operation
 naming a row that does not exist does nothing, and `remove` removes a repeated
 index once.
 
+## Validation issue / issue path
+
+A **validation issue** is one problem `validateForm` found: `{ message, path }`, shaped like a Standard
+Schema issue so the YAML layer (`parseYaml`) can point at the line. `path` names the config key the issue is
+about, in the keys and indexes the author wrote (`['steps', 0, 'elements', 2, 'grid', 'width']`); an issue
+about the whole form has the path `[]`.
+
+- **Authored keys.** A path names what the author wrote, not what a viewport resolves. A cascade check
+  (a grid area, a template that changes at a breakpoint) reports the authored key it resolves from, so an
+  array `areas` is `['grid', 'areas']` and a breakpoint's template is `['grid', 'areas', 'md']`. Layout
+  checks (`checkAppearance`, `resolveRecipeView`, `areaTemplateIssues`) return `LayoutIssue`s with paths
+  relative to the thing they checked; forms lays them under that thing's location.
+- **Schema issues.** One a schema reported also carries `code` and `params` (Zod's `too_small`, `minimum`,
+  `values` and so on), so an editor can localize a diagnostic without parsing the English `message`. The
+  engine's own checks have neither. A failed union is reported at the key that failed in the branch the
+  value was closest to, or at the union when no branch is clearly closest.
+- **Ids are decoration.** The `error.message` lines name the id of each element, step or action the path
+  passes; `issue.path` and `issue.message` never do.
+
 ## Container state
 
 A fieldset or array passes two states to every field inside it, at any depth.

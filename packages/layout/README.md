@@ -186,7 +186,7 @@ The render payload is opaque here: `bindRecipe(spec, render)` stores whatever a 
 
 ## Grid schemas
 
-`GridLayoutConfigSchema` (a container's `grid`) and `ElementGridConfigSchema` (an item's `grid`) are Zod Mini schemas, with `GridLayoutConfig` and `ElementGridConfig` as their inferred types. `ItemGridBreakpointSchema` is the schema of one breakpoint entry of an item's `responsive` map, and `GridBreakpointConfigSchema` the container's. The gap tokens (`GridGapTokens`) and the named widths and offsets (`GridWidthNames`, `GridOffsetNames`) are exported too. Area names are checked by a pattern that the JSON Schema export carries. Placement helpers used by validators (`namedPlacementOverflow`, `gridAreaTemplates`, `areaTemplateIssues`, and the cascade helpers) are exported too.
+`GridLayoutConfigSchema` (a container's `grid`) and `ElementGridConfigSchema` (an item's `grid`) are Zod Mini schemas, with `GridLayoutConfig` and `ElementGridConfig` as their inferred types. `ItemGridBreakpointSchema` is the schema of one breakpoint entry of an item's `responsive` map, and `GridBreakpointConfigSchema` the container's. The gap tokens (`GridGapTokens`) and the named widths and offsets (`GridWidthNames`, `GridOffsetNames`) are exported too. Area names are checked by a pattern that the JSON Schema export carries. Placement helpers used by validators (`namedPlacementOverflow`, `gridAreaTemplates`, `areaTemplateIssues`, and the cascade helpers) are exported too. `areaTemplateIssues(grid)` takes a grid config and returns `LayoutIssue`s whose `path` is relative to the grid: `['areas']` for the array form of the default template, else `['areas', slot]`.
 
 ## Public surface
 
