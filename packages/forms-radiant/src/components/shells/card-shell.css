@@ -10,16 +10,15 @@
 }
 
 /*
- * The card maps the semantic appearance tokens to its own properties. Its width is the card's own
- * mapping: 28rem at the default spacing, growing or shrinking eight times as fast as --se-space.
- * The fallbacks are the look of an unpicked card, with Radiant's theme variables where it has them.
+ * The card maps the semantic appearance tokens to its own properties: its width is the readable
+ * measure, --se-measure. The fallbacks are the look of an unpicked card, with Radiant's theme
+ * variables where it has them.
  */
 .card-shell__card {
-	--card-shell-width: calc(28rem + (var(--se-space, 1.5rem) - 1.5rem) * 8);
 	box-sizing: border-box;
 	flex: 0 1 auto;
 	background: var(--se-surface-background, var(--surface, #fff));
-	width: min(100%, var(--card-shell-width));
+	width: min(100%, var(--se-measure, 28rem));
 	border: var(--se-border-width, 1px) solid var(--border, currentColor);
 	border-radius: var(--radius-control, 0.75rem);
 	box-shadow: var(--se-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent));

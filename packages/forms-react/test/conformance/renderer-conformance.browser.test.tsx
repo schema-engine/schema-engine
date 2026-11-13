@@ -4,6 +4,7 @@ import { createFormEngine, defineInput } from '@schema-engine/forms';
 import {
 	rendererConformance,
 	conformanceAction,
+	conformanceInputAxes,
 	conformanceLayout,
 	customArrayType,
 } from '../../../../test-utils/renderer-conformance';
@@ -31,7 +32,7 @@ const CustomArrayRegistration = defineInput({
 rendererConformance(async ({ config, ...props }) => {
 	const engine = createFormEngine({
 		elements: [
-			InputElementRegistration,
+			{ ...InputElementRegistration, appearanceAxes: conformanceInputAxes },
 			ArrayElementRegistration,
 			CustomArrayRegistration,
 			FieldSetRegistration,

@@ -34,6 +34,9 @@ export const conformanceToneAxis = defineAxis({
 	values: { neutral: {}, brand: { '--se-tone-accent': 'rgb(255, 102, 0)' } },
 });
 
+/** The axes the conformance input registration declares: the built-in `size` and the host `tone`. */
+export const conformanceInputAxes = ['size', 'tone'];
+
 /** The `layout` option of every conformance engine: the built-in axes plus {@link conformanceToneAxis}. */
 export const conformanceLayout = { appearance: [...builtInAxes, conformanceToneAxis] } as const;
 
@@ -342,6 +345,18 @@ export function rendererConformance(mount: ConformanceMount): void {
 						'rgb(255, 102, 0)',
 					);
 				}
+			});
+			test('a field whose registration declares a host axis carries its own pick, and the form pick otherwise', async () => {
+				const { host } = await setup({
+					config: {
+						...form([{ ...input('email', 'Email'), appearance: { tone: 'brand' } }, input('name', 'Name')]),
+						appearance: { tone: 'neutral' },
+					},
+				});
+				const email = fieldHost(host, 'Email');
+				expect(email.getAttribute('data-se-tone')).toBe('brand');
+				expect(getComputedStyle(email).getPropertyValue('--se-tone-accent').trim()).toBe('rgb(255, 102, 0)');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-tone')).toBe('neutral');
 			});
 			test('a host axis value that sets no token leaves the neighbours alone', async () => {
 				const { host } = await setup({

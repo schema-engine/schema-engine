@@ -178,21 +178,24 @@ const sizeAxis = defineAxis({
 	$type: 'size',
 	metadata: {
 		name: 'Size',
-		description: 'How much room components take: spacing and type size.',
+		description: 'How much room components take: spacing, type size and readable width.',
 	},
 	default: 'default',
 	values: {
 		compact: {
 			'--se-space': 'var(--se-space-compact, 1rem)',
 			'--se-font-size': '0.875rem',
+			'--se-measure': '24rem',
 		},
 		default: {
 			'--se-space': 'initial',
 			'--se-font-size': 'initial',
+			'--se-measure': 'initial',
 		},
 		comfortable: {
 			'--se-space': 'var(--se-space-comfortable, 2rem)',
 			'--se-font-size': '1.0625rem',
+			'--se-measure': '32rem',
 		},
 	},
 });

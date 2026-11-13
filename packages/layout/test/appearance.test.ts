@@ -66,6 +66,7 @@ describe('builtInAxes', () => {
 		expect([...tokens].toSorted()).toEqual([
 			'--se-border-width',
 			'--se-font-size',
+			'--se-measure',
 			'--se-shadow',
 			'--se-space',
 			'--se-surface-background',
@@ -77,7 +78,9 @@ describe('builtInAxes', () => {
 
 	test('a default value hands its tokens back to the component fallback, so it undoes an inherited pick', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain('[data-se-size="default"]){--se-space:initial;--se-font-size:initial;}');
+		expect(css).toContain(
+			'[data-se-size="default"]){--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
+		);
 	});
 
 	test('name no host theme variable: the only references are renderer hooks in the se namespace', () => {
@@ -94,6 +97,17 @@ describe('builtInAxes', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(css).toContain('[data-se-size="compact"]){--se-space:var(--se-space-compact, 1rem);');
 		expect(css).toContain('[data-se-size="comfortable"]){--se-space:var(--se-space-comfortable, 2rem);');
+	});
+
+	test('size sets the readable measure: 24rem, 32rem, and the component fallback for default', () => {
+		const css = getAppearanceCss(compileAppearance(), 'lx');
+		expect(css).toContain(
+			'[data-se-size="compact"]){--se-space:var(--se-space-compact, 1rem);--se-font-size:0.875rem;--se-measure:24rem;}',
+		);
+		expect(css).toContain(
+			'[data-se-size="default"]){--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
+		);
+		expect(css).toContain('--se-measure:32rem;');
 	});
 
 	test('flat and outlined leave the component background alone', () => {

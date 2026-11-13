@@ -10,11 +10,11 @@ import type { FormShellProps } from '@schema-engine/forms-react/primitives';
  * @remarks
  * The card's `appearance` (`size`, `surface`) sets `--se-space`, `--se-border-width`, `--se-shadow`
  * and `--se-surface-background` through the layout theme's token rules; the fallbacks are the look
- * of an unstyled card, so a form that picks nothing renders as before. The card's width is its own
- * mapping of the spacing token: 28rem at the default spacing, eight times as sensitive as `--se-space`.
+ * of an unstyled card, so a form that picks nothing renders as before. The card's width is the
+ * readable measure, `--se-measure`.
  */
 const cardStyle: React.CSSProperties = {
-	maxWidth: 'calc(28rem + (var(--se-space, 1.5rem) - 1.5rem) * 8)',
+	maxWidth: 'var(--se-measure, 28rem)',
 	backgroundColor: 'var(--se-surface-background, var(--color-card))',
 	borderWidth: 'var(--se-border-width, 1px)',
 	boxShadow: 'var(--se-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent))',

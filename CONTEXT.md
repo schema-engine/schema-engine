@@ -371,7 +371,7 @@ every renderer; the visual effect of a built-in value is not yet: `size` changes
 Radiant only, and both card shells read the tokens. A field's `className` is applied to the same field host, the element that carries its `style` and the attributes, in both renderers. The field host that carries the attributes is the
 inner `.se-form-field` (the Radiant constraint wrapper around it carries only grid placement).
 
-`maxWidth`, `padding` and `shadowSize` are gone: the `size` and `surface` tokens set the padding, border and shadow, and the card maps `--se-space` to its own width. `contentWidth`, `sideWidth` and
+`maxWidth`, `padding` and `shadowSize` are gone: the `size` and `surface` tokens set the padding, border and shadow, and the card's width is the readable measure `--se-measure`. `contentWidth`, `sideWidth` and
 the structural keys (`showDescription`, `orientation`, `labels`, `align`) stay in slot config
 because they change layout or content, not appearance. `style` is the escape hatch for what the
 vocabulary does not cover and accepts only `--custom-property` keys with string or number values.

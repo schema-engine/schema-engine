@@ -107,13 +107,15 @@ function setHostTheme(variables: Record<string, string>) {
 }
 
 test.each([
-	['compact', '12px'],
-	['comfortable', '56px'],
-])('size %s follows the host theme spacing', async (size, padding) => {
-	const restore = setHostTheme({ '--space-block': '12px', '--space-block-xl': '56px' });
+	['compact', '12px', 384],
+	['default', '24px', 448],
+	['comfortable', '56px', 512],
+])('size %s follows the host theme spacing and keeps its width', async (size, padding, width) => {
+	const restore = setHostTheme({ '--space-block': '12px', '--space-block-lg': '24px', '--space-block-xl': '56px' });
 	try {
 		const picked = await card({ size });
 		expect(picked.sectionPadding).toBe(padding);
+		expect(picked.width).toBe(width);
 	} finally {
 		restore();
 	}
