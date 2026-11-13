@@ -68,6 +68,8 @@ export const BaseLayout = eco.component<BaseLayoutProps, JsxRenderable>({
 					</header>
 				) : null}
 				{showHeader ? <main class={className}>{children}</main> : children}
+				{/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- same markup on every docs site (Ecopages copy contract); not a form result */}
+				<div class="code-copy-status" role="status" aria-live="polite" data-code-copy-status></div>
 			</body>
 		);
 	},

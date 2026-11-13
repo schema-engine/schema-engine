@@ -22,7 +22,7 @@ test('sitemap lists docs pages and the llms index', async () => {
 	expect(sitemap).toContain('/llms.txt');
 });
 
-test('a fenced code block copies its source and a blank line keeps its height', async () => {
+test('a fenced code block copies its source, announces the result and a blank line keeps its height', async () => {
 	const browser = await chromium.launch();
 	try {
 		const context = await browser.newContext();
@@ -38,9 +38,10 @@ test('a fenced code block copies its source and a blank line keeps its height', 
 		await button.focus();
 		await button.click();
 		await page.waitForFunction(
-			(node) => (node as HTMLElement).getAttribute('aria-label') === 'Code copied to clipboard',
-			await button.elementHandle(),
+			() => document.querySelector('[data-code-copy-status]')?.textContent === 'Code copied to clipboard',
 		);
+		expect(await button.getAttribute('aria-label')).toBe('Copy code');
+		expect(await button.textContent()).toBe('Copied');
 		expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
 
 		const emptyLineHeights = await page
