@@ -2,8 +2,10 @@
  * `T` with every property, array and nested object read-only; functions are kept as they are.
  *
  * @remarks
- * Kept here rather than imported from `@schema-engine/layout`, which keeps its own copy for the
- * grid helpers and does not export it: it is plumbing, not part of either public surface.
+ * Forms publishes it on the `./lib/normalized-form-config` subpath, because its public config types
+ * are built from it and a consumer's declaration emit must be able to name it. It is a separate copy
+ * from the one `@schema-engine/layout` keeps internal for its grid helpers, so neither package's root
+ * entry exports it.
  */
 export type DeepReadonly<T> = T extends (...args: never[]) => unknown
 	? T

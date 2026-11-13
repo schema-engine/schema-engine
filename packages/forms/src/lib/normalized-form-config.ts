@@ -10,6 +10,12 @@ const ELEMENT_CONTAINER_KIND = Symbol.for('@schema-engine/forms.container-kind')
 
 const NORMALIZED_ELEMENT_CONFIG = Symbol.for('@schema-engine/forms.normalized-element-config');
 
+/**
+ * Re-exported because the public config types below are built from it: a consumer's declaration
+ * emit has to be able to name it from this subpath.
+ */
+export type { DeepReadonly };
+
 type NormalizedFormProvenance = {
 	readonly owner: object;
 };
