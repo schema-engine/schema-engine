@@ -151,17 +151,37 @@ function findConfig(actions: readonly ActionSequenceEntry<DemoConfig>[], id: str
 	return flatten(actions).find((action) => action.id === id);
 }
 
+/**
+ * A signal that aborts when either input does.
+ *
+ * @remarks
+ * Stands in for `AbortSignal.any`, which the docs' browser floor (Chrome 111, Safari 16.4) does not all have.
+ */
+function linkSignals(first: AbortSignal, second: AbortSignal): AbortSignal {
+	const controller = new AbortController();
+	for (const signal of [first, second]) {
+		if (signal.aborted) {
+			controller.abort();
+			break;
+		}
+		signal.addEventListener('abort', () => controller.abort(), { once: true });
+	}
+	return controller.signal;
+}
+
 function isAbort(error: unknown): boolean {
 	return error instanceof Error && error.name === 'AbortError';
 }
 
 function summarize(results: ActionDispatchResult[]): Pick<PlaygroundNode, 'status' | 'value'> {
-	if (results.some((result) => result.status === 'cancelled')) {
-		return { status: 'cancelled', value: 'interrupted' };
-	}
-	const blocked = results.find((result) => !result.success && result.shouldContinue === false);
+	const blocked = results.find(
+		(result) => result.status !== 'cancelled' && !result.success && result.shouldContinue === false,
+	);
 	if (blocked) {
 		return { status: 'failed', value: blocked.error ?? 'failed' };
+	}
+	if (results.some((result) => result.status === 'cancelled')) {
+		return { status: 'cancelled', value: 'interrupted' };
 	}
 	const parts = results.map((result) =>
 		result.success ? (typeof result.data === 'string' ? result.data : 'ok') : (result.error ?? 'failed'),
@@ -294,6 +314,7 @@ export class ActionPlaygroundSession {
 	}
 
 	interrupt(): void {
+		if (this.#phase !== 'running') return;
 		this.#run?.abort();
 		this.#nodes = this.#nodes.map((node) => (node.status === 'running' ? { ...node, status: 'cancelled' } : node));
 		if (this.#result.status === 'running')
@@ -342,11 +363,12 @@ export class ActionPlaygroundSession {
 		const { config, runSignal } = context;
 		this.#mark(runSignal, config.id, 'running');
 		try {
-			await this.#sleep(this.#delayMs ?? jitter(500, 900), AbortSignal.any([context.signal, runSignal]));
+			await this.#sleep(this.#delayMs ?? jitter(500, 900), linkSignals(context.signal, runSignal));
 		} catch (error) {
 			if (!isAbort(error)) throw error;
 			this.#mark(runSignal, config.id, 'cancelled');
-			return { success: false, error: 'interrupted', shouldContinue: false };
+			if (runSignal.aborted) return { success: false, error: 'interrupted', shouldContinue: false };
+			throw error;
 		}
 		if (config.fail) {
 			this.#mark(runSignal, config.id, 'failed', config.result);

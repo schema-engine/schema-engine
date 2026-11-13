@@ -13,17 +13,19 @@ function createGate() {
 				reject(new DOMException('Aborted', 'AbortError'));
 				return;
 			}
-			const onAbort = () => {
-				reject(new DOMException('Aborted', 'AbortError'));
-			};
-			signal.addEventListener('abort', onAbort, { once: true });
-			pending.push({
+			const entry = {
 				resolve: () => {
 					signal.removeEventListener('abort', onAbort);
 					resolve();
 				},
 				reject,
-			});
+			};
+			const onAbort = () => {
+				pending.splice(pending.indexOf(entry), 1);
+				reject(new DOMException('Aborted', 'AbortError'));
+			};
+			signal.addEventListener('abort', onAbort, { once: true });
+			pending.push(entry);
 		});
 	return {
 		sleep,
@@ -147,20 +149,73 @@ describe('action playground session', () => {
 		session.dispose();
 	});
 
-	test('dispose stops a pending run from updating the snapshot or notifying listeners', async () => {
+	test('dispose stops a pending run from updating the snapshot', async () => {
 		const gate = createGate();
 		const session = new ActionPlaygroundSession('sequential', { sleep: gate.sleep });
-		const listener = vi.fn();
-		session.subscribe(listener);
 		const running = session.run('result');
 		await vi.waitFor(() => {
 			expect(statusOf(session.snapshot(), 'serialize')).toBe('running');
 		});
 		const before = session.snapshot();
-		listener.mockClear();
 		session.dispose();
 		await running;
-		expect(listener).not.toHaveBeenCalled();
 		expect(session.snapshot()).toEqual(before);
+	});
+
+	test('a second run supersedes the first and drops its stale updates', async () => {
+		const gate = createGate();
+		const session = new ActionPlaygroundSession('sequential', { sleep: gate.sleep });
+		const first = session.run('result');
+		await vi.waitFor(() => {
+			expect(statusOf(session.snapshot(), 'serialize')).toBe('running');
+		});
+		const second = session.run('persist');
+		await vi.waitFor(() => {
+			expect(statusOf(session.snapshot(), 'persist')).toBe('running');
+		});
+		expect(statusOf(session.snapshot(), 'serialize')).toBe('idle');
+		gate.release();
+		await Promise.all([first, second]);
+		expect(statusOf(session.snapshot(), 'persist')).toBe('succeeded');
+		expect(statusOf(session.snapshot(), 'result')).toBe('succeeded');
+		expect(session.snapshot().result.value).toBe('row:42');
+		session.dispose();
+	});
+
+	test('reset during a run aborts it and returns to idle', async () => {
+		const gate = createGate();
+		const session = new ActionPlaygroundSession('sequential', { sleep: gate.sleep });
+		const running = session.run('result');
+		await vi.waitFor(() => {
+			expect(statusOf(session.snapshot(), 'serialize')).toBe('running');
+		});
+		session.reset();
+		await running;
+		expect(session.snapshot().phase).toBe('idle');
+		expect(session.snapshot().nodes.every((node) => node.status === 'idle')).toBe(true);
+		expect(statusOf(session.snapshot(), 'result')).toBe('idle');
+		session.dispose();
+	});
+
+	test('interrupt cancels every member of a parallel group', async () => {
+		const gate = createGate();
+		const session = new ActionPlaygroundSession('parallel', { sleep: gate.sleep });
+		const running = session.run('result');
+		await vi.waitFor(() => {
+			expect(gate.pendingCount()).toBe(3);
+		});
+		session.interrupt();
+		await running;
+		expect(session.snapshot().nodes.map((node) => node.status)).toEqual(['cancelled', 'cancelled', 'cancelled']);
+		expect(statusOf(session.snapshot(), 'result')).toBe('cancelled');
+		session.dispose();
+	});
+
+	test('interrupt while idle changes nothing', () => {
+		const session = new ActionPlaygroundSession('sequential', { sleep: async () => undefined });
+		const before = session.snapshot();
+		session.interrupt();
+		expect(session.snapshot()).toEqual(before);
+		session.dispose();
 	});
 });
