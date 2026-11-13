@@ -80,6 +80,7 @@ export type {
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
 	ActionRegistrationConstraint,
+	ValidationRegistrationConstraint,
 } from './builder/types.utils';
 export { ELEMENT_CHILDREN_KEY, elementChildrenSchema, getElementChildren } from './lib/element-children';
 export type { ElementChildrenInput, ElementChildrenOutput } from './lib/element-children';

@@ -23,6 +23,7 @@ import { buildFormEngine } from './build-form-engine';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import type { LayoutTheme, ResolvedAppearanceAxes } from '@schema-engine/layout';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
+import type { AnyValidationRegistration } from '@/schemas/validation/types';
 import {
 	describeRecipeFromRegistration,
 	describeViewCatalogFromRecipes,
@@ -42,6 +43,8 @@ export interface EngineRegistries {
 	schemaArtifacts: FormEngineSchemaArtifacts;
 	layout: LayoutTheme;
 	validationRegistry: ValidationRegistry;
+	/** The validations passed to `createFormEngine`, kept so {@link FormEngine.extend} can rebuild the registry. */
+	validations: readonly AnyValidationRegistration[];
 	defaultWizardRecipe?: string;
 }
 
@@ -72,6 +75,7 @@ export class FormEngine<
 			schemaArtifacts: registries.schemaArtifacts,
 			layout: registries.layout,
 			validationRegistry: registries.validationRegistry,
+			validations: registries.validations,
 			defaultWizardRecipe: registries.defaultWizardRecipe,
 		};
 		this.schemaArtifacts = registries.schemaArtifacts;
@@ -327,6 +331,7 @@ export class FormEngine<
 			elements: [...this.getAllElements(), ...(options?.elements ?? [])],
 			recipes: [...this.getAllRecipes(), ...(options?.recipes ?? [])],
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
+			validations: [...this.registries.validations, ...(options?.validations ?? [])],
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
 			layout: this.layout,
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,

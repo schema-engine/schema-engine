@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
-import type { EmailRule, ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { EmailRuleSchema, type EmailRule, type ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 import { FormFieldElement } from '@/elements/form-field';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
@@ -10,7 +10,9 @@ afterEach(() => document.body.replaceChildren());
 
 function engineRequiring(domain: string) {
 	const email: ValidationRegistration<EmailRule> = {
-		type: 'email',
+		$type: 'email',
+		schema: EmailRuleSchema,
+		metadata: { name: 'Email' },
 		category: 'string',
 		handler: () => z.optional(z.string().check(z.refine((value) => value.endsWith(domain), `Use ${domain}`))),
 		defaultFor: ['input'],

@@ -4,7 +4,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
 import { BaseFieldSchema, type ElementConfig } from '@schema-engine/forms/schemas';
-import type { MinLengthRule, ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import {
+	MinLengthRuleSchema,
+	type MinLengthRule,
+	type ValidationRegistration,
+} from '@schema-engine/forms/schemas/validation';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
@@ -17,7 +21,9 @@ type IsolatedInputConfig = z.infer<typeof isolatedInputSchema>;
 
 function createValidation(message: string, minimum: number): ValidationRegistration<MinLengthRule> {
 	return {
-		type: 'minLength',
+		$type: 'minLength',
+		schema: MinLengthRuleSchema,
+		metadata: { name: 'Minimum length' },
 		category: 'string',
 		handler: (rule) => z.string().check(z.minLength(minimum, rule.message ?? message)),
 	};

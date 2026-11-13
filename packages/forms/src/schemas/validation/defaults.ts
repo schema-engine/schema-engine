@@ -29,6 +29,34 @@ import type {
 	AsyncRule,
 	ValidationContext,
 } from './types.js';
+import {
+	AsyncRuleSchema,
+	Base64RuleSchema,
+	CidrRuleSchema,
+	Cuid2RuleSchema,
+	CuidRuleSchema,
+	DateRuleSchema,
+	DateTimeRuleSchema,
+	EmailRuleSchema,
+	HashRuleSchema,
+	HexRuleSchema,
+	Ipv4RuleSchema,
+	Ipv6RuleSchema,
+	JwtRuleSchema,
+	MaxItemsRuleSchema,
+	MaxLengthRuleSchema,
+	MaxRuleSchema,
+	MinItemsRuleSchema,
+	MinLengthRuleSchema,
+	MinRuleSchema,
+	PatternRuleSchema,
+	PhoneRuleSchema,
+	RequiredRuleSchema,
+	TimeRuleSchema,
+	UlidRuleSchema,
+	UrlRuleSchema,
+	UuidRuleSchema,
+} from './types.js';
 import { createAsyncValidationHandler } from './async/handler.js';
 import { relateValidation } from './relations.js';
 import { isEmpty } from './empty.js';
@@ -63,9 +91,11 @@ const createIpv6Schema = (message?: string): z.ZodMiniType => {
  * Built-in validation registrations
  * Maps validation rules to their Zod Mini schema generators.
  */
-export const defaultValidations: AnyValidationRegistration[] = [
+export const defaultValidations: readonly AnyValidationRegistration[] = [
 	{
-		type: 'required',
+		$type: 'required',
+		schema: RequiredRuleSchema,
+		metadata: { name: 'Required', description: 'The field must have a value.' },
 		category: 'generic',
 		handler: (rule: RequiredRule) =>
 			z.unknown().check(
@@ -75,17 +105,23 @@ export const defaultValidations: AnyValidationRegistration[] = [
 			),
 	},
 	{
-		type: 'minLength',
+		$type: 'minLength',
+		schema: MinLengthRuleSchema,
+		metadata: { name: 'Minimum length', description: 'The text has at least `value` characters.' },
 		category: 'string',
 		handler: (rule: MinLengthRule) => z.string().check(z.minLength(rule.value, rule.message)),
 	},
 	{
-		type: 'maxLength',
+		$type: 'maxLength',
+		schema: MaxLengthRuleSchema,
+		metadata: { name: 'Maximum length', description: 'The text has at most `value` characters.' },
 		category: 'string',
 		handler: (rule: MaxLengthRule) => z.string().check(z.maxLength(rule.value, rule.message)),
 	},
 	{
-		type: 'email',
+		$type: 'email',
+		schema: EmailRuleSchema,
+		metadata: { name: 'Email', description: 'The text is an email address.' },
 		category: 'string',
 		handler: (rule: EmailRule) => {
 			const email = z.email(rule.message);
@@ -93,12 +129,16 @@ export const defaultValidations: AnyValidationRegistration[] = [
 		},
 	},
 	{
-		type: 'pattern',
+		$type: 'pattern',
+		schema: PatternRuleSchema,
+		metadata: { name: 'Pattern', description: 'The text matches the regular expression `value`.' },
 		category: 'string',
 		handler: (rule: PatternRule) => z.string().check(z.regex(new RegExp(rule.value), rule.message)),
 	},
 	{
-		type: 'url',
+		$type: 'url',
+		schema: UrlRuleSchema,
+		metadata: { name: 'URL', description: 'The text is a URL, optionally limited by protocol and hostname.' },
 		category: 'string',
 		handler: (rule: UrlRule) =>
 			z.url({
@@ -108,17 +148,23 @@ export const defaultValidations: AnyValidationRegistration[] = [
 			}),
 	},
 	{
-		type: 'uuid',
+		$type: 'uuid',
+		schema: UuidRuleSchema,
+		metadata: { name: 'UUID', description: 'The text is a UUID, optionally of one version.' },
 		category: 'string',
 		handler: (rule: UuidRule) => z.uuid({ version: rule.version, error: rule.message }),
 	},
 	{
-		type: 'phone',
+		$type: 'phone',
+		schema: PhoneRuleSchema,
+		metadata: { name: 'Phone', description: 'The text is an E.164 phone number.' },
 		category: 'string',
 		handler: (rule: PhoneRule) => z.e164(rule.message || 'Please enter a valid phone number'),
 	},
 	{
-		type: 'cidr',
+		$type: 'cidr',
+		schema: CidrRuleSchema,
+		metadata: { name: 'CIDR', description: 'The text is an IPv4 or IPv6 CIDR range.' },
 		category: 'string',
 		handler: (rule: CidrRule) => {
 			const v4 = z.cidrv4(rule.message || 'Please enter a valid IPv4 CIDR');
@@ -130,48 +176,66 @@ export const defaultValidations: AnyValidationRegistration[] = [
 		},
 	},
 	{
-		type: 'ipv4',
+		$type: 'ipv4',
+		schema: Ipv4RuleSchema,
+		metadata: { name: 'IPv4', description: 'The text is an IPv4 address.' },
 		category: 'string',
 		handler: (rule: Ipv4Rule) => z.ipv4(rule.message || 'Invalid IPv4 address'),
 	},
 	{
-		type: 'ipv6',
+		$type: 'ipv6',
+		schema: Ipv6RuleSchema,
+		metadata: { name: 'IPv6', description: 'The text is an IPv6 address, with an optional zone suffix.' },
 		category: 'string',
 		handler: (rule: Ipv6Rule) => createIpv6Schema(rule.message),
 	},
 
 	{
-		type: 'min',
+		$type: 'min',
+		schema: MinRuleSchema,
+		metadata: { name: 'Minimum', description: 'The number is at least `value`.' },
 		category: 'number',
 		handler: (rule: MinRule) => z.number().check(z.gte(rule.value, rule.message)),
 	},
 	{
-		type: 'max',
+		$type: 'max',
+		schema: MaxRuleSchema,
+		metadata: { name: 'Maximum', description: 'The number is at most `value`.' },
 		category: 'number',
 		handler: (rule: MaxRule) => z.number().check(z.lte(rule.value, rule.message)),
 	},
 	{
-		type: 'minItems',
+		$type: 'minItems',
+		schema: MinItemsRuleSchema,
+		metadata: { name: 'Minimum items', description: 'The list has at least `value` items.' },
 		category: 'array',
 		handler: (rule: MinItemsRule) => z.array(z.unknown()).check(z.minLength(rule.value, rule.message)),
 	},
 	{
-		type: 'maxItems',
+		$type: 'maxItems',
+		schema: MaxItemsRuleSchema,
+		metadata: { name: 'Maximum items', description: 'The list has at most `value` items.' },
 		category: 'array',
 		handler: (rule: MaxItemsRule) => z.array(z.unknown()).check(z.maxLength(rule.value, rule.message)),
 	},
 	{
-		type: 'jwt',
+		$type: 'jwt',
+		schema: JwtRuleSchema,
+		metadata: { name: 'JWT', description: 'The text is a JSON Web Token.' },
 		category: 'string',
 		handler: (rule: JwtRule) => z.jwt({ alg: rule.alg, error: rule.message || 'Invalid JWT' }),
 	},
 	{
-		type: 'hash',
+		$type: 'hash',
+		schema: HashRuleSchema,
+		metadata: { name: 'Hash', description: 'The text is a hex digest of the chosen algorithm.' },
 		category: 'string',
 		handler: (rule: HashRule) => z.hash(rule.algorithm, { error: rule.message || 'Invalid hash' }),
 	},
 	{
-		type: 'base64',
+		$type: 'base64',
+		schema: Base64RuleSchema,
+		metadata: { name: 'Base64', description: 'The text is Base64 or Base64URL encoded.' },
 		category: 'string',
 		handler: (rule: Base64Rule) =>
 			rule.urlSafe
@@ -179,28 +243,38 @@ export const defaultValidations: AnyValidationRegistration[] = [
 				: z.base64({ error: rule.message || 'Invalid Base64' }),
 	},
 	{
-		type: 'cuid',
+		$type: 'cuid',
+		schema: CuidRuleSchema,
+		metadata: { name: 'CUID', description: 'The text is a CUID.' },
 		category: 'string',
 		handler: (rule: CuidRule) => z.cuid({ error: rule.message }),
 	},
 	{
-		type: 'cuid2',
+		$type: 'cuid2',
+		schema: Cuid2RuleSchema,
+		metadata: { name: 'CUID2', description: 'The text is a CUID2.' },
 		category: 'string',
 		handler: (rule: Cuid2Rule) => z.cuid2({ error: rule.message }),
 	},
 	{
-		type: 'ulid',
+		$type: 'ulid',
+		schema: UlidRuleSchema,
+		metadata: { name: 'ULID', description: 'The text is a ULID.' },
 		category: 'string',
 		handler: (rule: UlidRule) => z.ulid({ error: rule.message }),
 	},
 	{
-		type: 'hex',
+		$type: 'hex',
+		schema: HexRuleSchema,
+		metadata: { name: 'Hex', description: 'The text is a hexadecimal string.' },
 		category: 'string',
 		handler: (rule: HexRule) => z.hex({ error: rule.message }),
 	},
 
 	{
-		type: 'datetime',
+		$type: 'datetime',
+		schema: DateTimeRuleSchema,
+		metadata: { name: 'Datetime', description: 'The text is an ISO 8601 datetime.' },
 		category: 'date',
 		handler: (rule: DateTimeRule) =>
 			z.iso.datetime({
@@ -212,13 +286,17 @@ export const defaultValidations: AnyValidationRegistration[] = [
 	},
 
 	{
-		type: 'date',
+		$type: 'date',
+		schema: DateRuleSchema,
+		metadata: { name: 'Date', description: 'The text is an ISO 8601 date.' },
 		category: 'date',
 		handler: (rule: DateRule) => z.iso.date({ error: rule.message || 'Please enter a valid date' }),
 	},
 
 	{
-		type: 'time',
+		$type: 'time',
+		schema: TimeRuleSchema,
+		metadata: { name: 'Time', description: 'The text is an ISO 8601 time.' },
 		category: 'date',
 		handler: (rule: TimeRule) =>
 			z.iso.time({
@@ -228,7 +306,9 @@ export const defaultValidations: AnyValidationRegistration[] = [
 	},
 
 	{
-		type: 'async',
+		$type: 'async',
+		schema: AsyncRuleSchema,
+		metadata: { name: 'Async', description: 'The value is checked by a request to a server endpoint.' },
 		category: 'cross-field',
 		dependsOn: (rule: AsyncRule) => rule.dependencies ?? [],
 		handler: (rule: AsyncRule, context: ValidationContext) => createAsyncValidationHandler(rule, context),

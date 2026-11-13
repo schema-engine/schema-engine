@@ -9,6 +9,7 @@ import { useControlledFormElement } from '@/hooks/use-field';
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
+import { RequiredRuleSchema } from '@schema-engine/forms/schemas/validation';
 import { FormRenderer } from '@/components/internals/form-renderer';
 
 function AdapterForm({
@@ -191,7 +192,9 @@ describe('useControlledFormElement under FormRenderer', () => {
 					render: (config: ElementConfig) => <ConfiguredInput {...config} />,
 					validations: [
 						{
-							type: 'required',
+							$type: 'required',
+							schema: RequiredRuleSchema,
+							metadata: { name: 'Required' },
 							category: 'string',
 							defaultFor: ['required-field'],
 							handler: () => z.string().check(z.minLength(1)),

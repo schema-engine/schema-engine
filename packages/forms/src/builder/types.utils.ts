@@ -1,5 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { AnyValidationRegistration } from '@/schemas/validation/types';
+import type { AnyValidationRegistration, ValidationContext } from '@/schemas/validation/types';
 import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
 
 /** Coerce inferred registration maps into the engine generic constraint. */
@@ -120,6 +120,23 @@ export type ActionRegistrationConstraint = {
 	readonly schema: StandardSchemaConstraint;
 	readonly metadata: { readonly name: string };
 	readonly execute: (...args: never[]) => unknown;
+};
+
+/**
+ * A validation registration as `createFormEngine({ validations })` accepts it.
+ *
+ * @remarks
+ * `handler` and `dependsOn` take `never`, so a registration typed for one rule shape, such as
+ * `ValidationRegistration<PostcodeRule>`, is accepted without widening its rule type.
+ */
+export type ValidationRegistrationConstraint = {
+	readonly $type: string;
+	readonly schema: StandardSchemaConstraint;
+	readonly metadata: { readonly name: string };
+	readonly category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic' | 'cross-field';
+	readonly handler: (rule: never, context: ValidationContext) => unknown;
+	readonly dependsOn?: (rule: never) => readonly string[];
+	readonly defaultFor?: readonly string[];
 };
 
 /** Parsed config maps retain defaults and transforms independently of authoring input. */

@@ -8,6 +8,7 @@ import {
 	getValidationRulesForElement,
 	createDefaultValidationRegistry,
 	ValidationPresets,
+	PhoneRuleSchema,
 	type MinItemsRule,
 	type MaxItemsRule,
 } from '../../../src/schemas/validation/';
@@ -143,13 +144,16 @@ describe('Validation', () => {
 		});
 
 		test('injects defaultFor rules onto matching field types', () => {
-			const customRegistry = createDefaultValidationRegistry();
-			customRegistry.register({
-				type: 'phone',
-				category: 'string',
-				defaultFor: ['phone-input'],
-				handler: () => z.any(),
-			});
+			const customRegistry = createDefaultValidationRegistry([
+				{
+					$type: 'phone',
+					schema: PhoneRuleSchema,
+					metadata: { name: 'Phone' },
+					category: 'string',
+					defaultFor: ['phone-input'],
+					handler: () => z.any(),
+				},
+			]);
 
 			expect(getValidationRulesForElement({ $type: 'phone-input' }, customRegistry)).toEqual([{ type: 'phone' }]);
 			expect(
