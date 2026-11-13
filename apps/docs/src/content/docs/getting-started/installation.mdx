@@ -101,8 +101,8 @@ Load one Radiant UI theme, its stylesheet and the renderer's stylesheet once, th
 # Standalone action system (the forms packages already use it for submission)
 pnpm add @schema-engine/actions
 
-# YAML documents with line-accurate errors
-pnpm add @schema-engine/registry
+# YAML documents with line-accurate errors (@schema-engine/registry/yaml)
+pnpm add @schema-engine/registry yaml
 ```
 
 ## Package overview
@@ -118,10 +118,14 @@ pnpm add @schema-engine/registry
 
 ## Peer dependencies
 
-- `zod` >= 4.0.17 when using first-party Zod Mini schemas
-- `react` and `react-dom` >= 19 (React renderer)
-- `react-hook-form` >= 7.60 (optional; needed only for the React Hook Form adapter)
-- `@ecopages/radiant`, `@ecopages/jsx`, `@ecopages/signals` and `@ecopages/radiant-ui` (Radiant renderer; the exact versions are in [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started))
+The ranges are the ones in the package manifests:
+
+- `zod` `^4.0.17`
+- `typescript` `^5.4`
+- `react` and `react-dom` `^19` (React renderer)
+- `react-hook-form` `^7.60.0` (optional; needed only for the React Hook Form adapter)
+- `yaml` `^2.8.0` (optional; needed only for `@schema-engine/registry/yaml`)
+- `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.8.3`, and `@ecopages/radiant-ui` `>=0.3.6` (Radiant renderer; [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the rest)
 
 ## TypeScript configuration
 
