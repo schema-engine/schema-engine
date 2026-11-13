@@ -249,7 +249,7 @@ Write the selector with at least the specificity of a class: the theme's token r
 
 ## For editors: a JSON Schema enum
 
-The catalog and the JSON Schema export list each axis and its values, so `appearance.size` on a form and its steps is an enum an editor completes. On an element or a recipe slot, `appearance` lists only the axes its registration declares and is closed, so an undeclared axis is rejected in the editor as `validateForm` rejects it. Children of a fieldset or an array row are loosely typed in the export, and an element with a lazy schema keeps its own `appearance`; `validateForm` checks both.
+The catalog and the JSON Schema export list each axis and its values, so `appearance.size` on a form and its steps is an enum an editor completes. On an element or a recipe slot, `appearance` lists only the axes its registration declares and is closed, so an undeclared axis is rejected in the editor as `validateForm` rejects it. The children of a fieldset or an array row get the same per-element schema as top-level elements. An element with a lazy schema keeps its own `appearance` in the export; `validateForm` checks it.
 
 ## When to use something else
 

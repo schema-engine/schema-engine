@@ -300,9 +300,10 @@ every element and slot, so every one gets the key: an owner that declares none g
 `appearance` with no axes. The lists come from the registry and declarations validation checks
 (`checkAppearance`), so the export and validation cannot drift; a parity test walks fixture
 elements (open, strict, non-strict without an `appearance` key, piped) and the built-in recipes
-through both. The limits: a schema that is an object, or a pipe or prefault of one, is rewritten, but
-a lazy schema keeps its own `appearance`; the children of a fieldset or an array row are loosely
-typed in the export, so their `appearance` is not checked there (validation still checks it); and a
+through both, at the top of a step and nested in a fieldset and an array row. The children of an
+element's `elements` array are typed as a lazy union of every element's export schema, so a nested
+field gets the same closed `appearance`. The limits: a schema that is an object, or a pipe or prefault
+of one, is rewritten, but a lazy schema keeps its own `appearance` (validation still checks it); and a
 native Standard Schema element contributes an envelope of its `$type` and the same closed
 `appearance`. The catalog keeps each registration's own validator schema, so `getBySchema` finds it.
 

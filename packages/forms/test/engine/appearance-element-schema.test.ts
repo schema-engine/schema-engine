@@ -3,6 +3,7 @@ import * as z from 'zod/mini';
 import { builtInAxes, defineAxis } from '@schema-engine/layout';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema } from '@/schemas/base-field';
+import { elementChildrenSchema } from '@/lib/element-children';
 import { defineInput } from '@/types';
 import { defineFormRecipe } from '@/recipes';
 import { cardSpec, cardWizardSpec } from '@/recipes/built-in-specs';
@@ -190,5 +191,42 @@ describe('a Standard Schema element', () => {
 		const elements = steps.items.properties.elements as { items: { properties: Record<string, unknown> } };
 		const envelope = elements.items.properties.appearance as AppearanceJsonSchema;
 		expect(axesOf(envelope)).toEqual(['size']);
+	});
+});
+
+describe('the children of a container are typed like top-level elements', () => {
+	const fieldset = field(
+		'fieldset',
+		undefined,
+		z.extend(BaseFieldSchema, {
+			$type: z.literal('fieldset'),
+			elements: elementChildrenSchema.check(z.minLength(1)),
+		}),
+	);
+	const engine = createFormEngine({ elements: [sized, plain, fieldset] });
+	const schema = engine.generateFormConfigSchema() as Schema;
+	const children = (definitions(schema)['element:fieldset'].properties as Record<string, Schema>).elements as {
+		minItems?: number;
+		items: Schema;
+	};
+
+	test('a fieldset keeps the array rule of its schema', () => {
+		expect(children.minItems).toBe(1);
+	});
+
+	test('its child item is the element union, not a bare object with a $type', () => {
+		expect(children.items).toEqual({ $ref: expect.stringMatching(/^#\/\$defs\//) });
+		const union = (schema.$defs as Record<string, Schema>)[(children.items.$ref as string).split('/').pop()!];
+		const members = (union.anyOf as Array<{ $ref?: string }>).map((member) => member.$ref);
+		expect(members).toEqual(['#/$defs/element:sized', '#/$defs/element:plain', '#/$defs/element:fieldset']);
+	});
+
+	test('a child lists the axes its element declares', () => {
+		expect(appearanceOfElement(schema, 'sized')?.properties?.size?.enum).toEqual([
+			'compact',
+			'default',
+			'comfortable',
+		]);
+		expect(axesOf(appearanceOfElement(schema, 'plain'))).toEqual([]);
 	});
 });

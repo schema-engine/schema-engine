@@ -11,6 +11,7 @@ import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
+import { withExportedChildren } from '@/lib/element-children';
 import {
 	assertAxesNotReserved,
 	createAppearanceSchema,
@@ -81,11 +82,16 @@ function createRegistrationSchema(
  * Validation parses the registration's own schema, and the catalog keeps associating it, so only
  * the export sees the closed one. Computed once per registration, so the form config union and the
  * metadata registry hold the same schema object and the export refers to it by its id.
+ *
+ * With `childSchema`, an element that holds an `elements` array has its children typed as that schema,
+ * the lazy union of every element's export schema, so a child gets the same closed `appearance` as a
+ * top-level element. The union is lazy because it contains the container itself.
  */
 function toExportRegistrations(
 	registrations: Iterable<AnyElementRegistration | AnyRecipeRegistration | AnyActionRegistration>,
 	componentType: ComponentType,
 	layout: LayoutTheme,
+	childSchema?: z.ZodMiniType,
 ): ExportRegistration[] {
 	return Array.from(registrations, (registration) => {
 		const exported: ExportRegistration = {
@@ -101,11 +107,12 @@ function toExportRegistrations(
 			return exported;
 		}
 		if (componentType === ComponentType.Element) {
-			exported.exportSchema = withAppearanceAxes(
+			const withAppearance = withAppearanceAxes(
 				registration.schema,
 				layout.appearance,
 				(registration as AnyElementRegistration).appearanceAxes,
 			);
+			exported.exportSchema = childSchema ? withExportedChildren(withAppearance, childSchema) : withAppearance;
 		} else if (componentType === ComponentType.Recipe) {
 			exported.exportSchema = withSlotAppearanceAxes(
 				registration.schema,
@@ -117,15 +124,18 @@ function toExportRegistrations(
 	});
 }
 
+function createElementsUnion(elements: ExportRegistration[], layout: LayoutTheme): z.ZodMiniType {
+	return createRegistrationSchema(elements, (element) =>
+		createAppearanceSchema(layout.appearance, element.appearanceAxes),
+	);
+}
+
 function createFormConfigSchema(
-	elements: ExportRegistration[],
+	elementsUnion: z.ZodMiniType,
 	recipes: ExportRegistration[],
 	actions: ExportRegistration[],
 	layout: LayoutTheme,
 ) {
-	const elementsUnion = createRegistrationSchema(elements, (element) =>
-		createAppearanceSchema(layout.appearance, element.appearanceAxes),
-	);
 	const recipesUnion = createRegistrationSchema(recipes);
 	const actionsUnion = createRegistrationSchema(actions);
 
@@ -247,7 +257,9 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		actions: actionRegistry.size,
 	});
 
-	const exportedElements = toExportRegistrations(elementRegistry.all(), ComponentType.Element, layout);
+	const elementsUnionRef: { current?: z.ZodMiniType } = {};
+	const childSchema = z.lazy(() => elementsUnionRef.current ?? z.never());
+	const exportedElements = toExportRegistrations(elementRegistry.all(), ComponentType.Element, layout, childSchema);
 	const exportedRecipes = toExportRegistrations(recipeRegistry.all(), ComponentType.Recipe, layout);
 	const exportedActions = toExportRegistrations(actionRegistry.all(), ComponentType.Action, layout);
 
@@ -275,7 +287,9 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		}
 	}
 
-	const formConfigSchema = createFormConfigSchema(exportedElements, exportedRecipes, exportedActions, layout);
+	const elementsUnion = createElementsUnion(exportedElements, layout);
+	elementsUnionRef.current = elementsUnion;
+	const formConfigSchema = createFormConfigSchema(elementsUnion, exportedRecipes, exportedActions, layout);
 	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.all());
 	const schemaArtifacts = createFormEngineSchemaArtifacts(
 		metadataCatalog,

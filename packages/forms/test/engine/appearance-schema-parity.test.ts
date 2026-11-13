@@ -5,6 +5,7 @@ import { builtInAxes, defineAxis } from '@schema-engine/layout';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineInput } from '@/types';
+import { elementChildrenSchema } from '@/lib/element-children';
 import { defineFormRecipe } from '@/recipes';
 import * as builtInSpecs from '@/recipes/built-in-specs';
 
@@ -50,6 +51,17 @@ const pipedField = defineInput({
 	render: () => null,
 });
 
+const container = ($type: string) =>
+	defineInput({
+		$type,
+		schema: zm.extend(BaseFieldSchema, { $type: zm.literal($type), elements: elementChildrenSchema }),
+		appearanceAxes: ['size'],
+		metadata: { name: $type, category: 'input' },
+		render: () => null,
+	});
+
+const containers = [container('group'), container('rows')];
+
 const elements = [
 	field('plain'),
 	field('sized', ['size']),
@@ -58,6 +70,7 @@ const elements = [
 	strictField,
 	looseField,
 	pipedField,
+	...containers,
 ];
 const recipes = Object.values(builtInSpecs)
 	.filter((spec) => typeof spec === 'object' && spec !== null && '$type' in spec && 'slotSchemas' in spec)
@@ -94,6 +107,22 @@ const formWithElement = (element: Record<string, unknown>) => ({
 	steps: [{ id: 's', title: 'S', elements: [element] }],
 });
 
+/** Where an element can sit: at the top of a step, or as a child of each container, one level or two deep. */
+const placements: Array<readonly [string, (element: Record<string, unknown>) => Record<string, unknown>]> = [
+	['at the top of a step', (element) => element],
+	['in a fieldset', (element) => ({ $type: 'group', id: 'g', name: 'g', elements: [element] })],
+	['in an array row', (element) => ({ $type: 'rows', id: 'r', name: 'r', elements: [element] })],
+	[
+		'in a fieldset in an array row',
+		(element) => ({
+			$type: 'rows',
+			id: 'r',
+			name: 'r',
+			elements: [{ $type: 'group', id: 'g', name: 'g', elements: [element] }],
+		}),
+	],
+];
+
 describe('the JSON Schema and validation accept the same appearance picks', () => {
 	test('the sample forms are valid before a pick is added', () => {
 		expect(accepted(formWithElement({ $type: 'plain', id: 'a', name: 'a' }))).toEqual({
@@ -102,20 +131,31 @@ describe('the JSON Schema and validation accept the same appearance picks', () =
 		});
 	});
 
-	describe.each(elements.map((element) => [element.$type, element] as const))('element %s', ($type) => {
-		test.each(picks.map((pick) => [JSON.stringify(pick), pick] as const))('pick %s', (_label, pick) => {
-			const result = accepted(formWithElement({ $type, id: 'a', name: 'a', appearance: pick }));
-			expect(result.jsonSchema).toBe(result.validation);
-		});
-
-		test('exactly the declared axes are accepted', () => {
-			const declared = engine.getElement($type)?.appearanceAxes ?? [];
-			const allowed = Object.keys(axes).filter(
-				(axis) =>
-					accepted(formWithElement({ $type, id: 'a', name: 'a', appearance: { [axis]: axes[axis][0] } }))
-						.jsonSchema,
+	describe.each(placements)('an element %s', (_placement, place) => {
+		const formWith = (element: Record<string, unknown>) =>
+			formWithElement(
+				place(
+					containers.some((c) => c.$type === element.$type)
+						? { ...element, elements: [{ $type: 'plain', id: 'p', name: 'p' }] }
+						: element,
+				),
 			);
-			expect(allowed).toEqual(Object.keys(axes).filter((axis) => declared.includes(axis)));
+
+		describe.each(elements.map((element) => [element.$type, element] as const))('element %s', ($type) => {
+			test.each(picks.map((pick) => [JSON.stringify(pick), pick] as const))('pick %s', (_label, pick) => {
+				const result = accepted(formWith({ $type, id: 'a', name: 'a', appearance: pick }));
+				expect(result.jsonSchema).toBe(result.validation);
+			});
+
+			test('exactly the declared axes are accepted', () => {
+				const declared = engine.getElement($type)?.appearanceAxes ?? [];
+				const allowed = Object.keys(axes).filter(
+					(axis) =>
+						accepted(formWith({ $type, id: 'a', name: 'a', appearance: { [axis]: axes[axis][0] } }))
+							.jsonSchema,
+				);
+				expect(allowed).toEqual(Object.keys(axes).filter((axis) => declared.includes(axis)));
+			});
 		});
 	});
 
