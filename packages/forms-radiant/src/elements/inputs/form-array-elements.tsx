@@ -352,8 +352,9 @@ export class SeFormArray extends RadiantElement {
 	 * @remarks
 	 * A row whose id, index, config and engine are unchanged keeps its object, so `MapItems` skips it. The first
 	 * hydrated render places the server rows through `this.slotted` and has no list mounted, so the first
-	 * change of the ids after it renders the host once to mount the list in their place. A config or engine
-	 * change alone leaves the server rows in place.
+	 * change of the ids after it renders the host once to mount the list in their place. An engine arriving
+	 * alone leaves the server rows in place; a config change re-runs `render`, which reads `config`, so the
+	 * list is mounted with the new config.
 	 */
 	private setRows(ids: readonly string[]): void {
 		const { config } = this;
