@@ -1,4 +1,12 @@
-/** Registers the Radiant UI custom elements rendered by the docs shell. */
+/**
+ * Registers the Radiant UI custom elements rendered by the docs shell.
+ *
+ * @remarks
+ * Keep this file outside any `layouts` or `pages` directory. The Ecopages React client-graph
+ * boundary treats a file with either path segment as a Page or Layout entry and removes its
+ * bare side-effect imports, which left `rui-toc`, `rui-sidebar` and `rui-breadcrumb` undefined
+ * in the production build.
+ */
 /* oxlint-disable import/no-unassigned-import -- custom-element side effects */
 import '@ecopages/radiant-ui/alert';
 import '@ecopages/radiant-ui/breadcrumb';
