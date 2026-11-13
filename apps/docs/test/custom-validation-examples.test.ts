@@ -10,18 +10,21 @@ import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
 
 const page = readFileSync(new URL('../src/content/docs/forms/validation-custom.mdx', import.meta.url), 'utf8');
 
-function exampleSource(heading: string): string {
+function exampleSource(heading: string, index = 0): string {
 	const section = page.split(heading)[1];
-	const code = section?.match(/```typescript\n([\s\S]*?)\n```/)?.[1];
-	if (!code) throw new Error(`Missing TypeScript example after ${heading}`);
+	const code = [...(section?.matchAll(/```typescript\n([\s\S]*?)\n```/g) ?? [])][index]?.[1];
+	if (!code) throw new Error(`Missing TypeScript example ${index} after ${heading}`);
 	return code;
 }
 
-function example(heading: string): string {
-	return ts.transpileModule(exampleSource(heading), {
+function example(heading: string, index = 0): string {
+	return ts.transpileModule(exampleSource(heading, index), {
 		compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
 	}).outputText;
 }
+
+/** Each type-check builds a TypeScript program, which is slow when the hook runs every package at once. */
+vi.setConfig({ testTimeout: 60_000 });
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -67,17 +70,84 @@ test('the documented debounced async rule settles replaced checks and keeps fiel
 	await expect(Promise.all([latest, independent])).resolves.toMatchObject([{ success: true }, { success: true }]);
 });
 
+const requireModules = { 'zod/mini': z, '@schema-engine/forms': { createFormEngine } };
+
+function runPattern(heading: string, index = 0): Record<string, any> {
+	const exports: Record<string, unknown> = {};
+	runInNewContext(example(heading, index), {
+		exports,
+		require: (name: string) => {
+			if (!(name in requireModules)) throw new Error(`Unexpected import ${name}`);
+			return requireModules[name as keyof typeof requireModules];
+		},
+	});
+	return exports;
+}
+
+function parse(engine: ReturnType<typeof createFormEngine>, rule: { type: string }, value: unknown, context = {}) {
+	const schema = engine.getValidationRegistry().createSchema(rule, createValidationContext(context));
+	if (!schema) throw new Error(`${rule.type} is not registered`);
+	return schema.safeParse(value);
+}
+
+test('the length range pattern enforces the documented bounds', () => {
+	const { engine } = runPattern('### Validation with Parameters');
+	const rule = { type: 'lengthRange', value: { min: 3, max: 5 } };
+	expect(parse(engine, rule, 'abcd').success).toBe(true);
+	expect(parse(engine, rule, 'ab').success).toBe(false);
+	expect(parse(engine, rule, 'abcdef').success).toBe(false);
+});
+
+test('the credit card pattern accepts a Luhn-valid number and rejects a changed digit', () => {
+	const { engine } = runPattern('### Validation with Parameters', 1);
+	expect(parse(engine, { type: 'creditCard' }, '4242 4242 4242 4242').success).toBe(true);
+	expect(parse(engine, { type: 'creditCard' }, '4242 4242 4242 4241').success).toBe(false);
+});
+
+test('the company email pattern accepts only the listed domains', () => {
+	const { engine, emailField } = runPattern('### Business Rule Validations');
+	const rule = emailField.rules[0];
+	expect(parse(engine, rule, 'ada@mycompany.com').success).toBe(true);
+	expect(parse(engine, rule, 'ada@other.com').success).toBe(false);
+});
+
+test('the password strength pattern applies its documented requirements', () => {
+	const { engine, passwordField } = runPattern('### Password Strength');
+	const rule = passwordField.rules[0];
+	expect(parse(engine, rule, 'Abcdefghij12').success).toBe(true);
+	expect(parse(engine, rule, 'abcdefghij12').success).toBe(false);
+});
+
+test('the confirm password pattern reads its sibling through the context', () => {
+	const { engine } = runPattern('## Cross-Field Validations');
+	const context = { values: { password: 'secret' }, fieldPath: 'confirm' };
+	expect(parse(engine, { type: 'confirmPassword' }, 'secret', context).success).toBe(true);
+	expect(parse(engine, { type: 'confirmPassword' }, 'other', context).success).toBe(false);
+	expect(engine.getValidationRegistry().getRuleDependencies({ type: 'confirmPassword' })).toEqual(['password']);
+});
+
 test.each([
-	['### Simple Custom Validation', ''],
-	['## Several Validations at Once', ''],
-	['### 4. Document Your Validations', ''],
+	['### Simple Custom Validation', 0, ''],
+	['## Several Validations at Once', 0, ''],
+	['### 4. Document Your Validations', 0, ''],
+	['### Validation with Parameters', 0, ''],
+	['### Validation with Parameters', 1, ''],
+	['### Business Rule Validations', 0, ''],
+	['### Age Validation with Date', 0, ''],
+	['### Social Security Number (US)', 0, ''],
+	['### Password Strength', 0, ''],
+	['## Cross-Field Validations', 0, ''],
+	['### Built-in Async Validation (Recommended)', 0, ''],
+	['### Custom Async Validator (Advanced)', 0, ''],
+	['### 3. Handle Edge Cases', 0, ''],
 	[
 		'### Debouncing Async Validations',
+		0,
 		"\nimport type { ValidationRule } from '@schema-engine/forms/schemas/validation';\nconst fieldRule: ValidationRule = usernameRule;",
 	],
-])('the documented example under %s type-checks for a consumer', (heading, suffix) => {
+])('the documented example %# under %s (block %i) type-checks for a consumer', (heading, index, suffix) => {
 	const fileName = fileURLToPath(new URL('./__validation_snippets__.ts', import.meta.url));
-	const snippets = `${exampleSource(heading)}${suffix}`;
+	const snippets = `${exampleSource(heading, index)}${suffix}`;
 	const options: ts.CompilerOptions = {
 		module: ts.ModuleKind.ESNext,
 		moduleResolution: ts.ModuleResolutionKind.Bundler,

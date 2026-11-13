@@ -10,10 +10,10 @@ import * as z from 'zod/mini';
 
 While Form Engine provides comprehensive built-in validations, you might need custom validation logic for specific business requirements. A custom rule is a registration you pass to the engine when you create it.
 
-**Note:** Runnable field configs require `$type`, `id`, and `name`. Snippets below
-may show partial element objects when illustrating rule types, and the longer
-patterns leave the `rule` argument of a handler untyped for brevity; annotate it
-with your rule type in your own code.
+**Note:** Runnable field configs require `$type`, `id`, and `name`. The pattern
+snippets are complete TypeScript: each declares its rule type, types its registration
+with `ValidationRegistration<Rule>` and can be copied as it is. Short rule snippets such
+as the performance and naming examples are fragments.
 
 ## Registration Basics
 
@@ -72,77 +72,93 @@ createFormEngine({ validations: [postalCode, creditCard, lengthRange] });
 
 ### Validation with Parameters
 
-Create validations that accept configuration parameters:
+A rule is an object with a `type` and any parameters you choose. Describe it with a type, and the handler receives it typed. Each snippet below is complete and can be copied as it is.
 
 ```typescript
-const creditCard = {
-  $type: 'creditCard',
-  schema: z.looseObject({ type: z.literal('creditCard') }),
-  metadata: { name: 'Credit Card' },
-  category: 'string',
-  handler: (rule) => {
-    return z.string().check(z.refine((value) => {
-      const cleanValue = value.replace(/[\s-]/g, '');
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-      if (!/^\d+$/.test(cleanValue) || cleanValue.length < 13 || cleanValue.length > 19) {
-        return false;
-      }
+type LengthRangeRule = { type: 'lengthRange'; value?: { min?: number; max?: number }; message?: string };
 
-      let sum = 0;
-      let isEven = false;
+const lengthRange: ValidationRegistration<LengthRangeRule> = {
+	$type: 'lengthRange',
+	schema: z.looseObject({ type: z.literal('lengthRange') }),
+	metadata: { name: 'Length Range' },
+	category: 'string',
+	handler: (rule) => {
+		const { min, max } = rule.value ?? {};
+		const checks = [
+			...(min !== undefined ? [z.minLength(min, `Must be at least ${min} characters`)] : []),
+			...(max !== undefined ? [z.maxLength(max, `Must be no more than ${max} characters`)] : []),
+		];
 
-      for (let i = cleanValue.length - 1; i >= 0; i--) {
-        let digit = parseInt(cleanValue[i], 10);
+		return z.string().check(...checks);
+	},
+};
 
-        if (isEven) {
-          digit *= 2;
-          if (digit > 9) {
-            digit -= 9;
-          }
-        }
+export const engine = createFormEngine({ validations: [lengthRange] });
 
-        sum += digit;
-        isEven = !isEven;
-      }
+export const descriptionField = {
+	$type: 'input',
+	id: 'description',
+	name: 'description',
+	label: 'Description',
+	rules: [
+		{
+			type: 'lengthRange',
+			value: { min: 10, max: 500 },
+			message: 'Description must be between 10 and 500 characters',
+		},
+	],
+};
+```
 
-      return sum % 10 === 0;
-    }, rule.message || 'Invalid credit card number'));
-  }
-} as const;
+A credit card rule checks the Luhn sum:
 
-const lengthRange = {
-  $type: 'lengthRange',
-  schema: z.looseObject({ type: z.literal('lengthRange') }),
-  metadata: { name: 'Length Range' },
-  category: 'string',
-  handler: (rule) => {
-    const { min, max } = rule.value || {};
-    let schema = z.string();
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-    if (min !== undefined) {
-      schema = schema.check(z.minLength(min, `Must be at least ${min} characters`));
-    }
+type CreditCardRule = { type: 'creditCard'; message?: string };
 
-    if (max !== undefined) {
-      schema = schema.check(z.maxLength(max, `Must be no more than ${max} characters`));
-    }
+function passesLuhn(value: string): boolean {
+	const cleanValue = value.replace(/[\s-]/g, '');
 
-    return schema;
-  }
-} as const;
+	if (!/^\d+$/.test(cleanValue) || cleanValue.length < 13 || cleanValue.length > 19) {
+		return false;
+	}
 
-{
-  id: 'input',
-  name: 'description',
-  label: 'Description',
-  rules: [
-    {
-      type: 'lengthRange',
-      value: { min: 10, max: 500 },
-      message: 'Description must be between 10 and 500 characters'
-    }
-  ]
+	let sum = 0;
+	let isEven = false;
+
+	for (let i = cleanValue.length - 1; i >= 0; i--) {
+		let digit = Number(cleanValue[i]);
+
+		if (isEven) {
+			digit *= 2;
+			if (digit > 9) {
+				digit -= 9;
+			}
+		}
+
+		sum += digit;
+		isEven = !isEven;
+	}
+
+	return sum % 10 === 0;
 }
+
+const creditCard: ValidationRegistration<CreditCardRule> = {
+	$type: 'creditCard',
+	schema: z.looseObject({ type: z.literal('creditCard') }),
+	metadata: { name: 'Credit Card' },
+	category: 'string',
+	handler: (rule) => z.string().check(z.refine(passesLuhn, rule.message || 'Invalid credit card number')),
+};
+
+export const engine = createFormEngine({ validations: [creditCard] });
 ```
 
 ## Common Custom Validation Patterns
@@ -150,94 +166,123 @@ const lengthRange = {
 ### Business Rule Validations
 
 ```typescript
-const companyEmail = {
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+
+type CompanyEmailRule = { type: 'companyEmail'; value?: { domains?: string[] }; message?: string };
+
+const companyEmail: ValidationRegistration<CompanyEmailRule> = {
 	$type: 'companyEmail',
 	schema: z.looseObject({ type: z.literal('companyEmail') }),
 	metadata: { name: 'Company Email' },
 	category: 'string',
 	handler: (rule) => {
-		const allowedDomains = rule.value?.domains || ['company.com'];
-		return z.email('Invalid email format').check(
-			z.refine(
-				(email) => {
-					const domain = email.split('@')[1];
-					return allowedDomains.includes(domain);
-				},
-				rule.message || `Email must be from one of: ${rule.value?.domains?.join(', ')}`,
-			),
-		);
-	},
-} as const;
+		const allowedDomains = rule.value?.domains ?? ['company.com'];
 
-{
+		return z
+			.email('Invalid email format')
+			.check(
+				z.refine(
+					(email) => allowedDomains.includes(email.split('@')[1] ?? ''),
+					rule.message || `Email must be from one of: ${allowedDomains.join(', ')}`,
+				),
+			);
+	},
+};
+
+export const engine = createFormEngine({ validations: [companyEmail] });
+
+export const emailField = {
+	$type: 'input',
+	id: 'work-email',
+	name: 'workEmail',
+	label: 'Work email',
 	rules: [
 		{
 			type: 'companyEmail',
 			value: { domains: ['mycompany.com', 'subsidiary.com'] },
 			message: 'Please use your company email address',
 		},
-	];
-}
+	],
+};
 ```
 
 ### Age Validation with Date
 
 ```typescript
-const ageFromBirthDate = {
-  $type: 'ageFromBirthDate',
-  schema: z.looseObject({ type: z.literal('ageFromBirthDate') }),
-  metadata: { name: 'Age From Birth Date' },
-  category: 'date',
-  handler: (rule) => {
-    const { minAge, maxAge } = rule.value || {};
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-    return z.string().check(z.refine((dateString) => {
-      const birthDate = new Date(dateString);
-      const today = new Date();
-      const age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
+type AgeRule = { type: 'ageFromBirthDate'; value?: { minAge?: number; maxAge?: number }; message?: string };
 
-      const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())
-        ? age - 1
-        : age;
+const ageFromBirthDate: ValidationRegistration<AgeRule> = {
+	$type: 'ageFromBirthDate',
+	schema: z.looseObject({ type: z.literal('ageFromBirthDate') }),
+	metadata: { name: 'Age From Birth Date' },
+	category: 'date',
+	handler: (rule) => {
+		const { minAge, maxAge } = rule.value ?? {};
 
-      if (minAge !== undefined && actualAge < minAge) return false;
-      if (maxAge !== undefined && actualAge > maxAge) return false;
+		return z.string().check(
+			z.refine(
+				(dateString) => {
+					const birthDate = new Date(dateString);
+					const today = new Date();
+					const age = today.getFullYear() - birthDate.getFullYear();
+					const monthDiff = today.getMonth() - birthDate.getMonth();
+					const birthdayPending = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate());
+					const actualAge = birthdayPending ? age - 1 : age;
 
-      return true;
-    }, rule.message || `Age must be between ${rule.value?.minAge} and ${rule.value?.maxAge}`));
-  }
-} as const;
+					if (minAge !== undefined && actualAge < minAge) return false;
+					if (maxAge !== undefined && actualAge > maxAge) return false;
 
-{
-  id: 'input',
-  inputType: 'date',
-  name: 'birthDate',
-  rules: [
-    { type: 'required', message: 'Birth date is required' },
-    {
-      type: 'ageFromBirthDate',
-      value: { minAge: 18, maxAge: 65 },
-      message: 'You must be between 18 and 65 years old'
-    }
-  ]
-}
+					return true;
+				},
+				rule.message || `Age must be between ${minAge} and ${maxAge}`,
+			),
+		);
+	},
+};
+
+export const engine = createFormEngine({ validations: [ageFromBirthDate] });
+
+export const birthDateField = {
+	$type: 'input',
+	id: 'birth-date',
+	inputType: 'date',
+	name: 'birthDate',
+	rules: [
+		{ type: 'required', message: 'Birth date is required' },
+		{
+			type: 'ageFromBirthDate',
+			value: { minAge: 18, maxAge: 65 },
+			message: 'You must be between 18 and 65 years old',
+		},
+	],
+};
 ```
 
 ### Social Security Number (US)
 
 ```typescript
-const ssn = {
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+
+type SsnRule = { type: 'ssn'; message?: string };
+
+const ssn: ValidationRegistration<SsnRule> = {
 	$type: 'ssn',
 	schema: z.looseObject({ type: z.literal('ssn') }),
 	metadata: { name: 'Ssn' },
 	category: 'string',
-	handler: (rule) => {
-		return z.string().check(
+	handler: (rule) =>
+		z.string().check(
 			z.regex(/^\d{3}-\d{2}-\d{4}$/, 'SSN must be in format XXX-XX-XXXX'),
-			z.refine((ssn) => {
-				const parts = ssn.split('-');
-				const [area, group, serial] = parts;
+			z.refine((value) => {
+				const [area = '', group = '', serial = ''] = value.split('-');
 
 				if (area === '000' || area === '666' || area.startsWith('9')) return false;
 				if (group === '00') return false;
@@ -245,21 +290,38 @@ const ssn = {
 
 				return true;
 			}, rule.message || 'Invalid Social Security Number'),
-		);
-	},
-} as const;
+		),
+};
+
+export const engine = createFormEngine({ validations: [ssn] });
 ```
 
 ### Password Strength
 
 ```typescript
-const passwordStrength = {
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+
+type PasswordStrengthRule = {
+	type: 'passwordStrength';
+	value?: {
+		minLength?: number;
+		requireUppercase?: boolean;
+		requireLowercase?: boolean;
+		requireNumbers?: boolean;
+		requireSpecialChars?: boolean;
+	};
+	message?: string;
+};
+
+const passwordStrength: ValidationRegistration<PasswordStrengthRule> = {
 	$type: 'passwordStrength',
 	schema: z.looseObject({ type: z.literal('passwordStrength') }),
 	metadata: { name: 'Password Strength' },
 	category: 'string',
 	handler: (rule) => {
-		const requirements = rule.value || {
+		const requirements = rule.value ?? {
 			minLength: 8,
 			requireUppercase: true,
 			requireLowercase: true,
@@ -269,33 +331,25 @@ const passwordStrength = {
 
 		return z.string().check(
 			z.refine((password) => {
-				if (requirements.minLength && password.length < requirements.minLength) {
-					return false;
-				}
-
-				if (requirements.requireUppercase && !/[A-Z]/.test(password)) {
-					return false;
-				}
-
-				if (requirements.requireLowercase && !/[a-z]/.test(password)) {
-					return false;
-				}
-
-				if (requirements.requireNumbers && !/\d/.test(password)) {
-					return false;
-				}
-
-				if (requirements.requireSpecialChars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-					return false;
-				}
+				if (requirements.minLength && password.length < requirements.minLength) return false;
+				if (requirements.requireUppercase && !/[A-Z]/.test(password)) return false;
+				if (requirements.requireLowercase && !/[a-z]/.test(password)) return false;
+				if (requirements.requireNumbers && !/\d/.test(password)) return false;
+				if (requirements.requireSpecialChars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false;
 
 				return true;
 			}, rule.message || 'Password does not meet strength requirements'),
 		);
 	},
-} as const;
+};
 
-{
+export const engine = createFormEngine({ validations: [passwordStrength] });
+
+export const passwordField = {
+	$type: 'input',
+	id: 'password',
+	name: 'password',
+	inputType: 'password',
 	rules: [
 		{
 			type: 'passwordStrength',
@@ -308,8 +362,8 @@ const passwordStrength = {
 			},
 			message: 'Password must be at least 12 characters with uppercase, lowercase, and numbers',
 		},
-	];
-}
+	],
+};
 ```
 
 ## Cross-Field Validations
@@ -320,44 +374,51 @@ field being validated: a bare name is a sibling, a dotted name is absolute from
 the form root.
 
 ```typescript
-const confirmPassword = {
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+
+type ConfirmPasswordRule = { type: 'confirmPassword'; message?: string };
+type ConditionalRequiredRule = {
+	type: 'conditionalRequired';
+	value: { dependsOn: string; when: unknown };
+	message?: string;
+};
+
+const confirmPassword: ValidationRegistration<ConfirmPasswordRule> = {
 	$type: 'confirmPassword',
 	schema: z.looseObject({ type: z.literal('confirmPassword') }),
 	metadata: { name: 'Confirm Password' },
 	category: 'cross-field',
 	dependsOn: () => ['password'],
-	handler: (rule, context) => {
-		return z
+	handler: (rule, context) =>
+		z
 			.string()
 			.check(
 				z.refine(
-					(confirmPassword) => context.resolve('password') === confirmPassword,
+					(confirmation) => context.resolve('password') === confirmation,
 					rule.message || 'Passwords do not match',
 				),
-			);
-	},
-} as const;
+			),
+};
 
-const conditionalRequired = {
+const conditionalRequired: ValidationRegistration<ConditionalRequiredRule> = {
 	$type: 'conditionalRequired',
 	schema: z.looseObject({ type: z.literal('conditionalRequired') }),
 	metadata: { name: 'Conditional Required' },
 	category: 'cross-field',
-	dependsOn: (rule) => (rule.value?.dependsOn ? [rule.value.dependsOn] : []),
-	handler: (rule, context) => {
-		return z.optional(z.string()).check(
+	dependsOn: (rule) => [rule.value.dependsOn],
+	handler: (rule, context) =>
+		z.optional(z.string()).check(
 			z.refine((value) => {
-				const dependentField = context.resolve(rule.value?.dependsOn);
+				const dependentField = context.resolve(rule.value.dependsOn);
 
-				if (rule.value?.when === dependentField && !value) {
-					return false;
-				}
-
-				return true;
+				return !(rule.value.when === dependentField && !value);
 			}, rule.message || 'This field is required'),
-		);
-	},
-} as const;
+		),
+};
+
+export const engine = createFormEngine({ validations: [confirmPassword, conditionalRequired] });
 ```
 
 Because the reference is relative, a rule authored once on a field inside an
@@ -379,18 +440,19 @@ confirmation nobody has reached.
 Authoring the field is unchanged:
 
 ```typescript
-{
-  id: 'input',
-  name: 'companyName',
-  label: 'Company Name',
-  rules: [
-    {
-      type: 'conditionalRequired',
-      value: { dependsOn: 'userType', when: 'business' },
-      message: 'Company name is required for business accounts'
-    }
-  ]
-}
+export const companyNameField = {
+	$type: 'input',
+	id: 'company-name',
+	name: 'companyName',
+	label: 'Company Name',
+	rules: [
+		{
+			type: 'conditionalRequired',
+			value: { dependsOn: 'userType', when: 'business' },
+			message: 'Company name is required for business accounts',
+		},
+	],
+};
 ```
 
 ## Async Custom Validations
@@ -401,16 +463,18 @@ Authoring the field is unchanged:
 ### Built-in Async Validation (Recommended)
 
 ```typescript
-{
-  type: 'async',
-  url: '/api/check-username',
-  method: 'POST',
-  extraPayload: { validationType: 'premium' },
-  expectedResponse: { available: true },
-  debounce: 500,
-  cacheTTL: 300000,
-  message: 'Username is already taken'
-}
+import type { AsyncRule } from '@schema-engine/forms/schemas/validation';
+
+export const usernameRule = {
+	type: 'async',
+	url: '/api/check-username',
+	method: 'POST',
+	extraPayload: { validationType: 'premium' },
+	expectedResponse: { valid: true },
+	debounce: 500,
+	cacheTTL: 300000,
+	message: 'Username is already taken',
+} satisfies AsyncRule;
 ```
 
 ### Custom Async Validator (Advanced)
@@ -418,13 +482,20 @@ Authoring the field is unchanged:
 For complex async validation logic that can't be handled by the built-in async type, create custom async validators:
 
 ```typescript
-const uniqueUsername = {
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+
+type UniqueUsernameRule = { type: 'uniqueUsername'; message?: string };
+type ValidAddressRule = { type: 'validAddress'; message?: string };
+
+const uniqueUsername: ValidationRegistration<UniqueUsernameRule> = {
 	$type: 'uniqueUsername',
 	schema: z.looseObject({ type: z.literal('uniqueUsername') }),
 	metadata: { name: 'Unique Username' },
 	category: 'generic',
-	handler: (rule) => {
-		return z.string().check(
+	handler: (rule) =>
+		z.string().check(
 			z.refine(async (username) => {
 				try {
 					const response = await fetch('/api/check-username', {
@@ -433,24 +504,23 @@ const uniqueUsername = {
 						body: JSON.stringify({ username }),
 					});
 
-					const result = await response.json();
+					const result = (await response.json()) as { available: boolean };
 					return result.available;
 				} catch (error) {
 					console.error('Username validation failed:', error);
 					return false;
 				}
 			}, rule.message || 'Username is already taken'),
-		);
-	},
-} as const;
+		),
+};
 
-const validAddress = {
+const validAddress: ValidationRegistration<ValidAddressRule> = {
 	$type: 'validAddress',
 	schema: z.looseObject({ type: z.literal('validAddress') }),
 	metadata: { name: 'Valid Address' },
 	category: 'generic',
-	handler: (rule) => {
-		return z
+	handler: (rule) =>
+		z
 			.object({
 				street: z.string(),
 				city: z.string(),
@@ -465,12 +535,13 @@ const validAddress = {
 						body: JSON.stringify(address),
 					});
 
-					const result = await response.json();
+					const result = (await response.json()) as { valid: boolean };
 					return result.valid;
 				}, rule.message || 'Address could not be validated'),
-			);
-	},
-} as const;
+			),
+};
+
+export const engine = createFormEngine({ validations: [uniqueUsername, validAddress] });
 ```
 
 **Note**: The built-in `async` validation type is preferred for most server-side validations as it provides caching, dependency resolution, debouncing, and better error handling out of the box.
@@ -673,27 +744,30 @@ handler: (rule) => {
 Consider edge cases and provide graceful error handling:
 
 ```typescript
-const creditCard = {
-	$type: 'creditCard',
-	schema: z.looseObject({ type: z.literal('creditCard') }),
-	metadata: { name: 'Credit Card' },
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+
+type CardNumberRule = { type: 'cardNumber'; message?: string };
+
+const cardNumber: ValidationRegistration<CardNumberRule> = {
+	$type: 'cardNumber',
+	schema: z.looseObject({ type: z.literal('cardNumber') }),
+	metadata: { name: 'Card Number' },
 	category: 'string',
-	handler: (rule) => {
-		return z.string().check(
+	handler: (rule) =>
+		z.string().check(
 			z.refine((value) => {
 				if (!value) return false;
 
-				if (typeof value !== 'string') return false;
-
 				const cleanValue = value.replace(/[\s-]/g, '');
 
-				if (!/^\d+$/.test(cleanValue)) return false;
-
-				return true;
+				return /^\d+$/.test(cleanValue);
 			}, rule.message || 'Please enter a valid credit card number'),
-		);
-	},
-} as const;
+		),
+};
+
+export const engine = createFormEngine({ validations: [cardNumber] });
 ```
 
 ### 4. Document Your Validations
