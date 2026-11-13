@@ -1,5 +1,5 @@
 /*
- * What the React registry controls and fields take from the appearance tokens and the shared field layout.
+ * What the React registry controls and fields take from the appearance tokens.
  *
  * Control height. The built-in `size` axis sets the semantic token --se-control-height on compact and
  * comfortable (the layout theme declares it for the data-se-size values) and hands it back with `initial` on
@@ -9,28 +9,24 @@
  * of your ui components.
  *
  * Field font size. A field host (.se-form-field) that carries a `size` pick reads --se-font-size, as the
- * Radiant field does. Text your ui components size themselves (a Tailwind `text-sm` on a label) keeps its own
- * size, because an inherited size never beats a class on the element.
+ * Radiant field does, with the same `revert-layer` fallback: with no pick, or a `default` pick, a Tailwind
+ * text utility on the field (`text-lg`) keeps its size. Text your ui components size themselves (a `text-sm`
+ * on a label) keeps its own size too, because an inherited size never beats a class on the element.
  *
- * Field width. A text input sits in its field's content box and fills it, as in Radiant. That is the shared
- * contract for a field in its grid item; how wide the grid item is stays with the grid (`width`, `areas`).
+ * A text input fills its field, as in Radiant, because the shadcn `Input` your project copies is `w-full`;
+ * this file sets no width.
  *
  * Import this file unlayered, after Tailwind and after the layered recipes.css. A shadcn control sets its
  * height with a Tailwind utility (`h-8`), and utilities outrank every rule in the `components` layer, so
  * only an unlayered rule can let the size pick win; `revert-layer` then falls back to that utility when
  * nothing is picked. Every rule sits inside :where(), so an unlayered class of yours on the same element still
- * wins. The cost: while a size is picked, a Tailwind height utility passed to the control loses to the height
- * rule, and a Tailwind width utility passed to a text input loses to the width rule.
+ * wins. The cost: while a size is picked, a Tailwind height utility passed to the control, or a text utility
+ * passed to the field, loses to these rules.
  */
 :where([data-se-control]) {
 	height: var(--se-control-height, revert-layer);
 }
 
 :where(.se-form-field[data-se-size]) {
-	font-size: var(--se-font-size, inherit);
-}
-
-:where([data-slot='field-content'] > input[data-se-control]:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='hidden'])) {
-	box-sizing: border-box;
-	width: 100%;
+	font-size: var(--se-font-size, revert-layer);
 }

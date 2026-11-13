@@ -23,6 +23,17 @@ import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/
 import '@/components/schema-engine/forms/recipes/recipes.css';
 import '@/components/ui/schema-engine/components/controls.css';
 
+/**
+ * The part of the shadcn `Input` the shared field layout relies on: `w-full` and Tailwind's border-box.
+ *
+ * @remarks
+ * The registry copies no `Input` of its own (it depends on shadcn's, which is `w-full min-w-0`), and the test
+ * stubs carry no Tailwind, so this stands for those utilities, in the `utilities` layer where they live.
+ */
+const shadcnInput = document.createElement('style');
+shadcnInput.textContent = '@layer utilities { input { box-sizing: border-box; width: 100%; } }';
+document.head.prepend(shadcnInput);
+
 const CustomArrayRegistration = defineInput({
 	$type: customArrayType,
 	containerKind: 'array',

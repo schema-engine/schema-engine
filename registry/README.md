@@ -40,7 +40,7 @@ A recipe item ships its CSS beside the components, as `registry:file` entries th
 
 The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. The `layer(components)` keeps the recipe rules below Tailwind utilities; without Tailwind, import the file plain. Every rule sits inside `:where()`, so a host class on the same element wins either way. The shells and blocks carry no layout inline (the hero image and the progress fill reach the CSS as custom properties), and the card shell reads the appearance tokens (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that the form's layout theme declares for the `data-se-size` and `data-se-surface` attributes. With the built-in axes and no host theme overrides, one `appearance` config gives the same card geometry here as in Radiant.
 
-The control height of the `size` axis, the field font size and the full-width text input ship separately, as `controls.css` in the `schema-engine-form-field-primitive` item (every form element and the recipes depend on it), at `components/ui/schema-engine/components/controls.css` in a default setup. Import it **unlayered**, after the layered recipes import:
+The control height and the field font size of the `size` axis ship separately, as `controls.css` in the `schema-engine-form-field-primitive` item (every form element and the recipes depend on it), at `components/ui/schema-engine/components/controls.css` in a default setup. Import it **unlayered**, after the layered recipes import:
 
 ```css
 @import 'tailwindcss';

@@ -46,7 +46,7 @@
           "target": "@ui/schema-engine/components/controls.css"
         }
       ],
-      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field, and makes a text input fill its field."
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field."
     },
     {
       "name": "schema-engine-form-combobox-primitive",
@@ -1174,7 +1174,7 @@
           "target": "@ui/schema-engine/components/controls.css"
         }
       ],
-      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field, and makes a text input fill its field."
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field."
     },
     {
       "name": "schema-engine-form-combobox-primitive-radix",
@@ -2305,7 +2305,7 @@
           "target": "@ui/schema-engine/components/controls.css"
         }
       ],
-      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field, and makes a text input fill its field."
+      "docs": "Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import \"./components/ui/schema-engine/components/controls.css\"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field."
     },
     {
       "name": "schema-engine-form-combobox-primitive-aria",
