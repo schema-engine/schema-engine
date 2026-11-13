@@ -10,6 +10,24 @@ import {
 	pickSupportedAppearance,
 } from '@/lib/appearance';
 
+const isScopeRule = (line: string) => line.startsWith('@scope ');
+
+/** The plain rule for one axis value, as a line of the stylesheet. */
+function plainRuleOf(css: string, attribute: string): string | undefined {
+	return css.split('\n').find((line) => !isScopeRule(line) && line.includes(attribute));
+}
+
+/** The `@scope` rule for one axis value, as a line of the stylesheet. */
+function scopeRuleOf(css: string, attribute: string): string | undefined {
+	return css.split('\n').find((line) => isScopeRule(line) && line.includes(attribute));
+}
+
+/** The declaration block of the rule for one axis value, such as `{--se-space:1rem;}`. */
+function declarationsOf(css: string, attribute: string): string | undefined {
+	const rule = plainRuleOf(css, attribute);
+	return rule?.slice(rule.indexOf('{'));
+}
+
 const metadata = { name: 'Tone' };
 const tone = defineAxis({
 	$type: 'tone',
@@ -78,8 +96,8 @@ describe('builtInAxes', () => {
 
 	test('a default value hands its tokens back to the component fallback, so it undoes an inherited pick', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain(
-			'[data-se-size="default"]){--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
+		expect(declarationsOf(css, '[data-se-size="default"]')).toBe(
+			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
 		);
 	});
 
@@ -95,17 +113,19 @@ describe('builtInAxes', () => {
 
 	test('compact and comfortable spacing are hooks a renderer maps to its host theme', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain('[data-se-size="compact"]){--se-space:var(--se-space-compact, 1rem);');
-		expect(css).toContain('[data-se-size="comfortable"]){--se-space:var(--se-space-comfortable, 2rem);');
+		expect(declarationsOf(css, '[data-se-size="compact"]')).toContain('{--se-space:var(--se-space-compact, 1rem);');
+		expect(declarationsOf(css, '[data-se-size="comfortable"]')).toContain(
+			'{--se-space:var(--se-space-comfortable, 2rem);',
+		);
 	});
 
 	test('size sets the readable measure: 24rem, 32rem, and the component fallback for default', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain(
-			'[data-se-size="compact"]){--se-space:var(--se-space-compact, 1rem);--se-font-size:0.875rem;--se-measure:24rem;}',
+		expect(declarationsOf(css, '[data-se-size="compact"]')).toBe(
+			'{--se-space:var(--se-space-compact, 1rem);--se-font-size:0.875rem;--se-measure:24rem;}',
 		);
-		expect(css).toContain(
-			'[data-se-size="default"]){--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
+		expect(declarationsOf(css, '[data-se-size="default"]')).toBe(
+			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
 		);
 		expect(css).toContain('--se-measure:32rem;');
 	});
@@ -113,14 +133,14 @@ describe('builtInAxes', () => {
 	test('flat and outlined leave the component background alone', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(css).not.toContain('--se-surface-background:transparent');
-		expect(css).toMatch(/\[data-se-surface="flat"\]\)\{[^}]*--se-surface-background:initial;/);
-		expect(css).toMatch(/\[data-se-surface="outlined"\]\)\{[^}]*--se-surface-background:initial;/);
+		expect(declarationsOf(css, '[data-se-surface="flat"]')).toContain('--se-surface-background:initial;');
+		expect(declarationsOf(css, '[data-se-surface="outlined"]')).toContain('--se-surface-background:initial;');
 	});
 
 	test('elevated is the default, so it hands every token back to the component', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain(
-			'[data-se-surface="elevated"]){--se-border-width:initial;--se-shadow:initial;--se-surface-background:initial;}',
+		expect(declarationsOf(css, '[data-se-surface="elevated"]')).toBe(
+			'{--se-border-width:initial;--se-shadow:initial;--se-surface-background:initial;}',
 		);
 	});
 });
@@ -157,7 +177,7 @@ describe('compileAppearance', () => {
 			values: { compact: { '--se-space': '0.5rem' }, default: {}, comfortable: { '--se-space': '2rem' } },
 		});
 		const css = getAppearanceCss(compileAppearance([...builtInAxes, size]), 'lx');
-		expect(css).toContain('[data-se-size="compact"]){--se-space:0.5rem;}');
+		expect(declarationsOf(css, '[data-se-size="compact"]')).toBe('{--se-space:0.5rem;}');
 		expect(css).not.toContain('--se-space:1rem');
 	});
 
@@ -165,8 +185,38 @@ describe('compileAppearance', () => {
 		const css = getAppearanceCss(compileAppearance([tone]), 'lx');
 		expect(css).toContain('[data-se-theme="lx"]');
 		expect(css).toContain('--se-accent:#f60');
-		expect(css).toContain(':where([data-se-theme="lx"] [data-se-tone="brand"],');
-		expect(css.replaceAll(/:where\([^)]*\)/g, '')).not.toContain('[data-se-');
+		const rules = css.split('\n');
+		expect(rules.length).toBeGreaterThan(0);
+		for (const rule of rules) {
+			expect(rule).toMatch(
+				isScopeRule(rule) ? /^@scope \(.+\) to \(.+\)\{:where\(.+\)\{[^{}]*\}\}$/ : /^:where\(.+\)\{[^{}]*\}$/,
+			);
+		}
+	});
+
+	test('a plain rule leaves out whatever sits at or below an element of another theme', () => {
+		const rule = plainRuleOf(getAppearanceCss(compileAppearance([tone]), 'lx'), '[data-se-tone="brand"]');
+		expect(rule).toContain('[data-se-theme="lx"][data-se-tone="brand"]');
+		expect(rule).toContain(':not([data-se-theme]:not([data-se-theme="lx"])');
+		expect(rule).toMatch(/\[data-se-theme="lx"\] \[data-se-theme\]:not\(\[data-se-theme="lx"\]\) \*/);
+	});
+
+	test('a scope rule runs from the theme root down to the nearest other theme and sets the same tokens', () => {
+		const css = getAppearanceCss(compileAppearance([tone]), 'lx');
+		const rule = scopeRuleOf(css, '[data-se-tone="brand"]');
+		expect(rule).toMatch(
+			/^@scope \(\[data-se-theme="lx"\]\) to \(\[data-se-theme\]:not\(\[data-se-theme="lx"\]\)\)/,
+		);
+		expect(rule).toContain(':scope[data-se-tone="brand"]');
+		expect(rule?.endsWith(`${declarationsOf(css, '[data-se-tone="brand"]')}}`)).toBe(true);
+	});
+
+	test('scope rules come after every plain rule', () => {
+		const lines = getAppearanceCss(compileAppearance(), 'lx').split('\n');
+		const firstScope = lines.findIndex(isScopeRule);
+		expect(firstScope).toBeGreaterThan(0);
+		expect(lines.slice(firstScope).every(isScopeRule)).toBe(true);
+		expect(lines.slice(0, firstScope).some(isScopeRule)).toBe(false);
 	});
 
 	test('rejects an axis that has no Standard Schema', () => {
