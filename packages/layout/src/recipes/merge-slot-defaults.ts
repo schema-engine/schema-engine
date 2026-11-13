@@ -1,4 +1,13 @@
-import { isPlainObject } from '@/lib/is-plain-object';
+/**
+ * @remarks
+ * Duplicates the helper the forms package keeps for its own deep operations on purpose: this
+ * package cannot import forms.
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+	if (typeof value !== 'object' || value === null) return false;
+	const prototype = Object.getPrototypeOf(value);
+	return prototype === Object.prototype || prototype === null;
+}
 
 function mergeDeep(base: unknown, override: unknown): unknown {
 	if (override === undefined) return base;

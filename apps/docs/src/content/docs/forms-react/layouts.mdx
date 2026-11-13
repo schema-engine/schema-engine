@@ -14,12 +14,12 @@ import { viewRecipesDemoConfig } from '@/lib/form-configs/onboarding-wizard';
 
 Recipes compose a **shell** with optional **header**, **progress**, and **actions** blocks. Select one with form-level `view.$type`. `@schema-engine/forms-react` is headless: the factory does not bind default recipes. `FormRenderer` still lives in the package.
 
-| Layer                                          | Owns                                                                 |
-| ---------------------------------------------- | -------------------------------------------------------------------- |
-| `@schema-engine/forms/recipes`                 | Recipe protocol: `defineRecipeSpec`, `defineFormRecipe`, view model  |
-| `@schema-engine/forms/recipes/built-in`        | Built-in specs, slot schemas and their config types                  |
-| `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                |
-| `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()` |
+| Layer                                          | Owns                                                                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------- |
+| `@schema-engine/forms/recipes`                 | Forms recipe protocol: `defineRecipeSpec`, `defineFormRecipe`, view model |
+| `@schema-engine/forms/recipes/built-in`        | Built-in specs, slot schemas and their config types                       |
+| `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                     |
+| `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()`      |
 
 ## Default registry recipes
 

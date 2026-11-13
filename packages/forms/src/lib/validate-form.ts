@@ -30,17 +30,11 @@ import {
 	type GridAreaTemplates,
 	type CompiledAppearance,
 	type GridLayoutConfig,
+	resolveRecipeView,
 	getDefaultLayoutTheme,
 } from '@schema-engine/layout';
 import { logger } from '@/lib/logger';
-import { mergeSlotDefaults } from '@/recipes/merge-slot-defaults';
-import { isPlainObject } from '@/lib/is-plain-object';
-import {
-	resolveAppearance,
-	withAppearance,
-	withoutAppearanceKey,
-	type AppearanceScope,
-} from '@/lib/resolve-appearance';
+import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
 
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
 export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from '@/lib/form-view';
@@ -183,75 +177,13 @@ function parseView(
 		);
 	}
 
-	const slotAppearance = resolveSlotAppearance(view, recipe, appearance, issues);
-	const parsed = parseRegistration(
-		recipe.schema,
-		mergeSlotDefaults(slotAppearance.withoutAppearance, recipe.slotDefaults),
-		`Invalid view configuration for recipe '${recipeType}'`,
-	);
-	if (!parsed.ok) {
-		issues.push(parsed.issue);
-		return { issues, view };
+	const resolved = resolveRecipeView(recipe, view, appearance);
+	issues.push(...resolved.issues);
+	if (resolved.schemaIssues) {
+		const message = formatSchemaIssues(resolved.schemaIssues) || 'Validation failed';
+		issues.push(`Invalid view configuration for recipe '${recipeType}': ${message}`);
 	}
-	if (!isTaggedConfig(parsed.data)) {
-		issues.push(`Invalid view configuration for recipe '${recipeType}': parsed output is missing $type.`);
-		return { issues, view };
-	}
-
-	const allowedSlots = new Set<string>(recipe.slots);
-	for (const key of Object.keys(view)) {
-		if (key === '$type') continue;
-		if (!allowedSlots.has(key)) {
-			issues.push(
-				`Recipe '${recipeType}' does not accept view key '${key}'. Allowed: ${[...allowedSlots].join(', ') || '(none)'}.`,
-			);
-		}
-	}
-
-	return { issues, view: withSlotAppearance(parsed.data, slotAppearance.resolved) };
-}
-
-/**
- * Checks each slot's authored `appearance` and resolves the selection the slot renders with.
- *
- * @remarks
- * The key is removed from the view before the slot schemas parse it, so a registration's slot
- * schema only has to type it; the layout theme owns the vocabulary check. The form's picks reach a
- * slot for the axes the recipe declares on it, and the slot's own pick wins.
- */
-function resolveSlotAppearance(
-	view: FormTaggedConfig,
-	recipe: AnyRecipeRegistration,
-	appearance: AppearanceScope,
-	issues: string[],
-): { withoutAppearance: FormTaggedConfig; resolved: Record<string, Record<string, string>> } {
-	const withoutAppearance: FormTaggedConfig = { ...view };
-	const resolved: Record<string, Record<string, string>> = {};
-	for (const slot of recipe.slots) {
-		const authoredSlot = view[slot];
-		const supported = recipe.appearanceAxes?.[slot] ?? [];
-		const slotAppearance = resolveAppearance(
-			isPlainObject(authoredSlot) ? authoredSlot.appearance : undefined,
-			appearance,
-			{ subject: `Slot '${slot}' of recipe '${recipe.$type}'`, location: `view.${slot}`, supported },
-		);
-		issues.push(...slotAppearance.issues);
-		if (Object.keys(slotAppearance.selection).length > 0) resolved[slot] = slotAppearance.selection;
-		if (isPlainObject(authoredSlot)) withoutAppearance[slot] = withoutAppearanceKey(authoredSlot);
-	}
-	return { withoutAppearance, resolved };
-}
-
-function withSlotAppearance(
-	view: FormTaggedConfig,
-	resolved: Record<string, Record<string, string>>,
-): FormTaggedConfig {
-	const next: FormTaggedConfig = { ...view };
-	for (const [slot, selection] of Object.entries(resolved)) {
-		const slotConfig = view[slot];
-		if (isPlainObject(slotConfig)) next[slot] = { ...slotConfig, appearance: selection };
-	}
-	return next;
+	return { issues, view: isTaggedConfig(resolved.view) ? resolved.view : view };
 }
 
 function parseTypedConfig(

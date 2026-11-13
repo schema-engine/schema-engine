@@ -131,7 +131,7 @@ graph TD
     subgraph Core ["Core Abstractions"]
         Registry["@schema-engine/registry<br/>(Core: IoC & Types)"]
         Actions["@schema-engine/actions<br/>(Core: Event System)"]
-        Layout["@schema-engine/layout<br/>(Core: Grid & Appearance)"]
+        Layout["@schema-engine/layout<br/>(Core: Grid, Appearance & Recipes)"]
     end
 
     subgraph Implementation ["Implementation Layer"]
@@ -143,6 +143,7 @@ graph TD
     end
 
     Registry --> Actions
+    Registry --> Layout
     Registry --> Forms
     Actions --> Forms
     Layout --> Forms
@@ -160,7 +161,7 @@ graph TD
 | **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter with hydrated registry validation, shared per-engine lifecycle actions, nested submit values, SSR constraints evaluated against defaults, authored disabled preservation, scoped form and engine controllers, optional decorators, array-level validation, initial row values, SSR default rows, and stable field-array row IDs. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes/built-in`. |
 | **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                                                                                                                                                                                                                                                                                                                                                             |
 | **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                                                                                                                                                                                                                                                                                                                                                            |
-| **[@schema-engine/layout](./packages/layout)**               | `0.1.0` | Domain-neutral layout: the grid schemas and compiler, named placement, appearance axes (`defineAxis`), and `createLayoutTheme`, which compiles both into one theme with one `data-se-theme` and one stylesheet. Engines take it as `layout`. It does not depend on forms.                                                                                                                                                                            |
+| **[@schema-engine/layout](./packages/layout)**               | `0.1.0` | Domain-neutral layout: the grid schemas and compiler, named placement, appearance axes (`defineAxis`), `createLayoutTheme`, which compiles both into one theme with one `data-se-theme` and one stylesheet (engines take it as `layout`), and the recipe protocol (`defineRecipeProtocol`) a domain uses to declare its recipes' slots, kinds and rules. It does not depend on forms.                                                                |
 
 ---
 

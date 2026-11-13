@@ -101,8 +101,25 @@ See [the controller contract](./packages/forms-radiant/src/adapters/radiant/cont
 
 ## Recipes and the resolved view
 
+A **recipe protocol** is the vocabulary a domain gives its recipes: the **slots** it
+composes (in order), the **kinds** a recipe can take, and the **rules** that check a
+recipe's kind against the slots it declares. `@schema-engine/layout` owns the machinery
+that is the same for every domain: the spec, its binding to a render payload, slot
+defaults and their merge, and `resolveRecipeView`, which resolves a document's view (below),
+with the checks that a slot default parses against its slot schema and that a slot declaring
+appearance axes accepts an `appearance` key. A domain declares its
+protocol once with `defineRecipeProtocol({ slots, kinds, rules })`, and its specs and
+bindings are then typed by it: a slot or kind outside the protocol is a type error, and
+the rules run when a spec is defined and, on each winning registration, when the domain's
+`Recipe` registry is built (`createRecipeRegistry`). Forms declares `shell | header |
+progress | actions` and `single-step | wizard`, with the rules that a single-step recipe
+declares no `progress` slot and a wizard recipe declares `actions`; the built-in form
+recipes and their slot schemas stay in `@schema-engine/forms`.
+
 A form selects a recipe with `view.$type`. `validateForm` writes the **resolved view**
-into the normalized config: every slot the recipe declares is present and complete, so
+into the normalized config, by calling layout's `resolveRecipeView` for the recipe
+the view selects and keeping the form-only rules (the default wizard recipe, the step
+count each kind needs, how schema issues are reported). Every slot the recipe declares is present and complete, so
 renderers and blocks read it without parsing or defaulting. A slot's keys resolve in
 this precedence: the author's config, then the recipe's **slot defaults**
 (`slotDefaults` on the spec), then the slot schema's own defaults.
