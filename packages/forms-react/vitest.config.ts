@@ -4,6 +4,7 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { browserProjectLimits } from '../../scripts/vitest-browser-limits.ts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const formsPackageRoot = path.resolve(dirname, '../forms/src');
@@ -61,6 +62,7 @@ export default defineConfig({
 				resolve: { alias },
 				test: {
 					name: 'browser',
+					...browserProjectLimits(1),
 					include: [
 						'test/**/*.test.tsx',
 						'test/**/*.browser.test.tsx',
@@ -82,6 +84,7 @@ export default defineConfig({
 				resolve: { alias },
 				test: {
 					name: 'storybook',
+					...browserProjectLimits(2),
 					setupFiles: ['./.storybook/vitest.setup.ts'],
 					browser: {
 						enabled: true,
