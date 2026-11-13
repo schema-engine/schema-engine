@@ -257,26 +257,33 @@ function isSchemaIssue(value: unknown): value is StandardSchemaIssue {
 	return typeof value === 'object' && value !== null && 'message' in value && typeof value.message === 'string';
 }
 
+/** Whether a schema issue is a miss on one literal value, as a discriminator key reports. */
+function missedLiteral(issue: StandardSchemaIssue): boolean {
+	const { code, values } = issue as StandardSchemaIssue & SchemaIssueDetails;
+	return code === 'invalid_value' && Array.isArray(values) && values.length === 1;
+}
+
 /**
  * The branch of a failed union the value was closest to, when one branch is clearly closest.
  *
  * @remarks
- * Each branch reports the issues it found, with paths relative to the union. A branch with an issue about
- * the value itself (an empty path: the value has the wrong type for that branch) is out. Of the rest, the
- * closest is the one with the fewest issues, and only when it is the only such branch. Any other outcome
- * returns `undefined`, so the issue stays at the union instead of pointing into a branch the value did not
- * choose.
- *
- * A branch that fails on a literal key (a discriminator) counts like any other issue, so a union keyed
- * by one can be pointed at the wrong variant when the matching variant has more issues than the one
- * that misses on the key.
+ * Each branch reports the issues it found, with paths relative to the union. A branch is out when the
+ * value is not of its kind: an issue about the value itself (an empty path, a wrong type for that branch)
+ * or a miss on a single literal value (the discriminator key of another variant). Of the rest, the closest
+ * is the one with the fewest issues, and only when it is the only such branch. Any other outcome returns
+ * `undefined`, so the issue stays at the union instead of pointing into a branch the value did not choose.
+ * An enum of one value reads as a literal, so a branch that fails on it is out.
  */
 function closestBranch(details: SchemaIssueDetails): StandardSchemaIssue[] | undefined {
 	if (details.code !== 'invalid_union' || !Array.isArray(details.errors)) return undefined;
 	const branches = details.errors
 		.filter(Array.isArray)
 		.map((branch) => branch.filter(isSchemaIssue))
-		.filter((branch) => branch.length > 0 && branch.every((issue) => schemaIssuePath(issue.path).length > 0));
+		.filter(
+			(branch) =>
+				branch.length > 0 &&
+				branch.every((issue) => schemaIssuePath(issue.path).length > 0 && !missedLiteral(issue)),
+		);
 	const fewest = Math.min(...branches.map((branch) => branch.length));
 	const closest = branches.filter((branch) => branch.length === fewest);
 	return closest.length === 1 ? closest[0] : undefined;

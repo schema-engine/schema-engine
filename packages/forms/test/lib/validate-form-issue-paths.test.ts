@@ -413,6 +413,30 @@ describe('union issues', () => {
 	});
 });
 
+describe('union issues in the built-in rules', () => {
+	const withRules = defineInput({
+		$type: 'ruled',
+		schema: z.extend(BaseFieldSchema, { $type: z.literal('ruled') }),
+		metadata: { name: 'Ruled', category: 'input' },
+		render: () => null,
+	});
+	const ruledEngine = createFormEngine({ elements: [withRules] });
+	const ruleIssues = (rule: unknown) => {
+		const result = ruledEngine.safeValidateForm(formWith([{ $type: 'ruled', id: 'r', name: 'r', rules: [rule] }]));
+		if (result.success) throw new Error('expected the form to be invalid');
+		return result.issues.map((issue) => issue.path);
+	};
+	const at = (...path: PropertyKey[]) => ['steps', 0, 'elements', 0, 'rules', 0, ...path];
+
+	test('point at the missing key of the rule the type names', () => {
+		expect(ruleIssues({ type: 'async' })).toEqual([at('url')]);
+	});
+
+	test('point at the key whose value has the wrong type', () => {
+		expect(ruleIssues({ type: 'minLength', value: 'three' })).toEqual([at('value')]);
+	});
+});
+
 describe('issue codes', () => {
 	const issueFor = (element: Record<string, unknown>) =>
 		issuesOf(formWith([{ $type: 'sized', id: 's', name: 's', ...element }]))[0];
