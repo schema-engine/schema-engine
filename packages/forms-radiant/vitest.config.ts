@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { browserProjectLimits } from '../../scripts/vitest-browser-limits.ts';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
@@ -91,6 +92,7 @@ export default defineConfig({
 				optimizeDeps: { include: browserOptimizedDeps },
 				test: {
 					name: 'browser',
+					...browserProjectLimits(1),
 					include: ['test/**/*.browser.test.ts'],
 					globalSetup: ['./test/ssr/ssr-html.global-setup.ts'],
 					browser: {
@@ -112,6 +114,7 @@ export default defineConfig({
 				],
 				test: {
 					name: 'storybook',
+					...browserProjectLimits(2),
 					setupFiles: ['./.storybook/vitest.setup.ts'],
 					browser: {
 						enabled: true,
