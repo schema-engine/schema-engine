@@ -189,7 +189,9 @@ appearance }, { reservedNames })` compiles both into one **layout theme**: one
 `id` and one stylesheet (`css`). Renderers put that id on
 the form, grid and item elements as the single `data-se-theme` attribute and
 emit the stylesheet for each form: React hoists equal stylesheets to one element,
-while Radiant inlines an identical copy per form. `createFormEngine` and `createRadiantFormEngine` take
+while Radiant, which has no head hoisting, carries an identical self-contained copy in
+every form (by design: each form is styled before hydration whatever the render
+order, streaming, caching or removal of the others). `createFormEngine` and `createRadiantFormEngine` take
 the theme as `layout`, either a compiled theme or inline `{ grid, appearance }`
 options; there are no separate `grid` or `appearance` options. Engines built on
 one compiled theme share its id and stylesheet, so a form embedded in a page

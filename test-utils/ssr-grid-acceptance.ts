@@ -86,11 +86,22 @@ function themeIds(html: string): string[] {
  * writes that back as `data-href`, dropping other attributes, so the harness reads that instead.
  */
 function themeStylesheets(html: string, layout: LayoutThemeLike): string[] {
-	const marker = `(?:data-se-theme-css="${layout.id}"|data-href="se-layout-theme-${layout.id}")`;
 	return Array.from(
-		html.matchAll(new RegExp(`<style[^>]*${marker}[^>]*>([\\s\\S]*?)</style>`, 'g')),
+		html.matchAll(new RegExp(`${themeStylesheetOpening(layout)}([\\s\\S]*?)</style>`, 'g')),
 		(match) => match[1] ?? '',
 	);
+}
+
+/** Pattern for the opening tag of the layout theme's stylesheet, by its marker attribute. */
+function themeStylesheetOpening(layout: LayoutThemeLike): string {
+	return `<style[^>]*(?:data-se-theme-css="${layout.id}"|data-href="se-layout-theme-${layout.id}")[^>]*>`;
+}
+
+/** Each form element of a document, from its opening tag to the start of the next form. */
+function formChunks(html: string): string[] {
+	return html
+		.split(/(?=<(?:form|rui-form)\b[^>]*data-se-theme=)/)
+		.filter((chunk) => /^<(?:form|rui-form)\b/.test(chunk));
 }
 
 /**
@@ -112,18 +123,24 @@ export function expectOneThemeOneStylesheet(html: string, layout: LayoutThemeLik
 
 /**
  * Asserts two forms of different engines on one page that share a compiled theme: both carry the
- * same `data-se-theme`, and the page holds only that theme's stylesheet content.
+ * same `data-se-theme`, and every copy of the theme's stylesheet equals its `css`.
  *
  * @param html The page holding both forms.
- * @param dedupes Whether the renderer hoists a shared stylesheet to a single element (React does);
- * a renderer that inlines the stylesheet per form (Radiant) repeats identical content instead.
+ * @param sharesElement Whether the renderer serves the forms one stylesheet element. React hoists
+ * it by `href`, so the page holds exactly one, ahead of the first form. Radiant has no head
+ * hoisting, so each form carries its own self-contained copy and stays styled whatever the render
+ * order, streaming, caching or removal of the other forms.
  */
-export function expectSharedLayoutTheme(html: string, layout: LayoutThemeLike, dedupes: boolean): void {
+export function expectSharedLayoutTheme(html: string, layout: LayoutThemeLike, sharesElement: boolean): void {
 	expect(new Set(themeIds(html))).toEqual(new Set([layout.id]));
-	const sheets = themeStylesheets(html, layout);
-	expect(sheets.length).toBeGreaterThan(0);
-	expect(new Set(sheets).size).toBe(1);
-	if (dedupes) expect(sheets).toHaveLength(1);
+	const forms = formChunks(html);
+	expect(forms.length).toBeGreaterThan(1);
+	if (sharesElement) {
+		expect(themeStylesheets(html, layout)).toEqual([layout.css]);
+		expect(html.search(new RegExp(themeStylesheetOpening(layout)))).toBeLessThan(html.indexOf(forms[0] ?? ''));
+		return;
+	}
+	for (const form of forms) expect(themeStylesheets(form, layout)).toEqual([layout.css]);
 }
 
 async function waitForFrameLayout(): Promise<void> {
