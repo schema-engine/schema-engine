@@ -4,7 +4,12 @@ import { FormController } from '@/adapters/radiant/controller';
 import { createRoot } from '@ecopages/jsx/client';
 import * as z from 'zod/mini';
 import { defineInput } from '@schema-engine/forms';
-import { rendererConformance, conformanceAction, customArrayType } from '../../../../test-utils/renderer-conformance';
+import {
+	rendererConformance,
+	conformanceAction,
+	conformanceLayout,
+	customArrayType,
+} from '../../../../test-utils/renderer-conformance';
 import { FormArrayElements } from '@/elements/inputs/form-array-elements';
 import { ArrayElementConfigSchema, type ArrayElementsProps } from '@/elements/inputs/form-array-elements.types';
 import { FormRenderer } from '@/components/internals/form-renderer';
@@ -21,6 +26,7 @@ const CustomArrayRegistration = defineInput({
 const engine = createRadiantFormEngine({
 	elements: [...schemaFormRegistrations, CustomArrayRegistration],
 	actions: [conformanceAction],
+	layout: conformanceLayout,
 });
 
 rendererConformance(async ({ config, ...props }) => {

@@ -1,7 +1,12 @@
 import { render } from '@testing-library/react';
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { rendererConformance, conformanceAction, customArrayType } from '../../../../test-utils/renderer-conformance';
+import {
+	rendererConformance,
+	conformanceAction,
+	conformanceLayout,
+	customArrayType,
+} from '../../../../test-utils/renderer-conformance';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
@@ -34,6 +39,7 @@ rendererConformance(async ({ config, ...props }) => {
 		],
 		recipes: [...schemaFormRecipeRegistrations],
 		actions: [conformanceAction],
+		layout: conformanceLayout,
 	});
 	const renderConfig = (next: typeof config) => (
 		<FormRenderer {...props} config={engine.validateForm(next)} engine={engine} adapter={rhfAdapter} />

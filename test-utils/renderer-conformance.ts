@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, within } from '@testing-library/dom';
 import { userEvent } from 'vitest/browser';
 import * as v from 'valibot';
+import { builtInAxes, defineAxis } from '@schema-engine/layout';
 import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
 import {
 	builtInRecipeSpecs,
@@ -20,6 +21,21 @@ export const conformanceAction = {
 			: { success: true },
 	),
 };
+
+/**
+ * The host axis every conformance engine adds beside the built-in ones.
+ *
+ * @remarks `brand` sets `--se-tone-accent`, which the host-axis test reads back from computed style.
+ */
+export const conformanceToneAxis = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--se-tone-accent': 'rgb(255, 102, 0)' } },
+});
+
+/** The `layout` option of every conformance engine: the built-in axes plus {@link conformanceToneAxis}. */
+export const conformanceLayout = { appearance: [...builtInAxes, conformanceToneAxis] } as const;
 
 /**
  * `$type` each renderer registers with `containerKind: 'array'` and its array widget.
@@ -315,6 +331,24 @@ export function rendererConformance(mount: ConformanceMount): void {
 				const { host } = await setup({ config: sizedForm({ size: 'compact' }) });
 				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-space')).toBe('1rem');
 				expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-space')).toBe('1rem');
+			});
+			test('a host axis reaches the form and the step as an attribute and as its tokens', async () => {
+				const { host } = await setup({
+					config: { ...form([input('email', 'Email')]), appearance: { tone: 'brand' } },
+				});
+				for (const element of [formElement(host), stepElement(host, 'main')]) {
+					expect(element.getAttribute('data-se-tone')).toBe('brand');
+					expect(getComputedStyle(element).getPropertyValue('--se-tone-accent').trim()).toBe(
+						'rgb(255, 102, 0)',
+					);
+				}
+			});
+			test('a host axis value that sets no token leaves the neighbours alone', async () => {
+				const { host } = await setup({
+					config: { ...form([input('email', 'Email')]), appearance: { tone: 'neutral' } },
+				});
+				expect(formElement(host).getAttribute('data-se-tone')).toBe('neutral');
+				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-tone-accent').trim()).toBe('');
 			});
 			test('a field className lands on the field host', async () => {
 				const { host } = await setup({
