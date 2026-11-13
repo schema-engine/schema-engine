@@ -61,6 +61,6 @@ test('docsPageHeadLinks emits canonical and markdown alternate URLs', () => {
 	});
 	expect(docsPageHeadLinks('/docs/getting-started/introduction', origin)).toEqual({
 		canonical: 'http://localhost:3000/docs/getting-started/introduction',
-		markdownAlternate: 'http://localhost:3000/llms-content/getting-started/introduction.txt',
+		markdownAlternate: 'http://localhost:3000/docs-llm/getting-started/introduction.md',
 	});
 });

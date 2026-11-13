@@ -69,12 +69,29 @@ test('generateLlmDocs writes llms.txt and markdown exports', async () => {
 		const llmsTxt = await readFile(join(outputRoot, 'llms.txt'), 'utf8');
 		expect(llmsTxt).toContain('# Schema Engine Documentation');
 		expect(llmsTxt).toContain('## Getting Started');
-		expect(llmsTxt).toContain('/llms-content/getting-started/introduction.txt');
+		expect(llmsTxt).toContain('/docs-llm/getting-started/introduction.md');
+		expect(llmsTxt).not.toContain('/llms-content/');
 		expect(llmsTxt).not.toContain('Excluded');
 		expect(llmsTxt).not.toContain('## Llms Fixture');
 
-		const introduction = await readFile(join(outputRoot, 'llms-content/getting-started/introduction.txt'), 'utf8');
+		const introduction = await readFile(join(outputRoot, 'docs-llm/getting-started/introduction.md'), 'utf8');
 		expect(introduction).toContain('title:');
+		expect(await pathExists(join(outputRoot, 'docs-llm/llms-fixture/excluded.md'))).toBe(false);
+	} finally {
+		await rm(outputRoot, { recursive: true, force: true });
+	}
+});
+
+test('generateLlmDocs keeps writing the previous llms-content exports, unlisted', async () => {
+	const outputRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-legacy-'));
+
+	try {
+		const { generateLlmDocs } = await import('./generate-llm-docs');
+		await generateLlmDocs(outputRoot, { contentRoot });
+
+		const legacy = await readFile(join(outputRoot, 'llms-content/getting-started/introduction.txt'), 'utf8');
+		const current = await readFile(join(outputRoot, 'docs-llm/getting-started/introduction.md'), 'utf8');
+		expect(legacy).toBe(current);
 		expect(await pathExists(join(outputRoot, 'llms-content/llms-fixture/excluded.txt'))).toBe(false);
 	} finally {
 		await rm(outputRoot, { recursive: true, force: true });
@@ -88,7 +105,7 @@ test('generateLlmDocs leaves no staging directory behind', async () => {
 		const { generateLlmDocs } = await import('./generate-llm-docs');
 		await generateLlmDocs(outputRoot, { contentRoot });
 
-		expect(await pathExists(join(outputRoot, '.llms-content-staging'))).toBe(false);
+		expect(await pathExists(join(outputRoot, '.docs-llm-staging'))).toBe(false);
 	} finally {
 		await rm(outputRoot, { recursive: true, force: true });
 	}
@@ -98,17 +115,17 @@ test('generateLlmDocs replaces stale generator-owned exports', async () => {
 	const outputRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-stale-'));
 
 	try {
-		await mkdir(join(outputRoot, 'llms-content/stale-section'), { recursive: true });
+		await mkdir(join(outputRoot, 'docs-llm/stale-section'), { recursive: true });
 		await mkdir(join(outputRoot, 'llms-content/llms-fixture'), { recursive: true });
-		await writeFile(join(outputRoot, 'llms-content/stale-section/gone.txt'), '# Obsolete export\n', 'utf8');
+		await writeFile(join(outputRoot, 'docs-llm/stale-section/gone.md'), '# Obsolete export\n', 'utf8');
 		await writeFile(join(outputRoot, 'llms-content/llms-fixture/excluded.txt'), '# Should be removed\n', 'utf8');
 
 		const { generateLlmDocs } = await import('./generate-llm-docs');
 		await generateLlmDocs(outputRoot, { contentRoot });
 
-		expect(await pathExists(join(outputRoot, 'llms-content/stale-section/gone.txt'))).toBe(false);
+		expect(await pathExists(join(outputRoot, 'docs-llm/stale-section/gone.md'))).toBe(false);
 		expect(await pathExists(join(outputRoot, 'llms-content/llms-fixture/excluded.txt'))).toBe(false);
-		expect(await pathExists(join(outputRoot, 'llms-content/getting-started/introduction.txt'))).toBe(true);
+		expect(await pathExists(join(outputRoot, 'docs-llm/getting-started/introduction.md'))).toBe(true);
 	} finally {
 		await rm(outputRoot, { recursive: true, force: true });
 	}
@@ -125,9 +142,7 @@ test('generateLlmDocs index links, HTML alternates, and sitemap extras stay cons
 		const llmsTxt = await readFile(join(outputRoot, 'llms.txt'), 'utf8');
 		expect(llmsTxt).not.toContain('https://docs.example.com//');
 
-		const pageLinks = [...llmsTxt.matchAll(/\]\((https?:\/\/[^)]+\/llms-content\/[^)]+)\)/g)].map(
-			(match) => match[1],
-		);
+		const pageLinks = [...llmsTxt.matchAll(/\]\((https?:\/\/[^)]+\/docs-llm\/[^)]+)\)/g)].map((match) => match[1]);
 		expect(pageLinks.length).toBeGreaterThan(0);
 
 		for (const href of pageLinks) {
@@ -135,7 +150,7 @@ test('generateLlmDocs index links, HTML alternates, and sitemap extras stay cons
 			expect(url.origin).toBe('https://docs.example.com');
 			expect(await pathExists(join(outputRoot, url.pathname.slice(1)))).toBe(true);
 
-			const slug = url.pathname.replace(/^\/llms-content\//, '').replace(/\.txt$/, '');
+			const slug = url.pathname.replace(/^\/docs-llm\//, '').replace(/\.md$/, '');
 			expect(slug).not.toBe('');
 			expect(getDocsLlmUrlFromPathname(`/docs/${slug}`)).toBe(url.pathname);
 			expect(docsPageHeadLinks(`/docs/${slug}`, origin).markdownAlternate).toBe(href);

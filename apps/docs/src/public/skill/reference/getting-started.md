@@ -92,5 +92,5 @@ previews mount through a client island, same pattern as Radiant.
 ## More
 
 - The full docs site lives at `/docs`.
-- LLM exports are at `/llms.txt` and `/llms-content/<section>/<slug>.txt`.
+- LLM exports are at `/llms.txt` and `/docs-llm/<section>/<slug>.md`.
 - The Ecopages framework docs are at <https://ecopages.app/docs>.

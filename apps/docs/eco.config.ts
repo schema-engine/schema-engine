@@ -1,14 +1,14 @@
 import path from 'node:path';
 import '@ecopages/radiant/server/install-ssr-runtime';
 import { defineConfig } from '@ecopages/core/config';
-import { postcssProcessorPlugin } from '@ecopages/postcss-processor/plugin';
-import { tailwindV4Preset } from '@ecopages/postcss-processor/presets/tailwind-v4';
+import { lightningCssProcessorPlugin } from '@ecopages/lightningcss-processor';
+import { suffixNesting } from '@ecopages/lightningcss-processor/plugins/suffix-nesting';
+import { tailwindV4Preset } from '@ecopages/lightningcss-processor/presets/tailwind-v4';
 import { reactPlugin } from '@ecopages/react';
 import { ecopagesJsxPlugin } from '@ecopages/ecopages-jsx';
 import { contentProcessorPlugin } from '@ecopages/content-processor/plugin';
-import { compareEntriesByField } from '@ecopages/content-processor';
 import { createDocsMdxPlugins } from './src/mdx/plugins';
-import { docsFrontmatterSchema } from './src/content/docs';
+import { compareDocsEntries, docsFrontmatterSchema } from './src/content/docs';
 import { devToolbar } from '@ecopages/dev-toolbar/config';
 import { configuredSiteOrigin, DOCS_SITEMAP_EXTRA_URLS } from './src/lib/docs/site-meta';
 
@@ -44,18 +44,20 @@ export default defineConfig({
 		image: '/assets/images/default-og.png',
 	},
 	processors: [
-		postcssProcessorPlugin(
-			tailwindV4Preset({
+		lightningCssProcessorPlugin({
+			...tailwindV4Preset({
 				referencePath: path.resolve(import.meta.dirname, 'src/styles/tailwind.css'),
 			}),
-		),
+			targets: ['chrome >= 111', 'safari >= 16.4', 'firefox >= 128'],
+			plugins: [suffixNesting()],
+		}),
 		contentProcessorPlugin({
 			options: {
 				collections: {
 					docs: {
 						contentDir: 'content/docs',
 						extensions: ['.mdx'],
-						orderBy: compareEntriesByField('order'),
+						orderBy: compareDocsEntries,
 						schema: docsFrontmatterSchema,
 						entryType: './src/content/docs#DocsFrontmatter',
 					},

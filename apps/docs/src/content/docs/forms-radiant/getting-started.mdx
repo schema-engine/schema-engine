@@ -1,7 +1,6 @@
 ---
 title: 'Getting Started'
 description: 'Install the Radiant package and register your engine.'
-group: Forms Radiant
 order: 2
 ---
 
@@ -137,6 +136,19 @@ document.addEventListener('eco:before-swap', (event) => {
 
 A form that is only rendered on the client passes `engine` to
 `FormRenderer` and needs none of this.
+
+### Layout stylesheet per form
+
+Radiant has no head hoisting, so each form carries an identical, self-contained copy of its layout
+theme's stylesheet. Every form is therefore styled before hydration, whatever the render order,
+streaming, caching or removal of the other forms, and compression makes the repeated copies
+negligible (about 350 B gzip for three forms). A host that also wants the rules in its own head can
+serve the theme's `css`; the forms keep their copies, which hold the same rules:
+
+```typescript
+const { id, css } = formEngine.getLayout();
+const head = `<style data-se-theme-css="${id}">${css}</style>`;
+```
 
 ## Storybook
 

@@ -1,13 +1,11 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
-import { findAdjacentNavItems, flattenContentNav } from '@/lib/content-nav';
-import { docsNav } from '@/lib/docs-nav';
+import { findAdjacentNavItems } from '@/lib/content-nav';
+import { docsNavItems } from '@/lib/docs-nav';
 
 export type DocsPaginationProps = {
 	currentHref?: string;
 };
-
-const pages = flattenContentNav(docsNav);
 
 /**
  * Previous and next links for the current docs page, rendered on the server.
@@ -18,7 +16,7 @@ const pages = flattenContentNav(docsNav);
  */
 export const DocsPagination = eco.component<DocsPaginationProps, JsxRenderable>({
 	render: ({ currentHref }) => {
-		const adjacent = currentHref ? findAdjacentNavItems(pages, currentHref) : null;
+		const adjacent = currentHref ? findAdjacentNavItems(docsNavItems, currentHref) : null;
 		if (!adjacent || (!adjacent.prev && !adjacent.next)) {
 			return null;
 		}
