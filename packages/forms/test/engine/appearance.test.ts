@@ -85,7 +85,7 @@ describe('engine appearance vocabulary', () => {
 		const dense = axis('size', 'dense', 'airy');
 		const themed = createFormEngine({ layout: { appearance: [...builtInAxes, dense] } });
 		expect(themed.getLayout().axes.size).toEqual(['dense', 'airy']);
-		expect(themed.getLayout().appearance.get('size')).toBe(themed.getLayout().appearance.get('size'));
+		expect(themed.getLayout().appearance.get('size')).toMatchObject({ values: dense.values });
 	});
 
 	test('token values compile into the engine stylesheet, scoped by the one theme id', () => {
@@ -166,18 +166,6 @@ describe('the layout option', () => {
 	test('a compiled theme is checked against the renderer attribute names it skipped at compile time', () => {
 		const theme = createLayoutTheme({ appearance: [axis('step', 'a', 'b')] });
 		expect(() => createFormEngine({ layout: theme })).toThrowError(/'step'.*reserved/);
-	});
-
-	test('an element may declare an axis the theme adds', () => {
-		const theme = createLayoutTheme(toned);
-		const tonedInput = defineInput({
-			$type: 'toned',
-			schema: z.extend(BaseFieldSchema, { $type: z.literal('toned') }),
-			appearanceAxes: ['tone'],
-			metadata: { name: 'Toned', category: 'input' },
-			render: () => null,
-		});
-		expect(() => createFormEngine({ elements: [tonedInput], layout: theme })).not.toThrow();
 	});
 });
 

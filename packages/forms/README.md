@@ -179,7 +179,7 @@ and `surface` (`flat | outlined | elevated`). A host adds an axis by listing it 
 built-ins; an axis listed later with the same `$type` replaces the earlier one, so a host
 overrides a built-in axis the same way. The built-in tokens name no host theme; a renderer
 maps them to its own (Radiant's card falls back to `--space-block-lg`), and `size: default`
-sets no token, so it looks like no pick in a themed app.
+sets its tokens to `initial`, so it looks like no pick in a themed app.
 
 ```ts
 import { builtInAxes, defineAxis } from '@schema-engine/layout';
@@ -194,7 +194,11 @@ const size = defineAxis({
 	$type: 'size',
 	metadata: { name: 'Size' },
 	default: 'default',
-	values: { compact: { '--se-space': '0.5rem' }, default: {}, comfortable: { '--se-space': '2rem' } },
+	values: {
+		compact: { '--se-space': '0.5rem' },
+		default: { '--se-space': 'initial' },
+		comfortable: { '--se-space': '2rem' },
+	},
 });
 
 const engine = createFormEngine({ layout: { appearance: [...builtInAxes, tone, size] } });
@@ -202,7 +206,7 @@ const engine = createFormEngine({ layout: { appearance: [...builtInAxes, tone, s
 
 The engine lists every axis in its schema catalog (`axis:size`) and in the JSON Schema
 export, where `appearance.size` is an enum of the axis's values, so an editor autocompletes
-a form's and a step's picks.
+a form's and a step's picks. Element and recipe slot picks stay an open record of axis names to values.
 
 A form, a step, a field and a view slot pick values with `appearance`, and the
 typed `defineForm` narrows the values to the engine's axes:

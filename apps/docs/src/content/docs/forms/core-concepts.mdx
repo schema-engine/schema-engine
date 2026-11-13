@@ -288,15 +288,19 @@ const size = defineAxis({
 	$type: 'size',
 	metadata: { name: 'Size' },
 	default: 'default',
-	values: { compact: { '--se-space': '0.5rem' }, default: {}, comfortable: { '--se-space': '2rem' } },
+	values: {
+		compact: { '--se-space': '0.5rem' },
+		default: { '--se-space': 'initial' },
+		comfortable: { '--se-space': '2rem' },
+	},
 });
 
-const engine = createFormEngine({ layout: { appearance: [...builtInAxes, size] } });
+const engine = createFormEngine({ elements, layout: { appearance: [...builtInAxes, size] } });
 ```
 
 A registration declares the axes it responds to (`appearanceAxes: ['tone']`); the engine
 build throws, naming the registration, when it declares an axis the theme lacks. A form, a
 step, a field or a recipe slot picks a value with `appearance: { tone: 'brand' }`, and the
 renderer emits `data-se-tone="brand"`. Your CSS reads the tokens the value sets. The JSON
-Schema the engine exports lists every axis, so `appearance.size` is an enum an editor can
-autocomplete.
+Schema the engine exports lists every axis on the form and its steps, so `appearance.size`
+is an enum an editor can autocomplete.

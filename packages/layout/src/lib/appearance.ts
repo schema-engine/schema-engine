@@ -53,7 +53,10 @@ export interface AxisRegistration<
 	 *
 	 * @remarks
 	 * A component's own CSS fallbacks are the look of this value, so a document that picks it looks
-	 * like one that picks nothing. Its tokens are emitted like any other value's.
+	 * like one that picks nothing. To make that true under an inherited pick, a default value that
+	 * leaves the tokens to the component sets them to `initial`: a custom property set to `initial`
+	 * makes `var(--token, fallback)` use its fallback, so a step that picks `default` inside a
+	 * `compact` form undoes the compact tokens.
 	 */
 	readonly default: TValue;
 }
@@ -146,11 +149,13 @@ function assertValidAxis(axis: AnyAxisRegistration): void {
  * @remarks
  * Each value stands for a set of semantic CSS custom properties (`--se-space`, `--se-shadow`) that
  * components read; components never read the axis value. A token names a role, not a component, so
- * it means the same on every component that reads it. A value that sets no token leaves the
- * component's own fallback in place. Appearance only: structure is slot config or the grid.
+ * it means the same on every component that reads it. A value that sets a token to `initial`
+ * hands it back to the component's own fallback. Appearance only: structure is slot config or the grid.
  *
- * The axis carries a Standard Schema that accepts exactly its value names. Throws on an invalid
- * axis: see {@link assertValidAxis}.
+ * The axis carries a Standard Schema that accepts exactly its value names. Throws on an axis with
+ * a name that is not a lowercase identifier, fewer than 2 or more than 5 values, a value name that
+ * would break a selector, a token that is not a custom property or has an unsafe value, or a
+ * `default` that is not one of the values.
  */
 export function defineAxis<
 	const TName extends string,
@@ -182,7 +187,11 @@ const sizeAxis = defineAxis({
 			'--se-font-size': '0.875rem',
 			'--se-control-height': '2rem',
 		},
-		default: {},
+		default: {
+			'--se-space': 'initial',
+			'--se-font-size': 'initial',
+			'--se-control-height': 'initial',
+		},
 		comfortable: {
 			'--se-space': '2rem',
 			'--se-font-size': '1.0625rem',
@@ -212,6 +221,7 @@ const surfaceAxis = defineAxis({
 		elevated: {
 			'--se-border-width': '1px',
 			'--se-shadow': '0 8px 24px color-mix(in srgb, CanvasText 10%, transparent)',
+			'--se-surface-background': 'initial',
 		},
 	},
 });
@@ -221,9 +231,10 @@ const surfaceAxis = defineAxis({
  * (flat, outlined, elevated).
  *
  * @remarks
- * The tokens are renderer-neutral and name no host theme. `size.default` sets none and
- * `surface.elevated` sets no background, so a renderer's own fallbacks, which it maps to its host
- * theme, stay in force and `size: default` looks like no pick. Override an axis by listing another
+ * The tokens are renderer-neutral and name no host theme. `size.default` and the background of
+ * `surface.elevated` are `initial`, which hands the token back to the component's own fallback, so
+ * a renderer's fallbacks, which it maps to its host theme, stay in force and `size: default`
+ * looks like no pick, also inside a `compact` form. Override an axis by listing another
  * with the same `$type` after these: `createLayoutTheme({ appearance: [...builtInAxes, mine] })`.
  */
 export const builtInAxes = [sizeAxis, surfaceAxis] as const;
@@ -244,7 +255,8 @@ type AxesOfTuple<TAxes extends readonly AnyAxisRegistration[]> = TAxes extends r
  * Axis-to-value-union map of a theme: the axes a host lists in `appearance`, the last of a name winning.
  *
  * @remarks Typed authoring narrows a pick to these literals. `TAxes` should be a const-inferred list;
- * a list that is not a tuple widens to any axis name and any value.
+ * a list that is not a tuple, or a member typed as a plain `AnyAxisRegistration` (name `string`),
+ * widens to any axis name and any value.
  */
 export type ResolvedAppearanceAxes<TAxes extends readonly AnyAxisRegistration[] = typeof builtInAxes> =
 	number extends TAxes['length'] ? Record<string, string> : Flatten<AxesOfTuple<TAxes>>;

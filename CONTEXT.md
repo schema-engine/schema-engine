@@ -302,7 +302,7 @@ from the document to a container to an item or slot, a closer pick winning. A go
 - controls appearance only, never structure, which is slot config or the grid.
 
 `size` and `surface` are built in. The catalog and the JSON Schema export list each axis and its
-values, so `appearance.size` is an enum in an editor.
+values, so `appearance.size` on a form and its steps is an enum in an editor.
 
 ## Appearance ownership
 
@@ -346,14 +346,15 @@ form element and also on every grid and item, so two engines with different toke
 the tokens (`var(--se-space, 1.5rem)`) and keep the look of an unstyled form as the
 fallback. The built-in tokens name no host theme: a renderer's fallback is where its host theme
 variables belong (Radiant's card reads `var(--se-space, var(--space-block-lg, 1.5rem))`), and the
-built-in `size.default` sets no token, so `size: default` looks like no pick in a themed app. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
+built-in `size.default` sets its tokens to `initial`, which hands them back to the component's
+fallback, so `size: default` looks like no pick in a themed app, also inside a `compact` form. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
 that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,
 and a form of another engine nested inside a form is not supported. The DOM contract is the same in
 every renderer; the visual effect of a built-in value is not yet: `size` changes a field's font size in
 Radiant only, and both card shells read the tokens. A field's `className` is applied to the same field host, the element that carries its `style` and the attributes, in both renderers. The field host that carries the attributes is the
 inner `.se-form-field` (the Radiant constraint wrapper around it carries only grid placement).
 
-`maxWidth`, `padding` and `shadowSize` are axes now, not slot config. `contentWidth`, `sideWidth` and
+`maxWidth`, `padding` and `shadowSize` are gone: the `size` and `surface` tokens set the padding, border and shadow, and the card maps `--se-space` to its own width. `contentWidth`, `sideWidth` and
 the structural keys (`showDescription`, `orientation`, `labels`, `align`) stay in slot config
 because they change layout or content, not appearance. `style` is the escape hatch for what the
 vocabulary does not cover and accepts only `--custom-property` keys with string or number values.

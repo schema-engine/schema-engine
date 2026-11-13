@@ -17,7 +17,7 @@ afterEach(() => {
  * @remarks The shell reads the semantic tokens (`--se-space`, `--se-border-width`, `--se-shadow`); the engine declares them for the
  * attribute values, so the scope carries `data-se-theme` and the stylesheet is in the head.
  */
-function mountCard(pick?: Record<string, string>) {
+function mountCard(pick?: Record<string, string>, outerSize?: string) {
 	const style = document.createElement('style');
 	style.dataset.cardShellTest = '';
 	style.textContent = layout.css;
@@ -25,6 +25,7 @@ function mountCard(pick?: Record<string, string>) {
 	const scope = document.createElement('div');
 	scope.dataset.seTheme = layout.id;
 	scope.style.width = '1200px';
+	if (outerSize) scope.dataset.seSize = outerSize;
 	document.body.append(scope);
 	createRoot(scope).render(
 		CardShell({
@@ -36,8 +37,8 @@ function mountCard(pick?: Record<string, string>) {
 	return scope;
 }
 
-async function card(pick?: Record<string, string>) {
-	const scope = mountCard(pick);
+async function card(pick?: Record<string, string>, outerSize?: string) {
+	const scope = mountCard(pick, outerSize);
 	await expect.poll(() => scope.querySelector('.card-shell__card')).toBeTruthy();
 	const element = scope.querySelector<HTMLElement>('.card-shell__card')!;
 	return {
@@ -81,6 +82,15 @@ test.each([
 	const picked = await card({ surface });
 	expect(picked.style.borderTopWidth).toBe(border);
 	expect(picked.style.boxShadow === 'none').toBe(flatShadow);
+});
+
+test('size default undoes a compact pick it inherits', async () => {
+	const compact = await card(undefined, 'compact');
+	expect(compact.sectionPadding).toBe('16px');
+	document.body.replaceChildren();
+	const reset = await card({ size: 'default' }, 'compact');
+	expect(reset.sectionPadding).toBe('24px');
+	expect(reset.width).toBe(448);
 });
 
 test('an engine whose host sets the theme spacing is followed by the size tokens', async () => {

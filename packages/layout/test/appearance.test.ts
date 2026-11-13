@@ -76,6 +76,13 @@ describe('builtInAxes', () => {
 		).toEqual([]);
 	});
 
+	test('a default value hands its tokens back to the component fallback, so it undoes an inherited pick', () => {
+		const css = getAppearanceCss(compileAppearance(), 'lx');
+		expect(css).toContain(
+			'[data-se-size="default"]){--se-space:initial;--se-font-size:initial;--se-control-height:initial;}',
+		);
+	});
+
 	test('name no host theme variable', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(css).not.toContain('var(');

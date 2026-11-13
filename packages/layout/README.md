@@ -58,6 +58,7 @@ const profile = createFormEngine({ elements, layout: theme });
 An appearance axis becomes a `data-se-<axis>` attribute, so it must not reuse an attribute a renderer already writes. The compiler hard-codes none: each domain passes its own as `reservedNames`, and `assertAxesNotReserved(theme, reservedNames)` re-checks a theme compiled elsewhere.
 
 ```ts
+// `step` is an axis defined with `defineAxis({ $type: 'step', ... })`.
 createLayoutTheme({ appearance: [...builtInAxes, step] }, { reservedNames: ['step'] }); // throws
 ```
 
@@ -68,13 +69,13 @@ An appearance axis is one independent dimension of appearance, with 2 to 5 named
 `defineAxis({ $type, values, default, metadata })` builds an axis:
 
 - `$type` is the axis name and the `data-se-<axis>` attribute.
-- `values` maps each value name to its tokens (`--` keys only). A value that sets no token leaves the component's own fallback in place.
+- `values` maps each value name to its tokens (`--` keys only). A token set to `initial` hands the token back to the component's own fallback.
 - `default` names the value that stands for no pick. It must be one of `values`.
 - `metadata` is the name and description a catalog or an editor shows.
 
 `defineAxis` also produces the axis's Standard Schema (an enum of the value names), because the registry requires one. It throws on a bad name, fewer than 2 or more than 5 values, a value that would break a selector, a token that is not a custom property, or a `default` that is not a value.
 
-`builtInAxes` is the default list: `size` (`compact`, `default`, `comfortable`) sets `--se-space`, `--se-font-size` and `--se-control-height`; `surface` (`flat`, `outlined`, `elevated`) sets `--se-border-width`, `--se-shadow` and `--se-surface-background`. The tokens are renderer-neutral and name no host theme. `size.default` sets none, so a renderer's own fallbacks, mapped to its host theme, stay in force and `size: default` looks like no pick.
+`builtInAxes` is the default list: `size` (`compact`, `default`, `comfortable`) sets `--se-space`, `--se-font-size` and `--se-control-height`; `surface` (`flat`, `outlined`, `elevated`) sets `--se-border-width`, `--se-shadow` and `--se-surface-background`. The tokens are renderer-neutral and name no host theme. `size.default` sets its tokens to `initial`, so a renderer's own fallbacks, mapped to its host theme, stay in force and `size: default` looks like no pick, also inside a `compact` form. `--se-control-height` is declared for renderers to read; no built-in renderer reads it yet.
 
 `createLayoutTheme({ appearance: [...builtInAxes, myAxis] })` builds the axes into a registry: the last axis of a `$type` wins, so listing a `size` axis after the built-ins overrides it. A list without `builtInAxes` has no `size` or `surface`.
 
