@@ -10,6 +10,7 @@ import { compareEntriesByField } from '@ecopages/content-processor';
 import { createDocsMdxPlugins } from './src/mdx/plugins';
 import { docsFrontmatterSchema } from './src/content/docs';
 import { devToolbar } from '@ecopages/dev-toolbar/config';
+import { configuredSiteOrigin, DOCS_SITEMAP_EXTRA_URLS } from './src/lib/docs/site-meta';
 
 /**
  * @remarks
@@ -18,7 +19,12 @@ import { devToolbar } from '@ecopages/dev-toolbar/config';
  */
 export default defineConfig({
 	rootDir: import.meta.dirname,
-	baseUrl: process.env.ECOPAGES_BASE_URL ?? 'http://localhost:3000',
+	baseUrl: configuredSiteOrigin(),
+	sitemap: {
+		enabled: true,
+		extraUrls: [...DOCS_SITEMAP_EXTRA_URLS],
+		exclude: ['/404', '/500'],
+	},
 	integrations: [
 		reactPlugin({
 			extensions: ['.react.tsx'],
@@ -26,14 +32,7 @@ export default defineConfig({
 		}),
 		ecopagesJsxPlugin({
 			mdx: {
-				...createDocsMdxPlugins({
-					rehypePrettyCode: {
-						theme: {
-							light: 'light-plus',
-							dark: 'dark-plus',
-						},
-					},
-				}),
+				...createDocsMdxPlugins(),
 			},
 		}),
 	],
@@ -42,6 +41,7 @@ export default defineConfig({
 		description:
 			'JSON-driven, type-safe forms with Zod Mini validation and Standard Schema registrations. Four first-party packages: forms, forms-react, actions, and registry.',
 		keywords: ['schema-engine', 'forms', 'json', 'zod', 'react'],
+		image: '/assets/images/default-og.png',
 	},
 	processors: [
 		postcssProcessorPlugin(
