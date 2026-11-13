@@ -209,6 +209,21 @@ renderer adds `se-grid` beside `se-form-grid` on step grids and container inner 
 `mergeChildrenGridHost`). Breakpoint thresholds in the theme must keep named order
 (`sm ≤ md ≤ lg ≤ xl ≤ 2xl`); `rem`/`em` compare at a 16px root.
 
+Radiant has no head hoisting, so unlike `@schema-engine/forms-react` (which hoists equal stylesheets
+by `href` into one element) every form carries its own identical, self-contained
+`<style data-se-theme-css="<id>">`. That is deliberate: each form is styled before hydration
+whatever the render order, streaming, caching or removal of the other forms, and the repeated
+copies compress to almost nothing (about 350 B gzip for three forms). Sharing one element would
+need per-render state. `@ecopages/jsx/server` offers that through its render scope, but this
+package's browser bundle cannot import it, and a host such as Ecopages renders each component
+separately, so the state would not span the page. A host that wants the rules in its own head or critical stylesheet can
+serve the theme's `css` as well; the per-form copies stay and hold the same rules:
+
+```ts
+const { id, css } = engine.getLayout();
+const head = `<style data-se-theme-css="${id}">${css}</style>`;
+```
+
 ## MVP elements
 
 - input, textarea, number, select, checkbox, switch, radio, submit-button
