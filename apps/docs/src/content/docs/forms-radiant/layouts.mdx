@@ -14,7 +14,7 @@ The Radiant adapter ships its own shells and wizard blocks. These live
 previews use the same `FormConfig` JSON as the React adapter while rendering
 with Ecopages and Radiant UI elements.
 
-The shells take the same named `appearance` as the React recipes: set `view.shell.appearance` (for example `{ size: 'comfortable', surface: 'elevated' }` on the card shell) or a form-level `appearance`, and the shell reads the layout theme's semantic tokens (`--se-space`, `--se-border-width`, `--se-shadow`). Radiant elements emit the picked values as `data-se-<axis>` attributes, so a host axis is styled with CSS keyed on those attributes.
+The shells take the same named `appearance` as the React recipes: set `view.shell.appearance` (for example `{ size: 'comfortable', surface: 'elevated' }` on the card shell) or a form-level `appearance`, and the shell reads the layout theme's semantic tokens (`--se-space`, `--se-border-width`, `--se-shadow`). Radiant elements emit the picked values as `data-se-<axis>` attributes, so a host axis is styled with CSS keyed on those attributes. `size` also sets the height of inputs, selects, number fields and buttons: `compact` uses the theme's `--size-control-sm` and `comfortable` its `--size-control-lg`, and no pick or `default` keeps the theme's `--size-control-md`.
 
 ## Wizard shell
 
