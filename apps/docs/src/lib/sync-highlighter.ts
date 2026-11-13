@@ -6,6 +6,7 @@ import tsGrammar from 'shiki/langs/typescript.mjs';
 import tsxGrammar from 'shiki/langs/tsx.mjs';
 import darkPlusTheme from 'shiki/themes/dark-plus.mjs';
 import lightPlusTheme from 'shiki/themes/light-plus.mjs';
+import { DOCS_SHIKI_THEMES } from '@/mdx/shiki-themes';
 
 /** Languages the shared synchronous highlighter has registered. */
 export type SyncHighlightLanguage = 'ts' | 'tsx' | 'typescript' | 'bash' | 'json';
@@ -42,7 +43,7 @@ export function codeToHtmlSync(code: string, lang: SyncHighlightLanguage): strin
 	const highlighter = getHighlighter();
 	return highlighter.codeToHtml(code, {
 		lang,
-		themes: { light: 'light-plus', dark: 'dark-plus' },
+		themes: DOCS_SHIKI_THEMES,
 		defaultColor: false,
 	});
 }

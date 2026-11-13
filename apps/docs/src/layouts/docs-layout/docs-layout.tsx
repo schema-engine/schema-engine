@@ -63,13 +63,13 @@ const DocsSiteHeader = () => (
 	<div class="rui-sidebar-provider__site-header-inner">
 		<div class="rui-sidebar-provider__site-header-start">
 			<RuiSidebarTrigger
-				class="md:hidden rui-sidebar-trigger-placement--header"
+				class="md:hidden"
 				placement="header"
 				controls={DOCS_SIDEBAR_ID}
 				triggerLabel="Close documentation navigation"
 			/>
 			<RuiSidebarTrigger
-				class="md:hidden rui-sidebar-trigger-placement--inset"
+				class="md:hidden"
 				placement="inset"
 				controls={DOCS_SIDEBAR_ID}
 				triggerLabel="Open documentation navigation"
@@ -103,7 +103,7 @@ export type DocsLayoutProps = LayoutProps<JsxRenderable> & {
 
 export const DocsLayout = eco.layout<JsxRenderable, DocsLayoutProps>({
 	dependencies: {
-		scripts: ['./docs-layout.script.ts'],
+		scripts: [{ src: './docs-layout.script.ts', ssr: true }],
 	},
 	render: ({ children, currentHref }) => {
 		return (
@@ -115,13 +115,14 @@ export const DocsLayout = eco.layout<JsxRenderable, DocsLayoutProps>({
 					sidebar={
 						<RuiSidebar
 							id={DOCS_SIDEBAR_ID}
-							data-eco-persist={DOCS_SIDEBAR_ID}
+							data={{ ecoPersist: DOCS_SIDEBAR_ID }}
 							collapsible="off"
 							defaultWidth={250}
 							mobileBreakpoint={768}
 							mobileDefaultOpen={false}
 							label="Documentation navigation"
 							matchActive
+							scrollActiveOnMount
 							navigationEvents={ECO_NAVIGATION_EVENTS}
 						>
 							<RuiSidebarContent aria-label="Documentation navigation">
