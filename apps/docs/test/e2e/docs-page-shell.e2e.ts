@@ -60,6 +60,33 @@ test('a fenced code block copies its source, announces the result and a blank li
 	}
 });
 
+test('the built docs shell defines the Radiant UI and docs custom elements it renders', async () => {
+	const browser = await chromium.launch();
+	try {
+		const page = await browser.newPage();
+		await page.goto(`${baseUrl}/docs/styling/recipes`, { waitUntil: 'networkidle' });
+
+		const undefinedTags = await page.evaluate(() =>
+			[
+				'rui-toc',
+				'rui-sidebar',
+				'rui-breadcrumb',
+				'rui-tabs',
+				'radiant-code-tabs',
+				'radiant-copy-for-llm',
+			].filter((tag) => document.querySelector(tag) !== null && customElements.get(tag) === undefined),
+		);
+		expect(undefinedTags).toEqual([]);
+
+		const rendered = await page.evaluate(() =>
+			['rui-toc', 'rui-sidebar', 'rui-tabs'].filter((tag) => document.querySelector(tag) === null),
+		);
+		expect(rendered).toEqual([]);
+	} finally {
+		await browser.close();
+	}
+});
+
 test('a heading fragment link lands on its heading', async () => {
 	const browser = await chromium.launch();
 	try {

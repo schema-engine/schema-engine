@@ -69,7 +69,7 @@ function onDocsToastAfterSwap(): void {
 /**
  * Wires `show_notification` demos to `rui-toaster`.
  *
- * @remarks Docs pages load `docs-layout.script.ts`, not `base-layout.script.ts`,
+ * @remarks Docs pages load `docs-shell.script.ts`, not `base-layout.script.ts`,
  * because `BaseLayout` is a nested component there. Call this from every docs
  * client entry that owns the shell. Idempotent on `document` so HMR and dual
  * layout scripts do not stack listeners.

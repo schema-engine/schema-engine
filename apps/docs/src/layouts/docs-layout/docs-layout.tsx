@@ -112,7 +112,7 @@ export type DocsLayoutProps = LayoutProps<JsxRenderable> & {
 
 export const DocsLayout = eco.layout<JsxRenderable, DocsLayoutProps>({
 	dependencies: {
-		scripts: [{ src: './docs-layout.script.ts', ssr: true }],
+		scripts: [{ src: '../../components/docs-shell/docs-shell.script.ts', ssr: true }],
 	},
 	render: ({ children, currentHref }) => {
 		return (
