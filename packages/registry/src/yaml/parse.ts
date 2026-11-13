@@ -114,7 +114,8 @@ function syntaxMessage(message: string): string {
  *
  * @remarks
  * An unquoted `1.10` is the number `1.1` in every YAML version; quote it (`"1.10"`) to keep a string.
- * Multiple documents in one text are a syntax error. Anchors and aliases work within the text.
+ * Multiple documents in one text are a syntax error. Anchors and aliases work within the text; a text
+ * that expands to an excessive number of aliases is reported as an issue at line 1, not thrown.
  */
 export function safeParseYaml<T>(
 	text: string,
@@ -142,7 +143,15 @@ export function safeParseYaml<T>(
 		};
 	}
 
-	const result = validate(doc.toJS());
+	let value: unknown;
+	try {
+		value = doc.toJS();
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'The document could not be read';
+		return { success: false, issues: [issue(message, [], 1, 1)] };
+	}
+
+	const result = validate(value);
 	if (result.success) {
 		return { success: true, data: result.data };
 	}

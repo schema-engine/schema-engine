@@ -220,7 +220,7 @@ if (!result.success) {
 
 - `no`, `yes`, `on` and `off` are strings in YAML 1.2 and stay strings here. A YAML 1.1 reader, such as PyYAML or an older editor plugin, reads them as booleans, and `stringifyYaml` does not quote them.
 - An unquoted `1.10` is the number `1.1` in every YAML version. Only quoting keeps it a string: write `version: "1.10"`. `stringifyYaml` quotes such strings for you.
-- There is no loader, plugin or CLI, no multi-document files and no includes across files. Anchors and aliases work inside one file.
+- There is no loader, plugin or CLI, no multi-document files and no includes across files. Anchors and aliases work inside one file; a text that expands to an excessive number of aliases is reported as an issue at line 1.
 
 ## Package Exports
 

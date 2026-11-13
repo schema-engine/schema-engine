@@ -153,6 +153,20 @@ describe('syntax errors', () => {
 		expect(validate).not.toHaveBeenCalled();
 	});
 
+	test('an alias bomb is reported, not thrown, and validate is not called', () => {
+		const lines = ['a0: &a0 [x, x, x, x, x, x, x, x, x, x]'];
+		for (let level = 1; level <= 5; level++) {
+			const previous = `*a${level - 1}`;
+			lines.push(`a${level}: &a${level} [${Array(10).fill(previous).join(', ')}]`);
+		}
+		const validate = vi.fn(accept);
+
+		const result = safeParseYaml(lines.join('\n'), validate);
+
+		expect(result).toMatchObject({ success: false, issues: [{ path: [], line: 1, column: 1 }] });
+		expect(validate).not.toHaveBeenCalled();
+	});
+
 	test('duplicate keys are a syntax error', () => {
 		const result = safeParseYaml('a: 1\na: 2\n', accept);
 

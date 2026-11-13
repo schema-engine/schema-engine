@@ -191,6 +191,6 @@ export const text = stringifyYaml(form, { schemaUrl: './contact.schema.json' });
   is what it looks like. A YAML 1.1 reader (PyYAML, some older editor plugins) reads them as booleans.
 - An unquoted `1.10` is the number `1.1` in every YAML version. Quote it to keep a string: `version: "1.10"`.
   The same goes for an `id` or option value such as `007` or `1e3`.
-- One document per file. Anchors and aliases work inside a file; there are no includes across files.
+- One document per file. Anchors and aliases work inside a file (an excessive expansion is reported as an issue); there are no includes across files.
 - Duplicate keys in a map are a syntax error.
 - There is no build-time loader, plugin or CLI: parse where you load.
