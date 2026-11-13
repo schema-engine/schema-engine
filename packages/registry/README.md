@@ -213,14 +213,15 @@ if (!result.success) {
 - `parseYaml(text, validate, { filename? })` returns the data `validate` produced, or throws a `YamlDocumentError` whose `issues` are `YamlIssue[]`. `safeParseYaml` returns `{ success: true, data }` or `{ success: false, issues }` instead of throwing.
 - `validate` is `YamlValidate<T>`: a synchronous function from the parsed value to `{ success: true, data }` or `{ success: false, issues }`, where each issue is `{ message, path? }`. `engine.safeValidateForm` from `@schema-engine/forms` fits as it is. For a Standard Schema, wrap `~standard.validate` as above. Path segments may be keys or `{ key }`, as Standard Schema allows.
 - A `YamlIssue` is `{ message, path, line, column, filename? }`; line and column count from 1. A validation issue points at the start of the value its `path` names, or at the nearest ancestor that exists when the document lacks the key. A syntax error has an empty `path`; `validate` is not called when the text does not parse.
-- The text is read as YAML 1.2 with the core schema, one document per text. Duplicate keys and multiple documents are syntax errors.
-- `stringifyYaml(value, { schemaUrl? })` writes a value as YAML: a short map of scalars under a key in flow style (`grid: { width: half }`), every other collection in block style, and lines are not folded. `schemaUrl` adds a `# yaml-language-server: $schema=<url>` header that editors use for completion.
+- The text is read as YAML 1.2 with the core schema, one document per text, and a leading byte order mark is ignored. Duplicate keys and multiple documents are syntax errors. Mapping keys are read as strings, so `1: a` is the key `"1"`.
+- Tags (`!!binary`, `!!set`, `!!timestamp`, `!custom`, ...) are reported as issues at the tag, so `validate` only ever receives JSON-shaped values.
+- `stringifyYaml(value, { schemaUrl? })` writes a value as YAML: a short map of scalars under a key in flow style (`grid: { width: half }`), every other collection in block style, and lines are not folded. An object that appears twice is written twice, never as an anchor and alias. `schemaUrl` adds a `# yaml-language-server: $schema=<url>` header that editors use for completion.
 
 ### Caveats
 
 - `no`, `yes`, `on` and `off` are strings in YAML 1.2 and stay strings here. A YAML 1.1 reader, such as PyYAML or an older editor plugin, reads them as booleans, and `stringifyYaml` does not quote them.
 - An unquoted `1.10` is the number `1.1` in every YAML version. Only quoting keeps it a string: write `version: "1.10"`. `stringifyYaml` quotes such strings for you.
-- There is no loader, plugin or CLI, no multi-document files and no includes across files. Anchors and aliases work inside one file; a text that expands to an excessive number of aliases is reported as an issue at line 1.
+- There is no loader, plugin or CLI, no multi-document files and no includes across files. Anchors, aliases and merge keys (`<<: *defaults`) work inside one file. A text with more than 100 alias expansions is reported as an issue at line 1, which guards against files that expand to enormous values. An issue inside merged values points at the map that merges them.
 
 ## Package Exports
 

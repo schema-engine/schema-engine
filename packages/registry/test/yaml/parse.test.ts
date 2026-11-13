@@ -144,13 +144,57 @@ describe('syntax errors', () => {
 		expect(error.issues[0]?.message).not.toContain('\n');
 	});
 
-	test('a document with two documents is a syntax error', () => {
+	test('an over-indented line is reported once, on that line', () => {
+		const text = ['title: Docs', 'site:', '  a: 1', '  b: 2', '  e: 2', '   f: 3', 'tags: []', ''].join('\n');
+		const validate = vi.fn(accept);
+
+		const result = safeParseYaml(text, validate);
+
+		expect(validate).not.toHaveBeenCalled();
+		expect(result).toMatchObject({ success: false, issues: [{ line: 6, path: [] }] });
+		if (result.success) {
+			return;
+		}
+		expect(result.issues).toHaveLength(1);
+		expect(result.issues[0]?.message).toMatch(/^Bad indentation/);
+	});
+
+	test('a second document is reported in terms of the file, not the parser API', () => {
 		const validate = vi.fn(accept);
 
 		const result = safeParseYaml('a: 1\n---\nb: 2\n', validate);
 
-		expect(result.success).toBe(false);
+		expect(result).toEqual({
+			success: false,
+			issues: [{ message: 'A file holds one document; remove the extra `---`.', path: [], line: 2, column: 1 }],
+		});
 		expect(validate).not.toHaveBeenCalled();
+	});
+
+	test.each([
+		['!!js/function "f(){}"', '!!js/function'],
+		['!foo bar', '!foo'],
+		['!!float 1', '!!float'],
+		['!!binary aGVsbG8=', '!!binary'],
+		['!!set { x, y }', '!!set'],
+		['!!timestamp 2001-12-14', '!!timestamp'],
+		['!!omap [ { x: 1 } ]', '!!omap'],
+		['!!pairs [ { x: 1 } ]', '!!pairs'],
+	])('the tag %s is an issue at the tag, and validate is not called', (value, tag) => {
+		const validate = vi.fn(accept);
+
+		const result = safeParseYaml(`a: 1\nb: ${value}\n`, validate);
+
+		expect(validate).not.toHaveBeenCalled();
+		expect(result).toMatchObject({ success: false, issues: [{ path: [], line: 2, column: 4 }] });
+		if (result.success) {
+			return;
+		}
+		expect(result.issues[0]?.message).toContain(`remove ${tag} `);
+	});
+
+	test('the explicit core tags !!str and !!int still work', () => {
+		expect(parseYaml('a: !!str 5\nb: !!int "3"\n', accept)).toEqual({ a: '5', b: 3 });
 	});
 
 	test('an alias bomb is reported, not thrown, and validate is not called', () => {
@@ -164,6 +208,10 @@ describe('syntax errors', () => {
 		const result = safeParseYaml(lines.join('\n'), validate);
 
 		expect(result).toMatchObject({ success: false, issues: [{ path: [], line: 1, column: 1 }] });
+		if (!result.success) {
+			expect(result.issues[0]?.message).toMatch(/more than 100 times/);
+			expect(result.issues[0]?.message).not.toMatch(/resource exhaustion/);
+		}
 		expect(validate).not.toHaveBeenCalled();
 	});
 
@@ -171,6 +219,101 @@ describe('syntax errors', () => {
 		const result = safeParseYaml('a: 1\na: 2\n', accept);
 
 		expect(result).toMatchObject({ success: false, issues: [{ line: 2, column: 1 }] });
+	});
+});
+
+describe('anchors, merge keys, keys and byte order marks', () => {
+	const mergeSchema = z.object({
+		defaults: z.object({ port: z.number(), title: z.string() }),
+		servers: z.array(z.object({ port: z.number(), title: z.string(), name: z.string() })),
+	});
+
+	test('merge keys fill a map from an anchor', () => {
+		const text = [
+			'defaults: &defaults',
+			'  port: 80',
+			'  title: Docs',
+			'servers:',
+			'  - <<: *defaults',
+			'    name: a',
+			'',
+		].join('\n');
+
+		expect(parseYaml(text, validateWith(mergeSchema))).toEqual({
+			defaults: { port: 80, title: 'Docs' },
+			servers: [{ port: 80, title: 'Docs', name: 'a' }],
+		});
+	});
+
+	test('an issue inside a merged value points at the map that merges it', () => {
+		const text = [
+			'defaults: &defaults',
+			'  port: 80',
+			'  title: Docs',
+			'servers:',
+			'  - <<: *defaults',
+			'    port: eighty',
+			'    name: a',
+			'  - <<: *defaults',
+			'    port: 81',
+			'',
+		].join('\n');
+
+		const result = safeParseYaml(text, validateWith(mergeSchema));
+
+		expect(result).toMatchObject({
+			success: false,
+			issues: [
+				{ path: ['servers', 0, 'port'], line: 6, column: 11 },
+				{ path: ['servers', 1, 'name'], line: 8, column: 5 },
+			],
+		});
+	});
+
+	test('a merged value that is invalid points at the merging map, not at line 1', () => {
+		const text = [
+			'defaults: &defaults',
+			'  port: eighty',
+			'  title: Docs',
+			'servers:',
+			'  - <<: *defaults',
+			'    name: a',
+			'',
+		].join('\n');
+
+		const result = safeParseYaml(text, validateWith(mergeSchema));
+
+		expect(result).toMatchObject({
+			success: false,
+			issues: expect.arrayContaining([
+				expect.objectContaining({ path: ['defaults', 'port'], line: 2, column: 9 }),
+			]),
+		});
+		if (result.success) {
+			return;
+		}
+		expect(result.issues.find((found) => found.path.join('.') === 'servers.0.port')).toMatchObject({
+			line: 5,
+			column: 5,
+		});
+	});
+
+	test('numeric keys are read as strings and found by their string path', () => {
+		const text = ['1: one', '2: two', ''].join('\n');
+
+		expect(parseYaml(text, accept)).toEqual({ '1': 'one', '2': 'two' });
+		expect(
+			safeParseYaml(text, () => ({ success: false, issues: [{ message: 'bad', path: ['2'] }] })),
+		).toMatchObject({ success: false, issues: [{ line: 2, column: 4 }] });
+	});
+
+	test('a leading byte order mark does not shift the first line', () => {
+		const result = safeParseYaml('\uFEFFport: eighty\n', validateWith(siteSchema));
+
+		expect(result).toMatchObject({
+			success: false,
+			issues: expect.arrayContaining([expect.objectContaining({ path: ['port'], line: 1, column: 7 })]),
+		});
 	});
 });
 

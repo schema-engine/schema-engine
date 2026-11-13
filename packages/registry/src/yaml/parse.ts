@@ -1,5 +1,5 @@
 import { LineCounter, isNode, parseDocument } from 'yaml';
-import type { Document, Node } from 'yaml';
+import type { Document, Node, YAMLError, YAMLWarning } from 'yaml';
 
 /** One segment of a Standard Schema issue path: a key, or `{ key }` as Standard Schema allows. */
 type PathSegment = PropertyKey | { readonly key: PropertyKey };
@@ -98,24 +98,97 @@ function nodeForPath(doc: Document.Parsed, path: PropertyKey[]): Node | null {
 	return doc.contents?.range ? doc.contents : null;
 }
 
+/** The most alias expansions `toJS` allows before it gives up, which guards against alias bombs. */
+const MAX_ALIAS_COUNT = 100;
+
 /** The parser's message without the ` at line N, column N:` suffix and the code frame it appends. */
 function syntaxMessage(message: string): string {
 	return message.replace(/ at line \d+, column \d+:?[\s\S]*$/, '');
+}
+
+type Position = { line: number; col: number };
+
+function samePosition(a: Position | undefined, b: Position | undefined): boolean {
+	return a !== undefined && b !== undefined && a.line === b.line && a.col === b.col;
+}
+
+/** `tag:yaml.org,2002:float` as it is written in a document, `!!float`. */
+function shortTag(tag: string): string {
+	const prefix = 'tag:yaml.org,2002:';
+	return tag.startsWith(prefix) ? `!!${tag.slice(prefix.length)}` : tag;
+}
+
+/**
+ * The message an author can act on. The parser's own text often advises changing a `yaml` API call,
+ * which the author of a document cannot do.
+ */
+function friendlyMessage(problem: YAMLError | YAMLWarning): string {
+	switch (problem.code) {
+		case 'MULTIPLE_DOCS':
+			return 'A file holds one document; remove the extra `---`.';
+		case 'MULTILINE_IMPLICIT_KEY':
+			return 'Bad indentation: line this up with the keys above it, or put the whole key on one line.';
+		case 'TAG_RESOLVE_FAILED': {
+			const tag = /Unresolved tag: (\S+)/.exec(problem.message)?.[1];
+			const name = tag ? `${shortTag(tag)} ` : '';
+			return `Tags are not supported: remove ${name}and write the value plainly. Quote a string that looks like another type.`;
+		}
+		default:
+			return syntaxMessage(problem.message);
+	}
+}
+
+/**
+ * Where a parser problem is reported. A `MULTILINE_IMPLICIT_KEY` starts on the line above the
+ * over-indented line that ends it, so it is reported at its end.
+ */
+function positionOf(problem: YAMLError | YAMLWarning): Position {
+	const [start, end] = problem.linePos ?? [];
+	return (problem.code === 'MULTILINE_IMPLICIT_KEY' ? end : start) ?? start ?? { line: 1, col: 1 };
+}
+
+/**
+ * Every parser error and warning. An over-indented line makes the parser report two errors from the
+ * same place; the `BLOCK_AS_IMPLICIT_KEY` one is dropped.
+ */
+function parserProblems(doc: Document.Parsed): Array<{ message: string; position: Position }> {
+	const multiline = doc.errors.filter((error) => error.code === 'MULTILINE_IMPLICIT_KEY');
+	return [...doc.errors, ...doc.warnings]
+		.filter(
+			(problem) =>
+				problem.code !== 'BLOCK_AS_IMPLICIT_KEY' ||
+				!multiline.some((other) => samePosition(other.linePos?.[0], problem.linePos?.[0])),
+		)
+		.map((problem) => ({ message: friendlyMessage(problem), position: positionOf(problem) }));
+}
+
+/** The text of an error `toJS` throws, with the alias limit said in terms an author can use. */
+function conversionMessage(error: unknown): string {
+	if (error instanceof Error && /alias count/i.test(error.message)) {
+		return `The document uses aliases (*name) more than ${MAX_ALIAS_COUNT} times in all. Write the repeated value out, or use fewer or smaller anchors.`;
+	}
+	return error instanceof Error ? error.message : 'The document could not be read';
 }
 
 /**
  * Parse YAML text and validate the value, returning the issues instead of throwing.
  *
  * @param text A single YAML document, read as YAML 1.2 with the core schema: only `true`, `false`,
- * `null` and numbers are special, so `no`, `on` and `yes` stay strings.
+ * `null` and numbers are special, so `no`, `on` and `yes` stay strings. A leading byte order mark is
+ * ignored.
  * @param validate Called with the parsed value, only when the text is valid YAML.
  * @returns `{ success: true, data }` with what `validate` returned, or `{ success: false, issues }`
  * with each syntax error or validation issue and its line and column.
  *
  * @remarks
  * An unquoted `1.10` is the number `1.1` in every YAML version; quote it (`"1.10"`) to keep a string.
- * Multiple documents in one text are a syntax error. Anchors and aliases work within the text; a text
- * that expands to an excessive number of aliases is reported as an issue at line 1, not thrown.
+ * Multiple documents in one text are a syntax error. Tags (`!!binary`, `!!set`, `!custom`) are
+ * reported as issues, so what `validate` receives is always JSON-shaped. Mapping keys are read as
+ * strings: `1: a` is `{ '1': 'a' }`.
+ *
+ * Anchors, aliases and merge keys (`<<: *defaults`) work within the text. A text with more than 100
+ * alias expansions is reported as an issue at line 1, not thrown. An issue inside a merged value
+ * points at the map that merges it, because the merged keys have no place of their own.
  */
 export function safeParseYaml<T>(
 	text: string,
@@ -123,7 +196,15 @@ export function safeParseYaml<T>(
 	options?: YamlParseOptions,
 ): YamlParseResult<T> {
 	const lineCounter = new LineCounter();
-	const doc = parseDocument(text, { lineCounter, version: '1.2', schema: 'core' });
+	const source = text.startsWith('﻿') ? text.slice(1) : text;
+	const doc = parseDocument(source, {
+		lineCounter,
+		version: '1.2',
+		schema: 'core',
+		resolveKnownTags: false,
+		merge: true,
+		stringKeys: true,
+	});
 
 	const issue = (message: string, path: PropertyKey[], line: number, column: number): YamlIssue => {
 		const found: YamlIssue = { message, path, line, column };
@@ -133,22 +214,19 @@ export function safeParseYaml<T>(
 		return found;
 	};
 
-	if (doc.errors.length > 0) {
+	const problems = parserProblems(doc);
+	if (problems.length > 0) {
 		return {
 			success: false,
-			issues: doc.errors.map((error) => {
-				const start = error.linePos?.[0];
-				return issue(syntaxMessage(error.message), [], start?.line ?? 1, start?.col ?? 1);
-			}),
+			issues: problems.map(({ message, position }) => issue(message, [], position.line, position.col)),
 		};
 	}
 
 	let value: unknown;
 	try {
-		value = doc.toJS();
+		value = doc.toJS({ maxAliasCount: MAX_ALIAS_COUNT });
 	} catch (error) {
-		const message = error instanceof Error ? error.message : 'The document could not be read';
-		return { success: false, issues: [issue(message, [], 1, 1)] };
+		return { success: false, issues: [issue(conversionMessage(error), [], 1, 1)] };
 	}
 
 	const result = validate(value);

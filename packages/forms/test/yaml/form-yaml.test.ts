@@ -169,7 +169,7 @@ describe('a YAML form', () => {
 	});
 
 	test('the editor schema header names the generated schema', () => {
-		const schema = engine.generateFormConfigSchema();
+		const schema = engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' });
 
 		expect(schema).toMatchObject({ type: 'object' });
 		expect(stringifyYaml(contactJson, { schemaUrl: './contact.schema.json' })).toMatch(

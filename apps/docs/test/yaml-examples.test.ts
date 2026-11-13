@@ -85,9 +85,29 @@ test('the documented stringify example writes the language-server header', () =>
 	);
 });
 
+test('the documented merge-key example validates', () => {
+	const block = /```yaml\n(\s*defaults: &input[\s\S]*?)\n\s*```/.exec(page)?.[1];
+	if (!block) throw new Error('Missing the merge key example');
+	const indent = /^\s*/.exec(block)?.[0].length ?? 0;
+	const text = block
+		.split('\n')
+		.map((line) => line.slice(indent))
+		.join('\n');
+
+	const result = registryYaml.safeParseYaml(`id: merged\n${text}\n`, (value) => {
+		const { defaults: _defaults, ...form } = value as Record<string, unknown>;
+		return engine.safeValidateForm(form);
+	});
+
+	expect(result, JSON.stringify(result)).toMatchObject({ success: true });
+});
+
 test('the documented schema generator input exists on the engine', () => {
 	expect(codeAfter('## Editor autocomplete', 'typescript')).toContain(
-		"engine.generateFormConfigSchema({ io: 'input' })",
+		"engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' })",
 	);
-	expect(engine.generateFormConfigSchema({ io: 'input' })).toMatchObject({ type: 'object' });
+	expect(engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' })).toMatchObject({
+		$schema: 'http://json-schema.org/draft-07/schema#',
+		type: 'object',
+	});
 });

@@ -38,7 +38,7 @@ function isShortLeafMap(map: YAMLMap): boolean {
  * Write a value as YAML text.
  *
  * @remarks
- * A short map of scalars under a key is written in flow style (`grid: { width: half }`); every
+ * An object that appears twice is written out twice, not as an anchor and an alias. A short map of scalars under a key is written in flow style (`grid: { width: half }`); every
  * other collection, including a sequence item, is written in block style. Lines are not folded.
  * Strings that would read as another type are quoted, so `"1.10"` stays a string when parsed back.
  * `no` and `on` are not quoted, because YAML 1.2 reads them as strings; a YAML 1.1 reader would not.
@@ -48,7 +48,7 @@ export function stringifyYaml(value: unknown, options?: StringifyYamlOptions): s
 	if (schemaUrl !== undefined && /[\r\n]/.test(schemaUrl)) {
 		throw new TypeError('schemaUrl must be a single line');
 	}
-	const doc = new Document(value, { version: '1.2' });
+	const doc = new Document(value, { version: '1.2', aliasDuplicateObjects: false });
 	visit(doc, {
 		Map(_key, map, path) {
 			if (isPair(path.at(-1)) && isShortLeafMap(map)) {

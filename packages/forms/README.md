@@ -125,7 +125,7 @@ const form = parseYaml(text, (value) => engine.safeValidateForm(value), { filena
 // throws a YamlDocumentError: contact.form.yaml:17:24 steps[0].elements[1].grid.width: Expected one of ...
 ```
 
-For editor autocomplete, write `engine.generateFormConfigSchema({ io: 'input' })` to a file and name it in a
+For editor autocomplete, write `engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' })` to a file and name it in a
 `# yaml-language-server: $schema=...` header. The docs page `/docs/forms/yaml` (YAML Forms)
 has recipes for Node, Bun, Vite and fetch.
 

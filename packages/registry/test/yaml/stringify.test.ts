@@ -40,6 +40,15 @@ describe('stringifyYaml', () => {
 		expect(text).not.toContain('{');
 	});
 
+	test('writes an object used twice out twice, without anchors or aliases', () => {
+		const grid = { width: 'half' };
+
+		const text = stringifyYaml({ a: { grid }, b: { grid }, list: [grid, grid] });
+
+		expect(text).not.toMatch(/[&*]/);
+		expect(parseYaml(text, accept)).toEqual({ a: { grid }, b: { grid }, list: [grid, grid] });
+	});
+
 	test('does not fold long strings', () => {
 		const label = 'word '.repeat(40).trim();
 

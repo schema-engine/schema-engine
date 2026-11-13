@@ -94,8 +94,7 @@ import { parseForm } from './parse-form';
 export const contactForm = parseForm(contactYaml, 'contact.form.yaml');
 ```
 
-For TypeScript, declare the suffix once in a `.d.ts` file: `declare module '*.yaml?raw' { const text: string; export default text; }`.
-Bun does the same with `import text from './contact.form.yaml' with { type: 'text' }`.
+Vite's `vite/client` types already declare `?raw` imports as strings. Bun does the same with `import text from './contact.form.yaml' with { type: 'text' }`.
 
 ### Fetch
 
@@ -155,10 +154,13 @@ The engine generates that schema from what it has registered:
 import { writeFile } from 'node:fs/promises';
 import { engine } from './engine';
 
-await writeFile('contact.schema.json', JSON.stringify(engine.generateFormConfigSchema({ io: 'input' }), null, 2));
+const schema = engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' });
+await writeFile('contact.schema.json', JSON.stringify(schema, null, 2));
 ```
 
-Use `io: 'input'` so fields with defaults stay optional. Then name the schema at the top of the YAML file:
+Use `io: 'input'` so fields with defaults stay optional. Use `target: 'draft-7'` because the YAML language server
+only learned JSON Schema 2019-09 and 2020-12 in version 1.20.0; an editor extension that bundles an older server
+reads the schema as draft-07, which every version supports. Then name the schema at the top of the YAML file:
 
 ```yaml
 # yaml-language-server: $schema=./contact.schema.json
@@ -191,6 +193,27 @@ export const text = stringifyYaml(form, { schemaUrl: './contact.schema.json' });
   is what it looks like. A YAML 1.1 reader (PyYAML, some older editor plugins) reads them as booleans.
 - An unquoted `1.10` is the number `1.1` in every YAML version. Quote it to keep a string: `version: "1.10"`.
   The same goes for an `id` or option value such as `007` or `1e3`.
-- One document per file. Anchors and aliases work inside a file (an excessive expansion is reported as an issue); there are no includes across files.
+- One document per file. There are no includes across files.
+- Anchors, aliases and merge keys work inside a file, so a shared field can be written once:
+
+    ```yaml
+    defaults: &input
+        $type: input
+        grid: { width: half }
+    steps:
+        - id: details
+          title: Details
+          elements:
+              - <<: *input
+                id: name
+                name: name
+    ```
+
+    A text that uses aliases more than 100 times in all is reported as an issue, which guards against files
+    that expand to enormous values. An issue inside merged values points at the map that merges them.
+
+- Tags are not supported. `!!binary`, `!!set`, `!!timestamp`, `!custom` and the like are reported as issues, so the
+  engine only ever sees plain values.
+- Mapping keys are read as strings, so `1: a` is the key `"1"`.
 - Duplicate keys in a map are a syntax error.
 - There is no build-time loader, plugin or CLI: parse where you load.
