@@ -35,6 +35,7 @@ function fieldStyle(html: string, label: string): string {
  */
 export function expectSsrGridMarkup(html: string, layout: LayoutThemeLike): void {
 	expect(html).not.toMatch(/<script\b/i);
+	expectNeutralHooksPaired(html);
 	expect(html).toContain(layout.css.slice(0, 48));
 	expect(html).toContain(`data-se-theme="${layout.id}"`);
 	expect(html).toMatch(classToken('se-grid'));
@@ -53,6 +54,23 @@ export function expectSsrGridMarkup(html: string, layout: LayoutThemeLike): void
 /** A `class` attribute that lists exactly this class, not a longer class that starts with it. */
 function classToken(name: string): RegExp {
 	return new RegExp(`class="(?:[^"]*\\s)?${name}(?:\\s[^"]*)?"`);
+}
+
+/**
+ * Asserts every element a renderer marks as a form grid or form field also carries the neutral
+ * layout class the stylesheet keys on.
+ *
+ * @remarks
+ * The layout rules select only `.se-grid` and `.se-grid-item`, so a host that keeps the form class
+ * and loses the neutral one renders unstyled while every other assertion still finds its siblings.
+ */
+export function expectNeutralHooksPaired(html: string): void {
+	const classes = Array.from(html.matchAll(/class="([^"]*)"/g), (match) => (match[1] ?? '').split(/\s+/));
+	const unpaired = (form: string, neutral: string) =>
+		classes.filter((tokens) => tokens.includes(form) && !tokens.includes(neutral)).length;
+	expect(unpaired('se-form-grid', 'se-grid')).toBe(0);
+	expect(unpaired('se-form-field', 'se-grid-item')).toBe(0);
+	expect(classes.some((tokens) => tokens.includes('se-form-field'))).toBe(true);
 }
 
 /** Every `data-se-theme` value in a document, in order, including repeats. */
@@ -155,6 +173,7 @@ function fieldHost(doc: Document, label: RegExp): HTMLElement {
  */
 export async function expectSsrGridAcceptance(html: string, layout: LayoutThemeLike): Promise<void> {
 	expect(html).not.toMatch(/<script\b/i);
+	expectNeutralHooksPaired(html);
 	expect(html).toContain(layout.css.slice(0, 48));
 	expect(html).toContain(`data-se-theme="${layout.id}"`);
 	expect(html).toMatch(classToken('se-grid'));
@@ -290,6 +309,7 @@ export async function expectSsrNestedWidthsAcceptance(
 	layout: LayoutThemeLike,
 	groups: readonly ('Nest' | 'Row')[],
 ): Promise<void> {
+	expectNeutralHooksPaired(html);
 	expect(html).toContain(layout.css.slice(0, 48));
 
 	const { frame, doc } = await loadSsrFrame(html, 800);

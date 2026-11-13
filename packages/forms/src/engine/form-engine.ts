@@ -122,10 +122,10 @@ export class FormEngine<
 	 *
 	 * @remarks
 	 * Compiled once when the engine is built (or taken as given from `createFormEngine({ layout })`).
-	 * Renderers emit `css` inside the rendered form markup (React hoists and dedupes by key; Radiant
-	 * renders it inline), so SSR output is styled with no FOUC and no runtime injection, and put `id`
-	 * on the form, grid and item elements as `data-se-theme`. Engines built on the same theme share
-	 * its id and stylesheet.
+	 * Renderers emit `css` inside the rendered form markup, so SSR output is styled with no FOUC and
+	 * no runtime injection, and put `id` on the form, grid and item elements as `data-se-theme`.
+	 * Engines built on the same theme share its id; React hoists the shared stylesheet to one
+	 * element, while Radiant inlines an identical copy per form.
 	 */
 	getLayout(): LayoutTheme {
 		return this.layout;

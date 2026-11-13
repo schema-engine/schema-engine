@@ -1,5 +1,11 @@
 import { describe, test } from 'vitest';
-import { expectSsrAreasMarkup, expectSsrGridMarkup } from '../../../../test-utils/ssr-grid-acceptance';
+import {
+	expectNeutralHooksPaired,
+	expectSsrAreasMarkup,
+	expectSsrGridMarkup,
+} from '../../../../test-utils/ssr-grid-acceptance';
+import { renderArraySsrAcceptanceHtml } from './render-form-array-ssr-html';
+import { renderSsrNestedWidthsAcceptanceHtml } from './render-nested-widths-ssr-html';
 import {
 	getSsrAcceptanceEngine,
 	renderSsrAreasAcceptanceHtml,
@@ -13,5 +19,10 @@ describe('SSR grid layout markup', () => {
 
 	test('a drawn layout travels as the template on the grid and the area on each field', () => {
 		expectSsrAreasMarkup(renderSsrAreasAcceptanceHtml());
+	});
+
+	test('a fieldset and an array row keep the neutral hooks beside the form ones', () => {
+		expectNeutralHooksPaired(renderSsrNestedWidthsAcceptanceHtml());
+		expectNeutralHooksPaired(renderArraySsrAcceptanceHtml());
 	});
 });

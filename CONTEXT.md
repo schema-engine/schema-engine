@@ -171,7 +171,8 @@ forms, so any container of items can use it. `createLayoutTheme({ grid,
 appearance }, { reservedNames })` compiles both into one **layout theme**: one
 `id` and one stylesheet (`css`). Renderers put that id on
 the form, grid and item elements as the single `data-se-theme` attribute and
-emit the stylesheet once. `createFormEngine` and `createRadiantFormEngine` take
+emit the stylesheet for each form: React hoists equal stylesheets to one element,
+while Radiant inlines an identical copy per form. `createFormEngine` and `createRadiantFormEngine` take
 the theme as `layout`, either a compiled theme or inline `{ grid, appearance }`
 options; there are no separate `grid` or `appearance` options. Engines built on
 one compiled theme share its id and stylesheet, so a form embedded in a page
@@ -322,8 +323,8 @@ Both renderers emit the resolved selection as `data-se-<axis>="<value>"` on the 
 element (`data-se-step`), the field host and the slot elements. The token rules are part of the
 layout theme's one stylesheet, emitted once per form. They are written as
 `:where(<theme scope> [data-se-size="compact"])`, so they add no specificity and an author's
-`className` always wins; the scope is `data-se-theme`, the layout theme's id,
-on the form element, so two engines with different tokens cannot overwrite each other. Shells read
+`className` always wins; the scope is `data-se-theme`, the layout theme's id, which sits on the
+form element and also on every grid and item, so two engines with different tokens cannot overwrite each other. Shells read
 the tokens (`var(--se-size-padding, 1.5rem)`) and keep the look of an unstyled form as the
 fallback. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
 that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,
