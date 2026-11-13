@@ -83,7 +83,7 @@ Rules for a good axis: orthogonal to the others; the same meaning on every compo
 
 `createAppearanceSchema(registry)` builds the schema of a pick from the theme's axes: each axis an optional enum of its values, which a JSON Schema export lists. Pass the axes one owner declares as a second argument (`createAppearanceSchema(registry, ['size'])`) to list only those; an empty list is a closed object with no axes.
 
-For a JSON Schema export, `withAppearanceAxes(schema, registry, declared)` swaps the `appearance` key of an object schema for the closed schema of the axes its owner declares, and `withSlotAppearanceAxes(viewSchema, registry, appearanceAxes)` does the same for each slot of a recipe's view schema. They read the same registry and declarations that `checkAppearance` validates against, so the export and validation agree. They return a schema for export only (parse with the original), and leave a schema that is not a plain object, or one with no declared axes and no `appearance` key, as it is.
+For a JSON Schema export, `withAppearanceAxes(schema, registry, declared)` sets the `appearance` key of an object schema (looking through a pipe or a prefault) to the closed schema of the axes its owner declares, and `withSlotAppearanceAxes(viewSchema, registry, appearanceAxes)` does the same for each slot of a recipe's view schema. They read the same registry and declarations that `checkAppearance` validates against, so the export and validation agree. They return a schema for export only (parse with the original), and every owner gets the key, since validation checks every owner's pick, even when it declares no axes. A schema that is not an object (a lazy one, for example) is left as it is.
 
 ### Nested themes
 

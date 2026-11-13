@@ -65,9 +65,25 @@ describe('withAppearanceAxes', () => {
 		expect(appearanceKeys(withAppearanceAxes(strict, registry, ['tone']))).toEqual(['tone']);
 	});
 
-	test('leaves an object with no key and no declared axes as it is', () => {
-		const strict = z.strictObject({ id: z.string() });
-		expect(withAppearanceAxes(strict, registry)).toBe(strict);
+	test('an object that has no key and declares none still gets a closed one', () => {
+		const loose = z.object({ id: z.string() });
+		const schema = jsonOf(withAppearanceAxes(loose, registry));
+		expect(schema.properties?.appearance?.properties).toEqual({});
+		expect(schema.properties?.appearance?.additionalProperties).toBe(false);
+		expect(z.safeParse(withAppearanceAxes(loose, registry), { id: 'a', appearance: { bogus: 'x' } }).success).toBe(
+			false,
+		);
+	});
+
+	test('rewrites the input of a pipe and keeps its transform', () => {
+		const piped = z.pipe(
+			open,
+			z.transform((value) => ({ ...value, seen: true })),
+		);
+		const closed = withAppearanceAxes(piped, registry, ['size']);
+		expect(closed).not.toBe(piped);
+		expect(appearanceKeys(closed)).toEqual(['size']);
+		expect(z.safeParse(closed, { id: 'a', appearance: { size: 'compact' } }).data).toMatchObject({ seen: true });
 	});
 
 	test('leaves a schema that is not a plain object as it is', () => {
@@ -106,20 +122,21 @@ describe('withSlotAppearanceAxes', () => {
 		expect(slots.shell.properties?.appearance?.properties?.surface.enum).toEqual(['flat', 'outlined', 'elevated']);
 	});
 
-	test('a slot that declares nothing but has an appearance key is closed to no axes', () => {
+	test('a slot that declares nothing is closed to no axes', () => {
 		const slots = jsonOf(withSlotAppearanceAxes(view, registry, { shell: ['size'] })).properties!;
 		expect(slots.footer.properties?.appearance?.properties).toEqual({});
 		expect(slots.footer.properties?.appearance?.additionalProperties).toBe(false);
 	});
 
-	test('a slot with no appearance key and no declared axes is left alone', () => {
+	test('a slot whose schema has no appearance key gets a closed one too', () => {
 		const slots = jsonOf(withSlotAppearanceAxes(view, registry, { shell: ['size'] })).properties!;
-		expect(slots.header.properties).not.toHaveProperty('appearance');
+		expect(slots.header.properties?.appearance?.properties).toEqual({});
+		expect(slots.header.properties?.appearance?.additionalProperties).toBe(false);
 	});
 
-	test('a recipe that declares nothing and has no appearance keys comes back unchanged', () => {
-		const bare = z.strictObject({ $type: z.literal('r'), actions: z.prefault(z.strictObject({}), {}) });
-		expect(withSlotAppearanceAxes(bare, registry)).toBe(bare);
+	test('a view that is not an object comes back unchanged', () => {
+		const lazy = z.lazy(() => view);
+		expect(withSlotAppearanceAxes(lazy, registry)).toBe(lazy);
 	});
 
 	test('the slot defaults still apply when the view parses', () => {

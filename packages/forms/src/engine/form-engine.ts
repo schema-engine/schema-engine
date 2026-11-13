@@ -271,14 +271,14 @@ export class FormEngine<
 	 * @remarks
 	 * Generated as input: authors may omit prefaulted slots and defaulted keys, so only `$type` is required.
 	 *
-	 * Uses the schema the catalog lists the recipe by, which lists each slot's declared appearance axes,
+	 * Uses the schema the export lists the recipe by, which lists each slot's declared appearance axes,
 	 * so a view document gets the same autocomplete as the form config.
 	 */
 	private generateRecipeViewSchema(recipe: AnyRecipeRegistration): Record<string, unknown> {
 		const id = SchemaMetadataCatalog.entryId(ComponentType.Recipe, recipe.$type);
 		try {
 			return generateZodJSONSchemaDocument(
-				(this.schemaArtifacts.metadataCatalog.getSchema(id) ?? recipe.schema) as z.ZodMiniType,
+				(this.schemaArtifacts.exportSchemas.get(id) ?? recipe.schema) as z.ZodMiniType,
 				this.schemaArtifacts.metadataRegistry,
 				{
 					target: 'draft-2020-12',

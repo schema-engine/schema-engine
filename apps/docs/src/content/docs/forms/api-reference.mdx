@@ -126,7 +126,10 @@ engine.generateActionConfigSchema('submit', { io: 'input' });
 In these schemas an `appearance` pick is closed over the axes its owner declares. The form and
 each step list every axis of the layout theme; an element lists the axes in its `appearanceAxes`
 and a recipe slot the axes in the recipe's `appearanceAxes`, each as an enum of the axis's
-values. Any other axis is rejected, as it is by `validateForm`.
+values. Any other axis is rejected, as it is by `validateForm`. The export checks top-level
+elements and the recipe slots; the children of a fieldset or an array row are loosely typed in it,
+so their `appearance` is not checked there, and neither is that of an element whose schema is lazy.
+`validateForm` checks all of them.
 
 `getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` expose
 the same input/output converters through the Standard JSON Schema contract.

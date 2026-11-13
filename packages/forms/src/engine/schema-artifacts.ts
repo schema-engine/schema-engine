@@ -38,6 +38,14 @@ export interface FormEngineSchemaArtifacts {
 	metadataCatalog: SchemaMetadataCatalog;
 	metadataRegistry: FormEngineSchemaMetadataRegistry;
 	formConfigValidator: z.ZodMiniType;
+	/**
+	 * The schemas the JSON Schema export lists in place of a registration's own, by catalog id.
+	 *
+	 * @remarks
+	 * An element's or recipe's export schema is closed over the appearance axes it declares. The
+	 * catalog keeps the registration's validator schema, so this holds the export's alone.
+	 */
+	exportSchemas: ReadonlyMap<string, z.ZodMiniType>;
 	jsonSchema: FormEngineJSONSchemaSerializer;
 }
 
@@ -47,11 +55,19 @@ type ZodSchemaWithRegister = z.ZodMiniType & {
 
 /**
  * Bridge catalog metadata into a Zod registry for JSON Schema generation.
+ *
+ * @remarks
+ * An entry with an export schema is registered by that schema rather than the catalog's, so the
+ * export refers to it by the entry's id.
  */
-export function createZodRegistryFromCatalog(catalog: SchemaMetadataCatalog): FormEngineSchemaMetadataRegistry {
+export function createZodRegistryFromCatalog(
+	catalog: SchemaMetadataCatalog,
+	exportSchemas: ReadonlyMap<string, z.ZodMiniType> = new Map(),
+): FormEngineSchemaMetadataRegistry {
 	const registry = z.registry<FormEngineSchemaMetadata>();
 
-	for (const { schema, entry } of catalog.getRegisteredSchemas()) {
+	for (const { schema: catalogSchema, entry } of catalog.getRegisteredSchemas()) {
+		const schema = exportSchemas.get(entry.id) ?? catalogSchema;
 		const meta: FormEngineSchemaMetadata = {
 			id: entry.id,
 			title: entry.title,
@@ -191,12 +207,14 @@ export function createFormEngineSchemaArtifacts(
 	metadataCatalog: SchemaMetadataCatalog,
 	formConfigValidator: z.ZodMiniType,
 	actionConfigValidators?: Map<string, z.ZodMiniType>,
+	exportSchemas: ReadonlyMap<string, z.ZodMiniType> = new Map(),
 ): FormEngineSchemaArtifacts {
-	const metadataRegistry = createZodRegistryFromCatalog(metadataCatalog);
+	const metadataRegistry = createZodRegistryFromCatalog(metadataCatalog, exportSchemas);
 	return {
 		metadataCatalog,
 		metadataRegistry,
 		formConfigValidator,
+		exportSchemas,
 		jsonSchema: createFormEngineJSONSchemaSerializer(metadataRegistry, formConfigValidator, actionConfigValidators),
 	};
 }

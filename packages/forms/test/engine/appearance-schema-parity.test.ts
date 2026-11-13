@@ -32,12 +32,32 @@ const strictField = defineInput({
 	render: () => null,
 });
 
+const looseField = defineInput({
+	$type: 'loose',
+	schema: zm.object({ $type: zm.literal('loose'), id: zm.string(), name: zm.string() }),
+	metadata: { name: 'Loose', category: 'input' },
+	render: () => null,
+});
+
+const pipedField = defineInput({
+	$type: 'piped',
+	schema: zm.pipe(
+		zm.extend(BaseFieldSchema, { $type: zm.literal('piped') }),
+		zm.transform((config) => ({ ...config, normalized: true })),
+	),
+	appearanceAxes: ['size'],
+	metadata: { name: 'Piped', category: 'input' },
+	render: () => null,
+});
+
 const elements = [
 	field('plain'),
 	field('sized', ['size']),
 	field('surfaced', ['size', 'surface']),
 	field('toned', ['tone']),
 	strictField,
+	looseField,
+	pipedField,
 ];
 const recipes = Object.values(builtInSpecs)
 	.filter((spec) => typeof spec === 'object' && spec !== null && '$type' in spec && 'slotSchemas' in spec)
@@ -99,11 +119,6 @@ describe('the JSON Schema and validation accept the same appearance picks', () =
 		});
 	});
 
-	/**
-	 * A slot that declares no axes and whose schema has no `appearance` key rejects the key in the
-	 * export, while validation also accepts an empty pick on it. No axis is allowed either way, so the
-	 * empty pick is left out of that slot's cases.
-	 */
 	describe.each(recipes.map((recipe) => [recipe.$type, recipe] as const))('recipe %s', (_type, recipe) => {
 		const steps = recipe.kind === 'wizard' ? 2 : 1;
 		const formWithSlot = (slot: string, appearance: Record<string, string>) => ({
@@ -117,10 +132,7 @@ describe('the JSON Schema and validation accept the same appearance picks', () =
 		});
 
 		describe.each(recipe.slots.map((slot) => [slot] as const))('slot %s', (slot) => {
-			const declares = (recipe.appearanceAxes?.[slot] ?? []).length > 0;
-			const slotPicks = picks.filter((pick) => declares || Object.keys(pick).length > 0);
-
-			test.each(slotPicks.map((pick) => [JSON.stringify(pick), pick] as const))('pick %s', (_label, pick) => {
+			test.each(picks.map((pick) => [JSON.stringify(pick), pick] as const))('pick %s', (_label, pick) => {
 				const result = accepted(formWithSlot(slot, pick));
 				expect(result.jsonSchema).toBe(result.validation);
 			});

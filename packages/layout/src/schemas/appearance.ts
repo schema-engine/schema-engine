@@ -33,37 +33,75 @@ export function createAppearanceSchema(axes: AxisRegistry, supported?: readonly 
 	return z.strictObject(Object.fromEntries(entries));
 }
 
-function objectShape(schema: z.ZodMiniType): Record<string, z.ZodMiniType> | undefined {
-	const def = schema._zod.def as { type: string; shape?: Record<string, z.ZodMiniType> };
-	return def.type === 'object' ? def.shape : undefined;
+/**
+ * @remarks
+ * The schemas inside a Zod Mini schema's definition are typed as the core base, though a mini
+ * schema only ever holds mini schemas. A schema from another Zod flavour is left as it is.
+ */
+function isMiniSchema(schema: z.core.$ZodType): schema is z.ZodMiniType {
+	return 'check' in schema && typeof schema.check === 'function';
+}
+
+function isObjectSchema(schema: z.ZodMiniType): schema is z.ZodMiniObject {
+	return schema._zod.def.type === 'object';
+}
+
+function isPipeSchema(schema: z.ZodMiniType): schema is z.ZodMiniPipe {
+	return schema._zod.def.type === 'pipe';
+}
+
+function isPrefaultSchema(schema: z.ZodMiniType): schema is z.ZodMiniPrefault {
+	return schema._zod.def.type === 'prefault';
 }
 
 /**
- * Replaces the `appearance` key of an object schema with the closed schema of the axes its owner
+ * Sets the `appearance` key on the object a schema parses, looking through a pipe (its input) and
+ * a prefault (its inner schema). Any other schema comes back as it is.
+ */
+function setAppearance(schema: z.ZodMiniType, appearance: z.ZodMiniType): z.ZodMiniType {
+	if (isObjectSchema(schema)) return z.safeExtend(schema, { appearance });
+	if (isPipeSchema(schema)) {
+		const { in: input, out } = schema._zod.def;
+		if (!isMiniSchema(input)) return schema;
+		const next = setAppearance(input, appearance);
+		return next === input ? schema : z.pipe(next, out);
+	}
+	if (isPrefaultSchema(schema)) {
+		const { innerType, defaultValue } = schema._zod.def;
+		if (!isMiniSchema(innerType)) return schema;
+		const next = setAppearance(innerType, appearance);
+		return next === innerType ? schema : z.prefault(next, defaultValue);
+	}
+	return schema;
+}
+
+function declaredAppearance(axes: AxisRegistry, supported: readonly string[]) {
+	return z
+		.optional(createAppearanceSchema(axes, supported))
+		.check(z.describe('Named appearance values, one per declared axis'));
+}
+
+/**
+ * Sets the `appearance` key of an object schema to the closed schema of the axes its owner
  * declares, for a JSON Schema export.
  *
- * @param supported The owner's declared axes (`appearanceAxes`); omit it for an owner that declares none.
+ * @param supported The owner's declared axes (`appearanceAxes`); omit it for an owner that declares none,
+ * which gets a closed object with no axes.
  *
  * @remarks
  * Validation strips an authored `appearance` before it parses the owner's own schema and checks the
- * pick against the declared axes (`checkAppearance`), so the schema's own `appearance` key is only
- * ever a description. This swaps that key for one built from the same declarations, which keeps the
- * export from drifting from validation. A schema that is not a plain object (a lazy or piped
- * schema) is returned unchanged, and so is an object that declares no axes and has no `appearance`
- * key. The result is for export only: parse with the original.
+ * pick against the declared axes (`checkAppearance`), on every owner whatever its schema says. So the
+ * key is set whether or not the schema has one, and replaces an open one. This keeps the export from
+ * drifting from validation. A pipe is rewritten on its input, so a transform after the object stays.
+ * A schema that is not an object, a pipe of one or a prefault of one (a lazy schema, for example) is
+ * returned unchanged. The result is for export only: parse with the original.
  */
-export function withAppearanceAxes<TSchema extends z.ZodMiniType>(
-	schema: TSchema,
+export function withAppearanceAxes(
+	schema: z.ZodMiniType,
 	axes: AxisRegistry,
 	supported: readonly string[] = [],
 ): z.ZodMiniType {
-	const shape = objectShape(schema);
-	if (!shape || (supported.length === 0 && !('appearance' in shape))) return schema;
-	return z.safeExtend(schema as unknown as z.ZodMiniObject, {
-		appearance: z
-			.optional(createAppearanceSchema(axes, supported))
-			.check(z.describe('Named appearance values, one per declared axis')),
-	});
+	return setAppearance(schema, declaredAppearance(axes, supported));
 }
 
 /**
@@ -74,27 +112,21 @@ export function withAppearanceAxes<TSchema extends z.ZodMiniType>(
  *
  * @remarks
  * Expects the shape `defineProtocolRecipeSpec` builds: a strict object whose slots are objects
- * wrapped in `prefault`. Any other shape is returned unchanged. A slot that declares no axes and
- * has no `appearance` key stays as it is, so it keeps rejecting the key.
+ * wrapped in `prefault`. Validation resolves the appearance of every slot, so every slot gets the
+ * key. Any other shape is returned unchanged.
  */
-export function withSlotAppearanceAxes<TSchema extends z.ZodMiniType>(
-	schema: TSchema,
+export function withSlotAppearanceAxes(
+	schema: z.ZodMiniType,
 	axes: AxisRegistry,
 	slotAxes: Readonly<Record<string, readonly string[] | undefined>> = {},
 ): z.ZodMiniType {
-	const shape = objectShape(schema);
-	if (!shape) return schema;
+	if (!isObjectSchema(schema)) return schema;
 	const replaced: Record<string, z.ZodMiniType> = {};
-	for (const [slot, slotSchema] of Object.entries(shape)) {
-		const def = slotSchema._zod.def as { type: string; innerType?: z.ZodMiniType; defaultValue?: unknown };
-		if (def.type === 'prefault' && def.innerType) {
-			const inner = withAppearanceAxes(def.innerType, axes, slotAxes[slot]);
-			if (inner !== def.innerType) replaced[slot] = z.prefault(inner, def.defaultValue as never);
-			continue;
-		}
+	for (const [slot, slotSchema] of Object.entries(schema._zod.def.shape)) {
+		if (!isMiniSchema(slotSchema)) continue;
 		const next = withAppearanceAxes(slotSchema, axes, slotAxes[slot]);
 		if (next !== slotSchema) replaced[slot] = next;
 	}
 	if (Object.keys(replaced).length === 0) return schema;
-	return z.safeExtend(schema as unknown as z.ZodMiniObject, replaced);
+	return z.safeExtend(schema, replaced);
 }

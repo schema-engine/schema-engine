@@ -41,12 +41,13 @@ function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
 }
 
 /**
- * What a registration contributes to the JSON Schema export: its `$type`, the schema the catalog
- * lists it by, and its catalog metadata.
+ * What a registration contributes to the schema catalog and the JSON Schema export: its `$type`,
+ * its own validator schema, the schema the export lists it by, and its catalog metadata.
  */
 type ExportRegistration = {
 	$type: string;
 	schema: unknown;
+	exportSchema: unknown;
 	metadata: { name: string; description?: string; category?: string };
 	/** Axes declared by an element, so a native Standard Schema envelope can list them. */
 	appearanceAxes?: readonly string[];
@@ -63,7 +64,7 @@ function createRegistrationSchema(
 	envelopeAppearance?: (registration: ExportRegistration) => z.ZodMiniType,
 ): z.ZodMiniType {
 	const parts = registrations.map((registration) => {
-		if (isZodType(registration.schema)) return registration.schema;
+		if (isZodType(registration.exportSchema)) return registration.exportSchema;
 		return z.looseObject({
 			$type: z.literal(registration.$type),
 			...(envelopeAppearance ? { appearance: z.optional(envelopeAppearance(registration)) } : {}),
@@ -77,9 +78,9 @@ function createRegistrationSchema(
  * or recipe is closed over the axes it declares, built from the layout theme's axes.
  *
  * @remarks
- * Validation parses the registration's own schema, so only the export sees the closed one. Computed
- * once per registration, so the catalog and the form config union hold the same schema object and
- * the export refers to it by its id.
+ * Validation parses the registration's own schema, and the catalog keeps associating it, so only
+ * the export sees the closed one. Computed once per registration, so the form config union and the
+ * metadata registry hold the same schema object and the export refers to it by its id.
  */
 function toExportRegistrations(
 	registrations: Iterable<AnyElementRegistration | AnyRecipeRegistration | AnyActionRegistration>,
@@ -90,6 +91,7 @@ function toExportRegistrations(
 		const exported: ExportRegistration = {
 			$type: registration.$type,
 			schema: registration.schema,
+			exportSchema: registration.schema,
 			metadata: registration.metadata,
 		};
 		if (!isZodType(registration.schema)) {
@@ -99,13 +101,13 @@ function toExportRegistrations(
 			return exported;
 		}
 		if (componentType === ComponentType.Element) {
-			exported.schema = withAppearanceAxes(
+			exported.exportSchema = withAppearanceAxes(
 				registration.schema,
 				layout.appearance,
 				(registration as AnyElementRegistration).appearanceAxes,
 			);
 		} else if (componentType === ComponentType.Recipe) {
-			exported.schema = withSlotAppearanceAxes(
+			exported.exportSchema = withSlotAppearanceAxes(
 				registration.schema,
 				layout.appearance,
 				(registration as AnyRecipeRegistration).appearanceAxes,
@@ -249,6 +251,18 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const exportedRecipes = toExportRegistrations(recipeRegistry.all(), ComponentType.Recipe, layout);
 	const exportedActions = toExportRegistrations(actionRegistry.all(), ComponentType.Action, layout);
 
+	const exportSchemas = new Map<string, z.ZodMiniType>();
+	for (const [componentType, exported] of [
+		[ComponentType.Element, exportedElements],
+		[ComponentType.Recipe, exportedRecipes],
+	] as const) {
+		for (const item of exported) {
+			if (item.exportSchema !== item.schema && isZodType(item.exportSchema)) {
+				exportSchemas.set(SchemaMetadataCatalog.entryId(componentType, item.$type), item.exportSchema);
+			}
+		}
+	}
+
 	const metadataCatalog = lists.catalog?.clone() ?? new SchemaMetadataCatalog();
 	for (const [componentType, registrations] of [
 		[ComponentType.Element, exportedElements],
@@ -263,7 +277,12 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 
 	const formConfigSchema = createFormConfigSchema(exportedElements, exportedRecipes, exportedActions, layout);
 	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.all());
-	const schemaArtifacts = createFormEngineSchemaArtifacts(metadataCatalog, formConfigSchema, actionConfigValidators);
+	const schemaArtifacts = createFormEngineSchemaArtifacts(
+		metadataCatalog,
+		formConfigSchema,
+		actionConfigValidators,
+		exportSchemas,
+	);
 
 	return new FormEngine({
 		elements: elementRegistry,

@@ -141,8 +141,10 @@ describe('a recipe slot lists the axes it declares', () => {
 		expect(axesOf(shell.properties.appearance)).toEqual(['size', 'surface']);
 	});
 
-	test('a slot that declares no axes does not accept appearance', () => {
-		expect(appearanceOfSlot(schema, 'card', 'header')).toBeUndefined();
+	test('a slot that declares no axes lists an empty closed appearance', () => {
+		const appearance = appearanceOfSlot(schema, 'card', 'header');
+		expect(axesOf(appearance)).toEqual([]);
+		expect(appearance?.additionalProperties).toBe(false);
 	});
 
 	test('a host axis a recipe slot does not declare is not listed', () => {
@@ -153,6 +155,17 @@ describe('a recipe slot lists the axes it declares', () => {
 		});
 		const themedSchema = themed.generateFormConfigSchema() as Schema;
 		expect(axesOf(appearanceOfSlot(themedSchema, 'card', 'shell'))).toEqual(['size', 'surface']);
+	});
+});
+
+describe('the schema catalog keeps the validator schemas', () => {
+	test('each registration is found by its own schema, not the export one', () => {
+		const engine = createFormEngine({ elements: [sized], recipes: [card] });
+		const catalog = engine.getSchemaCatalog();
+		const element = engine.getElement('sized');
+		const recipe = engine.getRecipe('card');
+		expect(catalog.getBySchema(element!.schema)?.id).toBe('element:sized');
+		expect(catalog.has(recipe!.schema)).toBe(true);
 	});
 });
 
