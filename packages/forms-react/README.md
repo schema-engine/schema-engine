@@ -154,3 +154,6 @@ required constraints on fields and containers, disabled arrays, `validationMode`
 nested error clearing, Valibot action registration, submission aborts, submit
 attempt counts, and change and action callbacks. Run this suite
 with `pnpm exec vitest run --project browser test/conformance` from this package.
+`test/ssr/nested-theme.acceptance.browser.test.tsx` runs the shared nested-theme
+harness: a form on its own layout theme inside a grid item of another takes its own
+appearance tokens, with the host stylesheet before and after the form's.

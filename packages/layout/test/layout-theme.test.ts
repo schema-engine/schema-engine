@@ -52,7 +52,7 @@ describe('createLayoutTheme', () => {
 			values: { compact: { '--se-space': '0.5rem' }, default: {}, comfortable: { '--se-space': '2rem' } },
 		});
 		const theme = createLayoutTheme({ appearance: [...builtInAxes, size] });
-		expect(theme.css).toContain(`[data-se-size="compact"]){--se-space:0.5rem;}`);
+		expect(theme.css).toMatch(/\[data-se-size="compact"\].*\)\)\{--se-space:0\.5rem;\}/);
 		expect(theme.css).not.toContain('--se-space:1rem');
 		expect(theme.id).not.toBe(getDefaultLayoutTheme().id);
 	});

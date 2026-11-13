@@ -126,13 +126,13 @@ export function expectSharedLayoutTheme(html: string, layout: LayoutThemeLike, d
 	if (dedupes) expect(sheets).toHaveLength(1);
 }
 
-async function waitForFrameLayout(): Promise<void> {
+export async function waitForFrameLayout(): Promise<void> {
 	await new Promise<void>((resolve) => {
 		requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
 	});
 }
 
-async function loadSsrFrame(html: string, width: number): Promise<{ frame: HTMLIFrameElement; doc: Document }> {
+export async function loadSsrFrame(html: string, width: number): Promise<{ frame: HTMLIFrameElement; doc: Document }> {
 	const frame = document.createElement('iframe');
 	frame.title = 'SSR grid acceptance';
 	frame.setAttribute('sandbox', 'allow-same-origin');

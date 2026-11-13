@@ -359,14 +359,17 @@ element (`data-se-step`), the field host and the slot elements. The token rules 
 layout theme's one stylesheet, emitted once per form. They are written as
 `:where(<theme scope> [data-se-size="compact"])`, so they add no specificity and an author's
 `className` always wins; the scope is `data-se-theme`, the layout theme's id, which sits on the
-form element and also on every grid and item, so two engines with different tokens cannot overwrite each other. Shells read
+form element and also on every grid and item. A rule reaches an element only when no other theme lies between
+it and its theme's root, so the nearest theme wins: a form of one engine nested in a grid item of another takes
+its own tokens, whichever stylesheet comes later. Shells read
 the tokens (`var(--se-space, 1.5rem)`) and keep the look of an unstyled form as the
 fallback. The built-in tokens name no host theme: a renderer's fallback is where its host theme
 variables belong (Radiant's card reads `var(--se-space, var(--space-block-lg, 1.5rem))`), and the
 built-in `size.default` sets its tokens to `initial`, which hands them back to the component's
 fallback, so `size: default` looks like no pick in a themed app, also inside a `compact` form. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
 that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,
-and a form of another engine nested inside a form is not supported. The DOM contract is the same in
+also from a pick made outside a nested form of another theme. A theme re-entered below another theme
+(A in B in A) gets no tokens. The DOM contract is the same in
 every renderer; the visual effect of a built-in value is not yet: `size` changes a field's font size in
 Radiant only, and both card shells read the tokens. A field's `className` is applied to the same field host, the element that carries its `style` and the attributes, in both renderers. The field host that carries the attributes is the
 inner `.se-form-field` (the Radiant constraint wrapper around it carries only grid placement).

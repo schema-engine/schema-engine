@@ -272,6 +272,14 @@ theme's stylesheet is emitted once. The stylesheet selects only `.se-grid`,
 `.se-grid-item` and `[data-se-theme]`; the renderers add those classes beside
 `se-form-grid` and `se-form-field`, which stay available for your own styles.
 
+A form of one engine can sit inside a grid item of another, for example a form embedded
+in a page grid. Each theme's token rules reach only the elements whose nearest theme is
+that theme, so the embedded form picks `tone: brand` with its own theme's token
+whichever stylesheet comes later, and your own class still wins. Tokens are custom
+properties, so a pick made outside the embedded form still reaches it until the form
+picks a value on that axis. A theme nested below another theme and then below itself
+(A in B in A) gets no tokens.
+
 ### Appearance axes
 
 An appearance axis is one independent dimension of appearance with 2 to 5 named values.

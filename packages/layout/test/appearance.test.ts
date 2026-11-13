@@ -10,6 +10,12 @@ import {
 	pickSupportedAppearance,
 } from '@/lib/appearance';
 
+/** The declaration block of the rule for one axis value of theme `lx`, such as `{--se-space:1rem;}`. */
+function declarationsOf(css: string, attribute: string): string | undefined {
+	const rule = css.split('\n').find((line) => line.startsWith(`:where([data-se-theme="lx"]${attribute},`));
+	return rule?.slice(rule.lastIndexOf('){') + 1);
+}
+
 const metadata = { name: 'Tone' };
 const tone = defineAxis({
 	$type: 'tone',
@@ -78,8 +84,8 @@ describe('builtInAxes', () => {
 
 	test('a default value hands its tokens back to the component fallback, so it undoes an inherited pick', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain(
-			'[data-se-size="default"]){--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
+		expect(declarationsOf(css, '[data-se-size="default"]')).toBe(
+			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
 		);
 	});
 
@@ -95,17 +101,19 @@ describe('builtInAxes', () => {
 
 	test('compact and comfortable spacing are hooks a renderer maps to its host theme', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain('[data-se-size="compact"]){--se-space:var(--se-space-compact, 1rem);');
-		expect(css).toContain('[data-se-size="comfortable"]){--se-space:var(--se-space-comfortable, 2rem);');
+		expect(declarationsOf(css, '[data-se-size="compact"]')).toContain('{--se-space:var(--se-space-compact, 1rem);');
+		expect(declarationsOf(css, '[data-se-size="comfortable"]')).toContain(
+			'{--se-space:var(--se-space-comfortable, 2rem);',
+		);
 	});
 
 	test('size sets the readable measure: 24rem, 32rem, and the component fallback for default', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain(
-			'[data-se-size="compact"]){--se-space:var(--se-space-compact, 1rem);--se-font-size:0.875rem;--se-measure:24rem;}',
+		expect(declarationsOf(css, '[data-se-size="compact"]')).toBe(
+			'{--se-space:var(--se-space-compact, 1rem);--se-font-size:0.875rem;--se-measure:24rem;}',
 		);
-		expect(css).toContain(
-			'[data-se-size="default"]){--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
+		expect(declarationsOf(css, '[data-se-size="default"]')).toBe(
+			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
 		);
 		expect(css).toContain('--se-measure:32rem;');
 	});
@@ -113,14 +121,14 @@ describe('builtInAxes', () => {
 	test('flat and outlined leave the component background alone', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(css).not.toContain('--se-surface-background:transparent');
-		expect(css).toMatch(/\[data-se-surface="flat"\]\)\{[^}]*--se-surface-background:initial;/);
-		expect(css).toMatch(/\[data-se-surface="outlined"\]\)\{[^}]*--se-surface-background:initial;/);
+		expect(declarationsOf(css, '[data-se-surface="flat"]')).toContain('--se-surface-background:initial;');
+		expect(declarationsOf(css, '[data-se-surface="outlined"]')).toContain('--se-surface-background:initial;');
 	});
 
 	test('elevated is the default, so it hands every token back to the component', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
-		expect(css).toContain(
-			'[data-se-surface="elevated"]){--se-border-width:initial;--se-shadow:initial;--se-surface-background:initial;}',
+		expect(declarationsOf(css, '[data-se-surface="elevated"]')).toBe(
+			'{--se-border-width:initial;--se-shadow:initial;--se-surface-background:initial;}',
 		);
 	});
 });
@@ -157,7 +165,7 @@ describe('compileAppearance', () => {
 			values: { compact: { '--se-space': '0.5rem' }, default: {}, comfortable: { '--se-space': '2rem' } },
 		});
 		const css = getAppearanceCss(compileAppearance([...builtInAxes, size]), 'lx');
-		expect(css).toContain('[data-se-size="compact"]){--se-space:0.5rem;}');
+		expect(declarationsOf(css, '[data-se-size="compact"]')).toBe('{--se-space:0.5rem;}');
 		expect(css).not.toContain('--se-space:1rem');
 	});
 
@@ -165,8 +173,18 @@ describe('compileAppearance', () => {
 		const css = getAppearanceCss(compileAppearance([tone]), 'lx');
 		expect(css).toContain('[data-se-theme="lx"]');
 		expect(css).toContain('--se-accent:#f60');
-		expect(css).toContain(':where([data-se-theme="lx"] [data-se-tone="brand"],');
-		expect(css.replaceAll(/:where\([^)]*\)/g, '')).not.toContain('[data-se-');
+		const rules = css.split('\n');
+		expect(rules.length).toBeGreaterThan(0);
+		for (const rule of rules) expect(rule).toMatch(/^:where\(.*\)\{[^{}]*\}$/);
+	});
+
+	test('a rule stops at the first element of another theme, so the nearest theme wins', () => {
+		const css = getAppearanceCss(compileAppearance([tone]), 'lx');
+		const scope = '[data-se-theme="lx"]';
+		const foreign = `[data-se-theme]:not(${scope})`;
+		expect(css).toBe(
+			`:where(${scope}[data-se-tone="brand"],${scope} [data-se-tone="brand"]:not(${foreign},${scope} ${foreign} *)){--se-accent:#f60;}`,
+		);
 	});
 
 	test('rejects an axis that has no Standard Schema', () => {

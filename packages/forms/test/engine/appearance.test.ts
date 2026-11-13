@@ -90,7 +90,9 @@ describe('engine appearance vocabulary', () => {
 
 	test('token values compile into the engine stylesheet, scoped by the one theme id', () => {
 		const { id, css } = createFormEngine({ layout: toned }).getLayout();
-		expect(css).toContain(`:where([data-se-theme="${id}"] [data-se-tone="brand"],`);
+		expect(css).toContain(
+			`:where([data-se-theme="${id}"][data-se-tone="brand"],[data-se-theme="${id}"] [data-se-tone="brand"]:not(`,
+		);
 		expect(css).toContain('--se-tone-accent:#f60');
 	});
 

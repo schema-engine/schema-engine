@@ -83,6 +83,14 @@ Rules for a good axis: orthogonal to the others; the same meaning on every compo
 
 `createAppearanceSchema(registry)` builds the schema of a pick from the theme's axes: each axis an optional enum of its values, which a JSON Schema export lists.
 
+### Nested themes
+
+Every grid and item carries `data-se-theme`, so a form of theme B rendered inside a grid item of theme A has both themes above it. The token rules do not leak between them: each is written as `:where(<theme>[data-se-x="v"], <theme> [data-se-x="v"]:not(<other theme>, <theme> <other theme> *))`, so an element takes the tokens of the nearest theme, whichever stylesheet comes later. A pick made on the element that carries the theme, or below it with no other theme in between, uses that theme's tokens. The rules stay in `:where()`, so they add no specificity and an author's class still wins, and the grid rules are scoped to `se-grid` and `se-grid-item` per theme as before.
+
+The scoping is plain selectors, so it needs no script and holds in server-rendered output. It is not `@scope`: `@scope (...) to (...)` would also be exact, but it is recent (Baseline since late 2025), and a browser without it would drop every token rule, where selectors need only `:where()` and a selector list in `:not()`. The cost is one case that gets no tokens rather than the wrong ones: a theme nested below another theme and then below itself, such as A inside B inside A.
+
+Tokens are custom properties, so they still inherit like any other: an outer pick on an axis reaches a nested form that picks nothing on that axis, until that form picks a value (`default` hands the tokens back to the component).
+
 ## The stylesheet hooks
 
 The stylesheet selects only `.se-grid`, `.se-grid-item` and `[data-se-theme]`. A renderer puts `GRID_CLASS` (`se-grid`) on every grid container, `GRID_ITEM_CLASS` (`se-grid-item`) on every item placed in one, and `data-se-theme="<id>"` on both. It adds them beside its own classes. There are no aliases for another class name.

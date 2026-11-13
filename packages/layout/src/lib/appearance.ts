@@ -24,8 +24,8 @@ import type { LayoutTheme, LayoutThemeCompilerOptions } from './layout-theme';
  *
  * Compile once, where the theme is built ({@link createLayoutTheme} does, with the grid). Token rules are
  * emitted inside `:where()`, so they add no specificity and an author's `className` always wins; they
- * are scoped to the theme by `data-se-theme`, so two themes with different tokens cannot overwrite
- * each other.
+ * are scoped to the theme by `data-se-theme` and the nearest theme above an element wins, so two themes
+ * with different tokens cannot overwrite each other, also when one form sits in the other's grid.
  */
 
 /** Custom properties a value stands for, keyed `--name`. */
@@ -286,18 +286,32 @@ export interface CompiledAppearance {
  * The token rules of a compiled appearance, scoped to the layout theme with the given id.
  *
  * @remarks
- * Every rule sits inside `:where()`, so it adds no specificity, and matches both a descendant of the
- * theme root and the root itself. Empty when no value declares tokens.
+ * Every rule sits inside `:where()`, so it adds no specificity and an author's class always wins.
+ * A rule matches an element that carries the theme and the pick together, or a descendant of the
+ * theme's root with no element of another theme between. Every grid and item carries
+ * `data-se-theme`, so a form of theme B inside a grid item of theme A has both themes above it;
+ * leaving out whatever sits at or below a foreign theme leaves the nearest theme's rule as the one
+ * that matches, whatever the order of the stylesheets. Empty when no value declares tokens.
+ *
+ * @remarks
+ * Plain selectors, so it needs no script and holds in server-rendered output in every browser that
+ * supports `:where()` and a selector list in `:not()`. `@scope ... to ...` also expresses "down to
+ * the nearest theme" and tracks nesting exactly, but a browser without it would drop every token
+ * rule. The cost of plain selectors is one case that gets no tokens rather than the wrong ones: a
+ * theme re-entered below another theme (A in B in A), because "no other theme between" cannot be
+ * written without `@scope`. Revisit once `@scope` is in every browser the renderers support.
  */
 export function getAppearanceCss(appearance: CompiledAppearance, themeId: string): string {
 	const rules: string[] = [];
 	const scope = `[data-se-theme="${themeId}"]`;
+	const foreign = `[data-se-theme]:not(${scope})`;
 	for (const axis of appearance.registry.all()) {
 		for (const [value, tokens] of Object.entries(axis.values)) {
 			const declarations = Object.entries(tokens).map(([token, tokenValue]) => `${token}:${tokenValue};`);
 			if (declarations.length === 0) continue;
 			const match = `[data-se-${axis.$type}="${value}"]`;
-			rules.push(`:where(${scope} ${match},${scope}${match}){${declarations.join('')}}`);
+			const inside = `${scope} ${match}:not(${foreign},${scope} ${foreign} *)`;
+			rules.push(`:where(${scope}${match},${inside}){${declarations.join('')}}`);
 		}
 	}
 	return rules.join('\n');

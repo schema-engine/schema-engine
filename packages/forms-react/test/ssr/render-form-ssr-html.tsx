@@ -2,8 +2,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { FormEngineProvider } from '@/components/form-engine-provider';
 import { FormRenderer } from '@/components/internals/form-renderer';
+import { nestedGuestLayout, nestedThemeForm } from '../../../../test-utils/nested-theme-acceptance';
+import type { LayoutThemeLike } from '../../../../test-utils/ssr-grid-acceptance';
 import {
-	type createSsrAcceptanceEngine,
+	createSsrAcceptanceEngine,
 	getSsrAcceptanceFixture,
 	getSsrAreasFixture,
 	getSsrNestedWidthsFixture,
@@ -75,6 +77,21 @@ export function renderSsrSteppedAcceptanceHtml(): string {
 
 export function getSsrAcceptanceEngine() {
 	return getSsrAcceptanceFixture().engine;
+}
+
+/** Server output of the embedded form of the nested theme acceptance, on its own engine and theme. */
+export function renderNestedThemeGuestHtml(authorClass: boolean): { html: string; layout: LayoutThemeLike } {
+	const engine = createSsrAcceptanceEngine(nestedGuestLayout);
+	const html = renderToStaticMarkup(
+		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
+			<FormRenderer
+				engine={engine}
+				adapter={rhfAdapter}
+				config={engine.validateForm(nestedThemeForm('ssr-input', authorClass))}
+			/>
+		</FormEngineProvider>,
+	);
+	return { html, layout: engine.getLayout() };
 }
 
 const THEMED_FORM = {
