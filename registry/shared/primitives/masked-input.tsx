@@ -107,6 +107,7 @@ function MaskedInput({
 
 	return (
 		<input
+			data-se-control
 			{...props}
 			ref={setInputRef}
 			data-slot="masked-input"

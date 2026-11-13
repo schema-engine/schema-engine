@@ -180,7 +180,7 @@ const sizeAxis = defineAxis({
 	$type: 'size',
 	metadata: {
 		name: 'Size',
-		description: 'How much room components take: spacing, type size and readable width.',
+		description: 'How much room components take: spacing, type size, control height and readable width.',
 	},
 	default: 'default',
 	values: {
@@ -188,16 +188,19 @@ const sizeAxis = defineAxis({
 			'--se-space': 'var(--se-space-compact, 1rem)',
 			'--se-font-size': '0.875rem',
 			'--se-measure': '24rem',
+			'--se-control-height': 'var(--se-control-height-compact, 1.75rem)',
 		},
 		default: {
 			'--se-space': 'initial',
 			'--se-font-size': 'initial',
 			'--se-measure': 'initial',
+			'--se-control-height': 'initial',
 		},
 		comfortable: {
 			'--se-space': 'var(--se-space-comfortable, 2rem)',
 			'--se-font-size': '1.0625rem',
 			'--se-measure': '32rem',
+			'--se-control-height': 'var(--se-control-height-comfortable, 2.25rem)',
 		},
 	},
 });
@@ -233,7 +236,8 @@ const surfaceAxis = defineAxis({
  * (flat, outlined, elevated).
  *
  * @remarks
- * The tokens are renderer-neutral and name no host theme. `size.default` and the background of
+ * The tokens are renderer-neutral and name no host theme; `size` reads renderer hooks (`--se-space-compact`,
+ * `--se-control-height-compact` and their `comfortable` twins) with neutral fallbacks. `size.default` and the background of
  * `surface.elevated` are `initial`, which hands the token back to the component's own fallback, so
  * a renderer's fallbacks, which it maps to its host theme, stay in force and `size: default`
  * looks like no pick, also inside a `compact` form. Override an axis by listing another

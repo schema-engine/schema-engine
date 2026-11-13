@@ -83,6 +83,7 @@ describe('builtInAxes', () => {
 		);
 		expect([...tokens].toSorted()).toEqual([
 			'--se-border-width',
+			'--se-control-height',
 			'--se-font-size',
 			'--se-measure',
 			'--se-shadow',
@@ -97,7 +98,7 @@ describe('builtInAxes', () => {
 	test('a default value hands its tokens back to the component fallback, so it undoes an inherited pick', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(declarationsOf(css, '[data-se-size="default"]')).toBe(
-			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
+			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;--se-control-height:initial;}',
 		);
 	});
 
@@ -119,13 +120,24 @@ describe('builtInAxes', () => {
 		);
 	});
 
+	test('compact and comfortable control height are hooks with neutral fallbacks, and default hands it back', () => {
+		const css = getAppearanceCss(compileAppearance(), 'lx');
+		expect(declarationsOf(css, '[data-se-size="compact"]')).toContain(
+			'--se-control-height:var(--se-control-height-compact, 1.75rem);',
+		);
+		expect(declarationsOf(css, '[data-se-size="comfortable"]')).toContain(
+			'--se-control-height:var(--se-control-height-comfortable, 2.25rem);',
+		);
+		expect(declarationsOf(css, '[data-se-size="default"]')).toContain('--se-control-height:initial;');
+	});
+
 	test('size sets the readable measure: 24rem, 32rem, and the component fallback for default', () => {
 		const css = getAppearanceCss(compileAppearance(), 'lx');
 		expect(declarationsOf(css, '[data-se-size="compact"]')).toBe(
-			'{--se-space:var(--se-space-compact, 1rem);--se-font-size:0.875rem;--se-measure:24rem;}',
+			'{--se-space:var(--se-space-compact, 1rem);--se-font-size:0.875rem;--se-measure:24rem;--se-control-height:var(--se-control-height-compact, 1.75rem);}',
 		);
 		expect(declarationsOf(css, '[data-se-size="default"]')).toBe(
-			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;}',
+			'{--se-space:initial;--se-font-size:initial;--se-measure:initial;--se-control-height:initial;}',
 		);
 		expect(css).toContain('--se-measure:32rem;');
 	});

@@ -293,7 +293,7 @@ browser with `@scope`; a class with any specificity still wins.
 
 An appearance axis is one independent dimension of appearance with 2 to 5 named values.
 Each value stands for a set of semantic CSS tokens (`--se-space`, `--se-font-size`,
-`--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that
+`--se-measure`, `--se-control-height`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that
 components read. Components never read the axis value, and a token never names one
 component. `size` and `surface` are built in.
 
@@ -317,7 +317,7 @@ const engine = createFormEngine({ elements, layout: { appearance: [...builtInAxe
 
 Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
 variable widens, and typed `defineForm` stops narrowing the values. The card's width is the readable measure `--se-measure`, which `size` sets (24rem compact,
-32rem comfortable), so overriding the compact spacing does not resize the card.
+32rem comfortable), so overriding the compact spacing does not resize the card. `size` also sets the control height `--se-control-height`, through the hooks `--se-control-height-compact` (`1.75rem`) and `--se-control-height-comfortable` (`2.25rem`) that a renderer maps to its theme: Radiant uses the theme's small and large control sizes, and a `default` pick keeps the theme's own height.
 
 A registration declares the axes it responds to (`appearanceAxes: ['tone']`); the engine
 build throws, naming the registration, when it declares an axis the theme lacks. A form, a

@@ -17,6 +17,7 @@ export function WizardActions() {
 	return (
 		<div className={cn('flex items-center justify-between gap-4', variant === 'minimal' && 'w-full')}>
 			<Button
+				data-se-control
 				type="button"
 				variant={variant === 'minimal' ? 'ghost' : 'outline'}
 				onClick={navigation.goToPreviousStep}
@@ -32,12 +33,13 @@ export function WizardActions() {
 			) : null}
 			<div className="flex gap-2">
 				{navigation.isLastStep ? (
-					<Button key="submit" type="submit" aria-label={labels.submitAriaLabel}>
+					<Button key="submit" data-se-control type="submit" aria-label={labels.submitAriaLabel}>
 						{form.isSubmitting ? labels.submitting : labels.submit}
 					</Button>
 				) : (
 					<Button
 						key="next"
+						data-se-control
 						type="button"
 						onClick={navigation.goToNextStep}
 						disabled={!navigation.canGoNext}

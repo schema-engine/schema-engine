@@ -41,6 +41,7 @@ function DatePicker({
 			<PopoverTrigger
 				render={(triggerProps) => (
 					<Button
+						data-se-control
 						{...triggerProps}
 						{...props}
 						id={id}

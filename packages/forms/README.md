@@ -111,6 +111,24 @@ It still throws for a misuse of the API, such as a registration whose Standard S
 editor integration can pass `(value) => engine.safeValidateForm(value)` as its validator and map each
 `path` to a source location.
 
+### YAML forms
+
+A form can be authored as YAML. `@schema-engine/registry/yaml` parses the text with the YAML 1.2 core schema,
+calls your validator, and gives each issue a file, line and column. `engine.safeValidateForm` is the validator
+as it is; `yaml` is an optional peer dependency of `@schema-engine/registry`, needed only by an app that
+imports that subpath.
+
+```ts
+import { parseYaml } from '@schema-engine/registry/yaml';
+
+const form = parseYaml(text, (value) => engine.safeValidateForm(value), { filename: 'contact.form.yaml' });
+// throws a YamlDocumentError: contact.form.yaml:17:24 steps[0].elements[1].grid.width: Expected one of ...
+```
+
+For editor autocomplete, write `engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' })` to a file and name it in a
+`# yaml-language-server: $schema=...` header. The docs page `/docs/forms/yaml` (YAML Forms)
+has recipes for Node, Bun, Vite and fetch.
+
 ### Shared step and submission logic
 
 `createInitialStepStates(totalSteps)` creates completion, validity, and visitation arrays;
@@ -268,7 +286,7 @@ const engine = createFormEngine({ layout: { appearance: [...builtInAxes, tone, s
 
 Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
 variable widens, and typed `defineForm` stops narrowing the values. The card's width is the readable measure `--se-measure`, which `size` sets (24rem compact,
-32rem comfortable), so overriding the compact spacing does not resize the card.
+32rem comfortable), so overriding the compact spacing does not resize the card. `size` also sets the control height `--se-control-height`, through the hooks `--se-control-height-compact` (`1.75rem`) and `--se-control-height-comfortable` (`2.25rem`) that a renderer maps to its theme.
 
 The engine lists every axis in its schema catalog (`axis:size`) and in the JSON Schema
 export, where `appearance.size` is an enum of the axis's values, so an editor autocompletes

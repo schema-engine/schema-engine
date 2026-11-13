@@ -18,4 +18,5 @@ export const RENDERER_DATA_ATTRIBUTES = [
 	'last-invalid',
 	'row-id',
 	'required-marker',
+	'control',
 ] as const;

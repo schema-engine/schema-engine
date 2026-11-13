@@ -97,6 +97,7 @@ function PhoneNumberInput({ className, onChange, value, ...props }: ComponentPro
 
 	return (
 		<Input
+			data-se-control
 			{...props}
 			value={displayValue}
 			className={cn('rounded-s-none', className)}
@@ -173,6 +174,7 @@ function CountrySelect({ disabled, value: selectedCountry, options: countryList,
 			<PopoverTrigger
 				render={(props) => (
 					<Button
+						data-se-control
 						{...props}
 						type="button"
 						variant="outline"
