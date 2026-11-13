@@ -11,7 +11,7 @@ const SHARED_PRIMITIVES_ROOT = 'registry/shared/primitives';
 type BaseId = 'base-ui' | 'radix' | 'aria';
 type PrimitiveName =
 	'field' | 'combobox' | 'phone-input' | 'drop-zone' | 'masked-input' | 'number-field' | 'date-picker';
-type ItemType = 'registry:lib' | 'registry:ui' | 'registry:item' | 'registry:component';
+type ItemType = 'registry:lib' | 'registry:ui' | 'registry:item' | 'registry:component' | 'registry:file';
 
 interface CatalogFile {
 	path: string;
@@ -205,7 +205,7 @@ function listRelativeSourceFiles(absDir: string, prefix = ''): string[] {
 		const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
 		if (entry.isDirectory()) {
 			files.push(...listRelativeSourceFiles(join(absDir, entry.name), rel));
-		} else if (rel.endsWith('.ts') || rel.endsWith('.tsx')) {
+		} else if (rel.endsWith('.ts') || rel.endsWith('.tsx') || rel.endsWith('.css')) {
 			files.push(rel);
 		}
 	}
@@ -490,10 +490,22 @@ function buildElementItem(base: Base, spec: ElementSpec): CatalogItem {
 	};
 }
 
+/**
+ * A stylesheet is a `registry:file`, which the shadcn CLI copies to its `target` without touching it.
+ *
+ * @remarks
+ * The app imports the stylesheet from its global stylesheet. No component imports it, because the
+ * import needs the app's cascade layer (`layer(components)`) to let utility classes win.
+ */
+function recipeFileType(rel: string): ItemType {
+	if (rel.endsWith('.css')) return 'registry:file';
+	return rel.endsWith('.tsx') ? 'registry:component' : 'registry:lib';
+}
+
 function recipeFile(rel: string): CatalogFile {
 	return {
 		path: `${SHARED_FORMS_ROOT}/recipes/${rel}`,
-		type: rel.endsWith('.tsx') ? 'registry:component' : 'registry:lib',
+		type: recipeFileType(rel),
 		target: `@components/schema-engine/forms/recipes/${rel}`,
 	};
 }
@@ -509,7 +521,7 @@ function buildDefaultRecipeItem(base: Base): CatalogItem {
 		type: 'registry:item',
 		title: `Schema Engine default recipes (${base.label})`,
 		description: `Default ${base.label} view recipes and the generated recipe registration barrel.`,
-		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).',
+		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import "./components/schema-engine/forms/recipes/recipes.css" layer(components); (the path is relative to that stylesheet: ../components/... from a Next.js app/globals.css).',
 		registryDependencies: DEFAULT_RECIPE_REGISTRY_DEPENDENCIES.map((dep) => resolveDep(base, dep)),
 		dependencies: DEFAULT_RECIPE_RUNTIME_DEPENDENCIES,
 		files: defaultRecipeFiles().map(recipeFile),
@@ -780,6 +792,11 @@ function recipeSourceFiles(rel: string, source: string): string[] {
 		if (!local || seen.has(local)) continue;
 		seen.add(local);
 		files.push(local);
+		const stylesheet = local.replace(/\.tsx?$/, '.css');
+		if (!seen.has(stylesheet) && existsSync(join(root, SHARED_FORMS_ROOT, 'recipes', stylesheet))) {
+			seen.add(stylesheet);
+			files.push(stylesheet);
+		}
 	}
 
 	return files;
@@ -836,14 +853,36 @@ interface RecipeManifest {
  */
 function renderRecipeManifest(scan: RecipeScanEntry[]): string {
 	const manifest: RecipeManifest = {
-		recipes: scan.map(({ stem, source }) => ({
-			id: stem,
-			title: recipeTitle(stem),
-			files: recipeSourceFiles(`registrations/${stem}.ts`, source),
-		})),
+		recipes: scan.map(({ stem, source }) => {
+			const files = recipeSourceFiles(`registrations/${stem}.ts`, source);
+			return {
+				id: stem,
+				title: recipeTitle(stem),
+				files: files.some((file) => file.endsWith('.css')) ? [...files, RECIPE_STYLESHEET_ENTRY] : files,
+			};
+		}),
 	};
 
 	return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+/** The stylesheet the app imports; it pulls in every shell stylesheet. */
+const RECIPE_STYLESHEET_ENTRY = 'recipes.css';
+
+/** Shell stylesheets, paired with the shell components beside them. */
+function recipeShellStylesheets(): string[] {
+	return listRelativeSourceFiles(join(root, SHARED_FORMS_ROOT, 'recipes')).filter(
+		(file) => file.endsWith('.css') && file !== RECIPE_STYLESHEET_ENTRY,
+	);
+}
+
+function renderRecipeStylesheet(stylesheets: string[]): string {
+	return `/*
+ * Generated entry point for the Schema Engine default recipe styles.
+ * Import this one file from the app's global stylesheet; each shell's file sits beside its component.
+ */
+${stylesheets.map((file) => `@import './${file}';`).join('\n')}
+`;
 }
 
 function toRegistryItem(item: CatalogItem) {
@@ -873,6 +912,10 @@ export function buildOutputs(): Map<string, string> {
 	outputs.set(`${SHARED_FORMS_ROOT}/registrations.ts`, renderRegistrations(elementRegistrations()));
 	outputs.set(`${SHARED_FORMS_ROOT}/recipes/registrations.ts`, renderRecipeRegistrations(recipeScan));
 	outputs.set(`${SHARED_FORMS_ROOT}/recipes/manifest.json`, renderRecipeManifest(recipeScan));
+	outputs.set(
+		`${SHARED_FORMS_ROOT}/recipes/${RECIPE_STYLESHEET_ENTRY}`,
+		renderRecipeStylesheet(recipeShellStylesheets()),
+	);
 
 	return outputs;
 }

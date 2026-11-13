@@ -29,6 +29,17 @@ Every form element is also available as an individual item (for example `schema-
 
 Shells and blocks are consumer-owned registry source and are selected through explicitly registered `view.$type` recipes.
 
+## Recipe styles
+
+A recipe item ships its CSS beside the components, as `registry:file` entries the shadcn CLI copies to the `target` as given (`@components/schema-engine/forms/recipes/recipes.css` and one file per shell, such as `shells/card-shell.css`). Nothing imports the CSS for you, so import the entry point once in the app's global stylesheet, after Tailwind, into the `components` layer:
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+```
+
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. The `layer(components)` keeps the recipe rules below Tailwind utilities; without Tailwind, import the file plain. Every rule sits inside `:where()`, so a host class on the same element wins either way. The card shell, the only shell with styles so far, carries no inline styles and reads the appearance tokens (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that the form's layout theme declares for the `data-se-size` and `data-se-surface` attributes. With the built-in axes and no host theme overrides, one `appearance` config gives the same card geometry here as in Radiant.
+
 ## Source trees
 
 Every file resolves the same way: if a base-specific override exists it wins, otherwise the shared implementation is
