@@ -46,13 +46,13 @@ describe('hero shell', () => {
 
 		expect(root.style.color).toBe('');
 		expect(getComputedStyle(root).backgroundImage).toContain('x%22)');
-		expect(root.getAttribute('style')).toMatch(/^--se-hero-image:/);
 	});
 
-	test('hands the background image over as data, not as inline layout', () => {
+	test('keeps the background image as data and the layout in the stylesheet', () => {
 		const root = renderHero({ backgroundImage: '/hero.jpg' });
 
-		expect(root.style.getPropertyValue('--se-hero-image')).toContain('/hero.jpg');
-		expect(root.style.backgroundImage).toBe('');
+		expect(root.style.backgroundImage).toContain('/hero.jpg');
+		expect(root.style.length).toBe(1);
+		expect(getComputedStyle(root).backgroundSize).toBe('cover');
 	});
 });

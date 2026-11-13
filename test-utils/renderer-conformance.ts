@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, within } from '@testing-library/dom';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import * as v from 'valibot';
 import { builtInAxes, defineAxis } from '@schema-engine/layout';
 import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
@@ -160,6 +160,11 @@ const recipeForm = ({ $type, steps, header, progress, sideContent }: RecipeCase)
 const SPACED_RECIPES = ['hero-background', 'hero-wizard', 'sidebar-wizard', 'split-screen', 'split-screen-wizard'];
 const SIZES = ['compact', 'comfortable'] as const;
 
+/** The viewports the shell spacing checks pin: below and above the shells' 768px breakpoint. */
+const MOBILE_VIEWPORT = { width: 414, height: 896 };
+const DESKTOP_VIEWPORT = { width: 1100, height: 700 };
+const DESKTOP_RECIPES = ['sidebar-wizard', 'split-screen'];
+
 /**
  * What a `size` pick on the shell slot of each spaced recipe measures, in CSS pixels.
  *
@@ -167,6 +172,17 @@ const SIZES = ['compact', 'comfortable'] as const;
  * The hero pads itself and centres a 28rem column, the sidebar gaps its slots and the split screen pads its
  * content panel. A shell that stopped reading `--se-space` would keep its unpicked spacing instead.
  */
+const DESKTOP_SHELL_MEASURES: Record<string, Record<(typeof SIZES)[number], { padding: string; insetLeft: number }>> = {
+	'sidebar-wizard': {
+		compact: { padding: '0px', insetLeft: 321 },
+		comfortable: { padding: '0px', insetLeft: 353 },
+	},
+	'split-screen': {
+		compact: { padding: '0px', insetLeft: 616 },
+		comfortable: { padding: '0px', insetLeft: 632 },
+	},
+};
+
 const SPACED_SHELL_MEASURES: Record<
 	string,
 	Record<(typeof SIZES)[number], { padding: string; gap: string; insetLeft: number }>
@@ -558,6 +574,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 		 * the split screen and the sidebar stack. Both renderers assert the same literals, so equal spacing follows from both suites passing.
 		 */
 		describe('shell spacing parity', () => {
+			beforeAll(() => page.viewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height));
 			const shellAxes = (recipe: RecipeCase): readonly string[] => {
 				const spec: { appearanceAxes?: Partial<Record<string, readonly string[]>> } | undefined = Object.values(
 					builtInRecipeSpecs,
@@ -593,6 +610,20 @@ export function rendererConformance(mount: ConformanceMount): void {
 			};
 			test('the viewport is below the 768px breakpoint the literals assume', () => {
 				expect(window.innerWidth).toBeLessThan(768);
+			});
+			describe('at a desktop width', () => {
+				beforeAll(() => page.viewport(DESKTOP_VIEWPORT.width, DESKTOP_VIEWPORT.height));
+				afterAll(() => page.viewport(MOBILE_VIEWPORT.width, MOBILE_VIEWPORT.height));
+				test.each(DESKTOP_RECIPES.flatMap((type) => SIZES.map((size) => [type, size] as const)))(
+					'%s with size %s has the same spacing in every renderer',
+					async (type, size) => {
+						const recipe = recipeCases.find((candidate) => candidate.$type === type);
+						if (!recipe) throw new Error(`No conformance case for ${type}.`);
+						expect(window.innerWidth).toBeGreaterThanOrEqual(1024);
+						const { padding, insetLeft } = await measureShell(recipe, size);
+						expect({ padding, insetLeft }).toEqual(DESKTOP_SHELL_MEASURES[type]?.[size]);
+					},
+				);
 			});
 			test('the spaced recipes are found', () => {
 				expect(spacedRecipes.map((recipe) => recipe.$type).toSorted()).toEqual(SPACED_RECIPES);

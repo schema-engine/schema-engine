@@ -3,8 +3,8 @@
  *
  * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
  * The shell reads the semantic `size` token --se-space for its padding and the gaps of its content, as the
- * Radiant hero does; the fallbacks are the look of an unpicked hero. The background image is data: the
- * component hands it over as the custom property --se-hero-image, so no inline style carries layout.
+ * Radiant hero does; the fallbacks are the look of an unpicked hero. The background image is data and stays
+ * an inline `background-image` on the shell, so no inline style carries layout.
  *
  * Import this file into the `components` layer when the app uses Tailwind, so utility classes still outrank
  * it: `@import "./components/schema-engine/forms/recipes/recipes.css" layer(components);`
@@ -20,7 +20,6 @@
 	justify-content: center;
 	overflow: hidden;
 	padding: var(--se-space, 2rem);
-	background-image: var(--se-hero-image, none);
 	background-position: center;
 	background-size: cover;
 }
