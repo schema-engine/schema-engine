@@ -196,7 +196,7 @@ describe('compileAppearance', () => {
 
 	test('a plain rule leaves out whatever sits at or below an element of another theme', () => {
 		const rule = plainRuleOf(getAppearanceCss(compileAppearance([tone]), 'lx'), '[data-se-tone="brand"]');
-		expect(rule).toContain('[data-se-theme="lx"]');
+		expect(rule).toContain('[data-se-theme="lx"][data-se-tone="brand"]');
 		expect(rule).toContain(':not([data-se-theme]:not([data-se-theme="lx"])');
 		expect(rule).toMatch(/\[data-se-theme="lx"\] \[data-se-theme\]:not\(\[data-se-theme="lx"\]\) \*/);
 	});

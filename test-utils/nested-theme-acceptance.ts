@@ -190,6 +190,30 @@ export async function expectNestedFormUsesOwnThemeTokens(
 	);
 }
 
+/** The stylesheet text without its `@scope` rules, which sit one per line, as a browser without `@scope` sees it. */
+function withoutScopeRules(text: string): string {
+	return text.replaceAll(/^@scope [^\n]*?\}\}/gm, '');
+}
+
+/**
+ * Asserts the same nesting as {@link expectNestedFormUsesOwnThemeTokens} with the `@scope` rules
+ * removed from both stylesheets, so only the plain fallback rules apply.
+ *
+ * @remarks
+ * Every browser the tests run in supports `@scope`, so without this the plain rules, which a
+ * browser without it relies on, would never be exercised.
+ */
+export async function expectNestedFormUsesOwnThemeTokensWithoutScope(
+	guestHtml: string,
+	host: LayoutThemeLike,
+	guest: LayoutThemeLike,
+): Promise<void> {
+	const stripped = withoutScopeRules(guestHtml);
+	expect(stripped).not.toBe(guestHtml);
+	expect(withoutScopeRules(host.css)).not.toBe(host.css);
+	await expectNestedFormUsesOwnThemeTokens(stripped, { id: host.id, css: withoutScopeRules(host.css) }, guest);
+}
+
 /**
  * Asserts that a theme re-entered below another theme still uses its own tokens (A in B in A).
  *

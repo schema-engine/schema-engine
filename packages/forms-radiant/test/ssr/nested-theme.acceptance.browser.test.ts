@@ -2,6 +2,7 @@ import { describe, inject, test } from 'vitest';
 import {
 	expectAuthorClassOutranksNestedTokens,
 	expectNestedFormUsesOwnThemeTokens,
+	expectNestedFormUsesOwnThemeTokensWithoutScope,
 	expectReenteredThemeUsesOwnTokens,
 	nestedHostTheme,
 } from '../../../../test-utils/nested-theme-acceptance';
@@ -9,6 +10,14 @@ import {
 describe('a form nested in another theme grid', () => {
 	test('uses its own theme tokens whichever stylesheet comes later', async () => {
 		await expectNestedFormUsesOwnThemeTokens(
+			inject('ssrNestedThemeHtml'),
+			nestedHostTheme,
+			inject('ssrNestedTheme'),
+		);
+	});
+
+	test('uses its own theme tokens from the plain rules alone, as a browser without @scope does', async () => {
+		await expectNestedFormUsesOwnThemeTokensWithoutScope(
 			inject('ssrNestedThemeHtml'),
 			nestedHostTheme,
 			inject('ssrNestedTheme'),
