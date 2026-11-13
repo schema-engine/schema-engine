@@ -257,8 +257,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		actions: actionRegistry.size,
 	});
 
-	const elementsUnionRef: { current?: z.ZodMiniType } = {};
-	const childSchema = z.lazy(() => elementsUnionRef.current ?? z.never());
+	const childSchema = z.lazy(() => elementsUnion);
 	const exportedElements = toExportRegistrations(elementRegistry.all(), ComponentType.Element, layout, childSchema);
 	const exportedRecipes = toExportRegistrations(recipeRegistry.all(), ComponentType.Recipe, layout);
 	const exportedActions = toExportRegistrations(actionRegistry.all(), ComponentType.Action, layout);
@@ -288,7 +287,6 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	}
 
 	const elementsUnion = createElementsUnion(exportedElements, layout);
-	elementsUnionRef.current = elementsUnion;
 	const formConfigSchema = createFormConfigSchema(elementsUnion, exportedRecipes, exportedActions, layout);
 	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.all());
 	const schemaArtifacts = createFormEngineSchemaArtifacts(

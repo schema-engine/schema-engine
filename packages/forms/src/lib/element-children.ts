@@ -52,7 +52,7 @@ function isPrefaultSchema(schema: z.ZodMiniType): schema is z.ZodMiniPrefault {
  * @remarks
  * Finds the array a schema holds under {@link ELEMENT_CHILDREN_KEY}, looking through a pipe (its input)
  * and a prefault (its inner schema), and replaces its item schema; the array's own checks, such as a
- * minimum length, stay. Any other schema comes back as it is. Validation checks the children of any
+ * minimum length, stay. Any other schema comes back as it is, so an `elements` array wrapped in `optional`, `nullable`, `default` or `readonly` keeps loose children in the export. Validation checks the children of any
  * element that has an `elements` array, so this keeps the export from lagging behind it. The result is
  * for export only: parse with the original.
  */

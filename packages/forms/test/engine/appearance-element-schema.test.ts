@@ -222,11 +222,14 @@ describe('the children of a container are typed like top-level elements', () => 
 	});
 
 	test('a child lists the axes its element declares', () => {
-		expect(appearanceOfElement(schema, 'sized')?.properties?.size?.enum).toEqual([
-			'compact',
-			'default',
-			'comfortable',
-		]);
-		expect(axesOf(appearanceOfElement(schema, 'plain'))).toEqual([]);
+		const union = (schema.$defs as Record<string, Schema>)[(children.items.$ref as string).split('/').pop()!];
+		const memberOf = ($type: string) => {
+			const ref = (union.anyOf as Array<{ $ref: string }>).find((member) => member.$ref.endsWith(`:${$type}`));
+			return definitions(schema)[ref!.$ref.split('/').pop()!];
+		};
+		const appearanceOf = (member: Schema) => (member.properties as Record<string, AppearanceJsonSchema>).appearance;
+
+		expect(appearanceOf(memberOf('sized')).properties?.size?.enum).toEqual(['compact', 'default', 'comfortable']);
+		expect(axesOf(appearanceOf(memberOf('plain')))).toEqual([]);
 	});
 });
