@@ -74,6 +74,31 @@ describe('schema-engine GitHub registry catalog', () => {
 		});
 	}
 
+	for (const name of RECIPE_AGGREGATES) {
+		test(`${name} copies the recipe stylesheets as registry files`, () => {
+			const item = catalog.find((entry) => entry.name === name);
+			const stylesheets = item?.files.filter((file) => file.path.endsWith('.css')) ?? [];
+			expect(stylesheets.map((file) => file.target).toSorted()).toEqual([
+				'@components/schema-engine/forms/recipes/recipes.css',
+				'@components/schema-engine/forms/recipes/shells/card-shell.css',
+			]);
+			expect(stylesheets.every((file) => file.type === 'registry:file')).toBe(true);
+			expect(item?.docs).toContain('recipes.css');
+		});
+	}
+
+	test('every recipe group that ships a stylesheet also lists the recipes.css entry point', () => {
+		const manifest = JSON.parse(
+			readFileSync(
+				path.resolve(import.meta.dirname, '../../../../registry/shared/forms/recipes/manifest.json'),
+				'utf8',
+			),
+		) as { recipes: Array<{ id: string; files: string[] }> };
+		const styled = manifest.recipes.filter((recipe) => recipe.files.some((file) => file.endsWith('-shell.css')));
+		expect(styled.map((recipe) => recipe.id)).toEqual(expect.arrayContaining(['card', 'card-wizard']));
+		for (const recipe of styled) expect(recipe.files, recipe.id).toContain('recipes.css');
+	});
+
 	test('every file has an @components or @ui target', () => {
 		for (const item of catalog) {
 			for (const file of item.files) {

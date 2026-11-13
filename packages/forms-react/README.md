@@ -20,6 +20,15 @@ pnpm add react-hook-form
 
 Install the [Schema Engine registry](../../registry) elements and recipes for your UI library. The imports below refer to the generated registration barrels in your application.
 
+The recipes ship their CSS with them. Import it once in your global stylesheet, after Tailwind and into the `components` layer, so the card shell renders the `appearance` picks (`size`, `surface`) and your own classes override it:
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+```
+
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`.
+
 ## Render a form
 
 ```tsx

@@ -74,6 +74,10 @@ previews mount through a client island, same pattern as Radiant.
 - Form elements and React recipes come from `registry/shared/forms`,
   aliased as `@/components/schema-engine/forms/*`. `@/components/ui/*` resolves
   to the Forms React Storybook kit for those previews.
+- An app that installs the React recipes from the shadcn registry imports
+  `recipes/recipes.css` once in its global stylesheet, after Tailwind, with
+  `@import '<path>/components/schema-engine/forms/recipes/recipes.css' layer(components);`.
+  The path is relative to that stylesheet. Without it the card shell is unstyled.
 - The catch-all docs route registers island scripts and styles from each MDX
   entry's imports, so Forms React pages do not load Radiant preview assets
   and vice versa.

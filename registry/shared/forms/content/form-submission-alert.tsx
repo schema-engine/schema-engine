@@ -20,7 +20,6 @@ export function FormSubmissionAlert({
 	successMessage = DEFAULT_SUCCESS_MESSAGE,
 	errorMessage = DEFAULT_ERROR_MESSAGE,
 	pendingMessage = DEFAULT_PENDING_MESSAGE,
-	className,
 	grid,
 	style,
 }: SubmissionAlertProps) {
@@ -49,11 +48,7 @@ export function FormSubmissionAlert({
 	switch (submissionState.status) {
 		case 'pending':
 			return (
-				<Alert
-					{...host}
-					variant="default"
-					className={`${host.className} grid-cols-[1rem_1fr] gap-x-3 ${className || ''}`}
-				>
+				<Alert {...host} variant="default" className={`${host.className} grid-cols-[1rem_1fr] gap-x-3`}>
 					<div className="size-4 mt-0.5">
 						<Loader2 className="size-4 animate-spin" />
 					</div>
@@ -66,7 +61,7 @@ export function FormSubmissionAlert({
 				<Alert
 					{...host}
 					variant="default"
-					className={`${host.className} border-emerald-500/50 text-emerald-700 ${className || ''}`}
+					className={`${host.className} border-emerald-500/50 text-emerald-700`}
 				>
 					<CheckCircle2 className="size-4" />
 					<AlertTitle>{submissionState.successMessage || successMessage}</AlertTitle>
@@ -75,7 +70,7 @@ export function FormSubmissionAlert({
 
 		case 'error':
 			return (
-				<Alert {...host} variant="destructive" className={`${host.className} ${className || ''}`}>
+				<Alert {...host} variant="destructive">
 					<XCircle className="size-4" />
 					<AlertTitle>Submission Error</AlertTitle>
 					<AlertDescription>

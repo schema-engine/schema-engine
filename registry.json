@@ -946,7 +946,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (Base UI)",
       "description": "Default Base UI view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (the path is relative to that stylesheet: ../components/... from a Next.js app/globals.css).",
       "registryDependencies": [
         "button",
         "badge",
@@ -990,6 +990,11 @@
           "path": "registry/shared/forms/recipes/index.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/index.ts"
+        },
+        {
+          "path": "registry/shared/forms/recipes/recipes.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/recipes.css"
         },
         {
           "path": "registry/shared/forms/recipes/registrations/bare-controls.ts",
@@ -1040,6 +1045,11 @@
           "path": "registry/shared/forms/recipes/registrations.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/registrations.ts"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/card-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/card-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/card-shell.tsx",
@@ -2014,7 +2024,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (Radix UI)",
       "description": "Default Radix UI view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (the path is relative to that stylesheet: ../components/... from a Next.js app/globals.css).",
       "registryDependencies": [
         "button",
         "badge",
@@ -2058,6 +2068,11 @@
           "path": "registry/shared/forms/recipes/index.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/index.ts"
+        },
+        {
+          "path": "registry/shared/forms/recipes/recipes.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/recipes.css"
         },
         {
           "path": "registry/shared/forms/recipes/registrations/bare-controls.ts",
@@ -2108,6 +2123,11 @@
           "path": "registry/shared/forms/recipes/registrations.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/registrations.ts"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/card-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/card-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/card-shell.tsx",
@@ -3080,7 +3100,7 @@
       "type": "registry:item",
       "title": "Schema Engine default recipes (React Aria)",
       "description": "Default React Aria view recipes and the generated recipe registration barrel.",
-      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).",
+      "docs": "Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import \"./components/schema-engine/forms/recipes/recipes.css\" layer(components); (the path is relative to that stylesheet: ../components/... from a Next.js app/globals.css).",
       "registryDependencies": [
         "button",
         "badge",
@@ -3124,6 +3144,11 @@
           "path": "registry/shared/forms/recipes/index.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/index.ts"
+        },
+        {
+          "path": "registry/shared/forms/recipes/recipes.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/recipes.css"
         },
         {
           "path": "registry/shared/forms/recipes/registrations/bare-controls.ts",
@@ -3174,6 +3199,11 @@
           "path": "registry/shared/forms/recipes/registrations.ts",
           "type": "registry:lib",
           "target": "@components/schema-engine/forms/recipes/registrations.ts"
+        },
+        {
+          "path": "registry/shared/forms/recipes/shells/card-shell.css",
+          "type": "registry:file",
+          "target": "@components/schema-engine/forms/recipes/shells/card-shell.css"
         },
         {
           "path": "registry/shared/forms/recipes/shells/card-shell.tsx",

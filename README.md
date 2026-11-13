@@ -174,6 +174,13 @@ pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout r
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
+Import the recipe styles once in your global stylesheet, after Tailwind. The path is relative to that stylesheet (`./components/...` from a Vite `src/index.css`, `../components/...` from a Next.js `app/globals.css`):
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+```
+
 ```typescript
 import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';

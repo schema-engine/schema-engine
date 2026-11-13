@@ -178,6 +178,69 @@ const activeIndicator = (host: HTMLElement) =>
 		.filter((button) => button.getAttribute('aria-current') === 'step');
 const actionIds = () => conformanceAction.execute.mock.calls.map(([context]) => context.config.id);
 
+const sizedForm = (
+	appearance: Record<string, string>,
+	fieldAppearance?: Record<string, string>,
+	fieldClassName?: string,
+) => ({
+	...form([
+		{ ...input('email', 'Email'), appearance: fieldAppearance, className: fieldClassName },
+		input('name', 'Name'),
+	]),
+	appearance,
+});
+
+/**
+ * Reads the computed geometry of the card that carries a shell pick.
+ *
+ * @remarks
+ * The card is the element that holds the pick and the field, and its section is the child that holds the
+ * field, so the lookup names no renderer class. The host is made wider than the widest card, so the width
+ * is the shell's own readable measure, not the viewport's.
+ */
+function readCardGeometry(host: HTMLElement, appearance: Record<string, string>) {
+	host.style.width = '1200px';
+	const textbox = getByRole(host, 'textbox', { name: 'Field 1' });
+	const picked = Object.entries(appearance)
+		.map(([axis, value]) => `[data-se-${axis}="${value}"]`)
+		.join('');
+	const card = Array.from(host.querySelectorAll<HTMLElement>(picked)).find(
+		(element) =>
+			element !== formElement(host) &&
+			element !== stepElement(host, 'step0') &&
+			!element.classList.contains('se-grid-item') &&
+			element.contains(textbox),
+	);
+	if (!card) throw new Error('No card carries the pick.');
+	const section = Array.from(card.children).find((child) => child.contains(textbox));
+	if (!section) throw new Error('No card section holds the field.');
+	const style = getComputedStyle(card);
+	return {
+		padding: getComputedStyle(section).paddingTop,
+		width: card.getBoundingClientRect().width,
+		borderWidth: style.borderTopWidth,
+		boxShadow: style.boxShadow,
+	};
+}
+
+/** @remarks The unpicked card shadow, resolved on a probe so each renderer's own colour resolution is compared. */
+function defaultCardShadow() {
+	const probe = document.createElement('div');
+	probe.style.boxShadow = '0 8px 24px color-mix(in srgb, #000 10%, transparent)';
+	document.body.append(probe);
+	const shadow = getComputedStyle(probe).boxShadow;
+	probe.remove();
+	return shadow;
+}
+
+/** The card recipe's form, with a shell pick. */
+function cardForm(appearance: Record<string, string>): FormConfigView {
+	const cardCase = recipeCases.find((recipe) => recipe.$type === 'card');
+	if (!cardCase) throw new Error('The card recipe has no conformance case.');
+	const base = recipeForm(cardCase);
+	return { ...base, view: { ...base.view, $type: 'card', shell: { appearance } } };
+}
+
 /** @remarks Both browser projects execute these assertions against their own FormRenderer. */
 export function rendererConformance(mount: ConformanceMount): void {
 	describe('FormRenderer conformance', () => {
@@ -191,6 +254,10 @@ export function rendererConformance(mount: ConformanceMount): void {
 			const result = await mount(options);
 			cleanup = result.cleanup;
 			return result;
+		};
+		const cardGeometry = async (appearance: Record<string, string>) => {
+			const { host } = await setup({ config: cardForm(appearance) });
+			return readCardGeometry(host, appearance);
 		};
 		describe('class and custom properties', () => {
 			test('a step renders its className and custom properties', async () => {
@@ -245,17 +312,6 @@ export function rendererConformance(mount: ConformanceMount): void {
 			});
 		});
 		describe('appearance', () => {
-			const sizedForm = (
-				appearance: Record<string, string>,
-				fieldAppearance?: Record<string, string>,
-				fieldClassName?: string,
-			) => ({
-				...form([
-					{ ...input('email', 'Email'), appearance: fieldAppearance, className: fieldClassName },
-					input('name', 'Name'),
-				]),
-				appearance,
-			});
 			test('a form-level value reaches the form, the step and a field without its own', async () => {
 				const { host } = await setup({ config: sizedForm({ size: 'compact' }) });
 				expect(formElement(host).getAttribute('data-se-size')).toBe('compact');
@@ -398,6 +454,42 @@ export function rendererConformance(mount: ConformanceMount): void {
 				} finally {
 					author.remove();
 				}
+			});
+		});
+		/**
+		 * The card parity checks, run against both renderers with their own stylesheets.
+		 *
+		 * @remarks
+		 * The expected values are literals, which hold only for the built-in `size` and `surface` axes, no
+		 * host theme variables (`--space-block`, `--space-block-lg`, `--surface`, `--on-surface`, `--border`)
+		 * and a host wider than the widest card. A themed host changes them; Radiant's own tests cover that.
+		 * Both renderers assert the same literals, so equal geometry follows from both suites passing.
+		 */
+		describe('card appearance parity', () => {
+			test('a card with size comfortable and surface elevated has the same geometry in every renderer', async () => {
+				expect(await cardGeometry({ size: 'comfortable', surface: 'elevated' })).toEqual({
+					padding: '32px',
+					width: 512,
+					borderWidth: '1px',
+					boxShadow: defaultCardShadow(),
+				});
+			});
+			test.each([
+				['compact', '16px', 384],
+				['default', '24px', 448],
+				['comfortable', '32px', 512],
+			])('card size %s has the same padding and width in every renderer', async (size, padding, width) => {
+				expect(await cardGeometry({ size })).toMatchObject({ padding, width });
+			});
+			test.each([
+				['flat', '0px', 'none'],
+				['outlined', '1px', 'none'],
+				['elevated', '1px', undefined],
+			])('card surface %s has the same border and shadow in every renderer', async (surface, border, shadow) => {
+				expect(await cardGeometry({ surface })).toMatchObject({
+					borderWidth: border,
+					boxShadow: shadow ?? defaultCardShadow(),
+				});
 			});
 		});
 		test('resolves sibling show constraints independently in two array rows', async () => {

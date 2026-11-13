@@ -1,0 +1,52 @@
+/*
+ * Card shell styles for the React registry recipes.
+ *
+ * Every rule sits inside :where(), so it adds no specificity and a host class on the same element wins.
+ * The card reads the semantic appearance tokens the layout theme declares for the `size` and `surface`
+ * axes (--se-space, --se-measure, --se-border-width, --se-shadow, --se-surface-background); the
+ * fallbacks are the look of an unpicked card and follow the app's shadcn theme variables.
+ *
+ * Import this file into the `components` layer when the app uses Tailwind, so utility classes still
+ * outrank it: `@import "./components/schema-engine/forms/recipes/recipes.css" layer(components);`
+ */
+:where(.se-card-shell) {
+	display: flex;
+	min-height: 100svh;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	background-color: color-mix(in srgb, var(--muted, transparent) 30%, transparent);
+}
+
+@media (min-width: 768px) {
+	:where(.se-card-shell) {
+		padding: 2rem;
+	}
+}
+
+:where(.se-card-shell__card) {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: var(--se-measure, 28rem);
+	border: var(--se-border-width, 1px) solid var(--border, currentColor);
+	border-radius: calc(var(--radius, 0.5rem) + 4px);
+	background-color: var(--se-surface-background, var(--card, #fff));
+	color: var(--card-foreground, inherit);
+	box-shadow: var(--se-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent));
+}
+
+:where(.se-card-shell__section) {
+	padding: var(--se-space, 1.5rem);
+}
+
+:where(.se-card-shell__header) {
+	border-bottom: 1px solid var(--border, currentColor);
+	text-align: center;
+}
+
+:where(.se-card-shell__content) {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 1.5rem;
+}
