@@ -12,7 +12,7 @@ import { ReactFormPreview } from './react-form-preview.react';
  * {@link ReactFormDemoRoot} owns the root element; {@link ReactFormPreview} still performs React SSR
  * inside it.
  *
- * Embedding through `@ecopages/react/eco-embed` was tried on Ecopages 0.7.0 and
+ * Embedding through `@ecopages/react/eco-embed` was checked on Ecopages 0.8.0 and
  * does not fit: that `EcoEmbed` returns a React node, which is not a valid JSX
  * element type in an Ecopages JSX file (the type check fails), and it is meant
  * for React files that embed foreign components. The Ecopages JSX `EcoEmbed`
