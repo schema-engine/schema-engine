@@ -2,6 +2,7 @@ import { describe, test } from 'vitest';
 import {
 	expectAuthorClassOutranksNestedTokens,
 	expectNestedFormUsesOwnThemeTokens,
+	expectNestedGuestIgnoresHostSlots,
 	expectNestedFormUsesOwnThemeTokensWithoutScope,
 	expectReenteredThemeUsesOwnTokens,
 	nestedHostTheme,
@@ -27,5 +28,10 @@ describe('a form nested in another theme grid', () => {
 	test('keeps an author class above the axis tokens of both themes', async () => {
 		const { html, layout } = renderNestedThemeGuestHtml(true);
 		await expectAuthorClassOutranksNestedTokens(html, nestedHostTheme, layout);
+	});
+
+	test('does not read the host item placement at a width its own breakpoints have not reached', async () => {
+		const { html, layout } = renderNestedThemeGuestHtml(false);
+		await expectNestedGuestIgnoresHostSlots(html, nestedHostTheme, layout);
 	});
 });

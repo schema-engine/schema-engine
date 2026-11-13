@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { getGridItemVariables, getGridVariables, type GridThemeOptions } from '@/lib/grid-styles';
 import { createLayoutTheme, getDefaultLayoutTheme } from '@/lib/layout-theme';
 import { usesGridWidths } from '@/lib/grid-placement';
+import { computeElement } from './resolve-stylesheet';
 import { ElementGridConfigSchema, GridGapTokens, GridLayoutConfigSchema, type GridLayoutConfig } from '@/schemas/grid';
 
 const layout = (grid?: GridThemeOptions) => createLayoutTheme({ grid });
@@ -85,7 +86,12 @@ describe('generated stylesheet', () => {
 	});
 
 	test('a visible field falls back to the component display mode, not block', () => {
-		expect(css()).toContain('display:var(--se-item-display, var(--se-item-display-mode, block))');
+		const sheet = layout();
+		const item = (inline: Record<string, string> = {}) =>
+			computeElement(sheet.css, sheet.id, 'item', 1200, { inline }).value('display');
+		expect(item()).toBe('block');
+		expect(item({ '--se-item-display-mode': 'flex' })).toBe('flex');
+		expect(item({ '--se-item-display-mode': 'flex', '--se-item-display': 'none' })).toBe('none');
 	});
 
 	test('declares no place-* shorthand that would reset the axis longhands', () => {
@@ -93,32 +99,118 @@ describe('generated stylesheet', () => {
 	});
 
 	test('defaults field alignment to auto so the grid alignment still applies', () => {
-		expect(css()).toContain('justify-self:var(--se-item-justify-self, auto)');
-		expect(css()).toContain('align-self:var(--se-item-align-self, auto)');
+		const sheet = layout();
+		const item = computeElement(sheet.css, sheet.id, 'item', 1200);
+		expect(item.value('justify-self')).toBe('auto');
+		expect(item.value('align-self')).toBe('auto');
 	});
 
-	test('re-declares every responsive property inside each media query', () => {
-		const query = css().split('@media (min-width:40rem)')[1] ?? '';
-		for (const property of ['grid-template-columns', 'row-gap', 'column-gap']) {
-			expect(query).toContain(`${property}:var(--se-grid-`);
-		}
-		for (const property of ['display', 'grid-column', 'grid-row', 'justify-self', 'align-self']) {
-			expect(query).toContain(`${property}:var(--se-item-`);
+	const properties = {
+		grid: [
+			['grid-template-columns', 'se-grid-template'],
+			['grid-template-areas', 'se-grid-areas'],
+			['row-gap', 'se-grid-gap-y'],
+			['column-gap', 'se-grid-gap-x'],
+		],
+		item: [
+			['display', 'se-item-display'],
+			['grid-column', 'se-item-grid-column'],
+			['grid-row', 'se-item-grid-row'],
+			['justify-self', 'se-item-justify-self'],
+			['align-self', 'se-item-align-self'],
+			['margin-block-start', 'se-item-margin-block-start'],
+			['margin-block-end', 'se-item-margin-block-end'],
+		],
+	} as const;
+
+	test.each(['grid', 'item'] as const)('a %s slot applies from its breakpoint up, for every property', (kind) => {
+		const sheet = layout();
+		for (const [property, variable] of properties[kind]) {
+			const at = (width: number) =>
+				computeElement(sheet.css, sheet.id, kind, width, {
+					inline: { [`--${variable}`]: 'base', [`--${variable}-md`]: 'md', [`--${variable}-2xl`]: 'wide' },
+				}).value(property);
+			expect([at(100), at(767), at(768), at(1535), at(1536)], property).toEqual([
+				'base',
+				'base',
+				'md',
+				'md',
+				'wide',
+			]);
 		}
 	});
 
-	test('media queries fall back through narrower slots so sparse values cascade', () => {
-		expect(css()).toContain(
-			'grid-column:var(--se-item-grid-column-md, var(--se-item-grid-column-sm, var(--se-item-grid-column, var(--se-grid-default-column, auto))))',
-		);
+	test('a slot applies at the threshold of a configured breakpoint', () => {
+		const sheet = layout({ breakpoints: { md: '50rem' } });
+		const at = (width: number) =>
+			computeElement(sheet.css, sheet.id, 'item', width, {
+				inline: { '--se-item-grid-row': '1', '--se-item-grid-row-md': '2' },
+			}).value('grid-row');
+		expect([at(799), at(800)]).toEqual(['1', '2']);
+	});
+
+	test('a slot an author left unset falls back through the narrower slots', () => {
+		const sheet = layout();
+		const at = (width: number) =>
+			computeElement(sheet.css, sheet.id, 'item', width, {
+				inline: { '--se-item-grid-column': 'span 2', '--se-item-grid-column-md': 'span 3' },
+			}).value('grid-column');
+		expect([at(500), at(700), at(800), at(1100), at(1700)]).toEqual([
+			'span 2',
+			'span 2',
+			'span 3',
+			'span 3',
+			'span 3',
+		]);
+	});
+
+	test('an element that sets nothing computes the neutral defaults at every width', () => {
+		const sheet = layout();
+		for (const width of [320, 700, 1200, 1700]) {
+			const grid = computeElement(sheet.css, sheet.id, 'grid', width);
+			expect(grid.value('grid-template-columns')).toBe('repeat(1,minmax(0,1fr))');
+			expect(grid.value('grid-template-areas')).toBe('none');
+			expect(grid.value('row-gap')).toBe('1rem');
+			expect(grid.value('column-gap')).toBe('1rem');
+			expect(grid.value('justify-items')).toBe('normal');
+		}
+		const hosted = computeElement(sheet.css, sheet.id, 'grid', 700, {
+			inherited: { '--se-grid-gap-default': '3rem' },
+		});
+		expect(hosted.value('row-gap')).toBe('3rem');
 	});
 
 	test('resets every slot so nested grids and fields do not inherit placement', () => {
-		expect(css()).toContain('--se-grid-template:initial;');
-		expect(css()).toContain('--se-grid-template-2xl:initial;');
-		expect(css()).toContain('--se-item-grid-column:initial;');
-		expect(css()).toContain('--se-item-align-self-xl:initial;');
-		expect(css()).toContain('--se-grid-align-content:initial;');
+		const sheet = layout();
+		for (const kind of ['grid', 'item'] as const) {
+			const inherited = Object.fromEntries(
+				properties[kind].flatMap(([, variable]) =>
+					['', '-sm', '-md', '-lg', '-xl', '-2xl'].map((slot) => [`--${variable}${slot}`, 'parent']),
+				),
+			);
+			const child = computeElement(sheet.css, sheet.id, kind, 1700, { inherited });
+			for (const [property, variable] of properties[kind]) {
+				for (const slot of ['', '-sm', '-md', '-lg', '-xl', '-2xl']) {
+					expect(child.custom[`--${variable}${slot}`], `${variable}${slot}`).toBeUndefined();
+				}
+				expect(child.value(property), property).not.toBe('parent');
+			}
+		}
+		const grid = computeElement(sheet.css, sheet.id, 'grid', 1700, {
+			inherited: { '--se-grid-align-content': 'parent' },
+		});
+		expect(grid.value('align-content')).toBe('start');
+	});
+
+	test('a theme does not read the slots an ancestor theme with other breakpoints declared', () => {
+		const outer = layout();
+		const inner = layout({ breakpoints: { md: '60rem' } });
+		const parent = computeElement(outer.css, outer.id, 'item', 800, {
+			inline: { '--se-item-grid-column-md': 'span 6' },
+		});
+		expect(parent.value('grid-column')).toBe('span 6');
+		const child = computeElement(inner.css, inner.id, 'item', 800, { inherited: parent.custom });
+		expect(child.value('grid-column')).toBe('auto');
 	});
 });
 
@@ -414,15 +506,26 @@ describe('per-element spacing', () => {
 	});
 
 	test('the stylesheet defaults element margins to zero and falls back through narrower slots', () => {
-		expect(css()).toContain('margin-block-end:var(--se-item-margin-block-end, 0)');
-		expect(css()).toContain(
-			'margin-block-start:var(--se-item-margin-block-start-sm, var(--se-item-margin-block-start, 0))',
-		);
+		const sheet = layout();
+		const margin = (width: number, inline: Record<string, string> = {}) =>
+			computeElement(sheet.css, sheet.id, 'item', width, { inline });
+		expect(margin(1200).value('margin-block-end')).toBe('0');
+		expect(margin(1200).value('margin-block-start')).toBe('0');
+		const inline = { '--se-item-margin-block-start': '1rem', '--se-item-margin-block-start-lg': '2rem' };
+		expect([320, 700, 1100].map((width) => margin(width, inline).value('margin-block-start'))).toEqual([
+			'1rem',
+			'1rem',
+			'2rem',
+		]);
 	});
 
 	test('the stylesheet resets every spacing slot so nested fields do not inherit it', () => {
-		expect(css()).toContain('--se-item-margin-block-end:initial;');
-		expect(css()).toContain('--se-item-margin-block-start-2xl:initial;');
+		const sheet = layout();
+		const child = computeElement(sheet.css, sheet.id, 'item', 1700, {
+			inherited: { '--se-item-margin-block-end': '3rem', '--se-item-margin-block-start-2xl': '3rem' },
+		});
+		expect(child.value('margin-block-end')).toBe('0');
+		expect(child.value('margin-block-start')).toBe('0');
 	});
 });
 
@@ -493,8 +596,19 @@ describe('named widths and offsets', () => {
 	});
 
 	test('the stylesheet makes a field without a width fill the row when its grid has widths', () => {
-		expect(css()).toContain('--se-grid-default-column:initial;');
-		expect(css()).toContain('var(--se-item-grid-column, var(--se-grid-default-column, auto))');
+		const sheet = layout();
+		const field = (inline: Record<string, string> = {}) =>
+			computeElement(sheet.css, sheet.id, 'item', 1200, {
+				inherited: { '--se-grid-default-column': '1 / -1' },
+				inline,
+			}).value('grid-column');
+		expect(field()).toBe('1 / -1');
+		expect(field({ '--se-item-grid-column': 'span 6' })).toBe('span 6');
+		expect(computeElement(sheet.css, sheet.id, 'item', 1200).value('grid-column')).toBe('auto');
+		expect(
+			computeElement(sheet.css, sheet.id, 'grid', 1200, { inherited: { '--se-grid-default-column': '1 / -1' } })
+				.custom['--se-grid-default-column'],
+		).toBeUndefined();
 	});
 
 	test('a grid whose fields use widths gets twelve tracks and a full-row default', () => {
@@ -586,12 +700,21 @@ describe('named grid areas', () => {
 	});
 
 	test('the stylesheet reads the template areas through the breakpoint cascade and resets them', () => {
-		expect(css()).toContain('grid-template-areas:var(--se-grid-areas, none);');
-		expect(css()).toContain(
-			'grid-template-areas:var(--se-grid-areas-md, var(--se-grid-areas-sm, var(--se-grid-areas, none)));',
-		);
-		expect(css()).toContain('--se-grid-areas:initial;');
-		expect(css()).toContain('--se-grid-areas-2xl:initial;');
+		const sheet = layout();
+		const areas = (width: number, inline: Record<string, string> = {}) =>
+			computeElement(sheet.css, sheet.id, 'grid', width, { inline }).value('grid-template-areas');
+		const inline = { '--se-grid-areas': '"a"', '--se-grid-areas-md': '"a b"' };
+		expect([areas(1200), areas(320, inline), areas(700, inline), areas(800, inline), areas(1700, inline)]).toEqual([
+			'none',
+			'"a"',
+			'"a"',
+			'"a b"',
+			'"a b"',
+		]);
+		const nested = computeElement(sheet.css, sheet.id, 'grid', 1700, {
+			inherited: { '--se-grid-areas': '"a"', '--se-grid-areas-2xl': '"a b"' },
+		});
+		expect(nested.value('grid-template-areas')).toBe('none');
 	});
 
 	test.each([
