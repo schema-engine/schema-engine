@@ -4,7 +4,7 @@ import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema } from '@/schemas/base-field';
 
 const pipedSchema = z.pipe(
-	z.extend(BaseFieldSchema, { $type: z.literal('piped'), length: z.optional(z._default(z.number(), 6)) }),
+	z.extend(BaseFieldSchema, { $type: z.literal('piped'), length: z._default(z.number(), 6) }),
 	z.transform((config) => ({ ...config, normalized: true })),
 );
 
@@ -30,7 +30,7 @@ describe('generateFormConfigSchema with an element that pipes a transform', () =
 	test('describes the authored side, where a defaulted field is optional', () => {
 		const schema = engine.generateFormConfigSchema();
 
-		expect(schema.$defs['element:piped']?.required ?? []).not.toContain('length');
+		expect(schema.$defs['element:piped']?.required).not.toContain('length');
 	});
 
 	test('output mode still throws, since a transform has no JSON Schema for its output', () => {
