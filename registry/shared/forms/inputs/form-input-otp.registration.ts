@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const InputOTPElementRegistration = defineInput({
 	$type: 'input-otp',
+	appearanceAxes: ['size'],
 	render: FormInputOTP,
 	schema: InputOTPFieldConfigSchema,
 	metadata: {

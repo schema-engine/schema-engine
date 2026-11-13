@@ -20,6 +20,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const InputElementRegistration = defineInput({
 	$type: 'input',
+	appearanceAxes: ['size'],
 	render: FormInput,
 	schema: InputFieldSchema,
 	metadata: {

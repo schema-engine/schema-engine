@@ -3,6 +3,7 @@ import type { FormConfigView } from '@schema-engine/forms';
 import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { flattenValues } from './controller/values';
 import type { JsxRenderable } from '@ecopages/jsx';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 
 export function collectFormDefaultValues(
 	config: FormConfigView,
@@ -32,17 +33,22 @@ export function ConfiguredRuiForm({
 	config,
 	defaultValues = {},
 	initialValues,
+	layoutThemeId,
 	children,
 }: {
 	config: FormConfigView;
 	defaultValues?: Partial<Record<string, unknown>>;
 	initialValues?: Record<string, unknown>;
+	/** The engine's layout theme id, which scopes its token rules to this form. */
+	layoutThemeId?: string;
 	children: JsxRenderable;
 }) {
 	return (
 		<RuiForm
 			class={config.className}
 			style={config.style}
+			data-se-theme={layoutThemeId}
+			{...getAppearanceAttributes(config.appearance)}
 			mode={config.validationMode ?? 'onSubmit'}
 			reValidateMode={config.reValidateMode ?? 'onChange'}
 			defaultValues={initialValues ?? collectFormDefaultValues(config, defaultValues)}

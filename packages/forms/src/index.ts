@@ -46,7 +46,7 @@ export type {
 	FormEngineSchemaMetadata,
 	SchemaMetadataEntry,
 } from './engine';
-export { ElementRegistry, RecipeRegistry } from './registries';
+export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
 export type {
 	BuilderActionBaseContext,
 	ElementMetadata,
@@ -62,20 +62,28 @@ export type { ElementRenderProps, WithNormalizedChildren } from './types';
 export {
 	DEFAULT_WIZARD_RECIPE,
 	FormValidationError,
+	formatIssuePath,
 	getRenderableSteps,
+	stepGrid,
 	assertFormEngine,
-	resolveFormRecipe,
+	safeValidateFormConfig,
 	validateElementConfig,
 	validateFormConfig,
 } from './lib/validate-form';
-export type { RecipeLookup } from './lib/form-view';
+export type { FormValidationIssue, FormValidationResult } from './lib/validate-form';
 export { isNormalizedElementConfig } from './lib/normalized-form-config';
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from './lib/normalized-form-config';
-export type { FormAuthoringInput, FormAuthoringStep, AuthoringElement } from './builder/form-authoring';
+export type {
+	FormAuthoringInput,
+	FormAuthoringStep,
+	AuthoringElement,
+	ExactFormAppearance,
+} from './builder/form-authoring';
 export type {
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
 	ActionRegistrationConstraint,
+	ValidationRegistrationConstraint,
 } from './builder/types.utils';
 export { ELEMENT_CHILDREN_KEY, elementChildrenSchema, getElementChildren } from './lib/element-children';
 export type { ElementChildrenInput, ElementChildrenOutput } from './lib/element-children';

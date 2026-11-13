@@ -6,7 +6,7 @@ Engine repository. Read it first.
 ## What this repo is
 
 Schema Engine is a JSON-driven form system. Visual chrome is not in the
-core engine: specs live in `@schema-engine/forms/recipes`, React
+core engine: specs live in `@schema-engine/forms/recipes/built-in`, React
 implementations in the shadcn registry, Radiant implementations in
 `@schema-engine/forms-radiant`.
 
@@ -74,6 +74,10 @@ previews mount through a client island, same pattern as Radiant.
 - Form elements and React recipes come from `registry/shared/forms`,
   aliased as `@/components/schema-engine/forms/*`. `@/components/ui/*` resolves
   to the Forms React Storybook kit for those previews.
+- An app that installs the React recipes from the shadcn registry imports
+  `recipes/recipes.css` once in its global stylesheet, after Tailwind, with
+  `@import '<path>/components/schema-engine/forms/recipes/recipes.css' layer(components);`.
+  The path is relative to that stylesheet. Without it the card shell is unstyled.
 - The catch-all docs route registers island scripts and styles from each MDX
   entry's imports, so Forms React pages do not load Radiant preview assets
   and vice versa.
@@ -88,5 +92,5 @@ previews mount through a client island, same pattern as Radiant.
 ## More
 
 - The full docs site lives at `/docs`.
-- LLM exports are at `/llms.txt` and `/llms-content/<section>/<slug>.txt`.
+- LLM exports are at `/llms.txt` and `/docs-llm/<section>/<slug>.md`.
 - The Ecopages framework docs are at <https://ecopages.app/docs>.

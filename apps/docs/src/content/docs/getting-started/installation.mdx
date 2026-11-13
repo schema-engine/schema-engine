@@ -1,7 +1,6 @@
 ---
 title: 'Installation'
 description: 'Install the packages you need and configure your first engine instance.'
-group: Getting Started
 order: 2
 ---
 
@@ -13,7 +12,7 @@ Schema Engine is a monorepo with multiple packages. Install only what you need:
 
 ```bash
 # Core packages
-bun add @schema-engine/forms @schema-engine/forms-react react react-dom zod
+bun add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
 
 # React Hook Form adapter (@schema-engine/forms-react/adapters/react-hook-form),
 # used by the Quick Start and the Forms React guides
@@ -30,6 +29,7 @@ bun add @schema-engine/actions
 | `@schema-engine/forms`       | Core form engine (framework-agnostic) |
 | `@schema-engine/forms-react` | React components and hooks            |
 | `@schema-engine/actions`     | Domain-agnostic action system         |
+| `@schema-engine/layout`      | Grid and appearance theme (neutral)   |
 | `@schema-engine/registry`    | Base registry (internal dependency)   |
 
 ## Development Setup
@@ -92,6 +92,7 @@ schema-engine/
 │   ├── forms/           # @schema-engine/forms
 │   ├── forms-react/     # @schema-engine/forms-react
 │   ├── actions/         # @schema-engine/actions
+│   ├── layout/          # @schema-engine/layout
 │   └── registry/        # @schema-engine/registry
 ├── apps/
 │   └── www/             # Documentation site

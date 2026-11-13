@@ -1,5 +1,4 @@
 import { FormController } from '@/adapters/radiant/controller';
-import type { FormFieldElement } from '@/elements/form-field';
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
 import { expect, userEvent, within, waitFor, fn } from 'storybook/test';
@@ -218,10 +217,8 @@ export const ControllerOperations: Story = {
 			if (!firstNameField) throw new Error('Expected first name field');
 			await waitFor(async () => expect(names().map((input) => input.value)).toEqual(['Alice', 'Bob']));
 		});
-		await step('Decorated fields and plain controller share live values', async () => {
-			const field = canvasElement.querySelector<FormFieldElement>('se-field');
-			if (!field) throw new Error('Expected extended RuiField');
-			field.field.onChange('Updated Alice');
+		await step('A plain controller writes live values', async () => {
+			form.field('emergencyContacts.0.contactName').onChange('Updated Alice');
 			await waitFor(async () => expect(names()[0]).toHaveValue('Updated Alice'));
 			await userEvent.clear(names()[1]);
 			await userEvent.type(names()[1], 'Typed Bob');

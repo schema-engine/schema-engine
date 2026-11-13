@@ -1,16 +1,19 @@
 import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiAlert, RuiAlertIcon } from '@ecopages/radiant-ui/alert';
+import { GRID_ITEM_CLASS } from '@schema-engine/layout';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import type { SubmissionAlertProps } from './form-submission-alert.types';
 
 type AlertStatus = 'idle' | 'pending' | 'success' | 'error';
 
 @customElement('se-submission-alert')
 export class SeSubmissionAlert extends RadiantElement {
+	declare readonly [JSX_PROPS]?: { config: SubmissionAlertProps };
+
 	@prop({ type: Object }) config!: SubmissionAlertProps;
 
-	@state status: AlertStatus = 'idle';
+	@state protected status: AlertStatus = 'idle';
 	private dismissTimer?: ReturnType<typeof setTimeout>;
 
 	private setStatus(next: AlertStatus): void {
@@ -40,25 +43,12 @@ export class SeSubmissionAlert extends RadiantElement {
 			const custom = event as CustomEvent<{ succeeded?: boolean }>;
 			this.setStatus(custom.detail?.succeeded !== false ? 'success' : 'error');
 		};
-		const onRuiSubmit = () => {
-			const hasActionController = !!form.querySelector('se-form-action-controller');
-			if (hasActionController) {
-				return;
-			}
-			const config = this.config;
-			if (config?.showOn?.includes('pending')) {
-				this.setStatus('pending');
-			} else {
-				this.setStatus('success');
-			}
-		};
 		const onInvalid = () => {
 			this.setStatus('error');
 		};
 
 		form.addEventListener('se-action-submit-start', onSubmitStart);
 		form.addEventListener('se-action-submit-complete', onSubmitComplete);
-		form.addEventListener('rui-submit', onRuiSubmit);
 		form.addEventListener('rui-invalid', onInvalid);
 		this.registerCleanupCallback(() => {
 			if (this.dismissTimer) {
@@ -66,7 +56,6 @@ export class SeSubmissionAlert extends RadiantElement {
 			}
 			form.removeEventListener('se-action-submit-start', onSubmitStart);
 			form.removeEventListener('se-action-submit-complete', onSubmitComplete);
-			form.removeEventListener('rui-submit', onRuiSubmit);
 			form.removeEventListener('rui-invalid', onInvalid);
 		});
 	}
@@ -116,10 +105,12 @@ export class SeSubmissionAlert extends RadiantElement {
 export function FormSubmissionAlert(config: SubmissionAlertProps) {
 	const fieldHost = mergeFieldGridHost(config.grid, config.style);
 
-	return jsx('se-submission-alert', {
-		classes: ['se-form-field'],
-		'data-se-grid-theme': fieldHost.themeId,
-		style: fieldHost.style,
-		config,
-	});
+	return (
+		<SeSubmissionAlert
+			classes={['se-form-field', GRID_ITEM_CLASS, config.className]}
+			data-se-theme={fieldHost.themeId}
+			style={fieldHost.style}
+			config={config}
+		/>
+	);
 }

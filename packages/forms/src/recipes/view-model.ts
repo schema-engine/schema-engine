@@ -1,5 +1,8 @@
+import * as z from 'zod/mini';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { StepStates } from '@/engine/step-machine';
+import type { AnyRecipeRegistration } from '@/types/registration';
+import { readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './types';
 
 export interface ViewNavigation {
@@ -24,8 +27,7 @@ export interface ViewStep {
 	isVisited: boolean;
 }
 
-export interface ViewModel {
-	kind: RecipeKind;
+export interface ViewModel extends RecipeViewModel<RecipeKind> {
 	form: {
 		id: string;
 		title?: string;
@@ -36,30 +38,56 @@ export interface ViewModel {
 	activeStep: ViewStep;
 	currentStepIndex: number;
 	navigation: ViewNavigation;
-	viewConfig: Record<string, unknown>;
 }
 
-export function getSlotConfig<TConfig = Record<string, unknown>>(
+/**
+ * Reads one slot's complete config from a normalized view; see the layout `readSlotConfig`, which this
+ * types by the forms slot names.
+ */
+export function getSlotConfig<TSchema extends z.ZodMiniType>(
 	viewConfig: Record<string, unknown>,
 	slot: RecipeSlot,
-): TConfig {
-	return ((viewConfig[slot] as TConfig | undefined) ?? {}) as TConfig;
+	schema: TSchema,
+): z.output<TSchema> {
+	return readSlotConfig(viewConfig, slot, schema);
 }
 
-export function applySlotDefaults(
-	viewConfig: Record<string, unknown>,
-	defaults?: Partial<Record<RecipeSlot, Record<string, unknown>>>,
-): Record<string, unknown> {
-	if (!defaults) return viewConfig;
-
-	const next = { ...viewConfig };
-	for (const [slot, slotDefaults] of Object.entries(defaults)) {
-		next[slot] = {
-			...slotDefaults,
-			...(viewConfig[slot] as Record<string, unknown> | undefined),
-		};
+/**
+ * Resolves the recipe a normalized form's `view` selects, or `undefined` when the form has no view.
+ *
+ * @remarks
+ * Throws when `view.$type` is not registered on the engine, so a config normalized elsewhere fails
+ * loudly instead of rendering without chrome.
+ */
+export function getViewRecipe(
+	engine: { getRecipe(id: string): AnyRecipeRegistration | undefined },
+	config: { id: string; view?: { $type: string } },
+): AnyRecipeRegistration | undefined {
+	if (!config.view) return undefined;
+	const recipe = engine.getRecipe(config.view.$type);
+	if (!recipe) {
+		throw new Error(`Form '${config.id}' uses view '${config.view.$type}' but the engine has no such recipe.`);
 	}
-	return next;
+	return recipe;
+}
+
+/** Projects form steps and the live step state onto the {@link ViewStep} list both renderers expose to recipe blocks. */
+export function buildViewSteps(
+	steps: ReadonlyArray<{ id: string; title?: string; description?: string }>,
+	currentStep: number,
+	stepStates: StepStates,
+): ViewStep[] {
+	return steps.map((step, index) => ({
+		id: step.id,
+		title: step.title,
+		description: step.description,
+		index,
+		total: steps.length,
+		isActive: index === currentStep,
+		isCompleted: stepStates.completed[index] ?? false,
+		isValid: stepStates.valid[index] ?? false,
+		isVisited: stepStates.visited[index] ?? false,
+	}));
 }
 
 export function buildViewModel({
@@ -79,17 +107,7 @@ export function buildViewModel({
 	viewConfig: Record<string, unknown>;
 	stepStates: StepStates;
 }): ViewModel {
-	const steps: ViewStep[] = config.steps.map((step, index) => ({
-		id: step.id,
-		title: step.title,
-		description: step.description,
-		index,
-		total: config.steps.length,
-		isActive: index === currentStepIndex,
-		isCompleted: stepStates?.completed[index] ?? false,
-		isValid: stepStates?.valid[index] ?? false,
-		isVisited: stepStates?.visited[index] ?? false,
-	}));
+	const steps = buildViewSteps(config.steps, currentStepIndex, stepStates);
 
 	const activeStep = steps[currentStepIndex] ?? steps[0];
 	if (!activeStep) {

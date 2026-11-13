@@ -1,68 +1,26 @@
-import * as z from 'zod/mini';
-import type { RecipeKind, RecipeSlot, RecipeSpec } from './types';
-import { RECIPE_SLOT_ORDER } from './types';
+import {
+	defineProtocolRecipeSpec,
+	type ProtocolRecipeSpecDefinition,
+	type RecipeViewSchema,
+} from '@schema-engine/layout';
+import { formRecipeProtocol, type RecipeKind, type RecipeSlot } from './protocol';
+import type { RecipeSlotSchemas, RecipeSpec } from './types';
 
-export function mergeRecipeSlotSchemas(
-	$type: string,
-	slotSchemas: Partial<Record<RecipeSlot, z.ZodMiniType>>,
-): z.ZodMiniType {
-	const shape: Record<string, z.ZodMiniType> = {
-		$type: z.literal($type),
-	};
-
-	for (const [slot, schema] of Object.entries(slotSchemas)) {
-		if (schema) {
-			shape[slot] = z.optional(schema);
-		}
-	}
-
-	return z.strictObject(shape);
-}
-
-export function assertRecipeSlotSchemas(
-	kind: RecipeKind,
-	slotSchemas: Partial<Record<RecipeSlot, z.ZodMiniType>>,
-): void {
-	if (kind === 'single-step' && slotSchemas.progress) {
-		throw new Error("Recipes with kind 'single-step' cannot declare a progress slot.");
-	}
-	if (kind === 'wizard' && !slotSchemas.actions) {
-		throw new Error("Recipes with kind 'wizard' must declare an actions slot.");
-	}
-}
+export type { RecipeViewSchema } from '@schema-engine/layout';
 
 /**
- * Declares a recipe's `$type`, kind, slot schemas, and metadata.
+ * Declares a form recipe's `$type`, kind, slot schemas, and metadata.
  *
  * @remarks
- * Single-step recipes cannot declare `progress`; their `actions` slot is the
- * submit-only bar. Wizard recipes must declare `actions`. Built-in specs are
- * exported from this module.
+ * `defineProtocolRecipeSpec` from `@schema-engine/layout` on {@link formRecipeProtocol}: single-step
+ * recipes cannot declare `progress` (their `actions` slot is the submit-only bar), and wizard
+ * recipes must declare `actions`.
  */
 export function defineRecipeSpec<
 	const TType extends string,
-	TSchema extends z.ZodMiniType = z.ZodMiniType,
-	const TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>> = Partial<Record<RecipeSlot, z.ZodMiniType>>,
->(definition: {
-	$type: TType;
-	kind: RecipeKind;
-	metadata: RecipeSpec<TType, TSchema, TSlots>['metadata'];
-	slotSchemas?: TSlots;
-	slotDefaults?: RecipeSpec<TType, TSchema, TSlots>['slotDefaults'];
-	schema?: TSchema;
-}): RecipeSpec<TType, TSchema, TSlots> {
-	const slotSchemas = (definition.slotSchemas ?? {}) as TSlots;
-	assertRecipeSlotSchemas(definition.kind, slotSchemas);
-	const schema = (definition.schema ?? mergeRecipeSlotSchemas(definition.$type, slotSchemas)) as TSchema;
-	const slots = RECIPE_SLOT_ORDER.filter((slot) => slotSchemas[slot]);
-
-	return {
-		$type: definition.$type,
-		kind: definition.kind,
-		slots,
-		slotSchemas,
-		slotDefaults: definition.slotDefaults,
-		metadata: definition.metadata,
-		schema,
-	};
+	const TSlots extends RecipeSlotSchemas = Record<never, never>,
+>(
+	definition: ProtocolRecipeSpecDefinition<RecipeSlot, RecipeKind, TType, TSlots>,
+): RecipeSpec<TType, RecipeViewSchema<TType, TSlots>, TSlots> {
+	return defineProtocolRecipeSpec(formRecipeProtocol, definition);
 }

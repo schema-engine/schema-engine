@@ -1,7 +1,16 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
-import { defineFormRecipe, cardSpec, wizardSpec, type FormShellLayout } from '@schema-engine/forms/recipes';
+import { defineRecipeSpec, type FormShellLayout } from '@schema-engine/forms/recipes';
+import {
+	CardShellConfigSchema,
+	StepHeaderConfigSchema,
+	StepIndicatorsConfigSchema,
+	cardSpec,
+	formatStepLabel,
+	wizardSpec,
+} from '@schema-engine/forms/recipes/built-in';
 import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
+import { defineRecipe } from '@schema-engine/forms-react/primitives';
 
 type ShellProps = FormShellLayout<ReactNode>;
 
@@ -14,13 +23,12 @@ type ShellProps = FormShellLayout<ReactNode>;
  * with the docs shell), so React demos match the Radiant demos visually.
  */
 
-function DemoCardShell({ slots, viewConfig }: ShellProps) {
-	const padding = (((viewConfig.shell ?? {}) as Record<string, unknown>).padding as string | undefined) ?? 'lg';
+function DemoCardShell({ slots }: ShellProps) {
 	return (
 		<div className="se-demo-shell">
 			<div className="se-demo-shell__card">
 				{slots.header ? (
-					<div className={`se-demo-shell__header se-demo-shell__header--${padding}`}>{slots.header}</div>
+					<div className={'se-demo-shell__header se-demo-shell__header--lg'}>{slots.header}</div>
 				) : null}
 				<div className="se-demo-shell__content">
 					{slots.progress}
@@ -35,10 +43,10 @@ function DemoCardShell({ slots, viewConfig }: ShellProps) {
 function DemoStepHeader() {
 	const { form } = useViewContext();
 	const step = useActiveStep();
-	const { showDescription = true, showStepCounter = false } = useViewConfig('header');
+	const { showDescription, showStepCounter, labels } = useViewConfig('header', StepHeaderConfigSchema);
 	const title = step.title || form.title;
 	const description = step.description || form.description;
-	const counter = showStepCounter ? `Step ${step.index + 1} of ${step.total}` : null;
+	const counter = showStepCounter ? formatStepLabel(labels.stepCounter, step.index + 1, step.total) : null;
 	if (!title && !description && !counter) return null;
 	return (
 		<header className="se-demo-step-header">
@@ -51,8 +59,9 @@ function DemoStepHeader() {
 
 function DemoStepIndicators() {
 	const { steps } = useViewContext();
+	const { labels } = useViewConfig('progress', StepIndicatorsConfigSchema);
 	return (
-		<nav className="se-demo-indicators" aria-label="Form progress">
+		<nav className="se-demo-indicators" aria-label={labels.regionAriaLabel}>
 			<ol className="se-demo-indicators__list">
 				{steps.map((step) => (
 					<li
@@ -64,7 +73,16 @@ function DemoStepIndicators() {
 						}
 						data-active={step.isActive ? '' : undefined}
 					>
-						{step.isCompleted ? '✓' : step.index + 1}
+						{step.isCompleted ? (
+							<>
+								<span aria-hidden>✓</span>
+								<span className="sr-only">
+									{formatStepLabel(labels.completed, step.index + 1, steps.length)}
+								</span>
+							</>
+						) : (
+							step.index + 1
+						)}
 					</li>
 				))}
 			</ol>
@@ -122,12 +140,30 @@ function DemoFormActions() {
 	);
 }
 
-export const DemoCardRecipe = defineFormRecipe(cardSpec, {
+const demoCardSpec = defineRecipeSpec({
+	$type: cardSpec.$type,
+	kind: cardSpec.kind,
+	metadata: cardSpec.metadata,
+	slotSchemas: cardSpec.slotSchemas,
+	slotDefaults: cardSpec.slotDefaults,
+	appearanceAxes: cardSpec.appearanceAxes,
+});
+
+const demoWizardSpec = defineRecipeSpec({
+	$type: wizardSpec.$type,
+	kind: wizardSpec.kind,
+	metadata: wizardSpec.metadata,
+	slotSchemas: { ...wizardSpec.slotSchemas, shell: CardShellConfigSchema },
+	slotDefaults: wizardSpec.slotDefaults,
+	appearanceAxes: { shell: ['size', 'surface'] },
+});
+
+export const DemoCardRecipe = defineRecipe(demoCardSpec, {
 	shell: DemoCardShell,
 	slots: { header: DemoStepHeader, actions: DemoFormActions },
 });
 
-export const DemoWizardRecipe = defineFormRecipe(wizardSpec, {
+export const DemoWizardRecipe = defineRecipe(demoWizardSpec, {
 	shell: DemoCardShell,
 	slots: { header: DemoStepHeader, progress: DemoStepIndicators, actions: DemoWizardActions },
 });

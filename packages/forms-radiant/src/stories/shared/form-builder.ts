@@ -12,8 +12,4 @@ export function getEngine(): typeof storyFormEngine {
 	return storyFormEngine;
 }
 
-export function defineStoryForm<const TConfig extends Parameters<typeof storyFormEngine.defineForm>[0]>(
-	config: TConfig,
-) {
-	return storyFormEngine.defineForm(config);
-}
+export const defineStoryForm = storyFormEngine.defineForm.bind(storyFormEngine);

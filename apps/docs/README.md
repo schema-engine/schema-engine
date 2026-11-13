@@ -6,11 +6,15 @@ The Ecopages 0.6 CLI requires Node.js 24 or newer.
 
 ## Structure
 
-- `src/content/docs/**` — EcoPages JSX MDX entries with frontmatter (`title`, `description`, `group`, `order`), including Radiant and React demos. The Capabilities group documents cross-adapter behavior; Actions documents sequential and parallel dispatch with cooperative cancellation; recipes remain layout-only. Imported eco components and CSS are discovered automatically from top-level MDX imports; no `config.dependencies` block is needed. `FormRendererPreview` is a regular JSX page component (default integration, not an island): the form tree SSRs as light DOM and the base and docs layout client scripts bind its live engine after initial load and client-side navigation. React demos (`/docs/forms-react/**`) mount `ReactFormPreview` from `src/components/react-form-demo/` as React islands. Shared demo configurations live in `src/lib/form-configs/` (one module per form story; import the same object from multiple MDX pages when the demo is identical). Pages pass that object to live previews and `FormConfigCode`, which serializes it for the snippet, so demos and examples cannot drift. `.radiant.mdx` and `.react.mdx` are explicit MDX flavors for Radiant and React content. Typed in-app authoring is documented under Forms → Core concepts (Authoring modes) and Form engine setup (`defineForm` vs portable JSON).
+- `src/content/docs/<section>/<page>.mdx` — EcoPages JSX MDX entries with frontmatter (`title`, `description`, `order`, optional `llms`). The first folder is the sidebar section; its title, icon and position come from the typed `DOCS_SECTION_CONFIG` and `DOCS_SECTION_ORDER` in `src/content/docs.ts` (icons in `src/content/section-icons.tsx`). `test/docs-sections.test.ts` fails when a page sits outside a configured section, nests deeper than one folder, or when a published docs URL loses its page; serve a redirect before removing one from its list. Pages include Radiant and React demos. The Capabilities section documents cross-adapter behavior; Actions documents sequential and parallel dispatch with cooperative cancellation; recipes remain layout-only. Imported eco components and CSS are discovered automatically from top-level MDX imports; no `config.dependencies` block is needed. `FormRendererPreview` is a regular JSX page component (default integration, not an island): the form tree SSRs as light DOM and the base and docs layout client scripts bind its live engine after initial load and client-side navigation. React demos (`/docs/forms-react/**`) mount `ReactFormPreview` from `src/components/react-form-demo/` as React islands. Shared demo configurations live in `src/lib/form-configs/` (one module per form story; import the same object from multiple MDX pages when the demo is identical). Pages pass that object to live previews and `FormConfigCode`, which serializes it for the snippet, so demos and examples cannot drift. All content is plain `.mdx`. React demos embed `ReactFormPreview` through the Ecopages JSX `EcoEmbed` plus a client hydration script, because `@ecopages/react/eco-embed` returns a React node that an Ecopages JSX file cannot render (checked on Ecopages 0.7.0). Typed in-app authoring is documented under Forms → Core concepts (Authoring modes) and Form engine setup (`defineForm` vs portable JSON). The custom-validation guide demonstrates an illustrative validator and the built-in debounced async rule; unit checks execute both snippets.
 - `src/components/action-flow/` — interactive action playgrounds on the Actions overview. Each card dispatches through `ActionDispatcher` from `@schema-engine/actions`: tap a node to run that action, or the result to run the sequence. Motion respects the visitor's reduced-motion preference.
-- `src/lib/docs-nav.ts` — grouped navigation from content entries.
-- `src/layouts/docs-layout` — shared Radiant UI sidebar, TOC, and pagination.
-- `src/pages/docs/[...slug]/index.tsx` — catch-all route for MDX content.
+- `src/lib/docs-nav.ts` — sidebar sections built from content entries and `DOCS_SECTION_CONFIG`, plus the flat item list used for previous and next links.
+- `src/components/code-tabs` — every instance needs a unique, id-safe `name` that prefixes its tab and panel ids; copy status clears after 2 seconds and failures are announced. Source tabs preserve plain-text indentation and copy the selected file verbatim; highlighted tabs retain their rendered markup and separate clipboard text.
+- `src/layouts/docs-layout` — shared Radiant UI sidebar, TOC, and pagination, rendered on the server from the current route (`currentHref`).
+- `src/pages/docs/[...slug]/index.tsx` — catch-all route for MDX content; sets the page `url` that drives the canonical link, the Markdown alternate and the Copy for LLM link.
+- `src/mdx/` — MDX plugin factory (`createDocsMdxPlugins`). Fenced code gets a copy button (`transformerCopyButton` plus `rehype-pretty-copy-compatibility.ts`, which moves the button out of the scrolling `pre`), build-time heading ids (`rehype-heading-ids.ts`, same slug as `RuiToc`) and the shared Shiki themes (`shiki-themes.ts`). The click handler lives in `layouts/base-layout/code-copy.ts`, copied byte for byte from the Ecopages docs starter: the visible text reads Copy, then Copied or Try again for 1.2 s, the accessible name stays "Copy code", and the result is announced through the visually hidden `role="status"` region that `BaseLayout` renders at the end of `<body>`, so it survives browser-router navigation. Callouts use `RuiAlert variant="info" layout="banner" class="unstyled"`.
+- `src/lib/docs/` — `site-meta.ts` (site name, origin, canonical, OG image, sitemap extras) and `docs-llm-url.ts`; both are copied from the Ecopages docs starter, with Schema Engine values and the starter's `/docs-llm/<section>/<slug>.md` export scheme. `ECOPAGES_BASE_URL` overrides the origin.
+- `scripts/generate-llm-docs.ts` — writes `llms.txt` and `docs-llm/<section>/<slug>.md` into `src/public` in sidebar order, staged and swapped in only after every write succeeds. Frontmatter `llms: false` leaves a page out. Until the first release after 0.1.0 it also writes each page to the previous `llms-content/<slug>.txt` path (not listed in `llms.txt`) so published links keep working.
 
 ## Commands
 
@@ -20,6 +24,7 @@ pnpm dev
 pnpm build
 pnpm generate:llms
 pnpm check-types
+pnpm test:all
 pnpm test:e2e
 ```
 
@@ -28,7 +33,7 @@ pnpm test:e2e
 `test`. Root `pnpm build:lib` runs it through `turbo check-types`, so it builds
 the site too. Unused components that no longer type-check are excluded in `tsconfig.json`.
 
-`pnpm test:e2e` builds the site, serves the production preview on a free port, and
+`pnpm test:all` runs the unit and browser projects (the root pre-commit `turbo test:all` calls it). `pnpm test:e2e` builds the site, serves the production preview on a free port, and
 runs Playwright checks that the getting-started Forms React embed ships its
 serialized config, hydrates, keeps typed values, and surfaces validation after
 submit, and that the Radiant previews on the homepage and sequential-actions page submit and reset after direct or client-side navigation. Set `DOCS_E2E_BASE_URL` to test an already running server instead of

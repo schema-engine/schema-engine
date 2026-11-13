@@ -99,7 +99,7 @@ describe('Clean Enhanced Field System', () => {
 			readonly: false,
 			defaultValue: '',
 			className: 'test-class',
-			style: { color: 'blue' },
+			style: { '--field-color': 'blue' },
 			autoComplete: 'email',
 			autoFocus: true,
 			inputMode: 'email',
@@ -132,7 +132,7 @@ describe('Clean Enhanced Field System', () => {
 			spellCheck: true,
 			wrap: 'hard',
 			className: 'textarea-test-class',
-			style: { backgroundColor: 'lightgray' },
+			style: { '--field-background': 'lightgray' },
 		};
 
 		const result = TextareaFieldSchema.safeParse(fullTextareaConfig);

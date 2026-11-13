@@ -22,8 +22,4 @@ export type RadioOption = z.infer<typeof RadioOptionSchema>;
 export type RadioFieldExtension = z.infer<typeof RadioFieldExtensionSchema>;
 export type RadioFieldConfig = z.infer<typeof RadioFieldConfigSchema>;
 
-export type RadioFieldProps = RadioFieldConfig & {
-	onChange?: (value: string) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type RadioFieldProps = RadioFieldConfig;

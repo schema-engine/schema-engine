@@ -6,6 +6,10 @@ import * as z from 'zod/mini';
 import type { BuilderActionRegistration } from '@schema-engine/forms';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
+import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
+import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
+import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
+import { formResetPlugin } from '@schema-engine/forms/actions';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
 import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
@@ -38,6 +42,74 @@ function createEngine(onAction?: () => void) {
 }
 
 describe('FormRenderer state boundaries', () => {
+	test('resetting a React form clears a field with no configured default', async () => {
+		const engine = createFormEngine({
+			elements: [
+				InputElementRegistration,
+				CheckboxElementRegistration,
+				FieldSetRegistration,
+				ArrayElementRegistration,
+				SubmitButtonElementRegistration,
+			],
+			actions: [formResetPlugin({ storage: { save() {}, load() {}, remove() {} } })],
+		});
+		const config = engine.defineForm({
+			id: 'reset-form',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{ $type: 'input', id: 'email', name: 'email', label: 'Email' },
+						{ $type: 'input', id: 'name', name: 'name', label: 'Name', defaultValue: 'Ada' },
+						{ $type: 'checkbox', id: 'consent', name: 'consent', label: 'Consent', defaultValue: true },
+						{
+							$type: 'fieldSet',
+							id: 'address',
+							name: 'address',
+							label: 'Address',
+							elements: [
+								{ $type: 'input', id: 'city', name: 'city', label: 'City', defaultValue: 'Madrid' },
+							],
+						},
+						{
+							$type: 'arrayElements',
+							id: 'contacts',
+							name: 'contacts',
+							label: 'Contacts',
+							minItems: 1,
+							elements: [
+								{
+									$type: 'input',
+									id: 'contact',
+									name: 'contact',
+									label: 'Contact',
+									defaultValue: 'Original',
+								},
+							],
+						},
+						{ $type: 'submit', id: 'send', name: 'send', label: 'Send' },
+					],
+				},
+			],
+			actions: [{ $type: 'reset', id: 'reset' }],
+		});
+		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+		const email = screen.getByRole('textbox', { name: 'Email' });
+		await userEvent.fill(email, 'reader@example.com');
+		await userEvent.fill(screen.getByRole('textbox', { name: 'Name' }), 'Grace');
+		await userEvent.click(screen.getByRole('checkbox', { name: 'Consent' }));
+		await userEvent.fill(screen.getByRole('textbox', { name: 'City' }), 'Lisbon');
+		await userEvent.fill(screen.getByRole('textbox', { name: 'Contact' }), 'Changed');
+		await userEvent.click(screen.getByRole('button', { name: 'Add item' }));
+		await userEvent.click(screen.getByRole('button', { name: 'Send' }));
+		await waitFor(() => expect(email).toHaveValue(''));
+		expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Ada');
+		expect(screen.getByRole('checkbox', { name: 'Consent' })).toBeChecked();
+		expect(screen.getByRole('textbox', { name: 'City' })).toHaveValue('Madrid');
+		expect(screen.getAllByRole('textbox', { name: 'Contact' })).toHaveLength(1);
+		expect(screen.getByRole('textbox', { name: 'Contact' })).toHaveValue('Original');
+	});
 	test('a new config starts a new form instance with its defaults', async () => {
 		const engine = createEngine();
 		const firstConfig = engine.defineForm({

@@ -11,11 +11,10 @@ const SHARED_PRIMITIVES_ROOT = 'registry/shared/primitives';
 type BaseId = 'base-ui' | 'radix' | 'aria';
 type PrimitiveName =
 	'field' | 'combobox' | 'phone-input' | 'drop-zone' | 'masked-input' | 'number-field' | 'date-picker';
-type ItemType = 'registry:lib' | 'registry:ui' | 'registry:item' | 'registry:component';
+type ItemType = 'registry:lib' | 'registry:ui' | 'registry:item' | 'registry:component' | 'registry:file';
 
 interface CatalogFile {
 	path: string;
-	sourcePath: string;
 	type: ItemType;
 	target: string;
 }
@@ -78,7 +77,7 @@ const PRIMITIVES: Record<PrimitiveName, PrimitiveSpec> = {
 		title: 'Schema Engine field',
 		description: 'Label, description, and error chrome for Schema Engine fields.',
 		registryDependencies: ['label'],
-		dependencies: ['@schema-engine/forms', '@schema-engine/forms-react'],
+		dependencies: ['@schema-engine/forms', '@schema-engine/forms-react', '@schema-engine/layout'],
 	},
 	combobox: {
 		title: 'Schema Engine combobox',
@@ -187,11 +186,16 @@ const BASES: Base[] = [
 	},
 ];
 
-const FORM_RUNTIME_DEPENDENCIES = ['@schema-engine/forms-react', '@schema-engine/forms', 'zod'];
+const FORM_RUNTIME_DEPENDENCIES = [
+	'@schema-engine/forms-react',
+	'@schema-engine/forms',
+	'@schema-engine/layout',
+	'zod',
+];
 
 const DEFAULT_RECIPE_ITEM = 'schema-engine-form-recipes';
 const DEFAULT_RECIPE_RUNTIME_DEPENDENCIES = [...FORM_RUNTIME_DEPENDENCIES, 'lucide-react'];
-const DEFAULT_RECIPE_REGISTRY_DEPENDENCIES = ['button', 'badge', 'progress', 'separator', UTILS];
+const DEFAULT_RECIPE_REGISTRY_DEPENDENCIES = ['button', 'badge', 'separator', UTILS, PRIMITIVE_ITEM.field];
 
 function listRelativeSourceFiles(absDir: string, prefix = ''): string[] {
 	const files: string[] = [];
@@ -201,7 +205,7 @@ function listRelativeSourceFiles(absDir: string, prefix = ''): string[] {
 		const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
 		if (entry.isDirectory()) {
 			files.push(...listRelativeSourceFiles(join(absDir, entry.name), rel));
-		} else if (rel.endsWith('.ts') || rel.endsWith('.tsx')) {
+		} else if (rel.endsWith('.ts') || rel.endsWith('.tsx') || rel.endsWith('.css')) {
 			files.push(rel);
 		}
 	}
@@ -243,7 +247,7 @@ const ELEMENTS: ElementSpec[] = [
 		stem: 'actions/submit-button',
 		title: 'Submit button',
 		ident: 'SubmitButtonElementRegistration',
-		registryDependencies: ['button'],
+		registryDependencies: ['button', PRIMITIVE_ITEM.field],
 	},
 	{
 		stem: 'inputs/form-fieldset',
@@ -373,28 +377,19 @@ function resolveDep(base: Base, dep: string): string {
 	return isSameRepo ? `${GITHUB}/${itemName(base, dep)}` : dep;
 }
 
-interface FileCandidate {
-	path: string;
-	sourcePath: string;
-}
-
 /**
  * Both form wrappers and primitives resolve the same way: a base-specific file
  * wins when it exists, otherwise the shared implementation is used.
  */
-function preferOverride(override: FileCandidate, shared: FileCandidate): FileCandidate {
-	return existsSync(join(root, override.sourcePath)) ? override : shared;
+function preferOverride(override: string, shared: string): string {
+	return existsSync(join(root, override)) ? override : shared;
 }
 
 function formFile(base: Base, rel: string): CatalogFile {
-	const { path, sourcePath } = preferOverride(
-		{ path: `overlays/forms/${rel}`, sourcePath: `registry/${base.id}/overlays/forms/${rel}` },
-		{ path: `../shared/forms/${rel}`, sourcePath: `${SHARED_FORMS_ROOT}/${rel}` },
-	);
+	const path = preferOverride(`registry/${base.id}/overlays/forms/${rel}`, `${SHARED_FORMS_ROOT}/${rel}`);
 
 	return {
 		path,
-		sourcePath,
 		type: rel.endsWith('.tsx') ? 'registry:component' : 'registry:lib',
 		target: `@components/schema-engine/forms/${rel}`,
 	};
@@ -402,20 +397,23 @@ function formFile(base: Base, rel: string): CatalogFile {
 
 function primitiveFile(base: Base, name: PrimitiveName): CatalogFile {
 	const rel = `${name}.tsx`;
-	const { path, sourcePath } = preferOverride(
-		{ path: `primitives/${rel}`, sourcePath: `registry/${base.id}/primitives/${rel}` },
-		{ path: `../shared/primitives/${rel}`, sourcePath: `${SHARED_PRIMITIVES_ROOT}/${rel}` },
-	);
+	const path = preferOverride(`registry/${base.id}/primitives/${rel}`, `${SHARED_PRIMITIVES_ROOT}/${rel}`);
 
-	return { path, sourcePath, type: 'registry:ui', target: `@ui/schema-engine/components/${rel}` };
+	return { path, type: 'registry:ui', target: `@ui/schema-engine/components/${rel}` };
 }
 
 function primitiveFiles(base: Base, name: PrimitiveName): CatalogFile[] {
 	const files = [primitiveFile(base, name)];
+	if (name === 'field') {
+		files.push({
+			path: `${SHARED_PRIMITIVES_ROOT}/controls.css`,
+			type: 'registry:file',
+			target: '@ui/schema-engine/components/controls.css',
+		});
+	}
 	if (name === 'phone-input') {
 		files.push({
-			path: '../shared/primitives/phone-country.ts',
-			sourcePath: `${SHARED_PRIMITIVES_ROOT}/phone-country.ts`,
+			path: `${SHARED_PRIMITIVES_ROOT}/phone-country.ts`,
 			type: 'registry:lib',
 			target: '@ui/schema-engine/components/phone-country.ts',
 		});
@@ -423,38 +421,32 @@ function primitiveFiles(base: Base, name: PrimitiveName): CatalogFile[] {
 	if (name === 'date-picker') {
 		files.push(
 			{
-				path: '../shared/primitives/calendar.tsx',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/calendar.tsx`,
+				path: `${SHARED_PRIMITIVES_ROOT}/calendar.tsx`,
 				type: 'registry:ui',
 				target: '@ui/schema-engine/components/calendar.tsx',
 			},
 			{
-				path: '../shared/primitives/date-input.tsx',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-input.tsx`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-input.tsx`,
 				type: 'registry:ui',
 				target: '@ui/schema-engine/components/date-input.tsx',
 			},
 			{
-				path: '../shared/primitives/date-picker.tsx',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-picker.tsx`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-picker.tsx`,
 				type: 'registry:ui',
 				target: '@ui/schema-engine/components/date-picker.tsx',
 			},
 			{
-				path: '../shared/primitives/date-range-picker.tsx',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-range-picker.tsx`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-range-picker.tsx`,
 				type: 'registry:ui',
 				target: '@ui/schema-engine/components/date-range-picker.tsx',
 			},
 			{
-				path: '../shared/primitives/date-range-presets.ts',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-range-presets.ts`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-range-presets.ts`,
 				type: 'registry:lib',
 				target: '@ui/schema-engine/components/date-range-presets.ts',
 			},
 			{
-				path: '../shared/primitives/date-utils.ts',
-				sourcePath: `${SHARED_PRIMITIVES_ROOT}/date-utils.ts`,
+				path: `${SHARED_PRIMITIVES_ROOT}/date-utils.ts`,
 				type: 'registry:lib',
 				target: '@ui/schema-engine/components/date-utils.ts',
 			},
@@ -467,6 +459,17 @@ function primitiveFiles(base: Base, name: PrimitiveName): CatalogFile[] {
 function elementSlug(stem: string): string {
 	return stem.slice(stem.lastIndexOf('/') + 1).replace(/^form-/, '');
 }
+
+/**
+ * How an app loads the control height stylesheet.
+ *
+ * @remarks
+ * It is a separate import from `recipes.css` and goes unlayered, after the layered one: an unlayered
+ * rule outranks the Tailwind utilities layer, which is the only way the size pick can beat the fixed
+ * height a shadcn control carries. With no pick the rule reverts to that height.
+ */
+const CONTROLS_STYLESHEET_DOCS =
+	'Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import "./components/ui/schema-engine/components/controls.css"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control.';
 
 function buildPrimitiveItem(base: Base, name: PrimitiveName): CatalogItem {
 	const spec = PRIMITIVES[name];
@@ -482,6 +485,7 @@ function buildPrimitiveItem(base: Base, name: PrimitiveName): CatalogItem {
 		),
 		dependencies: override.dependencies ?? spec.dependencies,
 		files: primitiveFiles(base, name),
+		...(name === 'field' ? { docs: CONTROLS_STYLESHEET_DOCS } : {}),
 	};
 }
 
@@ -505,11 +509,22 @@ function buildElementItem(base: Base, spec: ElementSpec): CatalogItem {
 	};
 }
 
+/**
+ * A stylesheet is a `registry:file`, which the shadcn CLI copies to its `target` without touching it.
+ *
+ * @remarks
+ * The app imports the stylesheet from its global stylesheet. No component imports it, because the
+ * import needs the app's cascade layer (`layer(components)`) to let utility classes win.
+ */
+function recipeFileType(rel: string): ItemType {
+	if (rel.endsWith('.css')) return 'registry:file';
+	return rel.endsWith('.tsx') ? 'registry:component' : 'registry:lib';
+}
+
 function recipeFile(rel: string): CatalogFile {
 	return {
-		path: `../shared/forms/recipes/${rel}`,
-		sourcePath: `${SHARED_FORMS_ROOT}/recipes/${rel}`,
-		type: rel.endsWith('.tsx') ? 'registry:component' : 'registry:lib',
+		path: `${SHARED_FORMS_ROOT}/recipes/${rel}`,
+		type: recipeFileType(rel),
 		target: `@components/schema-engine/forms/recipes/${rel}`,
 	};
 }
@@ -525,7 +540,7 @@ function buildDefaultRecipeItem(base: Base): CatalogItem {
 		type: 'registry:item',
 		title: `Schema Engine default recipes (${base.label})`,
 		description: `Default ${base.label} view recipes and the generated recipe registration barrel.`,
-		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }).',
+		docs: 'Import schemaFormRecipeRegistrations from @/components/schema-engine/forms/recipes/registrations and pass them to createFormEngine({ recipes: [...] }). Import the recipe styles once in your global stylesheet: @import "./components/schema-engine/forms/recipes/recipes.css" layer(components); (the path is relative to that stylesheet: ../components/... from a Next.js app/globals.css).',
 		registryDependencies: DEFAULT_RECIPE_REGISTRY_DEPENDENCIES.map((dep) => resolveDep(base, dep)),
 		dependencies: DEFAULT_RECIPE_RUNTIME_DEPENDENCIES,
 		files: defaultRecipeFiles().map(recipeFile),
@@ -599,6 +614,7 @@ const REGISTRY_DEP_BY_IMPORT: Array<[string, string]> = [
 const TRACKED_NPM_DEPENDENCIES = [
 	'@schema-engine/forms-react',
 	'@schema-engine/forms',
+	'@schema-engine/layout',
 	'zod',
 	'clsx',
 	'tailwind-merge',
@@ -655,13 +671,13 @@ const OVERRIDE_ROOTS: Array<{ overrideDir: (base: Base) => string; sharedDir: st
 function checkOverrideIsNotACopy(base: Base, file: CatalogFile, errors: string[]): void {
 	for (const { overrideDir, sharedDir } of OVERRIDE_ROOTS) {
 		const prefix = `${overrideDir(base)}/`;
-		if (!file.sourcePath.startsWith(prefix)) continue;
+		if (!file.path.startsWith(prefix)) continue;
 
-		const sharedPath = join(root, sharedDir, file.sourcePath.slice(prefix.length));
+		const sharedPath = join(root, sharedDir, file.path.slice(prefix.length));
 		if (!existsSync(sharedPath)) return;
 
-		if (readFileSync(join(root, file.sourcePath), 'utf8') === readFileSync(sharedPath, 'utf8')) {
-			errors.push(`${file.sourcePath} is identical to the shared original; delete the override`);
+		if (readFileSync(join(root, file.path), 'utf8') === readFileSync(sharedPath, 'utf8')) {
+			errors.push(`${file.path} is identical to the shared original; delete the override`);
 		}
 	}
 }
@@ -676,8 +692,8 @@ export function validateCatalog(): string[] {
 			names.add(item.name);
 
 			for (const file of item.files) {
-				if (!existsSync(join(root, file.sourcePath))) {
-					errors.push(`${item.name} missing file ${file.sourcePath}`);
+				if (!existsSync(join(root, file.path))) {
+					errors.push(`${item.name} missing file ${file.path}`);
 					continue;
 				}
 				if (!file.target.startsWith('@components/') && !file.target.startsWith('@ui/')) {
@@ -689,8 +705,8 @@ export function validateCatalog(): string[] {
 			if (item.name === base.aggregateName) continue;
 
 			const imports = item.files
-				.filter((file) => existsSync(join(root, file.sourcePath)))
-				.flatMap((file) => collectImports(readFileSync(join(root, file.sourcePath), 'utf8')));
+				.filter((file) => existsSync(join(root, file.path)))
+				.flatMap((file) => collectImports(readFileSync(join(root, file.path), 'utf8')));
 
 			for (const spec of imports) {
 				if (spec.includes('@schema-engine/forms-react/components/internals')) {
@@ -795,6 +811,11 @@ function recipeSourceFiles(rel: string, source: string): string[] {
 		if (!local || seen.has(local)) continue;
 		seen.add(local);
 		files.push(local);
+		const stylesheet = local.replace(/\.tsx?$/, '.css');
+		if (!seen.has(stylesheet) && existsSync(join(root, SHARED_FORMS_ROOT, 'recipes', stylesheet))) {
+			seen.add(stylesheet);
+			files.push(stylesheet);
+		}
 	}
 
 	return files;
@@ -831,8 +852,6 @@ function renderRecipeRegistrations(scan: RecipeScanEntry[]): string {
  */
 ${imports}
 
-export type { BuiltInRecipeRegistry } from './recipe-registry';
-
 export {
 	${idents.join(',\n\t')},
 };
@@ -844,8 +863,6 @@ export const schemaFormRecipeRegistrations = [
 }
 
 interface RecipeManifest {
-	/** The one-time registry augmentation file. */
-	registry: string;
 	recipes: Array<{ id: string; title: string; files: string[] }>;
 }
 
@@ -855,32 +872,41 @@ interface RecipeManifest {
  */
 function renderRecipeManifest(scan: RecipeScanEntry[]): string {
 	const manifest: RecipeManifest = {
-		registry: 'recipe-registry.ts',
-		recipes: scan.map(({ stem, source }) => ({
-			id: stem,
-			title: recipeTitle(stem),
-			files: recipeSourceFiles(`registrations/${stem}.ts`, source),
-		})),
+		recipes: scan.map(({ stem, source }) => {
+			const files = recipeSourceFiles(`registrations/${stem}.ts`, source);
+			return {
+				id: stem,
+				title: recipeTitle(stem),
+				files: files.some((file) => file.endsWith('.css')) ? [...files, RECIPE_STYLESHEET_ENTRY] : files,
+			};
+		}),
 	};
 
 	return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
-function toRegistryItem(item: CatalogItem) {
-	const { registration: _registration, ...rest } = item;
-	return {
-		...rest,
-		files: rest.files.map(({ sourcePath: _sourcePath, ...file }) => file),
-	};
+/** The stylesheet the app imports; it pulls in every shell stylesheet. */
+const RECIPE_STYLESHEET_ENTRY = 'recipes.css';
+
+/** Shell stylesheets, paired with the shell components beside them. */
+function recipeShellStylesheets(): string[] {
+	return listRelativeSourceFiles(join(root, SHARED_FORMS_ROOT, 'recipes')).filter(
+		(file) => file.endsWith('.css') && file !== RECIPE_STYLESHEET_ENTRY,
+	);
 }
 
-function buildBaseRegistry(entry: BaseCatalog) {
-	return {
-		$schema: 'https://ui.shadcn.com/schema/registry.json',
-		name: `schema-engine-${entry.base.id}`,
-		homepage: `https://github.com/${GITHUB}`,
-		items: entry.catalog.map(toRegistryItem),
-	};
+function renderRecipeStylesheet(stylesheets: string[]): string {
+	return `/*
+ * Generated entry point for the Schema Engine default recipe styles.
+ * Import this one file from the app's global stylesheet; each shell's file sits beside its component.
+ */
+${stylesheets.map((file) => `@import './${file}';`).join('\n')}
+`;
+}
+
+function toRegistryItem(item: CatalogItem) {
+	const { registration: _registration, ...rest } = item;
+	return rest;
 }
 
 function buildRootRegistry() {
@@ -888,7 +914,7 @@ function buildRootRegistry() {
 		$schema: 'https://ui.shadcn.com/schema/registry.json',
 		name: 'schema-engine',
 		homepage: `https://github.com/${GITHUB}`,
-		include: BASES.map((base) => `registry/${base.id}/registry.json`),
+		items: catalog.map(toRegistryItem),
 	};
 }
 
@@ -905,13 +931,10 @@ export function buildOutputs(): Map<string, string> {
 	outputs.set(`${SHARED_FORMS_ROOT}/registrations.ts`, renderRegistrations(elementRegistrations()));
 	outputs.set(`${SHARED_FORMS_ROOT}/recipes/registrations.ts`, renderRecipeRegistrations(recipeScan));
 	outputs.set(`${SHARED_FORMS_ROOT}/recipes/manifest.json`, renderRecipeManifest(recipeScan));
-
-	for (const entry of catalogsByBase) {
-		outputs.set(
-			`registry/${entry.base.id}/registry.json`,
-			`${JSON.stringify(buildBaseRegistry(entry), null, 2)}\n`,
-		);
-	}
+	outputs.set(
+		`${SHARED_FORMS_ROOT}/recipes/${RECIPE_STYLESHEET_ENTRY}`,
+		renderRecipeStylesheet(recipeShellStylesheets()),
+	);
 
 	return outputs;
 }

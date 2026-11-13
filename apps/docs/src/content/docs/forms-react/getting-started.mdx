@@ -1,7 +1,6 @@
 ---
 title: 'Getting Started'
 description: 'Install the React adapter and register your engine.'
-group: Forms React
 order: 2
 ---
 
@@ -26,6 +25,16 @@ Install the form elements and, when using a supplied visual recipe, the recipe s
 ```bash
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
 ```
+
+The recipes copy their stylesheet with them. Import it once in your global stylesheet, after Tailwind and into the `components` layer (see [View recipes](/docs/forms-react/layouts#default-registry-recipes)):
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+@import './components/ui/schema-engine/components/controls.css';
+```
+
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. The second, unlayered import is the control height of the `size` appearance axis; it comes with the field primitive, and [View recipes](/docs/forms-react/layouts#default-registry-recipes) says why it is not layered.
 
 Then import their generated registration barrels:
 

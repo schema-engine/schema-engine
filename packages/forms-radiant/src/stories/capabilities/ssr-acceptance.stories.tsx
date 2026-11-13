@@ -5,7 +5,7 @@ const meta = {
 	...formRendererMeta,
 	title: 'Capabilities/SSR acceptance',
 	args: {
-		className: 'se-form-story--full',
+		class: 'se-form-story--full',
 		config: {
 			id: 'ssr-layout-acceptance',
 			title: 'SSR layout acceptance',

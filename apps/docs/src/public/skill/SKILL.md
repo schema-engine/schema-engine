@@ -42,7 +42,7 @@ and cross-adapter previews stay identical.
 
 React default shells and blocks live in the shadcn registry item
 `schema-engine-form-recipes` (source: `registry/shared/forms/recipes`). Specs
-live in `@schema-engine/forms/recipes`.
+live in `@schema-engine/forms/recipes/built-in`.
 
 The docs app's default previews use `@schema-engine/forms-radiant`. Forms
 React demo pages are EcoPages JSX pages that mount `ReactFormPreview` (the Radiant-styled demo kit) as a React island.
@@ -63,7 +63,7 @@ under `src/content/docs/` in the repository. The catch-all page renders any
 | Examples                     | `/docs/examples/basic-form`          |
 
 For machine consumption, the full LLM-exported corpus lives at
-`/llms.txt` (index) and `/llms-content/<section>/<slug>.txt` (page bodies).
+`/llms.txt` (index) and `/docs-llm/<section>/<slug>.md` (page bodies).
 
 ## Reference
 

@@ -228,8 +228,11 @@ when a chips-based multi-selection is needed.
 	label: 'Enter Code',
 	length: 6,
 	pattern: 'numeric', // numeric, alphanumeric
+	incompleteMessage: 'Enter all 6 characters', // optional, shown for a partly filled code
 }
 ```
+
+The field schema adds an exact-length rule that accepts an empty code or one with every slot filled, unless you write a `minLength`, `maxLength` or `pattern` rule. Headless `validateFormValues` and the renderer apply the same rule.
 
 ## Features
 
@@ -264,7 +267,8 @@ All fields support validation through the `rules` property:
 
 ## Styling
 
-Fields support inline styles and CSS classes:
+Fields support CSS classes and, as an escape hatch, CSS custom properties through `style`
+(keys must start with `--`; any other key fails validation):
 
 ```typescript
 {
@@ -272,8 +276,7 @@ Fields support inline styles and CSS classes:
 	name: 'fieldName',
 	label: 'Field',
 	style: {
-		marginBottom: '1rem',
-		padding: '0.5rem',
+		'--field-gap': '1rem',
 	},
 	className: 'my-custom-class',
 }

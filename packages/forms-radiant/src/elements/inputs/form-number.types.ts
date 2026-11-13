@@ -18,8 +18,4 @@ export const NumberFieldConfigSchema = z.extend(BaseFieldSchema, {
 export type NumberFieldExtension = z.infer<typeof NumberFieldExtensionSchema>;
 export type NumberFieldConfig = z.infer<typeof NumberFieldConfigSchema>;
 
-export type NumberFieldProps = NumberFieldConfig & {
-	onChange?: (value: number | '') => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type NumberFieldProps = NumberFieldConfig;

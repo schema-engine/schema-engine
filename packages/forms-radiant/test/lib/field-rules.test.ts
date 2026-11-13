@@ -30,8 +30,7 @@ describe('toFieldRules', () => {
 	});
 
 	test('uses the phone validator for complete numbers', async () => {
-		const phoneRegistry = createDefaultValidationRegistry();
-		phoneRegistry.register(createRadiantPhoneValidationRegistration());
+		const phoneRegistry = createDefaultValidationRegistry([createRadiantPhoneValidationRegistration()]);
 		const rules = toFieldRules({ rules: [{ type: 'phone' }] }, phoneRegistry);
 		expect(typeof rules?.validate).toBe('function');
 
@@ -79,8 +78,7 @@ describe('toFieldRules', () => {
 	});
 
 	test('injects phone validation for phone-input when the author omitted the rule', async () => {
-		const phoneRegistry = createDefaultValidationRegistry();
-		phoneRegistry.register(createRadiantPhoneValidationRegistration());
+		const phoneRegistry = createDefaultValidationRegistry([createRadiantPhoneValidationRegistration()]);
 		const rules = toFieldRules({ $type: 'phone-input' }, phoneRegistry);
 		expect(typeof rules?.validate).toBe('function');
 

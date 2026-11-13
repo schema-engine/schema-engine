@@ -1,7 +1,6 @@
 ---
 title: 'API Reference'
 description: 'Public surface of the React adapter.'
-group: Forms React
 order: 8
 ---
 
@@ -54,16 +53,17 @@ active-step state, navigation, and the current slot configuration.
 
 ```ts
 import { useViewContext, useActiveStep, useFormNavigation, useViewConfig } from '@schema-engine/forms-react/hooks';
+import { StepHeaderConfigSchema } from '@schema-engine/forms/recipes/built-in';
 
 useViewContext();
 useActiveStep();
 useFormNavigation();
-useViewConfig<MySlotConfig>('header');
+useViewConfig('header', StepHeaderConfigSchema);
 ```
 
 Shells and slot blocks are ordinary components. Bind them to a canonical spec
-with `defineFormRecipe(spec, { shell, slots })` from `@schema-engine/forms/recipes`.
-Built-in specs are exported from that subpath. The package root
+with `defineRecipe(spec, { shell, slots })` from `@schema-engine/forms-react/primitives`; it requires exactly the slots the spec declares.
+Built-in specs are exported from `@schema-engine/forms/recipes/built-in`. The package root
 `@schema-engine/forms` does not re-export them.
 
 `createFormEngine()` does not bind default recipes. That is not the same

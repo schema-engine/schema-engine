@@ -1,0 +1,37 @@
+/*
+ * The built-in size axis is renderer-neutral: compact and comfortable read these hooks. Radiant maps
+ * them to its theme spacing, with the neutral values as fallbacks, so a themed app keeps its rhythm.
+ */
+:where([data-se-theme]) {
+	--se-space-compact: var(--space-block, 1rem);
+	--se-space-comfortable: var(--space-block-xl, 2rem);
+	--se-control-height-compact: var(--size-control-sm, 1.75rem);
+	--se-control-height-comfortable: var(--size-control-lg, 2.25rem);
+}
+
+/*
+ * Radiant UI sizes inputs, selects, number fields and the default button from --size-control-md, which its
+ * theme sets on :root, or on a wrapper when the theme is scoped. A pick must replace that property below the
+ * pick, and a default pick must hand it back to the theme, so the theme's value is kept in a separate
+ * property where nothing replaces it: on :root, and on the element that holds a form's theme root and sits
+ * outside any other theme root, which sees a theme scoped to a wrapper. The pick reads that copy. The rule
+ * never refers to --size-control-md on its own right-hand side, so the form element, which carries the theme
+ * and the pick together, has no circular var(). With no pick no element matches, and the theme's
+ * --size-control-md applies untouched.
+ */
+:where(:root, :has(> [data-se-theme]):not([data-se-theme], [data-se-theme] *)) {
+	--se-radiant-control-md: var(--size-control-md, 2.5rem);
+}
+
+:where([data-se-size]) {
+	--size-control-md: var(--se-control-height, var(--se-radiant-control-md));
+}
+
+/*
+ * Appearance axes. The layout theme declares the tokens a value stands for (--se-space, --se-font-size, --se-shadow and the rest)
+ * inside :where() rules scoped by data-se-theme; these rules only read them, also inside
+ * :where(), so an author's class on the same element always wins.
+ */
+:where(.se-form-field[data-se-size]) {
+	font-size: var(--se-font-size, inherit);
+}

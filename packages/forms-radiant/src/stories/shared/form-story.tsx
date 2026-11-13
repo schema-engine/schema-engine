@@ -28,7 +28,7 @@ export const formRendererMeta = {
 	component: FormRenderer,
 	render: renderFormStory,
 	args: {
-		className: 'se-form-story--narrow',
+		class: 'se-form-story--narrow',
 	},
 	argTypes: {
 		engine: { table: { disable: true } },

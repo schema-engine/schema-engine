@@ -4,12 +4,7 @@ import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { InputFieldProps } from './form-input.types';
 
-export function FormInput({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: InputFieldProps) {
+export function FormInput(config: InputFieldProps) {
 	const { inputType, placeholder } = config;
 
 	return (
@@ -21,6 +16,8 @@ export function FormInput({
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
 			validation={config}
 			defaultValue={config.defaultValue}
@@ -32,13 +29,11 @@ export function FormInput({
 				type={inputType}
 				value={typeof config.defaultValue === 'string' ? config.defaultValue : undefined}
 				placeholder={placeholder}
+				autocomplete={config.autoComplete}
+				autofocus={config.autoFocus}
+				inputMode={config.inputMode}
+				spellcheck={config.spellCheck}
 				disabled={config.disabled}
-				on:input={(event: Event) => {
-					const target = event.target as HTMLInputElement;
-					propsOnChange?.(target.value);
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
 			/>
 		</FieldGroup>
 	);

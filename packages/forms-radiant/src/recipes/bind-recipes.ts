@@ -1,17 +1,15 @@
+import { defineFormRecipe, type RecipeSlot, type RecipeSpec } from '@schema-engine/forms/recipes';
 import {
 	bareControlsSpec,
 	cardSpec,
 	cardWizardSpec,
-	defineFormRecipe,
 	heroBackgroundSpec,
 	heroWizardSpec,
 	sidebarWizardSpec,
 	splitScreenSpec,
 	splitScreenWizardSpec,
 	wizardSpec,
-	type RecipeSlot,
-	type RecipeSpec,
-} from '@schema-engine/forms/recipes';
+} from '@schema-engine/forms/recipes/built-in';
 import type * as z from 'zod/mini';
 import {
 	StepHeaderBlock,
@@ -21,49 +19,52 @@ import {
 	FormActionsBlock,
 } from '@/components/blocks';
 import { CardShell, HeroShell, SidebarShell, SplitScreenShell, StackShell } from '@/components/shells';
-import type { RadiantRecipeAdapterPayload } from './types';
+import type { RadiantRecipePayload } from './types';
 
-function bind<
-	TType extends string,
-	TSchema extends z.ZodMiniType,
+/**
+ * Binds a recipe spec to Radiant components, requiring exactly the slots the spec declares.
+ */
+export function defineRecipe<
+	const TType extends string,
 	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>,
->(spec: RecipeSpec<TType, TSchema, TSlots>, render: RadiantRecipeAdapterPayload) {
-	return defineFormRecipe(spec, render);
+	TSchema extends z.ZodMiniType,
+>(spec: RecipeSpec<TType, TSchema, TSlots>, payload: RadiantRecipePayload<TSlots>) {
+	return defineFormRecipe(spec, payload);
 }
 
-export const CardRecipe = bind(cardSpec, {
+export const CardRecipe = defineRecipe(cardSpec, {
 	shell: CardShell,
 	slots: { header: StepHeaderBlock, actions: FormActionsBlock },
 });
-export const SplitScreenRecipe = bind(splitScreenSpec, {
+export const SplitScreenRecipe = defineRecipe(splitScreenSpec, {
 	shell: SplitScreenShell,
 	slots: { actions: FormActionsBlock },
 });
-export const HeroBackgroundRecipe = bind(heroBackgroundSpec, {
+export const HeroBackgroundRecipe = defineRecipe(heroBackgroundSpec, {
 	shell: HeroShell,
 	slots: { header: StepHeaderBlock, actions: FormActionsBlock },
 });
-export const BareControlsRecipe = bind(bareControlsSpec, {
+export const BareControlsRecipe = defineRecipe(bareControlsSpec, {
 	shell: StackShell,
 	slots: { actions: WizardActionsBlock },
 });
-export const WizardRecipe = bind(wizardSpec, {
+export const WizardRecipe = defineRecipe(wizardSpec, {
 	shell: StackShell,
 	slots: { header: StepHeaderBlock, progress: StepIndicatorsBlock, actions: WizardActionsBlock },
 });
-export const SidebarWizardRecipe = bind(sidebarWizardSpec, {
+export const SidebarWizardRecipe = defineRecipe(sidebarWizardSpec, {
 	shell: SidebarShell,
 	slots: { header: StepHeaderBlock, progress: StepIndicatorsBlock, actions: WizardActionsBlock },
 });
-export const CardWizardRecipe = bind(cardWizardSpec, {
+export const CardWizardRecipe = defineRecipe(cardWizardSpec, {
 	shell: CardShell,
 	slots: { header: StepHeaderBlock, progress: MinimalProgressBlock, actions: WizardActionsBlock },
 });
-export const HeroWizardRecipe = bind(heroWizardSpec, {
+export const HeroWizardRecipe = defineRecipe(heroWizardSpec, {
 	shell: HeroShell,
 	slots: { header: StepHeaderBlock, progress: MinimalProgressBlock, actions: WizardActionsBlock },
 });
-export const SplitScreenWizardRecipe = bind(splitScreenWizardSpec, {
+export const SplitScreenWizardRecipe = defineRecipe(splitScreenWizardSpec, {
 	shell: SplitScreenShell,
 	slots: { header: StepHeaderBlock, progress: StepIndicatorsBlock, actions: WizardActionsBlock },
 });

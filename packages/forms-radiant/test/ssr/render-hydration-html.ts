@@ -16,12 +16,14 @@ import { FormPhoneInput } from '@/elements/inputs/form-phone-input';
 import { InputFieldSchema } from '@/elements/inputs/form-input.types';
 import { PhoneInputFieldSchema } from '@/elements/inputs/form-phone-input.types';
 import { renderWithOwningFormEngine } from '@/contexts/form-engine-owner';
+import { FormElement } from '@/components/internals/field-renderer';
 import { createHydrationEngine } from './hydration-engine';
 
 await import('@/components/form-instance.script');
 
 export function renderHydrationHtml(): string {
 	return withRadiantServerCustomElementRenderBridge(() => {
+		const engine = createHydrationEngine();
 		const rules = [{ type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Must match password' }];
 		const config = { id: 'hydration', steps: [{ id: 'main', title: 'Main', elements: [] }] };
 		const fields = [
@@ -49,9 +51,18 @@ export function renderHydrationHtml(): string {
 				CheckboxFieldConfigSchema.parse({ $type: 'checkbox', id: 'accepted', name: 'accepted', rules }),
 			),
 			jsx(FormSlider, SliderFieldConfigSchema.parse({ $type: 'slider', id: 'amount', name: 'amount', rules })),
-			...renderWithOwningFormEngine(createHydrationEngine(), () => [
+			...renderWithOwningFormEngine(engine, () => [
 				FormInput(InputFieldSchema.parse({ $type: 'input', id: 'contact', name: 'contact' })),
 				FormPhoneInput(PhoneInputFieldSchema.parse({ $type: 'phone-input', id: 'phone', name: 'phone' })),
+				FormElement({
+					config: engine.validateElement({
+						$type: 'input',
+						id: 'vat',
+						name: 'vat',
+						constraints: [{ field: 'contact', operator: 'equals', value: 'show', action: 'show' }],
+					}),
+					engine,
+				}),
 			]),
 		];
 		return renderToString(

@@ -122,6 +122,7 @@ function DateInput({ value, onChange, className, disabled }: DateInputProps) {
 
 	return (
 		<div
+			data-se-control
 			className={cn(
 				'border-input bg-background flex h-8 items-center rounded-lg border px-2 text-sm shadow-xs',
 				disabled && 'pointer-events-none opacity-50',

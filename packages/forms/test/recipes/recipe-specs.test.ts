@@ -1,8 +1,15 @@
 import { describe, expect, test } from 'vitest';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { cardSpec, wizardSpec, builtInRecipeSpecs } from '@/recipes/built-in-specs';
-import { FormActionsConfigSchema, StepHeaderConfigSchema, WizardActionsConfigSchema } from '@/recipes/slot-schemas';
-import { applySlotDefaults, buildViewModel } from '@/recipes/view-model';
+import { createFormEngine } from '@/engine/create-form-engine';
+import { defineFormRecipe } from '@/recipes/define-form-recipe';
+import {
+	CardShellConfigSchema,
+	FormActionsConfigSchema,
+	StepHeaderConfigSchema,
+	WizardActionsConfigSchema,
+} from '@/recipes/slot-schemas';
+import { buildViewModel, buildViewSteps, getSlotConfig } from '@/recipes/view-model';
 import { createInitialStepStates } from '@/engine/step-machine';
 
 describe('defineRecipeSpec', () => {
@@ -45,6 +52,50 @@ describe('defineRecipeSpec', () => {
 	});
 });
 
+describe('defineRecipeSpec slotDefaults', () => {
+	const base = {
+		$type: 'defaults',
+		kind: 'single-step',
+		metadata: { name: 'Defaults' },
+		slotSchemas: { header: StepHeaderConfigSchema },
+	} as const;
+
+	test('fails at definition naming the recipe, slot and key', () => {
+		expect(() =>
+			defineRecipeSpec({
+				...base,
+				// @ts-expect-error -- 'befor' is not a counterPlacement value
+				slotDefaults: { header: { counterPlacement: 'befor' } },
+			}),
+		).toThrow(/'defaults' slotDefaults\.header.*counterPlacement/);
+	});
+
+	test('fails on an unknown key in a declared slot', () => {
+		expect(() =>
+			defineRecipeSpec({
+				...base,
+				// @ts-expect-error -- 'sizee' is not a header key
+				slotDefaults: { header: { sizee: 'sm' } },
+			}),
+		).toThrow(/'defaults' slotDefaults\.header.*sizee/);
+	});
+
+	test('fails on a default for an undeclared slot', () => {
+		expect(() =>
+			defineRecipeSpec({
+				...base,
+				// @ts-expect-error -- the recipe declares no progress slot
+				slotDefaults: { progress: {} },
+			}),
+		).toThrow(/slotDefaults\.progress.*does not declare/);
+	});
+
+	test('accepts a valid partial default', () => {
+		const spec = defineRecipeSpec({ ...base, slotDefaults: { header: { counterPlacement: 'before' } } });
+		expect(spec.slotDefaults).toEqual({ header: { counterPlacement: 'before' } });
+	});
+});
+
 describe('built-in recipe specs', () => {
 	test('declare unique $type values', () => {
 		const types = Object.values(builtInRecipeSpecs).map((spec) => spec.$type);
@@ -52,7 +103,9 @@ describe('built-in recipe specs', () => {
 	});
 
 	test('card schema accepts shell config without nested $type', () => {
-		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { padding: 'md' } }).success).toBe(true);
+		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { appearance: { size: 'compact' } } }).success).toBe(
+			true,
+		);
 		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { $type: 'card' } }).success).toBe(false);
 	});
 
@@ -68,15 +121,53 @@ describe('built-in recipe specs', () => {
 	});
 });
 
-describe('view model', () => {
-	test('applies slot defaults under author overrides', () => {
-		const view = applySlotDefaults(
-			{ $type: 'card', header: { size: 'lg' } },
-			{ header: { align: 'center', size: 'md' } },
+describe('buildViewSteps', () => {
+	test('projects active, completed, valid and visited flags per step', () => {
+		const steps = buildViewSteps(
+			[{ id: 'one', title: 'One', description: 'First' }, { id: 'two' }, { id: 'three', title: 'Three' }],
+			1,
+			{ completed: [true, false, false], valid: [true, true, false], visited: [true, true, false] },
 		);
-		expect(view.header).toEqual({ align: 'center', size: 'lg' });
-	});
 
+		expect(steps).toEqual([
+			{
+				id: 'one',
+				title: 'One',
+				description: 'First',
+				index: 0,
+				total: 3,
+				isActive: false,
+				isCompleted: true,
+				isValid: true,
+				isVisited: true,
+			},
+			{
+				id: 'two',
+				title: undefined,
+				description: undefined,
+				index: 1,
+				total: 3,
+				isActive: true,
+				isCompleted: false,
+				isValid: true,
+				isVisited: true,
+			},
+			{
+				id: 'three',
+				title: 'Three',
+				description: undefined,
+				index: 2,
+				total: 3,
+				isActive: false,
+				isCompleted: false,
+				isValid: false,
+				isVisited: false,
+			},
+		]);
+	});
+});
+
+describe('view model', () => {
 	test('builds steps with stable index and total', () => {
 		const model = buildViewModel({
 			config: {
@@ -104,5 +195,50 @@ describe('view model', () => {
 		expect(model.activeStep.index).toBe(1);
 		expect(model.activeStep.total).toBe(2);
 		expect(model.steps).toHaveLength(2);
+	});
+});
+
+describe('normalized slot defaults', () => {
+	const engine = createFormEngine({ recipes: [defineFormRecipe(cardSpec, {})] });
+	const steps = [{ id: 'main', title: 'Main', elements: [] }];
+
+	test('fills slots the author omits from the slot schema defaults', () => {
+		const form = engine.defineForm({ id: 'card', steps, view: { $type: 'card' } });
+		expect(form.view?.shell).toEqual({});
+		expect(form.view?.actions).toEqual({
+			labels: { submit: 'Submit', submitAriaLabel: 'Submit form', submitting: 'Submitting...' },
+			align: 'end',
+		});
+	});
+
+	test('layers author keys over recipe defaults over schema defaults', () => {
+		const form = engine.defineForm({ id: 'card', steps, view: { $type: 'card', header: { size: 'lg' } } });
+		expect(form.view?.header).toMatchObject({ size: 'lg', align: 'center', titleAs: 'h2' });
+	});
+
+	test('shows the defaults in the view JSON Schema', () => {
+		const viewSchema = engine.describeRecipe('card').viewSchema as {
+			$defs: Record<
+				string,
+				{ properties: Record<string, { properties: Record<string, { default?: unknown }> }> }
+			>;
+		};
+		const properties = viewSchema.$defs['recipe:card'].properties;
+		expect(properties.header.properties.titleAs.default).toBe('h2');
+		expect(properties.actions.properties.align.default).toBe('end');
+	});
+
+	test('lists only $type as required in the authoring view JSON Schema', () => {
+		const viewSchema = engine.describeRecipe('card').viewSchema as {
+			$defs: Record<string, { required?: string[]; properties: Record<string, { required?: string[] }> }>;
+		};
+		const recipeSchema = viewSchema.$defs['recipe:card'];
+		expect(recipeSchema.required).toEqual(['$type']);
+		expect(recipeSchema.properties.shell.required ?? []).not.toContain('maxWidth');
+	});
+
+	test('getSlotConfig reads a slot extended with extra keys without parsing it', () => {
+		const view = { shell: { maxWidth: 'lg', padding: 'md', shadowSize: 'md', accent: 'red' } };
+		expect(getSlotConfig(view, 'shell', CardShellConfigSchema)).toMatchObject({ maxWidth: 'lg', accent: 'red' });
 	});
 });

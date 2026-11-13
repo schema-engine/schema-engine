@@ -1,3 +1,4 @@
+import { getDefaultLayoutTheme } from '@schema-engine/layout';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/adapters/rhf/form-provider';
@@ -17,7 +18,12 @@ vi.mock('@schema-engine/forms/actions', async () => {
 });
 
 vi.mock('@/hooks/use-form-context', () => ({
-	useFormEngine: () => ({ engine: { getValidationRegistry: () => createDefaultValidationRegistry() } }),
+	useFormEngine: () => ({
+		engine: {
+			getValidationRegistry: () => createDefaultValidationRegistry(),
+			getLayout: () => getDefaultLayoutTheme(),
+		},
+	}),
 }));
 
 vi.mock('../../src/adapters/rhf/hooks/use-form-validation-resolver', () => ({

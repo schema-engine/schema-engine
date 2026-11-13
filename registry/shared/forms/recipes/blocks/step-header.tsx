@@ -1,5 +1,5 @@
 import type { ElementType } from 'react';
-import { formatStepCounter, type StepHeaderConfig } from '@schema-engine/forms/recipes';
+import { formatStepLabel, StepHeaderConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useActiveStep, useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
 
@@ -9,39 +9,36 @@ const titleSizes = {
 	lg: 'text-4xl',
 } as const;
 
-const alignments = {
-	start: 'text-left',
-	center: 'text-center',
-	end: 'text-right',
-} as const;
-
 export function StepHeader() {
 	const { form } = useViewContext();
 	const step = useActiveStep();
 	const {
-		showDescription = true,
-		showStepCounter = false,
+		showDescription,
+		showStepCounter,
 		labels,
-		size = 'md',
-		align = 'start',
-		titleAs = 'h2',
-		inheritColor = false,
-		counterPlacement = 'after',
-	} = useViewConfig<StepHeaderConfig>('header');
+		size,
+		align,
+		fallbackToFormTitle,
+		titleAs,
+		inheritColor,
+		counterPlacement,
+	} = useViewConfig('header', StepHeaderConfigSchema);
 
-	const title = step.title || form.title;
+	const title = step.title || (fallbackToFormTitle ? form.title : undefined);
 	const description = step.description || form.description;
-	const counterText = showStepCounter
-		? labels?.stepCounter
-			? formatStepCounter(labels.stepCounter, step.index + 1, step.total)
-			: `Step ${step.index + 1} of ${step.total}`
-		: null;
+	const counterText = showStepCounter ? formatStepLabel(labels.stepCounter, step.index + 1, step.total) : null;
 	const Title = titleAs as ElementType;
 
 	if (!title && !description && !counterText) return null;
 
 	return (
-		<header className={cn('max-w-none space-y-2', alignments[align], inheritColor && 'text-inherit')}>
+		<header
+			data-align={align}
+			className={cn(
+				'max-w-none space-y-2 data-[align=start]:text-left data-[align=center]:text-center',
+				inheritColor && 'text-inherit',
+			)}
+		>
 			{counterText && counterPlacement === 'before' ? (
 				<p className={cn('text-sm text-muted-foreground', inheritColor && 'text-inherit opacity-80')}>
 					{counterText}

@@ -1,18 +1,15 @@
 import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
-import { DEFAULT_WIZARD_RECIPE, FormValidationError, getRenderableSteps, resolveFormRecipe } from '@/lib/validate-form';
+import { FormValidationError, getRenderableSteps } from '@/lib/validate-form';
 import { isNormalizedFormConfig, isNormalizedElementConfig } from '@/lib/normalized-form-config';
 import { defineFormRecipe } from '@/recipes/define-form-recipe';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { sidebarWizardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
+import { ElementGridConfigSchema } from '@schema-engine/layout';
+import { elementChildrenSchema } from '@/lib/element-children';
 import { logger } from '@/lib/logger';
-
-const cardRecipeSchema = z.strictObject({
-	$type: z.literal('card'),
-	shell: z.optional(z.strictObject({ padding: z.optional(z.enum(['sm', 'md', 'lg'])) })),
-});
 
 const cardRecipe = defineFormRecipe(
 	defineRecipeSpec({
@@ -20,15 +17,9 @@ const cardRecipe = defineFormRecipe(
 		kind: 'single-step',
 		metadata: { name: 'Card', description: 'Card shell recipe' },
 		slotSchemas: { shell: z.strictObject({ padding: z.optional(z.enum(['sm', 'md', 'lg'])) }) },
-		schema: cardRecipeSchema,
 	}),
 	{},
 );
-
-const wizardRecipeSchema = z.strictObject({
-	$type: z.literal('wizard'),
-	actions: z.optional(z.strictObject({ labels: z.optional(z.strictObject({ next: z.optional(z.string()) })) })),
-});
 
 const wizardRecipe = defineFormRecipe(
 	defineRecipeSpec({
@@ -38,29 +29,87 @@ const wizardRecipe = defineFormRecipe(
 		slotSchemas: {
 			actions: z.strictObject({ labels: z.optional(z.strictObject({ next: z.optional(z.string()) })) }),
 		},
-		schema: wizardRecipeSchema,
 	}),
 	{},
 );
+
+const bareControlsRecipe = defineFormRecipe(
+	defineRecipeSpec({
+		$type: 'bare-controls',
+		kind: 'wizard',
+		metadata: { name: 'Bare controls', description: 'Bare wizard recipe' },
+		slotSchemas: { actions: z.strictObject({}) },
+	}),
+	{},
+);
+
+const nestedDefaultsRecipe = defineFormRecipe(
+	defineRecipeSpec({
+		$type: 'nested',
+		kind: 'single-step',
+		metadata: { name: 'Nested', description: 'Recipe with nested slot defaults' },
+		slotSchemas: {
+			header: z.strictObject({
+				size: z.optional(z.string()),
+				labels: z.optional(z.strictObject({ a: z.optional(z.string()), b: z.optional(z.string()) })),
+			}),
+		},
+		slotDefaults: { header: { size: 'sm', labels: { a: 'A', b: 'default b' } } },
+	}),
+	{},
+);
+
+const twoStepForm = {
+	id: 'wizard',
+	steps: [
+		{ id: 'one', title: 'One', elements: [] },
+		{ id: 'two', title: 'Two', elements: [] },
+	],
+};
 
 function createEngine() {
 	return createFormEngine({ recipes: [cardRecipe, wizardRecipe] });
 }
 
-describe('validateFormConfig', () => {
-	test('resolves the registered default wizard recipe for multi-step forms', () => {
-		const recipe = resolveFormRecipe(
-			{
-				id: 'wizard',
-				steps: [
-					{ id: 'one', title: 'One', elements: [] },
-					{ id: 'two', title: 'Two', elements: [] },
-				],
-			},
-			{ getRecipe: (id) => (id === DEFAULT_WIZARD_RECIPE ? wizardRecipe : undefined) },
-		);
+const formWith = (elements: unknown[], grid?: unknown) => ({
+	id: 'widths',
+	...(grid ? { grid } : {}),
+	steps: [{ id: 'main', title: 'Main', elements }],
+});
+const fieldNamed = (name: string, grid?: unknown) => ({ $type: 'field', id: name, name, ...(grid ? { grid } : {}) });
 
-		expect(recipe).toBe(wizardRecipe);
+describe('validateFormConfig', () => {
+	test('writes the default wizard recipe as the view of a multi-step form without view', () => {
+		const engine = createFormEngine({ recipes: [bareControlsRecipe] });
+		expect(engine.validateForm(twoStepForm).view?.$type).toBe('bare-controls');
+	});
+
+	test('writes the engine defaultWizardRecipe as the view', () => {
+		const engine = createFormEngine({ recipes: [cardRecipe, wizardRecipe], defaultWizardRecipe: 'wizard' });
+		expect(engine.validateForm(twoStepForm).view?.$type).toBe('wizard');
+		expect(engine.extend().validateForm(twoStepForm).view?.$type).toBe('wizard');
+	});
+
+	test('rejects a single-step recipe registered as the implicit bare-controls default', () => {
+		const singleStepBare = defineFormRecipe(
+			defineRecipeSpec({
+				$type: 'bare-controls',
+				kind: 'single-step',
+				metadata: { name: 'Bare', description: 'Single-step recipe named like the default' },
+				slotSchemas: { shell: z.strictObject({}) },
+			}),
+			{},
+		);
+		expect(() => createFormEngine({ recipes: [singleStepBare] })).toThrow(/must be a wizard recipe/);
+	});
+
+	test.each([
+		['an unregistered recipe', 'missing'],
+		['a single-step recipe', 'card'],
+	])('rejects defaultWizardRecipe naming %s at engine build', (_label, name) => {
+		expect(() => createFormEngine({ recipes: [cardRecipe], defaultWizardRecipe: name })).toThrow(
+			/defaultWizardRecipe/,
+		);
 	});
 
 	test.each([
@@ -77,46 +126,229 @@ describe('validateFormConfig', () => {
 		);
 	});
 
-	test('warns once per engine when a multi-step form has no wizard recipe registered', () => {
-		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
-		const config = {
-			id: 'headless-wizard',
-			steps: [
-				{ id: 'one', title: 'One', elements: [] },
-				{ id: 'two', title: 'Two', elements: [] },
+	describe('named grid widths', () => {
+		const gridField = defineInput({
+			$type: 'field',
+			schema: z.looseObject({
+				$type: z.literal('field'),
+				id: z.string(),
+				name: z.string(),
+				grid: z.optional(ElementGridConfigSchema),
+			}),
+			metadata: { name: 'Field', category: 'input' },
+			render: () => null,
+		});
+		const group = defineInput({
+			$type: 'group',
+			containerKind: 'object',
+			schema: z.looseObject({
+				$type: z.literal('group'),
+				id: z.string(),
+				name: z.string(),
+				elements: elementChildrenSchema,
+			}),
+			metadata: { name: 'Group', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({ elements: [gridField, group] });
+		test('accepts widths and offsets on a grid that sets no columns', () => {
+			expect(() =>
+				engine.validateForm(
+					formWith(
+						[fieldNamed('a', { width: 'half' }), fieldNamed('b', { width: 'half', offset: 'quarter' })],
+						{
+							gap: 'loose',
+						},
+					),
+				),
+			).not.toThrow();
+		});
+
+		test.each([
+			['columns', { columns: 3 }, 'columns'],
+			['auto columns', { columns: 'auto' }, 'columns'],
+			['a responsive columns entry', { responsive: { md: { columns: 2 } } }, 'columns'],
+			['a minimum column width', { minColumnWidth: '12rem' }, 'minColumnWidth'],
+			[
+				'a responsive minimum column width',
+				{ responsive: { lg: { minColumnWidth: '12rem' } } },
+				'minColumnWidth',
 			],
-		};
-		const lookup = { getRecipe: () => undefined };
+		])('rejects a grid with %s when a field uses width', (_label, grid, key) => {
+			const attempt = () => engine.validateForm(formWith([fieldNamed('a', { width: 'half' })], grid));
+			expect(attempt).toThrow(FormValidationError);
+			expect(attempt).toThrow(/uses areas, widths or columns/);
+			expect(attempt).toThrow(new RegExp(`Form grid sets '${key}'`));
+			expect(attempt).toThrow(/'a'/);
+		});
 
+		test('ignores grid keys that are present but undefined', () => {
+			expect(() =>
+				engine.validateForm(
+					formWith([fieldNamed('a', { width: undefined, column: 2 })], {
+						columns: undefined,
+						minColumnWidth: undefined,
+					}),
+				),
+			).not.toThrow();
+			expect(() =>
+				engine.validateForm(formWith([fieldNamed('a', { offset: undefined, column: 2 })])),
+			).not.toThrow();
+		});
+
+		test('rejects columns when a field uses a responsive width or an offset', () => {
+			const grid = { columns: 3 };
+			expect(() =>
+				engine.validateForm(formWith([fieldNamed('a', { responsive: { md: { width: 'third' } } })], grid)),
+			).toThrow(/uses areas, widths or columns/);
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { offset: 'half' })], grid))).toThrow(
+				/uses areas, widths or columns/,
+			);
+		});
+
+		test('keeps columns working when no field uses width', () => {
+			expect(() =>
+				engine.validateForm(formWith([fieldNamed('a', { column: 'span 2' })], { columns: 3 })),
+			).not.toThrow();
+		});
+
+		test.each([
+			['a width and a raw column', { width: 'half', column: 2 }],
+			['an offset and a raw column', { offset: 'quarter', column: '4 / 10' }],
+			['a responsive width next to a column', { column: 2, responsive: { md: { width: 'half' } } }],
+			['a width next to a responsive column', { width: 'half', responsive: { md: { column: 2 } } }],
+		])('rejects a field that sets %s', (_label, grid) => {
+			const attempt = () => engine.validateForm(formWith([fieldNamed('a', grid)]));
+			expect(attempt).toThrow(FormValidationError);
+			expect(attempt).toThrow(/'a'.*'(width|offset)'.*'column'|'a'.*'column'.*'(width|offset)'/);
+		});
+
+		test('allows a width with a raw row', () => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { width: 'half', row: 2 })]))).not.toThrow();
+		});
+
+		test.each([['wide'], ['full-ish']])('rejects the unknown width %s', (width) => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { width })]))).toThrow(FormValidationError);
+		});
+
+		test.each([['full'], ['auto']])('rejects %s as an offset', (offset) => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { offset })]))).toThrow(FormValidationError);
+		});
+
+		test('rejects auto as a width', () => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', { width: 'auto' })]))).toThrow(
+				FormValidationError,
+			);
+		});
+
+		test('accepts widths on a container and on its children', () => {
+			const form = formWith([
+				{
+					$type: 'group',
+					id: 'g',
+					name: 'g',
+					grid: { width: 'half' },
+					elements: [fieldNamed('inner', { width: 'half' }), fieldNamed('other', { offset: 'quarter' })],
+				},
+			]);
+			expect(() => engine.validateForm(form)).not.toThrow();
+		});
+
+		test('keeps the step columns apart from the widths of a container children', () => {
+			const form = formWith(
+				[{ $type: 'group', id: 'g', name: 'g', elements: [fieldNamed('inner', { width: 'half' })] }],
+				{ columns: 3 },
+			);
+			expect(() => engine.validateForm(form)).not.toThrow();
+		});
+
+		test('rejects a nested width and offset past the twelve tracks, naming its path', () => {
+			const form = formWith([
+				{
+					$type: 'group',
+					id: 'g',
+					name: 'g',
+					elements: [fieldNamed('inner', { width: 'two-thirds', offset: 'half' })],
+				},
+			]);
+			const attempt = () => engine.validateForm(form);
+			expect(attempt).toThrow(/elements\[0\].*elements\[0\].*'inner'.*'width'.*'offset'.*12 tracks/);
+		});
+
+		test('rejects a nested width next to a raw column', () => {
+			const form = formWith([
+				{ $type: 'group', id: 'g', name: 'g', elements: [fieldNamed('inner', { width: 'half', column: 2 })] },
+			]);
+			expect(() => engine.validateForm(form)).toThrow(/'inner'.*'width' and 'column'/);
+		});
+
+		test.each([
+			['two-thirds beside a half offset', { width: 'two-thirds', offset: 'half' }],
+			['three-quarters beside a third offset', { width: 'three-quarters', offset: 'third' }],
+			['full beside any offset', { width: 'full', offset: 'quarter' }],
+			[
+				'a wider width that meets the offset carried from a narrower slot',
+				{ width: 'half', offset: 'half', responsive: { md: { width: 'two-thirds' } } },
+			],
+			[
+				'a wider offset that meets the width carried from a narrower slot',
+				{ width: 'half', offset: 'quarter', responsive: { lg: { offset: 'two-thirds' } } },
+			],
+			[
+				'an offset in responsive.default',
+				{ width: 'three-quarters', responsive: { default: { offset: 'half' } } },
+			],
+		])('rejects %s past the twelve tracks', (_label, grid) => {
+			const attempt = () => engine.validateForm(formWith([fieldNamed('a', grid)]));
+			expect(attempt).toThrow(FormValidationError);
+			expect(attempt).toThrow(/'a'.*'width'.*'offset'.*12 tracks/);
+		});
+
+		test.each([
+			['half beside a half offset', { width: 'half', offset: 'half' }],
+			['half centred', { width: 'half', offset: 'quarter' }],
+			[
+				'a width that shrinks the sum below twelve',
+				{ width: 'two-thirds', offset: 'third', responsive: { md: { width: 'third' } } },
+			],
+			['an offset on its own', { offset: 'three-quarters' }],
+		])('accepts %s', (_label, grid) => {
+			expect(() => engine.validateForm(formWith([fieldNamed('a', grid)]))).not.toThrow();
+		});
+
+		test('allows a raw column field next to width fields', () => {
+			expect(() =>
+				engine.validateForm(
+					formWith([fieldNamed('a', { width: 'half' }), fieldNamed('b', { column: 'span 2' })]),
+				),
+			).not.toThrow();
+		});
+	});
+
+	test('warns once per form id and leaves the view unset when no default wizard recipe is registered', () => {
+		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		try {
-			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
-			expect(resolveFormRecipe(config, lookup)).toBeUndefined();
+			const engine = createEngine();
+			expect(engine.validateForm(twoStepForm).view).toBeUndefined();
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(warn.mock.calls[0]?.map(String).join(' ')).toMatch(/no 'bare-controls' recipe is registered/i);
-
-			expect(resolveFormRecipe(config, { getRecipe: () => undefined })).toBeUndefined();
+			engine.validateForm(twoStepForm);
+			expect(warn).toHaveBeenCalledTimes(1);
+			engine.validateForm({ ...twoStepForm, id: 'another' });
 			expect(warn).toHaveBeenCalledTimes(2);
+			expect(warn.mock.calls[0]?.map(String).join(' ')).toMatch(/no 'bare-controls' recipe is registered/i);
 		} finally {
 			warn.mockRestore();
 		}
 	});
 
-	test('stays silent for multi-step forms without an engine', () => {
-		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
-		try {
-			expect(
-				resolveFormRecipe({
-					id: 'no-engine-wizard',
-					steps: [
-						{ id: 'one', title: 'One', elements: [] },
-						{ id: 'two', title: 'Two', elements: [] },
-					],
-				}),
-			).toBeUndefined();
-			expect(warn).not.toHaveBeenCalled();
-		} finally {
-			warn.mockRestore();
-		}
+	test('keeps nested recipe defaults the author did not set', () => {
+		const engine = createFormEngine({ recipes: [nestedDefaultsRecipe] });
+		const form = engine.validateForm({
+			id: 'nested',
+			steps: [{ id: 'one', title: 'One', elements: [] }],
+			view: { $type: 'nested', header: { labels: { b: 'B' } } },
+		});
+		expect(form.view).toEqual({ $type: 'nested', header: { size: 'sm', labels: { a: 'A', b: 'B' } } });
 	});
 
 	test('accepts a single-step form without view', () => {
@@ -237,7 +469,7 @@ describe('validateFormConfig', () => {
 		});
 	});
 
-	test('flattens every step when no recipe is resolved', () => {
+	test('flattens every step when the form has no view', () => {
 		const config = {
 			id: 'headless-wizard',
 			steps: [
@@ -246,8 +478,8 @@ describe('validateFormConfig', () => {
 			],
 		};
 
-		expect(getRenderableSteps(config, undefined, 0).map((step) => step.id)).toEqual(['one', 'two']);
-		expect(getRenderableSteps(config, wizardRecipe, 1).map((step) => step.id)).toEqual(['two']);
+		expect(getRenderableSteps(config, 0).map((step) => step.id)).toEqual(['one', 'two']);
+		expect(getRenderableSteps({ ...config, view: { $type: 'wizard' } }, 1).map((step) => step.id)).toEqual(['two']);
 	});
 
 	test('validates registered Zod elements through defineForm', () => {
@@ -278,13 +510,13 @@ describe('validateFormConfig', () => {
 				id: 'bad',
 				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'note', id: 1, name: 'n1' }] }],
 			}),
-		).toThrow(/steps\[0\] \(id: 'main'\) elements\[0\].*Invalid element configuration.*\(id\)/s);
+		).toThrow(/^steps\[0\] \(main\)\.elements\[0\]\.id: Expected string/);
 		expect(() =>
 			engine.validateForm({
 				id: 'unknown',
 				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'missing', id: 'x', name: 'x' }] }],
 			}),
-		).toThrow(/steps\[0\] \(id: 'main'\) elements\[0\] \(id: 'x'\).*Unknown element type 'missing'/s);
+		).toThrow(/^steps\[0\] \(main\)\.elements\[0\] \(x\)\.\$type: Unknown element type 'missing'/);
 	});
 
 	test('rejects a field rule that has no validation handler', () => {
@@ -371,7 +603,7 @@ describe('validateFormConfig', () => {
 			})),
 		};
 		expect(isNormalizedFormConfig(copied, engine)).toBe(false);
-		expect(() => engine.validateForm(copied)).toThrow(/Invalid element configuration/i);
+		expect(() => engine.validateForm(copied)).toThrow(/^steps\[0\] \(main\)\.elements\[0\]\.id: Expected string/);
 	});
 
 	test('validateElement applies transforms for standalone fields', () => {
@@ -494,9 +726,7 @@ describe('validateFormConfig', () => {
 					},
 				],
 			}),
-		).toThrow(
-			/steps\[0\] \(id: 'main'\) elements\[0\] \(id: 'group'\) elements\[0\] \(id: 'count'\).*Invalid element configuration/s,
-		);
+		).toThrow(/^steps\[0\] \(main\)\.elements\[0\] \(group\)\.elements\[0\] \(count\)\.count: Expected string/);
 	});
 
 	test('normalized snapshot is owned and does not freeze caller objects', () => {

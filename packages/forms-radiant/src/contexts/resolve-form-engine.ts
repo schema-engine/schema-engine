@@ -1,41 +1,23 @@
-import { logger } from '@/lib/logger';
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { formEngineContext } from '@/components/provider';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
 
 /**
- * Reads `formEngineContext` from the host or an ancestor.
+ * Reads `formEngineContext` from the nearest provider above the host.
+ *
+ * @remarks
+ * The request starts at the parent, so `se-form-renderer` does not read the
+ * context it provides itself and an app can provide the engine above a renderer.
  */
 export function readFormEngineFromContext(host: HTMLElement): FormEngine | undefined {
 	let engine: FormEngine | undefined;
-	host.dispatchEvent(
+	(host.parentElement ?? host).dispatchEvent(
 		new ContextSubscriptionRequestEvent(formEngineContext, (context) => {
 			engine = context.engine;
 		}),
 	);
 	return engine;
-}
-
-const reportedHosts = new WeakSet<HTMLElement>();
-
-/**
- * Reports a host that no engine can reach, once per host.
- *
- * @remarks
- * A host under `se-form-renderer` stays quiet because the renderer's engine can
- * still arrive after the host connects, and a detached host (server rendering,
- * or before the host is attached) stays quiet because it cannot reach an
- * ancestor context yet.
- */
-function reportMissingEngine(host: HTMLElement): void {
-	if (!host.isConnected || host.closest('se-form-renderer') || reportedHosts.has(host)) {
-		return;
-	}
-	reportedHosts.add(host);
-	logger.warn(
-		`Could not resolve FormEngine for <${host.tagName.toLowerCase()}>: no engine reaches it. Pass an explicit \`engine\` prop or render the host inside \`se-form-renderer\`.`,
-	);
 }
 
 /**
@@ -44,6 +26,9 @@ function reportMissingEngine(host: HTMLElement): void {
  * @remarks
  * There is no module-level engine registry: an engine reaches a host only
  * through one of those three paths, however many engines the page has created.
+ * A host that finds none stays quiet: the app may bind the engine to the
+ * renderer after the host connects, and hosts follow the renderer's context
+ * when it arrives.
  */
 export function resolveFormEngine(host?: HTMLElement, explicit?: FormEngine): FormEngine | undefined {
 	if (explicit) {
@@ -57,9 +42,5 @@ export function resolveFormEngine(host?: HTMLElement, explicit?: FormEngine): Fo
 		}
 	}
 
-	const owning = peekOwningFormEngine();
-	if (!owning && host) {
-		reportMissingEngine(host);
-	}
-	return owning;
+	return peekOwningFormEngine();
 }

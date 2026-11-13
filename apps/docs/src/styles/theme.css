@@ -1,4 +1,4 @@
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *, .dark, .dark *));
 
 @theme {
 	--font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
@@ -8,6 +8,12 @@
 	--color-background-accent: var(--surface);
 	--color-on-background-accent: var(--on-surface);
 	--color-muted: var(--surface-container-low);
+
+	/**
+	 * Aliases below serve the React demo kit (shadcn-style class names such as `bg-card` and
+	 * `text-muted-foreground`), not the docs shell. They map onto Radiant raw tokens so the demo
+	 * follows the same palette. The shell itself only needs the three tokens above.
+	 */
 	--color-muted-foreground: color-mix(in oklab, var(--on-background) 55%, transparent);
 	--color-foreground: var(--on-background);
 	--color-card: var(--background);

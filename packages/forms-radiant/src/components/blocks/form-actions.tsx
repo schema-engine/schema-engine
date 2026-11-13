@@ -1,8 +1,9 @@
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { DEFAULT_FORM_ACTION_LABELS, getSlotConfig, type FormActionsConfig } from '@schema-engine/forms/recipes';
+import { type FormActionsConfig } from '@schema-engine/forms/recipes/built-in';
+import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 
 /**
@@ -18,19 +19,20 @@ import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/f
  */
 @customElement('se-form-actions')
 export class FormActionsElement extends RadiantElement {
-	@prop({ type: Object }) viewConfig?: Record<string, unknown>;
+	declare readonly [JSX_PROPS]?: { slotConfig?: FormActionsConfig };
+
+	@prop({ type: Object }) slotConfig?: FormActionsConfig;
 
 	@contextSelector({ context: formInstanceContext })
-	instance?: FormInstanceContextValue;
+	protected instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
-		const actionsConfig = getSlotConfig<FormActionsConfig>(this.viewConfig ?? {}, 'actions');
-		const labels = { ...DEFAULT_FORM_ACTION_LABELS, ...actionsConfig.labels };
-		const align = actionsConfig.align ?? 'end';
+		if (!this.slotConfig) return null;
+		const { labels, align } = this.slotConfig;
 		const isSubmitting = this.instance?.isSubmitting ?? false;
 		return (
 			<div classes={['se-form-actions', `se-form-actions--align-${align}`]}>
-				<RuiButton type="submit" aria-label={labels.submitAriaLabel}>
+				<RuiButton type="submit" prop:disabled={isSubmitting} aria-label={labels.submitAriaLabel}>
 					{isSubmitting ? labels.submitting : labels.submit}
 				</RuiButton>
 			</div>
@@ -38,8 +40,6 @@ export class FormActionsElement extends RadiantElement {
 	}
 }
 
-export function FormActionsBlock(context?: { viewConfig?: Record<string, unknown> }): JsxRenderable {
-	return jsx('se-form-actions', {
-		viewConfig: context?.viewConfig ?? {},
-	});
+export function FormActionsBlock(context?: RecipeSlotContext<FormActionsConfig>): JsxRenderable {
+	return <FormActionsElement slotConfig={context?.slotConfig} />;
 }

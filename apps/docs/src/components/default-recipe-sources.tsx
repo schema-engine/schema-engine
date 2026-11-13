@@ -22,23 +22,6 @@ export const DefaultRecipeSources = eco.component({
 
 		return (
 			<div class="not-prose space-y-8">
-				<div class="space-y-2">
-					<h3 class="text-lg font-semibold tracking-tight">Recipe registry (copy once)</h3>
-					<p class="text-sm text-muted-foreground">
-						Augments the form engine recipe map. Copy this file once, then copy any recipe below.
-					</p>
-					<CodeTabs
-						label="Recipe registry"
-						copyLabel="Copy file"
-						tabs={[
-							{
-								id: 'recipe-registry',
-								label: defaultRecipeSources.registry.path.replace(/^recipes\//, ''),
-								code: defaultRecipeSources.registry.code,
-							},
-						]}
-					/>
-				</div>
 				<div class="space-y-6">
 					<h3 class="text-lg font-semibold tracking-tight">Single-step recipes</h3>
 					{singleStep.map((recipe) => (
@@ -48,6 +31,7 @@ export const DefaultRecipeSources = eco.component({
 								<code class="text-sm font-normal text-muted-foreground">view.$type: '{recipe.id}'</code>
 							</h4>
 							<CodeTabs
+								name={`recipe-${recipe.id}`}
 								label={`${recipe.title} source files`}
 								tabs={recipeTabs(recipe)}
 								copyLabel="Copy file"
@@ -67,6 +51,7 @@ export const DefaultRecipeSources = eco.component({
 								<code class="text-sm font-normal text-muted-foreground">view.$type: '{recipe.id}'</code>
 							</h4>
 							<CodeTabs
+								name={`recipe-${recipe.id}`}
 								label={`${recipe.title} source files`}
 								tabs={recipeTabs(recipe)}
 								copyLabel="Copy file"

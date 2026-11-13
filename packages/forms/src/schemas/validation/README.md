@@ -35,9 +35,12 @@ Validation rules are plain JavaScript objects that describe how to validate a fi
 
 The `ValidationRegistry` is the central hub that:
 
-- Stores all validation type implementations
+- Stores all validation type implementations in a read-only registry from `@schema-engine/registry`
 - Converts validation rules into Zod Mini schemas
-- Manages custom validation registration
+- Derives the per-field-type default rules (`defaultFor`) once, when it is built
+
+Rules are registered when the registry is built, never afterwards: it has no `register`, `unregister` or `clear`.
+Custom rules reach an engine through `createFormEngine({ validations: [...] })`.
 
 ### Rule-to-Schema Generation
 
@@ -113,14 +116,14 @@ const formConfig = {
 
 ### Engine registry
 
-Each `FormEngine` owns a `ValidationRegistry` pre-loaded with the built-in handlers. Create a standalone copy with `createDefaultValidationRegistry()` when you are not building an engine:
+Each `FormEngine` owns a `ValidationRegistry`, built from the built-in handlers, the `validations` of the winning elements and `createFormEngine({ validations })`, in that order. A later registration of the same `$type` replaces the earlier one without a warning. Elements contribute in the element registry's order: a replaced `$type` keeps its first position, so for elements [A1, B, A2] where all declare the same validation `$type`, B's validation wins. Create a standalone copy with `createDefaultValidationRegistry()` when you are not building an engine:
 
 ```typescript
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 const registry = createDefaultValidationRegistry();
 
-const registeredTypes = registry.getRegisteredTypes();
+const registeredTypes = registry.keys();
 
 const stringValidations = registry.getByCategory('string');
 const numberValidations = registry.getByCategory('number');
@@ -128,17 +131,23 @@ const numberValidations = registry.getByCategory('number');
 
 ### Creating Custom Instances
 
+`createDefaultValidationRegistry(extra)` adds registrations after the built-in ones, so an extra registration with a built-in `$type` overrides it. `createValidationRegistry(list)` builds a registry from exactly the list you give it:
+
 ```typescript
-import { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createDefaultValidationRegistry, createValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import * as z from 'zod/mini';
 
-const customRegistry = new ValidationRegistry();
-
-customRegistry.register({
-	type: 'postalCode',
+const postalCode = {
+	$type: 'postalCode',
+	schema: z.object({ type: z.literal('postalCode'), message: z.optional(z.string()) }),
+	metadata: { name: 'Postal code' },
 	category: 'string',
-	handler: (rule) => z.string().check(z.regex(/^\d{5}$/, rule.message || 'Invalid postal code')),
-});
+	handler: (rule: { type: 'postalCode'; message?: string }) =>
+		z.string().check(z.regex(/^\d{5}$/, rule.message || 'Invalid postal code')),
+} as const;
+
+const withBuiltIns = createDefaultValidationRegistry([postalCode]);
+const only = createValidationRegistry([postalCode]);
 ```
 
 ## Built-in Validation Types
@@ -233,62 +242,56 @@ The assertion table and reference scoping are under
 
 The core `phone` rule checks E.164 numbers. The phone-input registration can replace that handler with its region-aware validator and applies `{ type: 'phone' }` to `phone-input` fields when the author omitted it. Pair the field with `required` when a number is mandatory. The forms package does not depend on a phone-number library.
 
-Required validation, `relate` emptiness assertions, constraint `is_empty` and `is_not_empty`, and async validation skips share one definition of empty: `undefined`, `null`, `''`, and `[]`. Values such as `false` and `0` are present. `validateForm` and `validateElement` reject a rule without a registered handler with a `FormValidationError` that identifies the field and rule type.
+Required validation, `relate` emptiness assertions, constraint `is_empty` and `is_not_empty`, and async validation skips share one definition of empty: `undefined`, `null`, `''`, and `[]`. Values such as `false` and `0` are present. `validateForm` and `validateElement` reject a rule without a registered handler with a `FormValidationError` that identifies the field and rule type, at the path of that rule's `type` (for example `['steps', 0, 'elements', 2, 'rules', 1, 'type']`).
 
 Debounced async rules share timers only within their caller-owned scope. Replacing a pending validation for the same rendered field path, endpoint, and dependency/extra payload sends only the latest request. A replaced parse of the same value shares that request's result. A replaced parse of a different value fails at once with `Validation pending`, because its value was never checked, so a superseded submit-time validation cannot pass. Renderers do not show it while the user types: React Hook Form drops a result for a value that has changed, and Radiant resolves a superseded call with the latest call's result. Different forms use separate scopes, and different field paths in one scope do not cancel each other.
 
 ### Registering Custom Validations
 
+A validation registration has the shared registration shape (`$type`, `schema`, `metadata`) and the handler fields. `$type` is the `type` authors write in `rules`, and `schema` is a Standard Schema for the rule object. Pass registrations to the engine:
+
 ```typescript
 import * as z from 'zod/mini';
-import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine } from '@schema-engine/forms';
 
-const registry = createDefaultValidationRegistry();
-
-registry.register({
-	type: 'creditCard',
+const creditCard = {
+	$type: 'creditCard',
+	schema: z.object({ type: z.literal('creditCard'), message: z.optional(z.string()) }),
+	metadata: { name: 'Credit card', description: 'A card number that passes the Luhn check.' },
 	category: 'string',
-	handler: (rule) => {
-		return z.string().check(z.refine((value) => {
-			const digits = value.replace(/\D/g, '');
-			if (digits.length < 13 || digits.length > 19) return false;
+	handler: (rule: { type: 'creditCard'; message?: string }) =>
+		z.string().check(
+			z.refine((value) => {
+				const digits = value.replace(/\D/g, '');
+				if (digits.length < 13 || digits.length > 19) return false;
 
-			let sum = 0;
-			let isEven = false;
+				let sum = 0;
+				let isEven = false;
 
-			for (let i = digits.length - 1; i >= 0; i--) {
-				let digit = parseInt(digits[i]);
-				if (isEven) {
-					digit *= 2;
-					if (digit > 9) digit -= 9;
+				for (let i = digits.length - 1; i >= 0; i--) {
+					let digit = parseInt(digits[i]);
+					if (isEven) {
+						digit *= 2;
+						if (digit > 9) digit -= 9;
+					}
+					sum += digit;
+					isEven = !isEven;
 				}
-				sum += digit;
-				isEven = !isEven;
-			}
 
-			return sum % 10 === 0;
-		}, rule.message || 'Invalid credit card number');
-	},
-		}));
+				return sum % 10 === 0;
+			}, rule.message || 'Invalid credit card number'),
+		),
+} as const;
+
+const engine = createFormEngine({ validations: [creditCard] });
 ```
 
-### Bulk Registration
+### Several Validations
+
+`validations` takes a list. Later entries replace earlier ones with the same `$type`, and they replace validations that elements declare:
 
 ```typescript
-const customValidations = [
-	{
-		type: 'postalCode',
-		category: 'string',
-		handler: (rule) => z.string().check(z.regex(/^\d{5}(-\d{4})?$/, rule.message)),
-	},
-	{
-		type: 'socialSecurity',
-		category: 'string',
-		handler: (rule) => z.string().check(z.regex(/^\d{3}-\d{2}-\d{4}$/, rule.message)),
-	},
-];
-
-registry.registerMultiple(customValidations);
+const engine = createFormEngine({ validations: [postalCode, socialSecurity] });
 ```
 
 ## Utility Functions
@@ -514,17 +517,19 @@ ValidationPresets.relate.allOrNone(['street', 'city', 'postcode']);
 Custom validators read other fields through the context:
 
 ```typescript
-registry.register({
-	type: 'conditionalRequired',
+const conditionalRequired = {
+	$type: 'conditionalRequired',
+	schema: z.object({ type: z.literal('conditionalRequired'), message: z.optional(z.string()) }),
+	metadata: { name: 'Conditional required' },
 	category: 'cross-field',
-	handler: (rule, context) => {
+	handler: (rule: { type: 'conditionalRequired'; message?: string }, context: ValidationContext) => {
 		return z
 			.string()
 			.check(
 				z.refine((value) => context.resolve('accountType') !== 'business' || value.length > 0, rule.message),
 			);
 	},
-});
+} as const;
 ```
 
 Async validation resolves its `dependencies` the same way, so a dependency may
@@ -560,12 +565,14 @@ A custom rule that reads other fields should declare `dependsOn` too, or nothing
 will re-run it:
 
 ```typescript
-registry.register({
-	type: 'confirmPassword',
+const confirmPassword = {
+	$type: 'confirmPassword',
+	schema: z.object({ type: z.literal('confirmPassword'), message: z.optional(z.string()) }),
+	metadata: { name: 'Confirm password' },
 	category: 'cross-field',
 	dependsOn: () => ['password'],
-	handler: (rule, context) => …,
-});
+	handler: (rule: { type: 'confirmPassword'; message?: string }, context: ValidationContext) => …,
+} as const;
 ```
 
 Two deliberate limits:
@@ -583,15 +590,19 @@ Two deliberate limits:
 
 ### ValidationRegistry
 
+`ValidationRegistry` extends the read-only `ReadOnlyRegistry` from `@schema-engine/registry`
+(`kind`, `size`, `get`, `has`, `all`, `keys`) and has no `register`, `unregister` or `clear`.
+Build one with `createValidationRegistry(list)` or `createDefaultValidationRegistry(extra?)`.
+
 #### Methods
 
-- `register(registration: ValidationRegistration): void` - Register a single validation
-- `registerMultiple(registrations: ValidationRegistration[]): void` - Register multiple validations
-- `unregister(type: string): boolean` - Remove a validation type
 - `has(type: string): boolean` - Check if validation type exists
+- `get(type: string): ValidationRegistration | undefined` - The registration for a type
+- `keys()` - All registered type names, in first-registration order
 - `createSchema(rule: ValidationRule, context: ValidationContext): z.ZodMiniType | null` - Create a Zod Mini schema from one rule, or return `null` if no handler is registered
-- `getRegisteredTypes(): string[]` - Get all registered type names
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
+- `getDefaultRulesForFieldType(fieldType: string): readonly BaseValidationRule[]` - The `defaultFor` rules for a field `$type`, derived at build and frozen. A replaced registration keeps the position its first registration had among a field type's defaults
+- `getRuleDependencies(rule): readonly string[]` - The field references a rule's `dependsOn` reports
 
 ### ValidationPresets
 
@@ -611,8 +622,12 @@ and resolves `{ status: 'skipped' }` otherwise.
 ### ValidationRegistration
 
 ```typescript
-interface ValidationRegistration {
-	type: string;
+interface ValidationRegistration extends BaseRegistration {
+	/** The rule `type` authors write in `rules`. */
+	$type: string;
+	/** Standard Schema for the rule object. */
+	schema: StandardSchemaV1;
+	metadata: { name: string; description?: string };
 	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic' | 'cross-field';
 	handler: (rule: ValidationRule, context: ValidationContext) => z.ZodMiniType;
 	/** Field references this rule reads, so renderers know when to re-run it. */
@@ -621,6 +636,11 @@ interface ValidationRegistration {
 	defaultFor?: readonly string[];
 }
 ```
+
+Everything that takes validations (`createFormEngine({ validations })`, an element's `validations`,
+`createValidationRegistry`, `createDefaultValidationRegistry`) accepts `ValidationRegistrationConstraint`.
+It erases the rule type, so a `ValidationRegistration<PostcodeRule>` is accepted as it is, and it requires
+`handler` to return a Zod Mini schema.
 
 ### ValidationRule Types
 
@@ -639,14 +659,18 @@ Specific rule types add their own properties (e.g., `value` for min/max rules, `
 
 ### 1. Register Custom Validations and Use JSON-Serializable Rules
 
-Form configurations must use plain JSON objects. For custom validation logic, register it in the ValidationRegistry first:
+Form configurations must use plain JSON objects. For custom validation logic, pass it to the engine first:
 
 ```typescript
-registry.register({
-	type: 'companyEmail',
+const companyEmail = {
+	$type: 'companyEmail',
+	schema: z.object({ type: z.literal('companyEmail'), message: z.optional(z.string()) }),
+	metadata: { name: 'Company email' },
 	category: 'string',
-	handler: (rule) => z.email().check(z.endsWith('@company.com')),
-});
+	handler: () => z.email().check(z.endsWith('@company.com')),
+} as const;
+
+const engine = createFormEngine({ validations: [companyEmail] });
 
 const field = {
 	rules: [
@@ -692,7 +716,7 @@ Always test custom validation logic thoroughly:
 describe('Custom postal-code validation', () => {
 	it('validates postal codes correctly', () => {
 		const rule = { type: 'postalCode', message: 'Invalid postal code' };
-		const schema = registry.createSchema(rule, createValidationContext());
+		const schema = engine.getValidationRegistry().createSchema(rule, createValidationContext());
 
 		expect(() => schema?.parse('28013')).not.toThrow();
 		expect(() => schema?.parse('invalid')).toThrow();

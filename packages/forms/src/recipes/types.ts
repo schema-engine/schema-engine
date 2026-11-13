@@ -1,24 +1,11 @@
-import * as z from 'zod/mini';
-import type { ComponentMetadata } from '@schema-engine/registry';
+import type * as z from 'zod/mini';
+import type { RecipeMetadata, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from '@schema-engine/layout';
+import type { RecipeKind, RecipeSlot } from './protocol';
 
-export type RecipeKind = 'single-step' | 'wizard';
+export type { RecipeKind, RecipeSlot } from './protocol';
+export type { RecipeMetadata, RecipeSlotDefaults } from '@schema-engine/layout';
 
-export type RecipeSlot = 'shell' | 'header' | 'progress' | 'actions';
-
-export const RECIPE_SLOT_ORDER = ['shell', 'header', 'progress', 'actions'] as const satisfies readonly RecipeSlot[];
-
-/**
- * Base view configuration schema — recipe registrations extend this with slot keys.
- */
-export const BaseViewConfigSchema = z.strictObject({
-	$type: z.string().check(z.describe('Recipe type identifier')),
-});
-
-export interface RecipeMetadata extends ComponentMetadata {
-	category?: string;
-	example?: unknown;
-	preview?: string;
-}
+export type RecipeSlotSchemas = ProtocolRecipeSlotSchemas<RecipeSlot>;
 
 export interface RecipeDescriptor {
 	$type: string;
@@ -37,19 +24,32 @@ export interface ViewCatalog {
 	};
 }
 
-export interface RecipeSpec<
+/**
+ * A form recipe spec: the layout recipe spec on the forms protocol.
+ *
+ * @remarks
+ * `appearanceAxes` is declared per slot; see {@link ProtocolRecipeSpec.appearanceAxes}.
+ */
+export type RecipeSpec<
 	TType extends string = string,
 	TSchema extends z.ZodMiniType = z.ZodMiniType,
-	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>> = Partial<Record<RecipeSlot, z.ZodMiniType>>,
-> {
-	$type: TType;
-	kind: RecipeKind;
-	slots: RecipeSlot[];
-	slotSchemas: TSlots;
-	slotDefaults?: Partial<Record<RecipeSlot, Record<string, unknown>>>;
-	metadata: RecipeMetadata;
-	schema: TSchema;
-}
+	TSlots extends RecipeSlotSchemas = RecipeSlotSchemas,
+> = ProtocolRecipeSpec<RecipeSlot, RecipeKind, TType, TSchema, TSlots>;
+
+/**
+ * Render payload an adapter binds to a spec: `slots` holds exactly the spec's non-shell slots,
+ * each required. `shell` is required only when the spec declares a shell config; a spec without
+ * one may still bind a shell component (the stack shell has no config).
+ *
+ * @remarks
+ * Adapters supply the component types, so a payload that omits a declared slot, or adds an
+ * undeclared one, fails to type-check at the binding site.
+ */
+export type RecipeRenderPayload<TSlots extends RecipeSlotSchemas, TShell, TSlot> = ('shell' extends keyof TSlots
+	? { shell: TShell }
+	: { shell?: TShell }) & {
+	slots: { [K in Exclude<keyof TSlots, 'shell'>]-?: TSlot };
+};
 
 export interface FormShellLayout<TNode> {
 	slots: {

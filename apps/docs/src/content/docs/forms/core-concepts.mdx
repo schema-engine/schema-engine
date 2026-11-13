@@ -1,7 +1,6 @@
 ---
 title: 'Core Concepts'
 description: 'How Schema Engine validates a config and selects a view recipe.'
-group: Forms
 order: 3
 ---
 
@@ -23,6 +22,10 @@ Choose how you author form configuration based on where the data lives:
 `defineForm` and `validateForm` run the same validation pipeline. `defineForm`
 only adds compile-time checks for the engine you built. The exported `FormConfig`
 type is envelope-level: it does not narrow each `$type` until validation runs.
+
+Both throw a `FormValidationError` on an invalid form. `engine.safeValidateForm(json)`
+returns `{ success, data | issues }` instead, and each issue carries the config `path`
+it is about (see [Form configuration errors](/docs/forms/validation-how-it-works#form-configuration-errors)).
 
 With `FormRenderer`, passing a plain config is enough — the renderer calls
 `validateForm` at the form boundary. Pre-validate only when you need a
@@ -49,7 +52,7 @@ const config = engine.defineForm({
 	steps: [{ id: 'details', title: 'Details', elements: [] }],
 	view: {
 		$type: 'card',
-		shell: { maxWidth: 'md' },
+		shell: { appearance: { size: 'default' } },
 		header: { showDescription: true },
 	},
 });
@@ -66,10 +69,13 @@ validated at the same boundary; the normalized marker is applied only after that
 succeeds. They return a frozen `NormalizedFormConfig` owned by that engine.
 Snapshot isolation copies plain objects and arrays; other objects currently
 remain shared. A form normalized by one engine cannot be passed to another;
-start from authoring input or JSON instead. They do **not** apply the default
-wizard recipe. A multi-step form that omits `view` validates successfully; at
-render, `resolveFormRecipe` uses registered `bare-controls`, or renders fields
-without chrome and warns once per engine.
+start from authoring input or JSON instead. They write the resolved `view`:
+a multi-step form that omits `view` gets `{ $type: 'bare-controls' }` (or the
+engine's `defaultWizardRecipe`), and each slot config is the recipe's
+`slotDefaults` under the author's keys, merged deep. When the default recipe is
+not registered the form validates without a `view`, `validateForm` warns, and
+the renderer paints fields without chrome. Renderers read the normalized `view`
+and do not apply defaults themselves.
 
 React and Radiant render that normalized form. They do not re-parse element
 input schemas. A field created outside a form must go through
@@ -80,3 +86,245 @@ Authors supply schema **input**; defaulted properties stay optional in
 children are typed from the same engine registrations as top-level fields.
 Containers render those children with `FormElements` and a field scope instead
 of cloning configuration to change paths.
+
+## Placing fields in the grid
+
+A form's `grid` sets its layout (`columns`, `gap`, `responsive`), and each
+element's own `grid` places it. There are three levels, from the most to the
+least readable:
+
+1. `width` and `offset` for fields that flow in rows.
+2. `areas` for a layout you draw as rows of names.
+3. Raw grid lines (`column`, `row`) as the escape hatch.
+
+A grid uses either `width`/`offset`, `areas` or `columns`; raw lines can sit
+next to widths or areas.
+
+### Rows of fields: `width` and `offset`
+
+For the common layouts, name the width:
+
+```ts
+{ $type: 'input', id: 'first', name: 'first', grid: { width: 'half' } },
+{ $type: 'input', id: 'last', name: 'last', grid: { width: 'half' } },
+{ $type: 'input', id: 'bio', name: 'bio', grid: { width: 'half', offset: 'quarter' } },
+```
+
+`width` is `full`, `three-quarters`, `two-thirds`, `half`, `third`, or
+`quarter`. `offset` leaves empty space before the field and takes the same names
+except `full`, so `half` with a `quarter` offset is centred in its row. A width
+on its own is the share of the row the field takes; the grid decides where it
+lands, so two `half` fields share a row. Leave the width out for a field that
+fills the row.
+
+Both change by breakpoint through the element's `grid.responsive`, like every
+other placement key. A slot that sets only the width keeps the offset of the
+slot before it, and the other way round:
+
+```ts
+{ grid: { width: 'full', responsive: { md: { width: 'third' } } } }
+```
+
+A grid whose fields use `width` or `offset` is laid out on 12 tracks, so each
+name is a whole number of tracks (`half` is 6, `third` is 4, `quarter` is 3), and
+a field in that grid that sets no width fills the row. Fieldsets and array rows
+lay out their children on their own grid, so `width` and `offset` work on a
+container's children the same way, and the enclosing grid's `columns` do not conflict
+with them.
+
+Validation enforces these rules for named widths:
+
+- A form grid that sets `columns` or `minColumnWidth` (at any breakpoint) cannot
+  contain a top-level field that uses `width` or `offset`: a grid uses areas,
+  widths or columns.
+- A field that sets `width` or `offset` cannot also set a raw `column`.
+- A field's `offset` plus `width` must fit in 12 tracks, counting the value
+  each carries from a narrower breakpoint: `two-thirds` after a `half` offset
+  is rejected.
+
+### Drawn layouts: `areas`
+
+When a field spans several rows or columns next to stacked fields, `width` and
+`offset` cannot say it. Draw the layout instead: the grid's `areas` is a list
+of rows, each row lists area names separated by spaces, and `.` is an empty
+cell. A field claims a name with `grid.area`.
+
+```yaml
+grid:
+    areas:
+        default: ['a', 'b', 'c', 'd', 'e']
+        md:
+            - 'a a a b b b'
+            - 'a a a c c c'
+            - 'd d e e e e'
+elements:
+    - { $type: input, id: a, name: a, grid: { area: a } }
+    - { $type: input, id: b, name: b, grid: { area: b } }
+    # c, d and e claim their own area the same way
+```
+
+Below `md` the five fields stack. From `md`, `a` spans three columns and two
+rows, `b` and `c` stack beside it, and `d` and `e` share the last row. The
+column count comes from the rows, so a grid with `areas` sets no `columns`.
+`areas` is an array for one layout at every width, or a record keyed `default`,
+`sm`, `md`, `lg`, `xl` and `2xl` (a slot you leave out keeps the layout of the
+slot before it). A responsive record must include `default`. A field's `area`
+is also responsive through `grid.responsive`, so a field can claim a different
+area when the template changes.
+
+A few things the template does not police:
+
+- A field with no `area` in an areas grid is auto-placed: it fills a `.` cell
+  if one is free, otherwise it opens an implicit row after the drawn ones. A raw
+  `column` or `row` on such a field works as it does anywhere else.
+- Two fields may claim the same area. That is meant for fields that are never
+  shown together (constraints, or `hidden` at a breakpoint); if both show, they
+  are drawn over the same cells.
+- A field hidden at a breakpoint (`grid.responsive.<slot>.hidden`) need not be in
+  that breakpoint's template, and the hidden state carries to wider
+  breakpoints until a slot shows it again.
+- A step with no fields under a form-level `areas` gets `grid: {}`, an empty own
+  grid that replaces the form's. Otherwise every template area counts as
+  unclaimed on that step.
+
+A step takes its own `grid`, which replaces the form's grid for that step. An
+areas template names specific fields, so each wizard step draws its own. A
+form-level `areas` applies to every step without a `grid` of its own, and each of
+those steps must then claim every area in it:
+
+```ts
+{
+  id: 'checkout',
+  grid: { columns: 2 },
+  steps: [
+    {
+      id: 'address',
+      title: 'Address',
+      grid: { areas: ['street street', 'city zip'] },
+      elements: [
+        { $type: 'input', id: 'street', name: 'street', grid: { area: 'street' } },
+        { $type: 'input', id: 'city', name: 'city', grid: { area: 'city' } },
+        { $type: 'input', id: 'zip', name: 'zip', grid: { area: 'zip' } },
+      ],
+    },
+    { id: 'payment', title: 'Payment', elements: [/* two columns, from the form grid */] },
+  ],
+}
+```
+
+Validation names the path of whatever it rejects:
+
+- Rows of one template must have the same number of cells, and each name's cells
+  must form a rectangle. CSS drops a whole template that breaks either rule.
+- Every field `area` must be in the template at each breakpoint where the grid
+  draws one, and every area in the template must be claimed by a field.
+- `areas` cannot be mixed with `columns` or `minColumnWidth`, or with `width` or
+  `offset` on the grid's fields: a grid uses areas, widths or columns.
+- A field cannot set `area` together with `width`, `offset`, `column` or `row`.
+- Names are ASCII CSS identifiers (`street`, `side-2`) and cannot be `auto`,
+  `span`, `none`, `default`, `inherit`, `initial`, `unset`, `revert` or
+  `revert-layer`. A name is written into a CSS custom property, so anything
+  that is not an identifier is rejected.
+- Fieldsets and array rows lay their children out without `areas`, so `area` is
+  rejected on a container's children. Use `width` and `offset` there.
+
+### Raw grid lines
+
+Raw `column`, `row` and `placeSelf` stay available as the escape hatch for
+anything the names do not cover. `column: 2` is a CSS grid line, not a span:
+it starts the field at line 2. Use `column: 'span 2'` to span two columns, or
+`column: '4 / 10'` for explicit lines. A raw `column` field may sit next to
+width fields, but it counts tracks of the 12 the widths use there, so
+`column: 'span 2'` is two of twelve, a sixth of the row.
+
+## The layout theme
+
+The grid vocabulary (breakpoint thresholds, gap tokens, the default minimum column
+width) and the appearance axes (`size` and `surface` built in, plus any you
+define) belong to one **layout theme**, compiled by `@schema-engine/layout`. Pass it to
+the engine as `layout`, inline or compiled once and shared:
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
+
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--se-accent': '#f60' } },
+});
+
+// Inline: the engine compiles a theme of its own.
+const engine = createFormEngine({
+	elements,
+	layout: {
+		grid: { breakpoints: { md: '50rem' }, gap: { default: '1rem' } },
+		appearance: [...builtInAxes, tone],
+	},
+});
+
+// Shared: both engines carry the same `data-se-theme` and one stylesheet.
+const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
+const checkout = createFormEngine({ elements, layout: theme });
+const profile = createFormEngine({ elements, layout: theme });
+```
+
+A form element, its grids and its items carry one `data-se-theme` attribute, and the
+theme's stylesheet is emitted once. The stylesheet selects only `.se-grid`,
+`.se-grid-item` and `[data-se-theme]`; the renderers add those classes beside
+`se-form-grid` and `se-form-field`, which stay available for your own styles.
+
+A form of one engine can sit inside a grid item of another, for example a form embedded
+in a page grid. Each theme's token rules reach only the elements whose nearest theme is
+that theme, so the embedded form picks `tone: brand` with its own theme's token
+whichever stylesheet comes later, and your own class still wins. Tokens are custom
+properties, so a pick made outside the embedded form still reaches it until the form
+picks a value that declares those tokens (the built-in `size.default` resets them).
+
+The theme's stylesheet also carries each token rule as an `@scope` block, which keeps
+the nearest theme exact when a theme is nested below another theme and then below
+itself (A in B in A). A browser without `@scope` ignores those blocks and uses the plain
+rules, which are right for every other nesting. Because scope proximity outranks source
+order, a zero-specificity author rule such as `:where(.x)` loses to a token rule in a
+browser with `@scope`; a class with any specificity still wins.
+
+### Appearance axes
+
+An appearance axis is one independent dimension of appearance with 2 to 5 named values.
+Each value stands for a set of semantic CSS tokens (`--se-space`, `--se-font-size`,
+`--se-measure`, `--se-control-height`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) that
+components read. Components never read the axis value, and a token never names one
+component. `size` and `surface` are built in.
+
+Define an axis with `defineAxis` and list it after `builtInAxes`. An axis listed later with
+the same `$type` replaces the earlier one, so this also overrides a built-in axis:
+
+```ts
+const size = defineAxis({
+	$type: 'size',
+	metadata: { name: 'Size' },
+	default: 'default',
+	values: {
+		compact: { '--se-space': '0.5rem' },
+		default: { '--se-space': 'initial' },
+		comfortable: { '--se-space': '2rem' },
+	},
+});
+
+const engine = createFormEngine({ elements, layout: { appearance: [...builtInAxes, size] } });
+```
+
+Keep the axis list inline, as above, or declare it `as const`: a list stored in a plain
+variable widens, and typed `defineForm` stops narrowing the values. The card's width is the readable measure `--se-measure`, which `size` sets (24rem compact,
+32rem comfortable), so overriding the compact spacing does not resize the card. `size` also sets the control height `--se-control-height`, through the hooks `--se-control-height-compact` (`1.75rem`) and `--se-control-height-comfortable` (`2.25rem`) that a renderer maps to its theme: Radiant uses the theme's small and large control sizes, and a `default` pick keeps the theme's own height.
+
+A registration declares the axes it responds to (`appearanceAxes: ['tone']`); the engine
+build throws, naming the registration, when it declares an axis the theme lacks. A form, a
+step, a field or a recipe slot picks a value with `appearance: { tone: 'brand' }`, and the
+renderer emits `data-se-tone="brand"`. Your CSS reads the tokens the value sets. The JSON
+Schema the engine exports lists every axis on the form and its steps, and on an element or a
+recipe slot only the axes it declares, each as an enum of its values, so `appearance.size`
+is an enum an editor can autocomplete and an axis the field does not declare is rejected. This
+holds for top-level elements and recipe slots; the children of a fieldset or an array row are not
+checked in the exported schema, though `validateForm` checks them.

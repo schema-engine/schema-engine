@@ -145,17 +145,6 @@ export async function playCheckboxByLabel(root: ParentNode, label: string | RegE
 	await userEvent.click(canvas.getByRole('checkbox', { name: label }));
 }
 
-export async function playOtpValue(root: ParentNode, value: string): Promise<void> {
-	for (let index = 0; index < value.length; index += 1) {
-		const slot = queryDeep(root, `[data-otp-index="${index}"]`) as HTMLInputElement | null;
-		if (!slot) {
-			throw new Error(`OTP input slot ${index} not found`);
-		}
-		await userEvent.clear(slot);
-		await userEvent.type(slot, value[index] ?? '');
-	}
-}
-
 export async function playSliderToValue(root: ParentNode, label: string | RegExp, value: number): Promise<void> {
 	const slider = within(root as HTMLElement).getByRole('slider', { name: label });
 	slider.focus();

@@ -1,8 +1,10 @@
 import './form-drop-zone.css';
-import { customElement, onEvent, prop, query, RadiantElement, state } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import { customElement, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import { emitControlChange } from '@/lib/field-control';
 import { FieldGroup } from '../field-group';
 import type { DropZoneFieldProps } from './form-drop-zone.types';
 
@@ -62,6 +64,10 @@ function formatFileNames(files: File[]) {
 
 @customElement('se-drop-zone')
 export class SeDropZone extends RadiantElement {
+	declare readonly [JSX_PROPS]?: Partial<
+		Pick<SeDropZone, 'name' | 'maxFiles' | 'maxSize' | 'minSize' | 'disabled' | 'accept'>
+	>;
+
 	@prop({ type: String }) name = '';
 	@prop({ type: Number, defaultValue: 1 }) maxFiles = 1;
 	@prop({ type: Number, defaultValue: 0 }) maxSize = 0;
@@ -69,26 +75,23 @@ export class SeDropZone extends RadiantElement {
 	@prop({ type: Boolean, defaultValue: false }) disabled = false;
 	@prop({ type: Object }) accept?: AcceptMap;
 
-	@state dragging = false;
-	@state files: File[] = [];
+	@state protected dragging = false;
+	@state protected files: File[] = [];
 
 	@query({ ref: 'input' }) fileInput!: HTMLInputElement | null;
 
-	@onEvent({ type: 'dragover', selector: '[data-ref="surface"]' })
-	onDragOver(event: Event) {
+	private readonly onDragOver = (event: Event) => {
 		event.preventDefault();
 		if (!this.disabled) {
 			this.dragging = true;
 		}
-	}
+	};
 
-	@onEvent({ type: 'dragleave', selector: '[data-ref="surface"]' })
-	onDragLeave() {
+	private readonly onDragLeave = () => {
 		this.dragging = false;
-	}
+	};
 
-	@onEvent({ type: 'drop', selector: '[data-ref="surface"]' })
-	onDrop(event: Event) {
+	private readonly onDrop = (event: Event) => {
 		event.preventDefault();
 		this.dragging = false;
 		if (this.disabled) {
@@ -96,20 +99,18 @@ export class SeDropZone extends RadiantElement {
 		}
 		const dataTransfer = (event as DragEvent).dataTransfer;
 		this.applyFiles(Array.from(dataTransfer?.files ?? []));
-	}
+	};
 
-	@onEvent({ type: 'click', selector: '[data-ref="surface"]' })
-	onSurfaceClick() {
+	private readonly onSurfaceClick = () => {
 		if (!this.disabled) {
 			this.fileInput?.click();
 		}
-	}
+	};
 
-	@onEvent({ type: 'change', selector: '[data-ref="input"]' })
-	onInputChange(event: Event) {
+	private readonly onInputChange = (event: Event) => {
 		const input = event.target as HTMLInputElement;
 		this.applyFiles(Array.from(input.files ?? []));
-	}
+	};
 
 	private applyFiles(nextFiles: File[]) {
 		const accepted = nextFiles.filter((file) => {
@@ -126,16 +127,11 @@ export class SeDropZone extends RadiantElement {
 		});
 
 		this.files = accepted.slice(0, this.maxFiles || accepted.length);
-		this.syncNativeInput();
-		this.dispatchEvent(
-			new CustomEvent('change', {
-				bubbles: true,
-				detail: { files: this.files },
-			}),
-		);
+		emitControlChange(this, this.files);
 	}
 
-	private syncNativeInput() {
+	@onUpdated(['files'])
+	syncNativeInput(): void {
 		if (!this.fileInput || typeof DataTransfer === 'undefined') {
 			return;
 		}
@@ -169,12 +165,16 @@ export class SeDropZone extends RadiantElement {
 		return (
 			<div
 				class="se-dropzone"
-				data-ref="surface"
+				on:dragover={this.onDragOver}
+				on:dragleave={this.onDragLeave}
+				on:drop={this.onDrop}
+				on:click={this.onSurfaceClick}
 				data-dragging={this.dragging ? 'true' : 'false'}
 				data-disabled={this.disabled ? 'true' : 'false'}
 			>
 				<input
 					data-ref="input"
+					on:change={this.onInputChange}
 					data-rui-control
 					class="se-dropzone__input"
 					type="file"
@@ -195,13 +195,22 @@ export class SeDropZone extends RadiantElement {
 	}
 }
 
-export function FormDropZone({
-	onChange: propsOnChange,
-	onDropChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: DropZoneFieldProps) {
+/**
+ * @remarks
+ * The file input inside the host is the submitted control, so the field names
+ * that input and the host only carries the files the store reads and writes.
+ */
+const dropZoneControl: FieldControlAdapter = {
+	read: (host) => Reflect.get(host, 'files'),
+	write: (host, value) => {
+		Reflect.set(host, 'files', Array.isArray(value) ? value : []);
+	},
+	submission: 'native',
+};
+
+registerFieldControl('se-drop-zone', dropZoneControl);
+
+export function FormDropZone(config: DropZoneFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -211,26 +220,21 @@ export function FormDropZone({
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
 			validation={config}
 			defaultValue={config.defaultValue ?? []}
 			disabled={config.disabled}
 		>
-			{jsx('se-drop-zone', {
-				name: config.name,
-				maxFiles: config.maxFiles ?? 1,
-				maxSize: config.maxSize ?? 0,
-				minSize: config.minSize ?? 0,
-				accept: config.accept,
-				disabled: config.disabled,
-				'on:change': (event: Event) => {
-					const files = (event as CustomEvent<{ files?: File[] }>).detail?.files ?? [];
-					propsOnChange?.(files);
-					onDropChange?.(files);
-				},
-				'on:blur': propsOnBlur,
-				'on:focus': propsOnFocus,
-			})}
+			<SeDropZone
+				name={config.name}
+				maxFiles={config.maxFiles ?? 1}
+				maxSize={config.maxSize ?? 0}
+				minSize={config.minSize ?? 0}
+				accept={config.accept}
+				disabled={config.disabled}
+			/>
 		</FieldGroup>
 	);
 }

@@ -58,9 +58,10 @@ class FormSummary extends RadiantElement {
 The decorator connects on mount, requests an update when the form changes, and
 cleans up on disconnect. It uses the same controller as the explicit lifecycle.
 It supports TC39 standard field decorators and TypeScript
-`experimentalDecorators`, the same dual dispatch as Radiant. A subclass of
-`RuiFieldElement` can use the decorator too; shipped fields expose it as
-`fieldElement.form` and expose their own binding as `fieldElement.field`.
+`experimentalDecorators`, the same dual dispatch as Radiant. The shipped
+`se-field` host has no controller of its own, so a field is not updated on
+every store notification; construct `new FormController(fieldElement)` where you
+need one.
 
 ## Reads, watches, and mutations
 
@@ -91,8 +92,12 @@ Invalid insertion, update, swap, and move indices are ignored.
   inside `se-form-renderer`), then the active render scope. It is cached until
   `disconnect`.
 - `ready` is `true` once `engine` resolves.
-- `connect(onChange?)` subscribes to `formEngineContext` and calls `onChange`
-  whenever the context supplies an engine.
+- `connect(onChange?)` subscribes to `formEngineContext`, caches the engine the
+  context supplies, and calls `onChange` each time the context publishes one,
+  including a value already published when `connect` runs. A published value
+  without an engine does not call it. The hosts of this package follow
+  `formEngineContext` themselves with `@onContextUpdate`, so an engine the app
+  binds to the renderer after they connect reaches them.
 - `disconnect()` removes that subscription and clears the cached engine.
 
 ## Runtime boundary

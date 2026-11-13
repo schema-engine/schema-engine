@@ -131,6 +131,7 @@ graph TD
     subgraph Core ["Core Abstractions"]
         Registry["@schema-engine/registry<br/>(Core: IoC & Types)"]
         Actions["@schema-engine/actions<br/>(Core: Event System)"]
+        Layout["@schema-engine/layout<br/>(Core: Grid, Appearance & Recipes)"]
     end
 
     subgraph Implementation ["Implementation Layer"]
@@ -142,8 +143,10 @@ graph TD
     end
 
     Registry --> Actions
+    Registry --> Layout
     Registry --> Forms
     Actions --> Forms
+    Layout --> Forms
     Forms --> React
 ```
 
@@ -151,13 +154,14 @@ graph TD
 
 ## 📦 Packages
 
-| Package                                                      | Version | Description                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Types form configurations from each engine's element, recipe, and action registrations; handles validation, constraint evaluation, and state management.                                                                                                                                                                                                                                      |
-| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React rendering at the root, runtime and view hooks at `/hooks`, adapter contracts and hooks at `/adapters`, and rendering primitives at `/primitives`. The optional React Hook Form adapter lives at `/adapters/react-hook-form`; elements and recipes are consumer-owned. A new normalized config starts a fresh form instance. Default recipes live in the shadcn registry.                                                              |
-| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter with hydrated registry validation, shared per-engine lifecycle actions, nested submit values, SSR constraints evaluated against defaults, authored disabled preservation, scoped form and engine controllers, optional decorators, array-level validation, initial row values, SSR default rows, and stable field-array row IDs. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes`. |
-| **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                                                                                                                                                                                                                                                                                                                                                    |
-| **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container.                                                                                                                                                                                                                                                                                                                                                   |
+| Package                                                      | Version | Description                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Types form configurations from each engine's element, recipe, and action registrations; handles validation, constraint evaluation, and state management.                                                                                                                                                                                                                                               |
+| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React rendering at the root, runtime and view hooks at `/hooks`, adapter contracts and hooks at `/adapters`, and rendering primitives at `/primitives`. The optional React Hook Form adapter lives at `/adapters/react-hook-form`; elements and recipes are consumer-owned. A new normalized config starts a fresh form instance; the React Hook Form adapter resets to initial field values. Default recipes live in the shadcn registry.           |
+| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter with hydrated registry validation, shared per-engine lifecycle actions, nested submit values, SSR constraints evaluated against defaults, authored disabled preservation, scoped form and engine controllers, optional decorators, array-level validation, initial row values, SSR default rows, and stable field-array row IDs. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes/built-in`. |
+| **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                                                                                                                                                                                                                                                                                                                                                             |
+| **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container, plus an optional `/yaml` subpath that parses YAML documents with line-accurate errors.                                                                                                                                                                                                                                                                     |
+| **[@schema-engine/layout](./packages/layout)**               | `0.1.0` | Domain-neutral layout: the grid schemas and compiler, named placement, appearance axes (`defineAxis`), `createLayoutTheme`, which compiles both into one theme with one `data-se-theme` and one stylesheet (engines take it as `layout`), and the recipe protocol (`defineRecipeProtocol`) a domain uses to declare its recipes' slots, kinds and rules. It does not depend on forms.                                                                |
 
 ---
 
@@ -166,8 +170,15 @@ graph TD
 See the full walkthrough in [Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx). Minimal verified setup:
 
 ```bash
-pnpm add @schema-engine/forms @schema-engine/forms-react react react-dom react-hook-form zod
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom react-hook-form zod
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
+```
+
+Import the recipe styles once in your global stylesheet, after Tailwind. The path is relative to that stylesheet (`./components/...` from a Vite `src/index.css`, `../components/...` from a Next.js `app/globals.css`):
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
 ```
 
 ```typescript
@@ -183,7 +194,7 @@ const engine = createFormEngine({
 const contactFormSchema = {
 	id: 'contact-form',
 	title: 'Contact Sales',
-	view: { $type: 'card', shell: { padding: 'md' } },
+	view: { $type: 'card', shell: { appearance: { size: 'default' } } },
 	steps: [
 		{
 			id: 'step-1',
@@ -231,8 +242,10 @@ Detailed architectural documentation is available in the [Documentation App](./a
 - **[Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx)**
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
 - **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)**
+- **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
 - **[Forms React — Getting Started](./apps/docs/src/content/docs/forms-react/getting-started.mdx)**
+- **[Contributing](./CONTRIBUTING.md)**: the pre-commit hook and how to run its checks locally
 
 ---
 
@@ -240,8 +253,9 @@ Detailed architectural documentation is available in the [Documentation App](./a
 
 MIT © Schema Engine Contributors
 
-The [registry package](./packages/registry/README.md) exposes one `BaseRegistry`
-class and registration types. Action sequences support concurrent groups and cooperative cancellation; the [actions package](./packages/actions/README.md)
+The [registry package](./packages/registry/README.md) exposes `createRegistry`, the
+read-only registry the forms engine and actions package use, `BaseRegistry` as the
+mutable opt-in for runtime plugins, and the registration types. Action sequences support concurrent groups and cooperative cancellation; the [actions package](./packages/actions/README.md)
 executes through `ActionDispatcher`; form-specific redirect results are described
 in the [forms action guide](./packages/forms/src/actions/README.md).
 

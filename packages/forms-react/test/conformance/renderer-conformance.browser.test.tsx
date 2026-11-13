@@ -1,7 +1,13 @@
 import { render } from '@testing-library/react';
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { rendererConformance, conformanceAction, customArrayType } from '../../../../test-utils/renderer-conformance';
+import {
+	rendererConformance,
+	conformanceAction,
+	conformanceInputAxes,
+	conformanceLayout,
+	customArrayType,
+} from '../../../../test-utils/renderer-conformance';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
@@ -13,7 +19,8 @@ import {
 import { FormArrayElements } from '@/components/schema-engine/forms/inputs/form-array-elements';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
-import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+import '@/components/schema-engine/forms/recipes/recipes.css';
 
 const CustomArrayRegistration = defineInput({
 	$type: customArrayType,
@@ -26,14 +33,15 @@ const CustomArrayRegistration = defineInput({
 rendererConformance(async ({ config, ...props }) => {
 	const engine = createFormEngine({
 		elements: [
-			InputElementRegistration,
+			{ ...InputElementRegistration, appearanceAxes: conformanceInputAxes },
 			ArrayElementRegistration,
 			CustomArrayRegistration,
 			FieldSetRegistration,
 			SubmitButtonElementRegistration,
 		],
-		recipes: [WizardRecipe],
+		recipes: [...schemaFormRecipeRegistrations],
 		actions: [conformanceAction],
+		layout: conformanceLayout,
 	});
 	const renderConfig = (next: typeof config) => (
 		<FormRenderer {...props} config={engine.validateForm(next)} engine={engine} adapter={rhfAdapter} />

@@ -1,111 +1,57 @@
 import * as z from 'zod/mini';
 import { HtmlAttributesSchema } from './html-attributes';
+import { AppearanceConfigSchema, ElementGridConfigSchema } from '@schema-engine/layout';
 import { ValidationRuleSchema } from './validation/';
 
 /**
- * Renderer style values vary across host adapters.
- * @remarks This existential value boundary keeps React, Radiant, and custom adapter style contracts open.
+ * Inline style: CSS custom properties only, keyed `--name`, with string or number values.
+ *
+ * @remarks
+ * Custom properties are the one style shape that means the same in every renderer: React reads
+ * `style` as camelCase `CSSProperties` and Radiant as a plain record, so a named CSS property such as
+ * `maxWidth` would render differently, and it could not be written portably in JSON or YAML.
+ * Styling beyond custom properties goes through `className` or the form's `appearance`.
+ *
+ * A string value may not contain `;`, `{` or `}`: renderers write the value into a declaration, so
+ * those characters would let one entry carry further declarations once the markup is server rendered.
  */
-const RendererStyleValueSchema = z.any();
+export const RendererStyleSchema = z.record(z.string(), z.union([z.string(), z.number()])).check(
+	z.superRefine((style, ctx) => {
+		for (const [key, value] of Object.entries(style)) {
+			if (!key.startsWith('--')) {
+				ctx.addIssue({
+					code: 'custom',
+					input: style,
+					path: [key],
+					message: `style accepts CSS custom properties only: '${key}' must start with '--'.`,
+				});
+			} else if (key.length === 2) {
+				ctx.addIssue({
+					code: 'custom',
+					input: style,
+					path: [key],
+					message: `style accepts CSS custom properties only: the name after '--' must not be empty.`,
+				});
+			}
+			if (typeof value === 'string' && /[;{}]/.test(value)) {
+				ctx.addIssue({
+					code: 'custom',
+					input: style,
+					path: [key],
+					message: `style '${key}' must be a single value: it cannot contain ';', '{' or '}', which would start another declaration.`,
+				});
+			}
+		}
+	}),
+);
 
-export const RendererStyleSchema = z.record(z.string(), RendererStyleValueSchema);
+export type RendererStyle = z.infer<typeof RendererStyleSchema>;
 
 /**
  * Constraint operands can be values from any registered field.
  * @remarks Their concrete types are selected by the form's element registrations.
  */
 const ConstraintValueSchema = z.any();
-
-/**
- * Semantic gap tokens for grid layouts.
- *
- * @remarks
- * Tokens are indirections to overridable CSS variables: the renderer emits
- * `var(--se-grid-gap-<token>)`, so hosts restyle every form by overriding the
- * token at `:root`. Raw CSS strings (e.g. `'1.5rem'`) are the one-off escape
- * hatch.
- */
-export const GridGapTokens = ['none', 'compact', 'default', 'loose', 'wide'] as const;
-
-export type GridGapToken = (typeof GridGapTokens)[number];
-
-/**
- * Semantic gap token or a raw CSS length.
- *
- * @remarks
- * The enum branch is redundant for validation — the string branch accepts the
- * same values — and `z.infer` collapses the union to `string`. It is kept
- * because `z.toJSONSchema` emits it as `anyOf: [{enum: [...]}, {type: string}]`,
- * which is how the token vocabulary reaches registry and docs consumers.
- */
-export const GridGapValueSchema = z
-	.union([z.enum(GridGapTokens), z.string()])
-	.check(z.describe('Semantic gap token (none | compact | default | loose | wide) or a raw CSS length.'));
-
-const GridLayoutPropertiesSchema = z.strictObject({
-	columns: z.optional(z.union([z.number(), z.literal('auto')])),
-	gap: z.optional(GridGapValueSchema),
-	gapX: z.optional(GridGapValueSchema),
-	gapY: z.optional(GridGapValueSchema),
-	minColumnWidth: z.optional(z.string()),
-	justifyItems: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
-	alignItems: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
-	placeItems: z.optional(z.string()),
-	justifyContent: z.optional(
-		z.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly']),
-	),
-	alignContent: z.optional(
-		z.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly']),
-	),
-	placeContent: z.optional(z.string()),
-});
-
-export const GridBreakpointConfigSchema = z.pick(GridLayoutPropertiesSchema, {
-	columns: true,
-	gap: true,
-	gapX: true,
-	gapY: true,
-	minColumnWidth: true,
-});
-
-function responsiveSchema<T extends z.ZodMiniType>(schema: T) {
-	return z.optional(
-		z.strictObject({
-			default: z.optional(schema),
-			sm: z.optional(schema),
-			md: z.optional(schema),
-			lg: z.optional(schema),
-			xl: z.optional(schema),
-			'2xl': z.optional(schema),
-		}),
-	);
-}
-
-export const GridLayoutConfigSchema = z.extend(GridLayoutPropertiesSchema, {
-	responsive: responsiveSchema(GridBreakpointConfigSchema),
-});
-
-const ElementGridPropertiesSchema = z.strictObject({
-	column: z.optional(z.union([z.number(), z.string()])),
-	row: z.optional(z.union([z.number(), z.string()])),
-	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
-	alignSelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
-	placeSelf: z.optional(z.string()),
-	marginBlockStart: z
-		.optional(GridGapValueSchema)
-		.check(z.describe('Extra space before this element, on top of the grid row gap.')),
-	marginBlockEnd: z
-		.optional(GridGapValueSchema)
-		.check(z.describe('Extra space after this element, on top of the grid row gap.')),
-});
-
-export const FieldGridBreakpointSchema = z.extend(z.omit(ElementGridPropertiesSchema, { placeSelf: true }), {
-	hidden: z.optional(z.boolean()),
-});
-
-export const ElementGridConfigSchema = z.extend(ElementGridPropertiesSchema, {
-	responsive: responsiveSchema(FieldGridBreakpointSchema),
-});
 
 /**
  * Constraint logic configuration schema
@@ -150,7 +96,8 @@ export const BaseFieldSchema = z.object({
 	rules: z.optional(z.array(ValidationRuleSchema)).check(z.describe('Validation rules')),
 
 	className: z.optional(z.string()).check(z.describe('CSS class name')),
-	style: z.optional(RendererStyleSchema).check(z.describe('Inline styles')),
+	style: z.optional(RendererStyleSchema).check(z.describe('CSS custom properties')),
+	appearance: z.optional(AppearanceConfigSchema).check(z.describe('Named appearance values, one per axis')),
 	htmlAttributes: z.optional(HtmlAttributesSchema),
 
 	grid: z.optional(ElementGridConfigSchema).check(z.describe('Grid positioning configuration')),
@@ -163,8 +110,4 @@ export const BaseFieldSchema = z.object({
  */
 export type BaseField = z.infer<typeof BaseFieldSchema>;
 export type BaseFieldInput = z.input<typeof BaseFieldSchema>;
-export type GridBreakpointConfig = z.infer<typeof GridBreakpointConfigSchema>;
-export type FieldGridBreakpointConfig = z.infer<typeof FieldGridBreakpointSchema>;
-export type ElementGridConfig = z.infer<typeof ElementGridConfigSchema>;
-export type GridLayoutConfig = z.infer<typeof GridLayoutConfigSchema>;
 export type ConstraintLogic = z.infer<typeof ConstraintLogicSchema>;

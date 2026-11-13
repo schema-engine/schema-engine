@@ -1,56 +1,54 @@
-@scope (.prose) to (.unstyled) {
-	:scope {
-		@apply text-on-background/90 text-base leading-[1.65];
+.prose {
+	@apply text-on-background/90 text-base leading-[1.65];
+
+	h1:not(.unstyled, .unstyled *) {
+		@apply mt-12 mb-6 font-heading text-4xl leading-tight font-extrabold tracking-tight text-on-background-accent;
 	}
 
-	h1 {
-		@apply text-4xl leading-tight font-extrabold text-on-background-accent mt-12 mb-6 font-heading tracking-tight;
-	}
-
-	h2 {
-		@apply text-3xl leading-tight font-bold text-on-background-accent mt-10 mb-5 font-heading tracking-tight;
+	h2:not(.unstyled, .unstyled *) {
+		@apply mt-10 mb-5 font-heading text-3xl leading-tight font-bold tracking-tight text-on-background-accent;
 		scroll-margin-top: 7.5rem;
 	}
 
-	h3 {
-		@apply text-2xl leading-snug font-bold text-on-background-accent mt-8 mb-4 font-heading tracking-tight;
+	h3:not(.unstyled, .unstyled *) {
+		@apply mt-8 mb-4 font-heading text-2xl leading-snug font-bold tracking-tight text-on-background-accent;
 		scroll-margin-top: 7.5rem;
 	}
 
-	h4 {
-		@apply text-xl leading-snug font-bold text-on-background-accent mt-6 mb-4 font-heading tracking-tight;
+	h4:not(.unstyled, .unstyled *) {
+		@apply mt-6 mb-4 font-heading text-xl leading-snug font-bold tracking-tight text-on-background-accent;
 	}
 
-	h5 {
-		@apply text-lg leading-snug font-bold text-on-background-accent mt-6 mb-4 font-heading;
+	h5:not(.unstyled, .unstyled *) {
+		@apply mt-6 mb-4 font-heading text-lg leading-snug font-bold text-on-background-accent;
 	}
 
-	h6 {
-		@apply text-base leading-snug font-bold text-on-background-accent mt-6 mb-4 font-heading;
+	h6:not(.unstyled, .unstyled *) {
+		@apply mt-6 mb-4 font-heading text-base leading-snug font-bold text-on-background-accent;
 	}
 
-	p {
+	p:not(.unstyled, .unstyled *) {
 		@apply mt-2 mb-7;
 	}
 
-	a {
-		@apply text-link font-medium underline underline-offset-4 decoration-link/30 hover:decoration-link transition-colors duration-200;
+	a:not(.unstyled, .unstyled *, .rui-button) {
+		@apply text-link font-medium underline decoration-link/30 underline-offset-4 transition-colors duration-200 hover:decoration-link;
 	}
 
-	strong {
+	strong:not(.unstyled, .unstyled *) {
 		@apply font-semibold;
 	}
 
-	ul,
-	ol {
-		@apply pl-6 my-6 text-on-background;
+	ul:not(.unstyled, .unstyled *),
+	ol:not(.unstyled, .unstyled *) {
+		@apply my-6 pl-6 text-on-background;
 
 		li {
 			@apply my-2 pl-2;
 		}
 	}
 
-	ul {
+	ul:not(.unstyled, .unstyled *) {
 		@apply list-disc;
 
 		li::marker {
@@ -58,46 +56,46 @@
 		}
 	}
 
-	ol {
+	ol:not(.unstyled, .unstyled *) {
 		@apply list-decimal;
 
 		li::marker {
-			@apply text-on-background/60 font-medium;
+			@apply font-medium text-on-background/60;
 		}
 	}
 
-	blockquote {
-		@apply border-l-[3px] border-primary/50 pl-5 py-2 my-8 font-serif italic text-on-background/80 bg-primary/5 rounded-r-xl;
+	blockquote:not(.unstyled, .unstyled *) {
+		@apply my-8 rounded-r-xl border-l-[3px] border-primary/50 bg-primary/5 py-2 pl-5 font-serif text-on-background/80 italic;
 
 		p {
 			@apply my-0;
 		}
 	}
 
-	code {
-		@apply font-mono text-[0.875em] bg-muted text-on-background-accent px-1.5 py-0.5 rounded-md border border-border/30;
+	code:not(.unstyled, .unstyled *, :where(figure[data-rehype-pretty-code-figure] *)) {
+		@apply rounded-md border border-border/30 bg-muted px-1.5 py-0.5 font-mono text-[0.875em] text-on-background-accent;
 	}
 
-	pre {
-		@apply my-8 rounded-md bg-background-accent/10 border border-border overflow-x-auto p-5 shadow-sm;
+	pre:not(.unstyled, .unstyled *, :where(figure[data-rehype-pretty-code-figure] *)) {
+		@apply my-8 overflow-x-auto rounded-md border border-border bg-background-accent p-5 shadow-sm;
 
 		code {
-			@apply bg-background-accent text-inherit p-0 rounded-none border-none text-[0.875em] leading-relaxed;
+			@apply rounded-none border-none bg-transparent p-0 text-[0.875em] leading-relaxed text-inherit;
 		}
 	}
 
-	hr {
-		@apply border-t border-border/40 my-10;
+	hr:not(.unstyled, .unstyled *) {
+		@apply my-10 border-t border-border/40;
 	}
 
-	table {
-		@apply w-full text-left border-collapse my-8 text-sm overflow-hidden rounded-xl border border-border/30 block md:table ring-1 ring-border/20;
+	table:not(.unstyled, .unstyled *) {
+		@apply my-8 block w-full max-w-full min-w-0 overflow-x-auto rounded-xl border border-border/30 text-left text-sm ring-1 ring-border/20;
 
 		thead {
 			@apply border-b border-border/50 bg-background-accent/20;
 
 			th {
-				@apply py-3 px-4 font-semibold text-on-background-accent whitespace-nowrap;
+				@apply px-4 py-3 font-semibold whitespace-nowrap text-on-background-accent;
 			}
 		}
 
@@ -106,7 +104,7 @@
 				@apply border-b border-border/30 transition-colors hover:bg-background-accent/10;
 
 				td {
-					@apply py-3 px-4 text-on-background align-top;
+					@apply px-4 py-3 align-top text-on-background;
 
 					code {
 						@apply whitespace-nowrap;

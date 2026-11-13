@@ -4,12 +4,19 @@ import { FormController } from '@/adapters/radiant/controller';
 import { createRoot } from '@ecopages/jsx/client';
 import * as z from 'zod/mini';
 import { defineInput } from '@schema-engine/forms';
-import { rendererConformance, conformanceAction, customArrayType } from '../../../../test-utils/renderer-conformance';
+import {
+	rendererConformance,
+	conformanceAction,
+	conformanceInputAxes,
+	conformanceLayout,
+	customArrayType,
+} from '../../../../test-utils/renderer-conformance';
 import { FormArrayElements } from '@/elements/inputs/form-array-elements';
 import { ArrayElementConfigSchema, type ArrayElementsProps } from '@/elements/inputs/form-array-elements.types';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
+import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 
 const CustomArrayRegistration = defineInput({
 	$type: customArrayType,
@@ -19,8 +26,13 @@ const CustomArrayRegistration = defineInput({
 	render: FormArrayElements as (props: Omit<ArrayElementsProps, '$type'>) => ReturnType<typeof FormArrayElements>,
 });
 const engine = createRadiantFormEngine({
-	elements: [...schemaFormRegistrations, CustomArrayRegistration],
+	elements: [
+		...schemaFormRegistrations,
+		{ ...InputElementRegistration, appearanceAxes: conformanceInputAxes },
+		CustomArrayRegistration,
+	],
 	actions: [conformanceAction],
+	layout: conformanceLayout,
 });
 
 rendererConformance(async ({ config, ...props }) => {

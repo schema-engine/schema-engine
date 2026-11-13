@@ -1,9 +1,10 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
-import { type NormalizedFormConfig, resolveFormRecipe } from '@schema-engine/forms';
+import type { NormalizedFormConfig, RecipeRegistration } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { getFormGridVariables } from '@schema-engine/forms/lib/grid-styles';
-import { applySlotDefaults } from '@schema-engine/forms/recipes';
+import { GRID_CLASS, getGridVariables } from '@schema-engine/layout';
+import { stepGrid } from '@schema-engine/forms/lib/validate-form';
+import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
 import { createFormMeta } from '@/lib/instance-view';
 import { FormElements } from './form-elements';
@@ -16,11 +17,11 @@ import { FormStep } from '@/components/form-step';
  *
  * @remarks
  * View-owned shell: no per-step filtering and no slot projection. The
- * `se-form-step` hosts toggle their own `hidden` attribute from the instance's
+ * `se-form-step` hosts bind their own `hidden` attribute to the instance's
  * step state, so SSR emits the whole form and step switching is pure DOM.
  */
-function GridThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
-	return jsx('style', { 'data-se-grid-theme': themeId, children: css });
+function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
+	return jsx('style', { 'data-se-theme-css': themeId, children: css });
 }
 
 export function RecipeRenderer({
@@ -32,29 +33,38 @@ export function RecipeRenderer({
 }: {
 	config: NormalizedFormConfig;
 	engine: FormEngine;
-	recipe: ReturnType<typeof resolveFormRecipe>;
+	recipe: RecipeRegistration | undefined;
 	children?: JsxRenderable;
 	initialValues?: Record<string, unknown>;
 }): JsxRenderable {
 	const values = expandValues(initialValues ?? collectFormDefaultValues(config));
-	const { theme, css: gridThemeCss } = engine.getCompiledGrid();
-	const viewConfig = recipe
-		? applySlotDefaults((config.view ?? { $type: recipe.$type }) as Record<string, unknown>, recipe.slotDefaults)
-		: ((config.view as Record<string, unknown> | undefined) ?? {});
+	const layout = engine.getLayout();
+	const viewConfig = (config.view as Record<string, unknown> | undefined) ?? {};
 	const meta = createFormMeta(config);
-	const slotContext = { meta, viewConfig };
+	const slotContext = (slot: Exclude<RecipeSlot, 'shell'>) => ({
+		meta,
+		slotConfig: viewConfig[slot] as Record<string, unknown> | undefined,
+	});
 	const isWizard = recipe?.kind === 'wizard';
 
 	const content = (
 		<>
-			<GridThemeStyle themeId={theme.id} css={gridThemeCss} />
+			<LayoutThemeStyle themeId={layout.id} css={layout.css} />
 			{config.steps.map((step, index) => (
-				<FormStep key={step.id} stepIndex={index} isWizard={isWizard}>
+				<FormStep
+					key={step.id}
+					stepId={step.id}
+					stepIndex={index}
+					hidden={isWizard && index !== 0}
+					class={step.className}
+					style={step.style}
+					appearance={step.appearance}
+				>
 					{step.elements.length ? (
 						<div
-							class="se-form-elements se-form-grid"
-							data-se-grid-theme={theme.id}
-							style={getFormGridVariables(config.grid, theme)}
+							class={`se-form-elements se-form-grid ${GRID_CLASS}`}
+							data-se-theme={layout.id}
+							style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
 						>
 							<FormElements
 								elements={step.elements}
@@ -75,10 +85,10 @@ export function RecipeRenderer({
 	const adapter = recipe.render as RadiantRecipeAdapterPayload;
 	if (!adapter?.slots) throw new Error(`Recipe '${recipe.$type}' is missing a Radiant adapter payload.`);
 	const slots = {
-		header: adapter.slots.header?.(slotContext),
-		progress: adapter.slots.progress?.(slotContext),
+		header: adapter.slots.header?.(slotContext('header')),
+		progress: adapter.slots.progress?.(slotContext('progress')),
 		content,
-		actions: adapter.slots.actions?.(slotContext),
+		actions: adapter.slots.actions?.(slotContext('actions')),
 	};
 	const output = adapter.shell ? (
 		adapter.shell({ slots, viewConfig, meta })

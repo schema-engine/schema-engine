@@ -1,4 +1,4 @@
-import { DEFAULT_WIZARD_ACTION_LABELS, type WizardActionsConfig } from '@schema-engine/forms/recipes';
+import { formatStepLabel, WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,16 +12,14 @@ import { cn } from '@/components/schema-engine/forms/lib/utils';
  */
 export function WizardActions() {
 	const { navigation, form, steps, currentStepIndex } = useViewContext();
-	const config = useViewConfig<WizardActionsConfig>('actions');
-	const labels = { ...DEFAULT_WIZARD_ACTION_LABELS, ...config.labels };
-	const appearance = config.appearance ?? 'default';
-	const showStepCounter = config.showStepCounter ?? appearance === 'default';
+	const { labels, variant, showStepCounter } = useViewConfig('actions', WizardActionsConfigSchema);
 
 	return (
-		<div className={cn('flex items-center justify-between gap-4', appearance === 'minimal' && 'w-full')}>
+		<div className={cn('flex items-center justify-between gap-4', variant === 'minimal' && 'w-full')}>
 			<Button
+				data-se-control
 				type="button"
-				variant={appearance === 'minimal' ? 'ghost' : 'outline'}
+				variant={variant === 'minimal' ? 'ghost' : 'outline'}
 				onClick={navigation.goToPreviousStep}
 				disabled={navigation.isFirstStep}
 				aria-label={labels.previousAriaLabel}
@@ -30,17 +28,18 @@ export function WizardActions() {
 			</Button>
 			{showStepCounter ? (
 				<Badge variant="secondary" aria-live="polite">
-					Step {currentStepIndex + 1} of {steps.length}
+					{formatStepLabel(labels.stepCounter, currentStepIndex + 1, steps.length)}
 				</Badge>
 			) : null}
 			<div className="flex gap-2">
 				{navigation.isLastStep ? (
-					<Button key="submit" type="submit" aria-label={labels.submitAriaLabel}>
+					<Button key="submit" data-se-control type="submit" aria-label={labels.submitAriaLabel}>
 						{form.isSubmitting ? labels.submitting : labels.submit}
 					</Button>
 				) : (
 					<Button
 						key="next"
+						data-se-control
 						type="button"
 						onClick={navigation.goToNextStep}
 						disabled={!navigation.canGoNext}

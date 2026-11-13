@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { AnyValidationRegistration } from '@/schemas/validation/types';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
+import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
 
 /** Coerce inferred registration maps into the engine generic constraint. */
 export type AsRegistrationMap<T> = T extends Record<string, unknown> ? T : Record<never, never>;
@@ -99,8 +100,9 @@ export type ElementRegistrationConstraint = {
 	readonly schema: StandardSchemaConstraint;
 	readonly metadata: { readonly name: string };
 	readonly render: (props: never) => unknown;
-	readonly validations?: readonly AnyValidationRegistration[];
+	readonly validations?: readonly ValidationRegistrationConstraint[];
 	readonly containerKind?: import('@/types/registration').ContainerKind;
+	readonly appearanceAxes?: AppearanceAxisList;
 };
 
 export type RecipeRegistrationConstraint = {
@@ -108,6 +110,7 @@ export type RecipeRegistrationConstraint = {
 	readonly schema: StandardSchemaConstraint;
 	readonly kind: 'single-step' | 'wizard';
 	readonly slots: readonly string[];
+	readonly appearanceAxes?: SlotAppearanceAxes;
 	readonly metadata: { readonly name: string };
 	readonly render: unknown;
 };
@@ -118,6 +121,8 @@ export type ActionRegistrationConstraint = {
 	readonly metadata: { readonly name: string };
 	readonly execute: (...args: never[]) => unknown;
 };
+
+export type { ValidationRegistrationConstraint };
 
 /** Parsed config maps retain defaults and transforms independently of authoring input. */
 export interface EngineOutputMaps {

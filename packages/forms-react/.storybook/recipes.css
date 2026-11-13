@@ -1,0 +1,5 @@
+/*
+ * The registry recipe styles, imported the way an app imports them (see registry/README.md): into the
+ * `components` layer that global.css's Tailwind import declares, so utilities still outrank them.
+ */
+@import '../../../registry/shared/forms/recipes/recipes.css' layer(components);

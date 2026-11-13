@@ -1,8 +1,15 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { getByRole, queryAllByRole, queryAllByText, queryByText } from '@testing-library/dom';
+import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, within } from '@testing-library/dom';
 import { userEvent } from 'vitest/browser';
 import * as v from 'valibot';
+import { builtInAxes, defineAxis } from '@schema-engine/layout';
 import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
+import {
+	builtInRecipeSpecs,
+	MinimalProgressConfigSchema,
+	SplitScreenShellConfigSchema,
+	StepIndicatorsConfigSchema,
+} from '@schema-engine/forms/recipes/built-in';
 
 export const conformanceAction = {
 	$type: 'conformance',
@@ -14,6 +21,24 @@ export const conformanceAction = {
 			: { success: true },
 	),
 };
+
+/**
+ * The host axis every conformance engine adds beside the built-in ones.
+ *
+ * @remarks `brand` sets `--se-tone-accent`, which the host-axis test reads back from computed style.
+ */
+export const conformanceToneAxis = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--se-tone-accent': 'rgb(255, 102, 0)' } },
+});
+
+/** The axes the conformance input registration declares: the built-in `size` and the host `tone`. */
+export const conformanceInputAxes = ['size', 'tone'];
+
+/** The `layout` option of every conformance engine: the built-in axes plus {@link conformanceToneAxis}. */
+export const conformanceLayout = { appearance: [...builtInAxes, conformanceToneAxis] } as const;
 
 /**
  * `$type` each renderer registers with `containerKind: 'array'` and its array widget.
@@ -58,7 +83,163 @@ const wizard = (...steps: FormConfigView['steps'][number]['elements'][]): FormCo
 	view: { $type: 'wizard', actions: { showStepCounter: true } },
 	steps: steps.map((elements, index) => ({ id: `step${index}`, title: `Step ${index + 1}`, elements })),
 });
+
+const recipeTitles = ['Profile', 'Plan', 'Review'];
+const formTitle = 'Account setup';
+const headerLabels = { stepCounter: 'Section {current} of {total}' };
+const indicatorLabels = { regionAriaLabel: 'Application progress', completed: 'Done' };
+const progressLabels = { progress: 'Application progress', valueText: 'Stage {current} of {total}' };
+const wizardActionLabels = {
+	previous: 'Back',
+	previousAriaLabel: 'Back one step',
+	next: 'Continue',
+	nextAriaLabel: 'Continue to next step',
+	submit: 'Send',
+	submitAriaLabel: 'Send application',
+	stepCounter: 'Page {current} of {total}',
+};
+const singleActionLabels = { submit: 'Send', submitAriaLabel: 'Send application' };
+
+interface RecipeCase {
+	$type: string;
+	steps: number;
+	header: boolean;
+	progress: 'indicators' | 'minimal' | undefined;
+	sideContent?: string;
+}
+
+/**
+ * @remarks
+ * Derived from the built-in specs so a new built-in recipe cannot skip conformance: the declared
+ * slots come from each spec's slot schemas, and the progress kind from the schema it uses.
+ */
+const recipeCases: RecipeCase[] = Object.values(builtInRecipeSpecs).map((spec) => {
+	const schemas: Partial<Record<string, unknown>> = spec.slotSchemas;
+	const progress = schemas.progress;
+	return {
+		$type: spec.$type,
+		steps: spec.kind === 'wizard' ? 3 : 1,
+		header: 'header' in schemas,
+		progress:
+			progress === StepIndicatorsConfigSchema
+				? 'indicators'
+				: progress === MinimalProgressConfigSchema
+					? 'minimal'
+					: undefined,
+		sideContent: schemas.shell === SplitScreenShellConfigSchema ? 'Welcome aboard' : undefined,
+	};
+});
+
+const recipeForm = ({ $type, steps, header, progress, sideContent }: RecipeCase): FormConfigView => {
+	const wizardKind = steps > 1;
+	const view: { $type: string; [slot: string]: unknown } = {
+		$type,
+		actions: wizardKind
+			? { labels: wizardActionLabels, showStepCounter: true }
+			: { labels: singleActionLabels, align: 'center' },
+	};
+	if (header) {
+		view.header = { align: 'center', titleAs: 'h1', showStepCounter: true, labels: headerLabels };
+	}
+	if (progress === 'indicators') view.progress = { labels: indicatorLabels };
+	if (progress === 'minimal') view.progress = { labels: progressLabels };
+	if (sideContent) view.shell = { sideContent };
+	return {
+		id: 'conformance',
+		title: formTitle,
+		view,
+		steps: recipeTitles.slice(0, steps).map((title, index) => ({
+			id: `step${index}`,
+			title,
+			elements: [input(`field${index}`, `Field ${index + 1}`)],
+		})),
+	};
+};
+
+/** @remarks The element a form's `className`, `style` and `appearance` land on: `<form>` in React, `<rui-form>` in Radiant. */
+const formElement = (host: HTMLElement) => {
+	const element = host.querySelector<HTMLElement>('rui-form, form');
+	if (!element) throw new Error('No form element rendered.');
+	return element;
+};
+const stepElement = (host: HTMLElement, id: string) => {
+	const element = host.querySelector<HTMLElement>(`[data-se-step="${id}"]`);
+	if (!element) throw new Error(`No element rendered for step '${id}'.`);
+	return element;
+};
+const fieldHost = (host: HTMLElement, label: string) => {
+	const element = getByRole(host, 'textbox', { name: label }).closest<HTMLElement>('.se-grid-item');
+	if (!element) throw new Error(`No field host rendered for '${label}'.`);
+	return element;
+};
+const activeIndicator = (host: HTMLElement) =>
+	within(getByRole(host, 'navigation', { name: 'Application progress' }))
+		.getAllByRole('button')
+		.filter((button) => button.getAttribute('aria-current') === 'step');
 const actionIds = () => conformanceAction.execute.mock.calls.map(([context]) => context.config.id);
+
+const sizedForm = (
+	appearance: Record<string, string>,
+	fieldAppearance?: Record<string, string>,
+	fieldClassName?: string,
+) => ({
+	...form([
+		{ ...input('email', 'Email'), appearance: fieldAppearance, className: fieldClassName },
+		input('name', 'Name'),
+	]),
+	appearance,
+});
+
+/**
+ * Reads the computed geometry of the card that carries a shell pick.
+ *
+ * @remarks
+ * The card is the element that holds the pick and the field, and its section is the child that holds the
+ * field, so the lookup names no renderer class. The host is made wider than the widest card, so the width
+ * is the shell's own readable measure, not the viewport's.
+ */
+function readCardGeometry(host: HTMLElement, appearance: Record<string, string>) {
+	host.style.width = '1200px';
+	const textbox = getByRole(host, 'textbox', { name: 'Field 1' });
+	const picked = Object.entries(appearance)
+		.map(([axis, value]) => `[data-se-${axis}="${value}"]`)
+		.join('');
+	const card = Array.from(host.querySelectorAll<HTMLElement>(picked)).find(
+		(element) =>
+			element !== formElement(host) &&
+			element !== stepElement(host, 'step0') &&
+			!element.classList.contains('se-grid-item') &&
+			element.contains(textbox),
+	);
+	if (!card) throw new Error('No card carries the pick.');
+	const section = Array.from(card.children).find((child) => child.contains(textbox));
+	if (!section) throw new Error('No card section holds the field.');
+	const style = getComputedStyle(card);
+	return {
+		padding: getComputedStyle(section).paddingTop,
+		width: card.getBoundingClientRect().width,
+		borderWidth: style.borderTopWidth,
+		boxShadow: style.boxShadow,
+	};
+}
+
+/** @remarks The unpicked card shadow, resolved on a probe so each renderer's own colour resolution is compared. */
+function defaultCardShadow() {
+	const probe = document.createElement('div');
+	probe.style.boxShadow = '0 8px 24px color-mix(in srgb, #000 10%, transparent)';
+	document.body.append(probe);
+	const shadow = getComputedStyle(probe).boxShadow;
+	probe.remove();
+	return shadow;
+}
+
+/** The card recipe's form, with a shell pick. */
+function cardForm(appearance: Record<string, string>): FormConfigView {
+	const cardCase = recipeCases.find((recipe) => recipe.$type === 'card');
+	if (!cardCase) throw new Error('The card recipe has no conformance case.');
+	const base = recipeForm(cardCase);
+	return { ...base, view: { ...base.view, $type: 'card', shell: { appearance } } };
+}
 
 /** @remarks Both browser projects execute these assertions against their own FormRenderer. */
 export function rendererConformance(mount: ConformanceMount): void {
@@ -74,6 +255,243 @@ export function rendererConformance(mount: ConformanceMount): void {
 			cleanup = result.cleanup;
 			return result;
 		};
+		const cardGeometry = async (appearance: Record<string, string>) => {
+			const { host } = await setup({ config: cardForm(appearance) });
+			return readCardGeometry(host, appearance);
+		};
+		describe('class and custom properties', () => {
+			test('a step renders its className and custom properties', async () => {
+				const base = form([input('email', 'Email')]);
+				const { host } = await setup({
+					config: {
+						...base,
+						steps: [{ ...base.steps[0], className: 'checkout-step', style: { '--accent': '#f60' } }],
+					},
+				});
+				const step = stepElement(host, 'main');
+				expect(step.classList.contains('checkout-step')).toBe(true);
+				expect(step.style.getPropertyValue('--accent')).toBe('#f60');
+			});
+			test('a step without className or style carries neither', async () => {
+				const { host } = await setup({ config: form([input('email', 'Email')]) });
+				const step = stepElement(host, 'main');
+				expect(step.className).not.toContain('undefined');
+				expect(step.getAttribute('style') ?? '').toBe('');
+			});
+			test('step className and style leave wizard step visibility to the navigation', async () => {
+				const config = wizard([input('first', 'First')], [input('last', 'Last')]);
+				const { host } = await setup({
+					config: {
+						...config,
+						steps: config.steps.map((step) => ({
+							...step,
+							className: `styled-${step.id}`,
+							style: { '--accent': step.id },
+						})),
+					},
+				});
+				const first = stepElement(host, 'step0');
+				const second = host.querySelector<HTMLElement>('[data-se-step="step1"]');
+				expect(first.classList.contains('styled-step0')).toBe(true);
+				expect(first.style.getPropertyValue('--accent')).toBe('step0');
+				expect(first.hidden).toBe(false);
+				expect(second === null || second.hidden).toBe(true);
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
+				const entered = stepElement(host, 'step1');
+				expect(entered.classList.contains('styled-step1')).toBe(true);
+				expect(entered.style.getPropertyValue('--accent')).toBe('step1');
+				expect(entered.hidden).toBe(false);
+			});
+			test('a form and a field render their custom properties', async () => {
+				const base = form([{ ...input('email', 'Email'), style: { '--gap': '2rem', '--columns': 2 } }]);
+				const { host } = await setup({ config: { ...base, style: { '--gap': '3rem' } } });
+				expect(formElement(host).style.getPropertyValue('--gap')).toBe('3rem');
+				expect(fieldHost(host, 'Email').style.getPropertyValue('--gap')).toBe('2rem');
+				expect(fieldHost(host, 'Email').style.getPropertyValue('--columns')).toBe('2');
+			});
+		});
+		describe('appearance', () => {
+			test('a form-level value reaches the form, the step and a field without its own', async () => {
+				const { host } = await setup({ config: sizedForm({ size: 'compact' }) });
+				expect(formElement(host).getAttribute('data-se-size')).toBe('compact');
+				expect(stepElement(host, 'main').getAttribute('data-se-size')).toBe('compact');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-size')).toBe('compact');
+			});
+			test('a field overrides the form value and its neighbours keep it', async () => {
+				const { host } = await setup({ config: sizedForm({ size: 'compact' }, { size: 'comfortable' }) });
+				expect(fieldHost(host, 'Email').getAttribute('data-se-size')).toBe('comfortable');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-size')).toBe('compact');
+			});
+			test('a step overrides the form value', async () => {
+				const base = sizedForm({ size: 'compact' });
+				const { host } = await setup({
+					config: { ...base, steps: [{ ...base.steps[0], appearance: { size: 'default' } }] },
+				});
+				expect(formElement(host).getAttribute('data-se-size')).toBe('compact');
+				expect(stepElement(host, 'main').getAttribute('data-se-size')).toBe('default');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-size')).toBe('default');
+			});
+			test('a form without appearance emits no appearance attributes', async () => {
+				const { host } = await setup({ config: form([input('email', 'Email')]) });
+				const attributed = Array.from(host.querySelectorAll('*')).filter((element) =>
+					element.getAttributeNames().some((name) => /^data-se-(size|surface)$/.test(name)),
+				);
+				expect(attributed).toHaveLength(0);
+			});
+			test('a recipe slot takes an appearance', async () => {
+				const cardCase = recipeCases.find((recipe) => recipe.$type === 'card');
+				if (!cardCase) throw new Error('The card recipe has no conformance case.');
+				const base = recipeForm(cardCase);
+				const { host } = await setup({
+					config: {
+						...base,
+						view: { ...base.view, $type: 'card', shell: { appearance: { surface: 'elevated' } } },
+					},
+				});
+				const shells = host.querySelectorAll<HTMLElement>('[data-se-surface="elevated"]');
+				expect(shells).toHaveLength(1);
+				expect(shells[0]).not.toBe(formElement(host));
+				expect(shells[0].contains(getByRole(host, 'textbox', { name: 'Field 1' }))).toBe(true);
+			});
+			test('a form-level value reaches a slot that supports the axis', async () => {
+				const cardCase = recipeCases.find((recipe) => recipe.$type === 'card');
+				if (!cardCase) throw new Error('The card recipe has no conformance case.');
+				const { host } = await setup({ config: { ...recipeForm(cardCase), appearance: { size: 'compact' } } });
+				const textbox = getByRole(host, 'textbox', { name: 'Field 1' });
+				const shell = Array.from(host.querySelectorAll<HTMLElement>('[data-se-size="compact"]')).find(
+					(element) =>
+						element !== formElement(host) &&
+						element !== stepElement(host, 'step0') &&
+						element !== fieldHost(host, 'Field 1') &&
+						element.contains(textbox),
+				);
+				expect(shell).toBeDefined();
+			});
+			test('structural slot config is unaffected by appearance', async () => {
+				const config: FormConfigView = {
+					id: 'conformance',
+					view: {
+						$type: 'card-wizard',
+						header: { showDescription: false },
+						shell: { appearance: { size: 'compact' } },
+					},
+					steps: [
+						{ id: 'one', title: 'One', description: 'Hidden description', elements: [input('a', 'A')] },
+						{ id: 'two', title: 'Two', elements: [input('b', 'B')] },
+					],
+				};
+				const { host } = await setup({ config });
+				expect(host.querySelector('[data-se-size="compact"]')).not.toBeNull();
+				expect(getByRole(host, 'heading', { name: 'One' })).toBeTruthy();
+				expect(queryByText(host, 'Hidden description')).toBeNull();
+			});
+			test('axis tokens apply to the element that carries the attribute', async () => {
+				const { host } = await setup({ config: sizedForm({ size: 'compact' }) });
+				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-space')).toBe('1rem');
+				expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-space')).toBe('1rem');
+			});
+			test('a host axis reaches the form and the step as an attribute and as its tokens', async () => {
+				const { host } = await setup({
+					config: { ...form([input('email', 'Email')]), appearance: { tone: 'brand' } },
+				});
+				for (const element of [formElement(host), stepElement(host, 'main')]) {
+					expect(element.getAttribute('data-se-tone')).toBe('brand');
+					expect(getComputedStyle(element).getPropertyValue('--se-tone-accent').trim()).toBe(
+						'rgb(255, 102, 0)',
+					);
+				}
+			});
+			test('a field whose registration declares a host axis carries its own pick, and the form pick otherwise', async () => {
+				const { host } = await setup({
+					config: {
+						...form([{ ...input('email', 'Email'), appearance: { tone: 'brand' } }, input('name', 'Name')]),
+						appearance: { tone: 'neutral' },
+					},
+				});
+				const email = fieldHost(host, 'Email');
+				expect(email.getAttribute('data-se-tone')).toBe('brand');
+				expect(getComputedStyle(email).getPropertyValue('--se-tone-accent').trim()).toBe('rgb(255, 102, 0)');
+				expect(fieldHost(host, 'Name').getAttribute('data-se-tone')).toBe('neutral');
+			});
+			test('a host axis value that sets no token leaves the neighbours alone', async () => {
+				const { host } = await setup({
+					config: { ...form([input('email', 'Email')]), appearance: { tone: 'neutral' } },
+				});
+				expect(formElement(host).getAttribute('data-se-tone')).toBe('neutral');
+				expect(getComputedStyle(formElement(host)).getPropertyValue('--se-tone-accent').trim()).toBe('');
+			});
+			test('a field className lands on the field host', async () => {
+				const { host } = await setup({
+					config: form([{ ...input('email', 'Email'), className: 'author-field' }, input('name', 'Name')]),
+				});
+				expect(fieldHost(host, 'Email').classList.contains('author-field')).toBe(true);
+				expect(fieldHost(host, 'Name').classList.contains('author-field')).toBe(false);
+			});
+			test('an author class on a field outranks the field axis styles', async () => {
+				const author = document.createElement('style');
+				author.textContent = '.author-field { --se-space: 7px; }';
+				document.head.prepend(author);
+				try {
+					const { host } = await setup({
+						config: sizedForm({ size: 'compact' }, { size: 'comfortable' }, 'author-field'),
+					});
+					expect(getComputedStyle(fieldHost(host, 'Email')).getPropertyValue('--se-space')).toBe('7px');
+					expect(getComputedStyle(fieldHost(host, 'Name')).getPropertyValue('--se-space')).not.toBe('7px');
+				} finally {
+					author.remove();
+				}
+			});
+			test('an author class outranks axis styles', async () => {
+				const author = document.createElement('style');
+				author.textContent = '.author-padding { --se-space: 7px; }';
+				document.head.prepend(author);
+				try {
+					const { host } = await setup({
+						config: { ...sizedForm({ size: 'compact' }), className: 'author-padding' },
+					});
+					expect(getComputedStyle(formElement(host)).getPropertyValue('--se-space')).toBe('7px');
+				} finally {
+					author.remove();
+				}
+			});
+		});
+		/**
+		 * The card parity checks, run against both renderers with their own stylesheets.
+		 *
+		 * @remarks
+		 * The expected values are literals, which hold only for the built-in `size` and `surface` axes, no
+		 * host theme variables (`--space-block`, `--space-block-lg`, `--surface`, `--on-surface`, `--border`)
+		 * and a host wider than the widest card. A themed host changes them; Radiant's own tests cover that.
+		 * Both renderers assert the same literals, so equal geometry follows from both suites passing.
+		 */
+		describe('card appearance parity', () => {
+			test('a card with size comfortable and surface elevated has the same geometry in every renderer', async () => {
+				expect(await cardGeometry({ size: 'comfortable', surface: 'elevated' })).toEqual({
+					padding: '32px',
+					width: 512,
+					borderWidth: '1px',
+					boxShadow: defaultCardShadow(),
+				});
+			});
+			test.each([
+				['compact', '16px', 384],
+				['default', '24px', 448],
+				['comfortable', '32px', 512],
+			])('card size %s has the same padding and width in every renderer', async (size, padding, width) => {
+				expect(await cardGeometry({ size })).toMatchObject({ padding, width });
+			});
+			test.each([
+				['flat', '0px', 'none'],
+				['outlined', '1px', 'none'],
+				['elevated', '1px', undefined],
+			])('card surface %s has the same border and shadow in every renderer', async (surface, border, shadow) => {
+				expect(await cardGeometry({ surface })).toMatchObject({
+					borderWidth: border,
+					boxShadow: shadow ?? defaultCardShadow(),
+				});
+			});
+		});
 		test('resolves sibling show constraints independently in two array rows', async () => {
 			const { host } = await setup({
 				config: form([
@@ -169,7 +587,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.click(getByRole(host, 'button', { name: 'Add item' }));
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(3);
 			await userEvent.fill(queryAllByRole(host, 'textbox', { name: 'Tag' })[2], 'c');
-			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item' })[0]);
+			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item 1' })[0]);
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
@@ -503,7 +921,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			const disabledControls = () =>
 				[
 					...queryAllByRole(host, 'textbox', { name: 'Tag' }),
-					...queryAllByRole(host, 'button', { name: /^(Add|Remove) item$/ }),
+					...queryAllByRole(host, 'button', { name: /^(Add item|Remove item \d+)$/ }),
 				].map((control) => (control as HTMLInputElement | HTMLButtonElement).disabled);
 			await expect.poll(disabledControls).toEqual([true, true, true, true, true]);
 			await userEvent.fill(getByRole(host, 'textbox', { name: 'Note' }), 'shown');
@@ -534,7 +952,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect
 				.poll(() => tags().map((tag) => tag.getAttribute('aria-invalid')))
 				.toEqual(['false', 'false', 'true']);
-			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item' })[0]);
+			await userEvent.click(queryAllByRole(host, 'button', { name: 'Remove item 1' })[0]);
 			await expect.poll(() => tags().map((tag) => tag.getAttribute('aria-invalid'))).toEqual(['false', 'true']);
 			expect(queryAllByText(host, 'Tag is required')).toHaveLength(1);
 		});
@@ -701,6 +1119,96 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => onAction.mock.calls.length).toBe(1);
 			expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'changed' }), { fullName: 'Ada' });
 			expect(onChange).toHaveBeenLastCalledWith({ fullName: 'Ada' });
+		});
+		describe('built-in recipes', () => {
+			test('every built-in spec has a conformance case', () => {
+				expect(recipeCases).toHaveLength(Object.keys(builtInRecipeSpecs).length);
+				expect(recipeCases.map((recipe) => recipe.$type).sort()).toEqual(
+					Object.values(builtInRecipeSpecs)
+						.map((spec) => spec.$type)
+						.sort(),
+				);
+			});
+
+			test.each(recipeCases.map((recipe) => [recipe.$type, recipe] as const))(
+				'%s renders every declared slot with the authored labels',
+				async (_name, recipe) => {
+					const { host } = await setup({ config: recipeForm(recipe) });
+					const wizardKind = recipe.steps > 1;
+
+					if (recipe.header) {
+						expect(getByRole(host, 'heading', { level: 1, name: 'Profile' })).toBeTruthy();
+						expect(getByRole(host, 'heading', { level: 1 }).parentElement?.getAttribute('data-align')).toBe(
+							'center',
+						);
+						expect(queryByText(host, `Section 1 of ${recipe.steps}`)).not.toBeNull();
+					} else {
+						expect(queryAllByRole(host, 'heading', { name: 'Profile' })).toHaveLength(0);
+						expect(queryByText(host, /^Section \d+ of/)).toBeNull();
+					}
+
+					if (recipe.progress === 'indicators') {
+						const active = activeIndicator(host);
+						expect(active).toHaveLength(1);
+						expect(active[0].textContent).toContain('Profile');
+					} else {
+						expect(queryByRole(host, 'navigation')).toBeNull();
+					}
+					if (recipe.progress === 'minimal') {
+						const bar = getByRole(host, 'progressbar', { name: 'Application progress' });
+						expect(bar.getAttribute('aria-valuenow')).toBe('33');
+						expect(bar.getAttribute('aria-valuetext')).toBe('Stage 1 of 3');
+					} else {
+						expect(queryByRole(host, 'progressbar')).toBeNull();
+					}
+
+					if (wizardKind) {
+						const previous = getByRole(host, 'button', { name: 'Back one step' });
+						expect(previous.textContent).toBe('Back');
+						expect(previous.hasAttribute('disabled')).toBe(true);
+						expect(getByRole(host, 'button', { name: 'Continue to next step' }).textContent).toBe(
+							'Continue',
+						);
+						expect(queryByText(host, 'Page 1 of 3')).not.toBeNull();
+						expect(queryByRole(host, 'button', { name: 'Send application' })).toBeNull();
+					} else {
+						expect(getByRole(host, 'button', { name: 'Send application' }).textContent).toBe('Send');
+					}
+
+					if (recipe.sideContent) expect(queryByText(host, recipe.sideContent)).not.toBeNull();
+					const titleCount = queryAllByText(host, formTitle).length;
+					expect(titleCount).toBe(recipe.$type.startsWith('split-screen') ? 1 : 0);
+				},
+			);
+
+			test.each(
+				recipeCases.filter((recipe) => recipe.steps > 1).map((recipe) => [recipe.$type, recipe] as const),
+			)('%s marks the active step and moves progress when Next is activated', async (_name, recipe) => {
+				const { host } = await setup({ config: recipeForm(recipe) });
+				await userEvent.click(getByRole(host, 'button', { name: 'Continue to next step' }));
+				await expect.poll(() => queryByText(host, 'Page 2 of 3') !== null).toBe(true);
+				expect(queryByText(host, 'Section 2 of 3') !== null).toBe(recipe.header);
+				if (recipe.header) expect(getByRole(host, 'heading', { level: 1, name: 'Plan' })).toBeTruthy();
+				if (recipe.progress === 'indicators') {
+					const active = activeIndicator(host);
+					expect(active).toHaveLength(1);
+					expect(active[0].textContent).toContain('Plan');
+					const first = within(getByRole(host, 'navigation', { name: 'Application progress' })).getAllByRole(
+						'button',
+					)[0];
+					expect(first.hasAttribute('aria-current')).toBe(false);
+					expect(first.textContent).toContain('Done');
+				}
+				if (recipe.progress === 'minimal') {
+					const bar = getByRole(host, 'progressbar', { name: 'Application progress' });
+					expect(bar.getAttribute('aria-valuenow')).toBe('67');
+					expect(bar.getAttribute('aria-valuetext')).toBe('Stage 2 of 3');
+				}
+				await userEvent.click(getByRole(host, 'button', { name: 'Continue to next step' }));
+				await expect.poll(() => queryByRole(host, 'button', { name: 'Send application' }) !== null).toBe(true);
+				expect(queryByRole(host, 'button', { name: 'Continue to next step' })).toBeNull();
+				expect(getByRole(host, 'button', { name: 'Send application' }).textContent).toBe('Send');
+			});
 		});
 	});
 }

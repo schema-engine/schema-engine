@@ -227,13 +227,14 @@ export class ActionPlaygroundSession {
 		this.#delayMs = options.delayMs;
 		this.#nodes = idleNodes(this.#definition.actions);
 
-		const registry = new ActionRegistry<PlaygroundContext, 'submit'>();
-		registry.register({
-			$type: 'work',
-			schema: demoSchema,
-			metadata: { name: 'Work', defaultTriggers: ['submit'] },
-			execute: (context) => this.#execute(context),
-		});
+		const registry = new ActionRegistry<PlaygroundContext, 'submit'>([
+			{
+				$type: 'work',
+				schema: demoSchema,
+				metadata: { name: 'Work', defaultTriggers: ['submit'] },
+				execute: (context) => this.#execute(context),
+			},
+		]);
 		this.#dispatcher = new ActionDispatcher(registry);
 	}
 

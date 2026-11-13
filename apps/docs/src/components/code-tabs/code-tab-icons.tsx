@@ -1,3 +1,4 @@
+/** @jsxImportSource @ecopages/jsx */
 import type { JsxRenderable } from '@ecopages/jsx';
 
 export type CodeTabIconKind = 'bun' | 'pnpm' | 'npm' | 'typescript';

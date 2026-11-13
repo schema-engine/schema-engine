@@ -16,12 +16,7 @@ export const DropZoneFieldSchema = z.extend(BaseFieldSchema, {
 
 export type DropZoneFieldConfig = z.infer<typeof DropZoneFieldSchema>;
 
-export type DropZoneFieldProps = DropZoneFieldConfig & {
-	onChange?: (value: File[]) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-	onDropChange?: (files: File[]) => void;
-};
+export type DropZoneFieldProps = DropZoneFieldConfig;
 
 export const dropZoneFieldExample: DropZoneFieldConfig = {
 	$type: 'drop-zone',

@@ -1,11 +1,20 @@
 import * as z from 'zod/mini';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { ElementConfig, ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
+import type { ElementGridConfig, LayoutInput } from '@schema-engine/layout';
 import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
-import { useGridThemeId } from '@/hooks/use-form-context';
+import { useLayoutThemeId } from '@/hooks/use-form-context';
 import { createFormEngine } from '@schema-engine/forms';
+import {
+	SSR_WIDTH_FIELDS,
+	ssrAreasForm,
+	ssrNestedFields,
+	ssrSteppedForm,
+} from '../../../../test-utils/ssr-grid-acceptance';
+import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
+import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -19,20 +28,24 @@ type SsrInputConfig = z.infer<typeof ssrInputSchema>;
 
 function SsrFixtureInput(config: SsrInputConfig) {
 	const { containerStyles } = useControlledFormElement(config as unknown as ElementConfig);
-	const gridThemeId = useGridThemeId();
+	const layoutThemeId = useLayoutThemeId();
 	const label = config.label ?? config.name;
 
 	return (
-		<div className="se-form-field" data-se-grid-theme={gridThemeId} style={containerStyles}>
+		<div className="se-form-field se-grid-item" data-se-theme={layoutThemeId} style={containerStyles}>
 			<label htmlFor={config.id}>{label}</label>
 			<input id={config.id} name={config.name} aria-label={label} readOnly />
 		</div>
 	);
 }
 
-function createSsrAcceptanceEngine() {
+/** The fixture engine; pass `layout` to put it on a shared or customised layout theme. */
+export function createSsrAcceptanceEngine<const TLayout extends LayoutInput = Record<never, never>>(layout?: TLayout) {
 	return createFormEngine({
+		layout,
 		elements: [
+			FieldSetRegistration,
+			ArrayElementRegistration,
 			{
 				$type: 'ssr-input',
 				schema: ssrInputSchema,
@@ -89,4 +102,78 @@ export function getSsrAcceptanceFixture() {
 		cachedFixture = { engine, config, adapter: rhfAdapter };
 	}
 	return cachedFixture;
+}
+
+let cachedWidthsFixture: ReturnType<typeof getSsrAcceptanceFixture> | undefined;
+
+/** Same engine as {@link getSsrAcceptanceFixture}, with a form that places fields by named width. */
+export function getSsrWidthsFixture() {
+	if (!cachedWidthsFixture) {
+		const { engine, adapter } = getSsrAcceptanceFixture();
+		const config = engine.validateForm({
+			id: 'ssr-widths-acceptance',
+			title: 'SSR widths acceptance',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: SSR_WIDTH_FIELDS.map(({ id, label, grid }) => ({
+						$type: 'ssr-input',
+						id,
+						name: id,
+						label,
+						grid,
+					})),
+				},
+			],
+		});
+		cachedWidthsFixture = { engine, config, adapter };
+	}
+	return cachedWidthsFixture;
+}
+
+let cachedNestedFixture: ReturnType<typeof getSsrAcceptanceFixture> | undefined;
+
+/** Same engine, with a fieldset and an array row whose children set widths. */
+export function getSsrNestedWidthsFixture() {
+	if (!cachedNestedFixture) {
+		const { engine, adapter } = getSsrAcceptanceFixture();
+		const children = (prefix: 'Nest' | 'Row') =>
+			ssrNestedFields(prefix).map(({ id, label, grid }) => ({ $type: 'ssr-input', id, name: id, label, grid }));
+		const config = engine.validateForm({
+			id: 'ssr-nested-widths-acceptance',
+			title: 'SSR nested widths acceptance',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{ $type: 'fieldSet', id: 'group', name: 'group', legend: 'Group', elements: children('Nest') },
+						{
+							$type: 'arrayElements',
+							id: 'rows',
+							name: 'rows',
+							label: 'Rows',
+							minItems: 1,
+							elements: children('Row'),
+						},
+					],
+				},
+			],
+		});
+		cachedNestedFixture = { engine, config, adapter };
+	}
+	return cachedNestedFixture;
+}
+
+/** Same engine as {@link getSsrAcceptanceFixture}, with a step grid that draws its layout from areas. */
+export function getSsrAreasFixture() {
+	const { engine, adapter } = getSsrAcceptanceFixture();
+	return { engine, config: engine.validateForm(ssrAreasForm('ssr-input')), adapter };
+}
+
+/** Same engine, with a step that draws its own responsive template beside a step on the form grid. */
+export function getSsrSteppedFixture() {
+	const { engine, adapter } = getSsrAcceptanceFixture();
+	return { engine, config: engine.validateForm(ssrSteppedForm('ssr-input')), adapter };
 }

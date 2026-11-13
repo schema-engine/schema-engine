@@ -11,6 +11,12 @@ import { ReactFormPreview } from './react-form-preview.react';
  * Ecopages JSX owns the demo root element so static builds emit the serialized
  * config and hydration markers Ecopages React islands omit on cross-integration
  * embeds. {@link ReactFormPreview} still performs React SSR inside the shell.
+ *
+ * Embedding through `@ecopages/react/eco-embed` was tried on Ecopages 0.7.0 and
+ * does not fit: that `EcoEmbed` returns a React node, which is not a valid JSX
+ * element type in an Ecopages JSX file (the type check fails), and it is meant
+ * for React files that embed foreign components. The Ecopages JSX `EcoEmbed`
+ * stays, with the client hydration script, until a React-to-JSX embed exists.
  */
 export const ReactFormDemoEmbed = eco.component<{ config: FormConfig }, JsxRenderable>({
 	dependencies: {

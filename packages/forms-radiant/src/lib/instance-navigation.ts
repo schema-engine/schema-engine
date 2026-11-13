@@ -1,14 +1,17 @@
 import type { FormInstanceElement } from '@/components/form-instance.script';
-import type { FormActionControllerElement } from '@/components/form-action-controller';
+import type { FormActions } from '@/adapters/radiant/form-actions';
 import type { FormController } from '@/adapters/radiant/controller';
 import { collectStepFieldPaths, createStepMachine, createStepNavigator } from '@schema-engine/forms';
 import { validateCurrentStepFields } from './validate-current-step';
 
 /**
- * @remarks Step triggers go to the descendant `se-form-action-controller`; without one, navigation
- * dispatches nothing.
+ * @remarks Step triggers go to the instance's actions; a form that configures none dispatches nothing.
  */
-export function createInstanceNavigation(host: FormInstanceElement, readForm: () => FormController | undefined) {
+export function createInstanceNavigation(
+	host: FormInstanceElement,
+	readForm: () => FormController | undefined,
+	readActions: () => FormActions | undefined,
+) {
 	const { navigate, cancel } = createStepNavigator({
 		reduce: (state, action) => createStepMachine(host.config ?? { steps: [{}] })(state, action),
 		getState: () => host.machine,
@@ -23,8 +26,7 @@ export function createInstanceNavigation(host: FormInstanceElement, readForm: ()
 				collectStepFieldPaths(host.config.steps[index], form.getValues()),
 			);
 		},
-		dispatchTrigger: async (trigger) =>
-			host.querySelector<FormActionControllerElement>('se-form-action-controller')?.dispatchTrigger(trigger),
+		dispatchTrigger: async (trigger) => readActions()?.dispatchTrigger(trigger),
 	});
 
 	return {

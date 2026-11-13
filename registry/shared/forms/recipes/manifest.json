@@ -1,5 +1,4 @@
 {
-  "registry": "recipe-registry.ts",
   "recipes": [
     {
       "id": "bare-controls",
@@ -17,7 +16,9 @@
         "registrations/card.ts",
         "blocks/step-header.tsx",
         "blocks/form-actions.tsx",
-        "shells/card-shell.tsx"
+        "shells/card-shell.tsx",
+        "shells/card-shell.css",
+        "recipes.css"
       ]
     },
     {
@@ -28,7 +29,9 @@
         "blocks/minimal-progress.tsx",
         "blocks/step-header.tsx",
         "blocks/wizard-actions.tsx",
-        "shells/card-shell.tsx"
+        "shells/card-shell.tsx",
+        "shells/card-shell.css",
+        "recipes.css"
       ]
     },
     {

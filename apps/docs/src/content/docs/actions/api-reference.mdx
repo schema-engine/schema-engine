@@ -1,7 +1,6 @@
 ---
 title: 'API Reference'
 description: 'Public surface of the actions package.'
-group: Actions
 order: 5
 ---
 
@@ -11,16 +10,23 @@ order: 5
 
 ```typescript
 class ActionRegistry<TBaseContext, TTrigger>
-	extends BaseRegistry<string, ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>
-	implements ActionRegistryProvider<TBaseContext, TTrigger>
+	implements ReadOnlyRegistry<ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>,
+		ActionRegistryProvider<TBaseContext, TTrigger>
 {
-	get registryName(): string;
+	constructor(registrations: readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[]);
+
+	readonly kind: string;
+	readonly size: number;
+	get(key: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
+	has(key: string): boolean;
+	all(): readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[];
+	keys(): readonly string[];
 	getAction(type: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
 	getActionTypes(): string[];
 }
 ```
 
-Inherited behavior from `BaseRegistry` includes `register`, `has`, `get`, `getAll`, `getAllKeys`, `size`, `clear`.
+`ActionRegistry` is built from a list with `createRegistry` from `@schema-engine/registry`. It is read-only and frozen. A later registration with the same `$type` replaces an earlier one without a warning, and a winning registration whose schema is not a Standard Schema throws at construction, naming its `$type`. Subclasses may add their own fields. There is no `register` or `clear`; to register at runtime, implement `ActionRegistryProvider` yourself.
 
 ## ActionDispatcher
 

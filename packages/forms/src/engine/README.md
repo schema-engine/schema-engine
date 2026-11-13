@@ -37,6 +37,16 @@ require a `debounceScope` owned by the form.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
 
+## Form configuration validation
+
+`validateForm` and `safeValidateForm` share one pipeline (`safeValidateFormConfig` in `lib/validate-form.ts`).
+`validateForm` throws a `FormValidationError`; `safeValidateForm` returns `{ success: true, data }` or
+`{ success: false, issues }` with the same issues. Each issue is `{ message, path }`, the path in config keys
+and indexes (`['steps', 0, 'elements', 2, 'grid', 'width']`, `[]` for the whole form). See
+[Validation errors](../../README.md#validation-errors) for the paths each check reports. Registration
+checks made at build time (`buildFormEngine`) throw a plain `Error` naming the registration; they are not
+form issues.
+
 ## Action context form state
 
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass
@@ -49,7 +59,7 @@ including attempts that failed validation. An attempt counts once its validation
 failed, or once its submission lifecycle has run, so the triggers of a submission
 see the attempts before it. React passes React Hook Form's `submitCount`, which counts
 this way. Radiant UI's form store keeps only a submitted flag, so Radiant counts the
-`rui-invalid` and `rui-submit` events of its form instead.
+`rui-invalid` events of its form and its finished submission lifecycles instead.
 
 ## Schema artifacts and extension
 
@@ -60,7 +70,7 @@ id wholesale, schema, title and description included, and the supplied catalog i
 mutated. `extend` rebuilds the catalog the same way from the source engine's catalog,
 or from an explicit `catalog` passed to `extend`, so custom entries carry over and
 added or overridden registrations replace theirs without touching the source engine.
-The compiled grid is inherited. JSON Schema generation uses `StandardJSONSchemaV1`
+The layout theme (`getLayout()`: grid vocabulary, appearance axes held in a registry, one id and one stylesheet; the catalog and JSON Schema export list each axis and its values, and an element's or recipe slot's `appearance` in the export lists only the axes it declares) is inherited, and is taken as given when the engine was created with a compiled theme. JSON Schema generation uses `StandardJSONSchemaV1`
 from `@standard-schema/spec` and keeps the existing forms vendor, schema ids, targets
 and input/output documents.
 
@@ -78,11 +88,25 @@ custom array widgets receive the same path and default behavior as built-ins.
 
 ## Registration storage
 
-`buildFormEngine` checks each supplied Standard Schema once, then stores elements,
-recipes, and actions in Maps keyed by `$type`. Later duplicates replace earlier
-registrations. `FormEngine` takes an isolated Map snapshot, and its lookup methods
-serve renderers and action dispatch. Construction does not instantiate temporary
-component or action registries.
+`buildFormEngine` stores elements, recipes, and actions in three read-only
+registries from `@schema-engine/registry`, built with `createRegistry`, and validation rules in a
+fourth, built with `createRegistry('Validation', ...)` (see `createValidationRegistry`). Each
+registry checks the winning registration's Standard Schema once, at build, and throws naming
+the offending kind and `$type` (for example `Element 'note' schema must implement
+Standard Schema`). Later duplicates replace earlier registrations without a
+warning. A registration overridden later in the list is skipped by every build
+check (schema, recipe slots, declared axes). The registries and the copies they
+store are frozen and the registration objects you pass stay untouched, so
+`FormEngine` shares its registries with engines built by `extend` without copying, and its lookup
+methods serve renderers and action dispatch. The `getAll*` and `get*Ids` methods
+return fresh arrays.
+
+The validation registry is built from the built-in rules, then the `validations` of each winning
+element in the element registry's order (a replaced `$type` keeps its first position, so for
+[A1, B, A2] where all declare the same validation `$type`, B's validation wins), then
+`createFormEngine({ validations })`. `FormEngine` keeps the `validations`
+option so `extend` rebuilds the registry from it. The per-field-type default rules (`defaultFor`) are
+derived from the stored registrations at build, not kept as mutable state.
 
 Validation helpers accept structural, read-only element views as well as normalized
 snapshots. Both renderers use these same helpers, the step machine and

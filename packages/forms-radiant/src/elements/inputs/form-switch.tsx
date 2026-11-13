@@ -1,38 +1,28 @@
-import { FormField } from '@/elements/form-field';
 import { RuiSwitch } from '@ecopages/radiant-ui/switch';
-import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
-import { RuiLabel } from '@ecopages/radiant-ui/label';
+import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
+import { FieldGroup } from '../field-group';
 import type { SwitchFieldProps } from './form-switch.types';
 
-export function FormSwitch({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: SwitchFieldProps) {
+export function FormSwitch(config: SwitchFieldProps) {
 	return (
-		<FormField
+		<FieldGroup
 			name={config.name}
-			validation={config}
-			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
-			disabled={config.disabled}
+			label={config.label || config.name}
+			htmlFor={config.id}
+			hiddenLabel={!config.label}
+			labelAfter
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
+			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
+			validation={config}
+			defaultValue={config.defaultValue}
+			disabled={config.disabled}
 		>
-			<RuiSwitch
-				id={config.id}
-				name={config.name}
-				disabled={config.disabled}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ checked: boolean }>).detail;
-					propsOnChange?.(detail?.checked ?? false);
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
-			/>
-			{config.label ? <RuiLabel htmlFor={config.id}>{config.label}</RuiLabel> : null}
-			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
-			<RuiFieldError />
-		</FormField>
+			<RuiSwitch id={config.id} name={config.name} disabled={config.disabled} />
+		</FieldGroup>
 	);
 }

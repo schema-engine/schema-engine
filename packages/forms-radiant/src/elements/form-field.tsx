@@ -1,43 +1,140 @@
-import { customElement } from '@ecopages/radiant';
-import { onContextUpdate } from '@ecopages/radiant/context';
+import {
+	GRID_ITEM_CLASS,
+	getAppearanceAttributes,
+	type AppearanceSelection,
+	type ElementGridConfig,
+} from '@schema-engine/layout';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import type { FieldRules } from '@ecopages/radiant-ui/form';
-import { jsx, type JsxCustomElementAttributes } from '@ecopages/jsx';
-import { FormController, formController } from '@/adapters/radiant/controller';
-import { readHydratedRules } from '@/components/internals/field-rule-hydrator';
-import type { ElementGridConfig } from '@schema-engine/forms/schemas';
+import type { JsxCustomElementAttributes } from '@ecopages/jsx';
+import { readHydratedRules, rebuildHydratedRules } from '@/components/internals/field-rule-hydrator';
+import { formEngineContext } from '@/components/provider';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { resolveElementRules, toFieldRules, type FieldRulesSource } from '@/lib/field-rules';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { formEngineContext, type FormEngineContextValue } from '@/components/provider';
-import { replaceBaselineRules } from '@/lib/constraint-required-rules';
+import { bindTo, customElement, onUpdated, state } from '@ecopages/radiant';
+import { onContextUpdate } from '@ecopages/radiant/context';
+import { constraintContext, formValuesContext, type ConstraintState } from '@/contexts/constraint-context';
+import { FormController } from '@/adapters/radiant/controller';
+import { shouldSurfaceDependentError } from '@schema-engine/forms/schemas/validation';
 
-/** RuiField's registration and presentation, with scoped programmatic form access. */
+/** RuiField's registration and presentation, restoring hydrated rules and defaults. */
 @customElement('se-field')
 export class FormFieldElement extends RuiFieldElement {
-	@formController form!: FormController;
+	private constraint?: ConstraintState;
+	private isAuthoredDisabled?: (renderedPath: string) => boolean;
+	private authoredRules?: FieldRules;
+	private appliedRules?: FieldRules;
+	private hydratedEngine?: FormEngine;
+
+	/**
+	 * Whether the required marker is shown.
+	 *
+	 * @remarks
+	 * Paints the marker `FieldGroup` renders, server-rendered or not, so the hydrated markup is reused.
+	 * Seeded from the hydrated rules in `onConnected`, before the first constraint is applied.
+	 */
+	@state
+	@bindTo({ selector: '[data-se-required-marker]', bool: 'hidden', invert: true })
+	private requiredShown = false;
 
 	protected override onConnected(): void {
 		this.hydrateDefaultValue();
+		this.hydratedEngine = resolveFormEngine(this);
 		const rules = readHydratedRules(this);
-		if (rules) {
-			this.rules = rules;
-		}
+		if (rules) this.rules = rules;
 		super.onConnected();
+		this.authoredRules ??= this.rules ?? {};
+		this.requiredShown = Boolean(this.rules?.required);
+		this.applyConstraint();
 	}
 
 	/**
+	 * Takes rules set from outside as the new authored baseline, then reapplies the constraint.
+	 *
 	 * @remarks
-	 * During hydration the renderer's engine can arrive after the field connects,
-	 * when `onConnected` could build only the registry-free rules. The validator
-	 * that registry-backed rules (such as `relate`) need is attached once the
-	 * engine reaches the field.
+	 * A re-render can reuse this element with new `rules`. Only the object `applyConstraint`
+	 * wrote is its own; any other is authored, and keeping the first baseline would
+	 * overwrite it with stale rules on the next constraint change.
 	 */
-	@onContextUpdate({ context: formEngineContext, requestUpdate: false })
-	onFormEngine({ engine }: FormEngineContextValue): void {
-		if (!engine) return;
-		const rules = readHydratedRules(this);
-		if (rules?.validate) {
-			replaceBaselineRules(this, rules);
+	@onUpdated(['rules'])
+	onExternalRules(): void {
+		if (this.authoredRules === undefined || this.rules === this.appliedRules) return;
+		this.authoredRules = this.rules ?? {};
+		this.applyConstraint();
+	}
+
+	/**
+	 * Rebuilds the derived rules with the registry of the engine the renderer publishes.
+	 *
+	 * @remarks
+	 * Serialized rules cannot carry custom validators, and a validator closes over the registry it was built
+	 * with, so every engine that arrives or replaces another rebuilds them from the serialized baseline, in
+	 * this one place. A field that connected with its engine has them already.
+	 */
+	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
+	onRendererEngine(engine: FormEngine | undefined): void {
+		if (!engine || !this.isConnected || engine === this.hydratedEngine) return;
+		this.hydratedEngine = engine;
+		const rules = rebuildHydratedRules(this, engine);
+		if (!rules) return;
+		this.rules = rules;
+		this.onRulesUpdated();
+	}
+
+	@onContextUpdate({ context: constraintContext, requestUpdate: false })
+	onConstraint(constraint: ConstraintState | undefined): void {
+		this.constraint = constraint;
+		this.applyConstraint();
+	}
+
+	@onContextUpdate({
+		context: formValuesContext,
+		select: (form) => form?.isAuthoredDisabled,
+		requestUpdate: false,
+	})
+	onAuthoredDisabled(isAuthoredDisabled: ((renderedPath: string) => boolean) | undefined): void {
+		this.isAuthoredDisabled = isAuthoredDisabled;
+		this.applyConstraint();
+	}
+
+	/**
+	 * Composes the field's authored state with the constraint wrappers around it.
+	 *
+	 * @remarks
+	 * A field outside every wrapper never receives a constraint and keeps what render gave
+	 * it. The live `disabled` already holds what a constraint applied at render, so the
+	 * authored state comes from the config lookup, and the authored rules are kept as
+	 * the object they were, because a clone would strip `validate` functions and `RegExp`
+	 * patterns. It waits for the constraint context, the authored-disabled lookup and the authored
+	 * rules, so an authored `disabled` is never lifted while the lookup is still on its
+	 * way; a field inside a wrapper that has not evaluated yet keeps its render state too. A `required` that changes validates the field when the
+	 * user has reached it, as a dependent field is.
+	 */
+	private applyConstraint(): void {
+		const { constraint, isAuthoredDisabled, authoredRules: authored } = this;
+		if (!constraint || !isAuthoredDisabled || !authored) return;
+		const name = this.getAttribute('name') ?? this.name;
+
+		this.disabled = isAuthoredDisabled(name) || constraint.disabled;
+
+		const required = constraint.required
+			? typeof authored.required === 'string'
+				? authored.required
+				: true
+			: authored.required;
+		if (this.rules?.required === required) return;
+		this.appliedRules = { ...authored, required };
+		this.rules = this.appliedRules;
+		this.requiredShown = Boolean(required);
+		this.onRulesUpdated();
+
+		const store = new FormController(this).store;
+		if (!store || !name) return;
+		const { touched, isSubmitted } = store.getState();
+		if (shouldSurfaceDependentError({ touched: Boolean(touched[name]), submitted: isSubmitted })) {
+			void store.validateField(name);
 		}
 	}
 
@@ -61,10 +158,6 @@ export class FormFieldElement extends RuiFieldElement {
 		} catch {
 			this.defaultValue = undefined;
 		}
-	}
-
-	get field() {
-		return this.form.field(this.name);
 	}
 }
 
@@ -96,8 +189,10 @@ export function FormField({
 	class: className,
 	grid,
 	style,
+	appearance,
 	...props
 }: Omit<JsxCustomElementAttributes<FormFieldElement, RuiFieldProps>, 'rules'> & {
+	appearance?: AppearanceSelection;
 	validation?: FieldRulesSource;
 	validate?: FieldRules['validate'];
 	grid?: ElementGridConfig;
@@ -106,21 +201,24 @@ export function FormField({
 	const fieldHost = mergeFieldGridHost(grid, style);
 	const validationRules = validation ? resolveElementRules(validation) : undefined;
 
-	return jsx('se-field', {
-		...props,
-		classes: ['se-form-field', className],
-		'data-se-grid-theme': fieldHost.themeId,
-		style: fieldHost.style,
-		'prop:rules': withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate),
-		'data-se-validation-rules': validationRules ? JSON.stringify(validationRules) : undefined,
-		'prop:defaultValue': defaultValue,
-		data: {
-			defaultValue: defaultValueData ?? (defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined),
-		},
-		children: (
+	return (
+		<FormFieldElement
+			{...props}
+			classes={['se-form-field', GRID_ITEM_CLASS, className]}
+			data-se-theme={fieldHost.themeId}
+			style={fieldHost.style}
+			{...getAppearanceAttributes(appearance)}
+			rules={withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate)}
+			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
+			defaultValue={defaultValue}
+			data={{
+				defaultValue:
+					defaultValueData ?? (defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined),
+			}}
+		>
 			<div class="rui-field" data-ref="field">
 				{children}
 			</div>
-		),
-	});
+		</FormFieldElement>
+	);
 }

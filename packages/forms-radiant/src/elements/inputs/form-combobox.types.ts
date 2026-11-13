@@ -23,8 +23,4 @@ export type ComboboxOption = z.infer<typeof ComboboxOptionSchema>;
 export type ComboboxFieldExtension = z.infer<typeof ComboboxFieldExtensionSchema>;
 export type ComboboxFieldConfig = z.infer<typeof ComboboxFieldConfigSchema>;
 
-export type ComboboxFieldProps = ComboboxFieldConfig & {
-	onChange?: (value: string | string[]) => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type ComboboxFieldProps = ComboboxFieldConfig;

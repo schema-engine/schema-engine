@@ -1,12 +1,18 @@
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
+import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
 import { ComponentType } from './component-type';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import * as z from 'zod/mini';
 import type { FormEngineSchemaArtifacts } from './schema-artifacts';
-import { validateElementConfig, validateFormConfig } from '@/lib/validate-form';
+import {
+	safeValidateFormConfig,
+	validateElementConfig,
+	validateFormConfig,
+	type FormValidationResult,
+} from '@/lib/validate-form';
 import type { NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
-import type { FormAuthoringInput } from '@/builder/form-authoring';
+import type { ExactFormAppearance, ExactViewConfig, FormAuthoringInput } from '@/builder/form-authoring';
 import type {
 	LastWinsMerge,
 	EngineOutputMaps,
@@ -20,8 +26,9 @@ import type {
 import type { ExtendFormEngineOptions } from './create-form-engine';
 import { buildFormEngine } from './build-form-engine';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import type { CompiledGrid, NormalizedGridTheme } from '@/lib/grid-styles';
+import type { LayoutTheme, ResolvedAppearanceAxes } from '@schema-engine/layout';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import {
 	describeRecipeFromRegistration,
 	describeViewCatalogFromRecipes,
@@ -35,12 +42,15 @@ export * from './component-type';
  * Engine registries - internal storage for all registered components.
  */
 export interface EngineRegistries {
-	elements: Map<string, AnyElementRegistration>;
-	recipes: Map<string, AnyRecipeRegistration>;
-	actions: Map<string, AnyActionRegistration>;
+	elements: ElementRegistry;
+	recipes: RecipeRegistry;
+	actions: ActionRegistrationRegistry;
 	schemaArtifacts: FormEngineSchemaArtifacts;
-	compiledGrid: CompiledGrid;
+	layout: LayoutTheme;
 	validationRegistry: ValidationRegistry;
+	/** The validations passed to `createFormEngine`, kept so {@link FormEngine.extend} can rebuild the registry. */
+	validations: readonly ValidationRegistrationConstraint[];
+	defaultWizardRecipe?: string;
 }
 
 export class FormEngine<
@@ -48,23 +58,33 @@ export class FormEngine<
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+	TAppearance extends Record<string, string> = ResolvedAppearanceAxes,
 > {
 	private readonly registries: EngineRegistries;
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
-	private readonly compiledGrid: CompiledGrid;
+	private readonly layout: LayoutTheme;
 	private readonly validationRegistry: ValidationRegistry;
 
+	/**
+	 * @remarks
+	 * Shares the registries it receives instead of copying them. They are
+	 * read-only, so engines built by `extend` can share them safely. Construct
+	 * engines with `createFormEngine`; passing a registry that changes later is
+	 * unsupported.
+	 */
 	constructor(registries: EngineRegistries) {
 		this.registries = {
-			elements: new Map(registries.elements),
-			recipes: new Map(registries.recipes),
-			actions: new Map(registries.actions),
+			elements: registries.elements,
+			recipes: registries.recipes,
+			actions: registries.actions,
 			schemaArtifacts: registries.schemaArtifacts,
-			compiledGrid: registries.compiledGrid,
+			layout: registries.layout,
 			validationRegistry: registries.validationRegistry,
+			validations: registries.validations,
+			defaultWizardRecipe: registries.defaultWizardRecipe,
 		};
 		this.schemaArtifacts = registries.schemaArtifacts;
-		this.compiledGrid = registries.compiledGrid;
+		this.layout = registries.layout;
 		this.validationRegistry = registries.validationRegistry;
 
 		logger.debug('FormEngine initialized', {
@@ -79,11 +99,11 @@ export class FormEngine<
 	}
 
 	getAllElements(): AnyElementRegistration[] {
-		return Array.from(this.registries.elements.values());
+		return [...this.registries.elements.all()];
 	}
 
 	getElementIds(): string[] {
-		return Array.from(this.registries.elements.keys());
+		return [...this.registries.elements.keys()];
 	}
 
 	hasElement(id: string): boolean {
@@ -95,11 +115,11 @@ export class FormEngine<
 	}
 
 	getAllRecipes(): AnyRecipeRegistration[] {
-		return Array.from(this.registries.recipes.values());
+		return [...this.registries.recipes.all()];
 	}
 
 	getRecipeIds(): string[] {
-		return Array.from(this.registries.recipes.keys());
+		return [...this.registries.recipes.keys()];
 	}
 
 	hasRecipe(id: string): boolean {
@@ -107,24 +127,21 @@ export class FormEngine<
 	}
 
 	/**
-	 * The engine's immutable compiled grid: the resolved theme and its stylesheet.
+	 * The engine's immutable layout theme: grid vocabulary, appearance vocabulary, one id and one stylesheet.
 	 *
 	 * @remarks
-	 * Compiled once when the engine is built. Renderers emit `css` inside the
-	 * rendered form markup (React hoists and dedupes by key; Radiant renders it
-	 * inline), so SSR output is styled with no FOUC and no runtime injection.
+	 * Compiled once when the engine is built (or taken as given from `createFormEngine({ layout })`).
+	 * Renderers emit `css` inside the rendered form markup, so SSR output is styled with no FOUC and
+	 * no runtime injection, and put `id` on the form, grid and item elements as `data-se-theme`.
+	 * Engines built on the same theme share its id; React hoists the shared stylesheet to one
+	 * element, while Radiant inlines an identical copy per form.
 	 */
-	getCompiledGrid(): CompiledGrid {
-		return this.compiledGrid;
+	getLayout(): LayoutTheme {
+		return this.layout;
 	}
 
 	getValidationRegistry(): ValidationRegistry {
 		return this.validationRegistry;
-	}
-
-	/** The engine's immutable grid theme (computed once at construction). */
-	getGridTheme(): NormalizedGridTheme {
-		return this.compiledGrid.theme;
 	}
 
 	getAction(id: string): AnyActionRegistration | undefined {
@@ -132,11 +149,11 @@ export class FormEngine<
 	}
 
 	getAllActions(): AnyActionRegistration[] {
-		return Array.from(this.registries.actions.values());
+		return [...this.registries.actions.all()];
 	}
 
 	getActionTypes(): string[] {
-		return Array.from(this.registries.actions.keys());
+		return [...this.registries.actions.keys()];
 	}
 
 	hasAction(id: string): boolean {
@@ -168,21 +185,55 @@ export class FormEngine<
 	validateForm(
 		config: unknown,
 	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
-		return validateFormConfig(config, {
+		return validateFormConfig(config, this.validateOptions()) as unknown as NormalizedFormConfig<
+			TOutputs['elements'],
+			TOutputs['recipes'],
+			TOutputs['actions']
+		>;
+	}
+
+	/**
+	 * Same validation as {@link validateForm}, returned as a result instead of thrown.
+	 *
+	 * @returns `{ success: true, data }` with the frozen normalized form, or `{ success: false, issues }`
+	 * with the problems found and the config path each is about (`['steps', 0, 'elements', 2, 'grid', 'width']`;
+	 * `[]` for the whole form). The shape fits a YAML or editor integration that points an issue at a location.
+	 *
+	 * @remarks
+	 * A malformed form envelope (its own shape, such as `steps` not being an array) stops the deeper
+	 * checks and is reported alone; once it parses, element, action, grid and view issues come together.
+	 *
+	 * Still throws for a misuse of the API, such as a registration whose Standard Schema is async.
+	 */
+	safeValidateForm(
+		config: unknown,
+	): FormValidationResult<NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>> {
+		return safeValidateFormConfig(config, this.validateOptions()) as FormValidationResult<
+			NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>
+		>;
+	}
+
+	private validateOptions() {
+		return {
 			owner: this,
-			getRecipe: (id) => this.getRecipe(id),
-			getElement: (id) => this.getElement(id),
-			getAction: (id) => this.getAction(id),
-			hasValidation: (type) => this.validationRegistry.has(type),
-		}) as unknown as NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
+			getRecipe: (id: string) => this.getRecipe(id),
+			defaultWizardRecipe: this.registries.defaultWizardRecipe,
+			getElement: (id: string) => this.getElement(id),
+			getAction: (id: string) => this.getAction(id),
+			hasValidation: (type: string) => this.validationRegistry.has(type),
+			axes: this.layout.axes,
+		};
 	}
 
 	/**
 	 * Author a form from this engine's registered elements, recipes, and actions.
 	 * Same runtime pipeline as {@link validateForm}.
 	 */
-	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions>>(
-		config: TConfig,
+	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions, TAppearance>>(
+		config: TConfig & { view?: ExactViewConfig<TConfig['view'], TRecipes, TAppearance> } & ExactFormAppearance<
+				TConfig,
+				TAppearance
+			>,
 	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
 		return this.validateForm(config);
 	}
@@ -196,6 +247,7 @@ export class FormEngine<
 		return validateElementConfig(config, {
 			getElement: (id) => this.getElement(id),
 			hasValidation: (type) => this.validationRegistry.has(type),
+			axes: this.layout.axes,
 		}) as unknown as NormalizedElementConfig<TOutputs['elements']>;
 	}
 
@@ -215,14 +267,23 @@ export class FormEngine<
 		return getAuthoringInstructionsFromCatalog(this.describeViewCatalog());
 	}
 
+	/**
+	 * @remarks
+	 * Generated as input: authors may omit prefaulted slots and defaulted keys, so only `$type` is required.
+	 *
+	 * Uses the schema the export lists the recipe by, which lists each slot's declared appearance axes,
+	 * so a view document gets the same autocomplete as the form config.
+	 */
 	private generateRecipeViewSchema(recipe: AnyRecipeRegistration): Record<string, unknown> {
+		const id = SchemaMetadataCatalog.entryId(ComponentType.Recipe, recipe.$type);
 		try {
 			return generateZodJSONSchemaDocument(
-				recipe.schema as z.ZodMiniType,
+				(this.schemaArtifacts.exportSchemas.get(id) ?? recipe.schema) as z.ZodMiniType,
 				this.schemaArtifacts.metadataRegistry,
 				{
 					target: 'draft-2020-12',
-					schemaId: SchemaMetadataCatalog.entryId(ComponentType.Recipe, recipe.$type),
+					io: 'input',
+					schemaId: id,
 				},
 			) as Record<string, unknown>;
 		} catch (error) {
@@ -301,14 +362,17 @@ export class FormEngine<
 			elements: LastWinsMerge<TOutputs['elements'], MergedOutputMap<TNewElements>>;
 			recipes: LastWinsMerge<TOutputs['recipes'], MergedOutputMap<TNewRecipes>>;
 			actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
-		}
+		},
+		TAppearance
 	> {
 		return buildFormEngine({
 			elements: [...this.getAllElements(), ...(options?.elements ?? [])],
 			recipes: [...this.getAllRecipes(), ...(options?.recipes ?? [])],
 			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
+			validations: [...this.registries.validations, ...(options?.validations ?? [])],
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
-			compiledGrid: this.compiledGrid,
+			layout: this.layout,
+			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,
@@ -317,7 +381,8 @@ export class FormEngine<
 				elements: LastWinsMerge<TOutputs['elements'], MergedOutputMap<TNewElements>>;
 				recipes: LastWinsMerge<TOutputs['recipes'], MergedOutputMap<TNewRecipes>>;
 				actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
-			}
+			},
+			TAppearance
 		>;
 	}
 }
@@ -335,6 +400,7 @@ export type FormEngineRuntime<
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
-> = Omit<FormEngine<TElements, TRecipes, TActions, TOutputs>, 'extend'>;
+	TAppearance extends Record<string, string> = ResolvedAppearanceAxes,
+> = Omit<FormEngine<TElements, TRecipes, TActions, TOutputs, TAppearance>, 'extend'>;
 
 export type { EngineOutputMaps } from '@/builder/types.utils';

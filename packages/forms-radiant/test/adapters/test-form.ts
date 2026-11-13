@@ -11,6 +11,11 @@ const noopUnregister = () => {};
  * @remarks
  * `ContextProvider` types its host as a Radiant element, but it only listens
  * for and dispatches context events on it, which any element supports.
+ *
+ * Pass a plain element in browser tests. A defined `rui-form` already provides
+ * `formContext`, and a Radiant provider that answers stops immediate
+ * propagation, so a second provider on the same element is never reached. A
+ * test that needs a real `rui-form` reads its own store instead.
  */
 export function provideTestFormStore(host: HTMLElement, store?: FormStore, ready = true) {
 	return new ContextProvider<typeof formContext>(

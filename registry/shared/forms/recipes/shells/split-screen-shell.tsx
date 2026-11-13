@@ -1,4 +1,5 @@
-import { getSlotConfig, type SplitScreenShellConfig } from '@schema-engine/forms/recipes';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
+import { SplitScreenShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useViewContext } from '@schema-engine/forms-react/hooks';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
@@ -15,15 +16,22 @@ const contentAlignment = {
 	bottom: 'justify-end',
 } as const;
 
+/**
+ * @remarks
+ * The panel shows the form title. When the recipe has a header slot, that header must set
+ * `fallbackToFormTitle: false` in its slot defaults, or the form title is repeated in the header
+ * for steps without a title. A custom recipe that reuses this shell with a header slot must set
+ * that default too.
+ */
 export function SplitScreenShell({ slots, viewConfig }: FormShellProps) {
 	const {
 		sideContent,
-		sidePlacement = 'left',
-		sideWidth = 'normal',
-		contentAlignment: alignment = 'center',
-	} = getSlotConfig<SplitScreenShellConfig>(viewConfig, 'shell');
+		sidePlacement,
+		sideWidth,
+		contentAlignment: alignment,
+	} = getSlotConfig(viewConfig, 'shell', SplitScreenShellConfigSchema);
 	const { form, activeStep } = useViewContext();
-	const title = form.title || activeStep.title;
+	const title = form.title || (slots.header ? undefined : activeStep.title);
 
 	return (
 		<div className="flex min-h-svh w-full flex-col md:flex-row">

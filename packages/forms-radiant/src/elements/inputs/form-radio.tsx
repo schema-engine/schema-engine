@@ -1,17 +1,10 @@
-import { FormField } from '@/elements/form-field';
 import { RuiRadioGroup } from '@ecopages/radiant-ui/radio-group';
-import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
-import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isRenderedRequired } from '@/lib/field-rules';
+import { FieldGroup } from '../field-group';
 import type { RadioFieldProps } from './form-radio.types';
 
-export function FormRadio({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: RadioFieldProps) {
-	const isRequired = isFieldRequired(config.rules);
+export function FormRadio(config: RadioFieldProps) {
 	const options = config.options.map((option) => ({
 		value: String(option.value),
 		label: option.label,
@@ -19,33 +12,21 @@ export function FormRadio({
 	}));
 
 	return (
-		<FormField
+		<FieldGroup
 			name={config.name}
-			validation={config}
-			defaultValueData={config.defaultValue !== undefined ? JSON.stringify(config.defaultValue) : undefined}
-			disabled={config.disabled}
+			label={config.label || config.name}
+			hiddenLabel={!config.label}
+			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
+			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
+			validation={config}
+			defaultValue={config.defaultValue}
+			disabled={config.disabled}
 		>
-			{config.label ? (
-				<RuiLabel>
-					{config.label}
-					{isRequired ? ' *' : ''}
-				</RuiLabel>
-			) : null}
-			<RuiRadioGroup
-				name={config.name}
-				options={options}
-				value={config.defaultValue}
-				on:change={(event: Event) => {
-					const detail = (event as CustomEvent<{ value: string }>).detail;
-					propsOnChange?.(detail?.value ?? '');
-				}}
-				on:blur={propsOnBlur}
-				on:focus={propsOnFocus}
-			/>
-			{config.description ? <RuiFieldDescription>{config.description}</RuiFieldDescription> : null}
-			<RuiFieldError />
-		</FormField>
+			<RuiRadioGroup name={config.name} options={options} value={config.defaultValue} />
+		</FieldGroup>
 	);
 }

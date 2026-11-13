@@ -13,6 +13,7 @@ export const CodeTabs = eco.component({
 		return (
 			<radiant-code-tabs
 				class={props.class}
+				name={props.name}
 				label={props.label}
 				tabs={props.tabs}
 				copyLabel={props.copyLabel}

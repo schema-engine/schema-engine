@@ -31,14 +31,5 @@
 		"useDefineForClassFields": true,
 		"verbatimModuleSyntax": true
 	},
-	"include": ["src", "eco.config.ts", "modules.d.ts"],
-	"exclude": [
-		"src/components/api-field",
-		"src/components/burger",
-		"src/components/code-preview.tsx",
-		"src/components/header",
-		"src/components/lit-counter",
-		"src/components/navigation",
-		"src/components/switch"
-	]
+	"include": ["src", "eco.config.ts", "modules.d.ts"]
 }

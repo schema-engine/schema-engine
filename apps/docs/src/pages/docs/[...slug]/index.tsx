@@ -5,6 +5,8 @@ import { getComponent, getEntryDependencies } from 'ecopages:content/docs/server
 import type { Entry } from 'ecopages:content/docs';
 import { CopyForLlm } from '@/components/copy-for-llm';
 import { DocsBreadcrumb } from '@/components/docs-breadcrumb';
+import { DOCS_ROOT } from '@/content/docs';
+import { getDocsLlmUrl } from '@/lib/docs/docs-llm-url';
 import { DocsLayout } from '@/layouts/docs-layout';
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
 import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
@@ -26,8 +28,21 @@ async function resolveDocsEntryDependencies(slug: string) {
 	});
 }
 
+/**
+ * @remarks
+ * Returns `undefined` for an empty slug so the layout renders no pagination
+ * instead of matching a `/docs/` href that no nav item has.
+ */
+function docsHref(slug: string | string[] | undefined): string | undefined {
+	const segments = [slug ?? []].flat().filter(Boolean);
+	return segments.length > 0 ? `${DOCS_ROOT}/${segments.join('/')}` : undefined;
+}
+
 export default eco.page<{ entry: Entry }, JsxRenderable>({
-	layout: DocsLayout,
+	layout: {
+		component: DocsLayout,
+		props: ({ params }) => ({ currentHref: docsHref(params?.slug) }),
+	},
 	/**
 	 * @remarks MDX entry assets still flow through `getEntryDependencies`; the
 	 * page's own components are picked up from the static imports above.
@@ -53,6 +68,7 @@ export default eco.page<{ entry: Entry }, JsxRenderable>({
 	metadata: ({ props: { entry } }) => ({
 		title: `Docs | ${entry.title}`,
 		description: entry.description,
+		url: `${DOCS_ROOT}/${entry.segments.join('/')}`,
 	}),
 	render: async ({ entry }) => {
 		const Content = await getComponent(entry.slug);
@@ -61,7 +77,9 @@ export default eco.page<{ entry: Entry }, JsxRenderable>({
 			<section class="docs-page">
 				<div class="docs-bar unstyled">
 					<DocsBreadcrumb entry={entry} />
-					<CopyForLlm llmUrl={`/llms-content/${entry.slug}.txt`} />
+					<CopyForLlm
+						llmUrl={getDocsLlmUrl(entry.segments[0]!, entry.segments[entry.segments.length - 1]!)}
+					/>
 				</div>
 				<Content />
 			</section>

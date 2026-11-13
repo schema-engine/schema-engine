@@ -1,7 +1,6 @@
 ---
 title: 'How It Works'
 description: 'Action lifecycle, dispatch, and error propagation.'
-group: Actions
 order: 6
 ---
 
@@ -13,7 +12,7 @@ The forms package uses these primitives for form actions.
 
 ## Lifecycle
 
-1. Register action types in an `ActionRegistry`.
+1. Build an `ActionRegistry` from your action registrations.
 2. Provide action configs to the dispatcher.
 3. Trigger execution with a trigger value and base context.
 4. The dispatcher resolves matching registrations.

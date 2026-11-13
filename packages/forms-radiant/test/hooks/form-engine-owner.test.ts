@@ -24,7 +24,7 @@ const childProbeSchema = z.object({
 
 function createProbeEngine(breakpoints: { md: string }, onRender: () => void) {
 	return createFormEngine({
-		grid: { breakpoints },
+		layout: { grid: { breakpoints } },
 		elements: [
 			{
 				$type: 'probe',
@@ -41,7 +41,7 @@ function createProbeEngine(breakpoints: { md: string }, onRender: () => void) {
 
 function createNestedProbeEngines(captured: string[]) {
 	const engineB = createFormEngine({
-		grid: { breakpoints: { md: '60rem' } },
+		layout: { grid: { breakpoints: { md: '60rem' } } },
 		elements: [
 			{
 				$type: 'child-probe',
@@ -55,7 +55,7 @@ function createNestedProbeEngines(captured: string[]) {
 		],
 	});
 	const engineA = createFormEngine({
-		grid: { breakpoints: { md: '50rem' } },
+		layout: { grid: { breakpoints: { md: '50rem' } } },
 		elements: [
 			{
 				$type: 'parent-probe',
@@ -78,7 +78,7 @@ function createNestedProbeEngines(captured: string[]) {
 
 describe('form engine owner', () => {
 	test('field hosts resolve the engine that is rendering them', () => {
-		const engineB = createFormEngine({ grid: { breakpoints: { md: '60rem' } } });
+		const engineB = createFormEngine({ layout: { grid: { breakpoints: { md: '60rem' } } } });
 
 		let capturedThemeId: string | undefined;
 		const engineA = createProbeEngine({ md: '50rem' }, () => {
@@ -87,8 +87,8 @@ describe('form engine owner', () => {
 
 		renderRegisteredElement(engineA.validateElement({ $type: 'probe', id: 'probe', name: 'probe' }), engineA);
 
-		expect(capturedThemeId).toBe(engineA.getGridTheme().id);
-		expect(capturedThemeId).not.toBe(engineB.getGridTheme().id);
+		expect(capturedThemeId).toBe(engineA.getLayout().id);
+		expect(capturedThemeId).not.toBe(engineB.getLayout().id);
 	});
 
 	test('later renders through the same engine still own the field hosts', () => {
@@ -101,7 +101,7 @@ describe('form engine owner', () => {
 		renderRegisteredElement(normalized, engineA);
 		renderRegisteredElement(normalized, engineA);
 
-		expect(captured).toEqual([engineA.getGridTheme().id, engineA.getGridTheme().id]);
+		expect(captured).toEqual([engineA.getLayout().id, engineA.getLayout().id]);
 	});
 
 	test('restores the parent engine after a nested host render', () => {
@@ -113,6 +113,6 @@ describe('form engine owner', () => {
 			engineA,
 		);
 
-		expect(captured).toEqual([engineA.getGridTheme().id, engineB.getGridTheme().id, engineA.getGridTheme().id]);
+		expect(captured).toEqual([engineA.getLayout().id, engineB.getLayout().id, engineA.getLayout().id]);
 	});
 });

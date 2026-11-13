@@ -31,7 +31,7 @@ test('dispatches sequential actions from the overview playground', async () => {
 		});
 		await pwExpect(sequential.locator('[data-node-id="index"]')).toHaveAttribute('data-status', 'succeeded');
 		await page.goto(`${baseUrl}/docs/forms/actions`, { waitUntil: 'networkidle' });
-		expect(await page.locator('.eco-banner a[href="/docs/actions/overview"]').count()).toBe(1);
+		expect(await page.locator('.rui-alert a[href="/docs/actions/overview"]').count()).toBe(1);
 	} finally {
 		await browser.close();
 	}

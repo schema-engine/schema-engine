@@ -20,6 +20,21 @@ Install the default visual recipes separately when a form uses a supplied `view.
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
+The recipes item also copies the recipe stylesheets (`recipes/recipes.css` and one file per shell that has styles). Import the entry point once in your global stylesheet, after Tailwind and into the `components` layer so Tailwind utilities and your own classes win:
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+```
+
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`.
+
+The field primitive, which every element and the recipes depend on, also copies `controls.css`: it gives the controls that carry `data-se-control` the control height of the `size` axis. Import it once, **unlayered**, after the layered recipes import, so it outranks the Tailwind height utility on your `ui` controls (see [the registry README](../../README.md#recipe-styles)):
+
+```css
+@import './components/ui/schema-engine/components/controls.css';
+```
+
 Files land under `@components/schema-engine/forms`. Schema Engine primitives (field chrome, phone, dropzone, chips combobox) land under `@ui/schema-engine/components`. Official shadcn primitives (`button`, `input`, `select`, …) stay on the shadcn registry.
 
 Register everything with the generated barrel:

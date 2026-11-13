@@ -1,7 +1,6 @@
 ---
 title: 'Components'
 description: 'Register and configure the field elements supplied by the React registry.'
-group: Forms React
 order: 3
 ---
 
@@ -49,6 +48,8 @@ engine.
 Every field has a `$type` and `name`; the remaining properties come from that
 registration's schema. Shared properties include `label`, `description`,
 `defaultValue`, `rules`, `constraints`, `grid`, `className`, and `style`.
+`className` and `style` are escape hatches: `style` accepts only CSS custom
+properties (keys that start with `--`) and validation rejects any other key.
 
 ```json
 {
@@ -64,8 +65,10 @@ registration's schema. Shared properties include `label`, `description`,
 }
 ```
 
-Responsive placement belongs to the element's `grid` property and the form's
-top-level `grid` configuration. View chrome belongs to `view`, not to a step or
+Responsive placement belongs to the element's `grid` property (named `width` and
+`offset`, an `area` of the grid's `areas`, or raw lines) and the form's top-level
+`grid` configuration, which a step can replace with its own `grid`; see
+[Placing fields in the grid](/docs/forms/core-concepts#placing-fields-in-the-grid). View chrome belongs to `view`, not to a step or
 element; see [View recipes](/docs/forms-react/layouts).
 
 ## Custom elements

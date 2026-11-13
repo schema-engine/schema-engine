@@ -16,8 +16,4 @@ export const CheckboxFieldConfigSchema = z.extend(BaseFieldSchema, {
 export type CheckboxFieldExtension = z.infer<typeof CheckboxFieldExtensionSchema>;
 export type CheckboxFieldConfig = z.infer<typeof CheckboxFieldConfigSchema>;
 
-export type CheckboxFieldProps = CheckboxFieldConfig & {
-	onChange?: (checked: boolean | 'indeterminate') => void;
-	onBlur?: () => void;
-	onFocus?: () => void;
-};
+export type CheckboxFieldProps = CheckboxFieldConfig;

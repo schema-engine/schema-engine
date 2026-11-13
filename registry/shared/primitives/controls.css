@@ -1,0 +1,19 @@
+/*
+ * Control height for the React registry controls.
+ *
+ * The built-in `size` axis sets the semantic token --se-control-height on compact and comfortable (the
+ * layout theme declares it for the data-se-size values) and hands it back with `initial` on default. A
+ * control that carries data-se-control reads it, so one `appearance` config gives the same control height
+ * here as in Radiant. With no pick, or a `default` pick, the token is unset and the fallback `revert-layer`
+ * rolls the declaration back to the control's own height, so an unpicked control keeps the look of your ui
+ * components.
+ *
+ * Import this file unlayered, after Tailwind and after the layered recipes.css. A shadcn control sets its
+ * height with a Tailwind utility (`h-8`), and utilities outrank every rule in the `components` layer, so
+ * only an unlayered rule can let the size pick win; `revert-layer` then falls back to that utility when
+ * nothing is picked. The rule sits inside :where(), so an unlayered class of yours on the same element still
+ * wins. The cost: while a size is picked, a Tailwind height utility passed to the control loses to this rule.
+ */
+:where([data-se-control]) {
+	height: var(--se-control-height, revert-layer);
+}

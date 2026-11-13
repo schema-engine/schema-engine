@@ -1,8 +1,12 @@
 import './form-masked-input.css';
-import { customElement, onUpdated, prop, query, RadiantElement } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import { customElement, bindTo, onUpdated, prop, query, state } from '@ecopages/radiant';
+import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import {
 	createPatternMaskOptions,
@@ -13,9 +17,37 @@ import {
 } from '@/lib/mask-options';
 import type { MaskedInputFieldProps } from './form-masked-input.types';
 
-@customElement('se-masked-input')
-export class SeMaskedInput extends RadiantElement {
-	@prop({ type: String }) name = '';
+/**
+ * @remarks
+ * `value` is what the field submits: the masked text, the unmasked text or the
+ * typed value, as `unmask` selects. IMask owns the visible text, so a write to
+ * `value` is pushed into the mask instance instead of rendered.
+ */
+@customElement('se-masked-input', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': '[data-ref="input"]' },
+})
+export class SeMaskedInput extends FormAssociatedElement {
+	declare readonly [JSX_PROPS]?: Partial<
+		Pick<
+			SeMaskedInput,
+			| 'name'
+			| 'disabled'
+			| 'value'
+			| 'inputId'
+			| 'mask'
+			| 'unmask'
+			| 'placeholder'
+			| 'autoComplete'
+			| 'inputMode'
+			| 'placeholderChar'
+			| 'lazy'
+			| 'overwrite'
+			| 'autoFocus'
+			| 'definitions'
+		>
+	>;
+
+	@prop({ type: String }) value = '';
 	@prop({ type: String }) inputId = '';
 	@prop({ type: String }) mask = '';
 	@prop({ type: String }) unmask = '';
@@ -23,18 +55,29 @@ export class SeMaskedInput extends RadiantElement {
 	@prop({ type: String }) autoComplete = '';
 	@prop({ type: String }) inputMode = '';
 	@prop({ type: String }) placeholderChar = '';
-	@prop({ type: String }) defaultValue = '';
 	@prop({ type: Boolean, defaultValue: true }) lazy = true;
 	@prop({ type: Boolean, defaultValue: false }) overwrite = false;
 	@prop({ type: Boolean, defaultValue: false }) autoFocus = false;
-	@prop({ type: Boolean, defaultValue: false }) disabled = false;
 	@prop({ type: Object }) definitions?: Record<string, string>;
 
+	@state @bindTo({ bool: 'data-ready' }) protected ready = false;
+	@contextSelector({ context: fieldContext })
+	@state
+	protected field?: FieldContextValue = undefined;
+
 	@query({ ref: 'input' }) input!: HTMLInputElement | null;
-	@query({ ref: 'control' }) control!: HTMLInputElement | null;
 
 	private maskInstance: import('imask').InputMask<import('@/lib/mask-options').PatternMaskOptions> | null = null;
 	private attachGeneration = 0;
+	private applyingValue = false;
+
+	protected override formValue(): FormValue {
+		return this.value;
+	}
+
+	protected override restoreFormState(state: FormValue): void {
+		this.value = typeof state === 'string' ? state : '';
+	}
 
 	protected override onConnected(): void {
 		void this.attachMask();
@@ -44,9 +87,14 @@ export class SeMaskedInput extends RadiantElement {
 		});
 	}
 
-	@onUpdated(['mask', 'unmask', 'lazy', 'overwrite', 'placeholderChar', 'definitions', 'defaultValue'])
+	@onUpdated(['mask', 'unmask', 'lazy', 'overwrite', 'placeholderChar', 'definitions'])
 	onMaskConfigUpdated(): void {
 		void this.attachMask();
+	}
+
+	@onUpdated(['value'])
+	onValueUpdated(): void {
+		this.applyValue();
 	}
 
 	private maskConfig() {
@@ -72,48 +120,61 @@ export class SeMaskedInput extends RadiantElement {
 
 		if (this.maskInstance) {
 			this.maskInstance.updateOptions(this.maskConfig());
-			this.syncValue();
-			this.setAttribute('data-ready', '');
-			return;
+		} else {
+			this.maskInstance = IMask(this.input, this.maskConfig());
+			this.maskInstance.on('accept', this.onAccept);
 		}
-
-		const instance = IMask(this.input, this.maskConfig());
-		this.maskInstance = instance;
-		if (this.defaultValue) {
-			instance.value = this.defaultValue;
-		}
-		instance.on('accept', () => this.syncValue());
-		this.syncValue();
-		this.setAttribute('data-ready', '');
+		this.applyValue();
+		this.ready = true;
 	}
 
 	private destroyMask() {
 		this.maskInstance?.destroy();
 		this.maskInstance = null;
-		this.removeAttribute('data-ready');
+		this.ready = false;
 	}
 
-	private syncValue() {
-		if (!this.maskInstance || !this.control) {
+	private readonly onAccept = () => {
+		if (!this.maskInstance || this.applyingValue) {
 			return;
 		}
 
 		const next = readMaskValue(this.maskInstance, parseUnmaskMode(this.unmask));
-		if (this.control.value === next) {
+		if (next === this.value) {
 			return;
 		}
 
-		this.control.value = next;
-		this.control.dispatchEvent(new Event('input', { bubbles: true }));
-		this.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { value: next } }));
+		this.value = next;
+		emitControlChange(this, next);
+	};
+
+	private applyValue() {
+		const instance = this.maskInstance;
+		const mode = parseUnmaskMode(this.unmask);
+		if (!instance || readMaskValue(instance, mode) === this.value) {
+			return;
+		}
+
+		this.applyingValue = true;
+		try {
+			if (mode === 'typed') {
+				instance.typedValue = this.value;
+			} else if (mode) {
+				instance.unmaskedValue = this.value;
+			} else {
+				instance.value = this.value;
+			}
+		} finally {
+			this.applyingValue = false;
+		}
 	}
 
 	override render(): JsxRenderable {
 		return (
 			<div class="se-masked">
-				<input class="se-masked__value" data-ref="control" data-rui-control name={this.name} tabindex={-1} />
 				<input
-					id={this.inputId}
+					id={this.inputId || undefined}
+					{...fieldAria(this.field)}
 					data-ref="input"
 					class="rui-input se-masked__input"
 					type="text"
@@ -121,7 +182,7 @@ export class SeMaskedInput extends RadiantElement {
 					autocomplete={this.autoComplete || undefined}
 					inputmode={this.inputMode || undefined}
 					autofocus={this.autoFocus}
-					disabled={this.disabled}
+					disabled={this.effectiveDisabled}
 					spellcheck={false}
 				/>
 			</div>
@@ -129,12 +190,9 @@ export class SeMaskedInput extends RadiantElement {
 	}
 }
 
-export function FormMaskedInput({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: MaskedInputFieldProps) {
+registerValueControl('se-masked-input');
+
+export function FormMaskedInput(config: MaskedInputFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -144,32 +202,29 @@ export function FormMaskedInput({
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
 			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>
-			{jsx('se-masked-input', {
-				name: config.name,
-				placeholder: config.placeholder,
-				disabled: config.disabled,
-				inputId: config.id ?? '',
-				mask: config.mask,
-				unmask: config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : '',
-				lazy: config.lazy ?? true,
-				overwrite: Boolean(config.overwrite),
-				placeholderChar: config.placeholderChar ?? '',
-				definitions: config.definitions,
-				autoComplete: config.autoComplete ?? '',
-				inputMode: config.inputMode ?? '',
-				autoFocus: Boolean(config.autoFocus),
-				defaultValue: typeof config.defaultValue === 'string' ? config.defaultValue : '',
-				'on:change': (event: Event) => {
-					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
-				},
-				'on:blur': propsOnBlur,
-				'on:focus': propsOnFocus,
-			})}
+			<SeMaskedInput
+				name={config.name}
+				placeholder={config.placeholder}
+				disabled={config.disabled}
+				inputId={config.id ?? ''}
+				mask={config.mask}
+				unmask={config.unmask === 'typed' ? 'typed' : config.unmask ? 'true' : ''}
+				lazy={config.lazy ?? true}
+				overwrite={Boolean(config.overwrite)}
+				placeholderChar={config.placeholderChar ?? ''}
+				definitions={config.definitions}
+				autoComplete={config.autoComplete ?? ''}
+				inputMode={config.inputMode ?? ''}
+				autoFocus={Boolean(config.autoFocus)}
+				value={typeof config.defaultValue === 'string' ? config.defaultValue : ''}
+			/>
 		</FieldGroup>
 	);
 }

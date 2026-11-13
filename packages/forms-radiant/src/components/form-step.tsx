@@ -1,53 +1,94 @@
-import { customElement, onUpdated, prop, RadiantElement } from '@ecopages/radiant';
+import { customElement, bindTo, onUpdated, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/layout';
 
 /**
  * Visibility host for one authored step.
  *
  * @remarks
  * The `FormRenderer` view authors every step's fields once inside this host.
- * There is no render override and no slot projection: the host toggles its own
- * `hidden` attribute, so step switching is pure DOM and SSR emits the full form
- * with only the active step visible. The initial `hidden` arrives as a prop from
- * the view (step 0 active for wizards); the live `formInstanceContext` takes
- * over after hydration. Until an instance value arrives, the host assumes the
- * props default (step 0 active), so hydrating a step-0 host never flashes it
- * hidden while the context is still settling.
+ * There is no render override and no slot projection: the host binds its own
+ * `hidden` attribute to a flag derived from the instance context, so step
+ * switching is pure DOM and SSR emits the full form with only the active step
+ * visible. The view also passes the initial `hidden` attribute (step 0 active for
+ * wizards). Until an instance value arrives the host keeps the attribute the
+ * view wrote.
  *
  * @element se-form-step
  */
 @customElement('se-form-step')
 export class FormStepElement extends RadiantElement {
-	@prop({ type: Number, defaultValue: 0 }) stepIndex = 0;
-	@prop({ type: Boolean, defaultValue: false }) isWizard = false;
+	declare readonly [JSX_PROPS]?: { stepIndex?: number };
 
-	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
-	applyStepState(instance: FormInstanceContextValue | undefined): void {
-		const activeStep = instance?.currentStep ?? 0;
-		this.toggleAttribute('hidden', this.isWizard && activeStep !== this.stepIndex);
+	@prop({ type: Number, defaultValue: 0 }) stepIndex = 0;
+
+	@state
+	@bindTo({ bool: 'hidden' })
+	private hiddenStep = false;
+
+	private instance?: FormInstanceContextValue;
+
+	/**
+	 * @remarks
+	 * The view writes `hidden` once, for the server-rendered markup. From connect on the
+	 * host owns it through `hiddenStep` and follows every value the instance publishes,
+	 * so a view update never competes with the current step.
+	 */
+	protected override onConnected(): void {
+		this.hiddenStep = this.hasAttribute('hidden');
 	}
 
-	@onUpdated(['isWizard', 'stepIndex'])
-	onStepPropsUpdated(): void {
-		this.applyStepState(undefined);
+	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
+	onInstance(instance: FormInstanceContextValue | undefined): void {
+		this.instance = instance;
+		this.syncHidden();
+	}
+
+	@onUpdated(['stepIndex'])
+	onStepIndexUpdated(): void {
+		this.syncHidden();
+	}
+
+	private syncHidden(): void {
+		const { instance } = this;
+		if (instance?.isWizard === undefined) return;
+		this.hiddenStep = instance.isWizard && instance.currentStep !== this.stepIndex;
 	}
 }
 
 export function FormStep({
+	stepId,
 	stepIndex,
-	isWizard = false,
+	hidden = false,
+	class: className,
+	style,
+	appearance,
 	children,
 }: {
+	stepId: string;
 	stepIndex: number;
-	isWizard?: boolean;
+	/** The server-rendered visibility: true for every step but the first of a wizard. */
+	hidden?: boolean;
+	/** The step's authored `className`. */
+	class?: string;
+	/** The step's authored custom properties. */
+	style?: Record<string, string | number | undefined>;
+	/** The step's resolved appearance, emitted as `data-se-<axis>` attributes. */
+	appearance?: AppearanceSelection;
 	children: JsxRenderable;
 }): JsxRenderable {
-	return jsx('se-form-step', {
-		stepIndex,
-		isWizard,
-		hidden: isWizard && stepIndex !== 0,
-		children,
-	});
+	return (
+		<FormStepElement
+			stepIndex={stepIndex}
+			hidden={hidden}
+			classes={['se-form-step', className]}
+			style={style}
+			data-se-step={stepId}
+			{...getAppearanceAttributes(appearance)}
+		>
+			{children}
+		</FormStepElement>
+	);
 }

@@ -7,6 +7,8 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { evaluateConstraints } from '@schema-engine/forms/constraints';
 import type { ConstraintEvaluationContext } from './render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { ConstraintElement } from './constraint-element';
+import { GRID_ITEM_CLASS } from '@schema-engine/layout';
 
 export interface FormElementProps {
 	/**
@@ -16,11 +18,13 @@ export interface FormElementProps {
 	config: NormalizedElementConfig;
 	engine?: FormEngine;
 	name?: string;
+	/** Path of the enclosing array row or object, which an element without a name resolves its sibling references in. */
+	scopePath?: string;
 	id?: string;
 	instanceId?: string;
 	initialValues?: Record<string, unknown>;
 	values?: Record<string, unknown>;
-	className?: string;
+	class?: string;
 	constraintContext?: ConstraintEvaluationContext;
 	style?: Record<string, string | number | undefined>;
 }
@@ -31,11 +35,12 @@ export function FormElement({
 	config,
 	engine,
 	name,
+	scopePath,
 	id,
 	instanceId,
 	initialValues,
 	values,
-	className,
+	class: className,
 	style,
 	constraintContext,
 }: FormElementProps): JsxRenderable {
@@ -64,26 +69,34 @@ export function FormElement({
 		);
 	}
 
+	const baseRequired = isFieldRequired('rules' in config ? config.rules : undefined);
+	const fieldPath =
+		fieldConstraintContext.fieldPath ??
+		('name' in config ? config.name : undefined) ??
+		scopePath ??
+		id ??
+		('id' in config ? config.id : undefined) ??
+		'';
 	const snapshot = evaluateConstraints({
 		constraints,
-		baseRequired: isFieldRequired('rules' in config ? config.rules : undefined),
-		fieldPath: fieldConstraintContext.fieldPath ?? ('name' in config ? config.name : undefined),
+		baseRequired,
+		fieldPath,
 		values: constraintValues,
 	});
 	const { shouldShow } = snapshot;
-	const fieldName =
-		name ?? ('name' in config ? config.name : undefined) ?? id ?? ('id' in config ? config.id : undefined) ?? '';
 	const fieldHost = mergeFieldGridHost(
 		'grid' in config ? config.grid : undefined,
 		style,
-		resolvedEngine.getGridTheme().id,
+		resolvedEngine.getLayout().id,
 	);
 
 	return (
-		<div
-			classes={['se-form-field', 'se-form-constraint', className]}
-			data-se-constraint-field={fieldName}
-			data-se-grid-theme={fieldHost.themeId}
+		<ConstraintElement
+			classes={['se-form-field', GRID_ITEM_CLASS, 'se-form-constraint', className]}
+			data-se-constraint-field={fieldPath}
+			data-se-constraints={JSON.stringify(constraints)}
+			data-se-base-required={baseRequired ? '' : undefined}
+			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			hidden={!shouldShow}
 		>
@@ -99,6 +112,6 @@ export function FormElement({
 				true,
 				snapshot,
 			)}
-		</div>
+		</ConstraintElement>
 	);
 }

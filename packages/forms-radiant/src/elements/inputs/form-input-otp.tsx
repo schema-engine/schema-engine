@@ -1,8 +1,12 @@
 import './form-input-otp.css';
-import { customElement, onEvent, prop, RadiantElement, state } from '@ecopages/radiant';
-import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
+import { customElement, prop, query, state } from '@ecopages/radiant';
+import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
@@ -14,121 +18,129 @@ function sanitizeChar(value: string, pattern: 'numeric' | 'alphanumeric') {
 	return /^[a-zA-Z0-9]$/.test(char) ? char : '';
 }
 
-@customElement('se-input-otp')
-export class SeInputOtp extends RadiantElement {
-	@prop({ type: String }) name = '';
+/**
+ * @remarks
+ * The characters live in `slots`, one entry per slot, so filling or clearing a
+ * slot never moves another. `value` is the slots joined, so an incomplete code
+ * is a shorter string that a length rule rejects. Writing a value that equals
+ * the current one is a no-op, which keeps a store echo from re-spreading a code
+ * with gaps from the first slot.
+ */
+@customElement('se-input-otp', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': '[data-ref="group"]' },
+})
+export class SeInputOtp extends FormAssociatedElement {
+	declare readonly [JSX_PROPS]?: Partial<Pick<SeInputOtp, 'name' | 'disabled' | 'length' | 'pattern'>>;
+
 	@prop({ type: Number, defaultValue: 6 }) length = 6;
 	@prop({ type: String, defaultValue: 'numeric' }) pattern: 'numeric' | 'alphanumeric' = 'numeric';
-	@prop({ type: Boolean, defaultValue: false }) disabled = false;
 
-	@state value = '';
+	@state protected slots: string[] = [];
+	@contextSelector({ context: fieldContext })
+	@state
+	protected field?: FieldContextValue = undefined;
 
-	@onEvent({ type: 'input', selector: '[data-otp-index]' })
-	onSlotInput(event: Event) {
-		const input = event.target as HTMLInputElement;
-		const index = Number(input.dataset.otpIndex);
-		const char = sanitizeChar(input.value, this.pattern);
-		input.value = char;
+	@query({ ref: 'slot', all: true }) slotInputs!: HTMLInputElement[];
 
-		const chars = this.value.padEnd(this.length, ' ').split('').slice(0, this.length);
-		chars[index] = char || ' ';
-		this.value = chars.join('').replace(/ +$/g, '').replace(/ /g, '');
-
-		if (char) {
-			const next = this.querySelector<HTMLInputElement>(`[data-otp-index="${index + 1}"]`);
-			next?.focus();
-		}
-
-		this.dispatchChange();
+	get value(): string {
+		return this.slots.join('');
 	}
 
-	@onEvent({ type: 'keydown', selector: '[data-otp-index]' })
-	onSlotKeydown(event: Event) {
-		const keyEvent = event as KeyboardEvent;
-		if (keyEvent.key !== 'Backspace') {
+	set value(next: string) {
+		if (next === this.value) {
 			return;
 		}
-
-		const input = keyEvent.target as HTMLInputElement;
-		const index = Number(input.dataset.otpIndex);
-		if (input.value) {
-			return;
-		}
-
-		const previous = this.querySelector<HTMLInputElement>(`[data-otp-index="${index - 1}"]`);
-		previous?.focus();
+		this.fill(next);
 	}
 
-	@onEvent({ type: 'paste', selector: '[data-otp-index]' })
-	onSlotPaste(event: Event) {
-		const pasteEvent = event as ClipboardEvent;
-		pasteEvent.preventDefault();
-		const text = pasteEvent.clipboardData?.getData('text') ?? '';
+	protected override formValue(): FormValue {
+		return this.value;
+	}
+
+	protected override restoreFormState(state: FormValue): void {
+		this.value = typeof state === 'string' ? state : '';
+	}
+
+	private padSlots(chars: readonly string[]) {
+		return Array.from({ length: this.length }, (_, index) => chars[index] ?? '');
+	}
+
+	private fill(text: string) {
 		const chars = text
 			.split('')
 			.map((char) => sanitizeChar(char, this.pattern))
-			.filter(Boolean)
-			.slice(0, this.length);
-		this.value = chars.join('');
-		this.dispatchChange();
+			.filter(Boolean);
+		this.slots = this.padSlots(chars);
 	}
 
-	private dispatchChange() {
-		this.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { value: this.value } }));
-		const hidden = this.querySelector<HTMLInputElement>('[data-rui-control]');
-		if (hidden) {
-			hidden.value = this.value;
-			hidden.dispatchEvent(new Event('input', { bubbles: true }));
+	private readonly onSlotInput = (event: Event) => {
+		const input = event.target as HTMLInputElement;
+		const index = this.slotInputs.indexOf(input);
+		const char = sanitizeChar(input.value, this.pattern);
+		input.value = char;
+
+		const slots = this.padSlots(this.slots);
+		slots[index] = char;
+		this.slots = slots;
+
+		if (char) {
+			this.slotInputs[index + 1]?.focus();
 		}
-	}
+
+		emitControlChange(this, this.value);
+	};
+
+	private readonly onSlotKeydown = (event: Event) => {
+		const keyEvent = event as KeyboardEvent;
+		const input = keyEvent.target as HTMLInputElement;
+		if (keyEvent.key !== 'Backspace' || input.value) {
+			return;
+		}
+
+		this.slotInputs[this.slotInputs.indexOf(input) - 1]?.focus();
+	};
+
+	private readonly onSlotPaste = (event: Event) => {
+		const pasteEvent = event as ClipboardEvent;
+		pasteEvent.preventDefault();
+		this.fill(pasteEvent.clipboardData?.getData('text') ?? '');
+		emitControlChange(this, this.value);
+	};
 
 	override render(): JsxRenderable {
-		const length = this.length || 6;
+		const { length } = this;
 		const firstHalf = Math.ceil(length / 2);
-		const chars = this.value.split('');
 
 		return (
-			<fieldset class="se-otp">
-				<input class="se-otp__value" data-rui-control name={this.name} value={this.value} tabindex={-1} />
-				{Array.from({ length: firstHalf }, (_, index) => (
+			<fieldset class="se-otp" data-ref="group" {...fieldAria(this.field)}>
+				{Array.from({ length }, (_, index) => [
+					index === firstHalf ? (
+						<span class="se-otp__separator" aria-hidden="true">
+							-
+						</span>
+					) : null,
 					<input
 						class="rui-input se-otp__slot"
-						data-otp-index={String(index)}
+						data-ref="slot"
+						aria-label={`Character ${index + 1} of ${length}`}
 						maxlength={1}
 						inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
 						autocomplete={index === 0 ? 'one-time-code' : 'off'}
-						disabled={this.disabled}
-						value={chars[index] ?? ''}
-					/>
-				))}
-				<span class="se-otp__separator" aria-hidden="true">
-					-
-				</span>
-				{Array.from({ length: length - firstHalf }, (_, offset) => {
-					const index = firstHalf + offset;
-					return (
-						<input
-							class="rui-input se-otp__slot"
-							data-otp-index={String(index)}
-							maxlength={1}
-							inputmode={this.pattern === 'numeric' ? 'numeric' : 'text'}
-							autocomplete="off"
-							disabled={this.disabled}
-							value={chars[index] ?? ''}
-						/>
-					);
-				})}
+						disabled={this.effectiveDisabled}
+						on:input={this.onSlotInput}
+						on:keydown={this.onSlotKeydown}
+						on:paste={this.onSlotPaste}
+						prop:value={this.slots[index] ?? ''}
+					/>,
+				])}
 			</fieldset>
 		);
 	}
 }
 
-export function FormInputOTP({
-	onChange: propsOnChange,
-	onBlur: propsOnBlur,
-	onFocus: propsOnFocus,
-	...config
-}: InputOTPFieldProps) {
+registerValueControl('se-input-otp');
+
+export function FormInputOTP(config: InputOTPFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -138,22 +150,19 @@ export function FormInputOTP({
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
 			description={config.description}
 			grid={config.grid}
+			appearance={config.appearance}
+			class={config.className}
 			style={config.style}
 			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>
-			{jsx('se-input-otp', {
-				name: config.name,
-				length: config.length ?? 6,
-				pattern: config.pattern ?? 'numeric',
-				disabled: config.disabled,
-				'on:change': (event: Event) => {
-					propsOnChange?.((event as CustomEvent<{ value?: string }>).detail?.value ?? '');
-				},
-				'on:blur': propsOnBlur,
-				'on:focus': propsOnFocus,
-			})}
+			<SeInputOtp
+				name={config.name}
+				length={config.length ?? 6}
+				pattern={config.pattern ?? 'numeric'}
+				disabled={config.disabled}
+			/>
 		</FieldGroup>
 	);
 }

@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const TextareaElementRegistration = defineInput({
 	$type: 'textarea',
+	appearanceAxes: ['size'],
 	render: FormTextarea,
 	schema: TextareaFieldSchema,
 	metadata: {

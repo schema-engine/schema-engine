@@ -1,27 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { createFormEngine, resolveFormRecipe } from '@schema-engine/forms';
+import { createFormEngine } from '@schema-engine/forms';
 
 describe('forms package export contract', () => {
-	test('resolveFormRecipe accepts an engine lookup from the published package', () => {
-		const recipe = {
-			$type: 'card',
-			kind: 'single-step' as const,
-			slots: [],
-			schema: { '~standard': { version: 1, vendor: 'test', validate: (value: unknown) => ({ value }) } },
-			metadata: { name: 'Card', description: 'Card' },
-			render: {},
-		};
-
-		expect(
-			resolveFormRecipe(
-				{
-					id: 'contact',
-					view: { $type: 'card' },
-					steps: [{ id: 'main', title: 'Contact', elements: [] }],
-				},
-				{ getRecipe: (id) => (id === 'card' ? recipe : undefined) },
-			),
-		).toBe(recipe);
+	test('createFormEngine rejects an unregistered defaultWizardRecipe from the published package', () => {
+		expect(() => createFormEngine({ defaultWizardRecipe: 'missing' })).toThrow(/defaultWizardRecipe/);
 	});
 
 	test('createFormEngine is callable from the published package', () => {

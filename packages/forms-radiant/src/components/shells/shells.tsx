@@ -1,15 +1,15 @@
-import type { JsxRenderable } from '@ecopages/jsx';
-import { jsx } from '@ecopages/jsx/jsx-runtime';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { FormMeta } from '@/lib/instance-view';
+import { getAppearanceAttributes } from '@schema-engine/layout';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
 import {
-	getSlotConfig,
-	type CardShellConfig,
-	type HeroShellConfig,
-	type SidebarShellConfig,
-	type SplitScreenShellConfig,
-} from '@schema-engine/forms/recipes';
+	CardShellConfigSchema,
+	HeroShellConfigSchema,
+	SidebarShellConfigSchema,
+	SplitScreenShellConfigSchema,
+} from '@schema-engine/forms/recipes/built-in';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveInitialInstance } from '@/lib/instance-view';
 import type { FormShellProps } from '@/recipes/types';
@@ -29,7 +29,7 @@ export function StackShell({ slots }: FormShellProps): JsxRenderable {
 }
 
 export function SidebarShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const { showSeparator = true } = getSlotConfig<SidebarShellConfig>(viewConfig, 'shell');
+	const { showSeparator } = getSlotConfig(viewConfig, 'shell', SidebarShellConfigSchema);
 	return (
 		<div classes={['se-sidebar-shell', !showSeparator && 'se-sidebar-shell--no-separator']}>
 			{slots.progress ? <aside class="se-sidebar-shell__progress">{slots.progress}</aside> : null}
@@ -44,14 +44,12 @@ export function SidebarShell({ slots, viewConfig }: FormShellProps): JsxRenderab
 }
 
 export function CardShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const { maxWidth = 'md', padding = 'md', shadowSize = 'md' } = getSlotConfig<CardShellConfig>(viewConfig, 'shell');
+	const { appearance } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
 	return (
 		<div class="card-shell">
-			<div classes={['card-shell__card', `card-shell__card--${maxWidth}`, `card-shell__shadow--${shadowSize}`]}>
-				{slots.header ? (
-					<div classes={['card-shell__header', `card-shell__padding--${padding}`]}>{slots.header}</div>
-				) : null}
-				<div classes={['card-shell__content', `card-shell__padding--${padding}`]}>
+			<div class="card-shell__card" {...getAppearanceAttributes(appearance)}>
+				{slots.header ? <div class="card-shell__header card-shell__section">{slots.header}</div> : null}
+				<div class="card-shell__content card-shell__section">
 					{slots.progress}
 					{slots.content}
 					{slots.actions}
@@ -62,17 +60,18 @@ export function CardShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 }
 
 export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable {
-	const {
-		backgroundImage,
-		backgroundVideo,
-		contentWidth = 'md',
-	} = getSlotConfig<HeroShellConfig>(viewConfig, 'shell');
+	const { backgroundImage, backgroundVideo, contentWidth } = getSlotConfig(
+		viewConfig,
+		'shell',
+		HeroShellConfigSchema,
+	);
 	return (
-		<div class="hero-shell" style={{ backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined }}>
+		<div
+			class="hero-shell"
+			style={{ backgroundImage: backgroundImage ? `url(${JSON.stringify(backgroundImage)})` : undefined }}
+		>
 			{backgroundVideo ? (
-				<video autoplay muted loop class="hero-shell__video">
-					<source src={backgroundVideo} type="video/mp4" />
-				</video>
+				<video autoplay muted loop playsinline src={backgroundVideo} class="hero-shell__video" />
 			) : null}
 			<div class="hero-shell__overlay" />
 			<div classes={['hero-shell__content', `hero-shell__content--${contentWidth}`]}>
@@ -87,20 +86,27 @@ export function HeroShell({ slots, viewConfig }: FormShellProps): JsxRenderable 
 	);
 }
 
+/**
+ * @remarks
+ * The panel shows the form title. When the recipe has a header slot, that header must set
+ * `fallbackToFormTitle: false` in its slot defaults, or the form title is repeated in the header
+ * for steps without a title. A custom recipe that reuses this shell with a header slot must set
+ * that default too.
+ */
 export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): JsxRenderable {
-	const {
-		sideContent,
-		sidePlacement = 'left',
-		sideWidth = 'normal',
-		contentAlignment = 'center',
-	} = getSlotConfig<SplitScreenShellConfig>(viewConfig, 'shell');
+	const { sideContent, sidePlacement, sideWidth, contentAlignment } = getSlotConfig(
+		viewConfig,
+		'shell',
+		SplitScreenShellConfigSchema,
+	);
 	return (
 		<div class="split-screen-shell">
-			{jsx('se-split-screen-side', {
-				class: `split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`,
-				sideContent: sideContent ?? '',
-				meta,
-			})}
+			<SplitScreenSideElement
+				class={`split-screen-shell__side split-screen-shell__side--${sideWidth}${sidePlacement === 'right' ? ' split-screen-shell__side--right' : ''}`}
+				sideContent={sideContent ?? ''}
+				hasHeader={Boolean(slots.header)}
+				meta={meta}
+			/>
 			<main classes={['split-screen-shell__main', `split-screen-shell__main--${contentAlignment}`]}>
 				{slots.header}
 				{slots.progress}
@@ -113,18 +119,21 @@ export function SplitScreenShell({ slots, viewConfig, meta }: FormShellProps): J
 
 @customElement('se-split-screen-side')
 export class SplitScreenSideElement extends RadiantElement {
+	declare readonly [JSX_PROPS]?: Partial<Pick<SplitScreenSideElement, 'sideContent' | 'hasHeader' | 'meta'>>;
+
 	@prop({ type: String }) sideContent = '';
+	@prop({ type: Boolean }) hasHeader = false;
 	@prop({ type: Object }) meta?: FormMeta;
 
 	@contextSelector({ context: formInstanceContext })
-	instance?: FormInstanceContextValue;
+	protected instance?: FormInstanceContextValue;
 
 	override render(): JsxRenderable {
 		const meta = this.meta;
-		if (!meta) return <slot />;
+		if (!meta) return this.slotted;
 		const instance = this.instance ?? deriveInitialInstance(meta);
 		const step = meta.steps[instance.currentStep] ?? meta.steps[0];
-		const title = meta.title || step?.title;
+		const title = meta.title || (this.hasHeader ? undefined : step?.title);
 		const sideContent = this.sideContent;
 		if (!title && !sideContent) return null;
 		return (

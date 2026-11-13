@@ -12,8 +12,6 @@ import { SplitScreenRecipe } from './registrations/split-screen';
 import { SplitScreenWizardRecipe } from './registrations/split-screen-wizard';
 import { WizardRecipe } from './registrations/wizard';
 
-export type { BuiltInRecipeRegistry } from './recipe-registry';
-
 export {
 	BareControlsRecipe,
 	CardRecipe,

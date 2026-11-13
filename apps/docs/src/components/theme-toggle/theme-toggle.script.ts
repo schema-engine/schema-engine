@@ -27,9 +27,8 @@ const THEME_TOGGLE_TAG = 'theme-toggle';
 export class ThemeToggle extends RuiCycleToggleElement {
 	/**
 	 * @remarks
-	 * First-connect attribute catch-up is deferred to a microtask. Applying the
-	 * stored preference synchronously would run first, then catch-up would
-	 * overwrite `value` with the SSR attribute.
+	 * Runs on connect and applies the stored preference, replacing the value
+	 * seeded from the server-rendered attribute.
 	 */
 	protected override onConnected(): void {
 		this.syncWithStoredPreference();

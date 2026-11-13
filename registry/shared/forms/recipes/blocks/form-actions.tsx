@@ -1,4 +1,4 @@
-import { DEFAULT_FORM_ACTION_LABELS, type FormActionsConfig } from '@schema-engine/forms/recipes';
+import { FormActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { useViewConfig, useViewContext } from '@schema-engine/forms-react/hooks';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
@@ -12,9 +12,7 @@ import { cn } from '@/components/schema-engine/forms/lib/utils';
  */
 export function FormActions() {
 	const { form } = useViewContext();
-	const config = useViewConfig<FormActionsConfig>('actions');
-	const labels = { ...DEFAULT_FORM_ACTION_LABELS, ...config.labels };
-	const align = config.align ?? 'end';
+	const { labels, align } = useViewConfig('actions', FormActionsConfigSchema);
 
 	return (
 		<div
@@ -25,7 +23,7 @@ export function FormActions() {
 				align === 'end' && 'justify-end',
 			)}
 		>
-			<Button type="submit" aria-label={labels.submitAriaLabel}>
+			<Button data-se-control type="submit" aria-label={labels.submitAriaLabel}>
 				{form.isSubmitting ? labels.submitting : labels.submit}
 			</Button>
 		</div>

@@ -32,6 +32,7 @@
 		"@base-ui/react": "^1.1.0",
 		"@schema-engine/actions": "workspace:*",
 		"@schema-engine/forms": "workspace:*",
+		"@schema-engine/layout": "workspace:*",
 		"@schema-engine/scripts": "workspace:*",
 		"@storybook/addon-docs": "^10.5.2",
 		"@storybook/addon-vitest": "^10.5.2",
@@ -81,10 +82,11 @@
 	},
 	"peerDependencies": {
 		"@schema-engine/forms": "workspace:^",
+		"@schema-engine/layout": "workspace:^",
 		"react": "^19",
 		"react-dom": "^19",
 		"react-hook-form": "^7.60.0",
-		"typescript": "^5",
+		"typescript": "^5.4",
 		"zod": "^4.0.17"
 	},
 	"dependencies": {

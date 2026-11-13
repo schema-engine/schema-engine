@@ -1,7 +1,6 @@
 ---
 title: 'Overview'
 description: 'Domain-agnostic action execution with sequential and parallel groups.'
-group: Actions
 order: 1
 ---
 
@@ -70,8 +69,6 @@ type LogConfig = {
 	triggers?: readonly string[];
 };
 
-const registry = new ActionRegistry<BaseContext, Trigger>();
-
 const logAction: ActionRegistration<LogConfig, BaseContext, Trigger> = {
 	$type: 'log',
 	schema: z.strictObject({
@@ -90,7 +87,7 @@ const logAction: ActionRegistration<LogConfig, BaseContext, Trigger> = {
 	},
 };
 
-registry.register(logAction);
+const registry = new ActionRegistry<BaseContext, Trigger>([logAction]);
 
 const dispatcher = new ActionDispatcher(registry);
 

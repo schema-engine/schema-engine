@@ -1,4 +1,4 @@
-import { eco } from '@ecopages/core';
+import { eco, type LayoutProps } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { RuiChip } from '@ecopages/radiant-ui/chip';
@@ -17,7 +17,6 @@ import {
 } from '@ecopages/radiant-ui/sidebar';
 import { RuiToc } from '@ecopages/radiant-ui/toc';
 import { docsNav } from '@/lib/docs-nav';
-import { flattenContentNav } from '@/lib/content-nav';
 
 import { Logo } from '@/components/logo/logo';
 import { GITHUB_MARK_PATH } from '@/components/github-mark';
@@ -25,31 +24,27 @@ import { ThemeToggle } from '@/components/theme-toggle/theme-toggle';
 import { BaseLayout } from '@/layouts/base-layout';
 import { schemaEngineVersion } from '@/lib/schema-engine-version';
 import { DocsPagination } from './components/docs-pagination';
-import { getGroupIcon } from './get-group-icon';
 import './docs-layout.css';
 
-const paginationData = JSON.stringify({
-	pages: flattenContentNav(docsNav).map(({ href, title }) => ({ href, title })),
-});
 const ECO_NAVIGATION_EVENTS = 'eco:page-load,eco:after-swap';
 const DOCS_SIDEBAR_ID = 'docs-sidebar';
 
 const DocsNavigation = () => (
 	<>
-		{docsNav.groups.map((group, index) => (
+		{docsNav.sections.map((section, index) => (
 			<>
 				{index > 0 ? <RuiSidebarSeparator aria-label="Section divider" /> : null}
-				<RuiSidebarGroup aria-label={group.name}>
+				<RuiSidebarGroup aria-label={section.title}>
 					<RuiSidebarGroupHeader
 						label={
 							<>
-								<span class="rui-sidebar__group-icon">{getGroupIcon(group.name)}</span>
-								<span>{group.name}</span>
+								<span class="rui-sidebar__group-icon">{section.icon}</span>
+								<span>{section.title}</span>
 							</>
 						}
 					/>
-					<RuiSidebarMenu aria-label={`${group.name} links`}>
-						{group.items.map((item) => (
+					<RuiSidebarMenu aria-label={`${section.title} links`}>
+						{section.items.map((item) => (
 							<RuiSidebarMenuItem>
 								<RuiSidebarMenuButton as="a" href={item.href}>
 									{item.title}
@@ -67,13 +62,13 @@ const DocsSiteHeader = () => (
 	<div class="rui-sidebar-provider__site-header-inner">
 		<div class="rui-sidebar-provider__site-header-start">
 			<RuiSidebarTrigger
-				class="md:hidden rui-sidebar-trigger-placement--header"
+				class="md:hidden"
 				placement="header"
 				controls={DOCS_SIDEBAR_ID}
 				triggerLabel="Close documentation navigation"
 			/>
 			<RuiSidebarTrigger
-				class="md:hidden rui-sidebar-trigger-placement--inset"
+				class="md:hidden"
 				placement="inset"
 				controls={DOCS_SIDEBAR_ID}
 				triggerLabel="Open documentation navigation"
@@ -101,16 +96,17 @@ const DocsSiteHeader = () => (
 	</div>
 );
 
-export const DocsLayout = eco.layout<JsxRenderable>({
+export type DocsLayoutProps = LayoutProps<JsxRenderable> & {
+	currentHref?: string;
+};
+
+export const DocsLayout = eco.layout<JsxRenderable, DocsLayoutProps>({
 	dependencies: {
-		scripts: ['./docs-layout.script.ts'],
+		scripts: [{ src: './docs-layout.script.ts', ssr: true }],
 	},
-	render: ({ children }) => {
+	render: ({ children, currentHref }) => {
 		return (
 			<BaseLayout showHeader={false}>
-				<script type="application/json" id="docs-pagination-data">
-					{paginationData}
-				</script>
 				<RuiSidebarProvider
 					layout="docs"
 					class="docs-layout"
@@ -118,13 +114,14 @@ export const DocsLayout = eco.layout<JsxRenderable>({
 					sidebar={
 						<RuiSidebar
 							id={DOCS_SIDEBAR_ID}
-							data-eco-persist={DOCS_SIDEBAR_ID}
+							data={{ ecoPersist: DOCS_SIDEBAR_ID }}
 							collapsible="off"
 							defaultWidth={250}
 							mobileBreakpoint={768}
 							mobileDefaultOpen={false}
 							label="Documentation navigation"
 							matchActive
+							scrollActiveOnMount
 							navigationEvents={ECO_NAVIGATION_EVENTS}
 						>
 							<RuiSidebarContent aria-label="Documentation navigation">
@@ -136,7 +133,7 @@ export const DocsLayout = eco.layout<JsxRenderable>({
 					<RuiSidebarInset>
 						<div class="docs-layout__content">
 							<div class="prose">{children}</div>
-							<DocsPagination />
+							<DocsPagination currentHref={currentHref} />
 						</div>
 					</RuiSidebarInset>
 					<RuiToc

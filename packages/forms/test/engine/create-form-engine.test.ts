@@ -10,6 +10,7 @@ import {
 	createZodSchemaFromRules,
 	getValidationRulesForElement,
 	type AnyValidationRegistration,
+	PhoneRuleSchema,
 } from '@/schemas/validation';
 
 const noteSchema = z.object({
@@ -40,7 +41,6 @@ describe('createFormEngine', () => {
 				kind: 'single-step',
 				metadata: { name: 'Card' },
 				slotSchemas: { shell: z.strictObject({}) },
-				schema: z.object({ $type: z.literal('card') }),
 			}),
 			{},
 		);
@@ -52,6 +52,45 @@ describe('createFormEngine', () => {
 
 		expect(engine.hasElement('note')).toBe(true);
 		expect(engine.hasRecipe('card')).toBe(true);
+	});
+
+	test('rejects a hand-written wizard registration without an actions slot', () => {
+		const wizard = {
+			$type: 'hand-wizard',
+			kind: 'wizard',
+			slots: ['header'],
+			schema: z.strictObject({ $type: z.literal('hand-wizard') }),
+			metadata: { name: 'Hand wizard' },
+			render: {},
+		} as const;
+
+		expect(() => createFormEngine({ recipes: [wizard] })).toThrow(/'hand-wizard'.*actions slot/);
+	});
+
+	test('accepts a hand-written wizard registration that declares actions', () => {
+		const wizard = {
+			$type: 'hand-wizard',
+			kind: 'wizard',
+			slots: ['actions'],
+			schema: z.strictObject({ $type: z.literal('hand-wizard') }),
+			metadata: { name: 'Hand wizard' },
+			render: {},
+		} as const;
+
+		expect(createFormEngine({ recipes: [wizard] }).hasRecipe('hand-wizard')).toBe(true);
+	});
+
+	test('rejects a hand-written single-step registration with a progress slot', () => {
+		const card = {
+			$type: 'hand-card',
+			kind: 'single-step',
+			slots: ['progress'],
+			schema: z.strictObject({ $type: z.literal('hand-card') }),
+			metadata: { name: 'Hand card' },
+			render: {},
+		} as const;
+
+		expect(() => createFormEngine({ recipes: [card] })).toThrow(/'hand-card'.*progress slot/);
 	});
 
 	test('last registration wins for duplicate $type at runtime', () => {
@@ -85,7 +124,9 @@ describe('createFormEngine', () => {
 			render: () => null,
 			validations: [
 				{
-					type: 'phone',
+					$type: 'phone',
+					schema: PhoneRuleSchema,
+					metadata: { name: 'Phone' },
 					category: 'string',
 					defaultFor: ['phone-input'],
 					handler: (rule: { message?: string }) =>
@@ -120,7 +161,9 @@ describe('createFormEngine', () => {
 
 	test('does not leak element validations between engines', () => {
 		const customValidation = {
-			type: 'custom-leak-test',
+			$type: 'custom-leak-test',
+			schema: z.looseObject({ type: z.literal('custom-leak-test') }),
+			metadata: { name: 'Leak test' },
 			category: 'string',
 			defaultFor: ['leak-input'],
 			handler: () => z.string(),
@@ -163,16 +206,15 @@ describe('FormEngine.extend', () => {
 		expect(extended.hasElement('textarea')).toBe(true);
 	});
 
-	test('preserves the grid theme and cached stylesheet', () => {
+	test('preserves the layout theme and its stylesheet', () => {
 		const base = createFormEngine({
 			elements: [noteElement],
-			grid: { breakpoints: { md: '50rem' } },
+			layout: { grid: { breakpoints: { md: '50rem' } } },
 		});
 		const extended = base.extend({ elements: [textareaElement] });
 
-		expect(extended.getGridTheme()).toBe(base.getGridTheme());
-		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
-		expect(extended.getCompiledGrid()).toBe(base.getCompiledGrid());
+		expect(extended.getLayout()).toBe(base.getLayout());
+		expect(extended.getLayout().grid.breakpoints.md).toBe('50rem');
 	});
 });
 
@@ -206,11 +248,18 @@ test('a supplied catalog is copied and gains every registration entry', () => {
 	const engine = createFormEngine({ elements: [noteElement], catalog });
 	const extended = createFormEngine({ elements: [noteElement] }).extend({ elements: [textareaElement], catalog });
 
-	expect(Object.keys(engine.generateJSONSchemaCollection().schemas)).toEqual(['custom:metadata', 'element:note']);
+	expect(Object.keys(engine.generateJSONSchemaCollection().schemas)).toEqual([
+		'custom:metadata',
+		'element:note',
+		'axis:size',
+		'axis:surface',
+	]);
 	expect(Object.keys(extended.generateJSONSchemaCollection().schemas)).toEqual([
 		'custom:metadata',
 		'element:note',
 		'element:textarea',
+		'axis:size',
+		'axis:surface',
 	]);
 	expect(catalog.getRegisteredSchemas()).toHaveLength(1);
 });

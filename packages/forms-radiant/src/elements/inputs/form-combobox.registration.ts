@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const ComboboxElementRegistration = defineInput({
 	$type: 'combobox',
+	appearanceAxes: ['size'],
 	render: FormCombobox,
 	schema: ComboboxFieldConfigSchema,
 	metadata: {

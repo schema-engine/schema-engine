@@ -5,6 +5,7 @@ import type { FormProviderProps } from '../types';
 import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { useFormEngine } from '@/hooks/use-form-context';
+import { getAppearanceAttributes } from '@schema-engine/layout';
 import { collectStepActions, type FormActionConfig, type FormConfigView } from '@schema-engine/forms';
 import { useFormValidationResolver } from './hooks/use-form-validation-resolver';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
@@ -16,6 +17,22 @@ import { useFormMountEffect } from './hooks/use-form-mount-effect';
 import { useFormWatcher } from './hooks/use-form-watcher';
 import { useFormSubmitHandler, type NormalizedFormAction } from './hooks/use-form-submit-handler';
 import { useValidationDependencies } from './hooks/use-validation-dependencies';
+
+/** @remarks React Hook Form does not clone null-prototype records, so its defaults and live values would share state. */
+function toReactHookFormValue(value: unknown): unknown {
+	if (Array.isArray(value)) return value.map(toReactHookFormValue);
+	if (value && typeof value === 'object') {
+		const prototype = Object.getPrototypeOf(value);
+		if (prototype === null || prototype === Object.prototype) {
+			return toReactHookFormValues(value as Record<string, unknown>);
+		}
+	}
+	return value;
+}
+
+function toReactHookFormValues(values: Record<string, unknown>): Record<string, unknown> {
+	return Object.fromEntries(Object.entries(values).map(([key, value]) => [key, toReactHookFormValue(value)]));
+}
 
 /**
  * React Hook Form adapter implementation
@@ -42,7 +59,7 @@ export function FormProvider<
 
 	const formElements = useMemo(() => flattenStepElements(runtimeConfig.steps), [runtimeConfig.steps]);
 	const formDefaultValues = useMemo(
-		() => collectInitialValues(formElements, defaultValues),
+		() => toReactHookFormValues(collectInitialValues(formElements, defaultValues)),
 		[formElements, defaultValues],
 	);
 	const formValidationResolver = useFormValidationResolver(formElements, engine.getValidationRegistry());
@@ -148,6 +165,8 @@ export function FormProvider<
 						onSubmit={form.handleSubmit(handleSubmit)}
 						className={runtimeConfig.className}
 						style={runtimeConfig.style}
+						data-se-theme={engine.getLayout().id}
+						{...getAppearanceAttributes(runtimeConfig.appearance)}
 						noValidate
 					>
 						{children}

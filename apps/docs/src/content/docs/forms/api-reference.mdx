@@ -1,7 +1,6 @@
 ---
 title: 'API Reference'
 description: 'Public surface of the forms package.'
-group: Forms
 order: 7
 ---
 
@@ -10,35 +9,51 @@ order: 7
 ## createFormEngine
 
 ```ts
-interface CreateFormEngineOptions<TElements, TRecipes, TActions> {
+interface CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout> {
 	elements?: TElements;
 	recipes?: TRecipes;
 	actions?: TActions;
+	/** Custom validation rules, after the built-in ones and the validations elements declare; the last `$type` wins. */
+	validations?: readonly ValidationRegistrationConstraint[];
 	/** Extra schema metadata entries; copied, with every registration's entry written over it. */
 	catalog?: SchemaMetadataCatalog;
-	/** Breakpoint thresholds, gap tokens, and default min column width. */
-	grid?: GridThemeOptions;
+	/**
+	 * The layout theme: a compiled theme from `createLayoutTheme`, or inline
+	 * `{ grid, appearance }` options. `grid` holds breakpoint thresholds, gap tokens and the
+	 * default min column width; `appearance` is the list of axes built with `defineAxis`
+	 * (default `builtInAxes`: `size` and `surface`). The last axis of a `$type` wins.
+	 */
+	layout?: TLayout;
 }
 
 function createFormEngine<
 	const TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	const TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	const TActions extends readonly ActionRegistrationConstraint[] = readonly [],
+	const TLayout extends LayoutInput = Record<never, never>,
 >(
-	options?: CreateFormEngineOptions<TElements, TRecipes, TActions>,
-): FormEngineFromOptions<TElements, TRecipes, TActions>;
+	options?: CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout>,
+): FormEngineFromOptions<TElements, TRecipes, TActions, TLayout>;
 ```
 
 `FormEngineFromOptions` is the `FormEngine` typed from the merged registration
-lists. `grid` is accepted by `createFormEngine` and by
-`createRadiantFormEngine`, which forwards it. `engine.extend()` takes no `grid`
-option; extended engines inherit the source engine's grid theme.
+lists. `layout` is accepted by `createFormEngine` and by
+`createRadiantFormEngine`, which forwards it. Pass one theme compiled with
+`createLayoutTheme` (from `@schema-engine/layout`) to several engines and they share its
+`data-se-theme` and one stylesheet; inline options compile a theme of the engine's own.
+`engine.extend()` does not take `layout`; extended engines inherit the source
+engine's layout theme, which `engine.getLayout()` returns (`id`, `grid`, `axes`, `appearance`, `css`).
+The `grid` and `appearance` engine options no longer exist.
 
 Each array is structurally constrained: `$type`, a Standard Schema
 (`~standard.validate`), and the registration's render/execute function.
 Duplicate `$type` values follow last-wins at runtime. Tuples and inline arrays
 use last-wins typing; open `T[]` values use a union of configs for the same
 `$type`. Spread shared registration barrels and append overrides when needed.
+
+`validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
+and is not typed per engine: field `rules` keep their `type` string. See
+[Custom Validations](./validation-custom).
 
 Authors supply schema **input**. After validation, render functions receive
 schema **output**. Register elements with `defineInput` / `defineStatic` so the
@@ -75,11 +90,28 @@ engine.getRecipe('card');
 engine.getAllRecipes();
 engine.defineForm(config);
 engine.validateForm(json);
+engine.safeValidateForm(json);
 engine.validateElement(field);
 engine.extend({ actions: [extraAction] });
 engine.getFormConfigStandardSchema();
 engine.describeViewCatalog();
 ```
+
+`validateForm` throws a `FormValidationError` when the form is invalid.
+`safeValidateForm` runs the same validation and returns a result instead:
+
+```ts
+type FormValidationIssue = {
+	message: string;
+	path: ReadonlyArray<PropertyKey>; // ['steps', 0, 'elements', 2, 'grid', 'width']
+};
+
+type FormValidationResult<T> = { success: true; data: T } | { success: false; issues: FormValidationIssue[] };
+```
+
+`error.issues` on a `FormValidationError` has the same shape. See
+[Form configuration errors](/docs/forms/validation-how-it-works#form-configuration-errors)
+for the paths and a copy-pasteable example.
 
 JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
 `io: 'input'` for authoring input (where defaulted fields are optional) or
@@ -90,6 +122,14 @@ engine.generateJSONSchemaCollection({ io: 'input' });
 engine.generateFormConfigSchema({ io: 'output' });
 engine.generateActionConfigSchema('submit', { io: 'input' });
 ```
+
+In these schemas an `appearance` pick is closed over the axes its owner declares. The form and
+each step list every axis of the layout theme; an element lists the axes in its `appearanceAxes`
+and a recipe slot the axes in the recipe's `appearanceAxes`, each as an enum of the axis's
+values. Any other axis is rejected, as it is by `validateForm`. The export checks top-level
+elements and the recipe slots; the children of a fieldset or an array row are loosely typed in it,
+so their `appearance` is not checked there, and neither is that of an element whose schema is lazy.
+`validateForm` checks all of them.
 
 `getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` expose
 the same input/output converters through the Standard JSON Schema contract.

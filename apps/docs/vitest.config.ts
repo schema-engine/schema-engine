@@ -23,7 +23,8 @@ export default defineConfig({
 				},
 				test: {
 					name: 'unit',
-					include: ['test/**/*.test.ts'],
+					include: ['test/**/*.test.ts', 'scripts/**/*.test.ts', 'src/**/*.test.ts', 'src/**/*.test.tsx'],
+					exclude: ['src/**/*.test.browser.ts'],
 					environment: 'node',
 					setupFiles: ['./test/unit-setup.ts'],
 				},

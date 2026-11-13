@@ -2,6 +2,7 @@
 
 se-form-renderer,
 se-form-instance,
+se-form-step,
 se-step-header,
 se-minimal-progress,
 se-step-indicators,
@@ -19,12 +20,13 @@ se-masked-input,
 se-phone-input,
 se-submission-alert,
 .se-form-constraint,
-se-form-constraint {
+se-constraint {
 	display: block;
 }
 
 .se-form-constraint[hidden],
-se-form-constraint[hidden] {
+se-form-step[hidden],
+se-constraint[hidden] {
 	display: none !important;
 }
 

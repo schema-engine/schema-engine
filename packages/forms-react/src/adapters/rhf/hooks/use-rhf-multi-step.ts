@@ -106,15 +106,10 @@ export function useRHFMultiStep(
 	const goToStep = useCallback((index: number) => navigate({ type: 'go-to', index }), [navigate]);
 	const goToPrevious = useCallback(() => navigate({ type: 'previous' }), [navigate]);
 	const goToNext = useCallback(() => navigate({ type: 'next' }), [navigate]);
-	const { currentStepIndex, ...stepStates } = state;
-	return {
-		currentStep: currentStepIndex,
-		totalSteps,
-		stepStates,
-		goToStep,
-		goToNext,
-		goToPrevious,
-		navigation: {
+	const { currentStepIndex, completed, valid, visited } = state;
+	const stepStates = useMemo(() => ({ completed, valid, visited }), [completed, valid, visited]);
+	const navigation = useMemo(
+		() => ({
 			canGoNext: currentStepIndex < totalSteps - 1,
 			canGoPrevious: currentStepIndex > 0,
 			isFirstStep: currentStepIndex === 0,
@@ -122,6 +117,16 @@ export function useRHFMultiStep(
 			goToStep,
 			goToNextStep: goToNext,
 			goToPreviousStep: goToPrevious,
-		},
+		}),
+		[currentStepIndex, totalSteps, goToStep, goToNext, goToPrevious],
+	);
+	return {
+		currentStep: currentStepIndex,
+		totalSteps,
+		stepStates,
+		goToStep,
+		goToNext,
+		goToPrevious,
+		navigation,
 	};
 }

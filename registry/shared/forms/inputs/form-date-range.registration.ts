@@ -4,6 +4,7 @@ import { defineInput } from '@schema-engine/forms';
 
 export const DateRangeElementRegistration = defineInput({
 	$type: 'date-range',
+	appearanceAxes: ['size'],
 	render: FormDateRange,
 	schema: DateRangeFieldSchema,
 	metadata: {

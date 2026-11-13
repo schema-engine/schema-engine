@@ -1,6 +1,7 @@
 import type { z } from 'zod/mini';
+import { bindRecipe } from '@schema-engine/layout';
 import type { RecipeRegistration } from '@/types';
-import type { RecipeSlot, RecipeSpec } from './types';
+import type { RecipeSlotSchemas, RecipeSpec } from './types';
 
 /**
  * Binds a recipe spec to a framework render payload (shell and slot components).
@@ -10,17 +11,9 @@ import type { RecipeSlot, RecipeSpec } from './types';
  */
 export function defineFormRecipe<
 	const TType extends string,
-	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>,
+	TSlots extends RecipeSlotSchemas,
 	TSchema extends z.ZodMiniType,
 	TRender,
 >(spec: RecipeSpec<TType, TSchema, TSlots>, render: TRender): RecipeRegistration<TType, TSchema, TRender> {
-	return {
-		$type: spec.$type,
-		kind: spec.kind,
-		slots: spec.slots,
-		schema: spec.schema,
-		metadata: spec.metadata,
-		slotDefaults: spec.slotDefaults,
-		render,
-	} as RecipeRegistration<TType, TSchema, TRender>;
+	return bindRecipe(spec, render) as RecipeRegistration<TType, TSchema, TRender>;
 }

@@ -1,42 +1,27 @@
-import { getSlotConfig, type CardShellConfig } from '@schema-engine/forms/recipes';
+import { getAppearanceAttributes } from '@schema-engine/layout';
+import { getSlotConfig } from '@schema-engine/forms/recipes';
+import { CardShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
-import { cn } from '@/components/schema-engine/forms/lib/utils';
 
-const maxWidths = {
-	sm: 'max-w-sm',
-	md: 'max-w-md',
-	lg: 'max-w-lg',
-	xl: 'max-w-xl',
-} as const;
-
-const paddings = {
-	sm: 'p-4',
-	md: 'p-6',
-	lg: 'p-8',
-} as const;
-
-const shadows = {
-	sm: 'shadow-sm',
-	md: 'shadow-md',
-	lg: 'shadow-lg',
-	xl: 'shadow-xl',
-} as const;
-
+/**
+ * Styles live in `card-shell.css`, which the app imports through `recipes.css`.
+ *
+ * @remarks
+ * The card's `appearance` (`size`, `surface`) is emitted as `data-se-*` attributes; the layout theme's
+ * token rules turn them into `--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow` and
+ * `--se-surface-background`, which the stylesheet reads. The shell sets no inline style, so a host
+ * class on the card or a section overrides it.
+ */
 export function CardShell({ slots, viewConfig }: FormShellProps) {
-	const { maxWidth = 'md', padding = 'md', shadowSize = 'md' } = getSlotConfig<CardShellConfig>(viewConfig, 'shell');
-	const paddingClass = paddings[padding];
+	const { appearance } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
 
 	return (
-		<div className="flex min-h-svh items-center justify-center bg-muted/30 p-4 md:p-8">
-			<div
-				className={cn(
-					'w-full rounded-xl border bg-card text-card-foreground',
-					maxWidths[maxWidth],
-					shadows[shadowSize],
-				)}
-			>
-				{slots.header ? <div className={cn('border-b text-center', paddingClass)}>{slots.header}</div> : null}
-				<div className={cn('flex min-w-0 flex-col gap-6', paddingClass)}>
+		<div className="se-card-shell">
+			<div className="se-card-shell__card" {...getAppearanceAttributes(appearance)}>
+				{slots.header ? (
+					<div className="se-card-shell__header se-card-shell__section">{slots.header}</div>
+				) : null}
+				<div className="se-card-shell__content se-card-shell__section">
 					{slots.progress}
 					{slots.content}
 					{slots.actions}

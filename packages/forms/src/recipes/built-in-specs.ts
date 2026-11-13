@@ -1,6 +1,4 @@
-import type * as z from 'zod/mini';
 import { defineRecipeSpec } from './define-recipe-spec';
-import type { RecipeSpec } from './types';
 import {
 	CardShellConfigSchema,
 	FormActionsConfigSchema,
@@ -13,16 +11,18 @@ import {
 	WizardActionsConfigSchema,
 } from './slot-schemas';
 
-const MINIMAL_ACTIONS = { appearance: 'minimal', showStepCounter: false };
-const CENTERED_HEADER = { align: 'center', size: 'md' };
-const HERO_HEADER = { align: 'center', size: 'lg', titleAs: 'h1', inheritColor: true };
-const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'before' };
+const MINIMAL_ACTIONS = { variant: 'minimal', showStepCounter: false } as const;
+const CARD_SHELL_AXES = ['size', 'surface'] as const;
+const CENTERED_HEADER = { align: 'center', size: 'md' } as const;
+const HERO_HEADER = { align: 'center', size: 'lg', titleAs: 'h1', inheritColor: true } as const;
+const WIZARD_PROGRESS_HEADER = { showStepCounter: true, counterPlacement: 'before' } as const;
 
 export const cardSpec = defineRecipeSpec({
 	$type: 'card',
 	kind: 'single-step',
 	slotSchemas: { shell: CardShellConfigSchema, header: StepHeaderConfigSchema, actions: FormActionsConfigSchema },
 	slotDefaults: { header: CENTERED_HEADER },
+	appearanceAxes: { shell: CARD_SHELL_AXES },
 	metadata: { name: 'Card', description: 'Single-step form in a centered card shell.', category: 'layout' },
 });
 
@@ -66,6 +66,7 @@ export const cardWizardSpec = defineRecipeSpec({
 		actions: WizardActionsConfigSchema,
 	},
 	slotDefaults: { header: { ...CENTERED_HEADER, ...WIZARD_PROGRESS_HEADER }, actions: MINIMAL_ACTIONS },
+	appearanceAxes: { shell: CARD_SHELL_AXES },
 	metadata: {
 		name: 'Card wizard',
 		description: 'Multi-step wizard inside a card shell with progress bar.',
@@ -127,6 +128,7 @@ export const splitScreenWizardSpec = defineRecipeSpec({
 		progress: StepIndicatorsConfigSchema,
 		actions: WizardActionsConfigSchema,
 	},
+	slotDefaults: { header: { fallbackToFormTitle: false } },
 	metadata: {
 		name: 'Split screen wizard',
 		description: 'Multi-step wizard with a marketing side panel.',
@@ -145,13 +147,3 @@ export const builtInRecipeSpecs = {
 	'hero-wizard': heroWizardSpec,
 	'split-screen-wizard': splitScreenWizardSpec,
 } as const;
-
-export type RecipeConfigOf<S extends RecipeSpec> = { $type: S['$type'] } & {
-	[K in keyof S['slotSchemas'] as S['slotSchemas'][K] extends z.ZodMiniType ? K : never]?: z.infer<
-		NonNullable<S['slotSchemas'][K]>
-	>;
-};
-
-export type BuiltInRecipeRegistry = {
-	[K in keyof typeof builtInRecipeSpecs]: RecipeConfigOf<(typeof builtInRecipeSpecs)[K]>;
-};

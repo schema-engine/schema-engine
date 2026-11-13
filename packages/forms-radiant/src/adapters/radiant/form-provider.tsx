@@ -1,8 +1,7 @@
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormProviderProps } from '../types';
-import { assertFormEngine, hasConfiguredActions } from '@schema-engine/forms';
+import { assertFormEngine } from '@schema-engine/forms';
 import { FormInstance } from '@/components/form-instance';
-import { FormActionController } from '@/components/form-action-controller';
 
 export function FormProvider<TFormData extends Record<string, unknown> = Record<string, unknown>>({
 	config,
@@ -15,24 +14,16 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 }: FormProviderProps<TFormData> & { engine?: CoreFormEngine }) {
 	assertFormEngine(engine, config);
 	const normalizedConfig = engine.validateForm(config);
-	const actionController = hasConfiguredActions(normalizedConfig) ? (
-		<FormActionController
-			config={normalizedConfig}
-			engine={engine}
-			onAction={onAction as FormProviderProps['onAction']}
-		/>
-	) : null;
-
 	return (
 		<FormInstance
 			config={normalizedConfig}
 			engine={engine}
 			defaultValues={defaultValues}
 			onChange={onChange as FormProviderProps['onChange']}
+			onAction={onAction as FormProviderProps['onAction']}
 			onSubmit={onSubmit as ((data: Record<string, unknown>) => void | Promise<void>) | undefined}
 		>
 			{children}
-			{actionController}
 		</FormInstance>
 	);
 }
