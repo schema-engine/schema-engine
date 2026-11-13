@@ -531,7 +531,10 @@ export function rendererConformance(mount: ConformanceMount): void {
 			])('the action bar aligns its button at %s in every renderer', async (align, edge) => {
 				const base = cardForm({ size: 'default' });
 				const { host } = await setup({
-					config: { ...base, view: { ...base.view, actions: { labels: singleActionLabels, align } } },
+					config: {
+						...base,
+						view: { ...base.view, $type: 'card', actions: { labels: singleActionLabels, align } },
+					},
 				});
 				host.style.width = '1200px';
 				const submit = getByRole(host, 'button', { name: 'Send application' });
@@ -554,20 +557,22 @@ export function rendererConformance(mount: ConformanceMount): void {
 		 * renderers assert the same literals, so equal spacing follows from both suites passing.
 		 */
 		describe('shell spacing parity', () => {
-			const spacedRecipes = recipeCases.filter((recipe) => {
-				const axes: readonly string[] | undefined =
-					builtInRecipeSpecs[recipe.$type as keyof typeof builtInRecipeSpecs]?.appearanceAxes?.shell;
-				return axes?.includes('size') && !axes.includes('surface');
-			});
+			const shellAxes = (recipe: RecipeCase): readonly string[] => {
+				const spec: { appearanceAxes?: Partial<Record<string, readonly string[]>> } | undefined = Object.values(
+					builtInRecipeSpecs,
+				).find((candidate) => candidate.$type === recipe.$type);
+				return spec?.appearanceAxes?.shell ?? [];
+			};
+			const spacedRecipes = recipeCases.filter(
+				(recipe) => shellAxes(recipe).includes('size') && !shellAxes(recipe).includes('surface'),
+			);
 			const measureShell = async (recipe: RecipeCase, size: (typeof SIZES)[number]) => {
 				const base = recipeForm(recipe);
+				const shell: Record<string, unknown> = { ...(base.view?.shell as Record<string, unknown> | undefined) };
 				const { host } = await setup({
 					config: {
 						...base,
-						view: {
-							...base.view,
-							shell: { ...(base.view as { shell?: object }).shell, appearance: { size } },
-						},
+						view: { ...base.view, $type: recipe.$type, shell: { ...shell, appearance: { size } } },
 					},
 				});
 				host.style.width = '1200px';

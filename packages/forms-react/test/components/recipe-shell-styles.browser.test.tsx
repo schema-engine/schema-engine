@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
@@ -26,10 +26,10 @@ function mountShell(Shell: ComponentType<FormShellProps>, root: string, pick?: s
 	style.dataset.shellStyleTest = '';
 	style.textContent = `${layout.css}\n${hostCss}`;
 	document.head.prepend(style);
-	const slots: Record<string, ReactNode> = { header: 'Header', content: 'Content', actions: 'Actions' };
+	const slots: FormShellProps['slots'] = { header: 'Header', content: 'Content', actions: 'Actions' };
 	const view = render(
 		<div data-se-theme={layout.id} style={{ width: '1200px' }}>
-			<Shell slots={slots} viewConfig={{ shell: pick ? { appearance: { size: pick } } : {} }} meta={undefined} />
+			<Shell slots={slots} viewConfig={{ shell: pick ? { appearance: { size: pick } } : {} }} />
 		</div>,
 	);
 	const element = view.container.querySelector<HTMLElement>(root);
