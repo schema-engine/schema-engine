@@ -20,9 +20,7 @@ Unlike `@schema-engine/forms-react` — where the default view recipes live in t
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-The package targets Radiant `0.6.x` and Radiant UI `0.3.x`. Radiant `0.3.x`
-is not supported: its server renderer escapes form markup twice, so hydrated
-fields lose the validation rules serialized in the markup.
+The peer ranges are `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.8.3`, and `@ecopages/radiant-ui` `>=0.3.5`.
 
 Load Tailwind preflight (via Radiant core), theme, and component styles:
 
@@ -55,6 +53,33 @@ const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 `engine` is a live JavaScript value. `se-form-renderer` publishes it to descendant hosts through `formEngineContext`.
 
 A host resolves its engine from an explicit `engine`, then the nearest `se-form-renderer` context, then the render in progress, and follows the renderer's context when an engine arrives or changes later. A host that no engine reaches stays quiet while it connects, since the app may bind one later; `se-form-instance` logs one warning per form when the form is focused or submitted without an engine. There is no module-level default, however many engines have been created.
+
+### Server-rendered forms
+
+The engine is a live object, so it is not serialized into server markup. After the page loads, assign it to each `se-form-renderer`; `engine` is a property only (there is no HTML attribute). Hosts below the renderer follow it when it arrives or changes.
+
+```ts
+import type { FormRendererElement } from '@schema-engine/forms-radiant';
+import { formEngine } from './form-engine';
+
+function bindEngine(root: ParentNode): void {
+	for (const renderer of root.querySelectorAll<FormRendererElement>('se-form-renderer')) {
+		renderer.engine = formEngine;
+	}
+}
+
+bindEngine(document);
+```
+
+A client router that swaps in a parsed page does not upgrade the incoming renderers first. Bind them before the swap so they upgrade with the engine already set; this example uses the `eco:before-swap` event of `@ecopages/browser-router`:
+
+```ts
+document.addEventListener('eco:before-swap', (event) => {
+	bindEngine((event as CustomEvent<{ newDocument: Document }>).detail.newDocument);
+});
+```
+
+A form rendered only on the client passes `engine` to `FormRenderer` and needs neither. The docs app does this in `apps/docs/src/lib/preview-engine-binding.ts`.
 
 ### Registering only the elements a form uses
 
@@ -260,7 +285,7 @@ Stories default to **client** render. Use the Storybook toolbar **Radiant render
 
 Published JavaScript files are marked as side effects so bundlers preserve
 custom element registration for every entry point. Supported Radiant peers are
-`>=0.4.0 <0.5.0` (JSX and Radiant) and `>=0.2.1 <0.3.0` (Radiant UI).
+`>=0.8.3` (JSX, Radiant and Signals) and `>=0.3.5` (Radiant UI).
 
 ### Custom recipe migration
 
