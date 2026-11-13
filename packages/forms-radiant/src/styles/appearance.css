@@ -1,10 +1,10 @@
 /*
  * The built-in size axis is renderer-neutral: compact and comfortable read the hooks an author sets
- * (--se-space-compact and the others), then the host hook of the same name (--se-renderer-space-compact and the
- * others), then a neutral value. Radiant sets only the host hooks, from its theme, so a hook an author sets
+ * (--se-space-compact and the others), then the renderer property of the same name (--se-renderer-space-compact and the
+ * others), then a neutral value. Radiant sets only the renderer properties, from its theme, so a hook an author sets
  * on :root or any ancestor reaches the pick and wins, and a form with no author hook follows the theme.
  *
- * The host hooks are declared on the form element (the one themed element that is neither a grid nor an
+ * The renderer properties are declared on the form element (the one themed element that is neither a grid nor an
  * item), not on :root, so their var(--size-control-*) resolves at the form and sees the values of a wrapper
  * that scopes a theme, also for a form nested in another theme's grid item.
  * Radiant never declares the author hooks, so it cannot replace one an author set above or on the form.
@@ -19,7 +19,8 @@
 /*
  * The layout theme's loose and wide grid gaps read --space-block-lg and --space-block-xl, hooks Radiant UI
  * does not define. Radiant maps them to its spacing scale on :root, at zero specificity, so a spacing pack
- * reaches the gaps and an app's own rule for either hook wins. A gap the engine's grid theme sets itself
+ * reaches the gaps and an app's own unlayered rule for either hook wins (this package's index.css is unlayered, so a
+ * rule an app puts in a cascade layer loses to it). A gap the engine's grid theme sets itself
  * never reads them.
  */
 :where(:root) {
