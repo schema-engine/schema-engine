@@ -1,0 +1,79 @@
+---
+title: 'Styling and layout'
+description: 'Which tool styles what: the layout theme, the grid, appearance axes, tokens and escape hatches.'
+order: 1
+---
+
+# Styling and layout
+
+Schema Engine splits styling in two. The engine owns a **vocabulary** of names (`half`, `compact`, `elevated`, a gap token). The form owns the **intent**, written with those names in plain data. A renderer turns the intent into the same DOM contract in React and in Radiant: `data-se-*` attributes and CSS custom properties.
+
+| Owner                | Holds                                                                                  | Written in                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| The **layout theme** | Breakpoint thresholds, gap tokens, appearance axes and the tokens each axis value sets | `createLayoutTheme` from `@schema-engine/layout`, passed to the engine as `layout` |
+| The **form**         | Which width, which areas, which `size`                                                 | `grid`, `appearance`, `className`, `style` in the form config                      |
+| The **recipe**       | The markup and CSS of the frame around the fields, which reads the tokens              | A shell, as a registered recipe                                                    |
+| The **host app**     | Values of tokens, extra axes, its own CSS                                              | A stylesheet and the theme you pass to the engine                                  |
+
+Because the form only picks names, the same config validates and renders the same in every renderer, and it can live in JSON or [YAML](/docs/forms/yaml).
+
+## Which tool do I use
+
+| I want to                                                           | Use                                                              | Read                                                                                    |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Put two fields on one row                                           | `grid.width: half` on each field                                 | [Placing fields in the grid](/docs/forms/core-concepts#rows-of-fields-width-and-offset) |
+| Centre or indent a field                                            | `grid.offset`                                                    | same                                                                                    |
+| Draw a layout where one field spans rows                            | `grid.areas` on the form or step, `grid.area` on each field      | [Drawn layouts](/docs/forms/core-concepts#drawn-layouts-areas)                          |
+| Change the layout at a breakpoint                                   | `grid.responsive`, or an `areas` record                          | same                                                                                    |
+| Place one field exactly                                             | Raw `column`, `row`, `placeSelf`                                 | [Raw grid lines](/docs/forms/core-concepts#raw-grid-lines)                              |
+| Make a form denser or roomier                                       | `appearance: { size: 'compact' }`                                | [Appearance axes](/docs/styling/appearance-axes)                                        |
+| Change border, shadow or surface                                    | `appearance: { surface: 'outlined' }`                            | same                                                                                    |
+| Add a brand colour that every form can pick by name                 | A host axis with `defineAxis`                                    | [Appearance axes](/docs/styling/appearance-axes#add-a-host-axis)                        |
+| Change the rhythm between fields everywhere                         | The `--se-grid-gap-*` tokens, or `grid.gap` in the theme         | [Theming](/docs/styling/theming)                                                        |
+| Set a size, a width or a gap for one form                           | A class in `className` that sets the token                       | [Theming](/docs/styling/theming#where-to-set-a-token)                                   |
+| Style one form, step or field once                                  | `className`, or `style` with custom properties                   | [Escape hatches](#escape-hatches)                                                       |
+| Show or hide a part of a recipe (descriptions, labels, orientation) | Slot config on `view`, for example `view.header.showDescription` | [View recipes](/docs/forms-react/layouts)                                               |
+| Use a different frame around the fields                             | A recipe, built in or your own                                   | [Recipes](/docs/styling/recipes#a-custom-recipe-shell-in-react-and-in-radiant)          |
+| Make two engines or two renderers look the same                     | One compiled layout theme passed to both                         | [Layout themes](/docs/styling/layout-themes#share-a-theme-between-engines)              |
+| Copy a working setup                                                | A recipe                                                         | [Recipes](/docs/styling/recipes)                                                        |
+
+When two tools fit, take the first row of this list that does the job: a named width before a raw line, an axis value before a token override, a token override before a class, a class before inline `style`.
+
+## Three levels of layout
+
+A form's `grid` and each element's own `grid` lay fields out. The levels run from the most to the least readable:
+
+1. `width` and `offset` for fields that flow in rows. Names are shares of 12 tracks: `full`, `three-quarters`, `two-thirds`, `half`, `third`, `quarter`.
+2. `areas` for a layout you draw as rows of names, with `area` on each field.
+3. Raw grid lines (`column`, `row`, `placeSelf`) as the escape hatch.
+
+Fieldsets and array rows lay their children out on a grid of their own, so the same names work inside a container. A step's `grid` replaces the form's grid for that step. The rules, the validation errors and the limits are on [Placing fields in the grid](/docs/forms/core-concepts#placing-fields-in-the-grid).
+
+## Appearance
+
+An **appearance axis** is one independent dimension of appearance with 2 to 5 named values, such as `size` or `surface`. Each value stands for a set of CSS tokens that components read. A form, a step, a field or a recipe slot picks a value by name, and the renderer writes it as `data-se-<axis>="<value>"`. The engine ships `size` and `surface`; a host adds its own, such as `tone`. See [Appearance axes](/docs/styling/appearance-axes).
+
+## Escape hatches
+
+Names cover the common cases. Three hatches stay open for the rest, and they work the same in every renderer:
+
+- `className` on the form, a step or a field. Theme rules sit inside `:where()`, so a class of yours always wins on the same element.
+- `style` on the form, a step or a field. It accepts only CSS custom properties (keys starting with `--`, string or number values), because that is the one style shape that means the same in React, Radiant, JSON and YAML. A value cannot contain `;`, `{` or `}`.
+- Raw `column`, `row` and `placeSelf` on a field.
+
+```ts
+{
+	id: 'checkout',
+	className: 'checkout-form',
+	style: { '--se-grid-gap-default': '0.75rem' },
+	steps: [/* ... */],
+}
+```
+
+## Where next
+
+- [Layout themes](/docs/styling/layout-themes): compile a theme, share it, the neutral hooks and nested themes.
+- [Appearance axes](/docs/styling/appearance-axes): the definition, the rules, built-in axes and your own.
+- [Theming](/docs/styling/theming): the custom properties a host overrides, with a complete theme file.
+- [Recipes](/docs/styling/recipes): copy-paste configs with their CSS, each rendered live.
+- [YAML Forms](/docs/forms/yaml): author any of these in a `.form.yaml` file.

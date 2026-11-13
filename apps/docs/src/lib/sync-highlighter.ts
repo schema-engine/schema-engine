@@ -1,7 +1,9 @@
 import { createHighlighterCoreSync } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 import bashGrammar from 'shiki/langs/bash.mjs';
+import cssGrammar from 'shiki/langs/css.mjs';
 import jsonGrammar from 'shiki/langs/json.mjs';
+import yamlGrammar from 'shiki/langs/yaml.mjs';
 import tsGrammar from 'shiki/langs/typescript.mjs';
 import tsxGrammar from 'shiki/langs/tsx.mjs';
 import darkPlusTheme from 'shiki/themes/dark-plus.mjs';
@@ -9,7 +11,7 @@ import lightPlusTheme from 'shiki/themes/light-plus.mjs';
 import { DOCS_SHIKI_THEMES } from '@/mdx/shiki-themes';
 
 /** Languages the shared synchronous highlighter has registered. */
-export type SyncHighlightLanguage = 'ts' | 'tsx' | 'typescript' | 'bash' | 'json';
+export type SyncHighlightLanguage = 'ts' | 'tsx' | 'typescript' | 'bash' | 'json' | 'css' | 'yaml';
 
 const SYNC_HIGHLIGHTER_KEY = Symbol.for('@schema-engine/docs.sync-highlighter');
 
@@ -21,7 +23,7 @@ function getHighlighter(): ReturnType<typeof createHighlighterCoreSync> {
 	const target = globalThis as GlobalWithSyncHighlighter;
 	target[SYNC_HIGHLIGHTER_KEY] ??= createHighlighterCoreSync({
 		themes: [lightPlusTheme, darkPlusTheme],
-		langs: [tsGrammar, tsxGrammar, bashGrammar, jsonGrammar],
+		langs: [tsGrammar, tsxGrammar, bashGrammar, jsonGrammar, cssGrammar, yamlGrammar],
 		engine: createJavaScriptRegexEngine(),
 	});
 	return target[SYNC_HIGHLIGHTER_KEY];

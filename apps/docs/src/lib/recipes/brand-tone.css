@@ -1,0 +1,12 @@
+/*
+ * The tone axis sets colour roles (--primary and friends); this rule only reads one.
+ * [data-se-tone] is written by the renderer on the form element, so it can style the form itself.
+ */
+.brand-form {
+	padding-inline-start: 1rem;
+	border-inline-start: 0.25rem solid var(--primary);
+}
+
+.brand-form[data-se-tone='forest'] {
+	border-inline-start-style: dashed;
+}

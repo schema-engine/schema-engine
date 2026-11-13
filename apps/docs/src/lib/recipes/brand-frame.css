@@ -1,0 +1,18 @@
+.brand-frame {
+	overflow: hidden;
+	border: 2px solid var(--primary, currentColor);
+	border-radius: 0.75rem;
+}
+
+.brand-frame__label {
+	margin: 0;
+	padding: 0.5rem 1rem;
+	background: var(--primary, currentColor);
+	color: var(--on-primary, #fff);
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.brand-frame__body {
+	padding: 1rem;
+}

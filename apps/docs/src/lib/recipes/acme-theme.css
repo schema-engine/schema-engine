@@ -1,0 +1,31 @@
+/*
+ * acme-theme.css: one theme for every form that carries `className: 'acme'`.
+ * Replace `.acme` with `:root` to apply it to every form of the app.
+ */
+.acme {
+	/* 1. Rhythm: the gap tokens every grid reads. */
+	--se-grid-gap-compact: 0.5rem;
+	--se-grid-gap-default: 1rem;
+	--se-grid-gap-loose: 1.75rem;
+	--se-grid-gap-wide: 2.5rem;
+
+	/* 2. The hooks the built-in size axis reads. */
+	--se-space-compact: 0.75rem;
+	--se-space-comfortable: 2.25rem;
+	--se-control-height-compact: 2rem;
+	--se-control-height-comfortable: 2.75rem;
+
+	/* 3. Colour roles of your design system: Radiant UI and shadcn components read them. */
+	--primary: #4f46e5;
+	--on-primary: #ffffff;
+}
+
+/* 4. Literal tokens of an axis value: set them on the element that carries the pick. */
+.acme [data-se-size='comfortable'] {
+	--se-measure: 36rem;
+	--se-font-size: 1.125rem;
+}
+
+.acme [data-se-surface='outlined'] {
+	--se-border-width: 2px;
+}

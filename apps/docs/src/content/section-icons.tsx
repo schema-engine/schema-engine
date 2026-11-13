@@ -44,6 +44,15 @@ export const formsRadiantIcon: JsxRenderable = (
 	</SectionIcon>
 );
 
+export const stylingIcon: JsxRenderable = (
+	<SectionIcon>
+		<rect x="3" y="3" width="8" height="8" rx="1" />
+		<rect x="13" y="3" width="8" height="5" rx="1" />
+		<rect x="13" y="10" width="8" height="11" rx="1" />
+		<rect x="3" y="13" width="8" height="8" rx="1" />
+	</SectionIcon>
+);
+
 export const capabilitiesIcon: JsxRenderable = (
 	<SectionIcon>
 		<path d="M8 3h8l4 4v14H4V7l4-4z" />

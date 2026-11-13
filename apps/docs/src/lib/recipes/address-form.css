@@ -1,0 +1,5 @@
+/* Gap tokens are public custom properties: set them on the form (or on :root for every form). */
+.address-form {
+	--se-grid-gap-compact: 0.5rem;
+	--se-grid-gap-default: 1rem;
+}
