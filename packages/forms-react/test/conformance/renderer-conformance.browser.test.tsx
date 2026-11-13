@@ -21,6 +21,7 @@ import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/fo
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 import '@/components/schema-engine/forms/recipes/recipes.css';
+import '@/components/ui/schema-engine/components/controls.css';
 
 const CustomArrayRegistration = defineInput({
 	$type: customArrayType,

@@ -16,6 +16,7 @@
         "registrations/card.ts",
         "blocks/step-header.tsx",
         "blocks/form-actions.tsx",
+        "blocks/form-actions.css",
         "shells/card-shell.tsx",
         "shells/card-shell.css",
         "recipes.css"
@@ -41,7 +42,9 @@
         "registrations/hero-background.ts",
         "blocks/step-header.tsx",
         "blocks/form-actions.tsx",
-        "shells/hero-shell.tsx"
+        "blocks/form-actions.css",
+        "shells/hero-shell.tsx",
+        "recipes.css"
       ]
     },
     {
@@ -72,7 +75,9 @@
       "files": [
         "registrations/split-screen.ts",
         "blocks/form-actions.tsx",
-        "shells/split-screen-shell.tsx"
+        "blocks/form-actions.css",
+        "shells/split-screen-shell.tsx",
+        "recipes.css"
       ]
     },
     {

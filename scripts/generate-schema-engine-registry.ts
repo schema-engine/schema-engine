@@ -469,7 +469,7 @@ function elementSlug(stem: string): string {
  * height a shadcn control carries. With no pick the rule reverts to that height.
  */
 const CONTROLS_STYLESHEET_DOCS =
-	'Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import "./components/ui/schema-engine/components/controls.css"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control.';
+	'Import controls.css once in your global stylesheet, unlayered and after Tailwind and the recipe styles: @import "./components/ui/schema-engine/components/controls.css"; (adjust the path to your ui alias). It lets the size appearance axis set the height of the form controls that carry data-se-control and the font size of a field, and makes a text input fill its field.';
 
 function buildPrimitiveItem(base: Base, name: PrimitiveName): CatalogItem {
 	const spec = PRIMITIVES[name];

@@ -15,14 +15,7 @@ export function FormActions() {
 	const { labels, align } = useViewConfig('actions', FormActionsConfigSchema);
 
 	return (
-		<div
-			className={cn(
-				'flex w-full min-w-0',
-				align === 'start' && 'justify-start',
-				align === 'center' && 'justify-center',
-				align === 'end' && 'justify-end',
-			)}
-		>
+		<div className={cn('se-form-actions', `se-form-actions--align-${align}`)}>
 			<Button data-se-control type="submit" aria-label={labels.submitAriaLabel}>
 				{form.isSubmitting ? labels.submitting : labels.submit}
 			</Button>

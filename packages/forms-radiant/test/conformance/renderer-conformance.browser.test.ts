@@ -16,6 +16,7 @@ import { ArrayElementConfigSchema, type ArrayElementsProps } from '@/elements/in
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
+import '@/styles/appearance.css';
 import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 
 const CustomArrayRegistration = defineInput({

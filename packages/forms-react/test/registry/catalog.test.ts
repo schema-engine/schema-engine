@@ -79,6 +79,7 @@ describe('schema-engine GitHub registry catalog', () => {
 			const item = catalog.find((entry) => entry.name === name);
 			const stylesheets = item?.files.filter((file) => file.path.endsWith('.css')) ?? [];
 			expect(stylesheets.map((file) => file.target).toSorted()).toEqual([
+				'@components/schema-engine/forms/recipes/blocks/form-actions.css',
 				'@components/schema-engine/forms/recipes/recipes.css',
 				'@components/schema-engine/forms/recipes/shells/card-shell.css',
 			]);

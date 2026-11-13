@@ -1,0 +1,26 @@
+/*
+ * Layout of the submit-only action bar of single-step recipes.
+ *
+ * The bar is as wide as its container and the `actions.align` slot config places the button in it, so the
+ * same config gives the same alignment as in Radiant. Every rule sits inside :where(), so it adds no
+ * specificity and a host class on the same element wins.
+ *
+ * Import this file into the `components` layer when the app uses Tailwind, as recipes.css says.
+ */
+:where(.se-form-actions) {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+}
+
+:where(.se-form-actions--align-start) {
+	justify-content: flex-start;
+}
+
+:where(.se-form-actions--align-center) {
+	justify-content: center;
+}
+
+:where(.se-form-actions--align-end) {
+	justify-content: flex-end;
+}

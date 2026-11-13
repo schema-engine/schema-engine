@@ -457,6 +457,56 @@ export function rendererConformance(mount: ConformanceMount): void {
 			});
 		});
 		/**
+		 * The shared field and action layout, run against both renderers with their own stylesheets.
+		 *
+		 * @remarks
+		 * The agreed contract is a field's font size from the `size` token (`--se-font-size`), a text input that
+		 * fills its field, and the action bar's `align`. Padding, borders, control heights and the rest of a
+		 * field's look are renderer styling.
+		 */
+		describe('field and action layout parity', () => {
+			test.each([
+				['compact', '14px'],
+				['comfortable', '17px'],
+			])('a field with size %s has the same font size in every renderer', async (size, fontSize) => {
+				const { host } = await setup({ config: sizedForm({ size: 'default' }, { size }) });
+				expect(getComputedStyle(fieldHost(host, 'Email')).fontSize).toBe(fontSize);
+				expect(getComputedStyle(fieldHost(host, 'Name')).fontSize).not.toBe(fontSize);
+			});
+			test('a field without a size pick keeps the font size it inherits', async () => {
+				const { host } = await setup({ config: form([input('email', 'Email')]) });
+				expect(getComputedStyle(fieldHost(host, 'Email')).fontSize).toBe(
+					getComputedStyle(formElement(host)).fontSize,
+				);
+			});
+			test('a text input fills its field', async () => {
+				const { host } = await setup({ config: cardForm({ size: 'default' }) });
+				host.style.width = '1200px';
+				const field = fieldHost(host, 'Field 1').getBoundingClientRect();
+				const textbox = getByRole(host, 'textbox', { name: 'Field 1' }).getBoundingClientRect();
+				expect(textbox.width).toBe(field.width);
+				expect(textbox.left).toBe(field.left);
+			});
+			test.each([
+				['start', 'left'],
+				['center', 'center'],
+				['end', 'right'],
+			])('the action bar aligns its button at %s in every renderer', async (align, edge) => {
+				const base = cardForm({ size: 'default' });
+				const { host } = await setup({
+					config: { ...base, view: { ...base.view, actions: { labels: singleActionLabels, align } } },
+				});
+				host.style.width = '1200px';
+				const submit = getByRole(host, 'button', { name: 'Send application' });
+				const button = submit.getBoundingClientRect();
+				const bar = submit.parentElement!.getBoundingClientRect();
+				expect(bar.width).toBeGreaterThan(button.width);
+				if (edge === 'left') expect(button.left).toBe(bar.left);
+				if (edge === 'right') expect(button.right).toBe(bar.right);
+				if (edge === 'center') expect(button.left - bar.left).toBeCloseTo(bar.right - button.right, 0);
+			});
+		});
+		/**
 		 * The card parity checks, run against both renderers with their own stylesheets.
 		 *
 		 * @remarks
