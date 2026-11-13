@@ -127,7 +127,7 @@ The card shell sets no inline styles. Its class hooks are `se-card-shell`, `se-c
 
 ## Copy the default source
 
-Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files land under `@/components/schema-engine/forms/recipes`. Copy the files for each recipe you want. A recipe that has a stylesheet lists `recipes.css` with it; copy it together with every stylesheet it imports and import it as above. Each tab has a copy button.
+Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files land under `@/components/schema-engine/forms/recipes`. Copy the files for each recipe you want. A recipe that has a stylesheet lists `recipes.css` with it; copy it together with every stylesheet it imports and import it as above. Once more shells ship CSS, a copy of only the card recipe can drop the `@import` lines of the shells it does not use. Each tab has a copy button.
 
 <DefaultRecipeSources />
 
