@@ -14,7 +14,7 @@ afterEach(() => {
 /**
  * Mounts the card shell inside a form-like scope and the engine's token stylesheet.
  *
- * @remarks The shell reads `--se-size-*` and `--se-surface-*`; the engine declares them for the
+ * @remarks The shell reads the semantic tokens (`--se-space`, `--se-border-width`, `--se-shadow`); the engine declares them for the
  * attribute values, so the scope carries `data-se-theme` and the stylesheet is in the head.
  */
 function mountCard(pick?: Record<string, string>) {

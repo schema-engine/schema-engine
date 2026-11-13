@@ -1,10 +1,20 @@
+import {
+	createRegistry,
+	type BaseRegistration,
+	type ReadOnlyRegistry,
+	type RegistrationMetadata,
+} from '@schema-engine/registry';
+import * as z from 'zod/mini';
+
 /**
- * Named appearance values a document picks and renderers emit as data attributes.
+ * Appearance axes a document picks values on and renderers emit as data attributes.
  *
  * @remarks
- * The theme owns the vocabulary: which axes exist (`size`, `surface`, and any a host adds), the
- * closed list of values on each, and optionally the CSS custom properties a value stands for. The
- * document owns intent: it picks a value per axis on the document, a container, an item or a slot.
+ * An axis is one independent dimension of appearance, with two to five named values. Each value
+ * stands for a set of semantic CSS tokens, which components read; components never read an axis
+ * value. The theme declares the axes ({@link defineAxis}, stored in a registry), a registration
+ * declares which axes it responds to, and a document picks values that pass down.
+ *
  * A domain checks the pick against the vocabulary and the owner's declared axes
  * ({@link checkAppearance}), merges it with the pick it inherits ({@link mergeAppearance}), and a
  * renderer emits the result as `data-se-<axis>="<value>"` ({@link getAppearanceAttributes}).
@@ -20,99 +30,56 @@
 /** Custom properties a value stands for, keyed `--name`. */
 export type AppearanceTokens = Readonly<Record<`--${string}`, string | number>>;
 
-/** An axis's values: names only (the host styles them) or names with the custom properties each sets. */
-export type AppearanceAxisOptions = readonly string[] | Readonly<Record<string, AppearanceTokens>>;
-
-/** The `appearance` option of a theme: axis name to its values. */
-export type AppearanceOptions = Readonly<Record<string, AppearanceAxisOptions>>;
-
 /** A pick of one value per axis. */
 export type AppearanceSelection = Readonly<Record<string, string>>;
 
-export interface CompiledAppearance {
-	/** Axis name to its closed value list, built-in axes first. */
-	readonly axes: Readonly<Record<string, readonly string[]>>;
-	/** The custom properties each value sets, by axis and value. Values that set none are empty. */
-	readonly tokens: Readonly<Record<string, Readonly<Record<string, AppearanceTokens>>>>;
+/**
+ * An appearance axis, stored in a registry like every other registration.
+ *
+ * @remarks
+ * `schema` is a Standard Schema that accepts exactly the value names, which satisfies the
+ * registry's build check and is what a catalog or JSON Schema export lists. {@link defineAxis}
+ * produces it.
+ */
+export interface AxisRegistration<
+	TName extends string = string,
+	TValue extends string = string,
+> extends BaseRegistration<unknown, RegistrationMetadata> {
+	readonly $type: TName;
+	/** Each value name and the semantic tokens it stands for. */
+	readonly values: Readonly<Record<TValue, AppearanceTokens>>;
+	/**
+	 * The value that stands for no pick.
+	 *
+	 * @remarks
+	 * A component's own CSS fallbacks are the look of this value, so a document that picks it looks
+	 * like one that picks nothing. Its tokens are emitted like any other value's.
+	 */
+	readonly default: TValue;
 }
 
-const BUILT_IN_APPEARANCE = {
-	size: {
-		compact: {
-			'--se-size-padding': 'var(--space-block, 1rem)',
-			'--se-size-max-width': '24rem',
-			'--se-size-font-size': '0.875rem',
-		},
-		default: {
-			'--se-size-padding': 'var(--space-block-lg, 1.5rem)',
-			'--se-size-max-width': '28rem',
-			'--se-size-font-size': '1rem',
-		},
-		comfortable: {
-			'--se-size-padding': 'var(--space-block-xl, 2rem)',
-			'--se-size-max-width': '32rem',
-			'--se-size-font-size': '1.0625rem',
-		},
-	},
-	surface: {
-		flat: {
-			'--se-surface-border-width': '0',
-			'--se-surface-shadow': 'none',
-		},
-		outlined: {
-			'--se-surface-border-width': '1px',
-			'--se-surface-shadow': 'none',
-		},
-		elevated: {
-			'--se-surface-border-width': '1px',
-			'--se-surface-shadow': '0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent)',
-		},
-	},
-} as const satisfies Record<string, Record<string, AppearanceTokens>>;
+/** Any axis registration, whatever its name and values. */
+export type AnyAxisRegistration = AxisRegistration;
 
-/** Built-in axes and their values, as literal types, for typed authoring. */
-export type BuiltInAppearanceAxes = {
-	[A in keyof typeof BUILT_IN_APPEARANCE]: keyof (typeof BUILT_IN_APPEARANCE)[A];
-};
+/** A registry of axes, as {@link createLayoutTheme} builds it. */
+export type AxisRegistry = ReadOnlyRegistry<AnyAxisRegistration>;
 
-/** Value names of one axis option: the list entries, or the keys of a token map. */
-type AppearanceAxisValueNames<TAxis> = TAxis extends readonly (infer V extends string)[]
-	? V
-	: TAxis extends Readonly<Record<infer V extends string, unknown>>
-		? V
-		: never;
-
-/**
- * Axis-to-value-union map of a theme: the built-in axes extended by a host's `appearance` option.
- *
- * @remarks Typed authoring narrows a pick to these literals. `TOptions` should be a const-inferred option.
- */
-export type ResolvedAppearanceAxes<TOptions extends AppearanceOptions = Record<never, never>> = {
-	[A in keyof BuiltInAppearanceAxes | (keyof TOptions & string)]:
-		| (A extends keyof BuiltInAppearanceAxes ? BuiltInAppearanceAxes[A] : never)
-		| (A extends keyof TOptions ? AppearanceAxisValueNames<TOptions[A]> : never);
-};
-
-/** The axes an element or a recipe slot declares it supports. */
-export type AppearanceAxisList = readonly string[];
-
-/** The axes each slot of a recipe supports, keyed by slot name. */
-export type SlotAppearanceAxes<TSlot extends PropertyKey = string> = { [K in TSlot]?: AppearanceAxisList };
-
-/** Authoring shape of a pick: any declared axis, restricted to its values. */
-export type AppearanceInput<TAxes extends Record<string, string>> = { readonly [A in keyof TAxes]?: TAxes[A] };
+/** Input to {@link defineAxis}. */
+export interface AxisDefinition<TName extends string, TValues extends Readonly<Record<string, AppearanceTokens>>> {
+	/** The axis name, which becomes the `data-se-<axis>` attribute and the key of a pick. */
+	readonly $type: TName;
+	/** Each value name and the semantic tokens it stands for. Two to five values. */
+	readonly values: TValues;
+	/** One of the value names. */
+	readonly default: keyof TValues & string;
+	readonly metadata: RegistrationMetadata;
+}
 
 const AXIS_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const VALUE_NAME = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const UNSAFE_TOKEN_VALUE = /[{};<]|\/\*/;
-
-function isNameList(axis: AppearanceAxisOptions): axis is readonly string[] {
-	return Array.isArray(axis);
-}
-
-function axisEntries(axis: AppearanceAxisOptions): Array<[string, AppearanceTokens]> {
-	return isNameList(axis) ? axis.map((name) => [name, {}]) : Object.entries(axis);
-}
+const MIN_AXIS_VALUES = 2;
+const MAX_AXIS_VALUES = 5;
 
 /**
  * Throws when an axis name is one a domain reserves.
@@ -125,42 +92,181 @@ export function assertAxisNotReserved(axisName: string, reserved: ReadonlySet<st
 	}
 }
 
-function mergeAxes(
-	options: AppearanceOptions | undefined,
-	reserved: ReadonlySet<string>,
-): Map<string, Map<string, AppearanceTokens>> {
-	const axes = new Map<string, Map<string, AppearanceTokens>>();
-	const add = (axisName: string, entries: Array<[string, AppearanceTokens]>) => {
-		if (!AXIS_NAME.test(axisName)) {
+/**
+ * Throws when an axis is not a usable one: a bad name, fewer than two or more than five values, a
+ * value that would break a selector, a token that is not a custom property, or a `default` that is
+ * not a value.
+ *
+ * @remarks
+ * Axis names become `data-se-<axis>` attribute names and values go into attribute selectors, so
+ * both are restricted to plain identifiers. {@link defineAxis} and the compiler both run this, so an
+ * object that did not come from `defineAxis` is held to the same rules.
+ */
+function assertValidAxis(axis: AnyAxisRegistration): void {
+	const name = axis.$type;
+	if (!AXIS_NAME.test(name)) {
+		throw new Error(
+			`Invalid appearance axis name '${name}': use lowercase letters, digits and hyphens, starting with a letter.`,
+		);
+	}
+	const entries = Object.entries(axis.values);
+	if (entries.length < MIN_AXIS_VALUES || entries.length > MAX_AXIS_VALUES) {
+		throw new Error(
+			`Invalid appearance axis '${name}': an axis has ${MIN_AXIS_VALUES} to ${MAX_AXIS_VALUES} values, found ${entries.length}. A raw value is a token override, not an axis value.`,
+		);
+	}
+	if (!Object.hasOwn(axis.values, axis.default)) {
+		throw new Error(
+			`Invalid appearance axis '${name}': default '${axis.default}' is not one of its values (${entries.map(([value]) => value).join(', ')}).`,
+		);
+	}
+	for (const [value, tokens] of entries) {
+		if (!VALUE_NAME.test(value)) {
 			throw new Error(
-				`Invalid appearance axis name '${axisName}': use lowercase letters, digits and hyphens, starting with a letter.`,
+				`Invalid appearance value '${value}' on axis '${name}': use letters, digits, hyphens and underscores.`,
 			);
 		}
-		assertAxisNotReserved(axisName, reserved);
-		const values = axes.get(axisName) ?? new Map<string, AppearanceTokens>();
-		axes.set(axisName, values);
-		for (const [value, tokens] of entries) {
-			if (!VALUE_NAME.test(value)) {
+		for (const [token, tokenValue] of Object.entries(tokens)) {
+			if (!token.startsWith('--') || token.length < 3) {
 				throw new Error(
-					`Invalid appearance value '${value}' on axis '${axisName}': use letters, digits, hyphens and underscores.`,
+					`Invalid appearance token '${token}' on '${name}.${value}': tokens are CSS custom properties and start with '--'.`,
 				);
 			}
-			for (const [token, tokenValue] of Object.entries(tokens)) {
-				if (!token.startsWith('--') || token.length < 3) {
-					throw new Error(
-						`Invalid appearance token '${token}' on '${axisName}.${value}': tokens are CSS custom properties and start with '--'.`,
-					);
-				}
-				if (UNSAFE_TOKEN_VALUE.test(String(tokenValue))) {
-					throw new Error(`Invalid appearance token value for '${token}' on '${axisName}.${value}'.`);
-				}
+			if (UNSAFE_TOKEN_VALUE.test(String(tokenValue))) {
+				throw new Error(`Invalid appearance token value for '${token}' on '${name}.${value}'.`);
 			}
-			values.set(value, { ...values.get(value), ...tokens });
 		}
+	}
+}
+
+/**
+ * Defines an appearance axis: one independent dimension of appearance with a small closed set of
+ * named values.
+ *
+ * @remarks
+ * Each value stands for a set of semantic CSS custom properties (`--se-space`, `--se-shadow`) that
+ * components read; components never read the axis value. A token names a role, not a component, so
+ * it means the same on every component that reads it. A value that sets no token leaves the
+ * component's own fallback in place. Appearance only: structure is slot config or the grid.
+ *
+ * The axis carries a Standard Schema that accepts exactly its value names. Throws on an invalid
+ * axis: see {@link assertValidAxis}.
+ */
+export function defineAxis<
+	const TName extends string,
+	const TValues extends Readonly<Record<string, AppearanceTokens>>,
+>(definition: AxisDefinition<TName, TValues>): AxisRegistration<TName, keyof TValues & string> {
+	const axis: AxisRegistration<TName, keyof TValues & string> = {
+		$type: definition.$type,
+		values: definition.values,
+		default: definition.default,
+		metadata: definition.metadata,
+		schema: z
+			.enum(Object.keys(definition.values) as [string, ...string[]])
+			.check(z.describe(definition.metadata.description ?? definition.metadata.name)),
 	};
-	for (const [axisName, values] of Object.entries(BUILT_IN_APPEARANCE)) add(axisName, Object.entries(values));
-	for (const [axisName, axis] of Object.entries(options ?? {})) add(axisName, axisEntries(axis));
-	return axes;
+	assertValidAxis(axis);
+	return Object.freeze(axis);
+}
+
+const sizeAxis = defineAxis({
+	$type: 'size',
+	metadata: {
+		name: 'Size',
+		description: 'How much room components take: spacing, type size and control height.',
+	},
+	default: 'default',
+	values: {
+		compact: {
+			'--se-space': '1rem',
+			'--se-font-size': '0.875rem',
+			'--se-control-height': '2rem',
+		},
+		default: {},
+		comfortable: {
+			'--se-space': '2rem',
+			'--se-font-size': '1.0625rem',
+			'--se-control-height': '2.75rem',
+		},
+	},
+});
+
+const surfaceAxis = defineAxis({
+	$type: 'surface',
+	metadata: {
+		name: 'Surface',
+		description: 'How a container sets itself apart: border, shadow and background.',
+	},
+	default: 'elevated',
+	values: {
+		flat: {
+			'--se-border-width': '0',
+			'--se-shadow': 'none',
+			'--se-surface-background': 'transparent',
+		},
+		outlined: {
+			'--se-border-width': '1px',
+			'--se-shadow': 'none',
+			'--se-surface-background': 'transparent',
+		},
+		elevated: {
+			'--se-border-width': '1px',
+			'--se-shadow': '0 8px 24px color-mix(in srgb, CanvasText 10%, transparent)',
+		},
+	},
+});
+
+/**
+ * The axes every layout theme starts from: `size` (compact, default, comfortable) and `surface`
+ * (flat, outlined, elevated).
+ *
+ * @remarks
+ * The tokens are renderer-neutral and name no host theme. `size.default` sets none and
+ * `surface.elevated` sets no background, so a renderer's own fallbacks, which it maps to its host
+ * theme, stay in force and `size: default` looks like no pick. Override an axis by listing another
+ * with the same `$type` after these: `createLayoutTheme({ appearance: [...builtInAxes, mine] })`.
+ */
+export const builtInAxes = [sizeAxis, surfaceAxis] as const;
+
+/** The value names of an axis registration. */
+type AxisValueNames<TAxis> = TAxis extends AxisRegistration<string, infer V> ? V : never;
+
+type Flatten<T> = { [K in keyof T]: T[K] & string };
+
+type AxesOfTuple<TAxes extends readonly AnyAxisRegistration[]> = TAxes extends readonly [
+	...infer Rest extends readonly AnyAxisRegistration[],
+	infer Last extends AnyAxisRegistration,
+]
+	? Omit<AxesOfTuple<Rest>, Last['$type']> & { [K in Last['$type']]: AxisValueNames<Last> }
+	: unknown;
+
+/**
+ * Axis-to-value-union map of a theme: the axes a host lists in `appearance`, the last of a name winning.
+ *
+ * @remarks Typed authoring narrows a pick to these literals. `TAxes` should be a const-inferred list;
+ * a list that is not a tuple widens to any axis name and any value.
+ */
+export type ResolvedAppearanceAxes<TAxes extends readonly AnyAxisRegistration[] = typeof builtInAxes> =
+	number extends TAxes['length'] ? Record<string, string> : Flatten<AxesOfTuple<TAxes>>;
+
+/** Built-in axes and their values, as literal types, for typed authoring. */
+export type BuiltInAppearanceAxes = ResolvedAppearanceAxes;
+
+/** The axes an element or a recipe slot declares it supports. */
+export type AppearanceAxisList = readonly string[];
+
+/** The axes each slot of a recipe supports, keyed by slot name. */
+export type SlotAppearanceAxes<TSlot extends PropertyKey = string> = { [K in TSlot]?: AppearanceAxisList };
+
+/** Authoring shape of a pick: any declared axis, restricted to its values. */
+export type AppearanceInput<TAxes extends Record<string, string>> = { readonly [A in keyof TAxes]?: TAxes[A] };
+
+/** A theme's compiled appearance vocabulary. */
+export interface CompiledAppearance {
+	/** The axes, last registration of a `$type` winning, in first-registration order. */
+	readonly registry: AxisRegistry;
+	/** Axis name to its closed value list. */
+	readonly axes: Readonly<Record<string, readonly string[]>>;
 }
 
 /**
@@ -173,13 +279,11 @@ function mergeAxes(
 export function getAppearanceCss(appearance: CompiledAppearance, themeId: string): string {
 	const rules: string[] = [];
 	const scope = `[data-se-theme="${themeId}"]`;
-	for (const [axisName, values] of Object.entries(appearance.axes)) {
-		for (const value of values) {
-			const declarations = Object.entries(appearance.tokens[axisName]?.[value] ?? {}).map(
-				([token, tokenValue]) => `${token}:${tokenValue};`,
-			);
+	for (const axis of appearance.registry.all()) {
+		for (const [value, tokens] of Object.entries(axis.values)) {
+			const declarations = Object.entries(tokens).map(([token, tokenValue]) => `${token}:${tokenValue};`);
 			if (declarations.length === 0) continue;
-			const match = `[data-se-${axisName}="${value}"]`;
+			const match = `[data-se-${axis.$type}="${value}"]`;
 			rules.push(`:where(${scope} ${match},${scope}${match}){${declarations.join('')}}`);
 		}
 	}
@@ -199,27 +303,29 @@ export interface AppearanceCompilerOptions {
 }
 
 /**
- * Compiles an `appearance` option over the built-in `size` and `surface` axes.
+ * Compiles a list of axes into the theme's appearance vocabulary.
+ *
+ * @param axes - The axes of the theme; defaults to {@link builtInAxes}. A later axis with the same
+ * `$type` replaces the earlier one, so `[...builtInAxes, mine]` overrides.
  *
  * @remarks
- * A host adds an axis by naming it, or extends one by listing more values: values union with the
- * built-in ones, and tokens a host sets for a built-in value are merged over the built-in tokens, per token. Axis names
- * become `data-se-<axis>` attribute names and values go into attribute selectors, so both are
- * restricted to plain identifiers. Throws on a name, value or token that is not, and on an axis named in `reservedNames`.
+ * Stores the axes with `createRegistry`, so each needs a Standard Schema, and holds every winner to
+ * the rules {@link defineAxis} states. Throws on an invalid axis and on one named in `reservedNames`.
  */
 export function compileAppearance(
-	options?: AppearanceOptions,
+	axes: readonly AnyAxisRegistration[] = builtInAxes,
 	compiler: AppearanceCompilerOptions = {},
 ): CompiledAppearance {
-	const axes = mergeAxes(options, new Set(compiler.reservedNames));
+	const registry = createRegistry<AnyAxisRegistration>('Axis', axes);
+	const reserved = new Set(compiler.reservedNames);
+	for (const axis of registry.all()) {
+		assertValidAxis(axis);
+		assertAxisNotReserved(axis.$type, reserved);
+	}
 	return Object.freeze({
+		registry,
 		axes: Object.freeze(
-			Object.fromEntries([...axes].map(([axis, values]) => [axis, Object.freeze([...values.keys()])])),
-		),
-		tokens: Object.freeze(
-			Object.fromEntries(
-				[...axes].map(([axis, values]) => [axis, Object.freeze(Object.fromEntries(values))] as const),
-			),
+			Object.fromEntries(registry.all().map((axis) => [axis.$type, Object.freeze(Object.keys(axis.values))])),
 		),
 	});
 }

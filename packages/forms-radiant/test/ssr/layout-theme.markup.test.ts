@@ -1,7 +1,7 @@
 import { withRadiantServerCustomElementRenderBridge } from '@ecopages/radiant/server/radiant-element-ssr';
 import { renderToString } from '@ecopages/jsx/server';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
-import { createLayoutTheme } from '@schema-engine/layout';
+import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
 import { describe, expect, test } from 'vitest';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
@@ -9,6 +9,20 @@ import { expectOneThemeOneStylesheet, expectSharedLayoutTheme } from '../../../.
 import { createSsrAcceptanceEngine } from './render-form-ssr-html';
 
 await import('@/components/form-instance.script');
+
+const axis = (name: string, ...values: string[]) =>
+	defineAxis({
+		$type: name,
+		metadata: { name },
+		default: values[0] ?? 'a',
+		values: Object.fromEntries(values.map((value) => [value, {}])),
+	});
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--se-tone-accent': '#f60' } },
+});
 
 const form = {
 	id: 'themed',
@@ -33,7 +47,7 @@ describe('the layout theme in Radiant markup', () => {
 	test('a form carries one data-se-theme and one stylesheet for the grid and the appearance rules', () => {
 		const engine = createSsrAcceptanceEngine({
 			grid: { minColumnWidth: '12rem' },
-			appearance: { tone: { brand: { '--se-tone-accent': '#f60' } } },
+			appearance: [...builtInAxes, tone],
 		});
 		const html = renderOnEngine(engine);
 
@@ -42,7 +56,7 @@ describe('the layout theme in Radiant markup', () => {
 	});
 
 	test('two engines on one compiled theme carry the same data-se-theme and the same stylesheet', () => {
-		const theme = createLayoutTheme({ appearance: { tone: ['neutral', 'brand'] } });
+		const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
 		const first = createSsrAcceptanceEngine(theme);
 		const second = createSsrAcceptanceEngine(theme);
 		const page = `${renderOnEngine(first)}${renderOnEngine(second)}`;
@@ -52,8 +66,8 @@ describe('the layout theme in Radiant markup', () => {
 	});
 
 	test('engines on different themes keep separate ids and stylesheets', () => {
-		const first = createSsrAcceptanceEngine({ appearance: { tone: ['a'] } });
-		const second = createSsrAcceptanceEngine({ appearance: { tone: ['b'] } });
+		const first = createSsrAcceptanceEngine({ appearance: [...builtInAxes, axis('tone', 'a', 'x')] });
+		const second = createSsrAcceptanceEngine({ appearance: [...builtInAxes, axis('tone', 'b', 'x')] });
 		const page = `${renderOnEngine(first)}${renderOnEngine(second)}`;
 
 		expect(first.getLayout().id).not.toBe(second.getLayout().id);

@@ -1,8 +1,8 @@
 /*
- * Appearance axes. The layout theme declares the tokens a value stands for (--se-size-*, --se-surface-*)
+ * Appearance axes. The layout theme declares the tokens a value stands for (--se-space, --se-font-size, --se-shadow and the rest)
  * inside :where() rules scoped by data-se-theme; these rules only read them, also inside
  * :where(), so an author's class on the same element always wins.
  */
 :where(.se-form-field[data-se-size]) {
-	font-size: var(--se-size-font-size);
+	font-size: var(--se-font-size, inherit);
 }

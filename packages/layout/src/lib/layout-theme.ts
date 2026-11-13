@@ -2,10 +2,12 @@ import {
 	assertAxisNotReserved,
 	compileAppearance,
 	getAppearanceCss,
+	type AnyAxisRegistration,
 	type AppearanceCompilerOptions,
-	type AppearanceOptions,
+	type AxisRegistry,
 	type CompiledAppearance,
 	type ResolvedAppearanceAxes,
+	type builtInAxes,
 } from '@/lib/appearance';
 import {
 	canonicalGridTheme,
@@ -16,10 +18,18 @@ import {
 } from '@/lib/grid-styles';
 
 /** What an author writes: the grid vocabulary and the appearance vocabulary of one theme. */
-export interface LayoutThemeOptions<TAppearance extends AppearanceOptions = AppearanceOptions> {
+export interface LayoutThemeOptions<
+	TAppearance extends readonly AnyAxisRegistration[] = readonly AnyAxisRegistration[],
+> {
 	/** Breakpoint thresholds, gap tokens and the default minimum column width. */
 	readonly grid?: GridThemeOptions;
-	/** The named axes a document picks values on, over the built-in `size` and `surface`. */
+	/**
+	 * The axes a document picks values on, built with `defineAxis`. Defaults to {@link builtInAxes}.
+	 *
+	 * @remarks
+	 * A later axis with the same `$type` replaces the earlier one, so `[...builtInAxes, myAxis]` adds
+	 * an axis and overrides a built-in one. A list without the built-ins has none of them.
+	 */
 	readonly appearance?: TAppearance;
 }
 
@@ -42,8 +52,10 @@ export interface LayoutTheme<TAxes extends Record<string, string> = Record<strin
 	readonly id: string;
 	/** The resolved grid vocabulary. */
 	readonly grid: NormalizedGridTheme;
-	/** Appearance axis name to its closed value list, built-in axes first. */
+	/** Appearance axis name to its closed value list. */
 	readonly axes: Readonly<{ [A in keyof TAxes]: readonly TAxes[A][] }>;
+	/** The theme's axes as registrations: values, tokens, default and metadata. */
+	readonly appearance: AxisRegistry;
 	/** The stylesheet for grid and appearance together, scoped by `[data-se-theme="<id>"]`. */
 	readonly css: string;
 }
@@ -58,7 +70,7 @@ export type LayoutInput = LayoutTheme | LayoutThemeOptions;
  */
 export type LayoutAxes<TLayout> = TLayout extends { readonly axes: infer TAxes }
 	? { [A in keyof TAxes]: TAxes[A] extends readonly (infer V extends string)[] ? V : never }
-	: TLayout extends { readonly appearance: infer TAppearance extends AppearanceOptions }
+	: TLayout extends { readonly appearance: infer TAppearance extends readonly AnyAxisRegistration[] }
 		? ResolvedAppearanceAxes<TAppearance>
 		: ResolvedAppearanceAxes;
 
@@ -96,10 +108,7 @@ function hashThemeId(serialized: string): string {
 }
 
 function canonicalAppearance(appearance: CompiledAppearance) {
-	return Object.entries(appearance.axes).map(([axis, values]) => [
-		axis,
-		values.map((value) => [value, appearance.tokens[axis]?.[value] ?? {}]),
-	]);
+	return appearance.registry.all().map((axis) => [axis.$type, axis.default, Object.entries(axis.values)]);
 }
 
 /**
@@ -110,11 +119,11 @@ function canonicalAppearance(appearance: CompiledAppearance) {
  * that describe the same theme give the same id, whatever the key order of the grid's responsive
  * entries, so engines built from equal options share a stylesheet.
  *
- * Throws on a grid or appearance option that is invalid, and on an appearance axis named in
+ * Throws on a grid or axis that is invalid, and on an appearance axis named in
  * `reservedNames`: each domain lists the `data-se-*` attributes its renderers already write, so
  * this package hard-codes none.
  */
-export function createLayoutTheme<const TAppearance extends AppearanceOptions = Record<never, never>>(
+export function createLayoutTheme<const TAppearance extends readonly AnyAxisRegistration[] = typeof builtInAxes>(
 	options?: LayoutThemeOptions<TAppearance>,
 	compiler: LayoutThemeCompilerOptions = {},
 ): LayoutTheme<ResolvedAppearanceAxes<TAppearance>> {
@@ -124,7 +133,7 @@ export function createLayoutTheme<const TAppearance extends AppearanceOptions = 
 		JSON.stringify({ grid: canonicalGridTheme(grid), appearance: canonicalAppearance(appearance) }),
 	);
 	const css = [getGridThemeCss(grid, id), getAppearanceCss(appearance, id)].filter(Boolean).join('\n');
-	const theme = { id, grid, axes: appearance.axes, css };
+	const theme = { id, grid, axes: appearance.axes, appearance: appearance.registry, css };
 	Object.defineProperty(theme, LAYOUT_THEME_BRAND, { value: true, enumerable: false });
 	Object.freeze(theme);
 	return theme as unknown as LayoutTheme<ResolvedAppearanceAxes<TAppearance>>;

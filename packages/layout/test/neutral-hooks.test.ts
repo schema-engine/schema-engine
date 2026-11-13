@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { createLayoutTheme } from '@/index';
+import { builtInAxes, createLayoutTheme, defineAxis } from '@/index';
 
 /**
  * The selector of every rule in a stylesheet, including rules inside `@media`.
@@ -14,7 +14,15 @@ function selectorsOf(css: string): string[] {
 
 const css = createLayoutTheme({
 	grid: { responsive: { md: { default: '1.25rem' } } },
-	appearance: { tone: { brand: { '--se-tone-accent': '#f60' } } },
+	appearance: [
+		...builtInAxes,
+		defineAxis({
+			$type: 'tone',
+			metadata: { name: 'Tone' },
+			default: 'neutral',
+			values: { neutral: {}, brand: { '--se-tone-accent': '#f60' } },
+		}),
+	],
 }).css;
 
 describe('the layout stylesheet hooks', () => {
