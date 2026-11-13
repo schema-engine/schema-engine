@@ -10,7 +10,7 @@ se-drop-zone {
 	align-items: center;
 	justify-content: center;
 	gap: var(--space-inline, 0.5rem);
-	padding: var(--space-block-lg, 2rem);
+	padding: var(--space-8, 2rem);
 	text-align: center;
 	color: var(--on-surface, inherit);
 	background: var(--background, transparent);

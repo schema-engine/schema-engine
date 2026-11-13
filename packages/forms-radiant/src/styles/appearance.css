@@ -10,8 +10,8 @@
  * specificity beats this zero-specificity one); an element below the form inherits it.
  */
 :where([data-se-theme]:not(.se-grid, .se-grid-item)) {
-	--se-space-compact: var(--space-block, 1rem);
-	--se-space-comfortable: var(--space-block-xl, 2rem);
+	--se-space-compact: var(--space-4, 1rem);
+	--se-space-comfortable: var(--space-8, 2rem);
 	--se-control-height-compact: var(--size-control-sm, 1.75rem);
 	--se-control-height-comfortable: var(--size-control-lg, 2.25rem);
 }

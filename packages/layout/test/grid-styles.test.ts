@@ -445,7 +445,7 @@ describe('responsive gap tokens', () => {
 	test('base values stay in gap and are unaffected by a ramp', () => {
 		const resolved = theme(ramped);
 		expect(resolved.gap.default).toBe('1rem');
-		expect(resolved.gap.loose).toBe('var(--space-block-lg, 1.5rem)');
+		expect(resolved.gap.loose).toBe('var(--space-6, 1.5rem)');
 		expect(resolved.responsive.lg).toEqual({ default: '1.5rem', loose: '2rem' });
 	});
 

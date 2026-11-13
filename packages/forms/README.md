@@ -260,7 +260,7 @@ read-only registry. `builtInAxes` is the default: `size` (`compact | default | c
 and `surface` (`flat | outlined | elevated`). A host adds an axis by listing it after the
 built-ins; an axis listed later with the same `$type` replaces the earlier one, so a host
 overrides a built-in axis the same way. The built-in tokens name no host theme; a renderer
-maps them to its own (Radiant's card falls back to `--space-block-lg`), and `size: default`
+maps them to its own (Radiant's card falls back to `--space-6`), and `size: default`
 sets its tokens to `initial`, so it looks like no pick in a themed app.
 
 ```ts

@@ -374,7 +374,7 @@ rule such as `:where(.x)` loses to a token rule in a browser that has `@scope` (
 "Nested themes", has the details). Shells read
 the tokens (`var(--se-space, 1.5rem)`) and keep the look of an unstyled form as the
 fallback. The built-in tokens name no host theme: a renderer's fallback is where its host theme
-variables belong (Radiant's card reads `var(--se-space, var(--space-block-lg, 1.5rem))`), and the
+variables belong (Radiant's card reads `var(--se-space, var(--space-6, 1.5rem))`), and the
 built-in `size.default` sets its tokens to `initial`, which hands them back to the component's
 fallback, so `size: default` looks like no pick in a themed app, also inside a `compact` form. `size` sets a control height the same way (`--se-control-height`, from the hooks `--se-control-height-compact` and `--se-control-height-comfortable`): Radiant maps it onto its `--size-control-md`, the React registry controls that carry `data-se-control` read it through `controls.css`, which an app imports unlayered because a shadcn control's height is a Tailwind utility that outranks every layered rule. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
 that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,

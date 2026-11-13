@@ -121,8 +121,8 @@ const DEFAULT_GAP: Record<GridGapToken, string> = {
 	none: '0',
 	compact: '0.5rem',
 	default: 'var(--space-stack, 1rem)',
-	loose: 'var(--space-block-lg, 1.5rem)',
-	wide: 'var(--space-block-xl, 2rem)',
+	loose: 'var(--space-6, 1.5rem)',
+	wide: 'var(--space-8, 2rem)',
 };
 
 const DEFAULT_MIN_COLUMN_WIDTH = '15.625rem';

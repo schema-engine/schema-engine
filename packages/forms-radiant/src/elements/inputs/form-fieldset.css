@@ -4,7 +4,7 @@
 	display: grid;
 	gap: 1rem;
 	margin: 0;
-	padding: var(--space-block, 1rem);
+	padding: var(--space-4, 1rem);
 	border: 1px solid var(--border, currentColor);
 	border-radius: var(--radius-control, 0.5rem);
 	min-inline-size: 0;
