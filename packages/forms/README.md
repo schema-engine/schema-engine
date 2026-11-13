@@ -272,7 +272,16 @@ variable widens, and typed `defineForm` stops narrowing the values. The card's w
 
 The engine lists every axis in its schema catalog (`axis:size`) and in the JSON Schema
 export, where `appearance.size` is an enum of the axis's values, so an editor autocompletes
-a form's and a step's picks. Element and recipe slot picks stay an open record of axis names to values.
+a form's and a step's picks. An element's `appearance` lists exactly the axes its registration
+declares in `appearanceAxes`, and a recipe slot's lists exactly the axes the recipe declares for it
+(`appearanceAxes: { shell: ['size', 'surface'] }`), each an enum of its values with
+`additionalProperties: false`, so an undeclared axis is rejected. An element that declares none
+gets a closed `appearance` with no axes; a slot that declares none and whose schema has no
+`appearance` key does not accept the key. The lists come from the registry and declarations
+validation checks (`checkAppearance`), so the export and validation cannot drift; a test walks every
+registered element and slot to prove it. Only a schema that is a plain object is rewritten: a lazy
+or piped element schema keeps its own `appearance`, and a native Standard Schema element contributes
+an envelope of its `$type` and the same closed `appearance`.
 
 A form, a step, a field and a view slot pick values with `appearance`, and the
 typed `defineForm` narrows the values to the engine's axes:

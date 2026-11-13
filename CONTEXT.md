@@ -321,7 +321,9 @@ from the document to a container to an item or slot, a closer pick winning. A go
 - controls appearance only, never structure, which is slot config or the grid.
 
 `size` and `surface` are built in. The catalog and the JSON Schema export list each axis and its
-values, so `appearance.size` on a form and its steps is an enum in an editor.
+values, so `appearance.size` on a form and its steps is an enum in an editor. An element's and a
+recipe slot's `appearance` lists only the axes its registration declares, closed, so an undeclared
+axis is rejected there as it is by validation.
 
 ## Appearance ownership
 

@@ -53,6 +53,11 @@ export class SchemaMetadataCatalog {
 		return this.entries.get(id);
 	}
 
+	/** The schema registered under an id, as the JSON Schema export lists it. */
+	getSchema(id: string): StandardSchemaV1 | undefined {
+		return this.schemasById.get(id);
+	}
+
 	getBySchema(schema: StandardSchemaV1): SchemaMetadataEntry | undefined {
 		const id = this.idBySchema.get(schema);
 		return id ? this.entries.get(id) : undefined;
