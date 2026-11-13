@@ -95,3 +95,52 @@ describe('Radiant controls under a theme that sets the control size', () => {
 		}
 	});
 });
+
+describe('a size hook set on the form class', () => {
+	const author = document.createElement('style');
+	beforeAll(() => {
+		author.textContent = '.tight-controls { --se-control-height-compact: 18px; }';
+		document.head.append(author);
+	});
+	afterAll(() => author.remove());
+
+	const formWith = (stepSize?: string, fieldSize?: string) => ({
+		...controlHeightForm(undefined, stepSize),
+		className: 'tight-controls',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				appearance: stepSize ? { size: stepSize } : undefined,
+				elements: [
+					{
+						$type: 'input',
+						id: 'email',
+						name: 'email',
+						label: 'Email',
+						appearance: fieldSize ? { size: fieldSize } : undefined,
+					},
+					{ $type: 'submit', id: 'submit', name: 'controlHeightSubmit', label: 'Send' },
+				],
+			},
+		],
+	});
+
+	test('reaches a pick on a step, which sits below the grids that carry the theme', async () => {
+		const { host, cleanup } = await mountRadiant({ config: formWith('compact') });
+		try {
+			expect(readControlHeights(host)).toEqual({ input: 18, button: 18 });
+		} finally {
+			cleanup();
+		}
+	});
+
+	test('reaches a pick on a field', async () => {
+		const { host, cleanup } = await mountRadiant({ config: formWith(undefined, 'compact') });
+		try {
+			expect(readControlHeights(host).input).toBe(18);
+		} finally {
+			cleanup();
+		}
+	});
+});
