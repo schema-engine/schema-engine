@@ -209,7 +209,10 @@ Rows supplied through form `defaultValues` are included in server markup with
 deterministic IDs. During hydration, the connected array host retains those row
 nodes even when the array view has no JSX binding markers of its own. The array host reads its engine from the renderer's context and registers with the form once it has one. Its error is a controlled `RuiFieldError`; the array fieldset's `aria-describedby` points at it while it shows a message. Direct
 `FormController.fieldArray` mutations do not apply the
-array config's Add and Remove behavior.
+array config's Add and Remove behavior. The host holds its row ids in a signal and renders the rows
+with `MapItems`, keyed by row id, so an add, remove or reorder patches only the rows that changed
+(a row whose index moves has its field names and remove label updated in place); the step indicators
+render the same way, keyed by step id.
 
 `masked-input`, `phone-input` and `input-otp` are form-associated custom elements
 registered with Radiant UI's `registerFieldControl`. Each exposes its value as
