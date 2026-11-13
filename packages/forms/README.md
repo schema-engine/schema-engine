@@ -52,8 +52,8 @@ const contactForm = engine.defineForm({
 
 ### Validation errors
 
-`validateForm` throws a `FormValidationError` for a form that does not validate. Its `issues` list every
-problem, each shaped like a Standard Schema issue: `{ message, path }`. `path` is the config key the
+`validateForm` throws a `FormValidationError` for a form that does not validate. Its `issues` list the
+problems found, each shaped like a Standard Schema issue: `{ message, path }`. `path` is the config key the
 issue is about, in object keys and array indexes, so a caller can find it without parsing the message.
 A nested element carries its whole path, and an issue about the form itself has the path `[]`:
 
@@ -67,24 +67,43 @@ A nested element carries its whole path, and an issue about the form itself has 
 
 A schema issue keeps the path the schema gave it, laid under the location of the element, action or view
 it validated. A check the engine makes (the view, recipe kind, grid, areas, appearance picks and rules)
-points at the key it rejects. `validateElement` reports paths relative to the element.
+points at the key it rejects, always a key the author wrote: a field whose `area` resolves through the
+breakpoint cascade is reported at the `area` it set, and the message says where a viewport lands.
+`validateElement` reports paths relative to the element. A malformed form envelope (its own shape, such as
+`steps` not being an array) stops the deeper checks and is reported alone; once it parses, the element,
+action, grid and view issues come together.
 
-`error.message` lists the issues one per line as `<path>: <message>`, with array indexes in brackets
-(`steps[0].elements[2].grid.width: Expected one of full, three-quarters, ...`), and the bare message for
-an issue about the whole form. `FormValidationIssue` and `FormValidationResult` are exported.
+An unrecognized key is reported at the key (`['view', 'shell', 'bogus']`), as the engine does for a view.
+`zod/mini` loads no locale, so its own messages are all `Invalid input`; the engine rewrites that fallback
+from what the issue reports (`Expected one of half, third, ...`, `Must be at least 3 characters.`,
+`Invalid email format.`) because these are author diagnostics, not copy shown to a form's users. A message a
+schema or its author wrote is kept, and a host that wants Zod's own wording loads a locale once with
+`z.config(z.locales.en())`, after which its messages pass through untouched.
 
-`engine.safeValidateForm(config)` runs the same validation and returns a result instead of throwing, in the
-shape `safeParseStandardSchema` uses elsewhere:
+`error.message` lists the issues one per line as `<path>: <message>`, with array indexes in brackets and the
+`id` of each element, step or action the path passes
+(`steps[0] (main).elements[2] (email).grid.width: Expected one of full, three-quarters, ...`), and the bare
+message for an issue about the whole form. The ids only decorate the message; `issue.path` and
+`issue.message` stay clean. `formatIssuePath(path, source?)` makes the same text, with the ids when you
+pass the config. `FormValidationIssue` and `FormValidationResult` are exported.
+
+`engine.safeValidateForm(config)` runs the same validation and returns a result instead of throwing:
+`{ success: true, data }` or `{ success: false, issues }`. (Unlike `safeParseStandardSchema`, which nests
+the issues under `error`, the issues are on the result, the shape a YAML layer's validator returns.)
 
 ```ts
-const result = engine.safeValidateForm(json);
-if (!result.success) {
-	for (const { path, message } of result.issues) {
-		console.error(path.join('.'), message);
+import { formatIssuePath } from '@schema-engine/forms';
+
+export function loadForm(json: unknown) {
+	const result = engine.safeValidateForm(json);
+	if (!result.success) {
+		for (const { path, message } of result.issues) {
+			console.error(`${formatIssuePath(path) || '(form)'}: ${message}`);
+		}
+		return undefined;
 	}
-	return;
+	return result.data; // the same frozen NormalizedFormConfig validateForm returns
 }
-render(result.data); // the same frozen NormalizedFormConfig validateForm returns
 ```
 
 It still throws for a misuse of the API, such as a registration whose Standard Schema is async. A YAML or

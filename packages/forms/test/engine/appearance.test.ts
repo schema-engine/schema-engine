@@ -433,7 +433,7 @@ describe('recipe slot appearance', () => {
 
 	test.each(['maxWidth', 'padding', 'shadowSize'])('a card shell no longer takes %s', (key) => {
 		expect(() => engine.validateForm(cardForm({ shell: { [key]: 'md' } }))).toThrowError(
-			new RegExp(`^view\\.shell: Unrecognized key: ${key}`),
+			new RegExp(`^view\\.shell\\.${key}: Unrecognized key: ${key}`),
 		);
 	});
 

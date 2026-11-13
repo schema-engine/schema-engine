@@ -159,7 +159,7 @@ describe('native Standard Schema engine path', () => {
 				},
 			]);
 			expect((error as FormValidationError).message).toMatch(
-				/^steps\[0\]\.elements\[0\]: Invalid minimal-fixture config/,
+				/^steps\[0\] \(main\)\.elements\[0\] \(field-1\): Invalid minimal-fixture config/,
 			);
 			expect((error as FormValidationError).message).not.toMatch(/\.run/);
 		}

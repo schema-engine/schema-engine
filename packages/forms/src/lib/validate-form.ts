@@ -27,7 +27,6 @@ import {
 	namedPlacementOverflow,
 	WIDTH_TRACKS,
 	type CascadeSlot,
-	type GridAreaTemplates,
 	type GridLayoutConfig,
 	resolveRecipeView,
 	getDefaultLayoutTheme,
@@ -52,41 +51,64 @@ export interface FormValidationIssue {
 	readonly path: ReadonlyArray<PropertyKey>;
 }
 
-/** What {@link safeValidateFormConfig} returns: the normalized form, or every issue found. */
+/** What {@link safeValidateFormConfig} returns: the normalized form, or the issues found. */
 export type FormValidationResult<T> = { success: true; data: T } | { success: false; issues: FormValidationIssue[] };
 
 type Path = ReadonlyArray<PropertyKey>;
 
+function childOf(node: unknown, key: PropertyKey): unknown {
+	return typeof node === 'object' && node !== null ? Reflect.get(node, key) : undefined;
+}
+
 /**
  * A path as it reads in an error message: object keys joined by dots, array indexes in brackets,
  * for example `steps[0].elements[2].grid.width`. The empty path is the empty string.
+ *
+ * @param source The config the path points into. With it, an array item that has a string `id` is
+ * followed by the id in parentheses, `steps[0] (main).elements[2] (email).grid.width`, so a log of a
+ * config with many fields names the one it means.
  */
-export function formatIssuePath(path: Path): string {
-	return path.reduce<string>((text, key) => {
-		if (typeof key === 'number') return `${text}[${key}]`;
-		return text ? `${text}.${String(key)}` : String(key);
-	}, '');
-}
-
-/** One line of {@link FormValidationError.message}: `<path>: <message>`, or the message alone for the whole form. */
-function formatIssue(issue: FormValidationIssue): string {
-	const path = formatIssuePath(issue.path);
-	return path ? `${path}: ${issue.message}` : issue.message;
+export function formatIssuePath(path: Path, source?: unknown): string {
+	let node = source;
+	let text = '';
+	for (const key of path) {
+		node = childOf(node, key);
+		if (typeof key === 'number') {
+			const id = childOf(node, 'id');
+			text += typeof id === 'string' && id ? `[${key}] (${id})` : `[${key}]`;
+		} else {
+			text += text ? `.${String(key)}` : String(key);
+		}
+	}
+	return text;
 }
 
 /**
  * Thrown by {@link validateFormConfig} when a form does not validate.
  *
+ * @param issues Every problem the checks found, each with the config path it is about.
+ * @param source The authored config the paths point into. It only decorates `message` with the ids
+ * of the elements and actions a path passes; `issues` stay as they are.
+ *
  * @remarks
- * `issues` is the full list, each with the config path it is about. `message` lists them one per
- * line as `<path>: <message>`, so a log reads without parsing `issues`. Use `safeValidateForm` on
- * the engine to get the same list as a result instead of an exception.
+ * `message` lists the issues one per line as `<path>: <message>`, so a log reads without parsing
+ * `issues`. Use `safeValidateForm` on the engine to get the same issues as a result instead of an
+ * exception.
  */
 export class FormValidationError extends Error {
 	readonly issues: readonly FormValidationIssue[];
 
-	constructor(issues: readonly FormValidationIssue[]) {
-		super(issues.length > 0 ? issues.map(formatIssue).join('\n') : 'Invalid form configuration');
+	constructor(issues: readonly FormValidationIssue[], source?: unknown) {
+		super(
+			issues.length > 0
+				? issues
+						.map((issue) => {
+							const path = formatIssuePath(issue.path, source);
+							return path ? `${path}: ${issue.message}` : issue.message;
+						})
+						.join('\n')
+				: 'Invalid form configuration',
+		);
 		this.name = 'FormValidationError';
 		this.issues = issues;
 	}
@@ -107,7 +129,6 @@ export interface ValidateFormOptions {
 	getElement: (id: string) => ElementRegistration | undefined;
 	getAction: (id: string) => AnyActionRegistration | undefined;
 	hasValidation: (type: string) => boolean;
-	parseFormConfig?: (config: unknown) => FormConfig;
 	/** Appearance axes the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
 	axes?: LayoutTheme['axes'];
 }
@@ -121,28 +142,55 @@ function schemaIssuePath(path: StandardSchemaIssue['path']): PropertyKey[] {
 /** The message a schema library falls back to when it has no locale loaded, such as `zod/mini`. */
 const GENERIC_SCHEMA_MESSAGE = 'Invalid input';
 
-/**
- * What a schema issue says. A message the schema or its author wrote is kept as is; the bare fallback
- * is replaced by what the issue itself reports (the allowed values, the expected type, the keys).
- *
- * @remarks
- * `zod/mini` loads no locale, so its own issues all read `Invalid input`; the `code`, `values`,
- * `expected` and `keys` on the issue carry what a reader needs. A schema that reports offending
- * `keys` without a known code keeps them listed after its message, as its path is the object itself.
- */
-function describeSchemaIssue(issue: StandardSchemaIssue): string {
-	const details = issue as StandardSchemaIssue & {
-		code?: unknown;
-		values?: unknown;
-		expected?: unknown;
-		keys?: unknown;
-	};
-	const keys = Array.isArray(details.keys)
+interface SchemaIssueDetails {
+	code?: unknown;
+	values?: unknown;
+	expected?: unknown;
+	origin?: unknown;
+	minimum?: unknown;
+	maximum?: unknown;
+	inclusive?: unknown;
+	format?: unknown;
+	pattern?: unknown;
+	keys?: unknown;
+}
+
+function issueKeys(details: SchemaIssueDetails): PropertyKey[] {
+	return Array.isArray(details.keys)
 		? details.keys.filter(
 				(key): key is PropertyKey =>
 					typeof key === 'string' || typeof key === 'number' || typeof key === 'symbol',
 			)
 		: [];
+}
+
+/** A bound as a sentence: `at least 3 characters`, `less than 10`. */
+function describeBound(details: SchemaIssueDetails, side: 'min' | 'max'): string | undefined {
+	const bound = side === 'min' ? details.minimum : details.maximum;
+	if (typeof bound !== 'number' && typeof bound !== 'bigint') return undefined;
+	const exclusive = details.inclusive === false;
+	const comparison = side === 'min' ? (exclusive ? 'greater than' : 'at least') : exclusive ? 'less than' : 'at most';
+	const unit =
+		details.origin === 'string'
+			? ' characters'
+			: details.origin === 'array' || details.origin === 'set'
+				? ' items'
+				: '';
+	return `${comparison} ${bound}${unit}`;
+}
+
+/**
+ * What a schema issue says. A message the schema or its author wrote is kept as is; the bare
+ * fallback is replaced by what the issue itself reports (the allowed values, the expected type, a
+ * bound, a format).
+ *
+ * @remarks
+ * `zod/mini` loads no locale, so its own issues all read `Invalid input`; the `code` and its details
+ * carry what a reader needs. These are author diagnostics, not copy rendered to a form's users. A
+ * host that loads a locale (`z.config(z.locales.en())`) gets that locale's messages untouched. A
+ * schema that reports offending `keys` without a known code keeps them listed after its message.
+ */
+function describeSchemaIssue(issue: StandardSchemaIssue, details: SchemaIssueDetails): string {
 	if (issue.message === GENERIC_SCHEMA_MESSAGE) {
 		if (details.code === 'invalid_value' && Array.isArray(details.values)) {
 			return `Expected one of ${details.values.map(String).join(', ')}.`;
@@ -150,31 +198,87 @@ function describeSchemaIssue(issue: StandardSchemaIssue): string {
 		if (details.code === 'invalid_type' && typeof details.expected === 'string') {
 			return `Expected ${details.expected}.`;
 		}
-		if (details.code === 'unrecognized_keys' && keys.length > 0) {
-			return `Unrecognized ${keys.length === 1 ? 'key' : 'keys'}: ${keys.map(String).join(', ')}.`;
+		const bound =
+			details.code === 'too_small'
+				? describeBound(details, 'min')
+				: details.code === 'too_big'
+					? describeBound(details, 'max')
+					: undefined;
+		if (bound) return `Must be ${bound}.`;
+		if (details.code === 'invalid_format' && typeof details.format === 'string') {
+			return details.format === 'regex' && typeof details.pattern === 'string'
+				? `Must match the pattern ${details.pattern}.`
+				: `Invalid ${details.format} format.`;
 		}
 	}
+	const keys = issueKeys(details);
 	return keys.length > 0 ? `${issue.message} (${keys.map(String).join(', ')})` : issue.message;
 }
 
 /**
  * Schema issues as form issues, each path laid under `base`, the location of the thing that was validated.
+ *
+ * @remarks
+ * An `unrecognized_keys` issue names the object, so it becomes one issue per key, at the key itself.
+ * That is where an editor or a YAML file should point, and where the engine's own check of a view's
+ * unknown keys already points.
  */
 function fromSchemaIssues(issues: readonly StandardSchemaIssue[], base: Path): FormValidationIssue[] {
 	if (issues.length === 0) return [issueAt(base, 'Validation failed')];
-	return issues.map((issue) => issueAt([...base, ...schemaIssuePath(issue.path)], describeSchemaIssue(issue)));
+	return issues.flatMap((issue) => {
+		const details = issue as StandardSchemaIssue & SchemaIssueDetails;
+		const path = [...base, ...schemaIssuePath(issue.path)];
+		const keys = issueKeys(details);
+		if (details.code === 'unrecognized_keys' && keys.length > 0) {
+			return keys.map((key) =>
+				issueAt(
+					[...path, key],
+					issue.message === GENERIC_SCHEMA_MESSAGE ? `Unrecognized key: ${String(key)}.` : issue.message,
+				),
+			);
+		}
+		return [issueAt(path, describeSchemaIssue(issue, details))];
+	});
 }
 
 function childPath(parent: Path, index: number): Path {
 	return [...parent, ELEMENT_CHILDREN_KEY, index];
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
 /**
- * Where an element's `grid` entry for a cascade slot sits, relative to the element, then `keys` below it.
- * The `default` slot is the top level of `grid`; any other slot is under `grid.responsive`.
+ * Where a grid sets the first of `keys`, relative to the grid: `['columns']` or
+ * `['responsive', 'md', 'columns']`. With `slot`, only that slot's entry is read.
+ *
+ * @remarks
+ * A path always names a key the author wrote, never a viewport the cascade resolved to, so an editor
+ * or a YAML file lands on real text.
  */
-function gridSlotPath(slot: CascadeSlot, ...keys: string[]): Path {
-	return ['grid', ...(slot === 'default' ? [] : ['responsive', slot]), ...keys];
+function gridKeyPath(grid: unknown, keys: readonly string[], slot?: CascadeSlot): Path | undefined {
+	if (!isRecord(grid)) return undefined;
+	const entries: Array<{ slot: string; prefix: Path; entry: unknown }> = [
+		{ slot: 'default', prefix: [], entry: grid },
+	];
+	if (isRecord(grid.responsive)) {
+		for (const [name, entry] of Object.entries(grid.responsive)) {
+			entries.push({ slot: name, prefix: ['responsive', name], entry });
+		}
+	}
+	for (const { slot: entrySlot, prefix, entry } of entries) {
+		if ((slot !== undefined && entrySlot !== slot) || !isRecord(entry)) continue;
+		const key = keys.find((name) => entry[name] !== undefined);
+		if (key !== undefined) return [...prefix, key];
+	}
+	return undefined;
+}
+
+/** Where an element sets the first of `keys` in its `grid`, relative to the element; `['grid']` when none is set. */
+function elementGridKeyPath(item: FormTaggedConfig, keys: readonly string[], slot?: CascadeSlot): Path {
+	const path = gridKeyPath(item.grid, keys, slot);
+	return path ? ['grid', ...path] : ['grid'];
 }
 
 /** Where a grid's `areas` template for a slot sits, below the grid. An array is the `default` template itself. */
@@ -385,7 +489,7 @@ function quotedKeys(keys: readonly string[]): string {
  * @remarks
  * Applies at every depth: a container lays its children out in a grid of its
  * own, so a nested field's tracks add up the same way a top-level field's do.
- * The path is relative to the element: its `grid`, or the slot of `grid.responsive` that overflows.
+ * The path is relative to the element and names the key that conflicts, or the one that overflows.
  */
 function namedPlacementIssue(item: FormTaggedConfig): FormValidationIssue | undefined {
 	const keys = elementGridKeys(item);
@@ -394,14 +498,14 @@ function namedPlacementIssue(item: FormTaggedConfig): FormValidationIssue | unde
 	const label = elementLabel(item);
 	if (keys.has('column')) {
 		return issueAt(
-			gridSlotPath('default'),
+			elementGridKeyPath(item, ['column']),
 			`${label} sets grid ${quotedKeys(named)} and 'column'; use named widths or a raw column, not both.`,
 		);
 	}
 	const overflow = namedPlacementOverflow(item);
 	if (overflow) {
 		return issueAt(
-			gridSlotPath(overflow.slot),
+			elementGridKeyPath(item, ['width', 'offset'], overflow.slot),
 			`${label} sets grid 'width' and 'offset' that span ${overflow.tracks} of ${WIDTH_TRACKS} tracks at ${overflow.slot === 'default' ? 'default' : `'${overflow.slot}'`}; together they must fit in ${WIDTH_TRACKS} tracks.`,
 		);
 	}
@@ -411,11 +515,6 @@ function namedPlacementIssue(item: FormTaggedConfig): FormValidationIssue | unde
 /** The slot as it reads in a message: nothing for the default width, else ` at 'md'`. */
 function atSlot(slot: CascadeSlot): string {
 	return slot === 'default' ? '' : ` at '${slot}'`;
-}
-
-/** The narrowest slot where an element sets `area`; the one an area issue is about. */
-function firstAreaSlot(item: FormTaggedConfig): CascadeSlot {
-	return (Object.keys(elementAreaSlots(item))[0] as CascadeSlot | undefined) ?? 'default';
 }
 
 /**
@@ -433,14 +532,14 @@ function areaPlacementIssue(item: FormTaggedConfig, nested: boolean): FormValida
 	const label = elementLabel(item);
 	if (nested) {
 		return issueAt(
-			gridSlotPath(firstAreaSlot(item), 'area'),
+			elementGridKeyPath(item, ['area']),
 			`${label} sets grid 'area' inside a container; a container lays its children out without areas.`,
 		);
 	}
 	const others = AREA_EXCLUSIVE_KEYS.filter((key) => keys.has(key));
 	if (others.length === 0) return undefined;
 	return issueAt(
-		gridSlotPath('default'),
+		elementGridKeyPath(item, others),
 		`${label} sets grid ${quotedKeys(['area', ...others])}; use an area or a width, offset or raw line, not both.`,
 	);
 }
@@ -523,9 +622,10 @@ function fieldPlacementIssues(
 	const widths = scope.elements.find(({ element }) => elementUsesGridWidths(element));
 	const exclusive = usesAreas ? ['areas'] : templateTrackKeys(grid);
 	if (widths && exclusive.length > 0) {
+		const tracksPath = gridKeyPath(grid, GRID_TEMPLATE_KEYS) ?? [];
 		issues.push(
 			issueAt(
-				usesAreas ? [...scope.gridPath, 'areas'] : scope.gridPath,
+				[...scope.gridPath, ...(usesAreas ? ['areas'] : tracksPath)],
 				`${label} sets ${quotedKeys(exclusive)} but ${elementLabel(widths.element)} uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
 			),
 		);
@@ -536,7 +636,7 @@ function fieldPlacementIssues(
 		for (const { element, path } of claimants) {
 			issues.push(
 				issueAt(
-					[...path, ...gridSlotPath(firstAreaSlot(element), 'area')],
+					[...path, ...elementGridKeyPath(element, ['area'])],
 					`${elementLabel(element)} sets grid 'area' but the ${label.toLowerCase()} has no 'areas'.`,
 				),
 			);
@@ -560,11 +660,12 @@ function areaClaimIssues(
 	const claims = claimants.map(({ element, path }) => ({
 		element,
 		path,
+		authored: elementAreaSlots(element),
 		bySlot: cascadeValues(elementAreaSlots(element)),
 		hiddenBySlot: cascadeValues(elementHiddenSlots(element)),
 	}));
 
-	for (const { element, path, bySlot, hiddenBySlot } of claims) {
+	for (const { element, path, authored, bySlot, hiddenBySlot } of claims) {
 		for (const [index, { slot, value: area }] of bySlot.entries()) {
 			const rows = templateBySlot[index]?.value;
 			if (area === undefined || rows === undefined || hiddenBySlot[index]?.value) continue;
@@ -572,7 +673,7 @@ function areaClaimIssues(
 			if (names.includes(area)) continue;
 			issues.push(
 				issueAt(
-					[...path, ...gridSlotPath(slot, 'area')],
+					[...path, ...elementGridKeyPath(element, ['area'], authoredSlot(authored, slot))],
 					`${elementLabel(element)} claims area '${area}'${atSlot(slot)}, which is not in the grid areas (${names.join(', ')}).`,
 				),
 			);
@@ -590,7 +691,7 @@ function areaClaimIssues(
 			reported.add(name);
 			issues.push(
 				issueAt(
-					[...gridPath, ...areasPath(grid, authoredTemplateSlot(templates, slot))],
+					[...gridPath, ...areasPath(grid, authoredSlot(templates, slot))],
 					`${label} area '${name}'${atSlot(slot)} is not claimed by any field${hint}.`,
 				),
 			);
@@ -600,16 +701,16 @@ function areaClaimIssues(
 }
 
 /**
- * The slot whose `areas` entry a cascaded slot's template comes from: itself when it sets one,
- * else the last narrower slot that did.
+ * The slot whose authored entry a cascaded slot resolves to: itself when it sets one, else the last
+ * narrower slot that did. A message says where a viewport lands; a path says what the author wrote.
  */
-function authoredTemplateSlot(templates: GridAreaTemplates, slot: CascadeSlot): CascadeSlot {
-	let authored: CascadeSlot = 'default';
-	for (const { slot: candidate } of cascadeValues(templates)) {
-		if (templates[candidate] !== undefined) authored = candidate;
+function authoredSlot<T>(authored: Partial<Record<CascadeSlot, T>>, slot: CascadeSlot): CascadeSlot {
+	let found: CascadeSlot = 'default';
+	for (const { slot: candidate } of cascadeValues(authored)) {
+		if (authored[candidate] !== undefined) found = candidate;
 		if (candidate === slot) break;
 	}
-	return authored;
+	return found;
 }
 
 function parseElementNode(
@@ -745,6 +846,7 @@ export function validateElementConfig(
 			parsed.issues.length > 0
 				? parsed.issues
 				: [issueAt(['$type'], 'Invalid element configuration: missing $type.')],
+			config,
 		);
 	}
 	return brandElementTree(parsed.item, options.getElement);
@@ -754,19 +856,21 @@ export function validateElementConfig(
  * Strict validation for a form configuration against the engine's registered recipes and schema.
  * Returns a frozen {@link NormalizedFormConfig}: schema defaults and transforms are kept, the input object is not mutated.
  *
- * @throws {FormValidationError} With every issue found. {@link safeValidateFormConfig} returns them instead.
+ * @throws {FormValidationError} With the issues found. {@link safeValidateFormConfig} returns them instead.
  */
 export function validateFormConfig(config: unknown, options: ValidateFormOptions): NormalizedFormConfig {
 	const result = safeValidateFormConfig(config, options);
-	if (!result.success) throw new FormValidationError(result.issues);
+	if (!result.success) throw new FormValidationError(result.issues, config);
 	return result.data;
 }
 
 /**
- * Same validation as {@link validateFormConfig}, reported as a result: the normalized form, or every
- * issue with the config path it is about.
+ * Same validation as {@link validateFormConfig}, reported as a result: the normalized form, or the
+ * issues found, each with the config path it is about.
  *
  * @remarks
+ * A malformed envelope (the form's own shape) stops the deeper checks, so it comes back on its own;
+ * once the envelope parses, the issues of every element, action, grid and view are reported together.
  * Still throws for a misuse of the API, such as a registration whose Standard Schema is async.
  */
 export function safeValidateFormConfig(
@@ -790,7 +894,7 @@ export function safeValidateFormConfig(
 		};
 	}
 
-	const parsedEnvelope = parseEnvelope(config, options);
+	const parsedEnvelope = parseEnvelope(config);
 	if (!parsedEnvelope.ok) return { success: false, issues: parsedEnvelope.issues };
 	const envelope = parsedEnvelope.data;
 
@@ -874,27 +978,11 @@ export function safeValidateFormConfig(
 }
 
 /**
- * Parses the form shape: `parseFormConfig` when the engine supplies one, then the envelope schema.
- *
- * @remarks
- * A `parseFormConfig` that throws a schema error (an error with an `issues` array) keeps those issues
- * and their paths; any other error becomes one issue about the whole form.
+ * Parses the form's own shape (its id, steps, view and the like). Nothing deeper is checked when this
+ * fails, so a malformed envelope is reported on its own.
  */
-function parseEnvelope(
-	config: unknown,
-	options: Pick<ValidateFormOptions, 'parseFormConfig'>,
-): ParseResult<FormConfigEnvelope> {
-	let input: unknown;
-	try {
-		input = options.parseFormConfig ? options.parseFormConfig(config) : config;
-	} catch (error) {
-		const thrown = error as { issues?: unknown } | null;
-		if (thrown && Array.isArray(thrown.issues)) {
-			return { ok: false, issues: fromSchemaIssues(thrown.issues as StandardSchemaIssue[], []) };
-		}
-		return { ok: false, issues: [issueAt([], error instanceof Error ? error.message : String(error))] };
-	}
-	const result = safeParseStandardSchema(formConfigEnvelopeSchema, input);
+function parseEnvelope(config: unknown): ParseResult<FormConfigEnvelope> {
+	const result = safeParseStandardSchema(formConfigEnvelopeSchema, config);
 	if (!result.success) return { ok: false, issues: fromSchemaIssues(result.error.issues, []) };
 	return { ok: true, data: result.data as FormConfigEnvelope };
 }

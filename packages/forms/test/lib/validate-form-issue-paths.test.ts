@@ -6,6 +6,7 @@ import { elementChildrenSchema } from '@/lib/element-children';
 import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineFormRecipe } from '@/recipes';
 import { cardSpec } from '@/recipes/built-in-specs';
+import { formSubmitPlugin } from '@/actions';
 import { defineInput } from '@/types';
 import { ElementGridConfigSchema } from '@schema-engine/layout';
 
@@ -34,8 +35,26 @@ const fieldset = defineInput({
 	render: () => null,
 });
 
+const sized = defineInput({
+	$type: 'sized',
+	schema: z.looseObject({
+		$type: z.literal('sized'),
+		id: z.string(),
+		name: z.string(),
+		title: z.optional(z.string().check(z.minLength(3))),
+		count: z.optional(z.number().check(z.lte(5))),
+		contact: z.optional(z.email()),
+		tags: z.optional(z.array(z.string()).check(z.minLength(2))),
+		note: z.optional(z.string().check(z.minLength(2, 'Say more.'))),
+	}),
+	metadata: { name: 'Sized', category: 'input' },
+	render: () => null,
+});
+
+const actionEngine = createFormEngine({ actions: [formSubmitPlugin()] });
+
 const engine = createFormEngine({
-	elements: [field, fieldset],
+	elements: [field, fieldset, sized],
 	recipes: [defineFormRecipe(cardSpec, {})],
 });
 
@@ -155,7 +174,7 @@ describe('validation issue paths', () => {
 
 		expect(issues.map((issue) => issue.path)).toEqual([
 			['steps', 0, 'elements', 0, '$type'],
-			['steps', 0, 'elements', 1, 'grid'],
+			['steps', 0, 'elements', 1, 'grid', 'column'],
 		]);
 	});
 
@@ -251,6 +270,163 @@ describe('validation issue paths', () => {
 	});
 });
 
+describe('issue paths name keys the author wrote', () => {
+	test('an area claim resolved through the cascade points at the authored area, keeping the viewport in the message', () => {
+		const form = formWith([named('x', { grid: { area: 'a' } })], {
+			grid: { areas: { default: ['a b'], md: ['b c'] } },
+		});
+		const claim = issuesOf(form).find((issue) => /claims area 'a'/.test(issue.message));
+
+		expect(claim?.path).toEqual(['steps', 0, 'elements', 0, 'grid', 'area']);
+		expect(claim?.message).toMatch(/at 'md'/);
+	});
+
+	test('an area claim written at a breakpoint points at that breakpoint', () => {
+		const form = formWith([named('x', { grid: { area: 'a', responsive: { md: { area: 'z' } } } })], {
+			grid: { areas: { default: ['a b'], md: ['a b'] } },
+		});
+		const claim = issuesOf(form).find((issue) => /claims area 'z'/.test(issue.message));
+
+		expect(claim?.path).toEqual(['steps', 0, 'elements', 0, 'grid', 'responsive', 'md', 'area']);
+	});
+
+	test('an offset that overflows at a breakpoint points at the key written there', () => {
+		const issues = issuesOf(
+			formWith([named('a', { grid: { width: 'half', responsive: { md: { offset: 'two-thirds' } } } })]),
+		);
+
+		expect(issues.map((issue) => issue.path)).toEqual([
+			['steps', 0, 'elements', 0, 'grid', 'responsive', 'md', 'offset'],
+		]);
+	});
+
+	test('a raw column written at a breakpoint beside a width points at the column', () => {
+		const issues = issuesOf(formWith([named('a', { grid: { width: 'half', responsive: { md: { column: 2 } } } })]));
+
+		expect(issues.map((issue) => issue.path)).toEqual([
+			['steps', 0, 'elements', 0, 'grid', 'responsive', 'md', 'column'],
+		]);
+	});
+
+	test('widths beside grid columns point at the columns key', () => {
+		expect(
+			issuesOf(formWith([named('a', { grid: { width: 'half' } })], { grid: { columns: 2 } })).map(
+				(issue) => issue.path,
+			),
+		).toEqual([['grid', 'columns']]);
+		expect(
+			issuesOf(
+				formWith([named('a', { grid: { width: 'half' } })], { grid: { responsive: { md: { columns: 2 } } } }),
+			).map((issue) => issue.path),
+		).toEqual([['grid', 'responsive', 'md', 'columns']]);
+	});
+
+	test('an area beside a width points at the width', () => {
+		const issues = issuesOf(
+			formWith([named('a', { grid: { area: 'x', width: 'half' } })], { grid: { areas: ['x'] } }),
+		);
+
+		expect(issues[0]?.path).toEqual(['steps', 0, 'elements', 0, 'grid', 'width']);
+	});
+
+	test('an unrecognized key is reported at the key itself, as the engine reports a view key', () => {
+		const issues = issuesOf(formWith([named('a')], { view: { $type: 'card', shell: { bogus: 1 } } }));
+
+		expect(issues).toEqual([{ path: ['view', 'shell', 'bogus'], message: 'Unrecognized key: bogus.' }]);
+	});
+
+	test('a schema issue inside an action group carries the full path', () => {
+		const result = actionEngine.safeValidateForm({
+			id: 'groups',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [],
+					actions: [
+						[
+							{ id: 'a', $type: 'submit', endpoint: '/a' },
+							{ id: 'b', $type: 'submit', endpoint: 3 },
+						],
+					],
+				},
+			],
+		});
+
+		expect(result.success).toBe(false);
+		expect(result.success ? [] : result.issues.map((issue) => issue.path)).toEqual([
+			['steps', 0, 'actions', 0, 1, 'endpoint'],
+		]);
+	});
+});
+
+describe('schema issue messages', () => {
+	const messagesFor = (element: Record<string, unknown>) =>
+		issuesOf(formWith([{ $type: 'sized', id: 's', name: 's', ...element }])).map((issue) => ({
+			key: issue.path.at(-1),
+			message: issue.message,
+		}));
+
+	test('replace the bare fallback with what the issue reports', () => {
+		expect(messagesFor({ title: 'ab', count: 9, contact: 'nope', tags: ['one'], extra: undefined })).toEqual([
+			{ key: 'title', message: 'Must be at least 3 characters.' },
+			{ key: 'count', message: 'Must be at most 5.' },
+			{ key: 'contact', message: 'Invalid email format.' },
+			{ key: 'tags', message: 'Must be at least 2 items.' },
+		]);
+		expect(messagesFor({ count: 'many' })).toEqual([{ key: 'count', message: 'Expected number.' }]);
+	});
+
+	test('keep a message the schema author wrote', () => {
+		expect(messagesFor({ note: 'x' })).toEqual([{ key: 'note', message: 'Say more.' }]);
+	});
+});
+
+describe('error message ids', () => {
+	test('lines name the id of each element and step a path passes, while issues stay clean', () => {
+		const form = {
+			id: 'ids',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						named('first'),
+						{
+							$type: 'fieldset',
+							id: 'group',
+							name: 'group',
+							elements: [named('email', { grid: { width: 'halve' } })],
+						},
+					],
+				},
+			],
+		};
+		let thrown: unknown;
+		try {
+			engine.validateForm(form);
+		} catch (error) {
+			thrown = error;
+		}
+
+		expect(thrown).toBeInstanceOf(FormValidationError);
+		const error = thrown as FormValidationError;
+		expect(error.message).toMatch(
+			/^steps\[0\] \(main\)\.elements\[1\] \(group\)\.elements\[0\] \(email\)\.grid\.width: /,
+		);
+		expect(error.issues[0]?.path).toEqual(['steps', 0, 'elements', 1, 'elements', 0, 'grid', 'width']);
+		expect(error.issues[0]?.message).not.toContain('email');
+	});
+
+	test('formatIssuePath adds ids only when it is given the config', () => {
+		const source = { steps: [{ id: 'main', elements: [{ id: 'email' }] }] };
+		const path = ['steps', 0, 'elements', 0, 'id'];
+
+		expect(formatIssuePath(path)).toBe('steps[0].elements[0].id');
+		expect(formatIssuePath(path, source)).toBe('steps[0] (main).elements[0] (email).id');
+	});
+});
+
 describe('safeValidateForm', () => {
 	test('does not throw, and lists every issue with its path', () => {
 		const form = formWith([named('a', { grid: { width: 'halve' } }), { $type: 'missing', id: 'x' }], {
@@ -312,7 +488,7 @@ describe('FormValidationError', () => {
 		const lines = error.message.split('\n');
 
 		expect(lines).toHaveLength(2);
-		expect(lines[0]).toMatch(/^steps\[0\]\.elements\[0\]\.grid\.width: .*half/);
+		expect(lines[0]).toMatch(/^steps\[0\] \(main\)\.elements\[0\] \(a\)\.grid\.width: .*half/);
 		expect(lines[1]).toMatch(/^view\.\$type: Unknown view recipe 'nope'/);
 	});
 

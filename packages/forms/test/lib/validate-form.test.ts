@@ -510,13 +510,13 @@ describe('validateFormConfig', () => {
 				id: 'bad',
 				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'note', id: 1, name: 'n1' }] }],
 			}),
-		).toThrow(/^steps\[0\]\.elements\[0\]\.id: Expected string/);
+		).toThrow(/^steps\[0\] \(main\)\.elements\[0\]\.id: Expected string/);
 		expect(() =>
 			engine.validateForm({
 				id: 'unknown',
 				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'missing', id: 'x', name: 'x' }] }],
 			}),
-		).toThrow(/^steps\[0\]\.elements\[0\]\.\$type: Unknown element type 'missing'/);
+		).toThrow(/^steps\[0\] \(main\)\.elements\[0\] \(x\)\.\$type: Unknown element type 'missing'/);
 	});
 
 	test('rejects a field rule that has no validation handler', () => {
@@ -603,7 +603,7 @@ describe('validateFormConfig', () => {
 			})),
 		};
 		expect(isNormalizedFormConfig(copied, engine)).toBe(false);
-		expect(() => engine.validateForm(copied)).toThrow(/^steps\[0\]\.elements\[0\]\.id: Expected string/);
+		expect(() => engine.validateForm(copied)).toThrow(/^steps\[0\] \(main\)\.elements\[0\]\.id: Expected string/);
 	});
 
 	test('validateElement applies transforms for standalone fields', () => {
@@ -726,7 +726,7 @@ describe('validateFormConfig', () => {
 					},
 				],
 			}),
-		).toThrow(/^steps\[0\]\.elements\[0\]\.elements\[0\]\.count: Expected string/);
+		).toThrow(/^steps\[0\] \(main\)\.elements\[0\] \(group\)\.elements\[0\] \(count\)\.count: Expected string/);
 	});
 
 	test('normalized snapshot is owned and does not freeze caller objects', () => {

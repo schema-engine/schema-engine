@@ -62,6 +62,7 @@ export type { ElementRenderProps, WithNormalizedChildren } from './types';
 export {
 	DEFAULT_WIZARD_RECIPE,
 	FormValidationError,
+	formatIssuePath,
 	getRenderableSteps,
 	stepGrid,
 	assertFormEngine,

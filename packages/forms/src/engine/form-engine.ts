@@ -196,10 +196,13 @@ export class FormEngine<
 	 * Same validation as {@link validateForm}, returned as a result instead of thrown.
 	 *
 	 * @returns `{ success: true, data }` with the frozen normalized form, or `{ success: false, issues }`
-	 * with every problem and the config path it is about (`['steps', 0, 'elements', 2, 'grid', 'width']`;
+	 * with the problems found and the config path each is about (`['steps', 0, 'elements', 2, 'grid', 'width']`;
 	 * `[]` for the whole form). The shape fits a YAML or editor integration that points an issue at a location.
 	 *
 	 * @remarks
+	 * A malformed form envelope (its own shape, such as `steps` not being an array) stops the deeper
+	 * checks and is reported alone; once it parses, element, action, grid and view issues come together.
+	 *
 	 * Still throws for a misuse of the API, such as a registration whose Standard Schema is async.
 	 */
 	safeValidateForm(

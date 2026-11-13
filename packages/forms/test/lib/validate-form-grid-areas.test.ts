@@ -245,7 +245,9 @@ describe('named grid areas', () => {
 				{ id: 'address', grid: { areas: ['street zip'] }, elements: claiming('street') },
 			]);
 			expect(issuePaths(form)).toEqual([['steps', 0, 'grid', 'areas']]);
-			expect(() => engine.validateForm(form)).toThrow(/^steps\[0\]\.grid\.areas: .*'zip'.*not claimed/);
+			expect(() => engine.validateForm(form)).toThrow(
+				/^steps\[0\] \(address\)\.grid\.areas: .*'zip'.*not claimed/,
+			);
 		});
 
 		test('rejects step columns next to step widths', () => {
