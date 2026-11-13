@@ -19,7 +19,7 @@ Schema Engine is a set of packages. You install the engine and one renderer: **R
 | Renderer    | Package                        | Form state                                             | Styling                                                           |
 | ----------- | ------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------- |
 | **React**   | `@schema-engine/forms-react`   | React Hook Form, through the React adapter (optional)  | Source you own, copied from the shadcn registry; Tailwind helps   |
-| **Radiant** | `@schema-engine/forms-radiant` | Radiant's own form controller; no React Hook Form      | One stylesheet from the package and a Radiant UI theme            |
+| **Radiant** | `@schema-engine/forms-radiant` | Radiant's own form controller; no React Hook Form      | Three CSS imports: a Radiant UI theme, its styles and the package's            |
 
 Both render the same `FormConfig` JSON. React Hook Form is the React adapter's form state, not a requirement of the engine or of the Radiant renderer.
 
@@ -93,7 +93,7 @@ Radiant needs no registry and no React. Install the renderer and its peers:
 pnpm add @schema-engine/forms-radiant @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals
 ```
 
-Load one Radiant UI theme and the renderer's stylesheet once, then create the engine with `createRadiantFormEngine({ elements: schemaFormRegistrations })`. [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the stylesheet imports, the peer versions and a full example.
+Load one Radiant UI theme, its stylesheet and the renderer's stylesheet once, then create the engine with `createRadiantFormEngine({ elements: schemaFormRegistrations })` (both come from `@schema-engine/forms-radiant`). [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the stylesheet imports, the peer versions and a full example.
 
 ## Optional packages
 
