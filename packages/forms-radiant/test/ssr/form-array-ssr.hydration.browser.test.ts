@@ -173,4 +173,33 @@ describe('SSR array hydration', () => {
 			app.remove();
 		}
 	});
+
+	test('server rows follow a config change right after hydration', async () => {
+		const html = inject('ssrArrayHtml').replaceAll('<\\/script>', '</script>');
+		const app = document.createElement('div');
+		app.innerHTML = html;
+		const renderer = app.querySelector<FormRendererElement>('se-form-renderer');
+		const arrayHost = app.querySelector<SeFormArray>('se-form-array');
+		if (!renderer || !arrayHost) throw new Error('Expected rendered form and array hosts');
+		const form = new FormController(arrayHost);
+
+		try {
+			renderer.engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+			document.body.append(app);
+			await expect.poll(() => form.getValues()).toEqual({ contacts: [{ role: 'Alice' }, { role: 'Bob' }] });
+
+			arrayHost.config = { ...arrayHost.config, disabled: true, addButtonText: 'Add contact' };
+			await expect
+				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ disabled }) => disabled))
+				.toEqual([true, true]);
+			expect([...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value)).toEqual([
+				'Alice',
+				'Bob',
+			]);
+			expect(arrayHost.querySelector('.se-form-array__add')?.textContent).toContain('Add contact');
+		} finally {
+			form.disconnect();
+			app.remove();
+		}
+	});
 });

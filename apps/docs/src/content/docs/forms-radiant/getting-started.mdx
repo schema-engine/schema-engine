@@ -18,6 +18,8 @@ import { contactFormConfig } from '@/lib/form-configs/homepage-contact';
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
+The peers need `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` 0.8.3 or later and `@ecopages/radiant-ui` 0.3.5 or later.
+
 Load Radiant UI theme and styles once in your app entry:
 
 ```typescript
@@ -106,19 +108,34 @@ to each `se-form-renderer`. Assign it before or after the renderer upgrades: the
 hosts below it read the engine from the renderer's context and follow it when it
 arrives or changes.
 
+`engine` is a property only; there is no HTML attribute. Bind every renderer on the page:
+
 ```typescript
+import type { FormRendererElement } from '@schema-engine/forms-radiant';
 import { formEngine } from './form-engine';
 
-document.querySelectorAll('se-form-renderer').forEach((renderer) => {
-	renderer.engine = formEngine;
-});
+function bindEngine(root: ParentNode): void {
+	for (const renderer of root.querySelectorAll<FormRendererElement>('se-form-renderer')) {
+		renderer.engine = formEngine;
+	}
+}
+
+bindEngine(document);
 ```
 
 A client-side router that swaps in a parsed page does not upgrade it first. Assign
 the engine to the incoming renderers in the router's `eco:before-swap` event
 (`event.detail.newDocument`), as the docs site does in
 `apps/docs/src/lib/preview-engine-binding.ts`; they upgrade with the engine
-already set. A form that is only rendered on the client passes `engine` to
+already set:
+
+```typescript
+document.addEventListener('eco:before-swap', (event) => {
+	bindEngine((event as CustomEvent<{ newDocument: Document }>).detail.newDocument);
+});
+```
+
+A form that is only rendered on the client passes `engine` to
 `FormRenderer` and needs none of this.
 
 ## Storybook
