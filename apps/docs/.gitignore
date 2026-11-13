@@ -9,3 +9,6 @@ src/public/llms-content
 src/public/docs-llm
 src/components/ui
 .docs-llm-staging
+
+# copied from registry/ before dev/build
+src/generated
