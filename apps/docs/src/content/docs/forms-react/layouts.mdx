@@ -29,7 +29,14 @@ Install the default source owned by your app:
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
-Then add its generated recipe barrel when you construct the engine:
+The install copies the recipe stylesheets next to the components. Import the entry point once in your global stylesheet, after Tailwind and into the `components` layer (adjust the path to your `components` alias):
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+```
+
+Without the import the shells render unstyled. Without Tailwind, import the file plain. Then add the generated recipe barrel when you construct the engine:
 
 ```typescript
 import { createFormEngine } from '@schema-engine/forms';
@@ -70,7 +77,7 @@ const formConfig: FormConfig = {
 
 ## Multi-step
 
-Recipe slots, steps, fields and the form take a named `appearance`: the engine's layout theme declares the axes (`size`: `compact | default | comfortable`, `surface`: `flat | outlined | elevated`, plus any a host adds), each element or slot declares the axes it supports, and both renderers emit the picked value as `data-se-<axis>`. The card shell reads the semantic tokens those values set (`--se-space`, `--se-border-width`, `--se-shadow`) and maps the spacing to its own width. Structural slot config such as `header.showDescription` is unchanged.
+Recipe slots, steps, fields and the form take a named `appearance`: the engine's layout theme declares the axes (`size`: `compact | default | comfortable`, `surface`: `flat | outlined | elevated`, plus any a host adds), each element or slot declares the axes it supports, and both renderers emit the picked value as `data-se-<axis>`. The card shell reads the semantic tokens those values set (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) from `card-shell.css`, so the same config gives the same padding, width, border and shadow as the Radiant card. Structural slot config such as `header.showDescription` is unchanged.
 
 Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`. The live demo renders exactly the configuration below:
 
@@ -81,6 +88,35 @@ Wizard recipes require **at least two steps**. Set `view.$type` to a wizard reci
 If you omit `view.$type` on a multi-step form, `validateForm` writes the engine's default wizard recipe as `view` (`bare-controls` unless `createFormEngine({ defaultWizardRecipe })` names another wizard recipe). If that recipe is not registered, the form keeps no `view`, `validateForm` warns, and fields render without chrome.
 
 See [Registration Flow](/docs/examples/registration-flow) for a full wizard configuration.
+
+## Style a recipe
+
+A copy-paste path from install to a styled card:
+
+1. Install the recipes and import the stylesheet as above.
+2. Pick the look in config. `size` is `compact`, `default` or `comfortable`; `surface` is `flat`, `outlined` or `elevated`:
+
+```typescript
+const config = engine.defineForm({
+	id: 'contact',
+	view: { $type: 'card', shell: { appearance: { size: 'comfortable', surface: 'outlined' } } },
+	steps: [{ id: 'details', elements: [{ $type: 'input', id: 'email', name: 'email', label: 'Email' }] }],
+});
+```
+
+3. Override it with your own CSS. The recipe rules sit inside `:where()`, so any class beats them without `!important`. Give the form a `className` (here `checkout-form`) and style the shell parts under it:
+
+```css
+.checkout-form .se-card-shell__section {
+	padding: 2.5rem;
+}
+
+.checkout-form .se-card-shell__card {
+	border-radius: 0;
+}
+```
+
+The shells set no inline styles. Their class hooks are `se-card-shell`, `se-card-shell__card`, `se-card-shell__section`, `se-card-shell__header` and `se-card-shell__content`.
 
 ## Copy the default source
 

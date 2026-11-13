@@ -20,6 +20,13 @@ pnpm add react-hook-form
 
 Install the [Schema Engine registry](../../registry) elements and recipes for your UI library. The imports below refer to the generated registration barrels in your application.
 
+The recipes ship their CSS with them. Import it once in your global stylesheet, after Tailwind and into the `components` layer, so the shells render the `appearance` picks (`size`, `surface`) as Radiant does and your own classes override them:
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+```
+
 ## Render a form
 
 ```tsx

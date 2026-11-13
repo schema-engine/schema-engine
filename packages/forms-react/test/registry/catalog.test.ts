@@ -74,6 +74,19 @@ describe('schema-engine GitHub registry catalog', () => {
 		});
 	}
 
+	for (const name of RECIPE_AGGREGATES) {
+		test(`${name} copies the recipe stylesheets as registry files`, () => {
+			const item = catalog.find((entry) => entry.name === name);
+			const stylesheets = item?.files.filter((file) => file.path.endsWith('.css')) ?? [];
+			expect(stylesheets.map((file) => file.target).toSorted()).toEqual([
+				'@components/schema-engine/forms/recipes/recipes.css',
+				'@components/schema-engine/forms/recipes/shells/card-shell.css',
+			]);
+			expect(stylesheets.every((file) => file.type === 'registry:file')).toBe(true);
+			expect(item?.docs).toContain('recipes.css');
+		});
+	}
+
 	test('every file has an @components or @ui target', () => {
 		for (const item of catalog) {
 			for (const file of item.files) {

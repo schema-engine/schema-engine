@@ -400,6 +400,79 @@ export function rendererConformance(mount: ConformanceMount): void {
 				}
 			});
 		});
+		describe('card appearance parity', () => {
+			/**
+			 * Renders the card recipe with a shell pick and reads the card's computed geometry.
+			 *
+			 * @remarks
+			 * The host is wider than the widest card so the width is the shell's own readable measure, not the viewport's.
+			 * The card is the element that holds the pick and the field, and its section is the child that holds the field.
+			 */
+			const cardGeometry = async (appearance: Record<string, string>) => {
+				const cardCase = recipeCases.find((recipe) => recipe.$type === 'card');
+				if (!cardCase) throw new Error('The card recipe has no conformance case.');
+				const base = recipeForm(cardCase);
+				const { host } = await setup({
+					config: { ...base, view: { ...base.view, $type: 'card', shell: { appearance } } },
+				});
+				host.style.width = '1200px';
+				const textbox = getByRole(host, 'textbox', { name: 'Field 1' });
+				const picked = Object.entries(appearance)
+					.map(([axis, value]) => `[data-se-${axis}="${value}"]`)
+					.join('');
+				const card = Array.from(host.querySelectorAll<HTMLElement>(picked)).find(
+					(element) =>
+						element !== formElement(host) &&
+						element !== stepElement(host, 'step0') &&
+						!element.classList.contains('se-grid-item') &&
+						element.contains(textbox),
+				);
+				if (!card) throw new Error('No card carries the pick.');
+				const section = Array.from(card.children).find((child) => child.contains(textbox));
+				if (!section) throw new Error('No card section holds the field.');
+				const style = getComputedStyle(card);
+				return {
+					padding: getComputedStyle(section).paddingTop,
+					width: card.getBoundingClientRect().width,
+					borderWidth: style.borderTopWidth,
+					boxShadow: style.boxShadow,
+				};
+			};
+			/** @remarks The unpicked card shadow, resolved on a probe so each renderer's own colour resolution is compared. */
+			const defaultShadow = () => {
+				const probe = document.createElement('div');
+				probe.style.boxShadow = '0 8px 24px color-mix(in srgb, #000 10%, transparent)';
+				document.body.append(probe);
+				const shadow = getComputedStyle(probe).boxShadow;
+				probe.remove();
+				return shadow;
+			};
+			test('a card with size comfortable and surface elevated has the same geometry in every renderer', async () => {
+				expect(await cardGeometry({ size: 'comfortable', surface: 'elevated' })).toEqual({
+					padding: '32px',
+					width: 512,
+					borderWidth: '1px',
+					boxShadow: defaultShadow(),
+				});
+			});
+			test.each([
+				['compact', '16px', 384],
+				['default', '24px', 448],
+				['comfortable', '32px', 512],
+			])('card size %s has the same padding and width in every renderer', async (size, padding, width) => {
+				expect(await cardGeometry({ size })).toMatchObject({ padding, width });
+			});
+			test.each([
+				['flat', '0px', 'none'],
+				['outlined', '1px', 'none'],
+				['elevated', '1px', undefined],
+			])('card surface %s has the same border and shadow in every renderer', async (surface, border, shadow) => {
+				expect(await cardGeometry({ surface })).toMatchObject({
+					borderWidth: border,
+					boxShadow: shadow ?? defaultShadow(),
+				});
+			});
+		});
 		test('resolves sibling show constraints independently in two array rows', async () => {
 			const { host } = await setup({
 				config: form([

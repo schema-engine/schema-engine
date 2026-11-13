@@ -27,6 +27,13 @@ Install the form elements and, when using a supplied visual recipe, the recipe s
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
+The recipes copy their stylesheet with them. Import it once in your global stylesheet, after Tailwind (see [View recipes](/docs/forms-react/layouts#default-registry-recipes)):
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+```
+
 Then import their generated registration barrels:
 
 ```typescript

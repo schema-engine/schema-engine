@@ -1,43 +1,27 @@
-import type React from 'react';
 import { getAppearanceAttributes } from '@schema-engine/layout';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import { CardShellConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import type { FormShellProps } from '@schema-engine/forms-react/primitives';
 
 /**
- * Card geometry read from the layout theme's semantic appearance tokens.
+ * Card shell. Its look lives in `card-shell.css`, which the app imports through `recipes.css`.
  *
  * @remarks
- * The card's `appearance` (`size`, `surface`) sets `--se-space`, `--se-border-width`, `--se-shadow`
- * and `--se-surface-background` through the layout theme's token rules; the fallbacks are the look
- * of an unstyled card, so a form that picks nothing renders as before. The card's width is the
- * readable measure, `--se-measure`.
+ * The card's `appearance` (`size`, `surface`) is emitted as `data-se-*` attributes; the layout theme's
+ * token rules turn them into `--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow` and
+ * `--se-surface-background`, which the stylesheet reads. The shell sets no inline style, so a host
+ * class on the card or a section overrides it.
  */
-const cardStyle: React.CSSProperties = {
-	maxWidth: 'var(--se-measure, 28rem)',
-	backgroundColor: 'var(--se-surface-background, var(--color-card))',
-	borderWidth: 'var(--se-border-width, 1px)',
-	boxShadow: 'var(--se-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent))',
-};
-
-const sectionStyle: React.CSSProperties = { padding: 'var(--se-space, 1.5rem)' };
-
 export function CardShell({ slots, viewConfig }: FormShellProps) {
 	const { appearance } = getSlotConfig(viewConfig, 'shell', CardShellConfigSchema);
 
 	return (
-		<div className="flex min-h-svh items-center justify-center bg-muted/30 p-4 md:p-8">
-			<div
-				className="w-full rounded-xl border bg-card text-card-foreground"
-				style={cardStyle}
-				{...getAppearanceAttributes(appearance)}
-			>
+		<div className="se-card-shell">
+			<div className="se-card-shell__card" {...getAppearanceAttributes(appearance)}>
 				{slots.header ? (
-					<div className="border-b text-center" style={sectionStyle}>
-						{slots.header}
-					</div>
+					<div className="se-card-shell__header se-card-shell__section">{slots.header}</div>
 				) : null}
-				<div className="flex min-w-0 flex-col gap-6" style={sectionStyle}>
+				<div className="se-card-shell__content se-card-shell__section">
 					{slots.progress}
 					{slots.content}
 					{slots.actions}
