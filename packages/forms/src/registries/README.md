@@ -15,7 +15,8 @@ These are type aliases of `ReadOnlyRegistry<AnyElementRegistration>`,
 `buildFormEngine` builds them: later duplicates win without a warning, each
 winning schema is checked as a Standard Schema, and the stored registrations are
 frozen shallow copies of the ones you passed, which stay untouched. Recipes are
-also slot-checked and axis-checked for winners only. There is no `register` or
+also checked against the forms recipe protocol (`createFormRecipeRegistry`) and
+axis-checked, for winners only. There is no `register` or
 `clear`.
 
 Register components through `createFormEngine({ elements, recipes, actions })`.

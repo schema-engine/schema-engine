@@ -2,6 +2,7 @@ import * as z from 'zod/mini';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { StepStates } from '@/engine/step-machine';
 import type { AnyRecipeRegistration } from '@/types/registration';
+import { getSlotConfig as readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './types';
 
 export interface ViewNavigation {
@@ -26,8 +27,7 @@ export interface ViewStep {
 	isVisited: boolean;
 }
 
-export interface ViewModel {
-	kind: RecipeKind;
+export interface ViewModel extends RecipeViewModel<RecipeKind> {
 	form: {
 		id: string;
 		title?: string;
@@ -38,23 +38,18 @@ export interface ViewModel {
 	activeStep: ViewStep;
 	currentStepIndex: number;
 	navigation: ViewNavigation;
-	viewConfig: Record<string, unknown>;
 }
 
 /**
- * Reads one slot's complete config from a normalized view.
- *
- * @remarks
- * `schema` only types the result. The view is already complete, and parsing it again with the
- * block's own strict schema would reject a custom recipe whose slot schema extends the block's
- * with extra keys.
+ * Reads one slot's complete config from a normalized view; see the layout `getSlotConfig`, which this
+ * types by the forms slot names.
  */
 export function getSlotConfig<TSchema extends z.ZodMiniType>(
 	viewConfig: Record<string, unknown>,
 	slot: RecipeSlot,
-	_schema: TSchema,
+	schema: TSchema,
 ): z.output<TSchema> {
-	return viewConfig[slot] as z.output<TSchema>;
+	return readSlotConfig(viewConfig, slot, schema);
 }
 
 /**
