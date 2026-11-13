@@ -358,17 +358,24 @@ the form, each step, each element and each view slot.
 Both renderers emit the resolved selection as `data-se-<axis>="<value>"` on the form element
 (the one carrying `className` and `style`: `<form>` in React, `rui-form` in Radiant), the step
 element (`data-se-step`), the field host and the slot elements. The token rules are part of the
-layout theme's one stylesheet, emitted once per form. They are written as
-`:where(<theme scope> [data-se-size="compact"])`, so they add no specificity and an author's
-`className` always wins; the scope is `data-se-theme`, the layout theme's id, which sits on the
-form element and also on every grid and item, so two engines with different tokens cannot overwrite each other. Shells read
+layout theme's one stylesheet, emitted once per form. Each rule sits inside `:where()`, so it adds no
+specificity and an author's `className` always wins; the scope is `data-se-theme`, the layout theme's
+id, which sits on the form element and also on every grid and item. A rule reaches the element that
+carries the theme and the pick together, or a descendant of the theme's root with no other theme
+between, so the nearest theme wins: a form of one engine nested in a grid item of another takes its
+own tokens, whichever stylesheet comes later. The same rules are emitted again as `@scope (theme) to
+(other theme)` blocks, which a browser without `@scope` ignores; they make a theme re-entered below
+another theme exact too, and, because scope proximity outranks source order, a zero-specificity author
+rule such as `:where(.x)` loses to a token rule in a browser that has `@scope` (the layout README,
+"Nested themes", has the details). Shells read
 the tokens (`var(--se-space, 1.5rem)`) and keep the look of an unstyled form as the
 fallback. The built-in tokens name no host theme: a renderer's fallback is where its host theme
 variables belong (Radiant's card reads `var(--se-space, var(--space-block-lg, 1.5rem))`), and the
 built-in `size.default` sets its tokens to `initial`, which hands them back to the component's
 fallback, so `size: default` looks like no pick in a themed app, also inside a `compact` form. What a host's own axis looks like is the host's CSS, keyed on the same attributes. A value
 that declares no tokens inherits the surrounding value's tokens through custom-property inheritance,
-and a form of another engine nested inside a form is not supported. The DOM contract is the same in
+also from a pick made outside a nested form of another theme, until that form picks a value that
+declares those tokens. The DOM contract is the same in
 every renderer; the visual effect of a built-in value is not yet: `size` changes a field's font size in
 Radiant only, and both card shells read the tokens. A field's `className` is applied to the same field host, the element that carries its `style` and the attributes, in both renderers. The field host that carries the attributes is the
 inner `.se-form-field` (the Radiant constraint wrapper around it carries only grid placement).

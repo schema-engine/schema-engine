@@ -83,6 +83,16 @@ Rules for a good axis: orthogonal to the others; the same meaning on every compo
 
 `createAppearanceSchema(registry)` builds the schema of a pick from the theme's axes: each axis an optional enum of its values, which a JSON Schema export lists.
 
+### Nested themes
+
+Every grid and item carries `data-se-theme`, so a form of theme B rendered inside a grid item of theme A has both themes above it. The token rules do not leak between them: with `T` the theme's `[data-se-theme="<id>"]` and `O` any other theme, `[data-se-theme]:not(T)`, each is written as `:where(T[data-se-x="v"], T [data-se-x="v"]:not(O, T O *))`, so an element takes the tokens of the nearest theme, whichever stylesheet comes later. A pick made on the element that carries the theme, or below it with no other theme in between, uses that theme's tokens. The rules stay in `:where()`, so they add no specificity and an author's class still wins. The grid rules are unchanged.
+
+Plain selectors cannot say "no other theme between" for a theme re-entered below another theme (A inside B inside A): the descendants of the inner A match no plain rule, so they inherit the custom properties of the nearest element that did, which can be a wrong token. The stylesheet therefore also carries, after the plain rules, one `@scope (T) to (O) { :where(:scope[data-se-x="v"], [data-se-x="v"]) { ... } }` per token rule. A browser without `@scope` (it is Baseline since late 2025) drops those blocks and keeps the plain rules, which are right for every case but A in B in A. A browser with it is exact for all of them. Neither needs a script, and both hold in server-rendered output. The `@scope` rules add about 1.4 KB to a theme with the built-in axes.
+
+`@scope` changes one cascade detail: scope proximity outranks source order, and an unscoped rule is the farthest from any scope root. A zero-specificity author rule such as `:where(.x)` therefore loses to a token rule in a browser with `@scope`, where it won on order alone before. A class with any specificity still wins.
+
+Tokens are custom properties, so they still inherit like any other: an outer pick on an axis reaches a nested form that picks nothing on that axis, until that form picks a value that declares those tokens (the built-in `size.default` and `surface.elevated` set theirs to `initial`, which hands them back to the component).
+
 ## The stylesheet hooks
 
 The stylesheet selects only `.se-grid`, `.se-grid-item` and `[data-se-theme]`. A renderer puts `GRID_CLASS` (`se-grid`) on every grid container, `GRID_ITEM_CLASS` (`se-grid-item`) on every item placed in one, and `data-se-theme="<id>"` on both. It adds them beside its own classes. There are no aliases for another class name.
