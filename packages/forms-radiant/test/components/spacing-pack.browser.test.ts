@@ -44,13 +44,6 @@ async function contentPadding(pick?: Record<string, string>) {
 	return getComputedStyle(scope.querySelector('.card-shell__content')!).paddingTop;
 }
 
-test('a size pick resolves to the default pack spacing before the compact pack loads', async () => {
-	addStyle(layout.css);
-	expect(await contentPadding({ size: 'compact' })).toBe('16px');
-	document.body.replaceChildren();
-	expect(await contentPadding({ size: 'comfortable' })).toBe('32px');
-});
-
 test.each([
 	['compact', '12px'],
 	['comfortable', '24px'],

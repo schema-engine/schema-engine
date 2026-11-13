@@ -153,12 +153,12 @@ streaming, caching or removal of the other forms, and compression makes the repe
 cheap on the wire. React hoists the equal stylesheets of its forms to one element instead; the
 stylesheet content is the same.
 
-The cost is in the browser, not on the wire. Every copy holds the same selectors and each form's elements sit under all of them, so style and layout time grows faster
-than the number of forms. Chromium and Firefox absorb it. WebKit does not: on a page of one SSR form repeated per
+The cost is in the browser, not on the wire. Every copy holds the same selectors and each form's elements sit under all of them, so, in WebKit, style and layout time grows
+faster than the number of forms. Chromium and Firefox absorb it. WebKit does not: on a page of one SSR form repeated per
 copy, WebKit 26.6 (Playwright, headless) needed about 11 ms for 10 forms, 37 ms for 25, 110 ms for 50 and
 390 ms for 100, against 2, 3, 6 and 11 ms with a single copy; Chromium 153 stayed under 9 ms for 100 forms and
 Firefox 155 under 17 ms. The figures are one small form per copy, so a real page with larger forms pays more.
-Real Safari was not measured. A page with a handful of forms does not notice it; a page that mounts dozens of
+The figures come from a one-off Playwright run, and real Safari was not measured. A page with a handful of forms does not notice it; a page that mounts dozens of
 forms at once (a list of editable rows, each its own form) does.
 
 A host that renders many forms on one page can serve the stylesheet once and drop the copies from the
@@ -168,9 +168,10 @@ rendered HTML. The rules are the same, so the forms look the same:
 const { id, css } = formEngine.getLayout();
 const sheet = `<style data-se-theme-css="${id}">${css}</style>`;
 
-// html is the server-rendered page; the forms' copies are removed and one copy goes in the head.
+// html is the complete server-rendered page, buffered: a streamed head has already been sent.
+// The regex matches the `<style data-se-theme-css>` element each form emits.
 const copies = /<style data-se-theme-css="[^"]*">[\s\S]*?<\/style>/g;
-const page = html.replace(copies, '').replace('</head>', `${sheet}</head>`);
+const page = html.replace(copies, '').replace('</head>', () => `${sheet}</head>`);
 ```
 
 `getLayout()` returns the engine's theme, `id` and `css`. Use it only where the host owns the whole

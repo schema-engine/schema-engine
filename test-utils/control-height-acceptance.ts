@@ -143,15 +143,18 @@ export function controlHeightHookAcceptance(mount: ConformanceMount): void {
 			for (const [name, value] of Object.entries(hooks)) ancestor().style.setProperty(name, value);
 			expect(await heights('compact')).toEqual({ input: 18, button: 18 });
 			cleanup?.();
+			cleanup = undefined;
 			expect(await heights('comfortable')).toEqual({ input: 52, button: 52 });
 		});
 
 		test('leaves no pick and default on the height the theme gives', async () => {
 			const unpicked = await heights();
 			cleanup?.();
+			cleanup = undefined;
 			for (const [name, value] of Object.entries(hooks)) ancestor().style.setProperty(name, value);
 			expect(await heights()).toEqual(unpicked);
 			cleanup?.();
+			cleanup = undefined;
 			expect(await heights('default')).toEqual(unpicked);
 		});
 	});

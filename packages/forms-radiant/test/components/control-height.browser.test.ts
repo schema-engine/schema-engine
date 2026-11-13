@@ -248,19 +248,24 @@ describe('a size hook set above the form', () => {
 	});
 
 	test('a spacing hook on the root element reaches the spacing of a compact form', async () => {
-		const spacing = async () => {
+		const read = async () => {
 			const { host, cleanup } = await mountRadiant({ config: controlHeightForm('compact') });
 			try {
-				return getComputedStyle(host.querySelector('rui-form')!).getPropertyValue('--se-space').trim();
+				const form = getComputedStyle(host.querySelector('rui-form')!);
+				return {
+					space: form.getPropertyValue('--se-space').trim(),
+					host: form.getPropertyValue('--se-host-space-compact').trim(),
+				};
 			} finally {
 				cleanup();
 			}
 		};
-		const themed = await spacing();
-		expect(themed).not.toBe('');
+		const themed = await read();
+		expect(themed.host).not.toBe('');
+		expect(themed.space).toBe(themed.host);
 		document.documentElement.style.setProperty('--se-space-compact', '0.3125rem');
 		try {
-			expect(await spacing()).toBe('0.3125rem');
+			expect((await read()).space).toBe('0.3125rem');
 		} finally {
 			document.documentElement.style.removeProperty('--se-space-compact');
 		}

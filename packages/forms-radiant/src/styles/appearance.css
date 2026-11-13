@@ -4,8 +4,9 @@
  * others), then a neutral value. Radiant sets only the host hooks, from its theme, so a hook an author sets
  * on :root or any ancestor reaches the pick and wins, and a form with no author hook follows the theme.
  *
- * The host hooks sit on the form element, the one themed element that is neither a grid nor an item, so a
- * form nested in another theme's grid item resolves the --size-control-* values of the wrapper it sits in.
+ * The host hooks are declared on the form element (the one themed element that is neither a grid nor an
+ * item), not on :root, so their var(--size-control-*) resolves at the form and sees the values of a wrapper
+ * that scopes a theme, also for a form nested in another theme's grid item.
  * Radiant never declares the author hooks, so it cannot replace one an author set above or on the form.
  */
 :where([data-se-theme]:not(.se-grid, .se-grid-item)) {

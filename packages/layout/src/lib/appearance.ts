@@ -237,8 +237,8 @@ const surfaceAxis = defineAxis({
  * (flat, outlined, elevated).
  *
  * @remarks
- * The tokens are renderer-neutral and name no host theme; `size` reads renderer hooks (`--se-space-compact`,
- * `--se-control-height-compact` and their `comfortable` twins) with neutral fallbacks. `size.default` and the background of
+ * The tokens are renderer-neutral and name no host theme; `size` reads hooks an author sets (`--se-space-compact`,
+ * `--se-control-height-compact` and their `comfortable` twins), then the `--se-host-*` twin of each, which a renderer sets from its host theme, then a neutral value. `size.default` and the background of
  * `surface.elevated` are `initial`, which hands the token back to the component's own fallback, so
  * a renderer's fallbacks, which it maps to its host theme, stay in force and `size: default`
  * looks like no pick, also inside a `compact` form. Override an axis by listing another
