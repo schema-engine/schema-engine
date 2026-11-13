@@ -24,13 +24,14 @@ bun add @schema-engine/actions
 
 ### Package Overview
 
-| Package                      | Description                           |
-| ---------------------------- | ------------------------------------- |
-| `@schema-engine/forms`       | Core form engine (framework-agnostic) |
-| `@schema-engine/forms-react` | React components and hooks            |
-| `@schema-engine/actions`     | Domain-agnostic action system         |
-| `@schema-engine/layout`      | Grid and appearance theme (neutral)   |
-| `@schema-engine/registry`    | Base registry (internal dependency)   |
+| Package                        | Description                              |
+| ------------------------------ | ---------------------------------------- |
+| `@schema-engine/forms`         | Core form engine (framework-agnostic)    |
+| `@schema-engine/forms-react`   | React components and hooks               |
+| `@schema-engine/forms-radiant` | Radiant (Ecopages) renderer              |
+| `@schema-engine/actions`       | Domain-agnostic action system            |
+| `@schema-engine/layout`        | Grid and appearance theme (neutral)      |
+| `@schema-engine/registry`      | Registries, and YAML documents (`/yaml`) |
 
 ## Development Setup
 
@@ -38,40 +39,38 @@ To contribute or explore the source code:
 
 ### Prerequisites
 
-- **Bun** - This project uses Bun as the JavaScript runtime
-- **Node.js** 18+ (for compatibility)
+- **pnpm** - The workspace uses pnpm
+- **Node.js** 24 or newer
 - **Git** for cloning the repository
 
 ### Clone and Setup
 
 ```bash
 # Clone the repository
-git clone https:
+git clone git@github.com:andeeplus/schema-engine.git
 cd schema-engine
 
 # Install dependencies
-bun install
+pnpm install
 
-# Start documentation site
-bun dev:www
+# Start the documentation site
+pnpm dev:docs
 ```
-
-The development server will start at `http://localhost:3000`.
 
 ### Development Scripts
 
 ```bash
-# Start documentation site
-bun dev:www
+# Start the documentation site
+pnpm dev:docs
 
-# Build all packages
-bun run build
+# Build all packages, then type-check them and the docs
+pnpm build:lib
 
-# Run tests
-bun test
+# Run the unit and browser tests
+pnpm test:all
 
-# Type check
-bun run typecheck
+# Lint
+pnpm lint
 ```
 
 ### Verification
@@ -79,7 +78,7 @@ bun run typecheck
 To verify that the installation was successful, check the version of the installed packages:
 
 ```bash
-bun list | grep schema-engine
+pnpm list --depth 0 | grep schema-engine
 ```
 
 You should see `@schema-engine/forms` and `@schema-engine/forms-react` listed with their versions.
@@ -91,11 +90,12 @@ schema-engine/
 ├── packages/
 │   ├── forms/           # @schema-engine/forms
 │   ├── forms-react/     # @schema-engine/forms-react
+│   ├── forms-radiant/   # @schema-engine/forms-radiant
 │   ├── actions/         # @schema-engine/actions
 │   ├── layout/          # @schema-engine/layout
 │   └── registry/        # @schema-engine/registry
 ├── apps/
-│   └── www/             # Documentation site
+│   └── docs/            # Documentation site
 └── package.json
 ```
 
@@ -128,3 +128,5 @@ The packages require the following peer dependencies:
 - **[Quick Start](/docs/getting-started/quick-start)** - Build your first form
 - **[Forms Package](/docs/forms/overview)** - Core engine documentation
 - **[Forms React](/docs/forms-react/overview)** - React integration
+- **[Forms Radiant](/docs/forms-radiant/overview)** - Radiant integration
+- **[Styling and layout](/docs/styling/overview)** - Grid, appearance axes, theming and recipes

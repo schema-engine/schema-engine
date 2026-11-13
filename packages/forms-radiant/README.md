@@ -81,6 +81,8 @@ document.addEventListener('eco:before-swap', (event) => {
 
 A form rendered only on the client passes `engine` to `FormRenderer` and needs neither. The docs app does this in `apps/docs/src/lib/preview-engine-binding.ts`.
 
+The docs have [Styling and layout](../../apps/docs/src/content/docs/styling/overview.mdx) and copy-paste [Recipes](../../apps/docs/src/content/docs/styling/recipes.mdx) rendered with this adapter. A scoped `--rui-density` does not resize Radiant controls (Radiant UI computes `--size-control-*` on `:root`); see [Theming](../../apps/docs/src/content/docs/styling/theming.mdx).
+
 ### Registering only the elements a form uses
 
 `schemaFormRegistrations` is every built-in element — the convenient default,

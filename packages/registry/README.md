@@ -12,6 +12,8 @@ Use the `ComponentRegistration` type when entries must include a render function
 
 It is used by higher-level packages such as `@schema-engine/forms`, `@schema-engine/actions` and `@schema-engine/layout` (which stores appearance axes in it), but it is also usable on its own for plugin systems and internal extension points.
 
+Docs: [Registries and the catalog](../../apps/docs/src/content/docs/registry/registries.mdx) covers read-only and mutable registries, what the forms engine registers, and adding a registration kind.
+
 ## Installation
 
 ```bash

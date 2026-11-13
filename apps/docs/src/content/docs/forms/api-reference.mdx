@@ -51,6 +51,10 @@ Duplicate `$type` values follow last-wins at runtime. Tuples and inline arrays
 use last-wins typing; open `T[]` values use a union of configs for the same
 `$type`. Spread shared registration barrels and append overrides when needed.
 
+`layout` is the [layout theme](/docs/styling/layout-themes). `engine.getLayout()` returns it, and
+`engine.getSchemaCatalog()` lists the registered elements, recipes, actions and axes
+([Registries](/docs/registry/registries)).
+
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
 and is not typed per engine: field `rules` keep their `type` string. See
 [Custom Validations](./validation-custom).
@@ -147,9 +151,17 @@ interface RecipeRegistration<TType, TSchema, TRender = unknown> {
 	slots: Array<'shell' | 'header' | 'progress' | 'actions'>;
 	schema: TSchema;
 	metadata: RecipeMetadata;
+	/** Slot config applied beneath the view's own slot config. */
+	slotDefaults?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', Record<string, unknown>>>;
+	/** Appearance axes each slot supports, for example `{ shell: ['size', 'surface'] }`. */
+	appearanceAxes?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', readonly string[]>>;
 	render: TRender;
 }
 ```
+
+The recipe protocol (the slots, the kinds, the rules that check them) is declared once per domain with
+`defineRecipeProtocol` from `@schema-engine/layout`; forms declares `shell | header | progress | actions` and
+`single-step | wizard`. See [Recipes](/docs/styling/recipes#a-custom-recipe-shell-in-react-and-in-radiant).
 
 See [Form engine setup](/docs/forms/builder) for adapter factories and
 composition rules.

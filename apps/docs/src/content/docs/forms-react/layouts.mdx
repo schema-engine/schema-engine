@@ -13,12 +13,13 @@ import { viewRecipesDemoConfig } from '@/lib/form-configs/onboarding-wizard';
 
 Recipes compose a **shell** with optional **header**, **progress**, and **actions** blocks. Select one with form-level `view.$type`. `@schema-engine/forms-react` is headless: the factory does not bind default recipes. `FormRenderer` still lives in the package.
 
-| Layer                                          | Owns                                                                      |
-| ---------------------------------------------- | ------------------------------------------------------------------------- |
-| `@schema-engine/forms/recipes`                 | Forms recipe protocol: `defineRecipeSpec`, `defineFormRecipe`, view model |
-| `@schema-engine/forms/recipes/built-in`        | Built-in specs, slot schemas and their config types                       |
-| `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                     |
-| `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()`      |
+| Layer                                          | Owns                                                                                                                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@schema-engine/layout`                        | The recipe protocol every domain shares: `defineRecipeProtocol`, `resolveRecipeView`, slot defaults                                                    |
+| `@schema-engine/forms/recipes`                 | The forms protocol (slots `shell`, `header`, `progress`, `actions`; kinds `single-step`, `wizard`): `defineRecipeSpec`, `defineFormRecipe`, view model |
+| `@schema-engine/forms/recipes/built-in`        | Built-in specs, slot schemas and their config types                                                                                                    |
+| `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                                                                                                  |
+| `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()`                                                                                   |
 
 ## Default registry recipes
 
@@ -74,9 +75,11 @@ const formConfig: FormConfig = {
 };
 ```
 
-## Multi-step
+## Appearance and the default styles
 
-Recipe slots, steps, fields and the form take a named `appearance`: the engine's layout theme declares the axes (`size`: `compact | default | comfortable`, `surface`: `flat | outlined | elevated`, plus any a host adds), each element or slot declares the axes it supports, and both renderers emit the picked value as `data-se-<axis>`. The card shell reads the semantic tokens those values set (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) from `card-shell.css`, so, with the built-in axes and no host theme overrides, the same config gives the same padding, width, border and shadow as the Radiant card. `controls.css`, a separate import from `recipes.css`, reads `--se-control-height` for the single-line controls that carry `data-se-control` (inputs, selects, number, masked and phone inputs, date triggers, the submit and wizard buttons): `compact` is `1.75rem` and `comfortable` `2.25rem` unless the host sets `--se-control-height-compact` or `--se-control-height-comfortable`, and no pick or `default` keeps the height of your own `ui` component. Import it unlayered, after the layered `recipes.css`: `@import './components/ui/schema-engine/components/controls.css';`. A shadcn control sets its height with a Tailwind utility, which outranks every `components` layer rule, so only an unlayered rule lets the pick win. While a size is picked, a Tailwind height utility you pass to a control loses to it, and an unlayered class of yours still wins. Structural slot config such as `header.showDescription` is unchanged.
+Recipe slots, steps, fields and the form take a named `appearance`. The guides are [Appearance axes](/docs/styling/appearance-axes) and [Theming](/docs/styling/theming); in short, the engine's layout theme declares the axes (`size`: `compact | default | comfortable`, `surface`: `flat | outlined | elevated`, plus any a host adds), each element or slot declares the axes it supports, and both renderers emit the picked value as `data-se-<axis>`. The card shell reads the semantic tokens those values set (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) from `card-shell.css`, so, with the built-in axes and no host theme overrides, the same config gives the same padding, width, border and shadow as the Radiant card. `controls.css`, a separate import from `recipes.css`, reads `--se-control-height` for the single-line controls that carry `data-se-control` (inputs, selects, number, masked and phone inputs, date triggers, the submit and wizard buttons): `compact` is `1.75rem` and `comfortable` `2.25rem` unless the host sets `--se-control-height-compact` or `--se-control-height-comfortable`, and no pick or `default` keeps the height of your own `ui` component. Import it unlayered, after the layered `recipes.css`: `@import './components/ui/schema-engine/components/controls.css';`. A shadcn control sets its height with a Tailwind utility, which outranks every `components` layer rule, so only an unlayered rule lets the pick win. While a size is picked, a Tailwind height utility you pass to a control loses to it, and an unlayered class of yours still wins. Structural slot config such as `header.showDescription` is unchanged.
+
+## Multi-step
 
 Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`. The live demo renders exactly the configuration below:
 
@@ -122,7 +125,7 @@ const config = engine.defineForm({
 }
 ```
 
-The card shell sets no inline styles. Its class hooks are `se-card-shell`, `se-card-shell__card`, `se-card-shell__section`, `se-card-shell__header` and `se-card-shell__content`.
+The card shell sets no inline styles. Its class hooks are `se-card-shell`, `se-card-shell__card`, `se-card-shell__section`, `se-card-shell__header` and `se-card-shell__content`. [Styling and layout](/docs/styling/overview) says which tool (a token, an axis value, a class) fits which job.
 
 ## Copy the default source
 
@@ -131,6 +134,8 @@ Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files l
 <DefaultRecipeSources />
 
 ## Custom recipes
+
+A recipe is a registration: a spec bound to your components. [Recipes](/docs/styling/recipes#a-custom-recipe-shell-in-react-and-in-radiant) has a custom shell that renders live in React and in Radiant, with its CSS.
 
 ```typescript
 import * as z from 'zod/mini';

@@ -116,6 +116,8 @@ longer augment a global `FormEngine` namespace.
 - Replace `useFormInstance` with `useFormContext` from `/adapters`.
 - Replace `useGDPRConsent` and `useGTMTracker` with `GDPRConsent` and `GTMTracker` from `@schema-engine/forms/browser`. `GDPRConsent` is a shared `GDPRConsentTool` backed by `localStorage` (`createGDPRConsent` builds one over other storage) and `GTMTracker` exposes static methods. Neither is a hook, so React state subscriptions belong to the application.
 
+Styling and layout guides: [Styling and layout](../../apps/docs/src/content/docs/styling/overview.mdx), [Appearance axes](../../apps/docs/src/content/docs/styling/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/styling/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/styling/recipes.mdx).
+
 See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx), [Hooks](../../apps/docs/src/content/docs/forms-react/hooks.mdx), and [Advanced usage](../../apps/docs/src/content/docs/forms-react/advanced.mdx).
 
 Registry source type checks run through the registry workspace's `check-types`
