@@ -42,6 +42,32 @@ export function generateZodJSONSchemaCollection(
 }
 
 /**
+ * Registry that answers metadata lookups from a primary registry laid over `z.globalRegistry`.
+ *
+ * @remarks
+ * `z.toJSONSchema` reads metadata from the single registry passed as `metadata`, which replaces
+ * `z.globalRegistry`. That is where `.describe(...)` and `.meta(...)` store a schema's own
+ * description, so passing only the catalog registry dropped every author-written description.
+ * Entries of the primary registry win key by key, except that an undefined value (a catalog entry
+ * without a description) does not hide the one the schema declares.
+ */
+class LayeredMetadataRegistry extends z.core.$ZodRegistry<Record<string, unknown>> {
+	constructor(private readonly primary: ZodJSONSchemaRegistry) {
+		super();
+	}
+
+	override get(schema: z.core.$ZodType): Record<string, unknown> | undefined {
+		const own = z.globalRegistry.get(schema);
+		const layered = this.primary.get(schema);
+		if (!layered) {
+			return own;
+		}
+		const defined = Object.fromEntries(Object.entries(layered).filter(([, value]) => value !== undefined));
+		return { ...own, ...defined };
+	}
+}
+
+/**
  * Generate a JSON Schema document from a Zod validator using registry metadata.
  * An optional `$id` can be applied centrally so higher layers do not repeat that
  * concern for each emitted schema.
@@ -58,7 +84,7 @@ export function generateZodJSONSchemaDocument(
 	const schema = z.toJSONSchema(validator, {
 		target: options?.target || 'draft-2020-12',
 		io: options?.io || 'input',
-		metadata: metadataRegistry,
+		metadata: new LayeredMetadataRegistry(metadataRegistry),
 	}) as JSONSchemaObject & { $id?: string };
 
 	if (options?.schemaId) {
