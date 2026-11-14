@@ -1,1 +1,1 @@
-pnpm check-types:scripts && pnpm registry:check && turbo test:all && pnpm lint-staged
+pnpm check-types:scripts && pnpm registry:check && turbo check-types test:all && pnpm lint-staged

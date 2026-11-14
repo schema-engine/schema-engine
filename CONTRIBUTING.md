@@ -15,23 +15,23 @@ Node 24 or newer and pnpm 10 are required. The browser tests of `forms-react`, `
 
 [`.husky/pre-commit`](./.husky/pre-commit) runs these steps in order and stops at the first failure:
 
-| Step | Command                    | What it checks                                                                        |
-| ---- | -------------------------- | ------------------------------------------------------------------------------------- |
-| 1    | `pnpm check-types:scripts` | Type-checks the `scripts` package.                                                    |
-| 2    | `pnpm registry:check`      | The generated shadcn registry files match their sources.                              |
-| 3    | `turbo test:all`           | Builds each package's dependencies, then runs every package's unit and browser tests. |
-| 4    | `pnpm lint-staged`         | Runs oxlint and Prettier on the staged files.                                         |
+| Step | Command                      | What it checks                                                                                                                           |
+| ---- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `pnpm check-types:scripts`   | Type-checks the `scripts` package.                                                                                                       |
+| 2    | `pnpm registry:check`        | The generated shadcn registry files match their sources.                                                                                 |
+| 3    | `turbo check-types test:all` | Builds each package's dependencies, type-checks every package (the docs app included), then runs every package's unit and browser tests. |
+| 4    | `pnpm lint-staged`           | Runs oxlint and Prettier on the staged files.                                                                                            |
 
 Run the same checks yourself, in the same order:
 
 ```sh
 pnpm check-types:scripts
 pnpm registry:check
-pnpm test:all
+pnpm turbo check-types test:all
 pnpm lint-staged
 ```
 
-Type-checking the whole workspace is not part of the hook because it also builds the docs app. Run it before opening a pull request:
+Type-checking runs in the hook, so a type error in any package or app blocks the commit. It costs about 10 seconds when turbo has the results cached (the docs app re-runs because its check builds the site) and about 40 seconds from a cold cache. To run it alone:
 
 ```sh
 pnpm turbo check-types
