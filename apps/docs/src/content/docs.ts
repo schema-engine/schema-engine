@@ -42,7 +42,7 @@ export const DOCS_SECTION_CONFIG: Record<DocsSectionId, { title: string; icon: J
 	forms: { title: 'Forms', icon: formsIcon },
 	'forms-react': { title: 'Forms React', icon: formsReactIcon },
 	'forms-radiant': { title: 'Forms Radiant', icon: formsRadiantIcon },
-	styling: { title: 'Styling', icon: stylingIcon },
+	styling: { title: 'Layout', icon: stylingIcon },
 	capabilities: { title: 'Capabilities', icon: capabilitiesIcon },
 	actions: { title: 'Actions', icon: actionsIcon },
 	registry: { title: 'Registry', icon: registryIcon },

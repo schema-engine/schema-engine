@@ -1,6 +1,6 @@
 # Schema Engine
 
-> **A Schema-First Foundation for Modular Interfaces** — Build deterministic, type-safe, and event-driven systems from portable definitions.
+> **Declarative interfaces, extended with your own components and actions** — build deterministic, type-safe, event-driven interfaces from portable definitions.
 
 > **Important:** This README is an overview, not the API reference. For copy-paste-ready examples and current contracts, use the [Documentation App](./apps/docs) — start with [Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx).
 
@@ -15,9 +15,9 @@ grid and recipe contracts. Debug output is disabled by default; warnings and err
 
 In modern software architecture, the layer between human intent and system behavior often remains a fragmented landscape of imperative logic and tightly coupled UI components.
 
-**Schema Engine** establishes a new standard: **The Schema is the Single Source of Truth.**
+**Schema Engine** describes an interface as a portable definition and keeps the rules for interpreting it in one place. Each team brings its own vocabulary of components and actions; the engine keeps the rules the same: how definitions resolve, validate, compose and dispatch.
 
-While **Forms** are the most common application of this pattern, the same primitives can drive **Wizards**, **Dashboards**, **Kanban Boards**, and **Workflow Designers**. By treating interfaces as **structured capabilities** rather than just views, we enable a level of governance, velocity, and reliability that is impossible with ad-hoc component assembly.
+**Forms** is the first domain. The core (registry, actions, constraints, recipes) is domain-agnostic, and further domains are planned. Schema Engine is not a standard; it uses [Standard Schema](https://standardschema.dev/) at the registration boundary, so registrations can be validated by Zod, Valibot, Effect Schema or a hand-written schema. See [ABOUT.md](./ABOUT.md) for the project's layers and wording.
 
 ---
 
@@ -237,11 +237,11 @@ export function ContactPage() {
 
 ## 📚 Documentation
 
-Detailed architectural documentation is available in the [Documentation App](./apps/docs).
+Detailed architectural documentation is available in the [Documentation App](./apps/docs), which uses self-hosted IBM Plex fonts.
 
 - **[Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx)**
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
-- **[Styling and layout](./apps/docs/src/content/docs/styling/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/styling/recipes.mdx)
+- **[Layout](./apps/docs/src/content/docs/styling/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/styling/recipes.mdx)
 - **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Registries and the catalog](./apps/docs/src/content/docs/registry/registries.mdx)
 - **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**

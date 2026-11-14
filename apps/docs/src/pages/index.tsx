@@ -3,6 +3,7 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { unsafeHtml } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { RuiChip } from '@ecopages/radiant-ui/chip';
+import { RuiCycleToggle, RuiCycleToggleItem } from '@ecopages/radiant-ui/cycle-toggle';
 import {
 	RuiFeed,
 	RuiFeedArticle,
@@ -13,7 +14,7 @@ import {
 import { RuiHeading, RuiHeadingEyebrow, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { BaseLayout } from '@/layouts/base-layout';
 import { FormRendererPreview } from '@/components/form-renderer';
-import { contactFormConfig, contactFormConfigExample } from '@/homepage/examples';
+import { contactFormConfig, contactFormConfigExample, contactFormYamlExample } from '@/homepage/examples';
 import './index.css';
 
 type HomeFeedArticleData = {
@@ -116,6 +117,7 @@ const AGENT_LINKS = [
 const ECOSYSTEM_PACKAGES = [
 	'@schema-engine/forms',
 	'@schema-engine/forms-react',
+	'@schema-engine/layout',
 	'@schema-engine/actions',
 	'@schema-engine/registry',
 ];
@@ -367,8 +369,7 @@ const HomeHero = () => (
 			<ul class="home-hero__pills">
 				{HERO_PILLS.map((label) => (
 					<li>
-						<span class="home-hero__pill-dot" aria-hidden="true" />
-						{label}
+						<RuiChip>{label}</RuiChip>
 					</li>
 				))}
 			</ul>
@@ -379,11 +380,34 @@ const HomeHero = () => (
 const HomeDemo = () => (
 	<section class="home-demo" aria-label="Contact form from JSON">
 		<div class="home-demo__grid">
-			<PreviewChrome label="contact-form.json">
-				<figure data-rehype-pretty-code-figure class="home-code-block">
-					{unsafeHtml(contactFormConfigExample)}
-				</figure>
-			</PreviewChrome>
+			<div class="home-preview home-source">
+				<div class="home-preview__bar">
+					<span class="home-preview__dots" aria-hidden="true">
+						<span class="home-preview__dot home-preview__dot--red" />
+						<span class="home-preview__dot home-preview__dot--yellow" />
+						<span class="home-preview__dot home-preview__dot--green" />
+					</span>
+					<div class="home-source__switch">
+						<span>contact-form.</span>
+						<RuiCycleToggle value="json" label="Source format" variant="outline" size="sm">
+							<RuiCycleToggleItem id="json" selected>
+								json
+							</RuiCycleToggleItem>
+							<RuiCycleToggleItem id="yaml" selected={false}>
+								yaml
+							</RuiCycleToggleItem>
+						</RuiCycleToggle>
+					</div>
+				</div>
+				<div class="home-preview__body">
+					<figure data-rehype-pretty-code-figure class="home-code-block home-source__json">
+						{unsafeHtml(contactFormConfigExample)}
+					</figure>
+					<figure data-rehype-pretty-code-figure class="home-code-block home-source__yaml">
+						{unsafeHtml(contactFormYamlExample)}
+					</figure>
+				</div>
+			</div>
 			<PreviewChrome label="Live Preview" traffic="preview">
 				<FormRendererPreview config={contactFormConfig} />
 			</PreviewChrome>
