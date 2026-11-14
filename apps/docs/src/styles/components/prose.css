@@ -2,7 +2,7 @@
 	@apply text-on-background/90 text-base leading-[1.65];
 
 	h1:not(.unstyled, .unstyled *) {
-		@apply mt-12 mb-6 font-heading text-4xl leading-tight font-extrabold tracking-tight text-on-background-accent;
+		@apply mt-12 mb-6 font-heading text-4xl leading-tight font-bold tracking-tight text-on-background-accent;
 	}
 
 	h2:not(.unstyled, .unstyled *) {

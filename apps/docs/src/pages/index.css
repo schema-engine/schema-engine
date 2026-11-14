@@ -7,7 +7,7 @@
 }
 
 .home-hero {
-	@apply relative mx-auto flex max-w-4xl flex-col items-center text-center;
+	@apply relative mx-auto flex max-w-4xl flex-col items-center py-12 text-center;
 }
 
 .home-hero__title {
@@ -27,15 +27,11 @@
 }
 
 .home-hero__pills {
-	@apply mt-10 mb-2 flex list-none flex-wrap items-center justify-center gap-x-8 gap-y-3 p-0 text-sm text-on-background/70;
+	@apply mt-8 mb-2 flex list-none flex-wrap items-center justify-center gap-2 p-0 text-sm text-on-background/70;
 }
 
 .home-hero__pills li {
 	@apply inline-flex items-center gap-2;
-}
-
-.home-hero__pill-dot {
-	@apply size-2 rounded-full bg-primary;
 }
 
 .home-demo {
@@ -47,9 +43,8 @@
 }
 
 .home-preview {
-	@apply flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background shadow-lg;
-	height: 500px;
-	max-height: 500px;
+	@apply flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background;
+	height: 380px;
 }
 
 .home-preview__bar {
@@ -80,14 +75,33 @@
 	@apply ml-auto font-mono text-xs text-on-background/60;
 }
 
+.home-source__switch {
+	@apply ml-auto flex items-center font-mono text-xs text-on-background/60;
+}
+
+.home-source__yaml {
+	display: none;
+}
+
+.home-source:has(rui-cycle-toggle[value='yaml']) .home-source__json {
+	display: none;
+}
+
+.home-source:has(rui-cycle-toggle[value='yaml']) .home-source__yaml {
+	display: block;
+}
+
 .home-preview__body {
 	@apply min-h-0 overflow-auto;
 	flex: 1 1 0;
 }
 
-.home-preview__body docs-form-renderer {
-	display: block;
-	min-height: 100%;
+.home-preview__body:has(.docs-form-renderer-preview) {
+	@apply bg-muted;
+}
+
+.home-preview__body .docs-form-renderer-preview {
+	@apply rounded-none;
 }
 
 .home-main {

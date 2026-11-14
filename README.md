@@ -237,11 +237,11 @@ export function ContactPage() {
 
 ## 📚 Documentation
 
-Detailed architectural documentation is available in the [Documentation App](./apps/docs).
+Detailed architectural documentation is available in the [Documentation App](./apps/docs), which uses self-hosted IBM Plex fonts.
 
 - **[Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx)**
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
-- **[Styling and layout](./apps/docs/src/content/docs/styling/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/styling/recipes.mdx)
+- **[Layout](./apps/docs/src/content/docs/styling/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/styling/recipes.mdx)
 - **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Registries and the catalog](./apps/docs/src/content/docs/registry/registries.mdx)
 - **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
