@@ -1,3 +1,4 @@
+/** @jsxImportSource @ecopages/jsx */
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { unsafeHtml } from '@ecopages/jsx/jsx-runtime';
 import { RuiButton } from '@ecopages/radiant-ui/button';
