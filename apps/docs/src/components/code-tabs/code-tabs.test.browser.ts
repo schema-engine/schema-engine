@@ -131,6 +131,41 @@ describe('RadiantCodeTabs', () => {
 		});
 	});
 
+	it('shows the copy and check icons and sets the copied state on its own tab, then clears it', async () => {
+		const user = userEvent.setup();
+		mockClipboard(vi.fn().mockResolvedValue(undefined));
+		const codeTabs = createCodeTabs();
+		codeTabs.selectedKey = 'js';
+		const copyButton = await mount(codeTabs);
+
+		expect(copyButton.textContent?.trim()).toBe('');
+		expect(
+			[...copyButton.querySelectorAll('[data-copy-icon]')].map((icon) => icon.getAttribute('data-copy-icon')),
+		).toEqual(['copy', 'check']);
+		expect(copyButton.hasAttribute('data-copy-state')).toBe(false);
+
+		await user.click(copyButton);
+
+		await vi.waitFor(() => expect(copyButton.getAttribute('data-copy-state')).toBe('copied'));
+		const others = [...codeTabs.querySelectorAll<HTMLElement>('[data-copy-button]')].filter(
+			(other) => other !== copyButton,
+		);
+		expect(others.every((other) => !other.hasAttribute('data-copy-state'))).toBe(true);
+		await vi.waitFor(() => expect(copyButton.hasAttribute('data-copy-state')).toBe(false), { timeout: 3000 });
+	});
+
+	it('sets the error state when the clipboard rejects', async () => {
+		const user = userEvent.setup();
+		mockClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+		const codeTabs = createCodeTabs();
+		codeTabs.selectedKey = 'js';
+		const copyButton = await mount(codeTabs);
+
+		await user.click(copyButton);
+
+		await vi.waitFor(() => expect(copyButton.getAttribute('data-copy-state')).toBe('error'));
+	});
+
 	it('keeps every id unique and every tab wired to its own panel across instances', async () => {
 		const install = createCodeTabs('install');
 		const usage = createCodeTabs('usage');
