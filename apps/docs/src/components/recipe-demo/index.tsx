@@ -3,7 +3,7 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { CodeTabs } from '@/components/code-tabs';
 import { FormRendererPreview } from '@/components/form-renderer';
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
-import { codeToHtmlSync } from '@/lib/sync-highlighter';
+import { highlightToHtml } from '@/lib/pierre-highlight';
 import { recipeConfigSource, recipeYamlSources, type Recipe } from '@/lib/recipes/catalog';
 import './recipe-demo.css';
 import '@/lib/recipes/acme-theme.css';
@@ -16,7 +16,7 @@ import '@/lib/recipes/drawn-layout.css';
 import '@/lib/recipes/tight-size.css';
 
 function tab(id: string, label: string, lang: 'ts' | 'tsx' | 'css' | 'yaml', source: string) {
-	return { id, label, html: codeToHtmlSync(source, lang), content: source };
+	return { id, label, html: highlightToHtml(source, lang), content: source };
 }
 
 /**

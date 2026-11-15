@@ -41,7 +41,8 @@ test('a fenced code block copies its source, announces the result and a blank li
 			() => document.querySelector('[data-code-copy-status]')?.textContent === 'Code copied to clipboard',
 		);
 		expect(await button.getAttribute('aria-label')).toBe('Copy code');
-		expect(await button.textContent()).toBe('Copied');
+		expect(await button.getAttribute('data-copy-state')).toBe('copied');
+		expect(await button.locator('svg[data-copy-icon]').count()).toBe(2);
 		expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
 
 		const emptyLineHeights = await page
