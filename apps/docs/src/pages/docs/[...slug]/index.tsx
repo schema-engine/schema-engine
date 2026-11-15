@@ -72,21 +72,18 @@ export default eco.page<{ entry: Entry }, JsxRenderable>({
 	 * page's own components are picked up from the static imports above.
 	 */
 	dependencies: async ({ props }) => resolveDocsEntryDependencies(props.entry.slug),
-	staticPaths: async () => ({
-		paths: entries.map((post) => ({
+	paths: async () =>
+		entries.map((post) => ({
 			params: {
 				slug: post.segments,
 			},
 		})),
-	}),
-	staticProps: async ({ pathname }) => {
-		const segments = Array.isArray(pathname.params.slug) ? pathname.params.slug : [pathname.params.slug];
+	props: async ({ params }) => {
+		const segments = Array.isArray(params.slug) ? params.slug : [params.slug];
 		const entry = getEntryBySegments(segments);
 
 		return {
-			props: {
-				entry,
-			},
+			entry,
 		};
 	},
 	metadata: ({ props: { entry } }) => ({

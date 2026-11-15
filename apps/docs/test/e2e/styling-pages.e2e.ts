@@ -89,7 +89,13 @@ describe('styling docs pages', () => {
 		);
 	}
 
-	/** Selects each tab of a recipe, clicks its copy button and compares the clipboard with the text shown. */
+	/**
+	 * Selects each tab of a recipe, clicks its copy button and compares the clipboard with the text shown.
+	 *
+	 * @remarks
+	 * The clipboard holds the file verbatim, while the highlighter drops one final newline from the display
+	 * (`highlightCode` in `src/lib/pierre-highlight.ts`), so that newline is removed before comparing.
+	 */
 	async function expectEveryTabCopies(id: string): Promise<void> {
 		const tabsHost = page.locator(`[data-recipe="${id}"] radiant-code-tabs`);
 		await tabsHost.scrollIntoViewIfNeeded();
@@ -104,7 +110,7 @@ describe('styling docs pages', () => {
 			const shown = await panel.locator('.code-tabs__code').textContent();
 			await panel.locator('.code-tabs__copy').click();
 			const copied = await page.evaluate(() => navigator.clipboard.readText());
-			expect(copied, `${id} tab ${index}`).toBe(shown);
+			expect(copied.replace(/\n$/, ''), `${id} tab ${index}`).toBe(shown);
 			expect(copied.length).toBeGreaterThan(40);
 		}
 	}

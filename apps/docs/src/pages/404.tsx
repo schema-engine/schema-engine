@@ -5,7 +5,7 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import type { ErrorPageTemplateProps } from '@ecopages/core';
 import './404.css';
 
-const Error404 = eco.page<ErrorPageTemplateProps, JsxRenderable>({
+export default eco.page<ErrorPageTemplateProps, JsxRenderable>({
 	layout: BaseLayout,
 	render: () => {
 		return (
@@ -26,5 +26,3 @@ const Error404 = eco.page<ErrorPageTemplateProps, JsxRenderable>({
 		);
 	},
 });
-
-export default Error404;
