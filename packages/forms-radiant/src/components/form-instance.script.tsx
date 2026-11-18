@@ -69,7 +69,7 @@ export class FormInstanceElement extends RadiantElement {
 	get isSubmitting(): boolean {
 		return this.submitting;
 	}
-	@query({ selector: 'rui-form' }) private ruiForm!: RuiFormElement | null;
+	@query('rui-form') private ruiForm!: RuiFormElement | null;
 	private unwatchChanges?: () => void;
 	private actions?: FormActions;
 

@@ -1,5 +1,5 @@
 import './form-drop-zone.css';
-import { customElement, onUpdated, prop, query, RadiantElement, state } from '@ecopages/radiant';
+import { customElement, onUpdated, prop, RadiantElement, state, ref } from '@ecopages/radiant';
 import { registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
@@ -78,7 +78,7 @@ export class SeDropZone extends RadiantElement {
 	@state protected dragging = false;
 	@state protected files: File[] = [];
 
-	@query({ ref: 'input' }) fileInput!: HTMLInputElement | null;
+	@ref('input') fileInput!: HTMLInputElement | null;
 
 	private readonly onDragOver = (event: Event) => {
 		event.preventDefault();
