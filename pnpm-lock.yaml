@@ -14,6 +14,11 @@ overrides:
   react: ^19.3.0
   react-dom: ^19.3.0
 
+patchedDependencies:
+  '@ecopages/radiant-ui@0.4.3':
+    hash: c847ec56073e814fb752602b1e1ab5207445f9d243321b6174e89329c19891ee
+    path: patches/@ecopages__radiant-ui@0.4.3.patch
+
 importers:
 
   .:
@@ -147,44 +152,44 @@ importers:
         version: 1.4.0
     devDependencies:
       '@ecopages/browser-router':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))
+        specifier: ^0.10.0
+        version: 0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))
       '@ecopages/content-processor':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(typescript@5.9.3)
+        specifier: ^0.10.0
+        version: 0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(typescript@5.9.3)
       '@ecopages/core':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
+        specifier: ^0.10.0
+        version: 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
       '@ecopages/dev-toolbar':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/signals@0.9.0)
+        specifier: ^0.10.0
+        version: 0.10.0(@ecopages/signals@0.11.1)
       '@ecopages/ecopages-jsx':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(typescript@5.9.3)
+        specifier: ^0.10.0
+        version: 0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(typescript@5.9.3)
       '@ecopages/file-system':
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^0.10.0
+        version: 0.10.0
       '@ecopages/jsx':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/signals@0.9.0)
+        specifier: ^0.11.1
+        version: 0.11.1(@ecopages/signals@0.11.1)
       '@ecopages/lightningcss-processor':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@tailwindcss/node@4.3.3)(@tailwindcss/oxide@4.3.3)(tailwindcss@4.3.3)(typescript@5.9.3)
+        specifier: ^0.10.0
+        version: 0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@tailwindcss/node@4.3.3)(@tailwindcss/oxide@4.3.3)(tailwindcss@4.3.3)(typescript@5.9.3)
       '@ecopages/radiant':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))
+        specifier: ^0.11.1
+        version: 0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
       '@ecopages/radiant-ui':
-        specifier: 0.4.0
-        version: 0.4.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(@ecopages/signals@0.9.0)
+        specifier: 0.4.3
+        version: 0.4.3(patch_hash=c847ec56073e814fb752602b1e1ab5207445f9d243321b6174e89329c19891ee)(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
       '@ecopages/react':
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
+        specifier: ^0.10.0
+        version: 0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
       '@ecopages/scripts-injector':
         specifier: ^0.1.5
         version: 0.1.5(typescript@5.9.3)
       '@ecopages/signals':
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^0.11.1
+        version: 0.11.1
       '@mdx-js/esbuild':
         specifier: ^3.1.1
         version: 3.1.1(esbuild@0.27.7)
@@ -225,8 +230,8 @@ importers:
         specifier: ^4.0.13
         version: 4.1.11(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(playwright@1.63.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11)
       ecopages:
-        specifier: ^0.9.0
-        version: 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
+        specifier: ^0.10.0
+        version: 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
       playwright:
         specifier: ^1.63.0
         version: 1.63.0
@@ -363,23 +368,23 @@ importers:
         specifier: ^7.28.0
         version: 7.29.7(@babel/core@7.29.7)
       '@ecopages/jsx':
-        specifier: 0.9.0
-        version: 0.9.0(@ecopages/signals@0.9.0)
+        specifier: 0.11.1
+        version: 0.11.1(@ecopages/signals@0.11.1)
       '@ecopages/radiant':
-        specifier: 0.9.0
-        version: 0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))
+        specifier: 0.11.1
+        version: 0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
       '@ecopages/radiant-ui':
-        specifier: 0.4.0
-        version: 0.4.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(@ecopages/signals@0.9.0)
+        specifier: 0.4.3
+        version: 0.4.3(patch_hash=c847ec56073e814fb752602b1e1ab5207445f9d243321b6174e89329c19891ee)(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
       '@ecopages/signals':
-        specifier: 0.9.0
-        version: 0.9.0
+        specifier: 0.11.1
+        version: 0.11.1
       '@ecopages/storybook-radiant-vite':
-        specifier: 0.2.2
-        version: 0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(@ecopages/signals@0.9.0)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+        specifier: 0.2.3
+        version: 0.2.3(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       '@ecopages/vite-plugin-radiant':
-        specifier: 0.2.2
-        version: 0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(@ecopages/signals@0.9.0)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+        specifier: 0.2.3
+        version: 0.2.3(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       '@rolldown/plugin-babel':
         specifier: ^0.2.1
         version: 0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -394,13 +399,13 @@ importers:
         version: link:../../scripts
       '@storybook/addon-a11y':
         specifier: ^10.5.10
-        version: 10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))
+        version: 10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))
       '@storybook/addon-docs':
         specifier: ^10.5.2
-        version: 10.6.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))
+        version: 10.6.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))
       '@storybook/addon-vitest':
         specifier: ^10.5.2
-        version: 10.6.0(@vitest/browser-playwright@4.1.11)(@vitest/browser@4.1.11(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11))(@vitest/runner@4.1.11)(react@19.3.0)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(vitest@4.1.11)
+        version: 10.6.0(@vitest/browser-playwright@4.1.11)(@vitest/browser@4.1.11(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11))(@vitest/runner@4.1.11)(react@19.3.1)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))(vitest@4.1.11)
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.2
@@ -427,7 +432,7 @@ importers:
         version: 1.63.0
       storybook:
         specifier: ^10.5.2
-        version: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0)
+        version: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1)
       tsc-alias:
         specifier: ^1.8.16
         version: 1.9.5
@@ -944,53 +949,53 @@ packages:
   '@date-fns/tz@1.5.0':
     resolution: {integrity: sha512-lwYN/vDPeNRULcepoE/LO2Pgx+7/RV+S9ARfbc9lr2DtGkOD7pAiruHvbR1RX3Qyf6ja47EWJDMsNK5vK08DJg==}
 
-  '@ecopages/browser-router@0.9.0':
-    resolution: {integrity: sha512-0e9pOkdbTh4hBPbbe70cCf/aZWYUvTfmNPVJexToergaHy2usvXv8CRbkfJtquVIuUcftxDp2Awm4HG3Fl0FPQ==}
+  '@ecopages/browser-router@0.10.0':
+    resolution: {integrity: sha512-1CFA5p6PTlDOmoX47F5NDCsVnL/eIS5szO9jW5sU7clSS6zPTwvC3EnTSzR1oIYoPhMCkK63MzFbjCIv++kT+A==}
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
-      '@ecopages/core': 0.9.0
+      '@ecopages/core': 0.10.0
 
-  '@ecopages/content-processor@0.9.0':
-    resolution: {integrity: sha512-EIreHKFm5rlkJVOERW/DZYjnTjSxTlOsJMYouHT8LLa1of0LoFlrZFvm3Qj2t4oRsfQRNjNIv2LFJJ+54LPYlQ==}
+  '@ecopages/content-processor@0.10.0':
+    resolution: {integrity: sha512-A4NEflHXgV82fu2XroZxM39yvNfmcn9n8HmjBdjJp/aKqz5IfsAj75kJk71p+esdu7q2EpChzYSO4SEYIt5Eug==}
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
-      '@ecopages/core': 0.9.0
+      '@ecopages/core': 0.10.0
 
-  '@ecopages/core@0.9.0':
-    resolution: {integrity: sha512-BxERcJq2pwEzoQhAXPd4DWnpKUj4PPeD3j3+htWxviR/Pas5Wg828I2ba5Omo1mKeFOLwH6OsAT2bKQ8A5+08Q==}
+  '@ecopages/core@0.10.0':
+    resolution: {integrity: sha512-8FayhsQmD3z7NkbUMia8Fz1TZ6qrL3lPORGiFe4sUhrirgVv4HP1KM2ZrLoGTH7ZJjVHkDN/9P/+2DNT9TAmRg==}
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
-      '@ecopages/dev-toolbar': 0.9.0
+      '@ecopages/dev-toolbar': 0.10.0
     peerDependenciesMeta:
       '@ecopages/dev-toolbar':
         optional: true
 
-  '@ecopages/dev-toolbar@0.9.0':
-    resolution: {integrity: sha512-UJGher5aB4B/NcJtZSe+xysSxhP1KqLirdlgSbvcAt5eOh/hfa8z4umWqr+mo/f/bjP8J3kh/TC6eqR4Hoe5uA==}
+  '@ecopages/dev-toolbar@0.10.0':
+    resolution: {integrity: sha512-ma4yggOuPrBTRHc6c+/zocCL7/FAtp1Oc90I5YJaCLW3Z0sz/8WqxxpvlKO1oLCb6xoBzlgurxp/buHLeYUjTQ==}
     engines: {node: ^24.22.0 || >=26.0.0}
 
-  '@ecopages/ecopages-jsx@0.9.0':
-    resolution: {integrity: sha512-AIkbsWhMFxjjHhbhd360b39bJR886mPuBa7LzDEhCLFgaR+rxU7FC3/MfCFGQ0NmA/X0u0/PdOUixqSE8ivzRA==}
-    engines: {node: ^24.22.0 || >=26.0.0}
-    peerDependencies:
-      '@ecopages/core': 0.9.0
-      '@ecopages/jsx': ^0.9.0
-      '@ecopages/radiant': ^0.9.0
-
-  '@ecopages/file-system@0.9.0':
-    resolution: {integrity: sha512-7sIiYqnTaJKE+HcI8XBN4NlMk2D8uYSS/Bo9wPS/bFRuN5OjQnnvJ+4Cdz9f0YBCjKmKwWNd5aoAMCk3aOqZ+g==}
-    engines: {node: ^24.22.0 || >=26.0.0}
-
-  '@ecopages/jsx@0.9.0':
-    resolution: {integrity: sha512-3i/hDyqncsApCot4GPYYQF29531LYOFlbsk1FSo6oqWvBicDM5qoV/TCCP/l34kzktQzBgwJXv4GnEDtjb4ntQ==}
-    peerDependencies:
-      '@ecopages/signals': '>=0.9.0'
-
-  '@ecopages/lightningcss-processor@0.9.0':
-    resolution: {integrity: sha512-CkPYcUGIt4VJ/hv+4/JeFb1ZN11XIT9xGrAgrrszpu1neYOkIYboKtgFUkZhsNKZShP+bnpSpYk0XFjApZh9nw==}
+  '@ecopages/ecopages-jsx@0.10.0':
+    resolution: {integrity: sha512-w0MDeOtdzhUiZ1ajq8WxzSYWkCbHTr2Chm31X7A9X/etBnw+WZAnHO7Xa/cFu6eJX9RduWtpDB6iuhsrFxmZbQ==}
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
-      '@ecopages/core': 0.9.0
+      '@ecopages/core': 0.10.0
+      '@ecopages/jsx': ^0.11.0
+      '@ecopages/radiant': ^0.11.0
+
+  '@ecopages/file-system@0.10.0':
+    resolution: {integrity: sha512-HkSXSzii44jE/5oywG1rZSvyfnXkjxSdgcTqDg0xpCM8HBSU1/w6kk98Wmn4HEHLAQ6fwwXJ5StnSUsSX20guA==}
+    engines: {node: ^24.22.0 || >=26.0.0}
+
+  '@ecopages/jsx@0.11.1':
+    resolution: {integrity: sha512-HLIyarTB8IwoI364eFoDqQUw9lXNhjaBeWl4FJJgdBrnjJf4joMWdL3IBKwNNiFprehOkaVMclsxEN0069BsUQ==}
+    peerDependencies:
+      '@ecopages/signals': '>=0.11.1'
+
+  '@ecopages/lightningcss-processor@0.10.0':
+    resolution: {integrity: sha512-2Mv0MUDCzk++8I1AvgApXE3NARyCY3oV59T1+1ioR9kebsVYP+QoMMZENhN7FF73KrrbZOe7jKBj2+XZGa8XWQ==}
+    engines: {node: ^24.22.0 || >=26.0.0}
+    peerDependencies:
+      '@ecopages/core': 0.10.0
       '@tailwindcss/node': '>=4'
       '@tailwindcss/oxide': '>=4'
       tailwindcss: '>=4'
@@ -1007,30 +1012,31 @@ packages:
     peerDependencies:
       typescript: ^5.0.0
 
-  '@ecopages/mdx@0.9.0':
-    resolution: {integrity: sha512-QpjjJ0EXXmIuSS9+mSKNOs4D6Zrb5sA4GQVsuW1gS7UhHBQ3AqFoTUgrGvZIuf+gNT/1r5BKbx1HVIbSpaDt3Q==}
+  '@ecopages/mdx@0.10.0':
+    resolution: {integrity: sha512-Y/ItpaeO/704ZwDqKvloPWIIZtqKVAhs8vfwI8gTPGxdg0JrkAuZZq2SXynMsxqBe4KJjhHDmME4ekBFxXME4A==}
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
-      '@ecopages/core': 0.9.0
+      '@ecopages/core': 0.10.0
       '@mdx-js/mdx': ^3.1.0
 
-  '@ecopages/radiant-ui@0.4.0':
-    resolution: {integrity: sha512-kG3R3yqGPs1BUGZAWRIMjpCiJ6XeX5h7fDYJterIv3ZWtr/fwLOvFalt6WjYVrbS0THaDg5MdMJtUgolmTzo3g==}
+  '@ecopages/radiant-ui@0.4.3':
+    resolution: {integrity: sha512-pSzpfP6tfR6yI+97Xl75FpSwsvJJqt2jokVbWnMJcFvjKzoMycZoth88a7d40b6z3aohp8Yeprr13prscv0+ig==}
     peerDependencies:
-      '@ecopages/jsx': '>=0.9.0'
-      '@ecopages/radiant': '>=0.9.0'
-      '@ecopages/signals': '>=0.9.0'
+      '@ecopages/jsx': '>=0.11.0'
+      '@ecopages/radiant': '>=0.11.0'
+      '@ecopages/signals': '>=0.11.0'
 
-  '@ecopages/radiant@0.9.0':
-    resolution: {integrity: sha512-XFWOnPAkcCB3iPKgEQqFo1LJ4RrR4R9gDVzQTzp8JiPq0lHSGq/U9Ps0C5uPzZwFQF7vYnSDvva0qBeTQvdS3w==}
+  '@ecopages/radiant@0.11.1':
+    resolution: {integrity: sha512-RDLd0wYUX/BcTsb+dNgBcsun1iyWv3uBI4K6WfmtGP/IQwWLOiHI1VnJu6wZy3msfko4eASbUEXoG85oYBSxJQ==}
     peerDependencies:
-      '@ecopages/jsx': '>=0.9.0'
+      '@ecopages/jsx': '>=0.11.1'
+      '@ecopages/signals': '>=0.11.1'
 
-  '@ecopages/react@0.9.0':
-    resolution: {integrity: sha512-IX2XnPhBlvZfb/dz25KG7+vQNprPSBGT6+Tc/Y1dsWX8iAC5Co61Yn84UYDc0CCCDGwoUWalCGQecWFkWN5H+A==}
+  '@ecopages/react@0.10.0':
+    resolution: {integrity: sha512-MibmiPTaiAnBojWc8XLSkPmwXSLGJObXquCN9n+/gPd++e6lMDkIAPK3f45w0Obql1pK3gMuy3M0jbKlZ3CJQA==}
     engines: {node: ^24.22.0 || >=26.0.0}
     peerDependencies:
-      '@ecopages/core': 0.9.0
+      '@ecopages/core': 0.10.0
       '@types/react': ^19
       '@types/react-dom': ^19
       react: ^19.3.0
@@ -1041,32 +1047,32 @@ packages:
     peerDependencies:
       typescript: ^5.0.0
 
-  '@ecopages/signals@0.9.0':
-    resolution: {integrity: sha512-Mad6z6Tjmy/jnqzHYpI7EX6qKN+zAul5QVxYFehFgrOhuzMyYzhPeZRL6wRdJdiPzJiGVXbk4ylTZv0/WvP4mg==}
+  '@ecopages/signals@0.11.1':
+    resolution: {integrity: sha512-dYEo3HoQKsau28PsPMyA1cLnupbj4Q5zPrn/Elo62JxhRAiajVqMDu2onkjEKLxzXhiK3oWuY6hjnlrzHoSpqg==}
 
-  '@ecopages/storybook-radiant-vite@0.2.2':
-    resolution: {integrity: sha512-FlGN859ZbfP0JiDaRXElO9ciCEaVKuiFjev2T6TjT9fVaMsVZwl+TFA8SRExtzXQfrmLpVwsIfo2muSRqIyAtA==}
+  '@ecopages/storybook-radiant-vite@0.2.3':
+    resolution: {integrity: sha512-gzv6G+1BYyVVPSX0NquO/f6I1mRF/5iU/Nr3y3fL1f0+ZP7uNyUoUBy0kK8n66Rp4YZRGrn1W4gZ4rZKlPnNZw==}
     peerDependencies:
-      '@ecopages/jsx': '>=0.8.1'
-      '@ecopages/radiant': '>=0.8.1'
-      '@ecopages/signals': '>=0.8.1'
+      '@ecopages/jsx': '>=0.10.0'
+      '@ecopages/radiant': '>=0.10.0'
+      '@ecopages/signals': '>=0.10.0'
       storybook: ^10.5.2
       vite: ^8.0.0
     peerDependenciesMeta:
       vite:
         optional: true
 
-  '@ecopages/vite-plugin-radiant@0.2.2':
-    resolution: {integrity: sha512-pny0hdr//3PYh4rqQMmnlFksngWXVi0oEHxmHRFYVNXMcvOg54ctYIBsyIW/IH7ULb4LoJ6iWPpDf9iLeZf2uQ==}
+  '@ecopages/vite-plugin-radiant@0.2.3':
+    resolution: {integrity: sha512-vMyPUGGLYQhPWvotayFrEvbcX5nhXDxUamllqQwSoF7qf1LLxgWGRvfgCM4Ml5ej1boGCHsYqzKf/kV87HKlFw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@babel/core': ^7.0.0
       '@babel/plugin-proposal-decorators': ^7.0.0
       '@babel/plugin-syntax-typescript': ^7.0.0
       '@babel/plugin-transform-class-properties': ^7.0.0
-      '@ecopages/jsx': '>=0.8.1'
-      '@ecopages/radiant': '>=0.8.1'
-      '@ecopages/signals': '>=0.8.1'
+      '@ecopages/jsx': '>=0.10.0'
+      '@ecopages/radiant': '>=0.10.0'
+      '@ecopages/signals': '>=0.10.0'
       '@rolldown/plugin-babel': ^0.2.0
       nitro: ^3
       vite: ^8.0.0
@@ -3876,8 +3882,8 @@ packages:
     resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
     engines: {node: '>=10'}
 
-  ecopages@0.9.0:
-    resolution: {integrity: sha512-DwZhy7c/VzN8LT/sfHAgD0Be6Wey+E6E8dWRXfMBxZIh39au0vpjlhEmRFlAEJzVbn+rGdL5Fg/+oVFGRcpBpQ==}
+  ecopages@0.10.0:
+    resolution: {integrity: sha512-zsM4QI36mFdPAGcTLFt+G8oQHwYdYcrOcnJ81Ocmd/ETfzV1MA+zG6fW2VDoi+lbYTEyXUbozHO2odQ9MW6tYw==}
     engines: {node: ^24.22.0 || >=26.0.0}
     hasBin: true
     peerDependencies:
@@ -5183,6 +5189,10 @@ packages:
     resolution: {integrity: sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==}
     engines: {node: '>=0.10.0'}
 
+  react@19.3.1:
+    resolution: {integrity: sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw==}
+    engines: {node: '>=0.10.0'}
+
   read-cache@1.0.2:
     resolution: {integrity: sha512-/peqiBB/n07gQGLsWaHho3WfvUyRscw0gYTsEFMhrIe/nWLkYaf5SbKYjGYqtRV3aPwykJgF2VEMo1ac4bnsGA==}
 
@@ -6224,15 +6234,15 @@ snapshots:
 
   '@date-fns/tz@1.5.0': {}
 
-  '@ecopages/browser-router@0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))':
+  '@ecopages/browser-router@0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))':
     dependencies:
-      '@ecopages/core': 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
+      '@ecopages/core': 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
       morphdom: 2.7.8
 
-  '@ecopages/content-processor@0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(typescript@5.9.3)':
+  '@ecopages/content-processor@0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
-      '@ecopages/file-system': 0.9.0
+      '@ecopages/core': 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
+      '@ecopages/file-system': 0.10.0
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       remark-frontmatter: 5.0.0
       unified: 11.0.5
@@ -6242,10 +6252,10 @@ snapshots:
       - supports-color
       - typescript
 
-  '@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)':
+  '@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)':
     dependencies:
       '@clack/prompts': 1.8.1
-      '@ecopages/file-system': 0.9.0
+      '@ecopages/file-system': 0.10.0
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       '@ecopages/scripts-injector': 0.1.5(typescript@5.9.3)
       '@jridgewell/remapping': 2.3.5
@@ -6257,43 +6267,43 @@ snapshots:
       rolldown: 1.3.2
       ws: 8.21.3
     optionalDependencies:
-      '@ecopages/dev-toolbar': 0.9.0(@ecopages/signals@0.9.0)
+      '@ecopages/dev-toolbar': 0.10.0(@ecopages/signals@0.11.1)
     transitivePeerDependencies:
       - bufferutil
       - typescript
       - utf-8-validate
 
-  '@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0)':
+  '@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1)':
     dependencies:
-      '@ecopages/jsx': 0.9.0(@ecopages/signals@0.9.0)
-      '@ecopages/radiant': 0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))
+      '@ecopages/jsx': 0.11.1(@ecopages/signals@0.11.1)
+      '@ecopages/radiant': 0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
       axe-core: 4.13.0
     transitivePeerDependencies:
       - '@ecopages/signals'
 
-  '@ecopages/ecopages-jsx@0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(typescript@5.9.3)':
+  '@ecopages/ecopages-jsx@0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
-      '@ecopages/file-system': 0.9.0
-      '@ecopages/jsx': 0.9.0(@ecopages/signals@0.9.0)
-      '@ecopages/mdx': 0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)
-      '@ecopages/radiant': 0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))
+      '@ecopages/core': 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
+      '@ecopages/file-system': 0.10.0
+      '@ecopages/jsx': 0.11.1(@ecopages/signals@0.11.1)
+      '@ecopages/mdx': 0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)
+      '@ecopages/radiant': 0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
       '@mdx-js/mdx': 3.1.1
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  '@ecopages/file-system@0.9.0': {}
+  '@ecopages/file-system@0.10.0': {}
 
-  '@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)':
+  '@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1)':
     dependencies:
-      '@ecopages/signals': 0.9.0
+      '@ecopages/signals': 0.11.1
 
-  '@ecopages/lightningcss-processor@0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@tailwindcss/node@4.3.3)(@tailwindcss/oxide@4.3.3)(tailwindcss@4.3.3)(typescript@5.9.3)':
+  '@ecopages/lightningcss-processor@0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@tailwindcss/node@4.3.3)(@tailwindcss/oxide@4.3.3)(tailwindcss@4.3.3)(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
-      '@ecopages/file-system': 0.9.0
+      '@ecopages/core': 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
+      '@ecopages/file-system': 0.10.0
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       browserslist: 4.29.5
       lightningcss: 1.33.0
@@ -6308,10 +6318,10 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  '@ecopages/mdx@0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)':
+  '@ecopages/mdx@0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
-      '@ecopages/file-system': 0.9.0
+      '@ecopages/core': 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
+      '@ecopages/file-system': 0.10.0
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       '@mdx-js/mdx': 3.1.1
       source-map: 0.8.0
@@ -6319,22 +6329,23 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@ecopages/radiant-ui@0.4.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(@ecopages/signals@0.9.0)':
+  '@ecopages/radiant-ui@0.4.3(patch_hash=c847ec56073e814fb752602b1e1ab5207445f9d243321b6174e89329c19891ee)(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)':
     dependencies:
-      '@ecopages/jsx': 0.9.0(@ecopages/signals@0.9.0)
-      '@ecopages/radiant': 0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))
-      '@ecopages/signals': 0.9.0
+      '@ecopages/jsx': 0.11.1(@ecopages/signals@0.11.1)
+      '@ecopages/radiant': 0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
+      '@ecopages/signals': 0.11.1
 
-  '@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))':
+  '@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)':
     dependencies:
-      '@ecopages/jsx': 0.9.0(@ecopages/signals@0.9.0)
+      '@ecopages/jsx': 0.11.1(@ecopages/signals@0.11.1)
+      '@ecopages/signals': 0.11.1
 
-  '@ecopages/react@0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)':
+  '@ecopages/react@0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)':
     dependencies:
-      '@ecopages/core': 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
-      '@ecopages/file-system': 0.9.0
+      '@ecopages/core': 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
+      '@ecopages/file-system': 0.10.0
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
-      '@ecopages/mdx': 0.9.0(@ecopages/core@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)
+      '@ecopages/mdx': 0.10.0(@ecopages/core@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3))(@mdx-js/mdx@3.1.1)(typescript@5.9.3)
       '@mdx-js/mdx': 3.1.1
       '@types/react': 19.3.0
       '@types/react-dom': 19.3.0(@types/react@19.3.0)
@@ -6349,18 +6360,18 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  '@ecopages/signals@0.9.0': {}
+  '@ecopages/signals@0.11.1': {}
 
-  '@ecopages/storybook-radiant-vite@0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(@ecopages/signals@0.9.0)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))':
+  '@ecopages/storybook-radiant-vite@0.2.3(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))':
     dependencies:
-      '@ecopages/jsx': 0.9.0(@ecopages/signals@0.9.0)
-      '@ecopages/radiant': 0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))
-      '@ecopages/signals': 0.9.0
-      '@ecopages/vite-plugin-radiant': 0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(@ecopages/signals@0.9.0)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
-      '@storybook/builder-vite': 10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+      '@ecopages/jsx': 0.11.1(@ecopages/signals@0.11.1)
+      '@ecopages/radiant': 0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
+      '@ecopages/signals': 0.11.1
+      '@ecopages/vite-plugin-radiant': 0.2.3(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+      '@storybook/builder-vite': 10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       '@storybook/global': 5.0.0
       esbuild: 0.28.2
-      storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0)
+      storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1)
       ts-dedent: 2.3.0
     optionalDependencies:
       vite: 8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
@@ -6373,13 +6384,13 @@ snapshots:
       - nitro
       - supports-color
 
-  '@ecopages/vite-plugin-radiant@0.2.2(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))(@ecopages/radiant@0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0)))(@ecopages/signals@0.9.0)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))':
+  '@ecopages/vite-plugin-radiant@0.2.3(@babel/core@7.29.7)(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-class-properties@7.29.7(@babel/core@7.29.7))(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/radiant@0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)(@rolldown/plugin-babel@0.2.4(@babel/core@7.29.7)(@babel/runtime@7.29.7)(rolldown@1.3.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(nitro@3.0.260311-beta(dotenv@8.6.0)(giget@2.0.0)(jiti@2.7.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))':
     dependencies:
       '@babel/parser': 7.29.9
       '@babel/traverse': 7.29.8
-      '@ecopages/jsx': 0.9.0(@ecopages/signals@0.9.0)
-      '@ecopages/radiant': 0.9.0(@ecopages/jsx@0.9.0(@ecopages/signals@0.9.0))
-      '@ecopages/signals': 0.9.0
+      '@ecopages/jsx': 0.11.1(@ecopages/signals@0.11.1)
+      '@ecopages/radiant': 0.11.1(@ecopages/jsx@0.11.1(@ecopages/signals@0.11.1))(@ecopages/signals@0.11.1)
+      '@ecopages/signals': 0.11.1
       parse5: 7.3.0
       picomatch: 4.0.7
       vite: 8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
@@ -6777,17 +6788,17 @@ snapshots:
       '@tybys/wasm-util': 0.10.4
     optional: true
 
-  '@napi-rs/wasm-runtime@1.2.4(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)':
-    dependencies:
-      '@emnapi/core': 1.11.2
-      '@emnapi/runtime': 1.11.2
-      '@tybys/wasm-util': 0.10.4
-    optional: true
-
   '@napi-rs/wasm-runtime@1.2.4(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
     dependencies:
       '@emnapi/core': 1.9.2
       '@emnapi/runtime': 1.9.2
+      '@tybys/wasm-util': 0.10.4
+    optional: true
+
+  '@napi-rs/wasm-runtime@1.2.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)':
+    dependencies:
+      '@emnapi/core': 1.11.2
+      '@emnapi/runtime': 1.11.2
       '@tybys/wasm-util': 0.10.4
     optional: true
 
@@ -6928,7 +6939,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.11.2
       '@emnapi/runtime': 1.11.2
-      '@napi-rs/wasm-runtime': 1.2.4(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
+      '@napi-rs/wasm-runtime': 1.2.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
     optional: true
 
   '@oxc-parser/binding-win32-arm64-msvc@0.127.0':
@@ -7064,7 +7075,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.11.2
       '@emnapi/runtime': 1.11.2
-      '@napi-rs/wasm-runtime': 1.2.4(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
+      '@napi-rs/wasm-runtime': 1.2.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
     optional: true
 
   '@oxc-resolver/binding-win32-arm64-msvc@11.21.2':
@@ -8033,11 +8044,11 @@ snapshots:
 
   '@standard-schema/utils@0.3.0': {}
 
-  '@storybook/addon-a11y@10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))':
+  '@storybook/addon-a11y@10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))':
     dependencies:
       '@storybook/global': 5.0.0
       axe-core: 4.13.0
-      storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0)
+      storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1)
 
   '@storybook/addon-docs@10.6.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))':
     dependencies:
@@ -8047,6 +8058,21 @@ snapshots:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0)
+      ts-dedent: 2.3.0
+      unplugin: 2.3.11
+    optionalDependencies:
+      '@types/react': 19.3.0
+    transitivePeerDependencies:
+      - '@types/react-dom'
+
+  '@storybook/addon-docs@10.6.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))':
+    dependencies:
+      '@mdx-js/react': 3.1.1(@types/react@19.3.0)(react@19.3.0)
+      '@storybook/icons': 2.1.0(react@19.3.0)
+      '@storybook/react-dom-shim': 10.6.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.1)
+      storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1)
       ts-dedent: 2.3.0
       unplugin: 2.3.11
     optionalDependencies:
@@ -8067,9 +8093,28 @@ snapshots:
     transitivePeerDependencies:
       - react
 
+  '@storybook/addon-vitest@10.6.0(@vitest/browser-playwright@4.1.11)(@vitest/browser@4.1.11(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11))(@vitest/runner@4.1.11)(react@19.3.1)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))(vitest@4.1.11)':
+    dependencies:
+      '@storybook/global': 5.0.0
+      '@storybook/icons': 2.1.0(react@19.3.1)
+      storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1)
+    optionalDependencies:
+      '@vitest/browser': 4.1.11(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11)
+      '@vitest/browser-playwright': 4.1.11(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(playwright@1.63.0)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11)
+      '@vitest/runner': 4.1.11
+      vitest: 4.1.11(@types/node@24.13.6)(@vitest/browser-playwright@4.1.11)(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+    transitivePeerDependencies:
+      - react
+
   '@storybook/builder-vite@10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))':
     dependencies:
       storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0)
+      ts-dedent: 2.3.0
+      vite: 8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
+
+  '@storybook/builder-vite@10.6.0(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))':
+    dependencies:
+      storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1)
       ts-dedent: 2.3.0
       vite: 8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
 
@@ -8079,11 +8124,24 @@ snapshots:
     dependencies:
       react: 19.3.0
 
+  '@storybook/icons@2.1.0(react@19.3.1)':
+    dependencies:
+      react: 19.3.1
+
   '@storybook/react-dom-shim@10.6.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))':
     dependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0)
+    optionalDependencies:
+      '@types/react': 19.3.0
+      '@types/react-dom': 19.3.0(@types/react@19.3.0)
+
+  '@storybook/react-dom-shim@10.6.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1))':
+    dependencies:
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.1)
+      storybook: 10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1)
     optionalDependencies:
       '@types/react': 19.3.0
       '@types/react-dom': 19.3.0(@types/react@19.3.0)
@@ -8763,11 +8821,11 @@ snapshots:
 
   dotenv@8.6.0: {}
 
-  ecopages@0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3):
+  ecopages@0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3):
     dependencies:
       '@clack/prompts': 1.8.1
-      '@ecopages/core': 0.9.0(@ecopages/dev-toolbar@0.9.0(@ecopages/signals@0.9.0))(typescript@5.9.3)
-      '@ecopages/file-system': 0.9.0
+      '@ecopages/core': 0.10.0(@ecopages/dev-toolbar@0.10.0(@ecopages/signals@0.11.1))(typescript@5.9.3)
+      '@ecopages/file-system': 0.10.0
       '@ecopages/logger': 0.2.3(typescript@5.9.3)
       giget: 2.0.0
       tsx: 4.23.15
@@ -10405,6 +10463,11 @@ snapshots:
       react: 19.3.0
       scheduler: 0.28.0
 
+  react-dom@19.3.0(react@19.3.1):
+    dependencies:
+      react: 19.3.1
+      scheduler: 0.28.0
+
   react-dropzone@14.4.1(react@19.3.0):
     dependencies:
       attr-accept: 2.2.5
@@ -10470,6 +10533,8 @@ snapshots:
       '@types/react': 19.3.0
 
   react@19.3.0: {}
+
+  react@19.3.1: {}
 
   read-cache@1.0.2: {}
 
@@ -10755,6 +10820,33 @@ snapshots:
       - react
       - utf-8-validate
 
+  storybook@10.6.0(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.1):
+    dependencies:
+      '@storybook/global': 5.0.0
+      '@storybook/icons': 2.1.0(react@19.3.1)
+      '@testing-library/dom': 10.4.2
+      '@testing-library/jest-dom': 6.9.1
+      '@testing-library/user-event': 14.6.7(@testing-library/dom@10.4.2)
+      '@vitest/expect': 3.2.4
+      '@vitest/spy': 3.2.4
+      '@webcontainer/env': 1.1.1
+      esbuild: 0.27.7
+      jsonc-parser: 3.3.1
+      open: 10.2.0
+      oxc-parser: 0.127.0
+      oxc-resolver: 11.21.2
+      recast: 0.23.21
+      semver: 7.8.5
+      use-sync-external-store: 1.7.0(react@19.3.1)
+      ws: 8.21.3
+    optionalDependencies:
+      '@types/react': 19.3.0
+      prettier: 3.9.9
+    transitivePeerDependencies:
+      - bufferutil
+      - react
+      - utf-8-validate
+
   strict-event-emitter@0.5.1: {}
 
   string-argv@0.3.2: {}
@@ -10982,6 +11074,10 @@ snapshots:
   use-sync-external-store@1.7.0(react@19.3.0):
     dependencies:
       react: 19.3.0
+
+  use-sync-external-store@1.7.0(react@19.3.1):
+    dependencies:
+      react: 19.3.1
 
   util-deprecate@1.0.2: {}
 
