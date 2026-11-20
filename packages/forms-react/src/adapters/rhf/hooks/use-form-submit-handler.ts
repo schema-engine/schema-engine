@@ -154,12 +154,7 @@ export function useFormSubmitHandler({
 			}
 
 			try {
-				if (onSubmit) {
-					await onSubmit(data);
-				}
-				if (config.onSubmit) {
-					await config.onSubmit(data);
-				}
+				await onSubmit?.(data);
 				setSubmissionSuccess();
 			} catch (error) {
 				logger.error('Form submission failed:', error);

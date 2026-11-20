@@ -98,6 +98,4 @@ export type FormConfig<
 	steps: Array<FormStep<TElements, TActions>>;
 	view?: FormViewConfig<TRecipes>;
 	actions?: Array<FormActionConfig<TActions> | FormActionConfig<TActions>[]>;
-	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
-	onChange?: (data: Record<string, unknown>) => void;
 };

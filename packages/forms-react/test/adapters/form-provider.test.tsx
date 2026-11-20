@@ -182,4 +182,32 @@ describe('FormProvider', () => {
 			expect(message).toContain('Error: form_change failed');
 		});
 	});
+
+	it('ignores callbacks injected into the config at runtime', async () => {
+		const configOnSubmit = vi.fn();
+		const configOnChange = vi.fn();
+		const onSubmit = vi.fn();
+		const onChange = vi.fn();
+		const injected = { ...config, onSubmit: configOnSubmit, onChange: configOnChange } as FormConfig;
+
+		render(
+			<FormProvider config={injected} onSubmit={onSubmit} onChange={onChange}>
+				<RegisteredInput />
+				<button type="submit">Submit</button>
+			</FormProvider>,
+		);
+
+		fireEvent.change(screen.getByTestId('field1'), { target: { value: 'new value' } });
+		await waitFor(() => {
+			expect(onChange).toHaveBeenCalled();
+		});
+
+		fireEvent.click(screen.getByText('Submit'));
+		await waitFor(() => {
+			expect(onSubmit).toHaveBeenCalledTimes(1);
+		});
+
+		expect(configOnChange).not.toHaveBeenCalled();
+		expect(configOnSubmit).not.toHaveBeenCalled();
+	});
 });

@@ -45,7 +45,6 @@ export function useFormWatcher({ control, config, onChange, dispatchTrigger }: U
 			}
 
 			currentOnChange?.(values);
-			currentConfig.onChange?.(values);
 		})();
 	}, [values]);
 }
