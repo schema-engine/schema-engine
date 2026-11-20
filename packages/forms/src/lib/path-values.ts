@@ -4,7 +4,7 @@ import { isPlainObject } from './is-plain-object.js';
  * Field *names* are composed in {@link ./field-scope.ts}; this module reads and writes values.
  */
 
-const RESERVED_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+export const RESERVED_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 function assertWritablePathKey(key: string): void {
 	if (RESERVED_PATH_KEYS.has(key)) {
