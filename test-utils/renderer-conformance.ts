@@ -1262,6 +1262,29 @@ export function rendererConformance(mount: ConformanceMount): void {
 			};
 			const mountAction = { $type: 'conformance', id: 'mounted', triggers: ['form_mount'] };
 			const changeAction = { $type: 'conformance', id: 'changed', triggers: ['form_change'] };
+			test('actions that do not ask for validity cause no validation', async () => {
+				const fetchStub = stubFetch(() => ({ valid: true }));
+				const { host } = await setup({
+					config: {
+						...form([
+							{
+								...input('counted', 'Counted'),
+								rules: [{ type: 'async', url: '/conformance-count', disableCache: true }],
+							},
+							input('other', 'Other'),
+						]),
+						validationMode: 'onSubmit',
+						actions: [mountAction, changeAction],
+					},
+					defaultValues: { counted: 'x' },
+				});
+				await expect.poll(actionIds).toContain('mounted');
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Other' }), 'abc');
+				await expect.poll(() => lastActionContext()?.formData.other).toBe('abc');
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(actionIds()).toContain('changed');
+				expect(fetchStub).not.toHaveBeenCalled();
+			});
 			test('an action asks for current validity without showing errors', async () => {
 				const { host } = await setup({
 					config: {

@@ -37,7 +37,10 @@ default, so blocks need no fallbacks. It is available only inside a `ViewProvide
 Import adapter hooks from `@schema-engine/forms-react/adapters`.
 
 `useFormContext` exposes adapter-neutral values, errors, submission state, and
-field operations. `useFormField` binds an element registration to that form.
+field operations. Its `formState` fields subscribe the caller only when read, so
+a component that reads `isSubmitting` re-renders when that changes and does not
+validate the form on each edit; reading `isValid` turns on full-form validation
+after every change. `useFormField` binds an element registration to that form.
 `useWatchField`, `useWatchForm`, and `useFieldArray` cover observation and
 array editing. `useFieldArray` provides `fields` plus `append`, `prepend`,
 `insert`, `swap`, `move`, `update`, `replace`, and `remove`.
