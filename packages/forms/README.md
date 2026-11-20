@@ -175,7 +175,7 @@ when the active step changes. Its form state takes `errors` and `touched` nested
 values, so a handler reads `context.errors.address.street` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
 The form state no longer accepts `touchedFields` or `isSubmitted`: pass `touched` and
-`submitCount`, both required (see [action context form state](src/engine/README.md#action-context-form-state)).
+`submitCount`, both required; the context's `isValid` is derived from `errors` (see [action context form state](src/engine/README.md#action-context-form-state)).
 The engine entry point also re-exports `ActionDispatcher` so
 both renderers can use the same action dispatcher class.
 
@@ -588,8 +588,10 @@ Recipe metadata has no `deprecated` property.
 
 React uses the engine's validation, step state, submission triggers and action
 context builder; see the [React adapter contract](../forms-react/README.md#validation-navigation-and-action-contexts).
-Action context form adapters must implement `reset`, `setValue`, `getValue` and
-`validate`, including for custom renderer integrations.
+Action context form adapters must implement `reset`, `setValue`, `getValue`, `validate`
+and `checkValidity`, including for custom renderer integrations. `checkFormValidity`
+validates values against every step's fields under a debounce scope of its own, so a
+renderer can answer `checkValidity` without recording errors.
 
 The validation dependency index also tracks `require` constraints, so renderers
 can clear conditional required errors when a controlling value changes.

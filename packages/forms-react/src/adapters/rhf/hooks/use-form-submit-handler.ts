@@ -10,6 +10,7 @@ import {
 	type FormConfigView,
 	type SubmissionActionResult,
 } from '@schema-engine/forms';
+import type { ActionSequenceEntry } from '@schema-engine/actions';
 import type { ActionDispatchInput, ActionDispatchResult, ActionExecutionResult } from '@schema-engine/forms/actions';
 import type { SubmissionState, SubmissionError } from '@/hooks/use-submission-state';
 
@@ -27,6 +28,7 @@ interface UseFormSubmitHandlerOptions {
 	form: UseFormReturn;
 	config: FormConfigView;
 	buildActionContext: () => BuilderActionBaseContext;
+	hasMatching: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
 	submission: SubmissionStateManager;
 	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
 	getCurrentStep: () => number;
@@ -58,6 +60,7 @@ export function useFormSubmitHandler({
 	form,
 	config,
 	buildActionContext,
+	hasMatching,
 	submission,
 	dispatchTrigger,
 	getCurrentStep,
@@ -120,6 +123,7 @@ export function useFormSubmitHandler({
 						{
 							actions,
 							context: buildActionContext,
+							hasMatching,
 							onAction,
 						},
 					);
@@ -170,6 +174,7 @@ export function useFormSubmitHandler({
 			onActionResults,
 			dispatchActions,
 			buildActionContext,
+			hasMatching,
 			dispatchTrigger,
 			getCurrentStep,
 			setSubmissionPending,

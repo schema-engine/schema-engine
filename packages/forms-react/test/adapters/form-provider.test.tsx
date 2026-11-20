@@ -13,6 +13,7 @@ vi.mock('@schema-engine/forms/actions', async () => {
 		ActionDispatcher: class {
 			dispatch = mockDispatch;
 			dispatchSync = mockDispatchSync;
+			hasMatching = () => true;
 		},
 	};
 });

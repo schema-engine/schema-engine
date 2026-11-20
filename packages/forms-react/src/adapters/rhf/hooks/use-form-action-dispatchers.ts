@@ -2,13 +2,16 @@ import { useCallback, useMemo, useState } from 'react';
 import { logger } from '@/lib/logger';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormActionTrigger, BuilderActionBaseContext, FormConfigView } from '@schema-engine/forms';
-import { buildFormActionContext, collectStepActions } from '@schema-engine/forms';
+import { buildFormActionContext, checkFormValidity, collectStepActions } from '@schema-engine/forms';
+import type { ActionSequenceEntry } from '@schema-engine/actions';
 import type { ActionDispatcher, ActionDispatchInput, ActionDispatchResult } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
+import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 interface UseFormActionDispatchersOptions {
 	form: UseFormReturn;
 	config: FormConfigView;
+	registry: ValidationRegistry;
 	actionExecutor: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	getCurrentStep?: () => number;
 	/** Seed for elapsed-time metadata; defaults to the form mount. */
@@ -18,6 +21,8 @@ interface UseFormActionDispatchersOptions {
 
 interface UseFormActionDispatchersReturn {
 	buildActionContext: () => BuilderActionBaseContext;
+	/** Whether any of the actions answers the trigger. */
+	hasMatching: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
 	dispatchActions: (
 		input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
 		suppressSubmitReport?: boolean,
@@ -36,6 +41,7 @@ interface UseFormActionDispatchersReturn {
 export function useFormActionDispatchers({
 	form,
 	config,
+	registry,
 	actionExecutor,
 	getCurrentStep,
 	formMountTime: formMountTimeProp,
@@ -49,16 +55,18 @@ export function useFormActionDispatchers({
 			setValue: (name, value) => form.setValue(name, value),
 			getValue: (name) => form.getValues(name),
 			validate: () => form.trigger(),
+			checkValidity: () =>
+				checkFormValidity({ steps: config.steps, values: structuredClone(form.getValues()), registry }),
 		}),
-		[form],
+		[form, config.steps, registry],
 	);
 
 	const buildActionContext = useCallback((): BuilderActionBaseContext => {
-		const { isValid, errors, touchedFields, submitCount } = form.formState;
+		const { errors, touchedFields, submitCount } = form.formState;
 		return buildFormActionContext({
 			config,
 			values: form.getValues(),
-			formState: { isValid, errors, touched: touchedFields, submitCount },
+			formState: { errors, touched: touchedFields, submitCount },
 			currentStep: getCurrentStep?.() ?? 0,
 			mountedAt: formMountTime,
 			form: formAdapter,
@@ -83,14 +91,15 @@ export function useFormActionDispatchers({
 		[actionExecutor, onActionResults],
 	);
 	const dispatchTrigger = useCallback(
-		(trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>): Promise<ActionDispatchResult[]> =>
-			dispatchActions({
-				actions: collectStepActions(config, getCurrentStep?.() ?? 0),
-				trigger,
-				context: buildActionContext(),
-				metadata: extraMetadata,
-			}),
-		[config, getCurrentStep, buildActionContext, dispatchActions],
+		async (
+			trigger: FormActionTrigger,
+			extraMetadata?: Record<string, unknown>,
+		): Promise<ActionDispatchResult[]> => {
+			const actions = collectStepActions(config, getCurrentStep?.() ?? 0);
+			if (!actionExecutor.hasMatching(actions, trigger)) return [];
+			return dispatchActions({ actions, trigger, context: buildActionContext(), metadata: extraMetadata });
+		},
+		[config, getCurrentStep, actionExecutor, buildActionContext, dispatchActions],
 	);
 	const dispatchTriggerSync = useCallback(
 		(trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => {
@@ -99,8 +108,15 @@ export function useFormActionDispatchers({
 		[dispatchTrigger],
 	);
 
+	const hasMatching = useCallback(
+		(actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) =>
+			actionExecutor.hasMatching(actions, trigger),
+		[actionExecutor],
+	);
+
 	return {
 		buildActionContext,
+		hasMatching,
 		dispatchActions,
 		dispatchTrigger,
 		dispatchTriggerSync,

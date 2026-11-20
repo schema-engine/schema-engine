@@ -28,7 +28,8 @@ dispatches after it; a renderer supplies its step state, step validation and tri
 `collectStepActions` gives the actions a trigger dispatches on the current step: the
 form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigation)). `runSubmissionLifecycle` accepts either a
 fixed context or a factory; use a factory when each submission trigger needs current form
-values and validation state. Its optional `onAction(action, data)` callback runs after each
+values and validation state. Its optional `hasMatching(actions, trigger)` skips a trigger no
+action answers, so no context is built for it; `ActionDispatcher.hasMatching` is the check. Its optional `onAction(action, data)` callback runs after each
 successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
 and later submit actions stop before error and completion triggers run. Submit sequence entries are dispatched in order; grouped actions run concurrently. Each returned result carries its `actionId`.
 `buildFormActionContext` takes nested `errors` and `touched` trees; a renderer that keys
@@ -57,6 +58,10 @@ form issues.
 `touched` and `submitCount`, both required, and nest `errors` and `touched` like the
 values (`{ address: { street: … } }`, not `{ 'address.street': … }`). A React Hook Form
 caller passes `touchedFields` as `touched`.
+
+The form state has no `isValid`: the context's `isValid` is true when `errors` is empty,
+in every renderer, and `form.checkValidity()` validates the current values without
+recording errors (`checkFormValidity`).
 
 `submitCount` is the number of submit attempts since the form was last reset,
 including attempts that failed validation. An attempt counts once its validation has

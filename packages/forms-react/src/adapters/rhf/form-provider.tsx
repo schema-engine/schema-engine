@@ -77,6 +77,7 @@ export function FormProvider<
 	const actionDispatchers = useFormActionDispatchers({
 		form,
 		config: runtimeConfig,
+		registry: engine.getValidationRegistry(),
 		actionExecutor,
 		getCurrentStep,
 		onActionResults,
@@ -134,6 +135,7 @@ export function FormProvider<
 		config: runtimeConfig,
 		submission,
 		buildActionContext: actionDispatchers.buildActionContext,
+		hasMatching: actionDispatchers.hasMatching,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 		getCurrentStep,
 		onSubmit: handleFormSubmit,

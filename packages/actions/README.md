@@ -208,6 +208,11 @@ class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 	): Promise<ActionDispatchResult[]>;
 
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void;
+
+	hasMatching<TConfig extends ActionConfigBase>(
+		actions: readonly ActionSequenceEntry<TConfig>[],
+		trigger: TTrigger,
+	): boolean;
 }
 ```
 
@@ -229,6 +234,10 @@ MIT
 explicit trigger mismatches before looking up a registration. Matching actions run in sequence except within an inner array, with one registration lookup each. Missing registrations
 produce a failed result. Thrown handlers become failed results and execution
 continues; an unsuccessful result with `shouldContinue: false` stops the sequence.
+`hasMatching(actions, trigger)` reports whether `dispatch` would run an action, or report a
+missing handler, on that trigger, so a caller can skip building a context for a trigger
+nothing answers.
+
 `dispatch` merges optional metadata into object contexts without mutating the
 caller. `dispatchSync` starts the same dispatch and logs unexpected rejections.
 Logging uses `@ecopages/logger`; enable debug output through the host's log levels.

@@ -1,6 +1,11 @@
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { buildFormActionContext, collectStepActions, runSubmissionLifecycle } from '@schema-engine/forms/engine';
+import {
+	buildFormActionContext,
+	checkFormValidity,
+	collectStepActions,
+	runSubmissionLifecycle,
+} from '@schema-engine/forms/engine';
 import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { FormProviderProps } from '@/adapters/types';
@@ -52,6 +57,12 @@ export class FormActions {
 			setValue: (name, value) => form.setValue(name, value),
 			getValue: (name) => form.getValue(name),
 			validate: () => form.trigger(),
+			checkValidity: () =>
+				checkFormValidity({
+					steps: options.config().steps,
+					values: form.getValues(),
+					registry: engine.getValidationRegistry(),
+				}),
 		};
 		form.host.addEventListener('rui-invalid', this.countInvalid);
 	}
@@ -104,6 +115,7 @@ export class FormActions {
 			const outcome = await runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
 				actions: this.activeActions(),
 				context: () => this.buildContext(),
+				hasMatching: (actions, trigger) => this.dispatcher.hasMatching(actions, trigger),
 				onAction: (action, data) => this.options.onAction?.(action, data),
 			});
 			this.report('form_submit', outcome.results);
@@ -116,7 +128,7 @@ export class FormActions {
 	/** Dispatches one trigger's actions for the current step; resolves empty when none are configured or before the form is ready. */
 	async dispatchTrigger(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
 		const actions = this.activeActions();
-		if (!actions.length || !this.options.form.ready) return [];
+		if (!this.options.form.ready || !this.dispatcher.hasMatching(actions, trigger)) return [];
 		return this.dispatchActions({ actions, trigger, context: this.buildContext() });
 	}
 
@@ -152,12 +164,11 @@ export class FormActions {
 	 */
 	private buildContext(): BuilderActionBaseContext {
 		const { form, currentStep } = this.options;
-		const { isValid, errors, touched } = form.formState;
+		const { errors, touched } = form.formState;
 		return buildFormActionContext({
 			config: this.options.config(),
 			values: form.getValues(),
 			formState: {
-				isValid,
 				errors: expandValues(errors),
 				touched: expandValues(touched),
 				submitCount: this.submitAttempts,

@@ -1,5 +1,8 @@
 import type { BuilderActionBaseContext } from '@/types';
-import type { FormValidationErrors } from './value-validation';
+import { createDebounceScope } from '../lib/debounce';
+import { flattenStepElements } from '../lib/field-scope';
+import type { ValidationRegistry } from '../schemas/validation/validation-registry';
+import { validateFormValues, type FormValidationErrors } from './value-validation';
 
 /**
  * Renderer form state in the engine's shape.
@@ -8,9 +11,12 @@ import type { FormValidationErrors } from './value-validation';
  * `errors` and `touched` are nested like the form values, so `address.street`
  * is read as `errors.address.street` in every renderer. A renderer that keys
  * them by flat field name expands them before building the context.
+ *
+ * There is no `isValid` here: the context's `isValid` is true when `errors` is
+ * empty, in every renderer. It says nothing about fields no validation has
+ * reached; `context.form.checkValidity()` answers for the current values.
  */
 export interface FormActionContextFormState {
-	isValid: boolean;
 	/** Nested errors, as `validateFormValues` returns them. */
 	errors: FormValidationErrors;
 	/** Nested touched state with `true` at each touched field. */
@@ -78,7 +84,7 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 		formData: values,
 		currentStep,
 		totalSteps: config.steps.length,
-		isValid: formState.isValid,
+		isValid: Object.keys(formState.errors).length === 0,
 		errors: formState.errors,
 		metadata: {
 			stepStartTime: getStepStartTime(form, currentStep, mountedAt, now),
@@ -87,6 +93,32 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 		},
 		form,
 	};
+}
+
+interface CheckFormValidityOptions {
+	steps: readonly { readonly elements?: readonly object[] }[];
+	values: Record<string, unknown>;
+	registry: ValidationRegistry;
+}
+
+/**
+ * Whether `values` pass the validation of every field of every step.
+ *
+ * @remarks
+ * Silent: it records and shows no errors. It validates under a debounce scope of
+ * its own, so it never replaces a debounced check a field has pending in the
+ * form's scope, at the cost of waiting out a debounced rule's delay instead of
+ * joining that check. The caller passes a snapshot of the values taken when the
+ * check was requested; later edits do not change the answer.
+ */
+export async function checkFormValidity({ steps, values, registry }: CheckFormValidityOptions): Promise<boolean> {
+	const errors = await validateFormValues({
+		elements: flattenStepElements(steps),
+		values,
+		registry,
+		debounceScope: createDebounceScope(),
+	});
+	return Object.keys(errors).length === 0;
 }
 
 interface ActionScopes<TAction> {

@@ -19,6 +19,7 @@ vi.mock('@schema-engine/forms/actions', () => ({
 	ActionDispatcher: class {
 		dispatch = vi.fn().mockResolvedValue([]);
 		dispatchSync = vi.fn();
+		hasMatching = () => true;
 	},
 }));
 

@@ -13,6 +13,12 @@ type FormActionDispatch = (
 interface RunSubmissionLifecycleOptions {
 	actions: readonly ActionSequenceEntry<FormActionConfig>[];
 	context: BuilderActionBaseContext | (() => BuilderActionBaseContext);
+	/**
+	 * Whether any action answers the trigger. A trigger nothing answers is not dispatched and builds no context.
+	 *
+	 * @remarks Defaults to answering every trigger.
+	 */
+	hasMatching?: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
 	onAction?: (action: FormActionConfig, data: BuilderActionBaseContext['formData']) => void | Promise<void>;
 }
 
@@ -36,11 +42,14 @@ function isGroup(entry: ActionSequenceEntry<FormActionConfig>): entry is readonl
 /** Runs the shared form submission action triggers and returns the submit action results. */
 export async function runSubmissionLifecycle(
 	dispatch: FormActionDispatch,
-	{ actions, context, onAction }: RunSubmissionLifecycleOptions,
+	{ actions, context, onAction, hasMatching = () => true }: RunSubmissionLifecycleOptions,
 ): Promise<SubmissionLifecycleResult> {
 	const currentContext = () => (typeof context === 'function' ? context() : context);
-	const dispatchTrigger = (trigger: FormActionTrigger) => dispatch({ actions, trigger, context: currentContext() });
+	const dispatchTrigger = async (trigger: FormActionTrigger) => {
+		if (hasMatching(actions, trigger)) await dispatch({ actions, trigger, context: currentContext() });
+	};
 	const dispatchSubmit = async (): Promise<SubmissionActionResult[]> => {
+		if (!hasMatching(actions, 'form_submit')) return [];
 		const submitContext = currentContext();
 		const results: SubmissionActionResult[] = [];
 		for (const [sequenceIndex, entry] of actions.entries()) {

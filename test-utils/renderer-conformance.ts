@@ -1246,6 +1246,83 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(actionIds).toEqual(['submitted']);
 			expect(lastActionContext()?.metadata.userInteractions).toBe(3);
 		});
+		describe('action context validity', () => {
+			afterEach(() => {
+				vi.unstubAllGlobals();
+			});
+			const stubFetch = (reply: (value: unknown) => { valid: boolean; message?: string }) => {
+				const fetchStub = vi.fn(async (_url: unknown, init?: RequestInit) => {
+					const { value } = JSON.parse(typeof init?.body === 'string' ? init.body : '{}') as {
+						value: unknown;
+					};
+					return new Response(JSON.stringify(reply(value)));
+				});
+				vi.stubGlobal('fetch', fetchStub);
+				return fetchStub;
+			};
+			const mountAction = { $type: 'conformance', id: 'mounted', triggers: ['form_mount'] };
+			const changeAction = { $type: 'conformance', id: 'changed', triggers: ['form_change'] };
+			test('an action asks for current validity without showing errors', async () => {
+				const { host } = await setup({
+					config: {
+						...form([
+							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							input('note', 'Note'),
+						]),
+						actions: [changeAction],
+					},
+				});
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'hi');
+				await expect.poll(() => lastActionContext()?.formData.note).toBe('hi');
+				await expect(lastActionContext()?.form.checkValidity()).resolves.toBe(false);
+				expect(queryByText(host, 'Name is required')).toBeNull();
+				expect(lastActionContext()?.errors).toEqual({});
+			});
+			test('isValid reports recorded errors, not the validity of the values', async () => {
+				const { host } = await setup({
+					config: {
+						...form([
+							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							input('note', 'Note'),
+						]),
+						actions: [mountAction, changeAction],
+					},
+				});
+				await expect.poll(actionIds).toContain('mounted');
+				const mounted = conformanceAction.execute.mock.calls.find(
+					([context]) => context.config.id === 'mounted',
+				);
+				expect(mounted?.[0].isValid).toBe(true);
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'hi');
+				await expect.poll(() => lastActionContext()?.formData.note).toBe('hi');
+				expect(lastActionContext()?.isValid).toBe(false);
+			});
+			test('a validity check answers for its own values while a field check is pending', async () => {
+				stubFetch((value) => (value === 'ab' ? { valid: false, message: 'Handle is taken' } : { valid: true }));
+				const { host } = await setup({
+					config: {
+						...form([
+							{
+								...input('handle', 'Handle'),
+								rules: [{ type: 'async', url: '/conformance-check', debounce: 50, disableCache: true }],
+							},
+						]),
+						validationMode: 'onChange',
+						reValidateMode: 'onChange',
+						actions: [changeAction],
+					},
+				});
+				const handle = getByRole(host, 'textbox', { name: 'Handle' });
+				await userEvent.type(handle, 'a');
+				await expect.poll(() => lastActionContext()?.formData.handle).toBe('a');
+				const check = lastActionContext()!.form.checkValidity();
+				await userEvent.type(handle, 'b');
+				await expect(check).resolves.toBe(true);
+				await expect.poll(() => queryByText(host, 'Handle is taken') !== null).toBe(true);
+			});
+		});
 		test('typing over a debounced async check shows only the latest result', async () => {
 			vi.stubGlobal(
 				'fetch',

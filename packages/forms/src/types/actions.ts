@@ -17,7 +17,13 @@ export interface BuilderActionBaseContext {
 	currentStep: number;
 	/** Total number of steps */
 	totalSteps: number;
-	/** Whether the form is currently valid */
+	/**
+	 * Whether no validation error is currently recorded.
+	 *
+	 * @remarks
+	 * It is true on a pristine form even when a required field is empty, until a validation records an error.
+	 * Call `form.checkValidity()` to validate the current values.
+	 */
 	isValid: boolean;
 	/** Validation errors by field name */
 	errors: Record<string, unknown>;
@@ -37,8 +43,15 @@ export interface BuilderActionBaseContext {
 		/** Set field value */
 		setValue: (name: string, value: unknown) => void;
 		getValue: (name: string) => unknown;
-		/** Resolves to the validity of the whole form. */
+		/** Validates the whole form, recording and showing its errors, and resolves to its validity. */
 		validate: () => Promise<boolean>;
+		/**
+		 * Resolves to whether the values current at the call are valid, recording and showing no errors.
+		 *
+		 * @remarks
+		 * Does not cancel a field validation that is pending, and a later edit does not change the answer.
+		 */
+		checkValidity: () => Promise<boolean>;
 	};
 }
 

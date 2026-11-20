@@ -147,7 +147,11 @@ as the value is valid.
 after the engine action lifecycle succeeds, and React Hook Form performs the
 submission validation once. Step action metadata includes elapsed form time.
 Action handlers receive a framework-neutral `context.form` with `reset`,
-`setValue`, `getValue`, and `validate`; `validate()` resolves to the form validity.
+`setValue`, `getValue`, `validate` and `checkValidity`; `validate()` validates the form,
+showing its errors, and resolves to its validity. `checkValidity()` validates the values
+current at the call without recording or showing errors. `context.isValid` is true while
+no error is recorded; it never reads React Hook Form's `isValid`, which would turn on
+full-form validation after every change. A trigger no action answers builds no context.
 
 A changed `require` condition revalidates a touched or submitted dependent field.
 Submission errors name the failing action by its configured `id`.

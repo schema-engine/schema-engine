@@ -22,6 +22,7 @@ export function createMockBuilderContext<TConfig = unknown>(
 			setValue: () => {},
 			getValue: () => undefined,
 			validate: async () => true,
+			checkValidity: async () => true,
 		},
 		formData: { field1: 'value1' },
 		metadata: {

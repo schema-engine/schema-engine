@@ -6,6 +6,7 @@ const form = {
 	setValue: () => undefined,
 	getValue: () => undefined,
 	validate: async () => true,
+	checkValidity: async () => true,
 };
 
 describe('buildFormActionContext', () => {
@@ -19,7 +20,7 @@ describe('buildFormActionContext', () => {
 		const input = {
 			config: { id: 'contact', steps: [{}, {}] },
 			values: { email: 'person@example.com' },
-			formState: { isValid: true, errors: {}, touched: { email: true }, submitCount: 2 },
+			formState: { errors: {}, touched: { email: true }, submitCount: 2 },
 			currentStep: 0,
 			mountedAt: 900,
 			form,
@@ -41,7 +42,6 @@ describe('buildFormActionContext', () => {
 			config: { id: 'contact', steps: [{}] },
 			values: {},
 			formState: {
-				isValid: false,
 				errors: {},
 				touched: { address: { street: true, city: true, zip: false }, contacts: [{ email: true }, undefined] },
 				submitCount: 1,
@@ -52,5 +52,24 @@ describe('buildFormActionContext', () => {
 		});
 
 		expect(context.metadata.userInteractions).toBe(4);
+	});
+
+	test('reports isValid from the recorded errors', () => {
+		const input = {
+			config: { id: 'contact', steps: [{}] },
+			values: {},
+			currentStep: 0,
+			mountedAt: 1_900,
+			form,
+		};
+
+		const pristine = buildFormActionContext({ ...input, formState: { errors: {}, touched: {}, submitCount: 0 } });
+		const failed = buildFormActionContext({
+			...input,
+			formState: { errors: { email: { message: 'Required' } }, touched: {}, submitCount: 0 },
+		});
+
+		expect(pristine.isValid).toBe(true);
+		expect(failed.isValid).toBe(false);
 	});
 });

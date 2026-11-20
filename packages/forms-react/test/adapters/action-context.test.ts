@@ -1,8 +1,9 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldValues } from 'react-hook-form';
 import { useFormActionDispatchers } from '../../src/adapters/rhf/hooks/use-form-action-dispatchers';
 import type { FormConfig } from '@schema-engine/forms/schemas';
+import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import type { ActionDispatcher } from '@schema-engine/actions';
 
 const config: FormConfig = {
@@ -13,9 +14,12 @@ const config: FormConfig = {
 	],
 };
 
+const registry = createDefaultValidationRegistry();
+
 const mockDispatcher = {
 	dispatch: async () => [],
 	dispatchSync: () => {},
+	hasMatching: () => true,
 } as unknown as ActionDispatcher;
 
 describe('useFormActionDispatchers', () => {
@@ -28,6 +32,7 @@ describe('useFormActionDispatchers', () => {
 			useFormActionDispatchers({
 				form: formResult.current,
 				config,
+				registry,
 				actionExecutor: mockDispatcher,
 				getCurrentStep: () => currentStep,
 				formMountTime: mountTime,
@@ -45,5 +50,59 @@ describe('useFormActionDispatchers', () => {
 		});
 
 		expect(result.current.buildActionContext().currentStep).toBe(0);
+	});
+
+	test('building a context does not subscribe the form to isValid', () => {
+		const { result: formResult } = renderHook(() => useForm({ defaultValues: {} }));
+		const { result } = renderHook(() =>
+			useFormActionDispatchers({ form: formResult.current, config, registry, actionExecutor: mockDispatcher }),
+		);
+
+		const context = result.current.buildActionContext();
+
+		expect(context.isValid).toBe(true);
+		expect(formResult.current.control._proxyFormState.isValid).toBe(false);
+	});
+
+	test('a trigger no action answers builds no context and dispatches nothing', async () => {
+		const dispatch = vi.fn(async () => []);
+		const actionExecutor = { dispatch, hasMatching: () => false } as unknown as ActionDispatcher;
+		const { result: formResult } = renderHook(() => useForm({ defaultValues: {} }));
+		const getValues = vi.spyOn(formResult.current, 'getValues');
+		const { result } = renderHook(() =>
+			useFormActionDispatchers({ form: formResult.current, config, registry, actionExecutor }),
+		);
+
+		await expect(result.current.dispatchTrigger('form_change')).resolves.toEqual([]);
+
+		expect(dispatch).not.toHaveBeenCalled();
+		expect(getValues).not.toHaveBeenCalled();
+	});
+
+	test('checkValidity validates silently without recording errors', async () => {
+		const required: FormConfig = {
+			id: 'test-form',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Step 1',
+					elements: [{ name: 'email', $type: 'input', inputType: 'text', rules: [{ type: 'required' }] }],
+				},
+			],
+		};
+		const { result: formResult } = renderHook(() => useForm<FieldValues>({ defaultValues: { email: '' } }));
+		const { result } = renderHook(() =>
+			useFormActionDispatchers({
+				form: formResult.current,
+				config: required,
+				registry,
+				actionExecutor: mockDispatcher,
+			}),
+		);
+
+		const form = result.current.buildActionContext().form;
+
+		await expect(form.checkValidity()).resolves.toBe(false);
+		expect(formResult.current.formState.errors).toEqual({});
 	});
 });

@@ -41,7 +41,7 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 		for (const [sequenceIndex, entry] of actions.entries()) {
 			const controller = new AbortController();
 			const run = async (action: TConfig, groupIndex?: number): Promise<ActionDispatchResult | undefined> => {
-				if (action.enabled === false || !this.shouldExecute(action, trigger)) return undefined;
+				if (!this.shouldRun(action, trigger)) return undefined;
 				const registration = this.registry.getAction(action.$type);
 				if (!registration) {
 					const error = `No handler registered for action type: ${action.$type}`;
@@ -57,8 +57,6 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 						shouldContinue: true,
 					};
 				}
-				if (action.triggers === undefined && !(registration.metadata.defaultTriggers ?? []).includes(trigger))
-					return undefined;
 				logger.debug(`Executing action: ${action.id} (${action.$type})`);
 				let result: ActionExecutionResult;
 				let cancelled = false;
@@ -99,9 +97,31 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 		return results;
 	}
 
-	/** @remarks Explicit triggers can exclude an action before its registration is needed. */
-	private shouldExecute(action: ActionConfigBase, trigger: TTrigger): boolean {
-		return action.triggers === undefined || action.triggers.some((candidate) => candidate === trigger);
+	/**
+	 * Whether `dispatch` would run, or report a missing handler for, at least one of the actions on this trigger.
+	 *
+	 * @remarks
+	 * Lets a caller skip building a context for a trigger no action answers. It checks the same conditions
+	 * `dispatch` does, so the two cannot disagree.
+	 */
+	hasMatching<TConfig extends ActionConfigBase>(
+		actions: readonly ActionSequenceEntry<TConfig>[],
+		trigger: TTrigger,
+	): boolean {
+		return actions.some((entry) =>
+			isGroup(entry) ? entry.some((action) => this.shouldRun(action, trigger)) : this.shouldRun(entry, trigger),
+		);
+	}
+
+	/**
+	 * @remarks
+	 * An action of an unregistered type always matches, so `dispatch` can report the missing handler.
+	 */
+	private shouldRun(action: ActionConfigBase, trigger: TTrigger): boolean {
+		if (action.enabled === false) return false;
+		if (action.triggers !== undefined) return action.triggers.some((candidate) => candidate === trigger);
+		const registration = this.registry.getAction(action.$type);
+		return !registration || (registration.metadata.defaultTriggers ?? []).includes(trigger);
 	}
 
 	/** @remarks Best-effort dispatch never rejects to its caller. */
