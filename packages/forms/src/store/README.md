@@ -39,4 +39,5 @@ points each rule at a store written to break it.
 `validateFormValues` and one debounce scope; dependents of a changed value are found with
 `buildDependencyIndex` by comparing the values at every watched path, so a write to a parent such as
 `address` re-validates a rule that reads `address.country`. Values are null-prototype maps inside and
-frozen plain records in the snapshot.
+frozen plain records in the snapshot. The dependency index is cached per store and rebuilt only when
+an array's row count changes, not when a value is typed or rows are moved.

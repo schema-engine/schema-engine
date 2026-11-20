@@ -2,7 +2,11 @@ import type { FieldArrayValue } from '@/adapters/types';
 import { validateFormValues } from '@/engine/value-validation';
 import { createDebounceScope } from '@/lib/debounce';
 import { getValueAtPath } from '@/lib/path-values';
-import { buildDependencyIndex, shouldSurfaceDependentError } from '@/schemas/validation/dependencies';
+import {
+	buildDependencyIndex,
+	shouldSurfaceDependentError,
+	type DependencyIndex,
+} from '@/schemas/validation/dependencies';
 import { flattenErrors, remapRows, syncRowIds } from './field-state';
 import {
 	VALIDATION_ERROR_SOURCE,
@@ -203,9 +207,34 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		return passed;
 	}
 
+	let cachedIndex: { rowIds: State['rowIds']; shape: string; index: DependencyIndex } | undefined;
+
+	/**
+	 * The dependency index for the form's current rows.
+	 *
+	 * @remarks
+	 * The index depends on the elements, which never change, and on how many rows each array has, so it
+	 * is rebuilt only when that row count signature changes. Writing a value, moving rows or adopting
+	 * ids leaves it as it was; the signature is not even computed while `rowIds` is the same object.
+	 */
+	function dependencyIndex(): DependencyIndex {
+		if (cachedIndex?.rowIds === state.rowIds) return cachedIndex.index;
+		const shape = Object.keys(state.rowIds)
+			.map((path) => `${path}:${state.rowIds[path].length}`)
+			.toSorted()
+			.join('|');
+		if (cachedIndex?.shape === shape) {
+			cachedIndex = { ...cachedIndex, rowIds: state.rowIds };
+			return cachedIndex.index;
+		}
+		const index = buildDependencyIndex(elements, toPlain(state.values) as Record<string, unknown>, registry);
+		cachedIndex = { rowIds: state.rowIds, shape, index };
+		return index;
+	}
+
 	/** Names that must be validated after a change: the dependents of every watched path whose value moved. */
 	function dependentsOfChange(previousValues: NullMap): string[] {
-		const index = buildDependencyIndex(elements, toPlain(state.values) as Record<string, unknown>, registry);
+		const index = dependencyIndex();
 		const changed = index.watched.filter(
 			(path) => !Object.is(readAt(previousValues, path), readAt(state.values, path)),
 		);

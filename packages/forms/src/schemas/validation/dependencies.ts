@@ -50,10 +50,9 @@ function collectRuleDependencies(
  * another field's validity. A rule that depends on validity would have to
  * revisit this.
  *
- * Rebuilt from the current values rather than cached: the index depends on the
- * config and on how many array rows exist, and a stale one after a row is added
- * or removed is worse than the walk it saves. Both walks are over the config,
- * not over user input.
+ * Not cached here: the index depends on the config and on how many array rows
+ * exist, so a caller that keeps one must rebuild it when a row is added or
+ * removed. The form store does, and builds it once per row-count change.
  */
 export function buildDependencyIndex(
 	elements: readonly object[],
