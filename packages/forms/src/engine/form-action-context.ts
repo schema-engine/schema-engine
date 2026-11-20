@@ -105,16 +105,16 @@ interface CheckFormValidityOptions {
  * Whether `values` pass the validation of every field of every step.
  *
  * @remarks
- * Silent: it records and shows no errors. It validates under a debounce scope of
+ * Silent: it records and shows no errors, though an async rule still makes its request. It validates under a debounce scope of
  * its own, so it never replaces a debounced check a field has pending in the
  * form's scope, at the cost of waiting out a debounced rule's delay instead of
- * joining that check. The caller passes a snapshot of the values taken when the
- * check was requested; later edits do not change the answer.
+ * joining that check. It copies `values` when called, so later edits do not
+ * change the answer. Values `structuredClone` cannot copy reject the call.
  */
 export async function checkFormValidity({ steps, values, registry }: CheckFormValidityOptions): Promise<boolean> {
 	const errors = await validateFormValues({
 		elements: flattenStepElements(steps),
-		values,
+		values: structuredClone(values),
 		registry,
 		debounceScope: createDebounceScope(),
 	});

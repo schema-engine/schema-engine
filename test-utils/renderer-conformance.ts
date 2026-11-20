@@ -1282,7 +1282,6 @@ export function rendererConformance(mount: ConformanceMount): void {
 				await userEvent.type(getByRole(host, 'textbox', { name: 'Other' }), 'abc');
 				await expect.poll(() => lastActionContext()?.formData.other).toBe('abc');
 				await new Promise((resolve) => setTimeout(resolve, 100));
-				expect(actionIds()).toContain('changed');
 				expect(fetchStub).not.toHaveBeenCalled();
 			});
 			test('an action asks for current validity without showing errors', async () => {

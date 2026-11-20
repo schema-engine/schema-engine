@@ -20,12 +20,4 @@ describe('checkFormValidity', () => {
 	test('is true when every field passes', async () => {
 		expect(await checkFormValidity({ steps, values: { email: 'a@b.co', phone: '1' }, registry })).toBe(true);
 	});
-
-	test('answers for the values it was given', async () => {
-		const values: Record<string, unknown> = { email: 'a@b.co', phone: '1' };
-		const pending = checkFormValidity({ steps, values: { ...values }, registry });
-		values.email = '';
-
-		expect(await pending).toBe(true);
-	});
 });

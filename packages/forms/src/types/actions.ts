@@ -49,7 +49,8 @@ export interface BuilderActionBaseContext {
 		 * Resolves to whether the values current at the call are valid, recording and showing no errors.
 		 *
 		 * @remarks
-		 * Does not cancel a field validation that is pending, and a later edit does not change the answer.
+		 * Covers every field of every step, unlike a step-scoped `validate`. Does not cancel a field validation
+		 * that is pending, and a later edit does not change the answer. A debounced async rule waits out its delay.
 		 */
 		checkValidity: () => Promise<boolean>;
 	};

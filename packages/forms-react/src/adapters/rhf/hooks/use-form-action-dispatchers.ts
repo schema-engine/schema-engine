@@ -55,8 +55,7 @@ export function useFormActionDispatchers({
 			setValue: (name, value) => form.setValue(name, value),
 			getValue: (name) => form.getValues(name),
 			validate: () => form.trigger(),
-			checkValidity: () =>
-				checkFormValidity({ steps: config.steps, values: structuredClone(form.getValues()), registry }),
+			checkValidity: () => checkFormValidity({ steps: config.steps, values: form.getValues(), registry }),
 		}),
 		[form, config.steps, registry],
 	);

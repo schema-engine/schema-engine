@@ -120,7 +120,7 @@ derived from the stored registrations at build, not kept as mutable state.
 Validation helpers accept structural, read-only element views as well as normalized
 snapshots. Both renderers use these same helpers, the step machine and
 step navigator, the submission lifecycle and the context builder. `BuilderActionBaseContext.form` requires
-`reset`, `setValue`, `getValue` and `validate`; it does not expose renderer methods.
+`reset`, `setValue`, `getValue`, `validate` and `checkValidity`; it does not expose renderer methods.
 
 Conditional `require` references participate in the shared validation dependency
 index, so changing a controlling value revalidates fields with visible errors.
