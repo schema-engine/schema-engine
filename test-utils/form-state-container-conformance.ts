@@ -1152,6 +1152,13 @@ const cases: FormStateContainerCase[] = [
 			expect(selectErrorsUnder(before, 'contacts')).toBe(selectErrorsUnder(before, 'contacts'));
 			store.blur('address');
 			expect(selectErrorsUnder(store.getSnapshot(), 'contacts')).toBe(selectErrorsUnder(before, 'contacts'));
+			store.setErrors('server', {
+				contacts: { message: 'few' },
+				'contacts.1.email': { message: 'row' },
+				name: { message: 'other name' },
+			});
+			expect(selectErrorsUnder(store.getSnapshot(), 'contacts')).toBe(selectErrorsUnder(before, 'contacts'));
+			expect(selectErrorsUnder(store.getSnapshot(), 'name')).not.toBe(selectErrorsUnder(before, 'name'));
 		},
 	},
 	{
@@ -1213,6 +1220,9 @@ const cases: FormStateContainerCase[] = [
 				/'contacts.4.email' names row '4' of 'contacts', which has 3 rows/,
 			);
 			expect(() => store.setErrors('server', { 'contacts.x': { message: 'x' } })).toThrow(/names row 'x'/);
+			expect(() => store.setErrors('server', { 'contacts.-1.email': { message: 'x' } })).toThrow(
+				/names row '-1'/,
+			);
 			expect(store.getSnapshot().errors).toEqual({});
 			expect(() =>
 				store.setErrors('server', { 'nothing.here': { message: 'fine' }, [FORM_ROOT]: { message: 'form' } }),

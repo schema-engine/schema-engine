@@ -149,6 +149,13 @@ export function parseElementNode(
 	if (!parsed.ok) {
 		return { issues: parsed.issues };
 	}
+	const parsedReserved = reservedNameSegment(parsed.data);
+	if (parsedReserved) {
+		return fail(
+			`Field name '${String(parsed.data.name)}' uses the reserved segment '${parsedReserved}': a name cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
+			['name'],
+		);
+	}
 	const placementIssue = namedPlacementIssue(parsed.data);
 	if (placementIssue) return fail(placementIssue.message, placementIssue.path);
 	const areaIssue = areaPlacementIssue(parsed.data, nested);

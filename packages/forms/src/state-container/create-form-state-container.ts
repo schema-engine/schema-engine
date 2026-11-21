@@ -277,7 +277,10 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		segments.forEach((segment, depth) => {
 			const above = segments.slice(0, depth).join('.');
 			const value = depth === 0 ? state.values : readAt(state.values, above);
-			if (Array.isArray(value) && !(Number.isInteger(Number(segment)) && Number(segment) < value.length)) {
+			if (
+				Array.isArray(value) &&
+				!(String(Number(segment)) === segment && Number(segment) >= 0 && Number(segment) < value.length)
+			) {
 				throw new Error(
 					`setErrors: '${path}' names row '${segment}' of '${above}', which has ${value.length} rows.`,
 				);

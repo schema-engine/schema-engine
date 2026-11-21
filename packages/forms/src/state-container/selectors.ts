@@ -72,14 +72,35 @@ export function selectError(snapshot: FormStateSnapshot, path: string): FormStat
 }
 
 const NO_ERRORS: Readonly<Record<string, FormStateError>> = Object.freeze({});
+
+interface SelectionNode {
+	result?: Readonly<Record<string, FormStateError>>;
+	readonly next: Map<string, WeakMap<FormStateError, SelectionNode>>;
+}
+const selections: SelectionNode = { next: new Map() };
 const underByErrors = new WeakMap<object, Map<string, Readonly<Record<string, FormStateError>>>>();
+
+/** The one selection for these errors, found by walking path and error object, so an equal list is the same object. */
+function internSelection(
+	found: ReadonlyArray<readonly [string, FormStateError]>,
+): Readonly<Record<string, FormStateError>> {
+	let node = selections;
+	for (const [key, error] of found) {
+		let byError = node.next.get(key);
+		if (!byError) node.next.set(key, (byError = new WeakMap()));
+		let child = byError.get(error);
+		if (!child) byError.set(error, (child = { next: new Map() }));
+		node = child;
+	}
+	return (node.result ??= Object.freeze(Object.fromEntries(found)));
+}
 
 /**
  * The errors at `path` and below it, by path: what to ask of a row or a section to know whether it has any.
  *
  * @remarks
- * Memoized by the snapshot's `errors`, which keeps its reference while no error changes, so the same object
- * comes back across snapshots until an error at or below `path` does.
+ * Interned by the errors it lists, so the same object comes back, across snapshots, until an error at or
+ * below `path` changes, however much else does.
  */
 export function selectErrorsUnder(snapshot: FormStateSnapshot, path: string): Readonly<Record<string, FormStateError>> {
 	let byPath = underByErrors.get(snapshot.errors);
@@ -87,7 +108,7 @@ export function selectErrorsUnder(snapshot: FormStateSnapshot, path: string): Re
 	let under = byPath.get(path);
 	if (!under) {
 		const found = Object.entries(snapshot.errors).filter(([key]) => key === path || key.startsWith(`${path}.`));
-		under = found.length === 0 ? NO_ERRORS : Object.freeze(Object.fromEntries(found));
+		under = found.length === 0 ? NO_ERRORS : internSelection(found);
 		byPath.set(path, under);
 	}
 	return under;

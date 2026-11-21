@@ -569,6 +569,30 @@ describe('validateFormConfig', () => {
 		},
 	);
 
+	test('rejects a reserved name that a registration produces rather than the author wrote', () => {
+		const field = defineInput({
+			$type: 'field',
+			schema: z.looseObject({
+				$type: z.literal('field'),
+				id: z.string(),
+				name: z.pipe(
+					z.optional(z.string()),
+					z.transform(() => '__root__'),
+				),
+			}),
+			metadata: { name: 'Field', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({ elements: [field] });
+
+		expect(() =>
+			engine.validateForm({
+				id: 'derived-name',
+				steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'field', id: 'a' }] }],
+			}),
+		).toThrow(/uses the reserved segment '__root__'/);
+	});
+
 	test('marks validated forms and skips re-running registration transforms', () => {
 		const countSchema = z.object({
 			$type: z.literal('count'),

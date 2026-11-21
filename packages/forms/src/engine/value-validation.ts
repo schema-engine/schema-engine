@@ -187,7 +187,7 @@ export function effectiveRulesFor({
 /**
  * Validates one field value and returns the message of every rule it fails, in rule order.
  *
- * @remarks Empty when the value passes. A rule that throws counts as one failure with a generic message.
+ * @remarks Empty when the value passes. A rule that throws counts as one failure with a generic message, and the other rules still report theirs.
  */
 export async function validateFieldValue({
 	element,
@@ -209,9 +209,19 @@ export async function validateFieldValue({
 			fieldPath,
 			debounceScope,
 		});
-		const schema = createZodSchemaFromRules(rules, context, registry);
-		const result = await z.safeParseAsync(schema, value);
-		return result.success ? [] : result.error.issues.map((issue) => issue.message || 'Validation failed');
+		const failures = await Promise.all(
+			rules.map(async (rule) => {
+				try {
+					const result = await z.safeParseAsync(createZodSchemaFromRules([rule], context, registry), value);
+					return result.success
+						? []
+						: result.error.issues.map((issue) => issue.message || 'Validation failed');
+				} catch {
+					return ['Validation failed'];
+				}
+			}),
+		);
+		return failures.flat();
 	} catch {
 		return ['Validation failed'];
 	}

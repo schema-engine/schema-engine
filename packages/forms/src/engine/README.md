@@ -18,8 +18,8 @@ The engine exports reusable helpers for paths, effective rules, and validation.
   depth; `effectiveRulesFor` and `validateFieldValue` take that as
   `inheritedRequired`. A container's own `required` rule does not pass down.
 
-For `validateFormValues`, omitted or empty `names` validates every named field.
-A non-empty list validates only the requested paths and their descendants.
+For `validateFormValues`, omitted `names` validates every named field. A list validates only the
+requested paths and their descendants, or only those paths with `exactNames`; an empty list validates nothing.
 
 React and Radiant delegate to these helpers. `createStepNavigator` owns the wizard's
 in-flight guard, the `step_leave` / `step_change` / `step_enter` order and `cancel`, which a
