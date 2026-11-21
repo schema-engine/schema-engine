@@ -1545,6 +1545,44 @@ export function rendererConformance(mount: ConformanceMount): void {
 				finish();
 				await expect.poll(actionIds).toEqual(['success', 'complete']);
 			});
+			test('a second submit while the first is validating is ignored', async () => {
+				const release: Array<() => void> = [];
+				vi.stubGlobal(
+					'fetch',
+					vi.fn(
+						() =>
+							new Promise<Response>((resolve) =>
+								release.push(() => resolve(new Response('{"valid":true}'))),
+							),
+					),
+				);
+				const onSubmit = vi.fn();
+				const { host } = await setup({
+					config: {
+						...form([
+							{
+								...input('slow', 'Slow'),
+								rules: [{ type: 'async', url: '/conformance-slow', disableCache: true }],
+							},
+						]),
+						validationMode: 'onSubmit',
+					},
+					defaultValues: { slow: 'x' },
+					onSubmit,
+				});
+				const element = host.querySelector('form')!;
+				element.requestSubmit();
+				await expect.poll(() => release.length).toBeGreaterThan(0);
+				element.requestSubmit();
+				await new Promise((resolve) => setTimeout(resolve, 50));
+				release[0]?.();
+				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+				await new Promise((resolve) => setTimeout(resolve, 50));
+				release.slice(1).forEach((resolve) => resolve());
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(onSubmit).toHaveBeenCalledTimes(1);
+				vi.unstubAllGlobals();
+			});
 			test('a rejected onSubmit is a failed submission', async () => {
 				const onSubmit = vi.fn(() => Promise.reject(new Error('Save failed')));
 				const { host } = await setup({

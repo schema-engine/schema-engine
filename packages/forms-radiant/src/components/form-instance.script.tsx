@@ -195,7 +195,7 @@ export class FormInstanceElement extends RadiantElement {
 	@onEvent({ type: 'submit', host: true, options: { capture: true } })
 	onNativeSubmit(event: Event): void {
 		this.warnWithoutEngine();
-		if (this.submitting) {
+		if (this.submitting || this.form?.store?.isSubmitting) {
 			event.preventDefault();
 			event.stopPropagation();
 			return;
