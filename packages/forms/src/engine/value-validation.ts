@@ -12,7 +12,7 @@ import {
 import type { BaseValidationRule, RequiredRule } from '../schemas/validation/types.js';
 import type { ValidationRegistry } from '../schemas/validation/validation-registry.js';
 import type { DebounceScope } from '../lib/debounce.js';
-import { ValidationSuperseded } from '../schemas/validation/errors.js';
+import { REPORTED_TEXT, ValidationSuperseded } from '../schemas/validation/errors.js';
 import * as z from 'zod/mini';
 
 export interface ValidationElement {
@@ -261,7 +261,9 @@ export async function validateFieldValue({
 				const result = await z.safeParseAsync(createZodSchemaFromRules([rule], context, registry), value);
 				if (result.success) return undefined;
 				const params = registry.getRuleParams(rule);
-				const message = registry.getRuleMessage(rule, result.error.issues[0]?.message);
+				const first = result.error.issues[0];
+				const reported = first?.code === 'custom' ? first.params?.[REPORTED_TEXT] : undefined;
+				const message = registry.getRuleMessage(rule, typeof reported === 'string' ? reported : undefined);
 				return Object.freeze({
 					type: rule.type,
 					...(rule.id === undefined ? {} : { ruleId: rule.id }),

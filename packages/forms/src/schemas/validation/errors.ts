@@ -29,3 +29,26 @@ export class ValidationSuperseded extends Error {
 		this.name = 'ValidationSuperseded';
 	}
 }
+
+/**
+ * Thrown by a rule's schema when the service it asks cannot answer: a non-ok response, a network failure or a body that is not an answer.
+ *
+ * @remarks
+ * Operational, not a field error and never cached: the value was not judged, and asking again may succeed.
+ * `validateFieldValue` reports it as a `FormValidationFailure`, keeping this as its cause.
+ */
+export class ValidationUnavailable extends Error {
+	constructor(options?: { cause?: unknown }) {
+		super('The service that validates the value could not answer.', options);
+		this.name = 'ValidationUnavailable';
+	}
+}
+
+/**
+ * The key of an issue's `params` under which a schema reports text that comes from outside the engine.
+ *
+ * @remarks
+ * The library's own text for an issue (such as 'Invalid input') is never read. Text a service answered with is
+ * put here by the schema, and only this reaches a registration's `message` hook.
+ */
+export const REPORTED_TEXT = 'schemaEngineReportedText';

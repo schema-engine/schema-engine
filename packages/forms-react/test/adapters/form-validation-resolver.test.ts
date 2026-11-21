@@ -159,4 +159,37 @@ describe('createFormValidationResolver', () => {
 			vi.useRealTimers();
 		}
 	});
+
+	test('a call superseded by another re-runs its own scope and values, not the other call outcome', async () => {
+		vi.useFakeTimers();
+		const fetchSpy = vi
+			.spyOn(globalThis, 'fetch')
+			.mockImplementation(async () => new Response(JSON.stringify({ valid: true }), { status: 200 }));
+		try {
+			const resolver = createFormValidationResolver(
+				[
+					{ name: 'name', rules: [{ type: 'required' }] },
+					{
+						name: 'email',
+						rules: [{ type: 'async', url: '/check', debounce: 30, disableCache: true } as { type: string }],
+					},
+				],
+				registry,
+			);
+			const options = { fields: {}, shouldUseNativeValidation: false };
+			const submit = resolver({ name: '', email: 'a@x.io' }, undefined, { ...options, names: undefined });
+			await vi.advanceTimersByTimeAsync(5);
+			const field = resolver({ name: '', email: 'b@x.io' }, undefined, { ...options, names: ['email'] });
+			await vi.advanceTimersByTimeAsync(500);
+			const [submitted, single] = await Promise.all([submit, field]);
+
+			expect(Object.keys(submitted.errors)).toEqual(['name']);
+			expect(submitted.values).toEqual({});
+			expect(single.errors).toEqual({});
+			expect(single.values).toEqual({ name: '', email: 'b@x.io' });
+		} finally {
+			fetchSpy.mockRestore();
+			vi.useRealTimers();
+		}
+	});
 });

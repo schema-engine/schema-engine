@@ -92,10 +92,14 @@ function resolveValidationRegistry(registry?: ValidationRegistry): ValidationReg
  *
  * A call that a later call replaces resolves with the latest call's result.
  * Radiant UI writes whatever a validator returns, so without this a debounced
- * async check superseded by the next keystroke would show its `Validation
- * pending` failure between keystrokes. React Hook Form drops such results the
+ * async check superseded by the next keystroke has no result, and nothing is
+ * shown for it between keystrokes. React Hook Form drops such results the
  * same way. A submit-time check still cannot pass on a value it never checked:
  * it waits for the check of the value the user typed last.
+ *
+ * A rule that could not run (a throwing rule, an unavailable service) cannot be left out, or the field would
+ * pass on a value nothing judged, and a validator that rejects is unhandled while the user types: this legacy
+ * path shows the rule's type as the error, which the engine itself never does.
  */
 function toValidator(
 	rules: ReadonlyArray<ValidationRule>,
@@ -122,7 +126,7 @@ function toValidator(
 			registry,
 			debounceScope,
 		}).then(({ issues, failures, superseded }) => {
-			if (failures[0]) throw failures[0];
+			if (failures[0]) return failures[0].ruleType;
 			if (superseded) throw new ValidationSuperseded();
 			const blocking = issues.find((found) => found.severity === 'error');
 			return blocking ? (blocking.message ?? blocking.type) : true;

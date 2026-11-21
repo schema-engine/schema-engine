@@ -2,7 +2,7 @@ import * as z from 'zod/mini';
 import { asyncValidationCache } from './cache';
 import type { AsyncRule, ValidationContext } from '../types.js';
 import { isEmpty } from '../empty.js';
-import { ValidationSuperseded } from '../errors.js';
+import { REPORTED_TEXT, ValidationSuperseded, ValidationUnavailable } from '../errors.js';
 
 /**
  * HTTP methods supported for async validation requests
@@ -23,12 +23,10 @@ interface CachedValidationResult {
 }
 
 /**
- * Standard cache TTL values for different error scenarios
+ * Cache TTL for an answer of the service; an outage is never cached
  */
 export const CACHE_TTL = {
 	DEFAULT: 5 * 60 * 1000,
-	HTTP_ERROR: 60 * 1000,
-	NETWORK_ERROR: 30 * 1000,
 } as const;
 
 /**
@@ -104,29 +102,11 @@ function getErrorMessage(data: unknown, fallbackMessage?: string): string | unde
 /**
  * Handles validation failure by adding an issue to the Zod Mini context.
  */
-function handleValidationFailure(ctx: z.core.$RefinementCtx, message: string | undefined): void {
+function handleValidationFailure(ctx: z.core.$RefinementCtx, text: string | undefined): void {
 	ctx.addIssue({
 		code: 'custom',
-		message,
+		...(text === undefined ? {} : { params: { [REPORTED_TEXT]: text } }),
 	});
-}
-
-/** @remarks Skips the cache when `disableCache` is set. */
-function cacheError(
-	cache: typeof asyncValidationCache,
-	url: string,
-	payload: Record<string, unknown>,
-	message: string | undefined,
-	cacheTTL: number,
-	disableCache?: boolean,
-): CachedValidationResult {
-	const errorResult: CachedValidationResult = { valid: false, message };
-
-	if (!disableCache) {
-		cache.set(url, payload, errorResult, cacheTTL);
-	}
-
-	return errorResult;
 }
 
 /**
@@ -178,10 +158,10 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 
 			/** Core validation function that performs the HTTP request and processes the response */
 			const performValidation = async (): Promise<CachedValidationResult> => {
+				const method = rule.method ?? 'POST';
+				const hasBody = method !== 'GET';
+				let data: unknown;
 				try {
-					const method = rule.method ?? 'POST';
-					const hasBody = method !== 'GET';
-
 					const response = await fetch(rule.url, {
 						method,
 						headers: {
@@ -190,41 +170,23 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 						},
 						...(hasBody ? { body: JSON.stringify(payload) } : {}),
 					});
-
-					if (!response.ok) {
-						return cacheError(
-							asyncValidationCache,
-							rule.url,
-							payload,
-							rule.message,
-							CACHE_TTL.HTTP_ERROR,
-							rule.disableCache,
-						);
-					}
-
-					const data = await response.json();
-					const isValid = isValidationSuccessful(data, rule.expectedResponse);
-
-					const cacheResult: CachedValidationResult = {
-						valid: isValid,
-						message: isValid ? undefined : getErrorMessage(data, rule.message),
-					};
-
-					if (!rule.disableCache) {
-						asyncValidationCache.set(rule.url, payload, cacheResult, rule.cacheTTL);
-					}
-
-					return cacheResult;
-				} catch {
-					return cacheError(
-						asyncValidationCache,
-						rule.url,
-						payload,
-						rule.message,
-						CACHE_TTL.NETWORK_ERROR,
-						rule.disableCache,
-					);
+					if (!response.ok) throw new Error(`HTTP ${response.status}`);
+					data = await response.json();
+				} catch (cause) {
+					throw new ValidationUnavailable({ cause });
 				}
+
+				const isValid = isValidationSuccessful(data, rule.expectedResponse);
+				const cacheResult: CachedValidationResult = {
+					valid: isValid,
+					message: isValid ? undefined : getErrorMessage(data, rule.message),
+				};
+
+				if (!rule.disableCache) {
+					asyncValidationCache.set(rule.url, payload, cacheResult, rule.cacheTTL);
+				}
+
+				return cacheResult;
 			};
 
 			/** Execute validation with optional debouncing based on rule configuration */

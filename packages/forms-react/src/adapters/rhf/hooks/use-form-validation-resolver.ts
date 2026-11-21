@@ -6,50 +6,47 @@ import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
 import { ValidationSuperseded, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 type Outcome = Awaited<ReturnType<typeof validateFormValues>>;
-interface Run {
-	readonly values: FieldValues;
-	readonly outcome: Promise<Outcome>;
-}
 
 /**
  * @remarks
  * Converts the engine's flat errors to the nested shape React Hook Form needs to clear individual field errors on revalidation.
- * Only the issue to show crosses, with the rule's type, and warnings do not: React Hook Form has no channel for them. A rule that could not run rejects the resolver.
+ * Only the issue to show crosses, with the rule's type, and warnings do not: React Hook Form has no channel for them. A rule that could not run (a throwing rule, an unavailable service) cannot be left out, or a submit would pass on a value nothing judged: the adapter shows it as an error of its rule type, which the engine itself never does.
  *
- * A check replaced by a later one before it ran has no result, so the call waits for the latest run and returns
- * that run's outcome for its values: a submit can neither pass early nor show a blocking entry with no cause.
+ * A check replaced by a later one before it ran has no result. The call waits for the later run to finish and
+ * then asks again for its own names and values, so it answers for what it was asked and never adopts the
+ * outcome of another call: a submit cannot pass early because a single field was checked after it.
  */
 export function createFormValidationResolver(elements: ValidationElementTree, registry: ValidationRegistry): Resolver {
 	const debounceScope = createDebounceScope();
-	let latest: Run | undefined;
-
-	async function settle(run: Run): Promise<{ values: FieldValues; found: Outcome }> {
-		const found = await run.outcome;
-		if (found.superseded.length === 0) return { values: run.values, found };
-		if (latest !== undefined && latest !== run) return settle(latest);
-		throw new ValidationSuperseded();
-	}
+	let latest: Promise<Outcome> | undefined;
 
 	return async (values: FieldValues, _context, options): Promise<ResolverResult> => {
-		const run: Run = {
-			values,
-			outcome: validateFormValues({ elements, values, registry, names: options.names, debounceScope }),
+		const ask = (): Promise<Outcome> => {
+			const run = validateFormValues({ elements, values, registry, names: options.names, debounceScope });
+			latest = run;
+			return run;
 		};
-		latest = run;
-		const { values: checked, found } = await settle(run);
-		const failure = Object.values(found.failures).flat()[0];
-		if (failure) throw failure;
-		const errors = Object.fromEntries(
-			Object.entries(found.issues).flatMap(([path, issues]) => {
+		let attempt = ask();
+		let found = await attempt;
+		while (found.superseded.length > 0) {
+			if (latest === attempt) throw new ValidationSuperseded();
+			await latest?.catch(() => undefined);
+			attempt = ask();
+			found = await attempt;
+		}
+		const failed = Object.entries(found.failures).map(
+			([path, failures]) => [path, { type: failures[0].ruleType, message: failures[0].ruleType }] as const,
+		);
+		const errors = Object.fromEntries([
+			...Object.entries(found.issues).flatMap(([path, issues]) => {
 				const blocking = issues.filter((issue) => issue.severity === 'error');
 				return blocking.length > 0
 					? [[path, { type: blocking[0].type, message: blocking[0].message ?? blocking[0].type }]]
 					: [];
 			}),
-		);
-		return Object.keys(errors).length
-			? { values: {}, errors: toFieldErrors(errors) }
-			: { values: checked, errors: {} };
+			...failed,
+		]);
+		return Object.keys(errors).length ? { values: {}, errors: toFieldErrors(errors) } : { values, errors: {} };
 	};
 }
 

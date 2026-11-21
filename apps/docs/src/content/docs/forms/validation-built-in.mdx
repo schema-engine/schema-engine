@@ -620,7 +620,7 @@ reference as authored:
 ### Caching Behavior
 
 - **Default TTL**: 5 minutes for successful validations
-- **Error TTL**: 1 minute for HTTP errors, 30 seconds for network errors
+- **Outages**: a non-ok response or a network failure is not an answer about the value. The rule throws `ValidationUnavailable`, which is reported as a failure to run (`validate()` rejects), and it is never cached
 - **Cache Keys**: Generated from URL + request payload for uniqueness
 - **Memory Management**: Expired entries are evicted during cache reads and writes
 - **Cache Control**: Use `disableCache: true` for always-fresh validation

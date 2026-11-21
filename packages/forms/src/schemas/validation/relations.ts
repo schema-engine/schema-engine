@@ -105,6 +105,7 @@ export const relateValidation: ValidationRegistration<RelateRule> = {
 	},
 	category: 'cross-field',
 	dependsOn: (rule) => rule.fields,
+	params: (rule) => ({ assert: rule.assert }),
 	handler: (rule, context) =>
 		RelationValueSchema.check(
 			z.refine((value: unknown) => {

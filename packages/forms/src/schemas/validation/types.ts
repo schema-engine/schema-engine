@@ -187,7 +187,7 @@ export const AsyncRuleSchema = z.object({
 		z.object({
 			valid: z.optional(z.boolean()),
 			success: z.optional(z.boolean()),
-			...ruleFields,
+			message: z.optional(z.string()),
 			error: z.optional(z.string()),
 		}),
 	),

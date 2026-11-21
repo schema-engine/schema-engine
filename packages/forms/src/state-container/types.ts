@@ -184,6 +184,17 @@ export interface BlurOptions extends NativeOptions {
 	readonly value?: unknown;
 }
 
+/**
+ * How the last `validate(paths, { submission })` of a submission ended.
+ *
+ * @remarks
+ * `'passed'`: the scope was current and nothing blocks; the token holds the values that passed. `'invalid'`:
+ * the scope was current and an error blocks, so show the errors and focus. `'overtaken'`: an edit, a row move,
+ * a reset or a superseded check outran it, so no verdict on anything: ask again, do not show errors the user
+ * did not cause. A call that rejects leaves it unset.
+ */
+export type SubmissionOutcome = 'passed' | 'invalid' | 'overtaken';
+
 declare const submissionBrand: unique symbol;
 
 /**
@@ -200,6 +211,8 @@ export interface SubmissionToken {
 	readonly [submissionBrand]: true;
 	/** The frozen values of the submission, nested like `snapshot.values`. */
 	readonly values: Readonly<Record<string, unknown>>;
+	/** How the last validation with this token ended; unset until one has, and while the next is running. */
+	readonly outcome: SubmissionOutcome | undefined;
 }
 
 /** What {@link FormStateContainer.setErrors} takes besides the errors. */
@@ -292,12 +305,12 @@ export interface FormStateContainer {
 	 * Replaces the whole branch at `path`, with the native fact of the control that produced it.
 	 *
 	 * @remarks
-	 * Throws for a path with a reserved `__` segment and for a path that names a row its array does not
+	 * Throws for a path with a reserved segment (one that starts with `__`, or `constructor`, `prototype`, `__proto__`) and for a path that names a row its array does not
 	 * have: rows are made with `fieldArray`, so a write cannot leave holes or rows without an id. It is a change: it validates when the mode says so, re-validates dependents, and drops what describes
 	 * a value that is gone. Errors a host set with `setErrors` are dropped at the path and below, and the
 	 * ones on the paths around it, the form included, as the value they described changed. The state of rows
-	 * and objects the branch no longer holds is dropped with them. A native fact reported with the same
-	 * value is a change too, so a write that leaves the value as it is still validates when the fact is new.
+	 * and objects the branch no longer holds is dropped with them. A write that leaves the value as it is
+	 * changes nothing, and the fact it carries is not stored: report a fact alone with `reportNative`.
 	 */
 	setValue(path: string, value: unknown, options?: NativeOptions): void;
 	/**
@@ -309,6 +322,17 @@ export interface FormStateContainer {
 	 * `setValue`.
 	 */
 	blur(path: string, options?: BlurOptions): void;
+	/**
+	 * Reports what a control says about the value the container holds at `path`, with no input from the user.
+	 *
+	 * @remarks
+	 * For a control that reports on its own, such as after a reset or when its constraints change. The fact is
+	 * bound to the value held now, and `null` withdraws it. It is no change: nothing becomes dirty or touched,
+	 * and it validates a path only when that path was validated before or is in a failed scope, never to start
+	 * validating a pristine one. A path the container does not hold (a removed row, an absent object) is ignored.
+	 * A reserved path throws.
+	 */
+	reportNative(path: string, native: NativeValidity | null): void;
 	/**
 	 * Replaces the defaults with `values` when given, then restores the values to the defaults and clears
 	 * every error, native fact, touched and dirty mark and the failed-check state.

@@ -52,6 +52,7 @@ import {
 	type FormStateSnapshot,
 	type NativeOptions,
 	type NativeValidity,
+	type SubmissionOutcome,
 	type SubmissionToken,
 } from './types';
 import {
@@ -136,6 +137,7 @@ interface RowEntry {
 
 /** What a submission captured, to apply its answer to what it was about. */
 interface SubmissionRecord {
+	outcome: SubmissionOutcome | undefined;
 	values: NullMap;
 	ids: IdTree | undefined;
 	readonly epoch: number;
@@ -272,6 +274,15 @@ function missingRow(
 	return undefined;
 }
 
+/** Whether the values hold `path`: its rows exist and every container above it is there. A leaf with no value is held. */
+function holds(path: string, values: NullMap): boolean {
+	if (missingRow(path, values)) return false;
+	const segments = path.split('.');
+	return segments
+		.slice(0, -1)
+		.every((_, depth) => isStructural(readAt(values, segments.slice(0, depth + 1).join('.'))));
+}
+
 /** The marks that belong to paths taking part. */
 function withoutExcluded(flat: NullMap<true>, excluded: readonly string[]): NullMap<true> {
 	if (excluded.length === 0) return flat;
@@ -364,7 +375,7 @@ function assertFieldPath(path: string, command: string): void {
 	const reserved = path.split('.').find(isReservedPathKey);
 	if (reserved !== undefined) {
 		throw new Error(
-			`${command}: '${path}' has the reserved segment '${reserved}'; segments cannot start with '__'.`,
+			`${command}: '${path}' has the reserved segment '${reserved}'; a segment cannot start with '__' or be constructor, prototype or __proto__.`,
 		);
 	}
 }
@@ -789,6 +800,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		}
 		if (tracker.outdated(run)) {
 			finish();
+			if (mode.submission) mode.submission.outcome = 'overtaken';
 			return false;
 		}
 
@@ -864,7 +876,10 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			return batch(() => {
 				const again = names?.map((name) => now(name));
 				finish();
-				if (again?.some((name) => name === undefined)) return Promise.resolve(false);
+				if (again?.some((name) => name === undefined)) {
+					if (mode.submission) mode.submission.outcome = 'overtaken';
+					return Promise.resolve(false);
+				}
 				return runValidation(again as string[] | undefined, { ...mode, retry: false });
 			});
 		}
@@ -897,7 +912,10 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				: setSelfAt(failed, '', true, isArrayNow);
 		}
 		finish({ validation, validated, failed });
-		if (overtaken) return false;
+		if (overtaken) {
+			if (mode.submission) mode.submission.outcome = 'overtaken';
+			return false;
+		}
 		if (failure && mode.reject) throw failure;
 		const scopeNow = names?.flatMap((name) => now(name) ?? []);
 		const stillInScope = (path: string): boolean =>
@@ -907,6 +925,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			mode.submission.values = start.values;
 			mode.submission.ids = start.ids;
 		}
+		if (mode.submission) mode.submission.outcome = passed ? 'passed' : 'invalid';
 		return passed;
 	}
 
@@ -1004,6 +1023,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			: readAt(previousValues, path);
 		const values = input.has ? setIn(previousValues, path, branch) : previousValues;
 		const valueChanged = values !== previousValues;
+		if (command === 'setValue' && !valueChanged) return;
 		const native = withFact(
 			valueChanged ? stable(state.native, conformAt(state.native, path, branch)) : state.native,
 			path,
@@ -1194,6 +1214,18 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				blurOptions,
 				true,
 			),
+		reportNative(path, reported) {
+			assertFieldPath(path, 'reportNative');
+			if (!holds(path, state.values)) return;
+			const native = withFact(state.native, path, reported, state.values);
+			if (native === state.native) return;
+			batch(() => {
+				commit({ native });
+				if (hasMarkAround(state.validated, path) || isFailed(path)) {
+					validateQuietly([path], { record: true, markFailed: false });
+				}
+			});
+		},
 		reset(values) {
 			const defaults = values ? (toInternal(values) as NullMap) : state.defaults;
 			tracker.reset();
@@ -1211,7 +1243,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				ids: syncIds(undefined, defaults, mintId),
 			});
 		},
-		validate(paths, validateOptions) {
+		async validate(paths, validateOptions) {
 			return batch(() => {
 				if (validateOptions?.native) {
 					const facts = flushedFacts(state.native, validateOptions.native, state.values);
@@ -1219,10 +1251,11 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				}
 				const token = validateOptions?.submission;
 				const submission = token && token === latestSubmission ? submissions.get(token) : undefined;
+				if (submission) submission.outcome = undefined;
 				return runValidation(paths, { record: true, markFailed: true, retry: true, reject: true, submission });
 			});
 		},
-		checkValidity: (paths, checkOptions) =>
+		checkValidity: async (paths, checkOptions) =>
 			runValidation(paths, {
 				record: false,
 				markFailed: false,
@@ -1232,10 +1265,18 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 					: undefined,
 			}),
 		beginSubmission() {
-			const record: SubmissionRecord = { values: state.values, ids: state.ids, epoch: tracker.epoch() };
+			const record: SubmissionRecord = {
+				outcome: undefined,
+				values: state.values,
+				ids: state.ids,
+				epoch: tracker.epoch(),
+			};
 			const token = Object.freeze({
 				get values() {
 					return toPlain(record.values);
+				},
+				get outcome() {
+					return record.outcome;
 				},
 			}) as unknown as SubmissionToken;
 			submissions.set(token, record);

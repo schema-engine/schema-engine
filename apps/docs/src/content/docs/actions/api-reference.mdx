@@ -10,7 +10,8 @@ order: 5
 
 ```typescript
 class ActionRegistry<TBaseContext, TTrigger>
-	implements ReadOnlyRegistry<ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>,
+	implements
+		ReadOnlyRegistry<ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>,
 		ActionRegistryProvider<TBaseContext, TTrigger>
 {
 	constructor(registrations: readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[]);

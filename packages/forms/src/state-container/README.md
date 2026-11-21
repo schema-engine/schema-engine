@@ -21,7 +21,7 @@ is `FormStateContainer`, its factory `createFormStateContainer` and its snapshot
 ## Paths and field state
 
 A path is a plain dotted path with the row index in it (`contacts.1.email`) everywhere in the API. The form
-itself is `FORM_ROOT` (`'__root__'`), where an error about the form rather than a field is kept. Path segments that start with `__` are reserved: a field name with one is rejected when a form config is validated, and the container rejects such paths except `FORM_ROOT`. A write (`setValue`, `blur`) and `setErrors` also reject a path that names a row its array does not have, so a write cannot leave holes or rows without an id: rows are made with `fieldArray`. Validation modes are `onSubmit`, `onChange`, `onBlur`, `onTouched` (the first blur, then every change, as in React Hook Form) and `all`.
+itself is `FORM_ROOT` (`'__root__'`), where an error about the form rather than a field is kept. Path segments that start with `__`, and `constructor` and `prototype`, are reserved: a field name with one is rejected when a form config is validated, and the container rejects such paths except `FORM_ROOT`. A write (`setValue`, `blur`) and `setErrors` also reject a path that names a row its array does not have, so a write cannot leave holes or rows without an id: rows are made with `fieldArray`. Validation modes are `onSubmit`, `onChange`, `onBlur`, `onTouched` (the first blur, then every change, as in React Hook Form) and `all`.
 
 Internally, what the container's checks recorded, server errors, native facts, touched, validated and failed
 marks and pending marks are trees with one node per value (`state-tree.ts`): a node holds the state of its
@@ -91,6 +91,7 @@ index), the native facts, the exclusions, the reset generation and the rows it n
 - `checkValidity()` answers for the values, native facts, server errors and exclusions current when it was
   called, and for no later state. It is never retried, and it never mixes those with errors set after. Its
   answer may be out of date when it resolves.
+- **How it ended.** `submission.outcome` is `'passed'`, `'invalid'` (the scope was current and an error blocks: show the errors and focus) or `'overtaken'` (an edit, a row move, a reset or a superseded check outran it: no verdict, ask again and show nothing the user did not cause). A rejected call leaves it unset.
 - **The runtime's contract.** `beginSubmission()` returns a token, and `validate(paths, { submission })` leaves
   it holding exactly the values the validation covered when it resolves `true`, from the run that resolved: an
   edit during the check followed by a retry that passes leaves the edit. The runtime submits `submission.values`,
@@ -112,7 +113,10 @@ one command and one notification.
 - A fact is an input to validation, not an error. When a check runs for a path, by mode, by a failed check or
   explicitly, its result is the failed rules followed by the fact, so native validity has exactly the timing
   of rules. `validate` and `checkValidity` count the facts of the paths in scope.
-- A fact reported with an unchanged value is still a change: it is validated per the mode.
+- A write that leaves the value as it is changes nothing, and the fact it carries is not stored. A control that
+  reports on its own (after a reset, or when its constraints change) uses `reportNative(path, fact)`: it binds the
+  fact to the value held now, is no change (nothing dirty or touched), re-validates the path only when it was
+  validated before or is in a failed scope, and ignores a path the container does not hold.
 - **A flush is the whole truth.** The map of `validate` or `checkValidity` replaces the facts for that check:
   a control that is not in it is not mounted, cannot vouch for its value, and its fact is not counted, so
   the engine's rules alone cover that path. `validate` drops the facts that are not in the map; `checkValidity`

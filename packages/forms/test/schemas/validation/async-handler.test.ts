@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createAsyncValidationHandler } from '../../../src/schemas/validation/async/handler';
 import { createValidationContext } from '../../../src/schemas/validation/utils';
 import { createDebounceScope } from '../../../src/lib/debounce';
-import { ValidationSuperseded } from '../../../src/schemas/validation/errors';
+import { REPORTED_TEXT, ValidationSuperseded } from '../../../src/schemas/validation/errors';
 
 describe('createAsyncValidationHandler HTTP method', () => {
 	let fetchSpy: ReturnType<typeof vi.spyOn>;
@@ -176,7 +176,10 @@ describe('createAsyncValidationHandler debounce', () => {
 		const second = schema.safeParseAsync('taken@example.com');
 		await vi.advanceTimersByTimeAsync(300);
 
-		const messages = (await Promise.all([first, second])).map((result) => result.error?.issues[0]?.message);
+		const messages = (await Promise.all([first, second])).map((result) => {
+			const issue = result.error?.issues[0];
+			return issue?.code === 'custom' ? issue.params?.[REPORTED_TEXT] : undefined;
+		});
 		expect(messages).toEqual(['Email is taken', 'Email is taken']);
 		expect(fetchSpy).toHaveBeenCalledOnce();
 	});
@@ -216,5 +219,18 @@ describe('createAsyncValidationHandler debounce', () => {
 		await vi.advanceTimersByTimeAsync(300);
 		await expect(Promise.all([first, second])).resolves.toMatchObject([{ success: true }, { success: true }]);
 		expect(fetchSpy).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe('AsyncRuleSchema', () => {
+	test('an expected response carries valid, success, message and error, and no rule identity', async () => {
+		const { AsyncRuleSchema } = await import('../../../src/schemas/validation/types');
+		const parsed = AsyncRuleSchema.parse({
+			type: 'async',
+			url: '/x',
+			expectedResponse: { valid: true, message: 'm', id: 'nope', severity: 'warning' },
+		});
+
+		expect(parsed.expectedResponse).toEqual({ valid: true, message: 'm' });
 	});
 });

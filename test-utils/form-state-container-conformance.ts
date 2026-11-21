@@ -1805,19 +1805,60 @@ const cases: FormStateContainerCase[] = [
 	},
 	{
 		rule: 'native facts',
-		name: 'a fact reported with the same value is a change that validates, and null withdraws it',
+		name: 'a write that leaves the value as it is changes nothing, whatever fact it carries',
 		async run(createStore) {
 			const store = createStore(fixture({ validationMode: 'onChange' }).options);
 			store.setValue('nickname', 'nick');
+			await settle();
 			const watch = watchValidation(store);
-			store.setValue('nickname', 'nick');
+			const before = store.getSnapshot();
+			store.setValue('nickname', 'nick', { native: { type: 'badInput' } });
 			await settle();
 			expect(watch.started).toBe(false);
-			store.setValue('nickname', 'nick', { native: { type: 'badInput', params: { step: 2 } } });
-			await vi.waitFor(() => expect(errorsOf(store).nickname?.type).toBe('badInput'));
-			expect(errorsOf(store).nickname.params).toEqual({ step: 2 });
-			store.setValue('nickname', 'nick', { native: null });
-			await vi.waitFor(() => expect(errorsOf(store).nickname).toBeUndefined());
+			expect(store.getSnapshot()).toBe(before);
+			expect(await store.checkValidity(['nickname'])).toBe(true);
+		},
+	},
+	{
+		rule: 'native facts',
+		name: 'reportNative binds a fact to the value held now, validates only a path already checked, and is no user change',
+		async run(createStore) {
+			const store = createStore(fixture({ validationMode: 'onChange' }).options);
+			const listener = vi.fn();
+			store.subscribe(listener);
+			store.reportNative('nickname', { type: 'valueMissing' });
+			await settle();
+			expect(errorsOf(store)).toEqual({});
+			expect(store.getSnapshot().dirty).toEqual({});
+			expect(store.getSnapshot().touched).toEqual({});
+			expect(listener).not.toHaveBeenCalled();
+			expect(await store.checkValidity(['nickname'])).toBe(false);
+
+			expect(await store.validate(['name'])).toBe(true);
+			store.reportNative('name', { type: 'typeMismatch', params: { type: 'email' } });
+			await vi.waitFor(() => expect(errorsOf(store).name?.type).toBe('typeMismatch'));
+			store.reportNative('name', null);
+			await vi.waitFor(() => expect(errorsOf(store).name).toBeUndefined());
+			expect(store.getSnapshot().dirty).toEqual({});
+		},
+	},
+	{
+		rule: 'native facts',
+		name: 'a reset form that hears from its controls again shows no error, and a path the container does not hold is ignored',
+		async run(createStore) {
+			const store = createStore(fixture({ validationMode: 'onChange' }).options);
+			store.setValue('nickname', 'x', { native: { type: 'typeMismatch' } });
+			await vi.waitFor(() => expect(errorsOf(store).nickname?.source).toBe('native'));
+			store.reset();
+			store.reportNative('nickname', { type: 'valueMissing' });
+			store.reportNative('contacts.9.email', { type: 'valueMissing' });
+			store.reportNative('nothing.here', { type: 'valueMissing' });
+			await settle();
+			expect(errorsOf(store)).toEqual({});
+			expect(store.getSnapshot().isValid).toBe(true);
+			store.fieldArray('contacts').remove(2);
+			expect(() => store.reportNative('contacts.2.email', { type: 'valueMissing' })).not.toThrow();
+			expect(() => store.reportNative('__x', { type: 'valueMissing' })).toThrow(/reserved/);
 		},
 	},
 	{
@@ -2191,6 +2232,124 @@ const cases: FormStateContainerCase[] = [
 		},
 	},
 	{
+		rule: 'issue identity',
+		name: 'an async rule reports the endpoint text on its own channel, never library text, and an outage is a failure to run and is not cached',
+		async run(createStore) {
+			let reply: () => Response = () => new Response(JSON.stringify({ valid: false }));
+			const fetchSpy = vi.fn(async () => reply());
+			vi.stubGlobal('fetch', fetchSpy);
+			try {
+				const options = custom(
+					[
+						{
+							$type: 'input',
+							name: 'handle',
+							rules: [
+								{
+									type: 'async',
+									id: 'handle-free',
+									url: '/check',
+									headers: { Authorization: 'secret' },
+								},
+							],
+						},
+					],
+					{ handle: 'ada' },
+				);
+				const store = createStore(options);
+				expect(await store.validate()).toBe(false);
+				expect(errorsOf(store).handle.all).toEqual([
+					{ type: 'async', source: 'validation', ruleId: 'handle-free' },
+				]);
+
+				reply = () => new Response(JSON.stringify({ valid: false, message: 'Handle is taken' }));
+				store.setValue('handle', 'ada2');
+				expect(await store.validate()).toBe(false);
+				expect(errorsOf(store).handle.message).toBe('Handle is taken');
+				expect(JSON.stringify(store.getSnapshot())).not.toMatch(/Invalid input|secret|\/check/);
+
+				reply = () => new Response('no', { status: 503 });
+				store.setValue('handle', 'ada3');
+				const down: unknown = await store.validate().then(
+					() => undefined,
+					(error: unknown) => error,
+				);
+				expect(down).toMatchObject({ name: 'FormValidationFailure', path: 'handle', ruleType: 'async' });
+				expect((down as { cause: Error }).cause.name).toBe('ValidationUnavailable');
+				const calls = fetchSpy.mock.calls.length;
+				reply = () => new Response(JSON.stringify({ valid: true }));
+				expect(await store.validate()).toBe(true);
+				expect(fetchSpy.mock.calls.length).toBe(calls + 1);
+
+				fetchSpy.mockImplementation(async () => {
+					throw new Error('offline');
+				});
+				const offline: unknown = await createStore({ ...options, defaults: { handle: 'zed' } })
+					.validate()
+					.then(
+						() => undefined,
+						(error: unknown) => error,
+					);
+				expect((offline as { cause: Error }).cause.name).toBe('ValidationUnavailable');
+			} finally {
+				vi.unstubAllGlobals();
+			}
+		},
+	},
+	{
+		rule: 'submission-bound validation',
+		name: 'the token says how the last validation ended: passed, invalid, or overtaken',
+		async run(createStore) {
+			const { options, gate } = fixture();
+			const store = createStore(options);
+			const submission = store.beginSubmission();
+			expect(submission.outcome).toBeUndefined();
+			expect(await store.validate(undefined, { submission })).toBe(true);
+			expect(submission.outcome).toBe('passed');
+
+			store.setValue('name', '');
+			expect(await store.validate(undefined, { submission })).toBe(false);
+			expect(submission.outcome).toBe('invalid');
+
+			store.setValue('name', 'Ada');
+			gate.hold('one');
+			const run = store.validate(['invites.0.code'], { submission });
+			await vi.waitFor(() => expect(gate.pending('one')).toBe(1));
+			expect(submission.outcome).toBeUndefined();
+			store.fieldArray('invites').remove(0);
+			gate.settle('one', true);
+			expect(await run).toBe(false);
+			expect(submission.outcome).toBe('overtaken');
+
+			const reset = store.beginSubmission();
+			gate.hold('free');
+			store.setValue('slug', 'free');
+			const second = store.validate(undefined, { submission: reset });
+			await vi.waitFor(() => expect(gate.pending('free')).toBe(1));
+			store.reset();
+			gate.settle('free', true);
+			expect(await second).toBe(false);
+			expect(reset.outcome).toBe('overtaken');
+		},
+	},
+	{
+		rule: 'paths of writes',
+		name: 'a reserved path in a native map rejects the call, and every reserved segment is named',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			const call = () => store.validate(undefined, { native: { __x: { type: 'valueMissing' } } });
+			let pending: Promise<boolean> | undefined;
+			expect(() => {
+				pending = call();
+			}).not.toThrow();
+			await expect(pending).rejects.toThrow(/reserved/);
+			await expect(store.checkValidity(undefined, { native: { 'a.constructor': null } })).rejects.toThrow(
+				/'constructor'/,
+			);
+			expect(() => store.setValue('prototype.x', 1)).toThrow(/__.*constructor.*prototype/s);
+		},
+	},
+	{
 		rule: 'atomic blur',
 		name: 'blur writes the value and marks the field touched as one command with one notification',
 		async run(createStore) {
@@ -2203,8 +2362,8 @@ const cases: FormStateContainerCase[] = [
 				}),
 			);
 			store.blur('name', { value: '', native: { type: 'valueMissing' } });
-			expect(seen).toEqual([{ value: '', touched: true }, ...seen.slice(1)]);
 			expect(seen[0]).toEqual({ value: '', touched: true });
+			expect(seen.every(({ touched }) => touched)).toBe(true);
 			await vi.waitFor(() =>
 				expect(errorsOf(store).name?.all.map(({ source }) => source)).toEqual(['validation', 'native']),
 			);
@@ -2306,7 +2465,7 @@ const cases: FormStateContainerCase[] = [
 			const errors = errorsOf(store);
 			expect(errors.tag.all).toEqual([
 				{ type: 'maxLength', source: 'validation', params: { maxLength: 2 } },
-				{ type: 'relate', source: 'validation', ruleId: 'same' },
+				{ type: 'relate', source: 'validation', ruleId: 'same', params: { assert: 'allEqual' } },
 			]);
 			expect(errors.count.all.map(({ params }) => params)).toEqual([{ min: 5 }, { max: 1 }]);
 			expect(errors.rows.params).toEqual({ minItems: 2 });
