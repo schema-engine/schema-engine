@@ -130,14 +130,33 @@ describe('ValidationRegistry', () => {
 			expect(emailRule.type).toBe('email');
 		});
 
+		it('builds rule config only: a message appears only when the caller passes one', () => {
+			const rules = [
+				ValidationPresets.string.email(),
+				ValidationPresets.string.minLength(3),
+				ValidationPresets.string.pattern('a'),
+				ValidationPresets.array.nonEmpty(),
+				ValidationPresets.network.ipv4(),
+				ValidationPresets.date.date(),
+				ValidationPresets.custom.async('/api/check'),
+			];
+
+			expect(rules.filter((rule) => rule.message !== undefined)).toEqual([]);
+		});
+
 		it('should provide number presets', () => {
 			const minRule = ValidationPresets.number.min(5);
-			expect(minRule).toEqual({ type: 'min', value: 5, message: 'Must be at least 5' });
+			expect(minRule).toEqual({ type: 'min', value: 5 });
+			expect(ValidationPresets.number.min(5, 'At least five')).toEqual({
+				type: 'min',
+				value: 5,
+				message: 'At least five',
+			});
 		});
 
 		it('should provide array presets', () => {
 			const minItemsRule = ValidationPresets.array.minItems(3);
-			expect(minItemsRule).toEqual({ type: 'minItems', value: 3, message: 'Must have at least 3 items' });
+			expect(minItemsRule).toEqual({ type: 'minItems', value: 3 });
 		});
 
 		it('should provide async presets with dependencies', () => {

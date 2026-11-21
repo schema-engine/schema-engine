@@ -364,7 +364,7 @@ const result = formSchema.safeParse({
 
 ### Validation Presets
 
-Use the exported `ValidationPresets` utility for convenient rule creation:
+Use the exported `ValidationPresets` utility for convenient rule creation. A preset builds rule config only (its `type`, the values you give it and your optional `message`); it adds no text of its own, so the application's language stays above the engine:
 
 ```typescript
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
