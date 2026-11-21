@@ -9,19 +9,19 @@ is `FormStateContainer`, its factory `createFormStateContainer` and its snapshot
 
 ## Ownership
 
-| Owns                                                           | Does not own                                                                               |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| The nested value tree and the defaults                         | Submission: `handleSubmit`, `isSubmitting`, `submitCount`, guards                          |
-| Field state: errors, warnings, touched, dirty, pending, checks | Control registration: a host bridges a control with `setValue`/`blur`, and `releaseNative` |
-| Native facts, tied to the value they describe                  | Focus and native submit: the host supplies them                                            |
-| Row ids of field arrays                                        | Operational status (a service that is down): the runtime's (#336)                          |
-| Which paths take part in validation                            |                                                                                            |
-| Atomic updates: one command, one notification                  |                                                                                            |
+| Owns                                                           | Does not own                                                                                                         |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| The nested value tree and the defaults                         | Submission: `handleSubmit`, `isSubmitting`, `submitCount`, guards                                                    |
+| Field state: errors, warnings, touched, dirty, pending, checks | Control registration: a host bridges a control with `setValue`/`blur` and flushes it with `validate`/`checkValidity` |
+| Native facts, tied to the value they describe                  | Focus and native submit: the host supplies them                                                                      |
+| Row ids of field arrays                                        | Operational status (a service that is down): the runtime's (#336)                                                    |
+| Which paths take part in validation                            |                                                                                                                      |
+| Atomic updates: one command, one notification                  |                                                                                                                      |
 
 ## Paths and field state
 
 A path is a plain dotted path with the row index in it (`contacts.1.email`) everywhere in the API. The form
-itself is `FORM_ROOT` (`'__root__'`), where an error about the form rather than a field is kept. Path segments that start with `__` are reserved: a field name with one is rejected when a form config is validated, and the container rejects such paths except `FORM_ROOT`.
+itself is `FORM_ROOT` (`'__root__'`), where an error about the form rather than a field is kept. Path segments that start with `__` are reserved: a field name with one is rejected when a form config is validated, and the container rejects such paths except `FORM_ROOT`. A write (`setValue`, `blur`) and `setErrors` also reject a path that names a row its array does not have, so a write cannot leave holes or rows without an id: rows are made with `fieldArray`. Validation modes are `onSubmit`, `onChange`, `onBlur`, `onTouched` (the first blur, then every change, as in React Hook Form) and `all`.
 
 Internally, what the container's checks recorded, server errors, native facts, touched, validated and failed
 marks and pending marks are trees with one node per value (`state-tree.ts`): a node holds the state of its
@@ -40,19 +40,26 @@ how a path segment is spelled.
 Defaults are cloned (the `defaults` option and `reset(values)`): defaults and live values never share objects.
 
 The snapshot shows this as flat maps by exact path: `errors`, `warnings`, `touched`, `dirty`, `validating`
-and `validationFailures`, with `values`, `defaults`, `rowIds`, `isValidating`, `isValid` and `revision`.
+and `validationFailures`, with `values`, `defaults`, `rowIds`, `isValidating` and `isValid`.
 
 - **Errors are never inherited.** `errors['contacts']` is the array's own error and `errors['contacts.0.email']`
   the row's; both can be present. The error of a field is the entry for exactly its path.
 - **An error is an issue with every issue of its path.** Every issue is `{ type, source, ruleId?, params?,
 message? }`: `type` is the rule type (`'minLength'`), the `ValidityState` flag of a native control
   (`'typeMismatch'`) or the server's code; `ruleId` is the author's stable id of the rule, so two `pattern`
-  rules stay apart; `params` is serializable and is what a translation interpolates (`{ value: 8 }` for a
-  rule, `{ minLength: 8 }` for a native control); `message` is a fallback and may be absent. `errors[path]`
+  rules stay apart; `params` is serializable and is what a translation interpolates (`{ minLength: 8 }`, for a rule
+  and for a native control alike, named like the constraint); `message` is only the text the author wrote
+  on the rule, or the server or control sent, and may be absent: the schema library's generic text is never used. `errors[path]`
   is the issue to show with `all`, the full, never empty list: what the server said, then each rule the value
   fails in authored order (whatever order the checks finished in), then what the platform's control reports.
   The shown fields equal `all[0]`, and the same object comes back while none of it changes. A rule reports
-  one issue however many checks its schema runs.
+  one issue however many checks its schema runs. Each validation registration declares the `params` of
+  its rule (`params(rule)`): `minLength`, `maxLength`, `min`, `max`, `minItems`, `maxItems` and `pattern`
+  give the constraint under its native name, and `async` and `relate` give nothing, so no url, header or field
+  list reaches a snapshot, an action context or a formatter.
+- **Text is the host's.** `FormIssueFormatter = (issue, { path }) => string` is the one seam: a binding takes
+  one from its host, calls it for the issue to show and for each issue of `all`, and falls back to
+  `issue.message`. The action context carries the same `FormStateError`.
 - **Warnings** have exactly that shape and timing, from rules declared `severity: 'warning'`. They never
   affect `isValid`, `validate` or `checkValidity`, and a path that takes no part has none. A server cannot
   send them yet: that is future work, with no change to the shape.
@@ -66,8 +73,7 @@ message? }`: `type` is the rule type (`'minLength'`), the `ValidityState` flag o
 - **`isValid`** is cheap: no error is recorded right now for a path that takes part. It does not prove the
   form is valid (nothing may have been checked) and does not say whether a retry is allowed. A submit button
   should not be disabled by it: a server error makes it `false`, and only the next attempt clears that.
-- **`revision`** increases whenever the values or the native facts change and on `reset`, never for errors,
-  marks or pending state. See freshness.
+- **`validationFailures`** are plain data, `{ path, ruleType, ruleId? }`, so a snapshot holds no error object.
 
 ## Freshness
 
@@ -84,18 +90,21 @@ index), the native facts, the exclusions, the reset generation and the rows it n
   resolves `false` without a retry.
 - `checkValidity()` answers for the values, native facts, server errors and exclusions current when it was
   called, and for no later state. It is never retried, and it never mixes those with errors set after. Its
-  answer may be out of date when it resolves; compare `snapshot.revision`.
-- **The runtime's contract.** Read `snapshot.revision` when the submission begins, call `validate()`, and
-  submit the values only when `validate()` resolved `true` and `snapshot.revision` is the same. `validate()`
-  covering the whole form resolves `true` only for a form no value of which changed, but one that covers
-  a few paths says nothing of the others.
+  answer may be out of date when it resolves.
+- **The runtime's contract.** `beginSubmission()` returns a token, and `validate(paths, { submission })` leaves
+  it holding exactly the values the validation covered when it resolves `true`, from the run that resolved: an
+  edit during the check followed by a retry that passes leaves the edit. The runtime submits `submission.values`,
+  frozen, and gives the server's answer back with the same token, which is judged against those values. No
+  version number is compared.
 
 ## Native facts
 
 A native fact is what a platform control reports (`{ type, params?, message? }`: the `ValidityState` flag,
 the constraint behind it, the control's own text). It travels with the input that produced it:
-`setValue(path, value, { native })`, `blur(path, { native })` and, for a submit, `validate(paths, { native })`
-with a fact for each control. `null` says the control reports itself valid and withdraws its fact.
+`setValue(path, value, { native })`, `blur(path, { value?, native })` and, for a submit or an action,
+`validate(paths, { native })` and `checkValidity(paths, { native })` with a fact for each control. `null` says
+the control reports itself valid and withdraws its fact. `blur` with a `value` writes it and marks the touch in
+one command and one notification.
 
 - A fact is stored with the value it describes, in the same shaped trees as the rest, so it moves with its
   row. Once the value at its path changes it is dropped: a write without a fact, such as a programmatic
@@ -104,8 +113,10 @@ with a fact for each control. `null` says the control reports itself valid and w
   explicitly, its result is the failed rules followed by the fact, so native validity has exactly the timing
   of rules. `validate` and `checkValidity` count the facts of the paths in scope.
 - A fact reported with an unchanged value is still a change: it is validated per the mode.
-- `releaseNative(path)` withdraws the fact and the native issue recorded from it, for a control that
-  disappeared. Facts for a row that does not exist are ignored. `reset` clears them.
+- **A flush is the whole truth.** The map of `validate` or `checkValidity` replaces the facts for that check:
+  a control that is not in it is not mounted, cannot vouch for its value, and its fact is not counted, so
+  the engine's rules alone cover that path. `validate` drops the facts that are not in the map; `checkValidity`
+  leaves the stored ones alone. Facts for a row that does not exist are ignored. `reset` clears them.
 
 ## Participation
 
@@ -126,7 +137,7 @@ is excluded together with everything below it. An inactive wizard step is not ex
 
 A host sets `server` errors, which describe the response to one submission.
 
-- `beginSubmission()` returns a token that captures the submitted values' revision and rows, and clears the
+- `beginSubmission()` returns a token that captures the submitted values and rows, and clears the
   source. A later `beginSubmission`, and `reset`, supersede it.
 - `setErrors('server', errors, { submission })` resolves index paths through the submission's rows: an
   error for the submitted `contacts.0.email` lands on that row wherever it is now, and is dropped when the
@@ -148,8 +159,8 @@ A rule that cannot run is no field error: it says nothing about the value.
 - An invalid rule is rejected when the form config is validated: `ValidationRegistry.check(rule)` finds a
   type with no handler or a handler that throws, so nothing is skipped silently. `createSchema` throws a
   `ValidationRuleError` for the same.
-- A rule that throws while it runs is a `FormValidationFailure` naming the path and the rule. `validate()`
-  and `checkValidity()` reject with it. An automatic check records it in `snapshot.validationFailures[path]`
+- A rule that throws while it runs is a `FormValidationFailure` naming the path and the rule, with the
+  cause. `validate()` and `checkValidity()` reject with it. An automatic check records it in `snapshot.validationFailures[path]`
   and keeps the other rules' results. It does not affect `isValid`: nothing says the value is wrong. The
   submit path is blocked all the same, because `validate()` rejects while the rule fails. The next check of
   the path replaces it.
@@ -157,7 +168,7 @@ A rule that cannot run is no field error: it says nothing about the value.
 ## Contract
 
 [types.ts](./types.ts) is the contract: `subscribe`, a stable immutable `getSnapshot`, a stable
-`getServerSnapshot` and the commands `getValue`, `getFieldState`, `setValue`, `blur`, `releaseNative`, `reset`,
+`getServerSnapshot` and the commands `getValue`, `getFieldState`, `setValue`, `blur`, `reset`,
 `validate`, `checkValidity`, `beginSubmission`, `setErrors` and `fieldArray`. No member depends on how it is called.
 
 Reads are pure selectors over the snapshot, memoized per snapshot and path, so they are safe as selectors

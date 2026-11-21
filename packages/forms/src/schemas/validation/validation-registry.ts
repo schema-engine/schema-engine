@@ -42,6 +42,12 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	 */
 	getRuleDependencies(rule: { type: string }): readonly string[];
 
+	/** The options of a rule its registration exposes to messages (`{ minLength: 8 }`), or `undefined` when it exposes none. */
+	getRuleParams(rule: { type: string }): Readonly<Record<string, unknown>> | undefined;
+
+	/** The fallback text of an issue of a rule: its author's `message`, or what its registration takes from the schema's `reported` text. */
+	getRuleMessage(rule: { type: string; message?: string }, reported: string | undefined): string | undefined;
+
 	/** Registrations of one category. */
 	getByCategory(category: string): AnyValidationRegistration[];
 
@@ -125,6 +131,11 @@ export function createValidationRegistry(
 		getDefaultRulesForFieldType: (fieldType) => defaultRulesByFieldType.get(fieldType) ?? NO_DEFAULT_RULES,
 		getRuleDependencies: (rule) =>
 			(registry.get(rule.type) as StoredValidationRegistration | undefined)?.dependsOn?.(rule) ?? [],
+		getRuleMessage: (rule, reported) => {
+			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
+			return registration?.message ? registration.message(rule, reported) : rule.message;
+		},
+		getRuleParams: (rule) => (registry.get(rule.type) as StoredValidationRegistration | undefined)?.params?.(rule),
 		getByCategory: (category) => registry.all().filter((registration) => registration.category === category),
 		createSchema: (rule, context) => {
 			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;

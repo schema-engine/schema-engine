@@ -71,26 +71,60 @@ describe('buildFormActionContext', () => {
 		const pristine = buildFormActionContext({ ...input, formState: { errors: {}, touched: {}, submitCount: 0 } });
 		const failed = buildFormActionContext({
 			...input,
-			formState: { errors: { email: { type: 'validation', message: 'Required' } }, touched: {}, submitCount: 0 },
+			formState: {
+				errors: {
+					email: {
+						type: 'validation',
+						source: 'validation',
+						message: 'Required',
+						all: [{ type: 'validation', source: 'validation', message: 'Required' }],
+					},
+				},
+				touched: {},
+				submitCount: 0,
+			},
 		});
 
 		const nested = buildFormActionContext({
 			...input,
 			formState: {
-				errors: { 'contacts.1.email': { type: 'validation', message: 'Invalid' } },
+				errors: {
+					'contacts.1.email': {
+						type: 'validation',
+						source: 'validation',
+						message: 'Invalid',
+						all: [{ type: 'validation', source: 'validation', message: 'Invalid' }],
+					},
+				},
 				touched: {},
 				submitCount: 0,
 			},
 		});
 		const formLevel = buildFormActionContext({
 			...input,
-			formState: { errors: { '': { type: 'server', message: 'Try later' } }, touched: {}, submitCount: 0 },
+			formState: {
+				errors: {
+					'': {
+						type: 'server',
+						source: 'validation',
+						message: 'Try later',
+						all: [{ type: 'server', source: 'validation', message: 'Try later' }],
+					},
+				},
+				touched: {},
+				submitCount: 0,
+			},
 		});
 
 		expect(pristine.isValid).toBe(true);
 		expect(failed.isValid).toBe(false);
 		expect(nested.isValid).toBe(false);
 		expect(formLevel.isValid).toBe(false);
-		expect(nested.errors['contacts.1.email']).toEqual({ type: 'validation', message: 'Invalid' });
+		expect(nested.errors['contacts.1.email']).toEqual({
+			type: 'validation',
+			source: 'validation',
+			message: 'Invalid',
+			all: [{ type: 'validation', source: 'validation', message: 'Invalid' }],
+		});
 	});
 });

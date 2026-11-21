@@ -1061,8 +1061,8 @@ const cases: FormStateContainerCase[] = [
 			const shown = errorsOf(store).code;
 			expect(shown.all).toEqual([
 				{ type: 'server', message: 'Taken', source: 'server' },
-				{ type: 'minLength', source: 'validation', params: { value: 5 }, message: 'Too short' },
-				{ type: 'pattern', source: 'validation', params: { value: '^\\d+$' }, message: 'Digits only' },
+				{ type: 'minLength', source: 'validation', params: { minLength: 5 }, message: 'Too short' },
+				{ type: 'pattern', source: 'validation', params: { pattern: '^\\d+$' }, message: 'Digits only' },
 				{ type: 'patternMismatch', source: 'native', params: { pattern: '[0-9]+' } },
 			]);
 			const { all, ...fields } = shown;
@@ -1276,7 +1276,7 @@ const cases: FormStateContainerCase[] = [
 				/reserved/,
 			);
 			expect(() => store.blur(FORM_ROOT)).toThrow(/reserved/);
-			expect(() => store.releaseNative('__x')).toThrow(/reserved/);
+			expect(() => store.setValue('__x', 1)).toThrow(/reserved/);
 			expect(() => store.blur('__x', { native: { type: 'valueMissing' } })).toThrow(/reserved/);
 			expect(() => store.setErrors('server', { 'contacts.4.email': { message: 'bounced' } })).toThrow(
 				/'contacts.4.email' names row '4' of 'contacts', which has 3 rows/,
@@ -1311,7 +1311,7 @@ const cases: FormStateContainerCase[] = [
 			expect(store.getSnapshot().isValidating).toBe(true);
 			gate.settle('taken', false);
 			expect(await run).toBe(false);
-			expect(errorsOf(store).slug?.message).toBe('Value is taken');
+			expect(errorsOf(store).slug?.type).toBe('gate');
 			expect(store.getSnapshot().isValidating).toBe(false);
 		},
 	},
@@ -1557,34 +1557,54 @@ const cases: FormStateContainerCase[] = [
 		},
 	},
 	{
-		rule: 'freshness',
-		name: 'revision increases with every value change, native fact and reset, never with errors or marks, so a runtime can compare it',
+		rule: 'submission-bound validation',
+		name: 'an edit during validation followed by a passing retry leaves the token holding the edited values, and the server answer for them applies',
 		async run(createStore) {
 			const store = createStore(fixture().options);
-			const start = store.getSnapshot().revision;
-			store.setValue('name', 'Ada');
-			expect(store.getSnapshot().revision).toBe(start);
-			store.setValue('name', 'Grace');
-			const edited = store.getSnapshot().revision;
-			expect(edited).toBeGreaterThan(start);
-			store.blur('name');
-			store.setErrors('server', { name: { type: 'taken' } });
-			await store.validate(['nickname']);
-			expect(store.getSnapshot().revision).toBe(edited);
-			store.fieldArray('contacts').swap(0, 1);
-			expect(store.getSnapshot().revision).toBeGreaterThan(edited);
-			const before = store.getSnapshot().revision;
-			store.blur('name', { native: { type: 'valueMissing' } });
-			expect(store.getSnapshot().revision).toBeGreaterThan(before);
-			const beforeReset = store.getSnapshot().revision;
-			store.reset();
-			expect(store.getSnapshot().revision).toBeGreaterThan(beforeReset);
-
-			const run = store.validate();
-			const submitted = store.getSnapshot().revision;
-			store.setValue('name', 'Hedy');
+			const submission = store.beginSubmission();
+			expect(submission.values).toEqual(store.getSnapshot().values);
+			const run = store.validate(undefined, { submission });
+			store.setValue('nickname', 'ada2');
 			expect(await run).toBe(true);
-			expect(store.getSnapshot().revision).not.toBe(submitted);
+			expect(submission.values.nickname).toBe('ada2');
+			expect(submission.values).toEqual(store.getSnapshot().values);
+			expect(Object.isFrozen(submission.values)).toBe(true);
+			store.setErrors('server', { nickname: { type: 'taken' } }, { submission });
+			expect(errorsOf(store).nickname?.type).toBe('taken');
+		},
+	},
+	{
+		rule: 'submission-bound validation',
+		name: 'a validation that fails leaves the values of the token as they were, and an edit after a pass drops only the answers for what it touched',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			const submission = store.beginSubmission();
+			const before = submission.values;
+			store.setValue('name', '');
+			expect(await store.validate(undefined, { submission })).toBe(false);
+			expect(submission.values).toBe(before);
+
+			store.setValue('name', 'Grace');
+			expect(await store.validate(undefined, { submission })).toBe(true);
+			expect(submission.values.name).toBe('Grace');
+			store.setValue('nickname', 'changed');
+			store.setErrors('server', { name: { type: 'taken' }, nickname: { type: 'taken' } }, { submission });
+			expect(Object.keys(errorsOf(store))).toEqual(['name']);
+		},
+	},
+	{
+		rule: 'submission-bound validation',
+		name: 'a token that a reset or a later submission superseded does not capture, and the values of a token are plain frozen data',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			const old = store.beginSubmission();
+			const current = store.beginSubmission();
+			store.setValue('name', 'Grace');
+			expect(await store.validate(undefined, { submission: old })).toBe(true);
+			expect(old.values.name).toBe('Ada');
+			expect(await store.validate(undefined, { submission: current })).toBe(true);
+			expect(current.values.name).toBe('Grace');
+			expect(current.values).toBe(current.values);
 		},
 	},
 	{
@@ -1700,7 +1720,7 @@ const cases: FormStateContainerCase[] = [
 			expect(errorsOf(store)).toEqual({});
 			store.setErrors('server', { name: { type: 'taken' } }, { submission: second });
 			expect(errorsOf(store).name?.type).toBe('taken');
-			expect(second.revision).toBe(store.getSnapshot().revision);
+			expect(second.values).toEqual(store.getSnapshot().values);
 		},
 	},
 	{
@@ -1781,27 +1801,21 @@ const cases: FormStateContainerCase[] = [
 	},
 	{
 		rule: 'native facts',
-		name: 'releasing a control withdraws its fact and the native issue recorded from it, and leaves the rest',
+		name: 'a flush is the whole truth: a control that is not in the map is not counted, for validate and for checkValidity',
 		async run(createStore) {
 			const store = createStore(fixture().options);
-			store.setValue('code', 'ab', { native: { type: 'patternMismatch' } });
-			expect(await store.validate(['code'])).toBe(false);
-			expect(errorsOf(store).code.all.map(({ source }) => source)).toEqual([
-				'validation',
-				'validation',
-				'native',
-			]);
-			store.releaseNative('code');
-			expect(errorsOf(store).code.all.map(({ source }) => source)).toEqual(['validation', 'validation']);
-			expect(await store.checkValidity(['name'])).toBe(true);
 			store.blur('name', { native: { type: 'valueMissing' } });
-			expect(await store.checkValidity(['name'])).toBe(false);
-			store.releaseNative('name');
-			expect(await store.checkValidity(['name'])).toBe(true);
-			const listener = vi.fn();
-			store.subscribe(listener);
-			store.releaseNative('name');
-			expect(listener).not.toHaveBeenCalled();
+			store.blur('nickname', { native: { type: 'valueMissing' } });
+			expect(await store.checkValidity()).toBe(false);
+			expect(await store.checkValidity(undefined, { native: { nickname: null } })).toBe(true);
+			expect(await store.checkValidity(undefined, { native: { name: { type: 'typeMismatch' } } })).toBe(false);
+			expect(await store.checkValidity()).toBe(false);
+
+			expect(await store.validate(undefined, { native: { nickname: { type: 'valueMissing' } } })).toBe(false);
+			expect(Object.keys(errorsOf(store))).toEqual(['nickname']);
+			expect(await store.validate(undefined, { native: {} })).toBe(true);
+			expect(errorsOf(store)).toEqual({});
+			expect(await store.checkValidity()).toBe(true);
 		},
 	},
 	{
@@ -1820,17 +1834,20 @@ const cases: FormStateContainerCase[] = [
 	},
 	{
 		rule: 'native facts',
-		name: 'a fact for a row that does not exist is ignored, and facts and params are copied so a caller cannot change a snapshot',
+		name: 'a flush ignores a fact for a row that does not exist, and facts and params are copied so a caller cannot change a snapshot',
 		async run(createStore) {
 			const store = createStore(fixture().options);
 			store.fieldArray('contacts').remove([0, 1, 2]);
-			store.blur('contacts.0.label', { native: { type: 'valueMissing' } });
-			expect(await store.validate()).toBe(true);
-			expect(errorsOf(store)).toEqual({});
+			expect(() => store.blur('contacts.0.label', { native: { type: 'valueMissing' } })).toThrow(/names row/);
 			store.setValue('contacts', null);
-			store.blur('contacts.0.label', { native: { type: 'valueMissing' } });
-			await store.validate(undefined, { native: { 'contacts.1.label': { type: 'valueMissing' } } });
+			await store.validate(undefined, {
+				native: {
+					'contacts.0.label': { type: 'valueMissing' },
+					'contacts.1.label': { type: 'valueMissing' },
+				},
+			});
 			expect(Object.keys(errorsOf(store)).filter((path) => path.endsWith('.label'))).toEqual([]);
+			store.setValue('contacts', []);
 
 			const allowed = ['first'];
 			store.setErrors('server', { name: { type: 'invalid', params: { allowed } } });
@@ -1970,10 +1987,11 @@ const cases: FormStateContainerCase[] = [
 				type: 'pattern',
 				source: 'validation',
 				ruleId: 'tag-letters',
-				params: { value: '^[a-z]+$' },
+				params: { pattern: '^[a-z]+$' },
 				message: 'Letters only',
 			});
-			expect(all[2].params).toEqual({ value: 8 });
+			expect(all[2].params).toEqual({ minLength: 8 });
+			expect(all[2].message).toBeUndefined();
 			expect(Object.isFrozen(all[2].params)).toBe(true);
 		},
 	},
@@ -2044,9 +2062,12 @@ const cases: FormStateContainerCase[] = [
 			automatic.setValue('secret', 'x');
 			automatic.setValue('secret', '');
 			await vi.waitFor(() => expect(automatic.getSnapshot().validationFailures.secret).toHaveLength(1));
-			expect(automatic.getSnapshot().validationFailures.secret[0]).toMatchObject({ ruleType: 'boom' });
+			expect(automatic.getSnapshot().validationFailures.secret).toEqual([
+				{ path: 'secret', ruleType: 'boom', ruleId: 'secret-boom' },
+			]);
+			expect(Object.isFrozen(automatic.getSnapshot().validationFailures.secret[0])).toBe(true);
 			expect(errorsOf(automatic).secret?.all).toEqual([
-				{ type: 'required', source: 'validation', ruleId: 'secret-required', message: expect.any(String) },
+				{ type: 'required', source: 'validation', ruleId: 'secret-required' },
 			]);
 			expect(automatic.getSnapshot().isValid).toBe(false);
 		},
@@ -2083,14 +2104,14 @@ const cases: FormStateContainerCase[] = [
 				type: 'minLength',
 				source: 'validation',
 				ruleId: 'password-strength',
-				params: { value: 8 },
+				params: { minLength: 8 },
 				message: 'Weak',
 				all: [
 					{
 						type: 'minLength',
 						source: 'validation',
 						ruleId: 'password-strength',
-						params: { value: 8 },
+						params: { minLength: 8 },
 						message: 'Weak',
 					},
 				],
@@ -2132,6 +2153,127 @@ const cases: FormStateContainerCase[] = [
 			expect(store.getSnapshot().warnings.company?.type).toBe('required');
 			store.setValue('kind', 'person');
 			expect(store.getSnapshot().warnings).toEqual({});
+		},
+	},
+	{
+		rule: 'atomic blur',
+		name: 'blur writes the value and marks the field touched as one command with one notification',
+		async run(createStore) {
+			const store = createStore(fixture({ validationMode: 'onBlur' }).options);
+			const seen: Array<{ value: unknown; touched: boolean }> = [];
+			store.subscribe(() =>
+				seen.push({
+					value: store.getSnapshot().values.name,
+					touched: store.getSnapshot().touched.name === true,
+				}),
+			);
+			store.blur('name', { value: '', native: { type: 'valueMissing' } });
+			expect(seen).toEqual([{ value: '', touched: true }, ...seen.slice(1)]);
+			expect(seen[0]).toEqual({ value: '', touched: true });
+			await vi.waitFor(() =>
+				expect(errorsOf(store).name?.all.map(({ source }) => source)).toEqual(['validation', 'native']),
+			);
+			expect(store.getSnapshot().dirty.name).toBe(true);
+
+			const quiet = createStore(fixture().options);
+			const listener = vi.fn();
+			quiet.subscribe(listener);
+			quiet.blur('name', { value: 'Grace' });
+			expect(listener).toHaveBeenCalledTimes(1);
+			quiet.blur('name', { value: undefined });
+			expect(quiet.getValue('name')).toBeUndefined();
+			quiet.blur('nickname');
+			expect(quiet.getValue('nickname')).toBe('ada');
+		},
+	},
+	{
+		rule: 'paths of writes',
+		name: 'setValue and blur refuse a row the array does not have, and a reserved segment, instead of leaving holes',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			const before = store.getSnapshot();
+			expect(() => store.setValue('contacts.3.email', 'x')).toThrow(
+				/'contacts.3.email' names row '3' of 'contacts'/,
+			);
+			expect(() => store.setValue('contacts.-1.email', 'x')).toThrow(/names row '-1'/);
+			expect(() => store.blur('contacts.5.email')).toThrow(/names row '5'/);
+			expect(() => store.blur('contacts.5.email', { value: 'x' })).toThrow(/names row '5'/);
+			expect(() => store.setValue('__secret', 1)).toThrow(/reserved segment/);
+			expect(store.getSnapshot()).toBe(before);
+			store.fieldArray('contacts').append({ email: 'd@example.com' });
+			store.setValue('contacts.3.email', 'e@example.com');
+			expect(store.getSnapshot().rowIds.contacts).toHaveLength(4);
+			expect(store.getSnapshot().rowIds.contacts.every((id) => typeof id === 'string')).toBe(true);
+		},
+	},
+	{
+		rule: 'validation mode timing',
+		name: 'onTouched validates on the first blur and on every change after it',
+		async run(createStore) {
+			const store = createStore(fixture({ validationMode: 'onTouched', defaults: { name: '' } }).options);
+			const watch = watchValidation(store);
+			store.setValue('name', '');
+			store.setValue('name', 'x');
+			store.setValue('name', '');
+			await settle();
+			expect(watch.started).toBe(false);
+			store.blur('name');
+			await vi.waitFor(() => expect(errorsOf(store).name?.type).toBe('required'));
+			store.setValue('name', 'Ada');
+			await vi.waitFor(() => expect(errorsOf(store).name).toBeUndefined());
+			store.setValue('name', '');
+			await vi.waitFor(() => expect(errorsOf(store).name?.type).toBe('required'));
+		},
+	},
+	{
+		rule: 'issue identity',
+		name: 'a registration declares the params of its rule: native names, and nothing of the configuration of async or relate rules',
+		async run(createStore) {
+			const store = createStore(
+				custom(
+					[
+						{
+							$type: 'input',
+							name: 'tag',
+							rules: [
+								{ type: 'maxLength', value: 2 },
+								{
+									type: 'relate',
+									fields: ['other'],
+									assert: 'allEqual',
+									includeSelf: true,
+									id: 'same',
+								},
+							],
+						},
+						{ $type: 'input', name: 'other' },
+						{
+							$type: 'input',
+							name: 'count',
+							rules: [
+								{ type: 'min', value: 5 },
+								{ type: 'max', value: 1 },
+							],
+						},
+						{
+							$type: 'arrayElements',
+							name: 'rows',
+							rules: [{ type: 'minItems', value: 2 }],
+							elements: [{ $type: 'input', name: 'x' }],
+						},
+					],
+					{ tag: 'abc', other: 'z', count: 3, rows: [{ x: '' }] },
+				),
+			);
+			expect(await store.validate()).toBe(false);
+			const errors = errorsOf(store);
+			expect(errors.tag.all).toEqual([
+				{ type: 'maxLength', source: 'validation', params: { maxLength: 2 } },
+				{ type: 'relate', source: 'validation', ruleId: 'same' },
+			]);
+			expect(errors.count.all.map(({ params }) => params)).toEqual([{ min: 5 }, { max: 1 }]);
+			expect(errors.rows.params).toEqual({ minItems: 2 });
+			expect(JSON.stringify(errors)).not.toMatch(/Too (small|big)|Invalid input/);
 		},
 	},
 ];

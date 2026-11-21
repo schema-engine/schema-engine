@@ -1,4 +1,4 @@
-import type { FormValidationFailure, ValidationElementTree } from '@/engine/value-validation';
+import type { ValidationElementTree } from '@/engine/value-validation';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import type { FieldArrayCommands } from './field-array';
 import type { FormFieldState } from './selectors';
@@ -13,8 +13,9 @@ import type { FormFieldState } from './selectors';
  * no submission state (`isSubmitting`, `submitCount`, a submit guard): the runtime owns those. Focus,
  * native controls and native submit belong to the host, and there is no control registration: a host
  * bridges a control into the container with {@link FormStateContainer.setValue} and
- * {@link FormStateContainer.blur}, which carry the control's native validity, and withdraws it with
- * {@link FormStateContainer.releaseNative}; a server's answer goes through {@link FormStateContainer.setErrors}.
+ * {@link FormStateContainer.blur}, which carry the control's native validity, and flushes it with
+ * {@link FormStateContainer.validate} and {@link FormStateContainer.checkValidity}; a server's answer goes
+ * through {@link FormStateContainer.setErrors}.
  *
  * The container is named for what it holds, not `FormStore`, which is a class of Radiant UI. Internal
  * until both renderer bindings run on it. Nothing here is exported from a package entry point.
@@ -27,8 +28,12 @@ import type { FormFieldState } from './selectors';
  */
 export const FORM_ROOT = '__root__';
 
-/** When a field validates: on `change`, on `blur`, on both (`all`) or only on an explicit {@link FormStateContainer.validate}. */
-export type FormValidationMode = 'onSubmit' | 'onChange' | 'onBlur' | 'all';
+/**
+ * When a field validates before a check of it has failed: on `change`, on `blur`, on both (`all`), on the
+ * first `blur` and on every change after it (`onTouched`, as React Hook Form's mode of that name) or only on
+ * an explicit {@link FormStateContainer.validate}.
+ */
+export type FormValidationMode = 'onSubmit' | 'onChange' | 'onBlur' | 'onTouched' | 'all';
 
 /** When a field validates once a {@link FormStateContainer.validate} over it has failed. */
 export type FormReValidateMode = 'onSubmit' | 'onChange' | 'onBlur';
@@ -44,7 +49,8 @@ export type FormStateSource = 'server' | 'validation' | 'native';
  * native control (`'typeMismatch'`) or the server's code. `ruleId` is the author's stable name for the
  * rule, so two `pattern` rules stay distinguishable. `params` are the numbers and names the text is
  * built from, serializable (`{ value: 8 }` for a rule, `{ minLength: 8 }` for a native control).
- * `message` is only a fallback for a host with no translation of the issue, and may be absent.
+ * `message` is only the text the author wrote on the rule, or the server or control sent, for a host with no
+ * translation of the issue, and may be absent. Text the schema library would make up is never used.
  */
 export interface FormStateIssue {
 	readonly type: string;
@@ -75,6 +81,30 @@ export interface FormStateError extends FormStateIssue {
  * It never affects `isValid`, `validate` or `checkValidity`. A server cannot send warnings yet.
  */
 export type FormStateWarning = FormStateError;
+
+/**
+ * Turns an issue into the text to show, for the field at `field.path`.
+ *
+ * @remarks
+ * The one seam between the engine, which reports what is wrong (`type`, `ruleId`, `params`), and the text
+ * of the application's language, which the engine does not own. A binding takes one from its host and
+ * calls it for the issue to show (an error or warning is itself an issue) and for each of `all` it lists,
+ * falling back to `issue.message` when the host gives none or the formatter returns nothing worth showing.
+ * `ruleId` picks a text of one rule, `type` a text of a kind of rule, and `params` fill its numbers. The
+ * action context and the bindings use this same issue type, so one formatter serves them all.
+ */
+export type FormIssueFormatter = (issue: FormStateIssue, field: { readonly path: string }) => string;
+
+/**
+ * A rule that could not run, as a snapshot keeps it: data, with no error object to retain.
+ *
+ * @remarks `validate` and `checkValidity` reject with the `FormValidationFailure` itself, which keeps the cause.
+ */
+export interface FormStateFailure {
+	readonly path: string;
+	readonly ruleType: string;
+	readonly ruleId?: string;
+}
 
 /**
  * An issue as a caller of {@link FormStateContainer.setErrors} may give it.
@@ -130,23 +160,46 @@ export interface NativeOptions {
 	readonly native?: NativeValidity | null;
 }
 
-/** What {@link FormStateContainer.validate} takes: a fact for each control, the flush a submit makes. */
-export interface ValidateOptions {
+/**
+ * What a platform control reports for each path, as a submit or an action flushes it.
+ *
+ * @remarks
+ * The map is the whole truth for that check: a control that is not in it is not mounted, cannot vouch for
+ * its value, and its stored fact is not counted, so the engine's rules alone cover that path. A `null` says
+ * the control reports itself valid. Facts for rows that do not exist are ignored.
+ */
+export interface NativeFlush {
 	readonly native?: Readonly<Record<string, NativeValidity | null>>;
+}
+
+/** What {@link FormStateContainer.validate} takes besides the paths. */
+export interface ValidateOptions extends NativeFlush {
+	/** The submission this check is the validation of: when it resolves `true`, the token holds exactly the values it validated. */
+	readonly submission?: SubmissionToken;
+}
+
+/** What {@link FormStateContainer.blur} takes: the value the control has now, when the host writes it, and its native fact. */
+export interface BlurOptions extends NativeOptions {
+	/** Written with the blur as one command, so the touch and the value reach subscribers together. */
+	readonly value?: unknown;
 }
 
 declare const submissionBrand: unique symbol;
 
 /**
- * What {@link FormStateContainer.beginSubmission} returns: the submitted values, as the container saw them.
+ * What {@link FormStateContainer.beginSubmission} returns: the values a submission is about, as the container saw them.
  *
  * @remarks
- * Opaque; pass it back to {@link FormStateContainer.setErrors}. `revision` is `snapshot.revision` when the
- * submission began.
+ * Opaque but for `values`. It holds the values current when the submission began, and each time
+ * `validate(paths, { submission })` resolves `true` it holds exactly the values that validation covered:
+ * a validation that was overtaken and retried leaves the values of the retry. A runtime submits
+ * `submission.values`, which is what passed. A server's answer given with the token is judged against them
+ * ({@link FormStateContainer.setErrors}).
  */
 export interface SubmissionToken {
 	readonly [submissionBrand]: true;
-	readonly revision: number;
+	/** The frozen values of the submission, nested like `snapshot.values`. */
+	readonly values: Readonly<Record<string, unknown>>;
 }
 
 /** What {@link FormStateContainer.setErrors} takes besides the errors. */
@@ -209,20 +262,11 @@ export interface FormStateSnapshot {
 	 * reject instead. It does not affect `isValid`, since nothing says the value is wrong, and is replaced
 	 * by the next check of the path.
 	 */
-	readonly validationFailures: Readonly<Record<string, readonly FormValidationFailure[]>>;
+	readonly validationFailures: Readonly<Record<string, readonly FormStateFailure[]>>;
 	/** Whether a validation the container started, other than `checkValidity`, is still running: any path pending, or a superseded run still in flight. */
 	readonly isValidating: boolean;
 	/** Whether no error from any source is recorded for a path that takes part. Cheap, and not a fresh check. */
 	readonly isValid: boolean;
-	/**
-	 * A number that increases whenever the values, or the native facts that decide validity, change, and on reset.
-	 *
-	 * @remarks
-	 * A runtime that submits reads it before `validate()` and again after: when it is the same, the values
-	 * it submits are the ones that passed. `validate()` resolving `true` only says the scope it covered was
-	 * current when it finished, and a whole-form `validate()` covers every value.
-	 */
-	readonly revision: number;
 }
 
 /**
@@ -248,21 +292,23 @@ export interface FormStateContainer {
 	 * Replaces the whole branch at `path`, with the native fact of the control that produced it.
 	 *
 	 * @remarks
-	 * It is a change: it validates when the mode says so, re-validates dependents, and drops what describes
+	 * Throws for a path with a reserved `__` segment and for a path that names a row its array does not
+	 * have: rows are made with `fieldArray`, so a write cannot leave holes or rows without an id. It is a change: it validates when the mode says so, re-validates dependents, and drops what describes
 	 * a value that is gone. Errors a host set with `setErrors` are dropped at the path and below, and the
 	 * ones on the paths around it, the form included, as the value they described changed. The state of rows
 	 * and objects the branch no longer holds is dropped with them. A native fact reported with the same
 	 * value is a change too, so a write that leaves the value as it is still validates when the fact is new.
 	 */
 	setValue(path: string, value: unknown, options?: NativeOptions): void;
-	/** Marks `path` touched, records the control's native fact when given, and validates it when the mode says so. */
-	blur(path: string, options?: NativeOptions): void;
 	/**
-	 * Withdraws what a control that disappeared reported: its native fact and the native issue recorded from it.
+	 * Marks `path` touched, writes the control's value and records its native fact when given, and validates it when the mode says so.
 	 *
-	 * @remarks Notifies only when there was something to withdraw. Nothing is re-validated.
+	 * @remarks
+	 * One command and one notification: with `options.value` the write and the touch are the same update, so
+	 * no subscriber sees the value without the mark or the other way round. The path is checked as in
+	 * `setValue`.
 	 */
-	releaseNative(path: string): void;
+	blur(path: string, options?: BlurOptions): void;
 	/**
 	 * Replaces the defaults with `values` when given, then restores the values to the defaults and clears
 	 * every error, native fact, touched and dirty mark and the failed-check state.
@@ -283,8 +329,13 @@ export interface FormStateContainer {
 	 * of its own validation starts the failed-check state for those paths, so they re-validate by
 	 * `reValidateMode` from then on. It does not mark anything submitted or touched.
 	 *
-	 * `options.native` is the flush of a submit: a fact for each control, recorded before the check, so it
-	 * is judged by the facts the controls hold now. Facts for rows that do not exist are ignored.
+	 * `options.native` is the flush of a submit: a fact for each control, and the whole truth. It replaces
+	 * the facts the container holds, so a control that is not in the map, being unmounted, is not counted
+	 * and its rules alone cover it. Facts for rows that do not exist are ignored.
+	 *
+	 * With `options.submission`, a result of `true` leaves the token holding exactly the values this
+	 * validation covered, from the run that resolved, so the values a runtime submits are the ones that
+	 * passed: an edit during the check, followed by a retry that passes, submits the edit.
 	 */
 	validate(paths?: readonly string[], options?: ValidateOptions): Promise<boolean>;
 	/**
@@ -293,17 +344,18 @@ export interface FormStateContainer {
 	 * @remarks
 	 * It answers for the values, native facts, server errors and participation current when it was called,
 	 * and for no later state: it is never retried and never mixes those with errors set afterwards, so the
-	 * answer may already be out of date when it resolves (compare `snapshot.revision`). Writes no error and
-	 * changes no state. Errors recorded earlier do not count, as the check validates afresh. It rejects with
+	 * answer may already be out of date when it resolves. It writes no error and
+	 * changes no state, and `options.native`, a flush as in `validate`, is used for this call only. Errors recorded earlier do not count, as the check validates afresh. It rejects with
 	 * a `FormValidationFailure` when a rule could not run.
 	 */
-	checkValidity(paths?: readonly string[]): Promise<boolean>;
+	checkValidity(paths?: readonly string[], options?: NativeFlush): Promise<boolean>;
 	/**
-	 * Starts a submission: captures the values it submits and clears the errors of the `server` source.
+	 * Starts a submission: captures the values it is about and clears the errors of the `server` source.
 	 *
 	 * @remarks
-	 * The token ties the server's answer to what was submitted, see {@link FormStateContainer.setErrors}. A
-	 * later `beginSubmission` supersedes it, and so does `reset`.
+	 * The token ties the server's answer to what was submitted, see {@link FormStateContainer.setErrors},
+	 * and `validate(paths, { submission })` leaves it holding the values that passed. A later
+	 * `beginSubmission` supersedes it, and so does `reset`.
 	 */
 	beginSubmission(): SubmissionToken;
 	/**
@@ -318,7 +370,7 @@ export interface FormStateContainer {
 	 * With `options.submission` the answer is applied to what it was about. Index paths are the ones of the
 	 * submitted values: an error for submitted `contacts.0.email` lands on that row wherever it is now, and
 	 * is dropped when the row is gone. An error is applied only when its target, and every value its rules
-	 * read, are unchanged since the submission began. A token from before a reset or from a superseded
+	 * read, are unchanged since the values of the submission (`submission.values`). A token from before a reset or from a superseded
 	 * submission is ignored. Without a token the errors are the host's, outside any submission, and apply
 	 * as they are. Either way an error is cleared when its path or a path its rules read is edited.
 	 */

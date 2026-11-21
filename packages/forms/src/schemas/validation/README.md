@@ -39,7 +39,7 @@ Every rule may also carry an `id` and a `severity`:
 
 `message` is the fallback text. `id` is the stable name a translation is keyed to, so two `pattern` rules stay
 apart. A rule with `severity: 'warning'` reports advice: it never makes the form invalid. A failed rule is
-reported as an issue with its `type`, `ruleId` and `params` (its options as authored, here `{ value: 8 }`).
+reported as an issue with its `type`, `ruleId`, `params` and `message` (only the text the author wrote). A registration declares the `params` of its rule with `params(rule)`, named like the native constraint (`{ minLength: 8 }` here); `async` and `relate` declare none, so their configuration (url, headers, field list) never reaches a snapshot or a formatter.
 
 ### ValidationRegistry
 

@@ -8,7 +8,7 @@ import {
 } from '@schema-engine/forms/engine';
 import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
-import type { FormFieldError } from '@schema-engine/forms/types';
+import type { FormStateError } from '@schema-engine/forms/types';
 import type { FormProviderProps } from '@/adapters/types';
 import { logger } from '@/lib/logger';
 import { createChangeDetector } from './controller/values';
@@ -41,9 +41,19 @@ export interface FormActionsOptions {
  *
  * @remarks Radiant UI types its errors as a partial record, so an entry can be `undefined` in the type; the engine's context records only errors.
  */
-function recordedErrors(errors: Readonly<Partial<Record<string, FormFieldError>>>): Record<string, FormFieldError> {
+function recordedErrors(
+	errors: Readonly<Partial<Record<string, { readonly type?: string; readonly message?: string }>>>,
+): Record<string, FormStateError> {
 	return Object.fromEntries(
-		Object.entries(errors).filter((entry): entry is [string, FormFieldError] => entry[1] !== undefined),
+		Object.entries(errors).flatMap(([path, error]) => {
+			if (error === undefined) return [];
+			const issue = {
+				type: error.type ?? 'validation',
+				source: 'validation' as const,
+				...(error.message === undefined ? {} : { message: error.message }),
+			};
+			return [[path, { ...issue, all: [issue] }]];
+		}),
 	);
 }
 

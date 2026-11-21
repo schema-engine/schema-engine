@@ -24,16 +24,18 @@ describe('field errors at the React Hook Form boundary', () => {
 			),
 		).toEqual({ profile: expect.objectContaining({ message: 'Required' }) });
 		expect(fromFieldErrors(nested({ profile: { ref: error, types: error } }), {})).toEqual({
-			'profile.ref': error,
-			'profile.types': error,
+			'profile.ref': expect.objectContaining({ message: 'Required' }),
+			'profile.types': expect.objectContaining({ message: 'Required' }),
 		});
 	});
 
 	test("reads an array's own error from its root, and leaves a root field alone", () => {
 		const error = { type: 'validation', message: 'Add two contacts' };
-		expect(fromFieldErrors(nested({ contacts: { root: error } }), { contacts: [] })).toEqual({ contacts: error });
+		expect(fromFieldErrors(nested({ contacts: { root: error } }), { contacts: [] })).toEqual({
+			contacts: expect.objectContaining({ message: 'Add two contacts' }),
+		});
 		expect(fromFieldErrors(nested({ settings: { root: error } }), { settings: { root: 'x' } })).toEqual({
-			'settings.root': error,
+			'settings.root': expect.objectContaining({ message: 'Add two contacts' }),
 		});
 	});
 

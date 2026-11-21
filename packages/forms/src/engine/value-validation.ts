@@ -77,10 +77,10 @@ export type ValidationSeverity = 'error' | 'warning';
  * One rule a value fails, with what a translation needs to say so.
  *
  * @remarks
- * `type` is the rule's type, `ruleId` the author's stable name for that rule and `params` its options as
- * authored (`{ value: 8 }` for a `minLength`), so a message is composed from the issue and not parsed out
- * of the text. `message` is the fallback text: the rule's own, else the schema library's. A rule reports
- * one issue however many checks its schema runs.
+ * `type` is the rule's type, `ruleId` the author's stable name for that rule and `params` the options its
+ * registration exposes (`{ minLength: 8 }`), so a message is composed from the issue and not parsed out of
+ * the text. `message` is only the text the author wrote on the rule: the schema library's generic text is
+ * never used. A rule reports one issue however many checks its schema runs.
  */
 export interface ValidationIssue {
 	readonly type: string;
@@ -221,17 +221,6 @@ export function effectiveRulesFor({
 	return [requiredRule, ...rules];
 }
 
-/** The keys of a rule that say who it is rather than how it checks. */
-const RULE_IDENTITY_KEYS: ReadonlySet<string> = new Set(['type', 'message', 'id', 'severity']);
-
-/** The options a rule was authored with, which a translation can interpolate; `undefined` when it has none. */
-function paramsOf(rule: BaseValidationRule): Readonly<Record<string, unknown>> | undefined {
-	const params = Object.fromEntries(
-		Object.entries(rule).filter(([key, value]) => !RULE_IDENTITY_KEYS.has(key) && value !== undefined),
-	);
-	return Object.keys(params).length === 0 ? undefined : frozenCopy(params);
-}
-
 type AuthoredRule = BaseValidationRule & { readonly id?: string; readonly severity?: ValidationSeverity };
 
 /**
@@ -258,11 +247,12 @@ export async function validateFieldValue({
 			try {
 				const result = await z.safeParseAsync(createZodSchemaFromRules([rule], context, registry), value);
 				if (result.success) return undefined;
-				const message = result.error.issues[0]?.message;
+				const params = registry.getRuleParams(rule);
+				const message = registry.getRuleMessage(rule, result.error.issues[0]?.message);
 				return Object.freeze({
 					type: rule.type,
 					...(rule.id === undefined ? {} : { ruleId: rule.id }),
-					...(paramsOf(rule) === undefined ? {} : { params: paramsOf(rule) }),
+					...(params === undefined ? {} : { params: frozenCopy(params) }),
 					...(message ? { message } : {}),
 					severity: rule.severity ?? 'error',
 				});

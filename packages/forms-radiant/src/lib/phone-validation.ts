@@ -30,6 +30,7 @@ export function createRadiantPhoneValidationRegistration(): ValidationRegistrati
 		metadata: { name: 'Phone', description: 'The text is a complete phone number.' },
 		category: 'string',
 		handler: createRadiantPhoneValidationSchema,
+		message: (_rule, reported) => reported,
 		defaultFor: ['phone-input'],
 	};
 }

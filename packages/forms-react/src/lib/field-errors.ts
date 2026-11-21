@@ -1,5 +1,5 @@
 import type { FieldErrors, FieldValues } from 'react-hook-form';
-import type { FormFieldError } from '@schema-engine/forms/types';
+import type { FormStateError } from '@schema-engine/forms/types';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 
 /**
@@ -11,9 +11,7 @@ import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-va
  * A container's error is written first, so an error on `contacts` and one on `contacts.0.email` share
  * one nested node, as React Hook Form's own shape requires.
  */
-export function toFieldErrors(
-	errors: Readonly<Record<string, FormFieldError & { type: string; message: string }>>,
-): FieldErrors {
+export function toFieldErrors(errors: Readonly<Record<string, { type: string; message: string }>>): FieldErrors {
 	const nested: Record<string, unknown> = {};
 	for (const [path, error] of Object.entries(errors).toSorted(
 		([a], [b]) => a.split('.').length - b.split('.').length,
@@ -23,11 +21,21 @@ export function toFieldErrors(
 	return nested as FieldErrors<FieldValues>;
 }
 
-function collect(node: unknown, path: string, out: Record<string, FormFieldError>): void {
+/** The engine's error for what React Hook Form recorded: one issue, from the validation, with the fields it carries. */
+function toStateError(node: { type?: unknown; message?: unknown }): FormStateError {
+	const issue = {
+		type: typeof node.type === 'string' ? node.type : 'validation',
+		source: 'validation' as const,
+		...(typeof node.message === 'string' ? { message: node.message } : {}),
+	};
+	return { ...issue, all: [issue] };
+}
+
+function collect(node: unknown, path: string, out: Record<string, FormStateError>): void {
 	if (typeof node !== 'object' || node === null) return;
 	const recorded =
 		('message' in node && typeof node.message === 'string') || ('type' in node && typeof node.type === 'string');
-	if (recorded && path) out[path] = node as FormFieldError;
+	if (recorded && path) out[path] = toStateError(node);
 	for (const [key, child] of Object.entries(node)) {
 		if (recorded && (key === 'ref' || key === 'types')) continue;
 		collect(child, path ? `${path}.${key}` : key, out);
@@ -45,10 +53,10 @@ function collect(node: unknown, path: string, out: Record<string, FormFieldError
  * error was cleared, record nothing. React Hook Form keeps the error of a field array itself at
  * `<array>.root`, so a `root` below an array in `values` is that array's own error.
  */
-export function fromFieldErrors(errors: FieldErrors, values: unknown): Record<string, FormFieldError> {
-	const nested: Record<string, FormFieldError> = {};
+export function fromFieldErrors(errors: FieldErrors, values: unknown): Record<string, FormStateError> {
+	const nested: Record<string, FormStateError> = {};
 	collect(errors, '', nested);
-	const flat: Record<string, FormFieldError> = {};
+	const flat: Record<string, FormStateError> = {};
 	for (const [path, error] of Object.entries(nested)) {
 		const parent = path.endsWith('.root') ? path.slice(0, -'.root'.length) : undefined;
 		flat[parent !== undefined && Array.isArray(getValueAtPath(values, parent)) ? parent : path] = error;

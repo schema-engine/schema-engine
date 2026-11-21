@@ -1,28 +1,8 @@
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
+import type { FormStateError } from '@/state-container/types';
 
-/** One thing wrong with a field, as an action sees it. */
-export interface FormFieldIssue {
-	/** The rule type (`'minLength'`), the native `ValidityState` flag or the server's code. */
-	readonly type?: string;
-	/** Fallback text: translate from `type`, `ruleId` and `params` where the host has the text. */
-	readonly message?: string;
-	/** Who reported it: `'validation'`, `'server'` or `'native'`, where the renderer knows. */
-	readonly source?: string;
-	/** The author's stable name for the rule that reported it. */
-	readonly ruleId?: string;
-	/** What the text is built from, serializable (`{ value: 8 }`). */
-	readonly params?: Readonly<Record<string, unknown>>;
-}
-
-/**
- * The error a field reports, as an action sees it.
- *
- * @remarks `type`, `message` and `source` are those of the issue to show; `all` lists every issue the field has, that one first.
- */
-export interface FormFieldError extends FormFieldIssue {
-	readonly all?: readonly FormFieldIssue[];
-}
+export type { FormIssueFormatter, FormStateError, FormStateIssue } from '@/state-container/types';
 
 /**
  * Base action context for the builder pattern.
@@ -49,7 +29,7 @@ export interface BuilderActionBaseContext {
 	 */
 	isValid: boolean;
 	/** Validation errors by dotted field path; `'__root__'` is the form itself. Warnings are not included. */
-	errors: Readonly<Record<string, FormFieldError>>;
+	errors: Readonly<Record<string, FormStateError>>;
 	/** Form metadata and timing information */
 	metadata: {
 		/** Timestamp when current step started */

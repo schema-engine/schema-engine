@@ -241,13 +241,6 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 		caught: ['identical errors change nothing and keep their objects, and a changed one replaces only its own'],
 	},
 	{
-		name: 'never moves the revision',
-		create: withSnapshot((snapshot) => ({ ...snapshot, revision: 0 })),
-		caught: [
-			'revision increases with every value change, native fact and reset, never with errors or marks, so a runtime can compare it',
-		],
-	},
-	{
 		name: 'reports nothing as pending',
 		create: withSnapshot((snapshot) => ({ ...snapshot, validating: {} })),
 		caught: ['lists the paths a check is running for, moves with a row, and drops a path a later check took over'],
@@ -262,9 +255,48 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 		],
 	},
 	{
-		name: 'keeps the facts of a control that was released',
-		create: withOverrides(() => ({ releaseNative: () => undefined })),
-		caught: ['releasing a control withdraws its fact and the native issue recorded from it, and leaves the rest'],
+		name: 'keeps counting the facts of a control a flush left out',
+		create: withOverrides((inner) => ({
+			checkValidity: (paths) => inner.checkValidity(paths),
+			validate: (paths, options) => inner.validate(paths, options && { ...options, native: undefined }),
+		})),
+		caught: [
+			'a flush is the whole truth: a control that is not in the map is not counted, for validate and for checkValidity',
+		],
+	},
+	{
+		name: 'stops the token from following the validation',
+		create: withOverrides((inner) => ({
+			validate: (paths, options) => inner.validate(paths, options && { ...options, submission: undefined }),
+		})),
+		caught: [
+			'an edit during validation followed by a passing retry leaves the token holding the edited values, and the server answer for them applies',
+		],
+	},
+	{
+		name: 'writes the value and the touch as two commands',
+		create: withOverrides((inner) => ({
+			blur: (path, options) => {
+				if (options && Object.hasOwn(options, 'value')) inner.setValue(path, options.value, options);
+				inner.blur(path, options && { native: options.native });
+			},
+		})),
+		caught: ['blur writes the value and marks the field touched as one command with one notification'],
+	},
+	{
+		name: 'writes past the end of an array',
+		create: withOverrides((inner) => ({
+			setValue: (path, value, options) => {
+				try {
+					inner.setValue(path, value, options);
+				} catch {
+					return undefined;
+				}
+			},
+		})),
+		caught: [
+			'setValue and blur refuse a row the array does not have, and a reserved segment, instead of leaving holes',
+		],
 	},
 	{
 		name: 'validates fields whatever their constraints and disabled state',
@@ -342,7 +374,7 @@ describe('form state container conformance cases', () => {
 				caught.map((name) => formStateContainerCases.find((entry) => entry.name === name)?.rule),
 			),
 		);
-		const coveredElsewhere = new Set(['stale async results']);
+		const coveredElsewhere = new Set(['stale async results', 'freshness']);
 		expect([...rules].filter((rule) => !caughtRules.has(rule) && !coveredElsewhere.has(rule))).toEqual([]);
 	});
 });

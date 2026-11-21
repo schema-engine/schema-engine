@@ -14,6 +14,7 @@ export function createPhoneValidationRegistration(): ValidationRegistration<Phon
 					message: rule.message || 'Enter a complete phone number',
 				}),
 			),
+		message: (_rule, reported) => reported,
 		defaultFor: ['phone-input'],
 	};
 }

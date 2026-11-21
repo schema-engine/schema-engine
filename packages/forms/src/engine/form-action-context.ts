@@ -1,4 +1,4 @@
-import type { BuilderActionBaseContext, FormFieldError } from '@/types';
+import type { BuilderActionBaseContext, FormStateError } from '@/types';
 import { createDebounceScope } from '../lib/debounce';
 import { flattenStepElements } from '../lib/field-scope';
 import type { ValidationRegistry } from '../schemas/validation/validation-registry';
@@ -19,7 +19,7 @@ import { validateFormValues } from './value-validation';
  */
 export interface FormActionContextFormState {
 	/** Errors by dotted field path, as `validateFormValues` returns them. */
-	errors: Readonly<Record<string, FormFieldError>>;
+	errors: Readonly<Record<string, FormStateError>>;
 	/** Touched fields by dotted path, `true` at each field the user has touched. */
 	touched: Readonly<Partial<Record<string, boolean>>>;
 	submitCount: number;

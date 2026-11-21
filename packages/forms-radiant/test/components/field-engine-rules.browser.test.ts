@@ -15,6 +15,7 @@ function engineRequiring(domain: string) {
 		metadata: { name: 'Email' },
 		category: 'string',
 		handler: () => z.optional(z.string().check(z.refine((value) => value.endsWith(domain), `Use ${domain}`))),
+		message: (_rule, reported) => reported,
 		defaultFor: ['input'],
 	};
 	return createFormEngine({ elements: [{ ...InputElementRegistration, validations: [email] }] });

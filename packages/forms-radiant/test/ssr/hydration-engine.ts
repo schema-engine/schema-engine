@@ -14,6 +14,7 @@ const emailForInputs: ValidationRegistration<EmailRule> = {
 		z.optional(
 			z.string().check(z.refine((value) => !value || value.includes('@'), rule.message ?? 'Enter an email')),
 		),
+	message: (_rule, reported) => reported,
 	defaultFor: ['input'],
 };
 

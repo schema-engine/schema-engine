@@ -23,7 +23,7 @@ type BridgeNativeValidity = { type: string; params?: Record<string, unknown>; me
 interface BridgeFormState {
 	getValue: (path: string) => unknown;
 	setValue: (path: string, value: unknown, options?: { native?: BridgeNativeValidity | null }) => void;
-	blur: (path: string, options?: { native?: BridgeNativeValidity | null }) => void;
+	blur: (path: string, options?: { value?: unknown; native?: BridgeNativeValidity | null }) => void;
 	getSnapshot: () => {
 		readonly values: Readonly<Record<string, unknown>>;
 		readonly errors: Readonly<Record<string, { readonly type?: string; readonly message?: string }>>;
@@ -35,7 +35,6 @@ interface BridgeFormState {
 		paths?: string[],
 		options?: { native?: Record<string, BridgeNativeValidity | null> },
 	) => Promise<boolean>;
-	releaseNative: (path: string) => void;
 }
 
 interface NotTheBridge {
@@ -54,7 +53,6 @@ describe('the form state container as a bridge host sees it', () => {
 		expect(bridge.getSnapshot().errors.name?.message).toBe('Fill in this field');
 		expect(await bridge.validate(['name'], { native: { name: null } })).toBe(true);
 		bridge.blur('name', { native: { type: 'tooShort', params: { minLength: 8 } } });
-		bridge.releaseNative('name');
 		expect(bridge.getSnapshot().warnings).toEqual({});
 	});
 

@@ -17,9 +17,9 @@ import {
 } from '@/engine/value-validation';
 
 /** The issue of a failed rule. */
-const found = (type: string, message: string, extra: Record<string, unknown> = {}) => ({
+const found = (type: string, message: string | undefined, extra: Record<string, unknown> = {}) => ({
 	type,
-	message,
+	...(message === undefined ? {} : { message }),
 	severity: 'error',
 	...extra,
 });
@@ -196,7 +196,7 @@ describe('validateFieldValue', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(result).toEqual({ issues: [found('required', 'Required')], failures: [] });
+		expect(result).toEqual({ issues: [found('required', undefined)], failures: [] });
 	});
 
 	test('a superseded async validation never passes submission', async () => {
@@ -230,9 +230,7 @@ describe('validateFieldValue', () => {
 				debounceScope,
 			});
 
-			expect((await first).issues).toEqual([
-				expect.objectContaining({ type: 'async', message: 'Validation pending' }),
-			]);
+			expect((await first).issues).toEqual([expect.objectContaining({ type: 'async' })]);
 			await vi.advanceTimersByTimeAsync(300);
 			expect(await second).toEqual({ issues: [], failures: [] });
 
@@ -322,7 +320,7 @@ describe('validateFormValues', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(errors.languages).toEqual([found('minItems', 'Select a language', { params: { value: 1 } })]);
+		expect(errors.languages).toEqual([found('minItems', 'Select a language', { params: { minItems: 1 } })]);
 	});
 
 	test('a rule that throws is a failure to run, and does not hide the issues of the others', async () => {
@@ -353,7 +351,7 @@ describe('validateFormValues', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(result.issues).toEqual([found('minLength', 'Too short', { params: { value: 5 } })]);
+		expect(result.issues).toEqual([found('minLength', 'Too short', { params: { minLength: 5 } })]);
 		expect(result.failures).toHaveLength(1);
 		expect(result.failures[0]).toMatchObject({ name: 'FormValidationFailure', path: 'code', ruleType: 'boom' });
 	});
@@ -387,8 +385,8 @@ describe('validateFormValues', () => {
 		});
 
 		expect(errors.code).toEqual([
-			found('minLength', 'Too short', { params: { value: 5 } }),
-			found('pattern', 'Digits only', { params: { value: '^\\d+$' } }),
+			found('minLength', 'Too short', { params: { minLength: 5 } }),
+			found('pattern', 'Digits only', { params: { pattern: '^\\d+$' } }),
 		]);
 	});
 
@@ -410,11 +408,11 @@ describe('validateFormValues', () => {
 		};
 
 		expect(await issuesOf(input)).toEqual({
-			contacts: [found('minItems', 'Add two contacts', { params: { value: 2 } })],
+			contacts: [found('minItems', 'Add two contacts', { params: { minItems: 2 } })],
 			'contacts.0.email': [found('required', 'Email is required')],
 		});
 		expect(await issuesOf({ ...input, names: ['contacts'], exactNames: true })).toEqual({
-			contacts: [found('minItems', 'Add two contacts', { params: { value: 2 } })],
+			contacts: [found('minItems', 'Add two contacts', { params: { minItems: 2 } })],
 		});
 	});
 
@@ -549,7 +547,7 @@ describe('rule issues', () => {
 				message: 'Not an email',
 				severity: 'error',
 			},
-			{ type: 'minLength', params: { value: 30 }, message: expect.any(String), severity: 'warning' },
+			{ type: 'minLength', params: { minLength: 30 }, severity: 'warning' },
 		]);
 	});
 });

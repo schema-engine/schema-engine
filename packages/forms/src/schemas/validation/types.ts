@@ -358,6 +358,25 @@ export interface ValidationRegistration<
 	 */
 	dependsOn?: (rule: TRule) => readonly string[];
 	/**
+	 * The options of this rule that a message can be built from, named like the native constraint they match.
+	 *
+	 * @remarks
+	 * They reach every issue the rule reports, and so a snapshot, an action context and a formatter: a
+	 * registration decides what it shows. `minLength` returns `{ minLength: 8 }`, as the native
+	 * `ValidityState` constraint is named, and a rule whose options are configuration (`async`'s url and
+	 * headers, `relate`'s field list) returns nothing. Values must be serializable.
+	 */
+	params?: (rule: TRule) => Readonly<Record<string, unknown>> | undefined;
+	/**
+	 * The fallback text of an issue this rule reports, given the text its schema reported.
+	 *
+	 * @remarks
+	 * By default the text is the author's own `message` on the rule, and the schema library's generic text
+	 * is never used. A registration whose schema reports text that is its own, or the answer of a service
+	 * (`async` shows the endpoint's message), returns `reported` here.
+	 */
+	message?: (rule: TRule, reported: string | undefined) => string | undefined;
+	/**
 	 * Field `$type` values that receive this rule when the author omitted it.
 	 *
 	 * @remarks Lets an integration attach a rule (for example `phone` on
@@ -391,6 +410,8 @@ export type ValidationRegistrationConstraint = {
 	readonly category: ValidationRegistration['category'];
 	readonly handler: (rule: never, context: ValidationContext) => z.ZodMiniType;
 	readonly dependsOn?: (rule: never) => readonly string[];
+	readonly params?: (rule: never) => Readonly<Record<string, unknown>> | undefined;
+	readonly message?: (rule: never, reported: string | undefined) => string | undefined;
 	readonly defaultFor?: readonly string[];
 };
 
