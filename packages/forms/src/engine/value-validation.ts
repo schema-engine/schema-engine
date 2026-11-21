@@ -1,10 +1,5 @@
 import { evaluateConstraints } from '../constraints/constraint-evaluator.js';
-import {
-	expandContainerParentPaths,
-	expandFieldTemplatePaths,
-	getValueAtPath,
-	setValueAtPath,
-} from '../lib/path-values.js';
+import { expandContainerParentPaths, expandFieldTemplatePaths, getValueAtPath } from '../lib/path-values.js';
 import { walkNamedElements } from '../lib/field-scope.js';
 import type { ConstraintLogic } from '../schemas/base-field.js';
 import {
@@ -54,7 +49,14 @@ export interface ValidateFormValuesInput {
 	elements: ValidationElementTree;
 	values: Record<string, unknown>;
 	registry: ValidationRegistry;
+	/**
+	 * Limits validation to these paths, and to the paths below them unless `exactNames` is set.
+	 *
+	 * @remarks An empty list validates every field.
+	 */
 	names?: readonly string[];
+	/** Match `names` as whole paths: a field below a named container is not validated. */
+	exactNames?: boolean;
 	/** Keyed async validation state for this caller's form lifetime; see `ValidateFieldValueInput`. */
 	debounceScope: DebounceScope;
 	/**
@@ -72,7 +74,8 @@ export interface FieldValidationError {
 	readonly message: string;
 }
 
-export type FormValidationErrors = Record<string, unknown>;
+/** The errors a validation found, by the dotted path of the field that failed; a container has its own. */
+export type FormValidationErrors = Record<string, FieldValidationError>;
 
 interface FieldElementPath {
 	readonly element: ValidationElement;
@@ -106,12 +109,12 @@ function expandArrayItemPaths(values: Record<string, unknown>, templatePath: str
 	return paths;
 }
 
-function pathIsRequested(path: string, names?: readonly string[]): boolean {
+function pathIsRequested(path: string, names?: readonly string[], exact = false): boolean {
 	if (!names?.length) {
 		return true;
 	}
 
-	return names.some((name) => path === name || path.startsWith(`${name}.`));
+	return names.some((name) => path === name || (!exact && path.startsWith(`${name}.`)));
 }
 
 function fieldElementPathsFor(elements: ValidationElementTree, values: Record<string, unknown>): FieldElementPath[] {
@@ -203,11 +206,14 @@ export async function validateFieldValue({
 }
 
 /**
- * Validates named fields and returns errors in the same nested shape as `values`.
+ * Validates named fields and returns their errors by dotted path.
  *
  * @remarks
  * `names` limits validation to matching paths and their descendants, which lets
- * callers validate a wizard step without surfacing errors from later steps.
+ * callers validate a wizard step without surfacing errors from later steps;
+ * `exactNames` limits it to the named paths themselves. The errors are flat so that
+ * a container and a row inside it can both fail: `contacts` and `contacts.0.email`
+ * are separate keys.
  *
  * A field inside a container (fieldset or array) whose `require` constraint
  * holds is required, at any depth. The container's own `required` rule does not
@@ -218,6 +224,7 @@ export async function validateFormValues({
 	values,
 	registry,
 	names,
+	exactNames = false,
 	debounceScope,
 	skipHidden = false,
 }: ValidateFormValuesInput): Promise<FormValidationErrors> {
@@ -238,7 +245,9 @@ export async function validateFormValues({
 				hasChildren && evaluateConstraints({ constraints: element.constraints, values, fieldPath }).isRequired,
 		)
 		.map(({ fieldPath }) => `${fieldPath}.`);
-	const fields = allFields.filter(({ fieldPath }) => pathIsRequested(fieldPath, names) && !isHidden(fieldPath));
+	const fields = allFields.filter(
+		({ fieldPath }) => pathIsRequested(fieldPath, names, exactNames) && !isHidden(fieldPath),
+	);
 	const messages = await Promise.all(
 		fields.map(async ({ element, fieldPath, hasChildren }) => ({
 			fieldPath,
@@ -257,8 +266,7 @@ export async function validateFormValues({
 	const errors: FormValidationErrors = {};
 	for (const { fieldPath, message } of messages) {
 		if (message) {
-			const error: FieldValidationError = { type: 'validation', message };
-			setValueAtPath(errors, fieldPath, error);
+			errors[fieldPath] = { type: 'validation', message };
 		}
 	}
 

@@ -135,7 +135,7 @@ state to `createStepMachine`, navigation (the in-flight guard and step triggers)
 submission, and a submit that arrives while one is validating or running is ignored. Every trigger dispatches the form's actions and then the
 current step's (`collectStepActions`). Unmounting the provider, which a replaced config
 causes, cancels the navigation in flight, so it dispatches no step trigger afterwards. Wizard Next validates nested fieldsets and live
-array rows; errors keep the nested value shape so field revalidation clears them.
+array rows; the resolver converts the engine's flat errors to the nested shape React Hook Form needs so field revalidation clears them.
 A `require` constraint supplies both the control's required state and validation.
 A `require` constraint on a fieldset or array makes every field inside it required,
 nested containers included, and a disabled fieldset or array, authored or by a

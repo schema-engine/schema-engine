@@ -2,23 +2,24 @@ import type { BuilderActionBaseContext } from '@/types';
 import { createDebounceScope } from '../lib/debounce';
 import { flattenStepElements } from '../lib/field-scope';
 import type { ValidationRegistry } from '../schemas/validation/validation-registry';
-import { validateFormValues, type FormValidationErrors } from './value-validation';
+import { validateFormValues } from './value-validation';
 
 /**
  * Renderer form state in the engine's shape.
  *
  * @remarks
- * `errors` and `touched` are nested like the form values, so `address.street`
- * is read as `errors.address.street` in every renderer. A renderer that keys
- * them by flat field name expands them before building the context.
+ * `errors` is flat, one entry per dotted field path, so `address.street` is read as
+ * `errors['address.street']` in every renderer and a container and a row inside it
+ * can both fail. `touched` is nested like the form values. A renderer that keeps
+ * errors in another shape converts them before building the context.
  *
- * There is no `isValid` here: the context's `isValid` is true when `errors` is
- * empty, in every renderer. It says nothing about fields no validation has
+ * There is no `isValid` here: the context's `isValid` is true when `errors` records
+ * no error, in every renderer. It says nothing about fields no validation has
  * reached; `context.form.checkValidity()` answers for the current values.
  */
 export interface FormActionContextFormState {
-	/** Nested errors, as `validateFormValues` returns them. */
-	errors: FormValidationErrors;
+	/** Errors by dotted field path, as `validateFormValues` returns them. */
+	errors: Record<string, unknown>;
 	/** Nested touched state with `true` at each touched field. */
 	touched: Record<string, unknown>;
 	submitCount: number;
@@ -37,20 +38,6 @@ interface BuildFormActionContextOptions<TForm extends BuilderActionBaseContext['
 	currentStep: number;
 	mountedAt: number;
 	form: TForm;
-}
-
-/**
- * Whether the nested errors hold at least one error node.
- *
- * @remarks
- * An error node is an object with a string `type` or `message`. Empty containers and array holes, which a
- * renderer can leave where a nested error was cleared, record nothing.
- */
-function hasRecordedError(node: unknown): boolean {
-	if (typeof node !== 'object' || node === null) return false;
-	if ('message' in node && typeof node.message === 'string') return true;
-	if ('type' in node && typeof node.type === 'string') return true;
-	return Object.values(node).some(hasRecordedError);
 }
 
 const stepTimings = new WeakMap<object, StepTiming>();
@@ -98,7 +85,7 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 		formData: values,
 		currentStep,
 		totalSteps: config.steps.length,
-		isValid: !hasRecordedError(formState.errors),
+		isValid: Object.keys(formState.errors).length === 0,
 		errors: formState.errors,
 		metadata: {
 			stepStartTime: getStepStartTime(form, currentStep, mountedAt, now),

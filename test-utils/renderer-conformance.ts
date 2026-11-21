@@ -1049,7 +1049,7 @@ export function rendererConformance(
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			expect(onSubmit).toHaveBeenCalledWith({ address: { street: 'Main Street' } });
 		});
-		test('handlers receive one errors shape', async () => {
+		test('handlers receive errors by dotted path', async () => {
 			const { host } = await setup({
 				config: {
 					...form([address, input('note', 'Note')]),
@@ -1061,7 +1061,7 @@ export function rendererConformance(
 			await userEvent.fill(getByRole(host, 'textbox', { name: 'Note' }), 'Ring twice');
 			await expect.poll(() => lastActionContext()?.formData.note).toBe('Ring twice');
 			expect(lastActionContext()?.errors).toEqual({
-				address: { street: expect.objectContaining({ message: 'Street is required' }) },
+				'address.street': expect.objectContaining({ message: 'Street is required' }),
 			});
 		});
 		test('a require constraint blocks submission until its condition is removed', async () => {

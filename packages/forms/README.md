@@ -180,8 +180,8 @@ does not fail the submission. Each returned result carries the `actionId` of the
 configured action that produced it.
 `buildFormActionContext` is an exported utility that constructs a form action
 context with form data and timing metadata, including a stable step start time that resets
-when the active step changes. Its form state takes `errors` and `touched` nested like the
-values, so a handler reads `context.errors.address.street` in every renderer, and
+when the active step changes. Its form state takes `errors` by dotted path and `touched` nested like the
+values, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
 The form state no longer accepts `touchedFields` or `isSubmitted`: pass `touched` and
 `submitCount`, both required; the context's `isValid` is derived from `errors` (see [action context form state](src/engine/README.md#action-context-form-state)).
@@ -501,8 +501,9 @@ engine's normalized form model.
 - `validateFieldValue({ element, value, values, fieldPath, registry, debounceScope })` returns
   the first validation message, or `undefined` when the value passes.
 - `validateFormValues({ elements, values, registry, names?, debounceScope })` validates the
-  selected paths and returns nested errors, such as
-  `errors.address.street.message`.
+  selected paths (`exactNames` limits it to the named paths themselves) and returns
+  errors by dotted path, such as `errors['address.street'].message`; a container and a row
+  inside it can both fail.
 
 Both helpers require a caller-owned `DebounceScope`, which carries async debounce
 state across validation calls for a form. Each rendered field path is keyed

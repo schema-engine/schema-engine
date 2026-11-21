@@ -66,25 +66,26 @@ describe('buildFormActionContext', () => {
 		const pristine = buildFormActionContext({ ...input, formState: { errors: {}, touched: {}, submitCount: 0 } });
 		const failed = buildFormActionContext({
 			...input,
-			formState: { errors: { email: { message: 'Required' } }, touched: {}, submitCount: 0 },
+			formState: { errors: { email: { type: 'validation', message: 'Required' } }, touched: {}, submitCount: 0 },
 		});
 
 		const nested = buildFormActionContext({
 			...input,
 			formState: {
-				errors: { contacts: [undefined, { email: { type: 'validation', message: 'Invalid' } }] },
+				errors: { 'contacts.1.email': { type: 'validation', message: 'Invalid' } },
 				touched: {},
 				submitCount: 0,
 			},
 		});
-		const emptied = buildFormActionContext({
+		const formLevel = buildFormActionContext({
 			...input,
-			formState: { errors: { address: {}, contacts: [undefined, {}] }, touched: {}, submitCount: 0 },
+			formState: { errors: { '': { type: 'server', message: 'Try later' } }, touched: {}, submitCount: 0 },
 		});
 
 		expect(pristine.isValid).toBe(true);
 		expect(failed.isValid).toBe(false);
 		expect(nested.isValid).toBe(false);
-		expect(emptied.isValid).toBe(true);
+		expect(formLevel.isValid).toBe(false);
+		expect(nested.errors['contacts.1.email']).toEqual({ type: 'validation', message: 'Invalid' });
 	});
 });

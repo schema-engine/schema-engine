@@ -61,7 +61,7 @@ describe('collectStepFieldPaths', () => {
 		await expect(
 			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			tags: [{ type: 'validation', message: 'Tag is required' }],
+			'tags.0': { type: 'validation', message: 'Tag is required' },
 		});
 	});
 
@@ -79,7 +79,7 @@ describe('collectStepFieldPaths', () => {
 		await expect(
 			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			tags: [{ type: 'validation', message: 'Tag is required' }],
+			'tags.0': { type: 'validation', message: 'Tag is required' },
 		});
 	});
 
@@ -104,7 +104,7 @@ describe('collectStepFieldPaths', () => {
 		await expect(
 			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			groups: [{ tags: [{ type: 'validation', message: 'Tag is required' }] }],
+			'groups.0.tags.0': { type: 'validation', message: 'Tag is required' },
 		});
 	});
 
@@ -132,7 +132,7 @@ describe('collectStepFieldPaths', () => {
 		await expect(
 			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			groups: [[{ type: 'validation', message: 'Tag is required' }]],
+			'groups.0.0': { type: 'validation', message: 'Tag is required' },
 		});
 	});
 });
@@ -247,9 +247,7 @@ describe('validateFormValues', () => {
 			names: ['address.street'],
 		});
 
-		expect(errors).toEqual({
-			address: { street: { type: 'validation', message: 'Street is required' } },
-		});
+		expect(errors).toEqual({ 'address.street': { type: 'validation', message: 'Street is required' } });
 	});
 
 	test('requires every field inside a container while its require constraint holds', async () => {
@@ -270,9 +268,7 @@ describe('validateFormValues', () => {
 				debounceScope: createDebounceScope(),
 			});
 
-		expect(await validate('business')).toMatchObject({
-			company: { vat: { type: 'validation' }, office: { street: { type: 'validation' } } },
-		});
+		expect(Object.keys(await validate('business')).toSorted()).toEqual(['company.office.street', 'company.vat']);
 		expect(await validate('personal')).toEqual({});
 	});
 
@@ -306,9 +302,35 @@ describe('validateFormValues', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(getValueAtPath(errors, 'languages')).toEqual({
+		expect(errors.languages).toEqual({
 			type: 'validation',
 			message: 'Select a language',
+		});
+	});
+
+	test('reports a container and a row inside it that both fail, and matches names exactly on request', async () => {
+		const contacts = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'contacts',
+			rules: [{ type: 'minItems', value: 2, message: 'Add two contacts' }],
+			elements: [
+				{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Email is required' }] },
+				{ $type: 'input', name: 'label' },
+			],
+		});
+		const input = {
+			elements: [contacts],
+			values: { contacts: [{}] },
+			registry,
+			debounceScope: createDebounceScope(),
+		};
+
+		expect(await validateFormValues(input)).toEqual({
+			contacts: { type: 'validation', message: 'Add two contacts' },
+			'contacts.0.email': { type: 'validation', message: 'Email is required' },
+		});
+		expect(await validateFormValues({ ...input, names: ['contacts'], exactNames: true })).toEqual({
+			contacts: { type: 'validation', message: 'Add two contacts' },
 		});
 	});
 
@@ -325,11 +347,11 @@ describe('validateFormValues', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(getValueAtPath(errors, 'contacts.1.email')).toEqual({
+		expect(errors['contacts.1.email']).toEqual({
 			type: 'validation',
 			message: 'Email is required',
 		});
-		expect(getValueAtPath(errors, 'contacts.2.email')).toEqual({
+		expect(errors['contacts.2.email']).toEqual({
 			type: 'validation',
 			message: 'Email is required',
 		});

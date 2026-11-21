@@ -152,8 +152,8 @@ export class FormActions {
 
 	/**
 	 * @remarks
-	 * Radiant UI keys errors and touched state by flat field name; both are expanded
-	 * into the engine's nested tree. The store records only whether the form was
+	 * Radiant UI keys errors and touched state by flat field name, as the engine's flat
+	 * errors are; touched state is expanded into the engine's nested tree. The store records only whether the form was
 	 * submitted, so `submitCount` counts the attempts Radiant UI reports instead:
 	 * `rui-invalid` for one that failed validation, and a finished submission
 	 * lifecycle, which is when React Hook Form counts it too.
@@ -167,7 +167,7 @@ export class FormActions {
 			config: this.options.config(),
 			values: form.getValues(),
 			formState: {
-				errors: expandValues(errors),
+				errors,
 				touched: expandValues(touched),
 				submitCount: this.submitAttempts,
 			},
