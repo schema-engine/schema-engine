@@ -15,16 +15,18 @@ describe('field errors at the React Hook Form boundary', () => {
 		).toEqual({ ref: expect.objectContaining({ message: 'Ref is required' }) });
 	});
 
-	test('keeps a field named ref or types below a node that has an error of its own', () => {
-		const flat = fromFieldErrors(
-			toFieldErrors({
-				profile: { type: 'validation', message: 'Profile is incomplete' },
-				'profile.ref': { type: 'validation', message: 'Ref is required' },
-				'profile.types': { type: 'validation', message: 'Types is required' },
-			}),
-			{},
-		);
-		expect(Object.keys(flat).toSorted()).toEqual(['profile', 'profile.ref', 'profile.types']);
+	test('reads ref and types as metadata below an error, and as fields elsewhere', () => {
+		const error = { type: 'validation', message: 'Required' };
+		expect(
+			fromFieldErrors(
+				nested({ profile: { ...error, ref: { type: 'text' }, types: { message: 'Rule failed' } } }),
+				{},
+			),
+		).toEqual({ profile: expect.objectContaining({ message: 'Required' }) });
+		expect(fromFieldErrors(nested({ profile: { ref: error, types: error } }), {})).toEqual({
+			'profile.ref': error,
+			'profile.types': error,
+		});
 	});
 
 	test("reads an array's own error from its root, and leaves a root field alone", () => {
