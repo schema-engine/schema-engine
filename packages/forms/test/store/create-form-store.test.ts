@@ -438,6 +438,41 @@ describe('createFormStore', () => {
 			expect(store.getSnapshot().errors.name?.message).toBe('Name is required');
 		});
 
+		test('a result below a row removed meanwhile is dropped even when its parent object never existed', async () => {
+			const store = createFormStore({
+				registry,
+				validationMode: 'onBlur',
+				elements: [
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [
+								{
+									$type: 'fieldset',
+									name: 'address',
+									elements: [
+										{
+											$type: 'input',
+											name: 'street',
+											rules: [{ type: 'required', message: 'Street is required' }],
+										},
+									],
+								},
+								{ $type: 'input', name: 'label' },
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { contacts: [{ label: 'a' }] },
+			});
+			store.blur('contacts.0.address.street');
+			store.setValue('contacts', []);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(store.getSnapshot().errors).toEqual({});
+		});
+
 		test('required fields below a missing object are reported', async () => {
 			const store = createFormStore({
 				registry,

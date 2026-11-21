@@ -7,7 +7,7 @@ import {
 	shouldSurfaceDependentError,
 	type DependencyIndex,
 } from '@/schemas/validation/dependencies';
-import { flattenErrors, pathExists, pruneMissing, remapRows, syncRowIds } from './field-state';
+import { flattenErrors, pruneMissing, remapRows, syncRowIds } from './field-state';
 import { createRunTracker } from './stale-results';
 import {
 	VALIDATION_ERROR_SOURCE,
@@ -235,8 +235,13 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		const passed = Object.keys(flat).length === 0;
 		if (!run) return passed;
 
+		const removedSince = (before: NullMap, path: string): boolean =>
+			path.split('.').some((_, depth, segments) => {
+				const ancestor = segments.slice(0, depth + 1).join('.');
+				return readAt(before, ancestor) !== undefined && readAt(state.values, ancestor) === undefined;
+			});
 		const stale = (path: string): boolean =>
-			(pathExists(startValues, path) && !pathExists(state.values, path)) ||
+			removedSince(startValues, path) ||
 			!Object.is(readAt(state.values, path), readAt(startValues, path)) ||
 			tracker.superseded(run, path) ||
 			dependencyChanged(path, startValues);
