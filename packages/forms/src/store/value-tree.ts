@@ -4,7 +4,7 @@ import { assertWritablePathKey, isReservedPathKey } from '@/lib/reserved-path-ke
 /** A map held by the store: null-prototype, replaced rather than mutated. */
 export type NullMap<T = unknown> = Record<string, T>;
 
-const isStructural = (node: unknown): node is NullMap | unknown[] =>
+export const isStructural = (node: unknown): node is NullMap | unknown[] =>
 	node !== null && typeof node === 'object' && !isOpaque(node);
 
 export function createMap<T = unknown>(): NullMap<T> {
@@ -150,47 +150,6 @@ export function setIn(root: NullMap, path: string, value: unknown): NullMap {
 /** Whether `path` is `scope` or lies below it. */
 export function isWithin(path: string, scope: string): boolean {
 	return scope === '' || path === scope || path.startsWith(`${scope}.`);
-}
-
-/**
- * The dirty state of `value` against `defaultValue`, in the shape of the value.
- *
- * @remarks
- * A leaf marks a path whose value differs. An array whose length differs is marked as a whole, as its
- * rows no longer line up; otherwise each row carries its own mark. An opaque value is compared by
- * reference, and the walk stops at any branch shared with the defaults.
- */
-export function dirtyTree(value: unknown, defaultValue: unknown): unknown {
-	if (Object.is(value, defaultValue)) return undefined;
-	if (!isStructural(value)) return true;
-	if (Array.isArray(value)) {
-		if (!Array.isArray(defaultValue) || isOpaque(defaultValue)) return markedBelow(value) ?? true;
-		if (value.length !== defaultValue.length) return true;
-		return trim(value.map((row, index) => dirtyTree(row, defaultValue[index])));
-	}
-	if (!isStructural(defaultValue) || Array.isArray(defaultValue)) return markedBelow(value) ?? true;
-	const marks = createMap();
-	for (const key of new Set([...Object.keys(value), ...Object.keys(defaultValue)])) {
-		const mark = dirtyTree(value[key], defaultValue[key]);
-		if (mark !== undefined) marks[key] = mark;
-	}
-	return Object.keys(marks).length === 0 ? undefined : marks;
-}
-
-function markedBelow(value: NullMap | unknown[]): unknown {
-	if (Array.isArray(value)) return trim(value.map((row) => dirtyTree(row, undefined)));
-	const marks = createMap();
-	for (const key of Object.keys(value)) {
-		const mark = dirtyTree(value[key], undefined);
-		if (mark !== undefined) marks[key] = mark;
-	}
-	return Object.keys(marks).length === 0 ? undefined : marks;
-}
-
-function trim(rows: unknown[]): unknown[] | undefined {
-	let length = rows.length;
-	while (length > 0 && rows[length - 1] === undefined) length -= 1;
-	return length === 0 ? undefined : rows.slice(0, length);
 }
 
 export function join(path: string, segment: string): string {

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { formStoreCases } from '../../../../test-utils/form-store-conformance';
-import { createFormStore } from '@/store/create-form-store';
+import { createFormStateContainer } from '@/store/create-form-state-container';
 
 vi.mock('@/store/row-ids', async (importOriginal) => {
 	const original = await importOriginal<typeof import('@/store/row-ids')>();
@@ -16,7 +16,7 @@ describe('a store that finds a late result by position instead of by row', () =>
 	])('fails "%s"', async (name) => {
 		const entry = formStoreCases.find((candidate) => candidate.name === name);
 		const failure: unknown = await Promise.resolve()
-			.then(() => entry?.run(createFormStore))
+			.then(() => entry?.run(createFormStateContainer))
 			.then(
 				() => undefined,
 				(error: unknown) => error,

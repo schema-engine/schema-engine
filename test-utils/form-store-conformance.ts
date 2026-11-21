@@ -3,7 +3,14 @@ import * as z from 'zod/mini';
 import { markNormalizedElementConfig } from '../packages/forms/src/lib/normalized-form-config';
 import type { ElementConfig } from '../packages/forms/src/schemas/field-config';
 import { createDefaultValidationRegistry } from '../packages/forms/src/schemas/validation/validation-registry';
-import type { FormStore, FormStoreFactory, FormStoreOptions } from '../packages/forms/src/store/types';
+import { toFieldArrayValue } from '../packages/forms/src/store/field-array';
+import { selectFieldState } from '../packages/forms/src/store/selectors';
+import {
+	FORM_PATH,
+	type FormStateContainer,
+	type FormStateContainerFactory,
+	type FormStateContainerOptions,
+} from '../packages/forms/src/store/types';
 
 /**
  * One rule of the internal form store contract, with the check that proves it.
@@ -15,7 +22,7 @@ import type { FormStore, FormStoreFactory, FormStoreOptions } from '../packages/
 export interface FormStoreCase {
 	readonly rule: string;
 	readonly name: string;
-	readonly run: (createStore: FormStoreFactory) => void | Promise<void>;
+	readonly run: (createStore: FormStateContainerFactory) => void | Promise<void>;
 }
 
 /**
@@ -50,11 +57,11 @@ const element = (config: Record<string, unknown>, containerKind?: 'array' | 'obj
 	markNormalizedElementConfig(config as unknown as ElementConfig, containerKind);
 
 interface Fixture {
-	readonly options: FormStoreOptions;
+	readonly options: FormStateContainerOptions;
 	readonly gate: ReturnType<typeof createGate>;
 }
 
-function fixture(overrides: Partial<FormStoreOptions> = {}): Fixture {
+function fixture(overrides: Partial<FormStateContainerOptions> = {}): Fixture {
 	const gate = createGate();
 	const registry = createDefaultValidationRegistry([
 		{
@@ -126,6 +133,7 @@ function fixture(overrides: Partial<FormStoreOptions> = {}): Fixture {
 					{
 						$type: 'arrayElements',
 						name: 'invites',
+						rules: [{ type: 'minItems', value: 2, message: 'Add two invites' }],
 						elements: [
 							{ $type: 'input', name: 'code', rules: [{ type: 'gate' }] },
 							{ $type: 'input', name: 'label' },
@@ -154,7 +162,7 @@ function fixture(overrides: Partial<FormStoreOptions> = {}): Fixture {
  * A check that nothing validated cannot pass vacuously on a short wait: every validation the store
  * starts is observable as `isValidating` while it runs.
  */
-export function watchValidation(store: FormStore): { readonly started: boolean } {
+export function watchValidation(store: FormStateContainer): { readonly started: boolean } {
 	const watch = { started: false };
 	store.subscribe(() => {
 		if (store.getSnapshot().isValidating) watch.started = true;
@@ -162,21 +170,17 @@ export function watchValidation(store: FormStore): { readonly started: boolean }
 	return watch;
 }
 
-/** The dotted paths of the leaves of a state tree, in the order the tree lists them. */
-export function leafPaths(tree: unknown, path = ''): string[] {
-	if (tree === undefined) return [];
-	if (tree === null || typeof tree !== 'object' || ('type' in tree && 'message' in tree)) return [path];
-	return Object.entries(tree).flatMap(([key, child]) => leafPaths(child, path ? `${path}.${key}` : key));
-}
+/** The paths of a flat map of marks, in order. */
+const marked = (marks: object): string[] => Object.keys(marks).toSorted();
 
 const error = (message: string) => ({ type: 'custom', message });
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 5));
-const errorsOf = (store: FormStore) => store.getSnapshot().errors;
-const contacts = (store: FormStore) =>
+const errorsOf = (store: FormStateContainer) => store.getSnapshot().errors;
+const contacts = (store: FormStateContainer) =>
 	(store.getSnapshot().values.contacts as Array<{ email: string }>).map((row) => row.email);
 
 /** The row ids of `contacts`, in row order. */
-const ids = (store: FormStore) => store.getSnapshot().rowIds.contacts ?? [];
+const ids = (store: FormStateContainer) => store.getSnapshot().rowIds.contacts ?? [];
 
 const cases: FormStoreCase[] = [
 	{
@@ -289,35 +293,86 @@ const cases: FormStoreCase[] = [
 		},
 	},
 	{
-		rule: 'field state in the shape of the values',
-		name: 'keeps errors and touched marks as objects and arrays like the values, one element per row',
+		rule: 'field state per exact path',
+		name: 'keeps errors, touched and dirty as flat maps by exact path, stable while unrelated state changes',
 		run(createStore) {
 			const store = createStore(fixture().options);
 			store.setErrors('server', { 'contacts.1.email': error('one'), nickname: error('nick') });
 			store.blur('contacts.1.email');
-			const { errorTree, touched, errors } = store.getSnapshot();
-			expect(errorTree).toEqual({ contacts: [undefined, { email: error('one') }], nickname: error('nick') });
-			expect(touched).toEqual({ contacts: [undefined, { email: true }] });
-			expect(Object.keys(errors).toSorted()).toEqual(['contacts.1.email', 'nickname']);
-			expect(errors['contacts.1.email']).toBe((errorTree.contacts as Array<{ email: unknown }>)[1].email);
+			store.setValue('address.street', '2 Side');
+			const { errors, touched, dirty, defaults } = store.getSnapshot();
+			expect(errors).toEqual({ 'contacts.1.email': error('one'), nickname: error('nick') });
+			expect(touched).toEqual({ 'contacts.1.email': true });
+			expect(dirty).toEqual({ 'address.street': true });
+			expect(defaults.address).toEqual({ street: '1 Main', country: 'IT' });
 
 			store.setValue('name', 'Grace');
 			const after = store.getSnapshot();
-			expect(after.errorTree).toBe(errorTree);
 			expect(after.errors).toBe(errors);
 			expect(after.touched).toBe(touched);
+			expect(after.defaults).toBe(defaults);
+			expect(after.dirty).not.toBe(dirty);
 		},
 	},
 	{
-		rule: 'field state in the shape of the values',
-		name: 'an error on a container covers the fields inside it',
+		rule: 'field state per exact path',
+		name: 'an error is never inherited: a container and a row inside it can both have one',
 		run(createStore) {
 			const store = createStore(fixture().options);
 			store.setErrors('server', { contacts: error('too few'), 'contacts.0.email': error('row') });
-			expect(Object.keys(errorsOf(store))).toEqual(['contacts']);
-			expect(store.getFieldState('contacts.0.email').error?.message).toBe('too few');
+			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['contacts', 'contacts.0.email']);
+			expect(store.getFieldState('contacts').error?.message).toBe('too few');
+			expect(store.getFieldState('contacts.0.email').error?.message).toBe('row');
+			expect(store.getFieldState('contacts.1.email').error).toBeUndefined();
+			expect(store.getSnapshot().isValid).toBe(false);
+		},
+	},
+	{
+		rule: 'field state per exact path',
+		name: 'an error about the form is its own entry and is no field error',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('server', { [FORM_PATH]: error('Try again later') });
+			expect(errorsOf(store)).toEqual({ '': error('Try again later') });
+			expect(store.getFieldState('name').error).toBeUndefined();
+			expect(store.getFieldState('contacts.0.email').invalid).toBe(false);
+			expect(store.getSnapshot().isValid).toBe(false);
+			expect(await store.validate(['name'])).toBe(true);
+			expect(await store.validate()).toBe(false);
+			store.setValue('name', 'Grace');
+			expect(errorsOf(store)).toEqual({});
+			expect(store.getSnapshot().isValid).toBe(true);
+		},
+	},
+	{
+		rule: 'field state per exact path',
+		name: 'editing a path drops the errors a host set there, below it and around it, and keeps the others',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('server', {
+				[FORM_PATH]: error('form'),
+				contacts: error('array'),
+				'contacts.0': error('row'),
+				'contacts.0.email': error('field'),
+				'contacts.1.email': error('sibling'),
+				nickname: error('other'),
+			});
+			store.setValue('contacts.0.email', 'new@example.com');
+			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['contacts.1.email', 'nickname']);
+		},
+	},
+	{
+		rule: 'field state per exact path',
+		name: 'touched marks cover the fields below them, and dirty marks do not cover but report below',
+		run(createStore) {
+			const store = createStore(fixture().options);
 			store.blur('address');
 			expect(store.getFieldState('address.street').isTouched).toBe(true);
+			expect(store.getFieldState('address').isTouched).toBe(true);
+			expect(store.getFieldState('name').isTouched).toBe(false);
+			store.setValue('address.street', '2 Side');
+			expect(store.getFieldState('address').isDirty).toBe(true);
+			expect(store.getFieldState('address.country').isDirty).toBe(false);
 		},
 	},
 	{
@@ -346,18 +401,17 @@ const cases: FormStoreCase[] = [
 	},
 	{
 		rule: 'snapshot stability',
-		name: 'subscribeTo calls a listener only when the selected value changes',
+		name: 'selectFieldState gives the same object for a snapshot and path, and a new one once its state changed',
 		run(createStore) {
 			const store = createStore(fixture().options);
-			const listener = vi.fn();
-			const stop = store.subscribeTo((snapshot) => snapshot.values.name, listener);
-			store.setValue('nickname', 'nick');
-			expect(listener).not.toHaveBeenCalled();
-			store.setValue('name', 'Grace');
-			expect(listener).toHaveBeenCalledExactlyOnceWith('Grace');
-			stop();
-			store.setValue('name', 'Hedy');
-			expect(listener).toHaveBeenCalledTimes(1);
+			const before = store.getSnapshot();
+			expect(selectFieldState(before, 'name')).toBe(selectFieldState(before, 'name'));
+			expect(store.getFieldState('name')).toBe(selectFieldState(before, 'name'));
+			store.blur('name');
+			const after = store.getSnapshot();
+			expect(selectFieldState(after, 'name')).not.toBe(selectFieldState(before, 'name'));
+			expect(selectFieldState(after, 'name').isTouched).toBe(true);
+			expect(selectFieldState(before, 'name').isTouched).toBe(false);
 		},
 	},
 	{
@@ -446,23 +500,21 @@ const cases: FormStoreCase[] = [
 			expect(await store.validate([])).toBe(true);
 			expect(await store.checkValidity([])).toBe(true);
 			expect(watch.started).toBe(false);
-			expect(store.getSnapshot().checkFailed).toBe(false);
 			expect(await store.checkValidity()).toBe(false);
 		},
 	},
 	{
 		rule: 'validation mode timing',
-		name: 'a row operation validates the array itself, not rows the user has not reached',
+		name: 'a row operation validates the array own rules, and the rows inside it are not validated',
 		async run(createStore) {
-			const store = createStore(
-				fixture({ validationMode: 'onChange', defaultValues: { contacts: [{ email: '' }] } }).options,
-			);
-			const watch = watchValidation(store);
-			store.fieldArray('contacts').append({ email: '' });
-			await settle();
-			expect(watch.started).toBe(true);
+			const { options, gate } = fixture({ validationMode: 'onChange', defaultValues: { invites: [] } });
+			const store = createStore(options);
+			gate.hold('x');
+			store.fieldArray('invites').append({ code: 'x', label: 'first' });
+			await vi.waitFor(() => expect(errorsOf(store).invites?.message).toBe('Add two invites'));
+			expect(gate.pending('x')).toBe(0);
+			expect(errorsOf(store)['invites.0.code']).toBeUndefined();
 			expect(store.getSnapshot().isValidating).toBe(false);
-			expect(errorsOf(store)).toEqual({});
 		},
 	},
 	{
@@ -493,7 +545,6 @@ const cases: FormStoreCase[] = [
 			store.setValue('name', 'Ada');
 			store.setValue('name', '');
 			await vi.waitFor(() => expect(errorsOf(store).name?.message).toBe('Name is required'));
-			expect(store.getSnapshot().checkFailed).toBe(false);
 		},
 	},
 	{
@@ -545,7 +596,6 @@ const cases: FormStoreCase[] = [
 			const store = createStore(fixture({ validationMode: 'onSubmit', reValidateMode: 'onChange' }).options);
 			store.setValue('name', '');
 			expect(await store.validate()).toBe(false);
-			expect(store.getSnapshot().checkFailed).toBe(true);
 			store.setValue('name', 'Ada');
 			await vi.waitFor(() => expect(errorsOf(store).name).toBeUndefined());
 			store.setValue('name', '');
@@ -600,7 +650,6 @@ const cases: FormStoreCase[] = [
 		async run(createStore) {
 			const store = createStore(fixture({ validationMode: 'onSubmit', reValidateMode: 'onChange' }).options);
 			expect(await store.validate()).toBe(true);
-			expect(store.getSnapshot().checkFailed).toBe(false);
 			const afterPass = watchValidation(store);
 			store.setValue('name', '');
 			await settle();
@@ -608,9 +657,7 @@ const cases: FormStoreCase[] = [
 			expect(errorsOf(store)).toEqual({});
 
 			expect(await store.validate()).toBe(false);
-			expect(store.getSnapshot().checkFailed).toBe(true);
 			store.reset();
-			expect(store.getSnapshot().checkFailed).toBe(false);
 			const afterReset = watchValidation(store);
 			store.setValue('name', '');
 			await settle();
@@ -632,7 +679,6 @@ const cases: FormStoreCase[] = [
 			expect(store.getSnapshot()).toBe(before);
 			expect(listener).not.toHaveBeenCalled();
 			expect(errorsOf(store)).toEqual({});
-			expect(store.getSnapshot().checkFailed).toBe(false);
 		},
 	},
 	{
@@ -653,16 +699,19 @@ const cases: FormStoreCase[] = [
 	},
 	{
 		rule: 'touched and dirty',
-		name: 'dirty follows the difference from the defaults, up through the containers',
+		name: 'dirty follows the difference from the defaults, and appending a row does not make the rows before it dirty',
 		run(createStore) {
 			const store = createStore(fixture().options);
 			expect(store.getSnapshot().dirty).toEqual({});
 			store.setValue('address.street', '2 Side');
-			expect(leafPaths(store.getSnapshot().dirty)).toEqual(['address.street']);
+			expect(marked(store.getSnapshot().dirty)).toEqual(['address.street']);
 			store.setValue('address.street', '1 Main');
 			expect(store.getSnapshot().dirty).toEqual({});
 			store.setValue('contacts.1.email', 'x@example.com');
-			expect(leafPaths(store.getSnapshot().dirty)).toEqual(['contacts.1.email']);
+			expect(marked(store.getSnapshot().dirty)).toEqual(['contacts.1.email']);
+			store.setValue('contacts.1.email', 'b@example.com');
+			store.fieldArray('contacts').append({ email: 'x@example.com' });
+			expect(marked(store.getSnapshot().dirty)).toEqual(['contacts', 'contacts.3.email']);
 			store.setValue('name', 'Grace');
 			store.reset();
 			expect(store.getSnapshot().dirty).toEqual({});
@@ -683,7 +732,6 @@ const cases: FormStoreCase[] = [
 			expect(snapshot.errors).toEqual({});
 			expect(snapshot.touched).toEqual({});
 			expect(snapshot.dirty).toEqual({});
-			expect(snapshot.checkFailed).toBe(false);
 		},
 	},
 	{
@@ -715,7 +763,7 @@ const cases: FormStoreCase[] = [
 				expect(contacts(store)).toEqual(['b@example.com', 'a@example.com', 'c@example.com']);
 				expect(snapshot.errors['contacts.0.email']?.message).toBe('one');
 				expect(snapshot.errors['contacts.1.email']?.message).toBe('zero');
-				expect(leafPaths(snapshot.touched)).toEqual(['contacts.0.email']);
+				expect(marked(snapshot.touched)).toEqual(['contacts.0.email']);
 			});
 			store.subscribe(listener);
 			store.fieldArray('contacts').swap(0, 1);
@@ -735,7 +783,7 @@ const cases: FormStoreCase[] = [
 			array.move(2, 0);
 			expect(ids(store)).toEqual([third, first, second]);
 			expect(errorsOf(store)['contacts.0.email']?.message).toBe('two');
-			expect(leafPaths(store.getSnapshot().touched)).toEqual(['contacts.0.email']);
+			expect(marked(store.getSnapshot().touched)).toEqual(['contacts.0.email']);
 
 			array.prepend({ email: 'new@example.com' });
 			expect(ids(store).slice(1)).toEqual([third, first, second]);
@@ -747,13 +795,13 @@ const cases: FormStoreCase[] = [
 
 			array.remove(0);
 			expect(Object.keys(errorsOf(store))).toEqual(['contacts.1.email']);
-			expect(leafPaths(store.getSnapshot().touched)).toEqual(['contacts.1.email']);
+			expect(marked(store.getSnapshot().touched)).toEqual(['contacts.1.email']);
 
 			array.remove(1);
 			expect(errorsOf(store)).toEqual({});
 			expect(store.getSnapshot().touched).toEqual({});
 			expect(contacts(store)).toEqual(['mid@example.com', 'a@example.com', 'b@example.com']);
-			expect(array.fields.map(({ id }) => id)).toEqual(ids(store));
+			expect(toFieldArrayValue(ids(store), array).fields.map(({ id }) => id)).toEqual(ids(store));
 		},
 	},
 	{
@@ -783,7 +831,7 @@ const cases: FormStoreCase[] = [
 			expect(ids(store)[1]).not.toBe(before[1]);
 			expect(ids(store)[2]).toBe(before[2]);
 			expect(Object.keys(errorsOf(store))).toEqual(['contacts.0.email']);
-			expect(leafPaths(store.getSnapshot().touched)).toEqual(['contacts.0.email']);
+			expect(marked(store.getSnapshot().touched)).toEqual(['contacts.0.email']);
 
 			array.replace([{ email: 'r@example.com' }]);
 			expect(ids(store)).toHaveLength(1);
@@ -845,33 +893,35 @@ const cases: FormStoreCase[] = [
 
 			store.fieldArray('groups').swap(0, 1);
 			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['groups.1.members.1.label', 'tags.1']);
-			expect(leafPaths(store.getSnapshot().touched).toSorted()).toEqual(['groups.1.members.1.label', 'tags.2']);
+			expect(marked(store.getSnapshot().touched).toSorted()).toEqual(['groups.1.members.1.label', 'tags.2']);
 
 			store.fieldArray('groups.1.members').remove(0);
 			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['groups.1.members.0.label', 'tags.1']);
 
 			store.fieldArray('tags').remove(0);
 			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['groups.1.members.0.label', 'tags.0']);
-			expect(leafPaths(store.getSnapshot().touched).toSorted()).toEqual(['groups.1.members.0.label', 'tags.1']);
+			expect(marked(store.getSnapshot().touched).toSorted()).toEqual(['groups.1.members.0.label', 'tags.1']);
 
 			store.setValue('groups', [{ title: 'only', members: [] }]);
 			expect(Object.keys(errorsOf(store))).toEqual(['tags.0']);
-			expect(leafPaths(store.getSnapshot().touched)).toEqual(['tags.1']);
+			expect(marked(store.getSnapshot().touched)).toEqual(['tags.1']);
 			expect(store.getSnapshot().rowIds['groups.0.members']).toEqual([]);
 		},
 	},
 	{
 		rule: 'array reindexing',
-		name: 'adopts row ids already rendered, only when there is one per row',
+		name: 'adopts the row ids of a snapshot rendered elsewhere, for the arrays whose row count matches',
 		run(createStore) {
-			const store = createStore(fixture().options);
-			store.adoptRowIds('contacts', ['a', 'b']);
-			expect(ids(store)).not.toEqual(['a', 'b']);
-			store.adoptRowIds('contacts', ['a', 'b', 'c']);
+			const store = createStore(
+				fixture({ rowIds: { contacts: ['a', 'b', 'c'], invites: ['only-one'] } }).options,
+			);
 			expect(ids(store)).toEqual(['a', 'b', 'c']);
-			expect(store.fieldArray('contacts').fields).toEqual([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+			expect(store.getSnapshot().rowIds.invites).toHaveLength(2);
+			expect(store.getSnapshot().rowIds.invites).not.toContain('only-one');
 			store.fieldArray('contacts').remove(0);
 			expect(ids(store)).toEqual(['b', 'c']);
+			store.fieldArray('contacts').append({ email: 'new@example.com' });
+			expect(new Set(ids(store)).size).toBe(3);
 		},
 	},
 	{
@@ -883,15 +933,17 @@ const cases: FormStoreCase[] = [
 			store.blur('contacts.2.email');
 			store.setValue('contacts.2.email', '');
 			expect(await store.validate(['contacts.2.email'])).toBe(false);
-			expect(store.getSnapshot().checkFailed).toBe(true);
 			store.setValue('contacts', [{ email: 'a@example.com' }]);
 			expect(errorsOf(store)).toEqual({});
 			expect(store.getSnapshot().touched).toEqual({});
-			expect(store.getSnapshot().checkFailed).toBe(false);
 			store.fieldArray('contacts').append({ email: 'fresh@example.com' });
 			store.fieldArray('contacts').append({ email: '' });
 			expect(errorsOf(store)).toEqual({});
 			expect(store.getSnapshot().touched).toEqual({});
+			const watch = watchValidation(store);
+			store.setValue('contacts.2.email', 'changed@example.com');
+			await settle();
+			expect(watch.started).toBe(false);
 		},
 	},
 	{
@@ -908,24 +960,23 @@ const cases: FormStoreCase[] = [
 	},
 	{
 		rule: 'error source precedence',
-		name: 'an explicit source beats validation, and the source set most recently beats the others',
+		name: 'server beats the container validation, which beats native, whatever order they were set in',
 		async run(createStore) {
 			const store = createStore(fixture().options);
-			store.setValue('name', '');
-			await store.validate();
-			expect(errorsOf(store).name?.message).toBe('Name is required');
-
 			store.setErrors('server', { name: error('Server says no') });
+			store.setErrors('native', { name: error('Fill in this field'), nickname: error('Native nick') });
 			expect(errorsOf(store).name?.message).toBe('Server says no');
-			store.setErrors('host', { name: error('Host says no') });
-			expect(errorsOf(store).name?.message).toBe('Host says no');
-			store.setErrors('server', { name: error('Server again') });
-			expect(errorsOf(store).name?.message).toBe('Server again');
+			expect(errorsOf(store).nickname?.message).toBe('Native nick');
 
-			store.setErrors('server', {});
-			expect(errorsOf(store).name?.message).toBe('Host says no');
-			store.setErrors('host', {});
-			expect(errorsOf(store).name?.message).toBe('Name is required');
+			const other = createStore(fixture({ defaultValues: { name: '', nickname: '' } }).options);
+			await other.validate();
+			expect(errorsOf(other).name?.message).toBe('Name is required');
+			other.setErrors('native', { name: error('Fill in this field') });
+			expect(errorsOf(other).name?.message).toBe('Name is required');
+			other.setErrors('server', { name: error('Server says no') });
+			expect(errorsOf(other).name?.message).toBe('Server says no');
+			other.setErrors('server', {});
+			expect(errorsOf(other).name?.message).toBe('Name is required');
 		},
 	},
 	{
@@ -935,7 +986,6 @@ const cases: FormStoreCase[] = [
 			const store = createStore(fixture().options);
 			store.setErrors('native', { name: error('Fill in this field') });
 			expect(await store.validate(['name'])).toBe(false);
-			expect(store.getSnapshot().checkFailed).toBe(false);
 			expect(await store.validate(['nickname'])).toBe(true);
 			expect(await store.validate()).toBe(false);
 			store.setErrors('native', {});
@@ -961,19 +1011,20 @@ const cases: FormStoreCase[] = [
 	},
 	{
 		rule: 'error source precedence',
-		name: 'a source cannot write validation, and an edit clears explicit errors below its path only',
+		name: 'checkValidity counts every source like validate does, without writing',
 		async run(createStore) {
 			const store = createStore(fixture().options);
-			expect(() => store.setErrors('validation', { name: error('x') })).toThrow();
-			store.setErrors('server', {
-				name: error('name'),
-				nickname: error('nickname'),
-				'address.street': error('street'),
-			});
-			store.setValue('name', 'Grace');
-			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['address.street', 'nickname']);
-			store.setValue('address', { street: '2', country: 'FR' });
-			expect(Object.keys(errorsOf(store))).toEqual(['nickname']);
+			store.setErrors('native', { name: error('Fill in this field') });
+			const before = store.getSnapshot();
+			expect(await store.checkValidity(['name'])).toBe(false);
+			expect(await store.checkValidity(['nickname'])).toBe(true);
+			expect(await store.checkValidity()).toBe(false);
+			store.setErrors('native', {});
+			expect(await store.checkValidity()).toBe(true);
+			store.setValue('name', '');
+			expect(await store.checkValidity()).toBe(false);
+			expect(store.getSnapshot().errors).toEqual({});
+			expect(before.errors).toEqual({ name: error('Fill in this field') });
 		},
 	},
 	{
@@ -1008,7 +1059,6 @@ const cases: FormStoreCase[] = [
 			gate.settle('taken', false);
 			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
 			expect(errorsOf(store)).toEqual({});
-			expect(store.getSnapshot().checkFailed).toBe(false);
 		},
 	},
 	{
@@ -1033,7 +1083,7 @@ const cases: FormStoreCase[] = [
 			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
 			expect(store.getValue('invites.1.label')).toBe('first');
 			expect(Object.keys(errorsOf(store))).toEqual(['invites.1.code']);
-			expect(leafPaths(store.getSnapshot().touched)).toEqual(['invites.1.code']);
+			expect(marked(store.getSnapshot().touched)).toEqual(['invites.1.code']);
 		},
 	},
 	{
@@ -1057,7 +1107,26 @@ const cases: FormStoreCase[] = [
 			gate.settle('one', false);
 			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
 			expect(errorsOf(store)).toEqual({});
-			expect(store.getSnapshot().checkFailed).toBe(false);
+		},
+	},
+	{
+		rule: 'stale async results',
+		name: 'a validate that a reset overtook is dropped and not run again against the defaults',
+		async run(createStore) {
+			const { options, gate } = fixture({ defaultValues: { name: 'Ada', slug: 'taken' } });
+			const store = createStore(options);
+			gate.hold('taken');
+			const run = store.validate(['slug']);
+			await vi.waitFor(() => expect(gate.pending('taken')).toBe(1));
+			store.setValue('slug', 'other');
+			store.reset();
+			const watch = watchValidation(store);
+			gate.settle('taken', false);
+			await run;
+			expect(watch.started).toBe(false);
+			expect(gate.pending('taken')).toBe(0);
+			expect(errorsOf(store)).toEqual({});
+			expect(store.getSnapshot().isValidating).toBe(false);
 		},
 	},
 	{
@@ -1146,7 +1215,7 @@ export const formStoreCases: readonly FormStoreCase[] = cases;
  * @remarks
  * Call it from a test file, like `rendererConformance`. A fresh store is built for each test.
  */
-export function formStoreConformance(createStore: FormStoreFactory): void {
+export function formStoreConformance(createStore: FormStateContainerFactory): void {
 	describe('form store conformance', () => {
 		for (const rule of new Set(cases.map((entry) => entry.rule))) {
 			describe(rule, () => {

@@ -1,21 +1,26 @@
 import { describe, expect, test } from 'vitest';
 import { formStoreCases } from '../../../../test-utils/form-store-conformance';
 import { isPlainObject } from '@/lib/is-plain-object';
-import { createFormStore } from '@/store/create-form-store';
-import type { FormStore, FormStoreFactory, FormStoreSnapshot } from '@/store/types';
+import { createFormStateContainer } from '@/store/create-form-state-container';
+import type { FormStateContainer, FormStateContainerFactory, FormStateSnapshot } from '@/store/types';
 
 const withOverrides =
-	(overrides: (inner: FormStore, options: Parameters<FormStoreFactory>[0]) => Partial<FormStore>): FormStoreFactory =>
+	(
+		overrides: (
+			inner: FormStateContainer,
+			options: Parameters<FormStateContainerFactory>[0],
+		) => Partial<FormStateContainer>,
+	): FormStateContainerFactory =>
 	(options) => {
-		const inner = createFormStore(options);
+		const inner = createFormStateContainer(options);
 		return { ...inner, ...overrides(inner, options) };
 	};
 
 /** Rebuilds `getSnapshot` and `getServerSnapshot` from the inner snapshot, once per inner snapshot. */
-const withSnapshot = (change: (snapshot: FormStoreSnapshot) => FormStoreSnapshot): FormStoreFactory =>
+const withSnapshot = (change: (snapshot: FormStateSnapshot) => FormStateSnapshot): FormStateContainerFactory =>
 	withOverrides((inner) => {
-		const cache = new WeakMap<FormStoreSnapshot, FormStoreSnapshot>();
-		const view = (snapshot: FormStoreSnapshot) => {
+		const cache = new WeakMap<FormStateSnapshot, FormStateSnapshot>();
+		const view = (snapshot: FormStateSnapshot) => {
 			let changed = cache.get(snapshot);
 			if (!changed) cache.set(snapshot, (changed = change(snapshot)));
 			return changed;
@@ -40,7 +45,7 @@ const thaw = <T>(value: T): T =>
  * A suite that every store passes proves nothing, so the conformance cases are pointed at stores
  * written to fail them.
  */
-const brokenStores: Array<{ name: string; create: FormStoreFactory; caught: string[] }> = [
+const brokenStores: Array<{ name: string; create: FormStateContainerFactory; caught: string[] }> = [
 	{
 		name: 'returns a new snapshot on every read',
 		create: withOverrides((inner) => ({ getSnapshot: () => ({ ...inner.getSnapshot() }) })),
@@ -106,12 +111,22 @@ const brokenStores: Array<{ name: string; create: FormStoreFactory; caught: stri
 	},
 	{
 		name: 're-validates every path once any check has failed',
-		create: withOverrides((inner) => ({
-			setValue: (path, value) => {
-				inner.setValue(path, value);
-				if (inner.getSnapshot().checkFailed) void inner.validate([path]);
-			},
-		})),
+		create: (options) => {
+			const inner = createFormStateContainer(options);
+			let failed = false;
+			return {
+				...inner,
+				validate: async (paths) => {
+					const valid = await inner.validate(paths);
+					if (!valid) failed = true;
+					return valid;
+				},
+				setValue: (path, value) => {
+					inner.setValue(path, value);
+					if (failed) void inner.validate([path]);
+				},
+			};
+		},
 		caught: ['a failed check of some paths does not turn on re-validation for the others'],
 	},
 	{
@@ -135,9 +150,21 @@ const brokenStores: Array<{ name: string; create: FormStoreFactory; caught: stri
 		caught: ['touched is set by a blur, not by a change, and cleared by reset'],
 	},
 	{
-		name: 'shows errors flat where the engine expects the shape of the values',
-		create: withSnapshot((snapshot) => ({ ...snapshot, errorTree: snapshot.errors as never })),
-		caught: ['keeps errors and touched marks as objects and arrays like the values, one element per row'],
+		name: 'shows the error of a container or of the form on every field below it',
+		create: withOverrides((inner) => ({
+			getFieldState: (path) => {
+				const state = inner.getFieldState(path);
+				const around = Object.keys(inner.getSnapshot().errors).find(
+					(key) => key === '' || path.startsWith(`${key}.`),
+				);
+				const error = state.error ?? (around === undefined ? undefined : inner.getSnapshot().errors[around]);
+				return { ...state, error, invalid: error !== undefined };
+			},
+		})),
+		caught: [
+			'an error is never inherited: a container and a row inside it can both have one',
+			'an error about the form is its own entry and is no field error',
+		],
 	},
 	{
 		name: 'reports a field untouched however it was blurred',
@@ -147,16 +174,11 @@ const brokenStores: Array<{ name: string; create: FormStoreFactory; caught: stri
 		caught: ['getFieldState reports error, touched and dirty for a path'],
 	},
 	{
-		name: 'tells a selector subscriber about every change',
-		create: withOverrides((inner) => ({
-			subscribeTo: (selector, listener) => inner.subscribe(() => listener(selector(inner.getSnapshot()))),
-		})),
-		caught: ['subscribeTo calls a listener only when the selected value changes'],
-	},
-	{
 		name: 'never reports dirty fields',
 		create: withSnapshot((snapshot) => ({ ...snapshot, dirty: {} })),
-		caught: ['dirty follows the difference from the defaults, up through the containers'],
+		caught: [
+			'dirty follows the difference from the defaults, and appending a row does not make the rows before it dirty',
+		],
 	},
 	{
 		name: 'swaps row values without the state that belongs to them',
@@ -173,20 +195,15 @@ const brokenStores: Array<{ name: string; create: FormStoreFactory; caught: stri
 		caught: ['swap moves rows with their ids, errors and touched state in one update'],
 	},
 	{
-		name: 'lets the oldest error source win',
+		name: 'lets native beat the container validation',
 		create: (options) => {
-			const inner = createFormStore(options);
-			const sources = new Map<string, Parameters<FormStore['setErrors']>[1]>();
+			const inner = createFormStateContainer(options);
 			return {
 				...inner,
-				setErrors(source, errors) {
-					sources.set(source, errors);
-					inner.setErrors(source, errors);
-					for (const [other, known] of sources) if (other !== source) inner.setErrors(other, known);
-				},
+				setErrors: (source, errors) => inner.setErrors(source === 'native' ? 'server' : 'native', errors),
 			};
 		},
-		caught: ['an explicit source beats validation, and the source set most recently beats the others'],
+		caught: ['server beats the container validation, which beats native, whatever order they were set in'],
 	},
 ];
 

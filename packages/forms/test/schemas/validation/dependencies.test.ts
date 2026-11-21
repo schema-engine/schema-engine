@@ -62,33 +62,7 @@ describe('buildDependencyIndex', () => {
 		expect(index.dependentsOf('contacts.1.customerType')).toEqual(['contacts.1.vatNumber']);
 	});
 
-	test('says whether each reference was written relative to the row or absolute', () => {
-		const rows = [
-			{
-				$type: 'arrayElements',
-				name: 'contacts',
-				elements: [
-					{ $type: 'input', name: 'email' },
-					{
-						$type: 'input',
-						name: 'confirm',
-						rules: [
-							{ type: 'relate', fields: ['email'], assert: 'allEqual' },
-							{ type: 'relate', fields: ['contacts.0.email'], assert: 'allEqual' },
-						],
-					},
-				],
-			},
-		];
-		const index = buildDependencyIndex(rows, { contacts: [{}, {}] }, registry);
-		expect(index.readsOf('contacts.1.confirm')).toEqual([
-			{ path: 'contacts.1.email', relative: true },
-			{ path: 'contacts.0.email', relative: false },
-		]);
-		expect(index.readsOf('contacts.1.email')).toEqual([]);
-	});
-
-	test('keeps both readings when a sibling and an absolute reference name the same field', () => {
+	test('keeps the references a field authored, so a caller resolves them where the field is', () => {
 		const rows = [
 			{
 				$type: 'arrayElements',
@@ -103,11 +77,11 @@ describe('buildDependencyIndex', () => {
 				],
 			},
 		];
-		const index = buildDependencyIndex(rows, { contacts: [{}] }, registry);
-		expect(index.readsOf('contacts.0.confirm')).toEqual([
-			{ path: 'contacts.0.email', relative: true },
-			{ path: 'contacts.0.email', relative: false },
-		]);
+		const index = buildDependencyIndex(rows, { contacts: [{}, {}] }, registry);
+		expect(index.referencesOf('contacts.1.confirm')).toEqual(['email', 'contacts.0.email']);
+		expect(index.dependentsOf('contacts.1.email')).toEqual(['contacts.1.confirm']);
+		expect(index.dependentsOf('contacts.0.email')).toEqual(['contacts.0.confirm', 'contacts.1.confirm']);
+		expect(index.referencesOf('contacts.1.email')).toEqual([]);
 	});
 
 	test('reports no dependents for a field nothing reads', () => {

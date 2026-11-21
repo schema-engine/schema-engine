@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import { buildDependencyIndex, createDefaultValidationRegistry } from '@/schemas/validation';
-import { createFormStore } from '@/store/create-form-store';
+import { createFormStateContainer } from '@/store/create-form-state-container';
 
 vi.mock('@/schemas/validation/dependencies', async (importOriginal) => {
 	const original = await importOriginal<typeof import('@/schemas/validation/dependencies')>();
@@ -13,7 +13,7 @@ const element = (config: Record<string, unknown>, containerKind?: 'array' | 'obj
 	markNormalizedElementConfig(config as unknown as ElementConfig, containerKind);
 
 const createLinesStore = () =>
-	createFormStore({
+	createFormStateContainer({
 		registry: createDefaultValidationRegistry(),
 		elements: [
 			element({ $type: 'input', name: 'note' }),
@@ -58,7 +58,6 @@ describe('the dependency index of a form store', () => {
 		store.fieldArray('lines').swap(0, 1);
 		store.fieldArray('lines').update(0, { type: 'person', vat: '' });
 		store.setValue('lines', [{ type: 'a' }, { type: 'b' }]);
-		store.adoptRowIds('lines', ['x', 'y']);
 		store.setValue('note', 'z');
 		expect(buildDependencyIndex).toHaveBeenCalledTimes(builds);
 	});

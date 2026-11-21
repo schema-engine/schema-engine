@@ -6,7 +6,7 @@ import { resolveFieldRef } from '@/lib/field-ref.js';
 import { expandFieldTemplatePaths } from '@/lib/path-values.js';
 
 const NO_DEPENDENTS: readonly string[] = [];
-const NO_READS: readonly DependencyRead[] = [];
+const NO_REFERENCES: readonly string[] = [];
 
 /**
  * Which fields a renderer must re-validate when a value changes.
@@ -22,47 +22,27 @@ export interface DependencyIndex {
 	expand(changed: readonly string[]): string[];
 	/** Every path something depends on — the set worth diffing. */
 	readonly watched: readonly string[];
-	/** What the field at `path` reads, and how each reference was written. */
-	readsOf(path: string): readonly DependencyRead[];
+	/**
+	 * What the field at `path` reads, as its rules and constraints wrote it.
+	 *
+	 * @remarks
+	 * References come back as authored, because what they mean depends on where the field is: a bare name
+	 * is a sibling of the field and a dotted one is a position. Resolve them with `resolveFieldRef` against
+	 * the field's path as it is when the question is asked.
+	 */
+	referencesOf(path: string): readonly string[];
 }
 
 /**
- * A field a rule reads.
+ * The references a field's rules read, as authored.
  *
  * @remarks
- * `relative` is true for a bare name, which names a sibling and so moves with the row that holds the
- * rule. A dotted reference is absolute: it names a position, whatever rows move under it.
+ * A rule declares what it reads through its registration's `dependsOn`; the references come back as
+ * authored, so they are resolved against the declaring field exactly as the rule itself resolves them at
+ * validation time.
  */
-export interface DependencyRead {
-	readonly path: string;
-	readonly relative: boolean;
-}
-
-/**
- * Absolute paths whose change should re-validate the field at `fieldPath`.
- *
- * @remarks
- * A rule declares what it reads through its registration's `dependsOn`; the
- * references come back as authored, so they are resolved against the declaring
- * field exactly as the rule itself resolves them at validation time.
- */
-function collectRuleDependencies(
-	rules: ReadonlyArray<BaseValidationRule> | undefined,
-	fieldPath: string,
-	registry: ValidationRegistry,
-): DependencyRead[] {
-	const references = (rules ?? []).flatMap((rule) => registry.getRuleDependencies(rule));
-	return readsOf(references, fieldPath);
-}
-
-function readsOf(references: readonly string[], fieldPath: string): DependencyRead[] {
-	const reads = new Map<string, DependencyRead>();
-	for (const reference of references) {
-		const path = resolveFieldRef(reference, fieldPath);
-		const relative = !reference.includes('.');
-		reads.set(`${relative}:${path}`, { path, relative });
-	}
-	return [...reads.values()];
+function ruleReferences(rules: ReadonlyArray<BaseValidationRule> | undefined, registry: ValidationRegistry): string[] {
+	return (rules ?? []).flatMap((rule) => registry.getRuleDependencies(rule));
 }
 
 /**
@@ -85,7 +65,7 @@ export function buildDependencyIndex(
 	registry: ValidationRegistry,
 ): DependencyIndex {
 	const dependents = new Map<string, string[]>();
-	const reads = new Map<string, readonly DependencyRead[]>();
+	const authored = new Map<string, readonly string[]>();
 
 	for (const { path: templatePath, element } of walkNamedElements(elements)) {
 		const rules = getValidationRulesForElement(element, registry);
@@ -101,12 +81,9 @@ export function buildDependencyIndex(
 				: [],
 		);
 		for (const fieldPath of expandFieldTemplatePaths(values, templatePath)) {
-			const dependencies = [
-				...collectRuleDependencies(rules, fieldPath, registry),
-				...readsOf(requiredReferences, fieldPath),
-			];
-			reads.set(fieldPath, dependencies);
-			for (const { path: dependency } of dependencies) {
+			const references = [...new Set([...ruleReferences(rules, registry), ...requiredReferences])];
+			authored.set(fieldPath, references);
+			for (const dependency of new Set(references.map((reference) => resolveFieldRef(reference, fieldPath)))) {
 				const existing = dependents.get(dependency);
 				if (!existing) {
 					dependents.set(dependency, [fieldPath]);
@@ -120,7 +97,7 @@ export function buildDependencyIndex(
 	return {
 		watched: [...dependents.keys()],
 		dependentsOf: (path) => dependents.get(path) ?? NO_DEPENDENTS,
-		readsOf: (path) => reads.get(path) ?? NO_READS,
+		referencesOf: (path) => authored.get(path) ?? NO_REFERENCES,
 		expand: (changed) => [...new Set(changed.flatMap((path) => dependents.get(path) ?? NO_DEPENDENTS))],
 	};
 }

@@ -20,6 +20,8 @@ export interface RunTracker {
 	/** `scope` is what the run asked for, as anchors; `undefined` is the whole form. */
 	start(scope: readonly RowAnchor[] | undefined, exact: boolean): ValidationRun;
 	reset(): void;
+	/** Whether the form was reset after `run` started: everything the run found is then moot. */
+	outdated(run: ValidationRun): boolean;
 	finish(run: ValidationRun): void;
 	/** `resolve` finds the path an anchor has now, or `undefined` when its rows are gone. */
 	superseded(run: ValidationRun, path: string, resolve: (anchor: RowAnchor) => string | undefined): boolean;
@@ -47,6 +49,7 @@ export function createRunTracker(): RunTracker {
 		reset() {
 			epoch += 1;
 		},
+		outdated: (run) => run.epoch !== epoch,
 		finish(run) {
 			pending.delete(run);
 			if (pending.size === 0) requests = [];

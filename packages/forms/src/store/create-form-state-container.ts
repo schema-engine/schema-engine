@@ -1,44 +1,43 @@
-import type { FieldArrayValue } from '@/adapters/types';
 import { validateFormValues } from '@/engine/value-validation';
 import { createDebounceScope } from '@/lib/debounce';
+import { resolveFieldRef } from '@/lib/field-ref';
 import { getValueAtPath } from '@/lib/path-values';
 import {
 	buildDependencyIndex,
 	shouldSurfaceDependentError,
 	type DependencyIndex,
 } from '@/schemas/validation/dependencies';
-import { flattenErrors } from './field-state';
+import { dirtyTree } from './dirty';
+import type { FieldArrayCommands } from './field-array';
 import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
+import { selectFieldState } from './selectors';
 import { createRunTracker } from './stale-results';
 import {
-	clearLeafAt,
+	clearAround,
+	clearAt,
+	clearSelfAt,
 	conformAt,
 	coveredAt,
+	entries,
 	fromEntries,
-	getAt,
-	leafAt,
-	leaves,
 	markAt,
-	mergeTrees,
 	reorderAt,
-	setAt,
+	setSelfAt,
 	stable,
+	type IsArrayAt,
 	type Tree,
 } from './state-tree';
-import {
-	VALIDATION_ERROR_SOURCE,
-	type FormErrorSource,
-	type FormFieldState,
-	type FormStateRoot,
-	type FormStore,
-	type FormStoreError,
-	type FormStoreOptions,
-	type FormStoreSnapshot,
+import type {
+	FormErrorSource,
+	FormStateContainer,
+	FormStateContainerOptions,
+	FormStateError,
+	FormStateSnapshot,
 } from './types';
 import {
 	changedPaths,
 	createMap,
-	dirtyTree,
+	isStructural,
 	isWithin,
 	reconcile,
 	setIn,
@@ -50,23 +49,22 @@ import {
 } from './value-tree';
 
 /**
- * Everything the store holds. Replaced as a whole by every command; no part is mutated.
+ * Everything the container holds. Replaced as a whole by every command; no part is mutated.
  *
  * @remarks
  * Field state is held in the shape of the values (see `state-tree.ts`), so a row's state is the row's
- * element of each array and moves with it. `failed` is `true` for the whole form, or a tree of the
- * paths whose check failed.
+ * element of each array and moves with it. The container's own errors are `validation`; a host's are in
+ * `native` and `server`. `failed` marks the paths whose check failed, `''` for the whole form.
  */
 interface State {
 	readonly values: NullMap;
 	readonly defaults: NullMap;
-	/** The store's own errors. */
-	readonly validation: Tree;
-	/** Error trees by source, ordered from the least to the most recently set. */
-	readonly sources: ReadonlyMap<FormErrorSource, Tree>;
-	readonly touched: Tree;
-	readonly dirty: Tree;
-	readonly failed: Tree;
+	readonly validation: Tree<FormStateError>;
+	readonly native: Tree<FormStateError>;
+	readonly server: Tree<FormStateError>;
+	readonly touched: Tree<true>;
+	readonly failed: Tree<true>;
+	readonly dirty: Tree<true>;
 	readonly ids: IdTree | undefined;
 	readonly validating: number;
 }
@@ -78,36 +76,28 @@ interface RowEntry {
 	readonly node: RowNode;
 }
 
-const isStructural = (value: unknown): boolean => value !== null && typeof value === 'object';
-/** The leaves of an error tree as the snapshot shows them, the very objects its `errorTree` holds. */
-function shownLeaves(tree: Tree): NullMap<FormStoreError> {
-	const shown = createMap<FormStoreError>();
-	for (const [path, leaf] of Object.entries(leaves(tree))) shown[path] = toPlain(leaf) as FormStoreError;
-	return shown;
-}
-
-const EMPTY_VIEW = Object.freeze({});
+const EXPLICIT_SOURCES = ['native', 'server'] as const satisfies readonly FormErrorSource[];
 const readAt = (root: NullMap, path: string): unknown => getValueAtPath(root, path);
 const isRow = (index: number, length: number): boolean => Number.isInteger(index) && index >= 0 && index < length;
 const asRows = (value: unknown): unknown[] => (Array.isArray(value) ? value : [value]);
-const view = <T>(tree: Tree): FormStateRoot<T> =>
-	tree === undefined ? EMPTY_VIEW : (toPlain(tree) as FormStateRoot<T>);
+const freezeError = (error: { type?: string; message?: string }, source: string): FormStateError =>
+	Object.freeze({ type: error.type ?? source, message: error.message ?? '' });
 
 /**
- * Creates the engine's reference {@link FormStore}: framework-free, with the engine's validation.
+ * Creates the engine's reference {@link FormStateContainer}: framework-free, with the engine's validation.
  *
  * @remarks
  * Values live in null-prototype maps and come out of the snapshot as frozen plain records; both views
  * share structure, so a branch no command touched keeps its reference. Validation goes through
  * `validateFormValues` with one debounce scope for recorded validation. A silent
- * {@link FormStore.checkValidity} gets a scope of its own, so it never replaces a debounced call of
+ * {@link FormStateContainer.checkValidity} gets a scope of its own, so it never replaces a debounced call of
  * the validation that writes errors.
  *
- * Errors, touched marks and failed checks are trees in the shape of the values. A row operation is one
- * splice, applied to the values and to every tree in the same commit, so state cannot fall out of step
- * with its rows. A validation result that arrives late finds its fields by row id, not by index.
+ * Errors, touched marks and failed checks are trees with a slot per node, in the shape of the values. A
+ * row operation is one splice, applied to the values and to every tree in the same commit, so state cannot
+ * fall out of step with its rows. A validation result that arrives late finds its fields by row id, not by index.
  */
-export function createFormStore(options: FormStoreOptions): FormStore {
+export function createFormStateContainer(options: FormStateContainerOptions): FormStateContainer {
 	const { elements, registry, validationMode = 'onSubmit', reValidateMode = 'onChange' } = options;
 	const tracker = createRunTracker();
 	const debounceScope = createDebounceScope();
@@ -126,30 +116,77 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		values: initialDefaults,
 		defaults: initialDefaults,
 		validation: undefined,
-		sources: new Map(),
+		native: undefined,
+		server: undefined,
 		touched: undefined,
-		dirty: undefined,
 		failed: undefined,
-		ids: syncIds(undefined, initialDefaults, mintId),
+		dirty: undefined,
+		ids: adoptAll(syncIds(undefined, initialDefaults, mintId), options.rowIds ?? {}),
 		validating: 0,
 	};
 
-	let effectiveFor:
-		{ validation: Tree; sources: State['sources']; tree: Tree; flat: NullMap<FormStoreError> } | undefined;
-	/** The errors to show, from every source: the store's own lowest, then each source by recency. */
-	function effectiveErrors(current: State): { tree: Tree; flat: NullMap<FormStoreError> } {
+	/** Whether the value at a path is an array, which decides how its field state is shaped. */
+	const isArrayAt: IsArrayAt = (path) => Array.isArray(readAt(state.values, path));
+
+	function adoptAt(ids: IdTree | undefined, path: string, adopted: readonly string[]): IdTree | undefined {
+		const rows = idsAt(ids, path);
+		if (!Array.isArray(rows) || rows.length !== adopted.length || new Set(adopted).size !== adopted.length)
+			return ids;
+		for (const id of adopted) adoptedIds.add(id);
+		return replaceIdsAt(
+			ids,
+			path,
+			(rows as readonly RowNode[]).map((row, index) =>
+				row.below === undefined ? { id: adopted[index] } : { id: adopted[index], below: row.below },
+			),
+		);
+	}
+
+	function adoptAll(
+		ids: IdTree | undefined,
+		adopted: Readonly<Record<string, readonly string[]>>,
+	): IdTree | undefined {
+		return Object.keys(adopted)
+			.toSorted((a, b) => a.split('.').length - b.split('.').length)
+			.reduce((current, path) => adoptAt(current, path, adopted[path]), ids);
+	}
+
+	let errorsFor:
+		| {
+				validation: Tree<FormStateError>;
+				native: Tree<FormStateError>;
+				server: Tree<FormStateError>;
+				flat: NullMap<FormStateError>;
+		  }
+		| undefined;
+	/** The error shown per path: `server` over the container's `validation` over `native`. */
+	function effectiveErrors(current: State): NullMap<FormStateError> {
 		if (
-			effectiveFor &&
-			effectiveFor.validation === current.validation &&
-			effectiveFor.sources === current.sources
+			errorsFor &&
+			errorsFor.validation === current.validation &&
+			errorsFor.native === current.native &&
+			errorsFor.server === current.server
 		) {
-			return effectiveFor;
+			return errorsFor.flat;
 		}
-		const tree = stable(effectiveFor?.tree, mergeTrees([current.validation, ...current.sources.values()]));
-		const flat = stabilize(effectiveFor?.flat ?? createMap<FormStoreError>(), shownLeaves(tree));
-		const computed = { validation: current.validation, sources: current.sources, tree, flat };
-		effectiveFor = computed;
-		return computed;
+		const merged = createMap<FormStateError>();
+		for (const tree of [current.native, current.validation, current.server]) {
+			for (const [path, error] of entries(tree)) merged[path] = error;
+		}
+		const flat = stabilize(errorsFor?.flat ?? createMap<FormStateError>(), merged);
+		errorsFor = { validation: current.validation, native: current.native, server: current.server, flat };
+		return flat;
+	}
+
+	const marksFor = new Map<string, { tree: Tree<true>; flat: NullMap<true> }>();
+	function marks(kind: 'touched' | 'dirty', tree: Tree<true>): NullMap<true> {
+		const known = marksFor.get(kind);
+		if (known && known.tree === tree) return known.flat;
+		const merged = createMap<true>();
+		for (const [path] of entries(tree)) merged[path] = true;
+		const flat = stabilize(known?.flat ?? createMap<true>(), merged);
+		marksFor.set(kind, { tree, flat });
+		return flat;
 	}
 
 	let flatIdsFor: { ids: IdTree | undefined; flat: NullMap<readonly string[]> } | undefined;
@@ -160,22 +197,22 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		return flat;
 	}
 
-	let snapshot = toSnapshot(state);
-	const serverSnapshot = snapshot;
-
-	function toSnapshot(current: State): FormStoreSnapshot {
+	function toSnapshot(current: State): FormStateSnapshot {
 		const errors = effectiveErrors(current);
 		return Object.freeze({
-			values: toPlain(current.values) as FormStoreSnapshot['values'],
-			errors: toPlainMap(errors.flat),
-			errorTree: view<FormStoreError>(errors.tree),
-			touched: view<true>(current.touched),
-			dirty: view<true>(current.dirty),
+			values: toPlain(current.values) as FormStateSnapshot['values'],
+			defaults: toPlain(current.defaults) as FormStateSnapshot['defaults'],
+			errors: toPlainMap(errors),
+			touched: toPlainMap(marks('touched', current.touched)),
+			dirty: toPlainMap(marks('dirty', current.dirty)),
 			rowIds: toPlainMap(flatRowIds(current)),
 			isValidating: current.validating > 0,
-			checkFailed: current.failed !== undefined,
+			isValid: Object.keys(errors).length === 0,
 		});
 	}
+
+	let snapshot = toSnapshot(state);
+	const serverSnapshot = snapshot;
 
 	let batchDepth = 0;
 	let notifyAfterBatch = false;
@@ -213,7 +250,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		}
 		state = next;
 		const nextSnapshot = toSnapshot(next);
-		const changed = (Object.keys(nextSnapshot) as Array<keyof FormStoreSnapshot>).some(
+		const changed = (Object.keys(nextSnapshot) as Array<keyof FormStateSnapshot>).some(
 			(key) => nextSnapshot[key] !== snapshot[key],
 		);
 		if (!changed) return;
@@ -228,6 +265,11 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 	function validatesOn(event: 'change' | 'blur', path: string): boolean {
 		const target = event === 'change' ? 'onChange' : 'onBlur';
 		return isFailed(path) ? reValidateMode === target : validationMode === 'all' || validationMode === target;
+	}
+
+	/** The errors hosts set, which a silent check counts as well. */
+	function explicitErrorPaths(): string[] {
+		return EXPLICIT_SOURCES.flatMap((source) => entries(state[source]).map(([path]) => path));
 	}
 
 	interface ValidationMode {
@@ -248,9 +290,10 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 	 * A recorded result is applied path by path, at the place its fields have now: each path is found
 	 * again through the ids of the rows it ran through, so a result for a row that moved lands on that
 	 * row, and one for a row that is gone is dropped. It is also dropped for a path when that path's value
-	 * was written while it ran, a value a rule of the path reads changed, a validation that started later
-	 * asked for the path, or the form was reset. When part of a result is dropped, an explicit validation
-	 * runs once more and resolves with the validity of the current state; a silent check writes nothing.
+	 * was written while it ran, a value a rule of the path reads changed, or a validation that started later
+	 * asked for the path. A reset drops the whole result, and nothing is run again. When part of a result
+	 * is dropped otherwise, an explicit validation runs once more and resolves with the validity of the
+	 * current state; a silent check writes nothing.
 	 */
 	async function runValidation(names: readonly string[] | undefined, mode: ValidationMode): Promise<boolean> {
 		if (names?.length === 0) return true;
@@ -270,25 +313,30 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			tracker.finish(run);
 			commit({ validating: state.validating - 1 });
 		};
-		let flat: NullMap<FormStoreError>;
+		let found: Awaited<ReturnType<typeof validateFormValues>>;
 		try {
-			const nested = await validateFormValues({
+			found = await validateFormValues({
 				elements,
 				registry,
 				values: toPlain(startValues) as Record<string, unknown>,
 				names,
+				exactNames: mode.exact,
 				debounceScope: mode.record ? debounceScope : silentDebounceScope,
 			});
-			flat = flattenErrors(nested);
 		} catch (error) {
 			settleRun();
 			throw error;
 		}
 		const inScope = (path: string): boolean =>
 			!names || (mode.exact ? names.includes(path) : names.some((name) => isWithin(path, name)));
-		for (const path of Object.keys(flat)) if (!inScope(path)) delete flat[path];
+		const flat = createMap<FormStateError>();
+		for (const [path, error] of Object.entries(found)) flat[path] = freezeError(error, 'validation');
 		const passed = Object.keys(flat).length === 0;
-		if (!run || !startIndex) return passed;
+		if (!run || !startIndex) return passed && !explicitErrorPaths().some(inScope);
+		if (tracker.outdated(run)) {
+			settleRun();
+			return passed;
+		}
 
 		const now = (path: string): string | undefined => resolveAnchor(anchorOf(startIds, path), state.ids);
 		const movedSince = (path: string): boolean => {
@@ -296,9 +344,13 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			return current === undefined || !Object.is(readAt(state.values, current), readAt(startValues, path));
 		};
 		const dependencyChanged = (path: string): boolean =>
-			startIndex.readsOf(path).some(({ path: read, relative }) => {
-				const current = relative ? now(read) : read;
-				return current === undefined || !Object.is(readAt(state.values, current), readAt(startValues, read));
+			startIndex.referencesOf(path).some((reference) => {
+				const current = now(path);
+				if (current === undefined) return true;
+				return !Object.is(
+					readAt(state.values, resolveFieldRef(reference, current)),
+					readAt(startValues, resolveFieldRef(reference, path)),
+				);
 			});
 		const lostContainer = (path: string): boolean =>
 			path
@@ -319,7 +371,12 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			tracker.superseded(run, current, (anchor) => resolveAnchor(anchor, state.ids)) ||
 			dependencyChanged(path);
 		const decided = [
-			...new Set([...Object.keys(leaves(startValidation)).filter(inScope), ...Object.keys(flat)]),
+			...new Set([
+				...entries(startValidation)
+					.map(([path]) => path)
+					.filter(inScope),
+				...Object.keys(flat),
+			]),
 		].map((path) => ({ path, current: now(path) }));
 		const scopeStale = (): boolean =>
 			changedPaths(startValues, state.values).some(
@@ -338,30 +395,26 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		}
 
 		let validation = state.validation;
-		const applicable = decided.filter(({ path, current }) => current !== undefined && !stale(path, current));
-		for (const { path, current } of applicable) {
-			if (flat[path] === undefined) validation = clearLeafAt(validation, current as string);
-		}
-		for (const { path, current } of applicable.toSorted(
-			(a, b) => b.path.split('.').length - a.path.split('.').length,
-		)) {
-			if (flat[path] !== undefined) validation = setAt(validation, current as string, flat[path]);
+		for (const { path, current } of decided) {
+			if (current !== undefined && !stale(path, current)) {
+				validation = setSelfAt(validation, current, flat[path], isArrayAt);
+			}
 		}
 		let failed = state.failed;
 		if (mode.markFailed && !passed) {
 			failed = names
-				? names.reduce<Tree>((tree, name) => {
+				? names.reduce((tree, name) => {
 						const current = now(name);
-						return current === undefined ? tree : markAt(tree, current);
+						return current === undefined ? tree : markAt(tree, current, isArrayAt);
 					}, failed)
-				: true;
+				: setSelfAt(failed, '', true, isArrayAt);
 		}
 		tracker.finish(run);
 		commit({ validation, failed, validating: state.validating - 1 });
 		const scopeNow = names?.flatMap((name) => now(name) ?? []);
 		const stillInScope = (path: string): boolean =>
 			!scopeNow || (mode.exact ? scopeNow.includes(path) : scopeNow.some((name) => isWithin(path, name)));
-		return passed && !Object.keys(effectiveErrors(state).flat).some(stillInScope);
+		return passed && !Object.keys(effectiveErrors(state)).some(stillInScope);
 	}
 
 	let cachedIndex: { ids: State['ids']; shape: string; index: DependencyIndex } | undefined;
@@ -419,6 +472,15 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		if (validatesSelf && exact) void runValidation([changedPath], { ...quiet, exact }).catch(() => undefined);
 	}
 
+	/** What a host set no longer describes the value at `path`, or the paths around it, once it changed. */
+	function dropHostErrors(path: string, includeBelow: boolean): Pick<State, 'native' | 'server'> {
+		const drop = (tree: Tree<FormStateError>) => {
+			const around = clearAround(tree, path);
+			return includeBelow ? clearAt(around, path) : clearSelfAt(around, path);
+		};
+		return { native: drop(state.native), server: drop(state.server) };
+	}
+
 	function setValue(path: string, value: unknown): void {
 		const previousValues = state.values;
 		const branch = reconcile(readAt(previousValues, path), toInternal(value));
@@ -427,23 +489,13 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		const root = path.split('.')[0];
 		const idsRoot = syncIds(idsAt(state.ids, root), readAt(values, root), mintId);
 		batch(() => {
-			let sources = state.sources;
-			if (!path) sources = new Map();
-			else {
-				const kept = new Map<FormErrorSource, Tree>();
-				for (const [source, tree] of state.sources) {
-					const cleared = setAt(tree, path, undefined);
-					if (cleared !== undefined) kept.set(source, cleared);
-				}
-				sources = kept;
-			}
 			commit({
 				values,
 				ids: replaceIdsAt(state.ids, root, idsRoot),
-				sources,
+				...dropHostErrors(path, true),
 				validation: conformAt(state.validation, path, branch),
 				touched: conformAt(state.touched, path, branch),
-				failed: state.failed === true ? true : conformAt(state.failed, path, branch),
+				failed: conformAt(state.failed, path, branch),
 			});
 			afterChange(previousValues, path, false);
 		});
@@ -482,25 +534,23 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 				rows.map((row) => row.value),
 			),
 		);
-		const sources = new Map<FormErrorSource, Tree>();
-		for (const [source, tree] of state.sources) {
-			const moved = reorderAt(tree, path, order);
-			if (moved !== undefined) sources.set(source, moved);
-		}
 		const root = path.split('.')[0];
 		const placed = replaceIdsAt(
 			state.ids,
 			path,
 			rows.map((row) => row.node),
 		);
+		const spliced = (tree: Tree<FormStateError>) => reorderAt(tree, path, order);
+		const hostErrors = dropHostErrors(path, false);
 		batch(() => {
 			commit({
 				values,
 				ids: replaceIdsAt(placed, root, syncIds(idsAt(placed, root), readAt(values, root), mintId)),
-				sources,
-				validation: reorderAt(state.validation, path, order),
+				native: spliced(hostErrors.native),
+				server: spliced(hostErrors.server),
+				validation: spliced(state.validation),
 				touched: reorderAt(state.touched, path, order),
-				failed: state.failed === true ? true : reorderAt(state.failed, path, order),
+				failed: reorderAt(state.failed, path, order),
 			});
 			afterChange(previousValues, path, true);
 		});
@@ -511,7 +561,10 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		return { value: internal, node: { id: mintId(), below: syncIds(undefined, internal, mintId) } };
 	};
 
-	function fieldArray(path: string): FieldArrayValue {
+	const fieldArrays = new Map<string, FieldArrayCommands>();
+	function fieldArray(path: string): FieldArrayCommands {
+		const known = fieldArrays.get(path);
+		if (known) return known;
 		const insert = (index: number, value: unknown): void => {
 			const rows = rowsAt(path);
 			const added = asRows(value);
@@ -524,11 +577,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			if (!indexes.every((index) => isRow(index, rows.length))) return;
 			commitRows(path, change(rows));
 		};
-		return {
-			get fields() {
-				const nodes = idsAt(state.ids, path);
-				return Array.isArray(nodes) ? (nodes as readonly RowNode[]).map(({ id }) => ({ id })) : [];
-			},
+		const commands: FieldArrayCommands = {
 			append: (value) => insert(rowsAt(path).length, value),
 			prepend: (value) => insert(0, value),
 			insert,
@@ -559,6 +608,8 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 					);
 			},
 		};
+		fieldArrays.set(path, commands);
+		return commands;
 	}
 
 	return {
@@ -568,32 +619,14 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 				listeners.delete(listener);
 			};
 		},
-		subscribeTo(selector, listener, isEqual = Object.is) {
-			let selected = selector(snapshot);
-			return this.subscribe(() => {
-				const next = selector(snapshot);
-				if (isEqual(selected, next)) return;
-				selected = next;
-				listener(next);
-			});
-		},
 		getSnapshot: () => snapshot,
 		getServerSnapshot: () => serverSnapshot,
 		getValue: (path) => toPlain(readAt(state.values, path)),
-		getFieldState(path): FormFieldState {
-			const error = leafAt(effectiveErrors(state).tree, path) as FormStoreError | undefined;
-			const marked = (tree: Tree): boolean => coveredAt(tree, path) || getAt(tree, path) !== undefined;
-			return {
-				error,
-				invalid: error !== undefined,
-				isTouched: marked(state.touched),
-				isDirty: marked(state.dirty),
-			};
-		},
+		getFieldState: (path) => selectFieldState(snapshot, path),
 		setValue,
 		blur: (path) =>
 			batch(() => {
-				if (!isTouched(path)) commit({ touched: markAt(state.touched, path) });
+				if (!isTouched(path)) commit({ touched: markAt(state.touched, path, isArrayAt) });
 				if (validatesOn('blur', path)) {
 					void runValidation([path], { record: true, markFailed: false }).catch(() => undefined);
 				}
@@ -604,8 +637,9 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			commit({
 				values: defaults,
 				defaults,
-				sources: new Map(),
 				validation: undefined,
+				native: undefined,
+				server: undefined,
 				touched: undefined,
 				failed: undefined,
 				ids: syncIds(undefined, defaults, mintId),
@@ -614,36 +648,13 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		validate: (paths) => runValidation(paths, { record: true, markFailed: true, retry: true }),
 		checkValidity: (paths) => runValidation(paths, { record: false, markFailed: false }),
 		setErrors(source, errors) {
-			if (source === VALIDATION_ERROR_SOURCE) {
-				throw new Error(`The '${VALIDATION_ERROR_SOURCE}' error source belongs to the store`);
-			}
-			const sources = new Map(state.sources);
-			sources.delete(source);
-			const tree = fromEntries(
-				Object.entries(errors).map(([path, error]) => [
-					path,
-					Object.freeze({ type: error.type ?? source, message: error.message ?? '' }),
-				]),
-			);
-			if (tree !== undefined) sources.set(source, tree);
-			commit({ sources });
-		},
-		fieldArray,
-		adoptRowIds(path, ids) {
-			const nodes = idsAt(state.ids, path);
-			if (!Array.isArray(nodes) || nodes.length !== ids.length || new Set(ids).size !== ids.length) return;
-			const rows = nodes as readonly RowNode[];
-			if (rows.every((row, index) => row.id === ids[index])) return;
-			for (const id of ids) adoptedIds.add(id);
 			commit({
-				ids: replaceIdsAt(
-					state.ids,
-					path,
-					rows.map((row, index) =>
-						row.below === undefined ? { id: ids[index] } : { id: ids[index], below: row.below },
-					),
+				[source]: fromEntries(
+					Object.entries(errors).map(([path, error]) => [path, freezeError(error, source)] as const),
+					isArrayAt,
 				),
 			});
 		},
+		fieldArray,
 	};
 }
