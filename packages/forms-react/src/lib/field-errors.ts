@@ -1,5 +1,5 @@
 import type { FieldErrors, FieldValues } from 'react-hook-form';
-import { setValueAtPath } from '@schema-engine/forms/lib/path-values';
+import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 
 /**
  * Converts the engine's flat errors to the nested `FieldErrors` React Hook Form reads.
@@ -24,7 +24,7 @@ function collect(node: unknown, path: string, out: Record<string, unknown>): voi
 		('message' in node && typeof node.message === 'string') || ('type' in node && typeof node.type === 'string');
 	if (recorded && path) out[path] = node;
 	for (const [key, child] of Object.entries(node)) {
-		if (key === 'ref' || key === 'types') continue;
+		if (recorded && (key === 'ref' || key === 'types')) continue;
 		collect(child, path ? `${path}.${key}` : key, out);
 	}
 }
@@ -33,11 +33,18 @@ function collect(node: unknown, path: string, out: Record<string, unknown>): voi
  * Converts the nested `FieldErrors` React Hook Form holds to the engine's flat errors.
  *
  * @remarks
- * A node is an error when it carries a string `type` or `message`. Empty containers and array holes,
- * which React Hook Form leaves where a nested error was cleared, record nothing.
+ * A node is an error when it carries a string `type` or `message`; `ref` and `types` belong to the error,
+ * not to a field below it. Empty containers and array holes, which React Hook Form leaves where a nested
+ * error was cleared, record nothing. React Hook Form keeps the error of a field array itself at
+ * `<array>.root`, so a `root` below an array in `values` is that array's own error.
  */
-export function fromFieldErrors(errors: FieldErrors): Record<string, unknown> {
+export function fromFieldErrors(errors: FieldErrors, values: unknown): Record<string, unknown> {
+	const nested: Record<string, unknown> = {};
+	collect(errors, '', nested);
 	const flat: Record<string, unknown> = {};
-	collect(errors, '', flat);
+	for (const [path, error] of Object.entries(nested)) {
+		const parent = path.endsWith('.root') ? path.slice(0, -'.root'.length) : undefined;
+		flat[parent !== undefined && Array.isArray(getValueAtPath(values, parent)) ? parent : path] = error;
+	}
 	return flat;
 }

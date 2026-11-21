@@ -93,7 +93,7 @@ export function useFormActionDispatchers({
 		return buildFormActionContext({
 			config,
 			values: form.getValues(),
-			formState: { errors: fromFieldErrors(errors), touched: touchedFields, submitCount },
+			formState: { errors: fromFieldErrors(errors, form.getValues()), touched: touchedFields, submitCount },
 			currentStep: getCurrentStep?.() ?? 0,
 			mountedAt: formMountTime,
 			form: formAdapter,
