@@ -7,7 +7,7 @@ import {
 	shouldSurfaceDependentError,
 	type DependencyIndex,
 } from '@/schemas/validation/dependencies';
-import { flattenErrors, pruneMissing, remapRows, syncRowIds } from './field-state';
+import { flattenErrors, pathExists, pruneMissing, remapRows, syncRowIds } from './field-state';
 import { createRunTracker } from './stale-results';
 import {
 	VALIDATION_ERROR_SOURCE,
@@ -18,6 +18,7 @@ import {
 	type FormStoreSnapshot,
 } from './types';
 import {
+	changedPaths,
 	collectDirty,
 	createMap,
 	isWithin,
@@ -235,11 +236,27 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		if (!run) return passed;
 
 		const stale = (path: string): boolean =>
+			!pathExists(state.values, path) ||
 			!Object.is(readAt(state.values, path), readAt(startValues, path)) ||
 			tracker.superseded(run, path) ||
 			dependencyChanged(path, startValues);
+		const scopeStale = (): boolean => {
+			const index = dependencyIndex();
+			return (
+				changedPaths(startValues, state.values).some(
+					(changed) =>
+						(!names || names.some((name) => isWithin(changed, name) || isWithin(name, changed))) &&
+						!tracker.superseded(run, changed),
+				) ||
+				index.watched.some(
+					(watched) =>
+						!Object.is(readAt(startValues, watched), readAt(state.values, watched)) &&
+						index.dependentsOf(watched).some(inScope),
+				)
+			);
+		};
 		const decided = new Set([...Object.keys(state.validation).filter(inScope), ...Object.keys(flat)]);
-		if (mode.retry && [...decided].some(stale)) {
+		if (mode.retry && (scopeStale() || [...decided].some(stale))) {
 			return batch(() => {
 				settleRun();
 				return runValidation(names, { ...mode, retry: false });

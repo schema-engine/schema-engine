@@ -382,6 +382,53 @@ describe('createFormStore', () => {
 		});
 	});
 
+	describe('validate while the form is edited', () => {
+		const requiredForm = () =>
+			createFormStore({
+				registry,
+				elements: [
+					element({
+						$type: 'input',
+						name: 'name',
+						rules: [{ type: 'required', message: 'Name is required' }],
+					}),
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [
+								{
+									$type: 'input',
+									name: 'email',
+									rules: [{ type: 'required', message: 'Email is required' }],
+								},
+								{ $type: 'input', name: 'label' },
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { name: 'Ada', contacts: [{}] },
+			});
+
+		test('a pass is not trusted when the value it passed changed meanwhile', async () => {
+			const store = requiredForm();
+			const run = store.validate(['name']);
+			store.setValue('name', '');
+			expect(await run).toBe(false);
+			expect(store.getSnapshot().errors.name?.message).toBe('Name is required');
+		});
+
+		test('a result for a row removed meanwhile is dropped', async () => {
+			const store = requiredForm();
+			const run = store.validate(['contacts.0.email']);
+			store.setValue('contacts', []);
+			expect(await run).toBe(true);
+			expect(store.getSnapshot().errors).toEqual({});
+			expect(store.getSnapshot().checkFailed).toBe(false);
+		});
+	});
+
 	describe('internal maps', () => {
 		test('keeps the null prototype when row ids are adopted, so a path named like a method is safe', () => {
 			const store = createFormStore({ registry, elements: [], defaultValues: { contacts: [{ a: 1 }] } });

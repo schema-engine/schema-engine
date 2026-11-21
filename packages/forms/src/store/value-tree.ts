@@ -188,3 +188,24 @@ export function collectDirty(value: unknown, defaultValue: unknown, path: string
 export function join(path: string, segment: string): string {
 	return path ? `${path}.${segment}` : segment;
 }
+
+/**
+ * Lists the paths whose value differs between two internal trees, stopping at the first differing node
+ * along each branch that is not a container on both sides.
+ *
+ * @remarks
+ * Branches shared by reference are skipped, so the walk costs what changed, not the size of the form.
+ */
+export function changedPaths(before: unknown, after: unknown, path = '', out: string[] = []): string[] {
+	if (Object.is(before, after)) return out;
+	const structural = (value: unknown): value is Record<string, unknown> =>
+		value !== null && typeof value === 'object' && !isOpaque(value);
+	if (structural(before) && structural(after) && Array.isArray(before) === Array.isArray(after)) {
+		for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+			changedPaths(before[key], after[key], join(path, key), out);
+		}
+	} else {
+		out.push(path);
+	}
+	return out;
+}

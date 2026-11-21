@@ -41,7 +41,8 @@ export function createRunTracker(): RunTracker {
 			return run;
 		},
 		moved(path) {
-			changes.push({ tick: ++tick, path });
+			tick += 1;
+			if (pending.size > 0) changes.push({ tick, path });
 		},
 		finish(run) {
 			pending.delete(run);
