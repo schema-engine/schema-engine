@@ -43,6 +43,18 @@ describe('createChangeDetector', () => {
 		expect(changed({ tags: ['a'], when: new Date(0) })).toBe(false);
 	});
 
+	test('reports a differing date, a reordered array, a null and a key added inside a record', () => {
+		const changed = createChangeDetector();
+		changed({ when: new Date(0), tags: ['a', 'b'], note: '', address: { city: 'Rome' } });
+
+		expect(changed({ when: new Date(1), tags: ['a', 'b'], note: '', address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ when: new Date(1), tags: ['b', 'a'], note: '', address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ when: new Date(1), tags: ['b', 'a'], note: null, address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ when: new Date(1), tags: ['b', 'a'], note: null, address: { city: 'Rome', zip: '1' } })).toBe(
+			true,
+		);
+	});
+
 	test('treats an absent value and an empty string as equal, but not a cleared value', () => {
 		const changed = createChangeDetector();
 		changed({ name: '' });

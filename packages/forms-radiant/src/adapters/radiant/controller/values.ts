@@ -70,7 +70,7 @@ function valuesEqual(a: unknown, b: unknown): boolean {
 		return a.length === b.length && a.every((item, index) => valuesEqual(item, b[index]));
 	}
 	if (isPlainRecord(a) && isPlainRecord(b)) {
-		return new Set([...Object.keys(a), ...Object.keys(b)]).values().every((key) => valuesEqual(a[key], b[key]));
+		return [...new Set([...Object.keys(a), ...Object.keys(b)])].every((key) => valuesEqual(a[key], b[key]));
 	}
 	return false;
 }
