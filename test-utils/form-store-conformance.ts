@@ -25,17 +25,21 @@ export interface FormStoreCase {
 function createGate() {
 	const waiting = new Map<string, Array<(valid: boolean) => void>>();
 	const held = new Set<string>();
+	const settled = new Map<string, boolean>();
 	return {
 		hold: (...values: string[]): void => values.forEach((value) => held.add(value)),
 		check: (value: unknown): Promise<boolean> =>
-			!held.has(String(value))
-				? Promise.resolve(true)
-				: new Promise((resolve) => {
-						const key = String(value);
-						waiting.set(key, [...(waiting.get(key) ?? []), resolve]);
-					}),
+			settled.has(String(value))
+				? Promise.resolve(settled.get(String(value)) === true)
+				: !held.has(String(value))
+					? Promise.resolve(true)
+					: new Promise((resolve) => {
+							const key = String(value);
+							waiting.set(key, [...(waiting.get(key) ?? []), resolve]);
+						}),
 		pending: (value: string): number => waiting.get(value)?.length ?? 0,
 		settle(value: string, valid: boolean): void {
+			settled.set(value, valid);
 			for (const resolve of waiting.get(value) ?? []) resolve(valid);
 			waiting.delete(value);
 		},
@@ -65,6 +69,7 @@ function fixture(overrides: Partial<FormStoreOptions> = {}): Fixture {
 		gate,
 		options: {
 			registry,
+			validationMode: 'onSubmit',
 			elements: [
 				element({ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Name is required' }] }),
 				element({
@@ -190,6 +195,15 @@ const cases: FormStoreCase[] = [
 			expect(() => {
 				(snapshot.touched as Record<string, unknown>).name = true;
 			}).toThrow(TypeError);
+			expect(() => {
+				(snapshot.dirty as Record<string, unknown>).name = true;
+			}).toThrow(TypeError);
+			expect(() => {
+				(snapshot.rowIds as Record<string, unknown>).contacts = [];
+			}).toThrow(TypeError);
+			expect(() => {
+				(snapshot.rowIds.contacts as string[]).push('x');
+			}).toThrow(TypeError);
 
 			defaults.address.street = 'changed after create';
 			expect((store.getSnapshot().values.address as { street: string }).street).toBe('1 Main');
@@ -228,8 +242,9 @@ const cases: FormStoreCase[] = [
 			expect(rows[1]).not.toBe(earlier[1]);
 			expect(rows[2]).toBe(earlier[2]);
 
+			const valuesBeforeBlur = store.getSnapshot().values;
 			store.blur('name');
-			expect(store.getSnapshot().values).toBe(store.getSnapshot().values);
+			expect(store.getSnapshot().values).toBe(valuesBeforeBlur);
 			expect(store.getSnapshot().values.contacts).toBe(rows);
 		},
 	},

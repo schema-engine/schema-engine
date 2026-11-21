@@ -59,7 +59,7 @@ export interface FormStoreSnapshot {
 	readonly dirty: Readonly<Record<string, true>>;
 	/** Row ids per array path, in row order. */
 	readonly rowIds: Readonly<Record<string, readonly string[]>>;
-	/** Whether a validation started by the store is still running. */
+	/** Whether a validation the store started, other than `checkValidity`, is still running. */
 	readonly isValidating: boolean;
 	/** Whether a {@link FormStore.validate} has failed since the last `reset`; see `reValidateMode`. */
 	readonly checkFailed: boolean;
