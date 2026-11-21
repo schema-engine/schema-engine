@@ -8,6 +8,7 @@ vi.mock('@/store/stale-results', () => ({
 		moved: () => undefined,
 		finish: () => undefined,
 		superseded: () => false,
+		movedSince: () => false,
 	}),
 }));
 

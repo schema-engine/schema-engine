@@ -201,6 +201,7 @@ export function changedPaths(before: unknown, after: unknown, path = '', out: st
 	const structural = (value: unknown): value is Record<string, unknown> =>
 		value !== null && typeof value === 'object' && !isOpaque(value);
 	if (structural(before) && structural(after) && Array.isArray(before) === Array.isArray(after)) {
+		if (Array.isArray(before) && Array.isArray(after) && before.length !== after.length) out.push(path);
 		for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
 			changedPaths(before[key], after[key], join(path, key), out);
 		}

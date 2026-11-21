@@ -236,7 +236,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		if (!run) return passed;
 
 		const stale = (path: string): boolean =>
-			!pathExists(state.values, path) ||
+			(pathExists(startValues, path) && !pathExists(state.values, path)) ||
 			!Object.is(readAt(state.values, path), readAt(startValues, path)) ||
 			tracker.superseded(run, path) ||
 			dependencyChanged(path, startValues);
@@ -246,7 +246,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 				changedPaths(startValues, state.values).some(
 					(changed) =>
 						(!names || names.some((name) => isWithin(changed, name) || isWithin(name, changed))) &&
-						!tracker.superseded(run, changed),
+						!tracker.movedSince(run, changed),
 				) ||
 				index.watched.some(
 					(watched) =>

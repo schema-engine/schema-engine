@@ -21,6 +21,8 @@ export interface RunTracker {
 	moved(path: string): void;
 	finish(run: ValidationRun): void;
 	superseded(run: ValidationRun, path: string): boolean;
+	/** Whether rows at or above `path` moved, or the form was reset, since `run` started. */
+	movedSince(run: ValidationRun, path: string): boolean;
 }
 
 export function createRunTracker(): RunTracker {
@@ -55,6 +57,9 @@ export function createRunTracker(): RunTracker {
 		superseded(run, path) {
 			if (allSeq > run.seq || (exactSeq.get(path) ?? 0) > run.seq) return true;
 			for (const [name, later] of prefixSeq) if (later > run.seq && isWithin(path, name)) return true;
+			return this.movedSince(run, path);
+		},
+		movedSince(run, path) {
 			return changes.some((change) => change.tick > run.tick && isWithin(path, change.path));
 		},
 	};

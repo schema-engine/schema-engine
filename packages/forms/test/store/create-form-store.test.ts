@@ -419,6 +419,71 @@ describe('createFormStore', () => {
 			expect(store.getSnapshot().errors.name?.message).toBe('Name is required');
 		});
 
+		test('a pass is not trusted when a later on-change validation took over its path', async () => {
+			const store = createFormStore({
+				registry,
+				validationMode: 'onChange',
+				elements: [
+					element({
+						$type: 'input',
+						name: 'name',
+						rules: [{ type: 'required', message: 'Name is required' }],
+					}),
+				],
+				defaultValues: { name: 'Ada' },
+			});
+			const run = store.validate(['name']);
+			store.setValue('name', '');
+			expect(await run).toBe(false);
+			expect(store.getSnapshot().errors.name?.message).toBe('Name is required');
+		});
+
+		test('required fields below a missing object are reported', async () => {
+			const store = createFormStore({
+				registry,
+				elements: [
+					element(
+						{
+							$type: 'fieldset',
+							name: 'address',
+							elements: [
+								{
+									$type: 'input',
+									name: 'street',
+									rules: [{ type: 'required', message: 'Street is required' }],
+								},
+							],
+						},
+						'object',
+					),
+				],
+			});
+			expect(await store.validate()).toBe(false);
+			expect(store.getSnapshot().errors['address.street']?.message).toBe('Street is required');
+		});
+
+		test('a shorter array is seen as changed even when the removed rows were undefined', async () => {
+			const store = createFormStore({
+				registry,
+				elements: [
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'tags',
+							rules: [{ type: 'minItems', value: 1, message: 'Add a tag' }],
+							elements: [{ $type: 'input', name: 'value' }],
+						},
+						'array',
+					),
+				],
+				defaultValues: { tags: [undefined] },
+			});
+			const run = store.validate(['tags']);
+			store.setValue('tags', []);
+			expect(await run).toBe(false);
+			expect(store.getSnapshot().errors.tags?.message).toBe('Add a tag');
+		});
+
 		test('a result for a row removed meanwhile is dropped', async () => {
 			const store = requiredForm();
 			const run = store.validate(['contacts.0.email']);
