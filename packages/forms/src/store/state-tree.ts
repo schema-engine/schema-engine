@@ -92,6 +92,12 @@ export function leafAt(tree: Tree, path: string): Tree {
 	return isContainer(current) ? undefined : current;
 }
 
+/** Clears the leaf at `path`; a container there holds the state of other paths and is kept. */
+export function clearLeafAt(tree: Tree, path: string): Tree {
+	const node = getAt(tree, path);
+	return node === undefined || isContainer(node) ? tree : setAt(tree, path, undefined);
+}
+
 /** Marks `path` unless it is already covered. */
 export function markAt(tree: Tree, path: string): Tree {
 	return coveredAt(tree, path) ? tree : setAt(tree, path, true);

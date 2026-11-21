@@ -558,6 +558,128 @@ describe('createFormStore', () => {
 		});
 	});
 
+	describe('late results and rows that move', () => {
+		const manualRule = () => {
+			const calls: Array<{ resolve: (valid: boolean) => void }> = [];
+			let manual = true;
+			const manualRegistry = createDefaultValidationRegistry([
+				{
+					$type: 'manual',
+					schema: z.object({ type: z.literal('manual') }),
+					metadata: { name: 'Manual' },
+					category: 'cross-field',
+					dependsOn: (rule: { reads?: string }) => (rule.reads ? [rule.reads] : []),
+					handler: (rule: { reads?: string }, context: { resolve: (reference: string) => unknown }) =>
+						z.any().check(
+							z.refine((value: unknown) => {
+								const valid = rule.reads === undefined || value === context.resolve(rule.reads);
+								return manual
+									? new Promise<boolean>((resolve) => calls.push({ resolve }))
+									: Promise.resolve(valid);
+							}, 'Not valid'),
+						),
+				} as never,
+			]);
+			return { registry: manualRegistry, calls, auto: () => (manual = false) };
+		};
+
+		test('a rule that reads an absolute indexed path is invalidated when rows move under it', async () => {
+			const rule = manualRule();
+			const store = createFormStore({
+				registry: rule.registry,
+				elements: [
+					element({
+						$type: 'input',
+						name: 'confirm',
+						rules: [{ type: 'manual', reads: 'contacts.0.email' }],
+					}),
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [
+								{ $type: 'input', name: 'email' },
+								{ $type: 'input', name: 'label' },
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { confirm: 'a', contacts: [{ email: 'a' }, { email: 'b' }] },
+			});
+			const run = store.validate(['confirm']);
+			await vi.waitFor(() => expect(rule.calls).toHaveLength(1));
+			store.fieldArray('contacts').swap(0, 1);
+			rule.auto();
+			rule.calls[0].resolve(true);
+			expect(await run).toBe(false);
+			expect(store.getSnapshot().errors.confirm?.message).toBe('Not valid');
+		});
+
+		test('the latest requester still wins for a row after rows move', async () => {
+			const rule = manualRule();
+			const store = createFormStore({
+				registry: rule.registry,
+				validationMode: 'onBlur',
+				elements: [
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [
+								{ $type: 'input', name: 'email', rules: [{ type: 'manual' }] },
+								{ $type: 'input', name: 'label' },
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { contacts: [{ email: 'x' }, { email: 'y' }] },
+			});
+			store.blur('contacts.0.email');
+			store.blur('contacts.0.email');
+			await vi.waitFor(() => expect(rule.calls).toHaveLength(2));
+			store.fieldArray('contacts').swap(0, 1);
+			rule.calls[1].resolve(true);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(true));
+			rule.calls[0].resolve(false);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(store.getSnapshot().errors).toEqual({});
+		});
+
+		test('clearing an old container error keeps the errors recorded below it', async () => {
+			const store = createFormStore({
+				registry,
+				validationMode: 'onSubmit',
+				reValidateMode: 'onSubmit',
+				elements: [
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							rules: [{ type: 'minItems', value: 1, message: 'Add a contact' }],
+							elements: [
+								{
+									$type: 'input',
+									name: 'email',
+									rules: [{ type: 'required', message: 'Email is required' }],
+								},
+								{ $type: 'input', name: 'label' },
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { contacts: [] },
+			});
+			expect(await store.validate()).toBe(false);
+			expect(Object.keys(store.getSnapshot().errors)).toEqual(['contacts']);
+			store.fieldArray('contacts').append({ label: 'x' });
+			expect(await store.validate()).toBe(false);
+			expect(Object.keys(store.getSnapshot().errors)).toEqual(['contacts.0.email']);
+		});
+	});
+
 	describe('internal maps', () => {
 		test('keeps the null prototype when row ids are adopted, so a path named like a method is safe', () => {
 			const store = createFormStore({ registry, elements: [], defaultValues: { contacts: [{ a: 1 }] } });

@@ -11,6 +11,7 @@ import { flattenErrors } from './field-state';
 import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
 import { createRunTracker } from './stale-results';
 import {
+	clearLeafAt,
 	conformAt,
 	coveredAt,
 	fromEntries,
@@ -257,7 +258,12 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		const startIds = state.ids;
 		const startValidation = state.validation;
 		const startIndex = mode.record ? dependencyIndex() : undefined;
-		const run = mode.record ? tracker.start(names, mode.exact === true) : undefined;
+		const run = mode.record
+			? tracker.start(
+					names?.map((name) => anchorOf(startIds, name)),
+					mode.exact === true,
+				)
+			: undefined;
 		if (mode.record) commit({ validating: state.validating + 1 });
 		const settleRun = (): void => {
 			if (!run) return;
@@ -289,9 +295,16 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			const current = now(path);
 			return current === undefined || !Object.is(readAt(state.values, current), readAt(startValues, path));
 		};
+		const readsChanged = (watched: string, path: string): boolean => {
+			const dependent = anchorOf(startIds, path);
+			const read = anchorOf(startIds, watched);
+			const sharedRows = new Map([...read.rows].filter(([position, id]) => dependent.rows.get(position) === id));
+			const current = resolveAnchor({ path: watched, rows: sharedRows }, state.ids);
+			return current === undefined || !Object.is(readAt(state.values, current), readAt(startValues, watched));
+		};
 		const dependencyChanged = (path: string): boolean =>
 			startIndex.watched.some(
-				(watched) => startIndex.dependentsOf(watched).includes(path) && movedSince(watched),
+				(watched) => startIndex.dependentsOf(watched).includes(path) && readsChanged(watched, path),
 			);
 		const lostContainer = (path: string): boolean =>
 			path
@@ -309,7 +322,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			current === undefined ||
 			lostContainer(path) ||
 			movedSince(path) ||
-			tracker.superseded(run, current) ||
+			tracker.superseded(run, current, (anchor) => resolveAnchor(anchor, state.ids)) ||
 			dependencyChanged(path);
 		const decided = [
 			...new Set([...Object.keys(leaves(startValidation)).filter(inScope), ...Object.keys(flat)]),
@@ -318,7 +331,11 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			changedPaths(startValues, state.values).some(
 				(changed) => !names || names.some((name) => isWithin(changed, name) || isWithin(name, changed)),
 			) ||
-			startIndex.watched.some((watched) => movedSince(watched) && startIndex.dependentsOf(watched).some(inScope));
+			startIndex.watched.some(
+				(watched) =>
+					!Object.is(readAt(state.values, watched), readAt(startValues, watched)) &&
+					startIndex.dependentsOf(watched).some(inScope),
+			);
 		if (mode.retry && (scopeStale() || decided.some(({ path, current }) => stale(path, current)))) {
 			return batch(() => {
 				settleRun();
@@ -327,10 +344,14 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		}
 
 		let validation = state.validation;
-		for (const { path, current } of decided.toSorted(
+		const applicable = decided.filter(({ path, current }) => current !== undefined && !stale(path, current));
+		for (const { path, current } of applicable) {
+			if (flat[path] === undefined) validation = clearLeafAt(validation, current as string);
+		}
+		for (const { path, current } of applicable.toSorted(
 			(a, b) => b.path.split('.').length - a.path.split('.').length,
 		)) {
-			if (current !== undefined && !stale(path, current)) validation = setAt(validation, current, flat[path]);
+			if (flat[path] !== undefined) validation = setAt(validation, current as string, flat[path]);
 		}
 		let failed = state.failed;
 		if (mode.markFailed && !passed) {

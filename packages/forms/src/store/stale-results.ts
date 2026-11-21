@@ -1,3 +1,4 @@
+import type { RowAnchor } from './row-ids';
 import { isWithin } from './value-tree';
 
 /** One recorded validation, as the tracker sees it. */
@@ -11,30 +12,36 @@ export interface ValidationRun {
  *
  * @remarks
  * A result is superseded for a path when a validation that started later asked for that path, which is
- * "the latest requester wins", or when the form was reset after the run started. Values, dependencies
- * and rows are the store's to check, as it owns them.
+ * "the latest requester wins", or when the form was reset after the run started. What a validation asked
+ * for is kept as row anchors, and resolved against the rows as they are when the question is asked, so
+ * the answer follows rows that moved. Values, dependencies and rows are the store's to check.
  */
 export interface RunTracker {
-	start(scope: readonly string[] | undefined, exact: boolean): ValidationRun;
+	/** `scope` is what the run asked for, as anchors; `undefined` is the whole form. */
+	start(scope: readonly RowAnchor[] | undefined, exact: boolean): ValidationRun;
 	reset(): void;
 	finish(run: ValidationRun): void;
-	superseded(run: ValidationRun, path: string): boolean;
+	/** `resolve` finds the path an anchor has now, or `undefined` when its rows are gone. */
+	superseded(run: ValidationRun, path: string, resolve: (anchor: RowAnchor) => string | undefined): boolean;
+}
+
+interface Request {
+	readonly seq: number;
+	readonly scope: readonly RowAnchor[] | undefined;
+	readonly exact: boolean;
 }
 
 export function createRunTracker(): RunTracker {
 	let seq = 0;
 	let epoch = 0;
-	let allSeq = 0;
 	const pending = new Set<ValidationRun>();
-	const prefixSeq = new Map<string, number>();
-	const exactSeq = new Map<string, number>();
+	let requests: Request[] = [];
 
 	return {
 		start(scope, exact) {
 			const run = { seq: ++seq, epoch };
 			pending.add(run);
-			if (!scope) allSeq = run.seq;
-			else for (const name of scope) (exact ? exactSeq : prefixSeq).set(name, run.seq);
+			requests.push({ seq: run.seq, scope, exact });
 			return run;
 		},
 		reset() {
@@ -42,15 +49,18 @@ export function createRunTracker(): RunTracker {
 		},
 		finish(run) {
 			pending.delete(run);
-			if (pending.size === 0) {
-				prefixSeq.clear();
-				exactSeq.clear();
-			}
+			if (pending.size === 0) requests = [];
 		},
-		superseded(run, path) {
-			if (run.epoch !== epoch || allSeq > run.seq || (exactSeq.get(path) ?? 0) > run.seq) return true;
-			for (const [name, later] of prefixSeq) if (later > run.seq && isWithin(path, name)) return true;
-			return false;
+		superseded(run, path, resolve) {
+			if (run.epoch !== epoch) return true;
+			return requests.some((request) => {
+				if (request.seq <= run.seq) return false;
+				if (!request.scope) return true;
+				return request.scope.some((anchor) => {
+					const asked = resolve(anchor);
+					return asked !== undefined && (request.exact ? asked === path : isWithin(path, asked));
+				});
+			});
 		},
 	};
 }
