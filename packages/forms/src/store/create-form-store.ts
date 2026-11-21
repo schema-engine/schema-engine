@@ -235,10 +235,15 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		const passed = Object.keys(flat).length === 0;
 		if (!run) return passed;
 
+		const isContainer = (value: unknown): boolean => value !== null && typeof value === 'object';
 		const removedSince = (before: NullMap, path: string): boolean =>
 			path.split('.').some((_, depth, segments) => {
 				const ancestor = segments.slice(0, depth + 1).join('.');
-				return readAt(before, ancestor) !== undefined && readAt(state.values, ancestor) === undefined;
+				const was = readAt(before, ancestor);
+				const now = readAt(state.values, ancestor);
+				return depth === segments.length - 1
+					? was !== undefined && now === undefined
+					: isContainer(was) && !isContainer(now);
 			});
 		const stale = (path: string): boolean =>
 			removedSince(startValues, path) ||

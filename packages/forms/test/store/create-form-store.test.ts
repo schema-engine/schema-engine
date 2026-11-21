@@ -473,6 +473,34 @@ describe('createFormStore', () => {
 			expect(store.getSnapshot().errors).toEqual({});
 		});
 
+		test('a result below an object replaced by null meanwhile is dropped', async () => {
+			const store = createFormStore({
+				registry,
+				validationMode: 'onBlur',
+				elements: [
+					element(
+						{
+							$type: 'fieldset',
+							name: 'address',
+							elements: [
+								{
+									$type: 'input',
+									name: 'street',
+									rules: [{ type: 'required', message: 'Street is required' }],
+								},
+							],
+						},
+						'object',
+					),
+				],
+				defaultValues: { address: {} },
+			});
+			store.blur('address.street');
+			store.setValue('address', null);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(store.getSnapshot().errors).toEqual({});
+		});
+
 		test('required fields below a missing object are reported', async () => {
 			const store = createFormStore({
 				registry,
