@@ -279,7 +279,12 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			const value = depth === 0 ? state.values : readAt(state.values, above);
 			if (
 				Array.isArray(value) &&
-				!(String(Number(segment)) === segment && Number(segment) >= 0 && Number(segment) < value.length)
+				!(
+					Number.isInteger(Number(segment)) &&
+					String(Number(segment)) === segment &&
+					Number(segment) >= 0 &&
+					Number(segment) < value.length
+				)
 			) {
 				throw new Error(
 					`setErrors: '${path}' names row '${segment}' of '${above}', which has ${value.length} rows.`,
