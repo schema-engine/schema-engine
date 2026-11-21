@@ -37,15 +37,25 @@ export function selectFields(rowIds: readonly string[] | undefined): Array<{ id:
 	return fields;
 }
 
+const NO_ROW_IDS: readonly string[] = Object.freeze([]);
+const valuesByCommands = new WeakMap<FieldArrayCommands, WeakMap<readonly string[], FieldArrayValue>>();
+
 /**
  * Builds the React Hook Form style field array a binding hands to its widgets.
  *
  * @param rowIds - The ids of the array's rows, from `snapshot.rowIds[path]`.
  * @param commands - The container's commands for the array, from `fieldArray(path)`.
+ *
+ * @remarks Memoized by the commands and the row ids array, so the same object comes back until the rows change.
  */
 export function toFieldArrayValue(
 	rowIds: readonly string[] | undefined,
 	commands: FieldArrayCommands,
 ): FieldArrayValue {
-	return { fields: selectFields(rowIds), ...commands };
+	let byRows = valuesByCommands.get(commands);
+	if (!byRows) valuesByCommands.set(commands, (byRows = new WeakMap()));
+	const key = rowIds ?? NO_ROW_IDS;
+	let value = byRows.get(key);
+	if (!value) byRows.set(key, (value = { fields: selectFields(rowIds), ...commands }));
+	return value;
 }

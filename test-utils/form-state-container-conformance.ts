@@ -3,10 +3,16 @@ import * as z from 'zod/mini';
 import { markNormalizedElementConfig } from '../packages/forms/src/lib/normalized-form-config';
 import type { ElementConfig } from '../packages/forms/src/schemas/field-config';
 import { createDefaultValidationRegistry } from '../packages/forms/src/schemas/validation/validation-registry';
+import { logger } from '../packages/forms/src/lib/logger';
 import { toFieldArrayValue } from '../packages/forms/src/state-container/field-array';
-import { selectError, selectFieldState, selectValue } from '../packages/forms/src/state-container/selectors';
 import {
-	FORM_PATH,
+	selectError,
+	selectErrorsUnder,
+	selectFieldState,
+	selectValue,
+} from '../packages/forms/src/state-container/selectors';
+import {
+	FORM_ROOT,
 	type FormStateContainer,
 	type FormStateContainerFactory,
 	type FormStateContainerOptions,
@@ -85,6 +91,14 @@ function fixture(overrides: Partial<FormStateContainerOptions> = {}): Fixture {
 					rules: [{ type: 'required', message: 'Nickname is required' }],
 				}),
 				element({ $type: 'input', name: 'slug', rules: [{ type: 'gate' }] }),
+				element({
+					$type: 'input',
+					name: 'code',
+					rules: [
+						{ type: 'minLength', value: 5, message: 'Too short' },
+						{ type: 'pattern', value: '^\\d+$', message: 'Digits only' },
+					],
+				}),
 				element(
 					{
 						$type: 'fieldset',
@@ -146,6 +160,7 @@ function fixture(overrides: Partial<FormStateContainerOptions> = {}): Fixture {
 				name: 'Ada',
 				nickname: 'ada',
 				slug: 'free',
+				code: '12345',
 				address: { street: '1 Main', country: 'IT' },
 				contacts: [{ email: 'a@example.com' }, { email: 'b@example.com' }, { email: 'c@example.com' }],
 				invites: [{ code: 'one' }, { code: 'two' }],
@@ -301,7 +316,8 @@ const cases: FormStateContainerCase[] = [
 			store.blur('contacts.1.email');
 			store.setValue('address.street', '2 Side');
 			const { errors, touched, dirty, defaults } = store.getSnapshot();
-			expect(errors).toEqual({ 'contacts.1.email': error('one'), nickname: error('nick') });
+			expect(Object.keys(errors).toSorted()).toEqual(['contacts.1.email', 'nickname']);
+			expect(errors.nickname).toMatchObject({ message: 'nick', source: 'server' });
 			expect(touched).toEqual({ 'contacts.1.email': true });
 			expect(dirty).toEqual({ 'address.street': true });
 			expect(defaults.address).toEqual({ street: '1 Main', country: 'IT' });
@@ -332,8 +348,9 @@ const cases: FormStateContainerCase[] = [
 		name: 'an error about the form is its own entry and is no field error',
 		async run(createStore) {
 			const store = createStore(fixture().options);
-			store.setErrors('server', { [FORM_PATH]: error('Try again later') });
-			expect(errorsOf(store)).toEqual({ '': error('Try again later') });
+			store.setErrors('server', { [FORM_ROOT]: error('Try again later') });
+			expect(Object.keys(errorsOf(store))).toEqual([FORM_ROOT]);
+			expect(errorsOf(store)[FORM_ROOT]).toMatchObject({ message: 'Try again later' });
 			expect(store.getFieldState('name').error).toBeUndefined();
 			expect(store.getFieldState('contacts.0.email').invalid).toBe(false);
 			expect(store.getSnapshot().isValid).toBe(false);
@@ -350,7 +367,7 @@ const cases: FormStateContainerCase[] = [
 		run(createStore) {
 			const store = createStore(fixture().options);
 			store.setErrors('server', {
-				[FORM_PATH]: error('form'),
+				[FORM_ROOT]: error('form'),
 				contacts: error('array'),
 				'contacts.0': error('row'),
 				'contacts.0.email': error('field'),
@@ -389,8 +406,8 @@ const cases: FormStateContainerCase[] = [
 			store.setValue('name', 'Grace');
 			store.blur('name');
 			store.setErrors('server', { name: error('no') });
-			expect(store.getFieldState('name')).toEqual({
-				error: error('no'),
+			expect(store.getFieldState('name')).toMatchObject({
+				error: { message: 'no' },
 				invalid: true,
 				isTouched: true,
 				isDirty: true,
@@ -975,72 +992,232 @@ const cases: FormStateContainerCase[] = [
 		},
 	},
 	{
-		rule: 'error source precedence',
-		name: 'server beats the container validation, which beats native, whatever order they were set in',
+		rule: 'error sources',
+		name: 'lists the server, then each failed rule in rule order, then the native fact, and shows the first',
 		async run(createStore) {
 			const store = createStore(fixture().options);
-			store.setErrors('server', { name: error('Server says no') });
-			store.setErrors('native', { name: error('Fill in this field'), nickname: error('Native nick') });
-			expect(errorsOf(store).name?.message).toBe('Server says no');
-			expect(errorsOf(store).nickname?.message).toBe('Native nick');
+			store.setValue('code', 'ab');
+			store.setNativeValidity({ code: { type: 'patternMismatch', message: 'Match the format' } });
+			store.setErrors('server', { code: { message: 'Taken' } });
+			expect(await store.validate(['code'])).toBe(false);
+			const shown = errorsOf(store).code;
+			expect(shown.all).toEqual([
+				{ type: 'server', message: 'Taken', source: 'server' },
+				{ type: 'validation', message: 'Too short', source: 'validation' },
+				{ type: 'validation', message: 'Digits only', source: 'validation' },
+				{ type: 'patternMismatch', message: 'Match the format', source: 'native' },
+			]);
+			expect({ type: shown.type, message: shown.message, source: shown.source }).toEqual(shown.all[0]);
 
-			const other = createStore(fixture({ defaults: { name: '', nickname: '' } }).options);
-			await other.validate();
-			expect(errorsOf(other).name?.message).toBe('Name is required');
-			other.setErrors('native', { name: error('Fill in this field') });
-			expect(errorsOf(other).name?.message).toBe('Name is required');
-			other.setErrors('server', { name: error('Server says no') });
-			expect(errorsOf(other).name?.message).toBe('Server says no');
-			other.setErrors('server', {});
-			expect(errorsOf(other).name?.message).toBe('Name is required');
+			store.setErrors('server', {});
+			const withoutServer = errorsOf(store).code;
+			expect(withoutServer.message).toBe('Too short');
+			expect(withoutServer.all).toHaveLength(3);
 		},
 	},
 	{
-		rule: 'error source precedence',
-		name: 'validate resolves false while an error from any source remains at the validated paths',
+		rule: 'error sources',
+		name: 'native validity is an input to validation: it shows with the timing of validation, and notifies nobody alone',
+		async run(createStore) {
+			const store = createStore(fixture({ validationMode: 'onSubmit' }).options);
+			const listener = vi.fn();
+			store.subscribe(listener);
+			store.setNativeValidity({ name: { type: 'valueMissing', message: 'Fill in this field' } });
+			expect(listener).not.toHaveBeenCalled();
+			expect(errorsOf(store)).toEqual({});
+			expect(await store.validate(['name'])).toBe(false);
+			expect(errorsOf(store).name).toMatchObject({
+				source: 'native',
+				type: 'valueMissing',
+				message: 'Fill in this field',
+			});
+
+			store.setNativeValidity({});
+			expect(errorsOf(store).name).toBeDefined();
+			expect(await store.validate(['name'])).toBe(true);
+			expect(errorsOf(store)).toEqual({});
+
+			const onChange = createStore(fixture({ validationMode: 'onChange' }).options);
+			onChange.setNativeValidity({ nickname: { type: 'valueMissing', message: 'Fill in this field' } });
+			onChange.setValue('nickname', 'nick');
+			await vi.waitFor(() => expect(errorsOf(onChange).nickname?.source).toBe('native'));
+			expect(errorsOf(onChange).nickname.message).toBe('Fill in this field');
+		},
+	},
+	{
+		rule: 'error sources',
+		name: 'validate and checkValidity count native facts and server errors alike, and checkValidity writes nothing',
 		async run(createStore) {
 			const store = createStore(fixture().options);
-			store.setErrors('native', { name: error('Fill in this field') });
-			expect(await store.validate(['name'])).toBe(false);
-			expect(await store.validate(['nickname'])).toBe(true);
+			store.setNativeValidity({ name: { type: 'valueMissing' } });
+			const before = store.getSnapshot();
+			expect(await store.checkValidity(['name'])).toBe(false);
+			expect(await store.checkValidity(['nickname'])).toBe(true);
+			expect(await store.checkValidity()).toBe(false);
+			expect(store.getSnapshot()).toBe(before);
 			expect(await store.validate()).toBe(false);
-			store.setErrors('native', {});
+			store.setNativeValidity({});
+			expect(await store.checkValidity()).toBe(true);
 			expect(await store.validate()).toBe(true);
+
+			store.setErrors('server', { name: { message: 'Taken' } });
+			expect(await store.checkValidity()).toBe(false);
+			expect(await store.validate()).toBe(false);
 		},
 	},
 	{
-		rule: 'error source precedence',
+		rule: 'error sources',
+		name: 'a cleared server source lets validate pass, and the form-level error alone blocks it',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('server', { [FORM_ROOT]: { message: 'Service unavailable' } });
+			expect(await store.validate()).toBe(false);
+			expect(await store.validate(['name'])).toBe(true);
+			store.setErrors('server', {});
+			expect(await store.validate()).toBe(true);
+			expect(errorsOf(store)).toEqual({});
+		},
+	},
+	{
+		rule: 'error sources',
 		name: 'a source may give a type or a message or neither, and the error still counts',
 		async run(createStore) {
 			const store = createStore(fixture().options);
 			store.setErrors('server', {
 				name: { message: 'Taken' },
 				nickname: {},
-				'address.street': { type: 'native' },
+				'address.street': { type: 'taken' },
 			});
 			const { errors } = store.getSnapshot();
-			expect(errors.name).toEqual({ type: 'server', message: 'Taken' });
-			expect(errors.nickname).toEqual({ type: 'server', message: '' });
-			expect(errors['address.street']).toEqual({ type: 'native', message: '' });
+			expect(errors.name).toMatchObject({ type: 'server', message: 'Taken', source: 'server' });
+			expect(errors.nickname).toMatchObject({ type: 'server', message: '' });
+			expect(errors['address.street']).toMatchObject({ type: 'taken', message: '' });
 			expect(await store.validate(['nickname'])).toBe(false);
 		},
 	},
 	{
-		rule: 'error source precedence',
-		name: 'checkValidity counts every source like validate does, without writing',
-		async run(createStore) {
+		rule: 'error sources',
+		name: 'identical errors change nothing and keep their objects, and a changed one replaces only its own',
+		run(createStore) {
 			const store = createStore(fixture().options);
-			store.setErrors('native', { name: error('Fill in this field') });
+			store.setErrors('server', { name: { message: 'Taken' }, nickname: { message: 'Taken' } });
 			const before = store.getSnapshot();
-			expect(await store.checkValidity(['name'])).toBe(false);
-			expect(await store.checkValidity(['nickname'])).toBe(true);
-			expect(await store.checkValidity()).toBe(false);
-			store.setErrors('native', {});
-			expect(await store.checkValidity()).toBe(true);
-			store.setValue('name', '');
-			expect(await store.checkValidity()).toBe(false);
+			const listener = vi.fn();
+			store.subscribe(listener);
+			store.setErrors('server', { name: { message: 'Taken' }, nickname: { message: 'Taken' } });
+			expect(listener).not.toHaveBeenCalled();
+			expect(store.getSnapshot()).toBe(before);
+
+			store.setErrors('server', { name: { message: 'Taken' }, nickname: { message: 'Other' } });
+			const after = store.getSnapshot();
+			expect(after.errors.name).toBe(before.errors.name);
+			expect(after.errors.nickname).not.toBe(before.errors.nickname);
+			expect(selectFieldState(after, 'name')).toBe(selectFieldState(before, 'name'));
+		},
+	},
+	{
+		rule: 'error sources',
+		name: 'a validation that finds the same thing again keeps its error objects, and reset clears native facts',
+		async run(createStore) {
+			const store = createStore(fixture({ defaults: { name: '' } }).options);
+			await store.validate(['name']);
+			const first = store.getSnapshot();
+			await store.validate(['name']);
+			expect(store.getSnapshot().errors.name).toBe(first.errors.name);
+			expect(selectFieldState(store.getSnapshot(), 'name')).toBe(selectFieldState(first, 'name'));
+
+			store.setNativeValidity({ nickname: { type: 'valueMissing' } });
+			store.reset();
+			expect(await store.validate()).toBe(false);
+			expect(errorsOf(store).nickname.all.map(({ source }) => source)).toEqual(['validation']);
+		},
+	},
+	{
+		rule: 'error sources',
+		name: 'selectErrorsUnder lists the errors at and below a path, and keeps its object while they are unchanged',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('server', {
+				contacts: { message: 'few' },
+				'contacts.1.email': { message: 'row' },
+				name: { message: 'n' },
+			});
+			const before = store.getSnapshot();
+			expect(Object.keys(selectErrorsUnder(before, 'contacts')).toSorted()).toEqual([
+				'contacts',
+				'contacts.1.email',
+			]);
+			expect(Object.keys(selectErrorsUnder(before, 'contacts.1'))).toEqual(['contacts.1.email']);
+			expect(selectErrorsUnder(before, 'address')).toEqual({});
+			expect(selectErrorsUnder(before, 'contacts')).toBe(selectErrorsUnder(before, 'contacts'));
+			store.blur('address');
+			expect(selectErrorsUnder(store.getSnapshot(), 'contacts')).toBe(selectErrorsUnder(before, 'contacts'));
+		},
+	},
+	{
+		rule: 'array reindexing',
+		name: 'toFieldArrayValue gives the same object while the rows are the same, and the commands are one object per path',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			const commands = store.fieldArray('contacts');
+			expect(store.fieldArray('contacts')).toBe(commands);
+			const rows = store.getSnapshot().rowIds.contacts;
+			expect(toFieldArrayValue(rows, commands)).toBe(toFieldArrayValue(rows, commands));
+			store.setValue('name', 'Grace');
+			expect(toFieldArrayValue(store.getSnapshot().rowIds.contacts, commands)).toBe(
+				toFieldArrayValue(rows, commands),
+			);
+			commands.append({ email: 'x@example.com' });
+			expect(toFieldArrayValue(store.getSnapshot().rowIds.contacts, commands)).not.toBe(
+				toFieldArrayValue(rows, commands),
+			);
+		},
+	},
+	{
+		rule: 'array reindexing',
+		name: 'warns when given row ids that do not match the rows, and keeps the ones it minted',
+		run(createStore) {
+			const warn = vi.spyOn(logger, 'warn').mockReturnThis();
+			try {
+				const store = createStore(
+					fixture({ rowIds: { contacts: ['a', 'b'], name: ['x'], invites: ['k', 'k'] } }).options,
+				);
+				expect(warn).toHaveBeenCalledTimes(3);
+				expect(ids(store)).toHaveLength(3);
+				expect(ids(store)).not.toContain('a');
+			} finally {
+				warn.mockRestore();
+			}
+		},
+	},
+	{
+		rule: 'error sources',
+		name: 'refuses a source a host cannot set, a reserved path, and a row that does not exist',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			const values = store.getSnapshot().values;
+			// @ts-expect-error only the server source can be set by a host
+			expect(() => store.setErrors('values', {})).toThrow(/Unknown error source 'values'/);
+			// @ts-expect-error only the server source can be set by a host
+			expect(() => store.setErrors('native', {})).toThrow(/Unknown error source 'native'/);
+			expect(store.getSnapshot().values).toBe(values);
+			expect(() => store.setErrors('server', { __secret: { message: 'x' } })).toThrow(
+				/reserved segment '__secret'/,
+			);
+			expect(() => store.setErrors('server', { 'contacts.__proto__.email': { message: 'x' } })).toThrow(
+				/reserved/,
+			);
+			expect(() => store.blur(FORM_ROOT)).toThrow(/reserved/);
+			expect(() => store.setNativeValidity({ __x: { type: 'valueMissing' } })).toThrow(/reserved/);
+			expect(() => store.setErrors('server', { 'contacts.4.email': { message: 'bounced' } })).toThrow(
+				/'contacts.4.email' names row '4' of 'contacts', which has 3 rows/,
+			);
+			expect(() => store.setErrors('server', { 'contacts.x': { message: 'x' } })).toThrow(/names row 'x'/);
 			expect(store.getSnapshot().errors).toEqual({});
-			expect(before.errors).toEqual({ name: error('Fill in this field') });
+			expect(() =>
+				store.setErrors('server', { 'nothing.here': { message: 'fine' }, [FORM_ROOT]: { message: 'form' } }),
+			).not.toThrow();
+			expect(Object.keys(errorsOf(store)).toSorted()).toEqual([FORM_ROOT, 'nothing.here']);
 		},
 	},
 	{
@@ -1138,7 +1315,7 @@ const cases: FormStateContainerCase[] = [
 			store.reset();
 			const watch = watchValidation(store);
 			gate.settle('taken', false);
-			await run;
+			expect(await run).toBe(false);
 			expect(watch.started).toBe(false);
 			expect(gate.pending('taken')).toBe(0);
 			expect(errorsOf(store)).toEqual({});

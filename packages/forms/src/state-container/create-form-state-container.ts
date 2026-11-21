@@ -1,7 +1,9 @@
 import { validateFormValues } from '@/engine/value-validation';
 import { createDebounceScope } from '@/lib/debounce';
 import { resolveFieldRef } from '@/lib/field-ref';
+import { logger } from '@/lib/logger';
 import { getValueAtPath } from '@/lib/path-values';
+import { isReservedPathKey } from '@/lib/reserved-path-keys';
 import {
 	buildDependencyIndex,
 	shouldSurfaceDependentError,
@@ -22,17 +24,21 @@ import {
 	fromEntries,
 	markAt,
 	reorderAt,
+	selfAt,
 	setSelfAt,
 	stable,
 	type IsArrayAt,
 	type Tree,
 } from './state-tree';
-import type {
-	FormErrorSource,
-	FormStateContainer,
-	FormStateContainerOptions,
-	FormStateError,
-	FormStateSnapshot,
+import {
+	FORM_ROOT,
+	type FormErrorSource,
+	type FormStateContainer,
+	type FormStateContainerOptions,
+	type FormStateError,
+	type FormStateIssue,
+	type FormStateSnapshot,
+	type NativeValidity,
 } from './types';
 import {
 	changedPaths,
@@ -59,15 +65,18 @@ import {
 interface State {
 	readonly values: NullMap;
 	readonly defaults: NullMap;
-	readonly validation: Tree<FormStateError>;
-	readonly native: Tree<FormStateError>;
-	readonly server: Tree<FormStateError>;
+	readonly validation: Tree<Issues>;
+	readonly server: Tree<Issues>;
+	readonly native: Readonly<Record<string, NativeValidity>>;
 	readonly touched: Tree<true>;
 	readonly failed: Tree<true>;
 	readonly dirty: Tree<true>;
 	readonly ids: IdTree | undefined;
 	readonly validating: number;
 }
+
+/** The issues of one path in one source. */
+type Issues = readonly FormStateIssue[];
 
 /** A row while an operation rebuilds an array: where it was, and what it is now. */
 interface RowEntry {
@@ -76,12 +85,46 @@ interface RowEntry {
 	readonly node: RowNode;
 }
 
-const EXPLICIT_SOURCES = ['native', 'server'] as const satisfies readonly FormErrorSource[];
+const HOST_SOURCES: readonly string[] = ['server'] satisfies readonly FormErrorSource[];
+const NO_NATIVE: Readonly<Record<string, NativeValidity>> = Object.freeze({});
 const readAt = (root: NullMap, path: string): unknown => getValueAtPath(root, path);
 const isRow = (index: number, length: number): boolean => Number.isInteger(index) && index >= 0 && index < length;
 const asRows = (value: unknown): unknown[] => (Array.isArray(value) ? value : [value]);
-const freezeError = (error: { type?: string; message?: string }, source: string): FormStateError =>
-	Object.freeze({ type: error.type ?? source, message: error.message ?? '' });
+const issue = (type: string, message: string, source: FormStateIssue['source']): FormStateIssue =>
+	Object.freeze({ type, message, source });
+
+/** The previous issues when `next` says the same, so an unchanged path keeps its objects. */
+const reuseIssues = (previous: Issues | undefined, next: Issues): Issues =>
+	previous &&
+	previous.length === next.length &&
+	previous.every((known, index) => {
+		const candidate = next[index];
+		return (
+			known.type === candidate.type && known.message === candidate.message && known.source === candidate.source
+		);
+	})
+		? previous
+		: Object.freeze([...next]);
+
+/** The error a list of issues makes, reusing `previous` when nothing in it changed. */
+function errorOf(issues: Issues, previous: FormStateError | undefined): FormStateError {
+	if (
+		previous &&
+		previous.all.length === issues.length &&
+		previous.all.every(
+			(known, index) =>
+				known.type === issues[index].type &&
+				known.message === issues[index].message &&
+				known.source === issues[index].source,
+		)
+	) {
+		return previous;
+	}
+	return Object.freeze({ ...issues[0], all: Object.freeze([...issues]) });
+}
+
+const internalPath = (path: string): string => (path === FORM_ROOT ? '' : path);
+const publicPath = (path: string): string => (path === '' ? FORM_ROOT : path);
 
 /**
  * Creates the engine's reference {@link FormStateContainer}: framework-free, with the engine's validation.
@@ -116,8 +159,8 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		values: initialDefaults,
 		defaults: initialDefaults,
 		validation: undefined,
-		native: undefined,
 		server: undefined,
+		native: NO_NATIVE,
 		touched: undefined,
 		failed: undefined,
 		dirty: undefined,
@@ -130,8 +173,20 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 
 	function adoptAt(ids: IdTree | undefined, path: string, adopted: readonly string[]): IdTree | undefined {
 		const rows = idsAt(ids, path);
-		if (!Array.isArray(rows) || rows.length !== adopted.length || new Set(adopted).size !== adopted.length)
+		if (!Array.isArray(rows)) {
+			logger.warn(`Row ids were given for '${path}', which is not an array in the defaults; they were ignored.`);
 			return ids;
+		}
+		if (rows.length !== adopted.length) {
+			logger.warn(
+				`Row ids were given for '${path}' for ${adopted.length} rows, but it has ${rows.length}; the ids the container minted stay.`,
+			);
+			return ids;
+		}
+		if (new Set(adopted).size !== adopted.length) {
+			logger.warn(`Row ids given for '${path}' are not unique; the ids the container minted stay.`);
+			return ids;
+		}
 		for (const id of adopted) adoptedIds.add(id);
 		return replaceIdsAt(
 			ids,
@@ -151,30 +206,22 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			.reduce((current, path) => adoptAt(current, path, adopted[path]), ids);
 	}
 
-	let errorsFor:
-		| {
-				validation: Tree<FormStateError>;
-				native: Tree<FormStateError>;
-				server: Tree<FormStateError>;
-				flat: NullMap<FormStateError>;
-		  }
-		| undefined;
-	/** The error shown per path: `server` over the container's `validation` over `native`. */
+	let errorsFor: { validation: Tree<Issues>; server: Tree<Issues>; flat: NullMap<FormStateError> } | undefined;
+	/** The error of each path: what the server said, then the container's validation, the first shown. */
 	function effectiveErrors(current: State): NullMap<FormStateError> {
-		if (
-			errorsFor &&
-			errorsFor.validation === current.validation &&
-			errorsFor.native === current.native &&
-			errorsFor.server === current.server
-		) {
+		if (errorsFor && errorsFor.validation === current.validation && errorsFor.server === current.server) {
 			return errorsFor.flat;
 		}
+		const found = createMap<FormStateIssue[]>();
+		for (const tree of [current.server, current.validation]) {
+			for (const [path, issues] of entries(tree)) (found[publicPath(path)] ??= []).push(...issues);
+		}
 		const merged = createMap<FormStateError>();
-		for (const tree of [current.native, current.validation, current.server]) {
-			for (const [path, error] of entries(tree)) merged[path] = error;
+		for (const [path, issues] of Object.entries(found)) {
+			merged[path] = errorOf(issues, errorsFor?.flat[path]);
 		}
 		const flat = stabilize(errorsFor?.flat ?? createMap<FormStateError>(), merged);
-		errorsFor = { validation: current.validation, native: current.native, server: current.server, flat };
+		errorsFor = { validation: current.validation, server: current.server, flat };
 		return flat;
 	}
 
@@ -213,6 +260,30 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 
 	let snapshot = toSnapshot(state);
 	const serverSnapshot = snapshot;
+
+	/** Rejects a path whose segment the engine reserves, as no field can be named that. */
+	function assertFieldPath(path: string, command: string): void {
+		const reserved = path.split('.').find(isReservedPathKey);
+		if (reserved !== undefined) {
+			throw new Error(
+				`${command}: '${path}' has the reserved segment '${reserved}'; segments cannot start with '__'.`,
+			);
+		}
+	}
+
+	/** Rejects a path that names a row its array does not have; a path below an absent object is allowed. */
+	function assertRowsExist(path: string): void {
+		const segments = internalPath(path).split('.').filter(Boolean);
+		segments.forEach((segment, depth) => {
+			const above = segments.slice(0, depth).join('.');
+			const value = depth === 0 ? state.values : readAt(state.values, above);
+			if (Array.isArray(value) && !(Number.isInteger(Number(segment)) && Number(segment) < value.length)) {
+				throw new Error(
+					`setErrors: '${path}' names row '${segment}' of '${above}', which has ${value.length} rows.`,
+				);
+			}
+		});
+	}
 
 	let batchDepth = 0;
 	let notifyAfterBatch = false;
@@ -267,9 +338,9 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return isFailed(path) ? reValidateMode === target : validationMode === 'all' || validationMode === target;
 	}
 
-	/** The errors hosts set, which a silent check counts as well. */
-	function explicitErrorPaths(): string[] {
-		return EXPLICIT_SOURCES.flatMap((source) => entries(state[source]).map(([path]) => path));
+	/** The errors a host set, which a silent check counts as well. */
+	function hostErrorPaths(): string[] {
+		return entries(state.server).map(([path]) => publicPath(path));
 	}
 
 	interface ValidationMode {
@@ -291,7 +362,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	 * again through the ids of the rows it ran through, so a result for a row that moved lands on that
 	 * row, and one for a row that is gone is dropped. It is also dropped for a path when that path's value
 	 * was written while it ran, a value a rule of the path reads changed, or a validation that started later
-	 * asked for the path. A reset drops the whole result, and nothing is run again. When part of a result
+	 * asked for the path. A reset drops the whole result, nothing is run again, and the call resolves `false`. When part of a result
 	 * is dropped otherwise, an explicit validation runs once more and resolves with the validity of the
 	 * current state; a silent check writes nothing.
 	 */
@@ -300,6 +371,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		const startValues = state.values;
 		const startIds = state.ids;
 		const startValidation = state.validation;
+		const startNative = state.native;
 		const startIndex = mode.record ? dependencyIndex() : undefined;
 		const run = mode.record
 			? tracker.start(
@@ -329,13 +401,18 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		}
 		const inScope = (path: string): boolean =>
 			!names || (mode.exact ? names.includes(path) : names.some((name) => isWithin(path, name)));
-		const flat = createMap<FormStateError>();
-		for (const [path, error] of Object.entries(found)) flat[path] = freezeError(error, 'validation');
+		const flat = createMap<Issues>();
+		for (const [path, error] of Object.entries(found)) {
+			flat[path] = error.all.map((rule) => issue(rule.type, rule.message, 'validation'));
+		}
+		for (const [path, fact] of Object.entries(startNative)) {
+			if (inScope(path)) flat[path] = [...(flat[path] ?? []), issue(fact.type, fact.message ?? '', 'native')];
+		}
 		const passed = Object.keys(flat).length === 0;
-		if (!run || !startIndex) return passed && !explicitErrorPaths().some(inScope);
+		if (!run || !startIndex) return passed && !hostErrorPaths().some(inScope);
 		if (tracker.outdated(run)) {
 			settleRun();
-			return passed;
+			return false;
 		}
 
 		const now = (path: string): string | undefined => resolveAnchor(anchorOf(startIds, path), state.ids);
@@ -397,7 +474,13 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		let validation = state.validation;
 		for (const { path, current } of decided) {
 			if (current !== undefined && !stale(path, current)) {
-				validation = setSelfAt(validation, current, flat[path], isArrayAt);
+				const issues = flat[path] as Issues | undefined;
+				validation = setSelfAt(
+					validation,
+					current,
+					issues && reuseIssues(selfAt(validation, current), issues),
+					isArrayAt,
+				);
 			}
 		}
 		let failed = state.failed;
@@ -473,12 +556,9 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	}
 
 	/** What a host set no longer describes the value at `path`, or the paths around it, once it changed. */
-	function dropHostErrors(path: string, includeBelow: boolean): Pick<State, 'native' | 'server'> {
-		const drop = (tree: Tree<FormStateError>) => {
-			const around = clearAround(tree, path);
-			return includeBelow ? clearAt(around, path) : clearSelfAt(around, path);
-		};
-		return { native: drop(state.native), server: drop(state.server) };
+	function dropHostErrors(path: string, includeBelow: boolean): Tree<Issues> {
+		const around = clearAround(state.server, path);
+		return includeBelow ? clearAt(around, path) : clearSelfAt(around, path);
 	}
 
 	function setValue(path: string, value: unknown): void {
@@ -492,7 +572,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			commit({
 				values,
 				ids: replaceIdsAt(state.ids, root, idsRoot),
-				...dropHostErrors(path, true),
+				server: dropHostErrors(path, true),
 				validation: conformAt(state.validation, path, branch),
 				touched: conformAt(state.touched, path, branch),
 				failed: conformAt(state.failed, path, branch),
@@ -540,14 +620,12 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			path,
 			rows.map((row) => row.node),
 		);
-		const spliced = (tree: Tree<FormStateError>) => reorderAt(tree, path, order);
-		const hostErrors = dropHostErrors(path, false);
+		const spliced = (tree: Tree<Issues>) => reorderAt(tree, path, order);
 		batch(() => {
 			commit({
 				values,
 				ids: replaceIdsAt(placed, root, syncIds(idsAt(placed, root), readAt(values, root), mintId)),
-				native: spliced(hostErrors.native),
-				server: spliced(hostErrors.server),
+				server: spliced(dropHostErrors(path, false)),
 				validation: spliced(state.validation),
 				touched: reorderAt(state.touched, path, order),
 				failed: reorderAt(state.failed, path, order),
@@ -626,6 +704,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		setValue,
 		blur: (path) =>
 			batch(() => {
+				assertFieldPath(path, 'blur');
 				if (!isTouched(path)) commit({ touched: markAt(state.touched, path, isArrayAt) });
 				if (validatesOn('blur', path)) {
 					void runValidation([path], { record: true, markFailed: false }).catch(() => undefined);
@@ -638,8 +717,8 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				values: defaults,
 				defaults,
 				validation: undefined,
-				native: undefined,
 				server: undefined,
+				native: NO_NATIVE,
 				touched: undefined,
 				failed: undefined,
 				ids: syncIds(undefined, defaults, mintId),
@@ -648,12 +727,31 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		validate: (paths) => runValidation(paths, { record: true, markFailed: true, retry: true }),
 		checkValidity: (paths) => runValidation(paths, { record: false, markFailed: false }),
 		setErrors(source, errors) {
-			commit({
-				[source]: fromEntries(
-					Object.entries(errors).map(([path, error]) => [path, freezeError(error, source)] as const),
-					isArrayAt,
-				),
+			if (!HOST_SOURCES.includes(source)) {
+				throw new Error(`Unknown error source '${String(source)}': a host sets ${HOST_SOURCES.join(', ')}.`);
+			}
+			const known = state.server;
+			const marks = Object.entries(errors).map(([path, input]): [string, Issues] => {
+				const where = internalPath(path);
+				if (path !== FORM_ROOT) assertFieldPath(path, 'setErrors');
+				assertRowsExist(path);
+				return [
+					where,
+					reuseIssues(selfAt(known, where), [issue(input.type ?? source, input.message ?? '', source)]),
+				];
 			});
+			commit({ server: stable(known, fromEntries(marks, isArrayAt)) });
+		},
+		setNativeValidity(validity) {
+			const facts = createMap<NativeValidity>();
+			for (const [path, fact] of Object.entries(validity)) {
+				assertFieldPath(path, 'setNativeValidity');
+				facts[path] = Object.freeze({
+					type: fact.type,
+					...(fact.message === undefined ? {} : { message: fact.message }),
+				});
+			}
+			state = { ...state, native: Object.freeze(facts) };
 		},
 		fieldArray,
 	};

@@ -2,7 +2,12 @@ import { describe, expect, test } from 'vitest';
 import { formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
-import type { FormStateContainer, FormStateContainerFactory, FormStateSnapshot } from '@/state-container/types';
+import {
+	FORM_ROOT,
+	type FormStateContainer,
+	type FormStateContainerFactory,
+	type FormStateSnapshot,
+} from '@/state-container/types';
 
 const withOverrides =
 	(
@@ -155,7 +160,7 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 			getFieldState: (path) => {
 				const state = inner.getFieldState(path);
 				const around = Object.keys(inner.getSnapshot().errors).find(
-					(key) => key === '' || path.startsWith(`${key}.`),
+					(key) => key === FORM_ROOT || path.startsWith(`${key}.`),
 				);
 				const error = state.error ?? (around === undefined ? undefined : inner.getSnapshot().errors[around]);
 				return { ...state, error, invalid: error !== undefined };
@@ -195,15 +200,40 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 		caught: ['swap moves rows with their ids, errors and touched state in one update'],
 	},
 	{
-		name: 'lets native beat the container validation',
-		create: (options) => {
-			const inner = createFormStateContainer(options);
-			return {
-				...inner,
-				setErrors: (source, errors) => inner.setErrors(source === 'native' ? 'server' : 'native', errors),
-			};
-		},
-		caught: ['server beats the container validation, which beats native, whatever order they were set in'],
+		name: 'ignores what the platform reports about a control',
+		create: withOverrides(() => ({ setNativeValidity: () => undefined })),
+		caught: [
+			'native validity is an input to validation: it shows with the timing of validation, and notifies nobody alone',
+			'lists the server, then each failed rule in rule order, then the native fact, and shows the first',
+		],
+	},
+	{
+		name: 'keeps only the first failed rule of a field',
+		create: withOverrides((inner) => ({
+			getSnapshot: () => {
+				const snapshot = inner.getSnapshot();
+				return {
+					...snapshot,
+					errors: Object.fromEntries(
+						Object.entries(snapshot.errors).map(([path, error]) => [
+							path,
+							{ ...error, all: error.all.slice(0, 1) },
+						]),
+					),
+				};
+			},
+		})),
+		caught: ['lists the server, then each failed rule in rule order, then the native fact, and shows the first'],
+	},
+	{
+		name: 'clears and rewrites a source on every write, even an identical one',
+		create: withOverrides((inner) => ({
+			setErrors: (source, errors) => {
+				inner.setErrors(source, {});
+				inner.setErrors(source, errors);
+			},
+		})),
+		caught: ['identical errors change nothing and keep their objects, and a changed one replaces only its own'],
 	},
 ];
 
