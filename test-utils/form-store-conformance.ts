@@ -573,6 +573,24 @@ const cases: FormStoreCase[] = [
 	},
 	{
 		rule: 'touched and dirty',
+		name: 'reset without values restores the defaults and clears every source of state',
+		async run(createStore) {
+			const store = createStore(fixture({ validationMode: 'onSubmit' }).options);
+			store.setValue('name', '');
+			store.blur('name');
+			store.setErrors('server', { nickname: error('no') });
+			expect(await store.validate()).toBe(false);
+			store.reset();
+			const snapshot = store.getSnapshot();
+			expect(snapshot.values.name).toBe('Ada');
+			expect(snapshot.errors).toEqual({});
+			expect(snapshot.touched).toEqual({});
+			expect(snapshot.dirty).toEqual({});
+			expect(snapshot.checkFailed).toBe(false);
+		},
+	},
+	{
+		rule: 'touched and dirty',
 		name: 'reset with values makes them the new defaults',
 		run(createStore) {
 			const store = createStore(fixture().options);
@@ -772,6 +790,37 @@ const cases: FormStoreCase[] = [
 			expect(errorsOf(store).name?.message).toBe('Host says no');
 			store.setErrors('host', {});
 			expect(errorsOf(store).name?.message).toBe('Name is required');
+		},
+	},
+	{
+		rule: 'error source precedence',
+		name: 'validate resolves false while an error from any source remains at the validated paths',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('native', { name: error('Fill in this field') });
+			expect(await store.validate(['name'])).toBe(false);
+			expect(store.getSnapshot().checkFailed).toBe(false);
+			expect(await store.validate(['nickname'])).toBe(true);
+			expect(await store.validate()).toBe(false);
+			store.setErrors('native', {});
+			expect(await store.validate()).toBe(true);
+		},
+	},
+	{
+		rule: 'error source precedence',
+		name: 'a source may give a type or a message or neither, and the error still counts',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('server', {
+				name: { message: 'Taken' },
+				nickname: {},
+				'address.street': { type: 'native' },
+			});
+			const { errors } = store.getSnapshot();
+			expect(errors.name).toEqual({ type: 'server', message: 'Taken' });
+			expect(errors.nickname).toEqual({ type: 'server', message: '' });
+			expect(errors['address.street']).toEqual({ type: 'native', message: '' });
+			expect(await store.validate(['nickname'])).toBe(false);
 		},
 	},
 	{

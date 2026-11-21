@@ -282,7 +282,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			failedScopes: failedScopes.length === state.failedScopes.length ? state.failedScopes : failedScopes,
 			validating: state.validating - 1,
 		});
-		return passed;
+		return passed && !Object.keys(mergedErrors(state)).some(inScope);
 	}
 
 	let cachedIndex: { rowIds: State['rowIds']; shape: string; index: DependencyIndex } | undefined;
@@ -529,7 +529,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			if (entries.length > 0) {
 				const map = createMap<FormStoreError>();
 				for (const [path, error] of entries)
-					map[path] = Object.freeze({ type: error.type, message: error.message });
+					map[path] = Object.freeze({ type: error.type ?? source, message: error.message ?? '' });
 				sources.set(source, map);
 			}
 			commit({ sources });

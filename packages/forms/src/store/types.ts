@@ -28,6 +28,20 @@ export interface FormStoreError {
 }
 
 /**
+ * An error as a caller of {@link FormStore.setErrors} may give it.
+ *
+ * @remarks
+ * Both parts are optional, as a native control's validity or a server response may carry only one. The
+ * store keeps a missing `type` as the name of the source and a missing `message` as an empty string, so
+ * an error is always a whole {@link FormStoreError} and `undefined` never reaches a field. An error
+ * with an empty message still blocks {@link FormStore.validate}; showing it is the host's choice.
+ */
+export interface FormStoreErrorInput {
+	readonly type?: string;
+	readonly message?: string;
+}
+
+/**
  * Who wrote an error.
  *
  * @remarks
@@ -102,8 +116,10 @@ export interface FormStore {
 	 * Validates `paths` (the whole form when omitted, nothing when empty), records the errors and resolves whether it passed.
 	 *
 	 * @remarks
-	 * A failure starts the failed-check state for those paths, so they re-validate by `reValidateMode`
-	 * from then on. It does not mark anything submitted or touched.
+	 * It resolves `false` while any error, from any source, remains at the validated paths after the run,
+	 * so a server or native error blocks it. A failure of its own validation starts the failed-check state
+	 * for those paths, so they re-validate by `reValidateMode` from then on. It does not mark anything
+	 * submitted or touched.
 	 */
 	validate(paths?: readonly string[]): Promise<boolean>;
 	/** Whether `paths` (the whole form when omitted) is valid. Writes no error and changes no state. */
@@ -115,7 +131,7 @@ export interface FormStore {
 	 * Where several sources report an error for one path, the source set most recently wins, and the
 	 * store's own `validation` source loses to every other. `validation` cannot be written here.
 	 */
-	setErrors(source: FormErrorSource, errors: Readonly<Record<string, FormStoreError>>): void;
+	setErrors(source: FormErrorSource, errors: Readonly<Record<string, FormStoreErrorInput>>): void;
 	/** The row operations of the array at `path`, with the semantics of {@link FieldArrayValue}. */
 	fieldArray(path: string): FieldArrayValue;
 	/**

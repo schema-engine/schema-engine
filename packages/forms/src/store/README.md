@@ -24,6 +24,9 @@ published is the smallest contract that works for both.
 - `setValue` replaces the whole branch.
 - Where several sources set an error for a path, the source set most recently wins and the store's own
   `validation` source loses to all of them. Editing a path drops the explicit-source errors at and below it.
+- `setErrors` takes errors with an optional `type` and `message`: a missing `type` is stored as the name
+  of the source and a missing `message` as an empty string. `validate` resolves `false` while any error,
+  from any source, remains at the validated paths, so a server or native error blocks it.
 - A failed `validate` starts re-validation by `reValidateMode` for the paths it covered. It marks nothing
   submitted, so a failed wizard step does not surface errors of later steps. The state ends only with
   `reset`, or when a branch write removes the rows it covered. `checkValidity` is silent. An empty list of
