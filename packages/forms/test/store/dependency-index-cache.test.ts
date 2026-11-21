@@ -42,8 +42,6 @@ const createLinesStore = () =>
 		},
 	});
 
-const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 5));
-
 describe('the dependency index of a form store', () => {
 	beforeEach(() => {
 		vi.mocked(buildDependencyIndex).mockClear();
@@ -60,7 +58,8 @@ describe('the dependency index of a form store', () => {
 		store.fieldArray('lines').swap(0, 1);
 		store.fieldArray('lines').update(0, { type: 'person', vat: '' });
 		store.setValue('lines', [{ type: 'a' }, { type: 'b' }]);
-		await settle();
+		store.adoptRowIds('lines', ['x', 'y']);
+		store.setValue('note', 'z');
 		expect(buildDependencyIndex).toHaveBeenCalledTimes(builds);
 	});
 
@@ -70,17 +69,25 @@ describe('the dependency index of a form store', () => {
 		expect(buildDependencyIndex).toHaveBeenCalledTimes(1);
 
 		store.fieldArray('lines').append({ type: 'person', vat: '' });
-		expect(buildDependencyIndex).toHaveBeenCalledTimes(2);
 		store.blur('lines.2.vat');
 		store.setValue('lines.2.type', 'company');
 		await vi.waitFor(() => expect(store.getSnapshot().errors['lines.2.vat']).toBeDefined());
 		expect(buildDependencyIndex).toHaveBeenCalledTimes(2);
 
 		store.fieldArray('lines').remove(2);
+		store.setValue('note', 'c');
 		expect(buildDependencyIndex).toHaveBeenCalledTimes(3);
 		store.reset({ note: '', lines: [] });
 		store.setValue('note', 'b');
 		expect(buildDependencyIndex).toHaveBeenCalledTimes(4);
+	});
+
+	test('is rebuilt when a write changes how many rows an array has', () => {
+		const store = createLinesStore();
+		store.setValue('note', 'a');
+		store.setValue('lines', [{ type: 'a' }, { type: 'b' }, { type: 'c' }]);
+		store.setValue('note', 'b');
+		expect(buildDependencyIndex).toHaveBeenCalledTimes(2);
 	});
 
 	test('keeps dependents correct across a rebuild', async () => {

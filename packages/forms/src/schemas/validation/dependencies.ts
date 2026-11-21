@@ -52,7 +52,7 @@ function collectRuleDependencies(
  *
  * Not cached here: the index depends on the config and on how many array rows
  * exist, so a caller that keeps one must rebuild it when a row is added or
- * removed. The form store does, and builds it once per row-count change.
+ * removed.
  */
 export function buildDependencyIndex(
 	elements: readonly object[],
