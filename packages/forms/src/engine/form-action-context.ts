@@ -39,6 +39,20 @@ interface BuildFormActionContextOptions<TForm extends BuilderActionBaseContext['
 	form: TForm;
 }
 
+/**
+ * Whether the nested errors hold at least one error node.
+ *
+ * @remarks
+ * An error node is an object with a string `type` or `message`. Empty containers and array holes, which a
+ * renderer can leave where a nested error was cleared, record nothing.
+ */
+function hasRecordedError(node: unknown): boolean {
+	if (typeof node !== 'object' || node === null) return false;
+	if ('message' in node && typeof node.message === 'string') return true;
+	if ('type' in node && typeof node.type === 'string') return true;
+	return Object.values(node).some(hasRecordedError);
+}
+
 const stepTimings = new WeakMap<object, StepTiming>();
 
 function countTouched(touched: unknown): number {
@@ -84,7 +98,7 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 		formData: values,
 		currentStep,
 		totalSteps: config.steps.length,
-		isValid: Object.keys(formState.errors).length === 0,
+		isValid: !hasRecordedError(formState.errors),
 		errors: formState.errors,
 		metadata: {
 			stepStartTime: getStepStartTime(form, currentStep, mountedAt, now),

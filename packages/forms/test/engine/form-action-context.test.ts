@@ -69,7 +69,22 @@ describe('buildFormActionContext', () => {
 			formState: { errors: { email: { message: 'Required' } }, touched: {}, submitCount: 0 },
 		});
 
+		const nested = buildFormActionContext({
+			...input,
+			formState: {
+				errors: { contacts: [undefined, { email: { type: 'validation', message: 'Invalid' } }] },
+				touched: {},
+				submitCount: 0,
+			},
+		});
+		const emptied = buildFormActionContext({
+			...input,
+			formState: { errors: { address: {}, contacts: [undefined, {}] }, touched: {}, submitCount: 0 },
+		});
+
 		expect(pristine.isValid).toBe(true);
 		expect(failed.isValid).toBe(false);
+		expect(nested.isValid).toBe(false);
+		expect(emptied.isValid).toBe(true);
 	});
 });

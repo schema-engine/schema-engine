@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import type { ActionDispatchInput, ActionExecutionResult } from '@schema-engine/actions';
 import { runSubmissionLifecycle } from '@/index';
 import type { FormActionTrigger } from '@/actions';
@@ -35,6 +35,33 @@ async function dispatchRejectingSecond({ actions, trigger }: ActionDispatchInput
 }
 
 describe('runSubmissionLifecycle', () => {
+	test('builds no context and dispatches nothing for triggers no action answers', async () => {
+		const { dispatch, triggers } = createDispatch([]);
+		const buildContext = vi.fn(() => context);
+
+		const result = await runSubmissionLifecycle(dispatch, {
+			actions: [saveAction],
+			context: buildContext,
+			hasMatching: () => false,
+		});
+
+		expect(result).toEqual({ succeeded: true, results: [] });
+		expect(triggers).toEqual([]);
+		expect(buildContext).not.toHaveBeenCalled();
+	});
+
+	test('dispatches only the triggers that have matching actions', async () => {
+		const { dispatch, triggers } = createDispatch([{ success: true }]);
+
+		await runSubmissionLifecycle(dispatch, {
+			actions: [saveAction],
+			context,
+			hasMatching: (_actions, trigger) => trigger === 'form_submit' || trigger === 'form_submit_complete',
+		});
+
+		expect(triggers).toEqual(['form_submit', 'form_submit_complete']);
+	});
+
 	test('treats an action that stops on failure as a failed submission', async () => {
 		const { dispatch, triggers } = createDispatch([{ success: false, shouldContinue: false }]);
 
