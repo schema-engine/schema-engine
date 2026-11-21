@@ -116,7 +116,7 @@ interface CheckFormValidityOptions {
 }
 
 /**
- * Whether `values` pass the validation of every field of every step.
+ * Whether `values` pass the validation of every field of every step that a constraint does not hide.
  *
  * @remarks
  * Silent: it records and shows no errors, though an async rule still makes its request. It validates under a debounce scope of
@@ -131,6 +131,7 @@ export async function checkFormValidity({ steps, values, registry }: CheckFormVa
 		values: structuredClone(values),
 		registry,
 		debounceScope: createDebounceScope(),
+		skipHidden: true,
 	});
 	return Object.keys(errors).length === 0;
 }

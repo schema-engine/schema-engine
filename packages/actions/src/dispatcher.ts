@@ -24,6 +24,10 @@ function isCancellation(error: unknown, signal: AbortSignal): boolean {
 	return signal.aborted && error instanceof Error && error.name === 'AbortError';
 }
 
+type ActionMatch<TBaseContext, TTrigger> =
+	| { runs: false }
+	| { runs: true; registration: ReturnType<ActionRegistryProvider<TBaseContext, TTrigger>['getAction']> };
+
 /** Dispatches actions in sequence, allowing groups to execute concurrently. */
 export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 	constructor(private readonly registry: ActionRegistryProvider<TBaseContext, TTrigger>) {}
@@ -41,8 +45,9 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 		for (const [sequenceIndex, entry] of actions.entries()) {
 			const controller = new AbortController();
 			const run = async (action: TConfig, groupIndex?: number): Promise<ActionDispatchResult | undefined> => {
-				if (!this.shouldRun(action, trigger)) return undefined;
-				const registration = this.registry.getAction(action.$type);
+				const match = this.match(action, trigger);
+				if (!match.runs) return undefined;
+				const { registration } = match;
 				if (!registration) {
 					const error = `No handler registered for action type: ${action.$type}`;
 					logger.error(error, { actionId: action.id, availableActions: this.registry.getActionTypes() });
@@ -109,19 +114,26 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 		trigger: TTrigger,
 	): boolean {
 		return actions.some((entry) =>
-			isGroup(entry) ? entry.some((action) => this.shouldRun(action, trigger)) : this.shouldRun(entry, trigger),
+			isGroup(entry) ? entry.some((action) => this.match(action, trigger).runs) : this.match(entry, trigger).runs,
 		);
 	}
 
 	/**
 	 * @remarks
-	 * An action of an unregistered type always matches, so `dispatch` can report the missing handler.
+	 * An action of an unregistered type always matches, so `dispatch` can report the missing handler. The
+	 * registration it looked up comes back so `dispatch` does not look it up again.
 	 */
-	private shouldRun(action: ActionConfigBase, trigger: TTrigger): boolean {
-		if (action.enabled === false) return false;
-		if (action.triggers !== undefined) return action.triggers.some((candidate) => candidate === trigger);
+	private match(action: ActionConfigBase, trigger: TTrigger): ActionMatch<TBaseContext, TTrigger> {
+		if (action.enabled === false) return { runs: false };
+		if (action.triggers !== undefined && !action.triggers.some((candidate) => candidate === trigger)) {
+			return { runs: false };
+		}
 		const registration = this.registry.getAction(action.$type);
-		return !registration || (registration.metadata.defaultTriggers ?? []).includes(trigger);
+		const implicit = action.triggers === undefined;
+		if (implicit && registration && !(registration.metadata.defaultTriggers ?? []).includes(trigger)) {
+			return { runs: false };
+		}
+		return { runs: true, registration };
 	}
 
 	/** @remarks Best-effort dispatch never rejects to its caller. */

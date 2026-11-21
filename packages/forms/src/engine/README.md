@@ -59,9 +59,11 @@ form issues.
 values (`{ address: { street: … } }`, not `{ 'address.street': … }`). A React Hook Form
 caller passes `touchedFields` as `touched`.
 
-The form state has no `isValid`: the context's `isValid` is true when `errors` is empty,
+The form state has no `isValid`: the context's `isValid` is true when `errors` holds no error node (an
+object with a string `type` or `message`; empty containers and array holes count for nothing),
 in every renderer, and `form.checkValidity()` validates the current values without
-recording errors (`checkFormValidity`).
+recording errors (`checkFormValidity`). It skips fields a `show` or `hide` constraint hides, and
+the fields inside a hidden container; a disabled field is still checked, as in a submission.
 
 `submitCount` is the number of submit attempts since the form was last reset,
 including attempts that failed validation. An attempt counts once its validation has

@@ -57,6 +57,14 @@ export interface ValidateFormValuesInput {
 	names?: readonly string[];
 	/** Keyed async validation state for this caller's form lifetime; see `ValidateFieldValueInput`. */
 	debounceScope: DebounceScope;
+	/**
+	 * Skips a field a `show` or `hide` constraint hides, and every field inside a hidden container.
+	 *
+	 * @remarks
+	 * Renderers validate only the fields they render, so a caller that validates the whole form without
+	 * naming fields sets this to agree with what a submission checks.
+	 */
+	skipHidden?: boolean;
 }
 
 export interface FieldValidationError {
@@ -211,15 +219,26 @@ export async function validateFormValues({
 	registry,
 	names,
 	debounceScope,
+	skipHidden = false,
 }: ValidateFormValuesInput): Promise<FormValidationErrors> {
 	const allFields = fieldElementPathsFor(elements, values);
+	const hiddenPaths = skipHidden
+		? allFields
+				.filter(
+					({ element, fieldPath }) =>
+						!evaluateConstraints({ constraints: element.constraints, values, fieldPath }).shouldShow,
+				)
+				.map(({ fieldPath }) => fieldPath)
+		: [];
+	const isHidden = (fieldPath: string) =>
+		hiddenPaths.some((hidden) => fieldPath === hidden || fieldPath.startsWith(`${hidden}.`));
 	const requiredContainers = allFields
 		.filter(
 			({ element, fieldPath, hasChildren }) =>
 				hasChildren && evaluateConstraints({ constraints: element.constraints, values, fieldPath }).isRequired,
 		)
 		.map(({ fieldPath }) => `${fieldPath}.`);
-	const fields = allFields.filter(({ fieldPath }) => pathIsRequested(fieldPath, names));
+	const fields = allFields.filter(({ fieldPath }) => pathIsRequested(fieldPath, names) && !isHidden(fieldPath));
 	const messages = await Promise.all(
 		fields.map(async ({ element, fieldPath, hasChildren }) => ({
 			fieldPath,

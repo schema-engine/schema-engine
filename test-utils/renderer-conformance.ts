@@ -1340,14 +1340,55 @@ export function rendererConformance(mount: ConformanceMount): void {
 				expect(lastActionContext()?.isValid).toBe(false);
 				expect(lastActionContext()?.metadata.userInteractions).toBeGreaterThan(0);
 			});
+			test('a field hidden by a constraint does not make checkValidity fail', async () => {
+				const { host } = await setup({
+					config: {
+						...form([
+							input('kind', 'Kind'),
+							{
+								...input('company', 'Company'),
+								rules: [{ type: 'required', message: 'Company is required' }],
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+							},
+							{
+								$type: 'fieldSet',
+								id: 'billing',
+								name: 'billing',
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+								elements: [
+									{
+										...input('vat', 'VAT'),
+										rules: [{ type: 'required', message: 'VAT is required' }],
+									},
+								],
+							},
+						]),
+						actions: [changeAction],
+					},
+				});
+				await userEvent.type(getByRole(host, 'textbox', { name: /^Kind/ }), 'x');
+				await expect.poll(() => lastActionContext()?.formData.kind).toBe('x');
+				await expect(lastActionContext()?.form.checkValidity()).resolves.toBe(true);
+				await userEvent.fill(getByRole(host, 'textbox', { name: /^Kind/ }), 'business');
+				await expect.poll(() => lastActionContext()?.formData.kind).toBe('business');
+				await expect(lastActionContext()?.form.checkValidity()).resolves.toBe(false);
+			});
 			test('a validity check answers for its own values while a field check is pending', async () => {
-				stubFetch((value) => (value === 'ab' ? { valid: false, message: 'Handle is taken' } : { valid: true }));
+				const fetchStub = stubFetch((value) =>
+					value === 'ab' ? { valid: false, message: 'Handle is taken' } : { valid: true },
+				);
+				const requested = () =>
+					fetchStub.mock.calls.map(
+						([, init]) => (JSON.parse(String(init?.body ?? '{}')) as { value: unknown }).value,
+					);
 				const { host } = await setup({
 					config: {
 						...form([
 							{
 								...input('handle', 'Handle'),
-								rules: [{ type: 'async', url: '/conformance-check', debounce: 50, disableCache: true }],
+								rules: [
+									{ type: 'async', url: '/conformance-check', debounce: 300, disableCache: true },
+								],
 							},
 						]),
 						validationMode: 'onChange',
@@ -1361,7 +1402,9 @@ export function rendererConformance(mount: ConformanceMount): void {
 				const check = lastActionContext()!.form.checkValidity();
 				await userEvent.type(handle, 'b');
 				await expect(check).resolves.toBe(true);
+				expect(requested()).toContain('a');
 				await expect.poll(() => queryByText(host, 'Handle is taken') !== null).toBe(true);
+				expect(requested()).toContain('ab');
 			});
 		});
 		test('typing over a debounced async check shows only the latest result', async () => {
