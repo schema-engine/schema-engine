@@ -239,7 +239,7 @@ describe('createFormStore', () => {
 		test('dirty reaches the fields below a container the defaults lack', () => {
 			const store = createFormStore({ registry, elements: [] });
 			store.setValue('address.street', 'Main');
-			expect(store.getSnapshot().dirty).toEqual({ address: true, 'address.street': true });
+			expect(store.getSnapshot().dirty).toEqual({ address: { street: true } });
 		});
 	});
 
@@ -351,7 +351,7 @@ describe('createFormStore', () => {
 			expect(store.getSnapshot().errors).toEqual({});
 		});
 
-		test('a row operation drops only the results under that array, and validate resolves with the current validity', async () => {
+		test('a row operation during validate makes it resolve with the validity of the current state', async () => {
 			const gate = gatedPasswords();
 			const store = createFormStore({
 				registry: gate.registry,
@@ -375,6 +375,7 @@ describe('createFormStore', () => {
 			const submit = store.validate();
 			await vi.waitFor(() => expect(gate.pending()).toBe(1));
 			store.fieldArray('tags').append({ v: 'x' });
+			gate.stopHolding();
 			gate.release();
 			expect(await submit).toBe(false);
 			expect(store.getSnapshot().errors.confirm?.message).toBe('Passwords differ');

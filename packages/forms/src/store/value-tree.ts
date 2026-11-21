@@ -4,6 +4,9 @@ import { assertWritablePathKey, isReservedPathKey } from '@/lib/reserved-path-ke
 /** A map held by the store: null-prototype, replaced rather than mutated. */
 export type NullMap<T = unknown> = Record<string, T>;
 
+const isStructural = (node: unknown): node is NullMap | unknown[] =>
+	node !== null && typeof node === 'object' && !isOpaque(node);
+
 export function createMap<T = unknown>(): NullMap<T> {
 	return Object.create(null) as NullMap<T>;
 }
@@ -150,39 +153,44 @@ export function isWithin(path: string, scope: string): boolean {
 }
 
 /**
- * Marks every path whose value differs from the default, and the containers around it.
+ * The dirty state of `value` against `defaultValue`, in the shape of the value.
  *
  * @remarks
- * An opaque value is compared by reference. The walk stops at any branch shared with the defaults.
+ * A leaf marks a path whose value differs. An array whose length differs is marked as a whole, as its
+ * rows no longer line up; otherwise each row carries its own mark. An opaque value is compared by
+ * reference, and the walk stops at any branch shared with the defaults.
  */
-export function collectDirty(value: unknown, defaultValue: unknown, path: string, out: NullMap<true>): boolean {
-	if (Object.is(value, defaultValue)) return false;
-	let dirty: boolean;
-	if (Array.isArray(value) && Array.isArray(defaultValue) && !isOpaque(value) && !isOpaque(defaultValue)) {
-		dirty = value.length !== defaultValue.length;
-		for (let index = 0; index < Math.max(value.length, defaultValue.length); index += 1) {
-			dirty = collectDirty(value[index], defaultValue[index], join(path, String(index)), out) || dirty;
-		}
-	} else if (
-		isPlainObject(value) &&
-		isPlainObject(defaultValue) &&
-		!Array.isArray(value) &&
-		!Array.isArray(defaultValue)
-	) {
-		dirty = false;
-		for (const key of new Set([...Object.keys(value), ...Object.keys(defaultValue)])) {
-			dirty = collectDirty(value[key], defaultValue[key], join(path, key), out) || dirty;
-		}
-	} else {
-		dirty = true;
-		if (Array.isArray(value) && !isOpaque(value)) {
-			value.forEach((item, index) => collectDirty(item, undefined, join(path, String(index)), out));
-		} else if (isPlainObject(value) && !Array.isArray(value)) {
-			for (const key of Object.keys(value)) collectDirty(value[key], undefined, join(path, key), out);
-		}
+export function dirtyTree(value: unknown, defaultValue: unknown): unknown {
+	if (Object.is(value, defaultValue)) return undefined;
+	if (!isStructural(value)) return true;
+	if (Array.isArray(value)) {
+		if (!Array.isArray(defaultValue) || isOpaque(defaultValue)) return markedBelow(value) ?? true;
+		if (value.length !== defaultValue.length) return true;
+		return trim(value.map((row, index) => dirtyTree(row, defaultValue[index])));
 	}
-	if (dirty && path) out[path] = true;
-	return dirty;
+	if (!isStructural(defaultValue) || Array.isArray(defaultValue)) return markedBelow(value) ?? true;
+	const marks = createMap();
+	for (const key of new Set([...Object.keys(value), ...Object.keys(defaultValue)])) {
+		const mark = dirtyTree(value[key], defaultValue[key]);
+		if (mark !== undefined) marks[key] = mark;
+	}
+	return Object.keys(marks).length === 0 ? undefined : marks;
+}
+
+function markedBelow(value: NullMap | unknown[]): unknown {
+	if (Array.isArray(value)) return trim(value.map((row) => dirtyTree(row, undefined)));
+	const marks = createMap();
+	for (const key of Object.keys(value)) {
+		const mark = dirtyTree(value[key], undefined);
+		if (mark !== undefined) marks[key] = mark;
+	}
+	return Object.keys(marks).length === 0 ? undefined : marks;
+}
+
+function trim(rows: unknown[]): unknown[] | undefined {
+	let length = rows.length;
+	while (length > 0 && rows[length - 1] === undefined) length -= 1;
+	return length === 0 ? undefined : rows.slice(0, length);
 }
 
 export function join(path: string, segment: string): string {
@@ -198,12 +206,10 @@ export function join(path: string, segment: string): string {
  */
 export function changedPaths(before: unknown, after: unknown, path = '', out: string[] = []): string[] {
 	if (Object.is(before, after)) return out;
-	const structural = (value: unknown): value is Record<string, unknown> =>
-		value !== null && typeof value === 'object' && !isOpaque(value);
-	if (structural(before) && structural(after) && Array.isArray(before) === Array.isArray(after)) {
+	if (isStructural(before) && isStructural(after) && Array.isArray(before) === Array.isArray(after)) {
 		if (Array.isArray(before) && Array.isArray(after) && before.length !== after.length) out.push(path);
 		for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
-			changedPaths(before[key], after[key], join(path, key), out);
+			changedPaths((before as NullMap)[key], (after as NullMap)[key], join(path, key), out);
 		}
 	} else {
 		out.push(path);

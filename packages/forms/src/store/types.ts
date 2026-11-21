@@ -6,8 +6,10 @@ import type { ValidationRegistry } from '@/schemas/validation/validation-registr
  * The internal form store contract: what a form's state container owns, and what it leaves to others.
  *
  * @remarks
- * The store owns the nested value tree, field state (errors, touched, dirty keyed by dotted path),
- * field-array row ids and the atomic updates that keep them consistent. It holds no submission state
+ * The store owns the nested value tree, field state (errors, touched, dirty), field-array row ids and
+ * the atomic updates that keep them consistent. Field state has the shape of the values: an object where
+ * the value is an object, an array with one element per row where the value is an array. A path is a
+ * plain dotted path with the row index in it (`contacts.1.email`) wherever the API takes one. It holds no submission state
  * (`isSubmitting`, `submitCount`, a submit guard): the runtime owns those. Focus, native controls and
  * native submit belong to the host, and there is no control registration: a host bridges a control
  * into the store with {@link FormStore.setValue}, {@link FormStore.blur} and {@link FormStore.setErrors}.
@@ -54,29 +56,60 @@ export type FormErrorSource = string;
 export const VALIDATION_ERROR_SOURCE: FormErrorSource = 'validation';
 
 /**
+ * State in the shape of the values: a leaf where something is marked, nested objects and arrays around it.
+ *
+ * @remarks
+ * An array has one element per row, `undefined` for a row with nothing marked. A leaf on a container
+ * covers everything below it: an error on `tags` is the array's own, and a touched mark on `address`
+ * covers its fields.
+ */
+export type FormStateTree<T> =
+	T | readonly (FormStateTree<T> | undefined)[] | { readonly [key: string]: FormStateTree<T> };
+
+/** The root of a {@link FormStateTree}, an object like the values. */
+export type FormStateRoot<T> = { readonly [key: string]: FormStateTree<T> };
+
+/**
  * The immutable state a subscriber reads.
  *
  * @remarks
  * Stable: {@link FormStore.getSnapshot} returns the same object until something changes, and a
- * branch that did not change keeps its reference, in `values` and in every map. Maps are plain
- * records, frozen. An opaque value, such as an array holding `File` objects, is kept and compared by
- * reference: it is never copied, frozen or diffed.
+ * branch that did not change keeps its reference, in `values`, in every tree and in every view. Plain
+ * records and arrays, frozen. An opaque value, such as an array holding `File` objects, is kept and
+ * compared by reference: it is never copied, frozen or diffed.
  */
 export interface FormStoreSnapshot {
 	/** The nested value tree. */
 	readonly values: Readonly<Record<string, unknown>>;
-	/** The effective error per dotted path; see {@link FormStore.setErrors} for which source wins. */
+	/**
+	 * The error to show per dotted path, from every source; see {@link FormStore.setErrors} for which wins.
+	 *
+	 * @remarks The flat view of {@link FormStoreSnapshot.errorTree}, for hosts that look errors up by name.
+	 */
 	readonly errors: Readonly<Record<string, FormStoreError>>;
-	/** Paths the user has blurred. Moves with its row; cleared by `reset`. */
-	readonly touched: Readonly<Record<string, true>>;
-	/** Paths, and the containers around them, whose value differs from the defaults. */
-	readonly dirty: Readonly<Record<string, true>>;
-	/** Row ids per array path, in row order. */
+	/** The same errors in the shape of the values, for the engine's action context. */
+	readonly errorTree: FormStateRoot<FormStoreError>;
+	/** Where the user has blurred. Moves with its row; cleared by `reset`. */
+	readonly touched: FormStateRoot<true>;
+	/** Where a value differs from the defaults. */
+	readonly dirty: FormStateRoot<true>;
+	/** The ids of an array's rows, by array path, in row order; derived from the store's row identity. */
 	readonly rowIds: Readonly<Record<string, readonly string[]>>;
 	/** Whether a validation the store started, other than `checkValidity`, is still running. */
 	readonly isValidating: boolean;
 	/** Whether a {@link FormStore.validate} has failed since the last `reset`; see `reValidateMode`. */
 	readonly checkFailed: boolean;
+}
+
+/** What is known about one field, after `getFieldState` of React Hook Form. */
+export interface FormFieldState {
+	/** The error shown for the path itself, or for a container around it. */
+	readonly error: FormStoreError | undefined;
+	readonly invalid: boolean;
+	/** Whether the path, a path around it or a path below it has been blurred. */
+	readonly isTouched: boolean;
+	/** Whether the path, a path around it or a path below it differs from the defaults. */
+	readonly isDirty: boolean;
 }
 
 /**
@@ -89,18 +122,30 @@ export interface FormStoreSnapshot {
 export interface FormStore {
 	/** Registers a listener for every snapshot change; returns the function that removes it. */
 	subscribe(listener: () => void): () => void;
+	/**
+	 * Calls `listener` with the selected value when it changes, compared with `isEqual`.
+	 *
+	 * @remarks The explicit alternative to reading state through a proxy: a host names what it reads.
+	 */
+	subscribeTo<T>(
+		selector: (snapshot: FormStoreSnapshot) => T,
+		listener: (value: T) => void,
+		isEqual?: (previous: T, next: T) => boolean,
+	): () => void;
 	getSnapshot(): FormStoreSnapshot;
 	/** The snapshot to render on the server and during hydration: the initial state, never replaced. */
 	getServerSnapshot(): FormStoreSnapshot;
 
 	/** The value at a dotted path, from the current state. */
 	getValue(path: string): unknown;
+	getFieldState(path: string): FormFieldState;
 	/**
 	 * Replaces the whole branch at `path`.
 	 *
 	 * @remarks
 	 * It is a change: it validates when the mode says so, re-validates dependents, and drops errors
 	 * from {@link FormStore.setErrors} sources at the path and below, which describe a value that is gone.
+	 * The state of rows and objects the branch no longer holds is dropped with them.
 	 */
 	setValue(path: string, value: unknown): void;
 	/** Marks `path` touched, and validates it when the mode says so. */
@@ -109,7 +154,7 @@ export interface FormStore {
 	 * Replaces the defaults with `values` when given, then restores the values to the defaults and clears
 	 * every error, touched and dirty mark and the failed-check state.
 	 *
-	 * @remarks Validation still running when this is called is dropped, as is one that spans a row move.
+	 * @remarks Validation still running when this is called is dropped; every row gets a new id.
 	 */
 	reset(values?: Record<string, unknown>): void;
 	/**

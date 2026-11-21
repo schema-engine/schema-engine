@@ -135,6 +135,25 @@ const brokenStores: Array<{ name: string; create: FormStoreFactory; caught: stri
 		caught: ['touched is set by a blur, not by a change, and cleared by reset'],
 	},
 	{
+		name: 'shows errors flat where the engine expects the shape of the values',
+		create: withSnapshot((snapshot) => ({ ...snapshot, errorTree: snapshot.errors as never })),
+		caught: ['keeps errors and touched marks as objects and arrays like the values, one element per row'],
+	},
+	{
+		name: 'reports a field untouched however it was blurred',
+		create: withOverrides((inner) => ({
+			getFieldState: (path) => ({ ...inner.getFieldState(path), isTouched: false }),
+		})),
+		caught: ['getFieldState reports error, touched and dirty for a path'],
+	},
+	{
+		name: 'tells a selector subscriber about every change',
+		create: withOverrides((inner) => ({
+			subscribeTo: (selector, listener) => inner.subscribe(() => listener(selector(inner.getSnapshot()))),
+		})),
+		caught: ['subscribeTo calls a listener only when the selected value changes'],
+	},
+	{
 		name: 'never reports dirty fields',
 		create: withSnapshot((snapshot) => ({ ...snapshot, dirty: {} })),
 		caught: ['dirty follows the difference from the defaults, up through the containers'],

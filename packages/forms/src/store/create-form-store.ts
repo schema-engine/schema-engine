@@ -7,11 +7,28 @@ import {
 	shouldSurfaceDependentError,
 	type DependencyIndex,
 } from '@/schemas/validation/dependencies';
-import { flattenErrors, pruneMissing, remapRows, syncRowIds } from './field-state';
+import { flattenErrors } from './field-state';
+import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
 import { createRunTracker } from './stale-results';
+import {
+	conformAt,
+	coveredAt,
+	fromEntries,
+	getAt,
+	leafAt,
+	leaves,
+	markAt,
+	mergeTrees,
+	reorderAt,
+	setAt,
+	stable,
+	type Tree,
+} from './state-tree';
 import {
 	VALIDATION_ERROR_SOURCE,
 	type FormErrorSource,
+	type FormFieldState,
+	type FormStateRoot,
 	type FormStore,
 	type FormStoreError,
 	type FormStoreOptions,
@@ -19,8 +36,8 @@ import {
 } from './types';
 import {
 	changedPaths,
-	collectDirty,
 	createMap,
+	dirtyTree,
 	isWithin,
 	reconcile,
 	setIn,
@@ -31,42 +48,52 @@ import {
 	type NullMap,
 } from './value-tree';
 
-type ErrorMap = NullMap<FormStoreError>;
-
 /**
  * Everything the store holds. Replaced as a whole by every command; no part is mutated.
  *
  * @remarks
+ * Field state is held in the shape of the values (see `state-tree.ts`), so a row's state is the row's
+ * element of each array and moves with it. `failed` is `true` for the whole form, or a tree of the
+ * paths whose check failed.
  */
 interface State {
 	readonly values: NullMap;
 	readonly defaults: NullMap;
-	/** Error maps by source, ordered from the least to the most recently set; `validation` is kept apart. */
-	readonly sources: ReadonlyMap<FormErrorSource, ErrorMap>;
-	readonly validation: ErrorMap;
-	readonly touched: NullMap<true>;
-	readonly dirty: NullMap<true>;
-	readonly rowIds: NullMap<readonly string[]>;
-	/** Paths whose validation failed, and so re-validate by `reValidateMode`; `''` is the whole form. */
-	readonly failedScopes: readonly string[];
+	/** The store's own errors. */
+	readonly validation: Tree;
+	/** Error trees by source, ordered from the least to the most recently set. */
+	readonly sources: ReadonlyMap<FormErrorSource, Tree>;
+	readonly touched: Tree;
+	readonly dirty: Tree;
+	readonly failed: Tree;
+	readonly ids: IdTree | undefined;
 	readonly validating: number;
 }
 
+/** A row while an operation rebuilds an array: where it was, and what it is now. */
 interface RowEntry {
-	/** Index the row had before the operation, or `undefined` for a row the operation adds. */
 	readonly from?: number;
 	readonly value: unknown;
-	readonly id: string;
+	readonly node: RowNode;
 }
 
-const NO_ERRORS: ErrorMap = createMap();
+const isStructural = (value: unknown): boolean => value !== null && typeof value === 'object';
+/** The leaves of an error tree as the snapshot shows them, the very objects its `errorTree` holds. */
+function shownLeaves(tree: Tree): NullMap<FormStoreError> {
+	const shown = createMap<FormStoreError>();
+	for (const [path, leaf] of Object.entries(leaves(tree))) shown[path] = toPlain(leaf) as FormStoreError;
+	return shown;
+}
 
+const EMPTY_VIEW = Object.freeze({});
 const readAt = (root: NullMap, path: string): unknown => getValueAtPath(root, path);
 const isRow = (index: number, length: number): boolean => Number.isInteger(index) && index >= 0 && index < length;
 const asRows = (value: unknown): unknown[] => (Array.isArray(value) ? value : [value]);
+const view = <T>(tree: Tree): FormStateRoot<T> =>
+	tree === undefined ? EMPTY_VIEW : (toPlain(tree) as FormStateRoot<T>);
 
 /**
- * Creates the engine's reference {@link FormStore}: dependency-free, with no framework.
+ * Creates the engine's reference {@link FormStore}: framework-free, with the engine's validation.
  *
  * @remarks
  * Values live in null-prototype maps and come out of the snapshot as frozen plain records; both views
@@ -74,6 +101,10 @@ const asRows = (value: unknown): unknown[] => (Array.isArray(value) ? value : [v
  * `validateFormValues` with one debounce scope for recorded validation. A silent
  * {@link FormStore.checkValidity} gets a scope of its own, so it never replaces a debounced call of
  * the validation that writes errors.
+ *
+ * Errors, touched marks and failed checks are trees in the shape of the values. A row operation is one
+ * splice, applied to the values and to every tree in the same commit, so state cannot fall out of step
+ * with its rows. A validation result that arrives late finds its fields by row id, not by index.
  */
 export function createFormStore(options: FormStoreOptions): FormStore {
 	const { elements, registry, validationMode = 'onSubmit', reValidateMode = 'onChange' } = options;
@@ -93,40 +124,55 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 	let state: State = {
 		values: initialDefaults,
 		defaults: initialDefaults,
+		validation: undefined,
 		sources: new Map(),
-		validation: NO_ERRORS,
-		touched: createMap(),
-		dirty: createMap(),
-		rowIds: syncRowIds(createMap(), '', initialDefaults, mintId),
-		failedScopes: [],
+		touched: undefined,
+		dirty: undefined,
+		failed: undefined,
+		ids: syncIds(undefined, initialDefaults, mintId),
 		validating: 0,
 	};
 
-	let mergedFor: { sources: State['sources']; validation: ErrorMap; merged: ErrorMap } | undefined;
-	function mergedErrors(current: State): ErrorMap {
-		if (mergedFor?.sources === current.sources && mergedFor.validation === current.validation) {
-			return mergedFor.merged;
+	let effectiveFor:
+		{ validation: Tree; sources: State['sources']; tree: Tree; flat: NullMap<FormStoreError> } | undefined;
+	/** The errors to show, from every source: the store's own lowest, then each source by recency. */
+	function effectiveErrors(current: State): { tree: Tree; flat: NullMap<FormStoreError> } {
+		if (
+			effectiveFor &&
+			effectiveFor.validation === current.validation &&
+			effectiveFor.sources === current.sources
+		) {
+			return effectiveFor;
 		}
-		const merged = createMap<FormStoreError>();
-		Object.assign(merged, current.validation);
-		for (const errors of current.sources.values()) Object.assign(merged, errors);
-		const stable = mergedFor ? stabilize(mergedFor.merged, merged) : merged;
-		mergedFor = { sources: current.sources, validation: current.validation, merged: stable };
-		return stable;
+		const tree = stable(effectiveFor?.tree, mergeTrees([current.validation, ...current.sources.values()]));
+		const flat = stabilize(effectiveFor?.flat ?? createMap<FormStoreError>(), shownLeaves(tree));
+		const computed = { validation: current.validation, sources: current.sources, tree, flat };
+		effectiveFor = computed;
+		return computed;
+	}
+
+	let flatIdsFor: { ids: IdTree | undefined; flat: NullMap<readonly string[]> } | undefined;
+	function flatRowIds(current: State): NullMap<readonly string[]> {
+		if (flatIdsFor && flatIdsFor.ids === current.ids) return flatIdsFor.flat;
+		const flat = stabilize(flatIdsFor?.flat ?? createMap<readonly string[]>(), flatIds(current.ids));
+		flatIdsFor = { ids: current.ids, flat };
+		return flat;
 	}
 
 	let snapshot = toSnapshot(state);
 	const serverSnapshot = snapshot;
 
 	function toSnapshot(current: State): FormStoreSnapshot {
+		const errors = effectiveErrors(current);
 		return Object.freeze({
 			values: toPlain(current.values) as FormStoreSnapshot['values'],
-			errors: toPlainMap(mergedErrors(current)),
-			touched: toPlainMap(current.touched),
-			dirty: toPlainMap(current.dirty),
-			rowIds: toPlainMap(current.rowIds),
+			errors: toPlainMap(errors.flat),
+			errorTree: view<FormStoreError>(errors.tree),
+			touched: view<true>(current.touched),
+			dirty: view<true>(current.dirty),
+			rowIds: toPlainMap(flatRowIds(current)),
 			isValidating: current.validating > 0,
-			checkFailed: current.failedScopes.length > 0,
+			checkFailed: current.failed !== undefined,
 		});
 	}
 
@@ -162,9 +208,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		const previous = state;
 		let next: State = { ...previous, ...change };
 		if (next.values !== previous.values || next.defaults !== previous.defaults) {
-			const dirty = createMap<true>();
-			collectDirty(next.values, next.defaults, '', dirty);
-			next = { ...next, dirty: stabilize(previous.dirty, dirty) };
+			next = { ...next, dirty: stable(previous.dirty, dirtyTree(next.values, next.defaults)) };
 		}
 		state = next;
 		const nextSnapshot = toSnapshot(next);
@@ -177,7 +221,8 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		else notify();
 	}
 
-	const isFailed = (path: string): boolean => state.failedScopes.some((scope) => isWithin(path, scope));
+	const isFailed = (path: string): boolean => coveredAt(state.failed, path);
+	const isTouched = (path: string): boolean => coveredAt(state.touched, path);
 
 	function validatesOn(event: 'change' | 'blur', path: string): boolean {
 		const target = event === 'change' ? 'onChange' : 'onBlur';
@@ -199,15 +244,19 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 	 * Validates `names` (the whole form when omitted; nothing when empty) against the values as they are now.
 	 *
 	 * @remarks
-	 * A recorded result is applied path by path, and only where it still describes the form: not when
-	 * the path's value was written while it ran, a dependency of the path changed, a later validation
-	 * asked for the path, or rows at or above it moved or the form was reset. When part of a result is
-	 * dropped, an explicit validation runs once more and resolves with the validity of the current
-	 * state; a silent check writes nothing.
+	 * A recorded result is applied path by path, at the place its fields have now: each path is found
+	 * again through the ids of the rows it ran through, so a result for a row that moved lands on that
+	 * row, and one for a row that is gone is dropped. It is also dropped for a path when that path's value
+	 * was written while it ran, a value a rule of the path reads changed, a validation that started later
+	 * asked for the path, or the form was reset. When part of a result is dropped, an explicit validation
+	 * runs once more and resolves with the validity of the current state; a silent check writes nothing.
 	 */
 	async function runValidation(names: readonly string[] | undefined, mode: ValidationMode): Promise<boolean> {
 		if (names?.length === 0) return true;
 		const startValues = state.values;
+		const startIds = state.ids;
+		const startValidation = state.validation;
+		const startIndex = mode.record ? dependencyIndex() : undefined;
 		const run = mode.record ? tracker.start(names, mode.exact === true) : undefined;
 		if (mode.record) commit({ validating: state.validating + 1 });
 		const settleRun = (): void => {
@@ -215,7 +264,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			tracker.finish(run);
 			commit({ validating: state.validating - 1 });
 		};
-		let flat: ErrorMap;
+		let flat: NullMap<FormStoreError>;
 		try {
 			const nested = await validateFormValues({
 				elements,
@@ -233,64 +282,74 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			!names || (mode.exact ? names.includes(path) : names.some((name) => isWithin(path, name)));
 		for (const path of Object.keys(flat)) if (!inScope(path)) delete flat[path];
 		const passed = Object.keys(flat).length === 0;
-		if (!run) return passed;
+		if (!run || !startIndex) return passed;
 
-		const isContainer = (value: unknown): boolean => value !== null && typeof value === 'object';
-		const removedSince = (before: NullMap, path: string): boolean =>
-			path.split('.').some((_, depth, segments) => {
-				const ancestor = segments.slice(0, depth + 1).join('.');
-				const was = readAt(before, ancestor);
-				const now = readAt(state.values, ancestor);
-				return depth === segments.length - 1
-					? was !== undefined && now === undefined
-					: isContainer(was) && !isContainer(now);
-			});
-		const stale = (path: string): boolean =>
-			removedSince(startValues, path) ||
-			!Object.is(readAt(state.values, path), readAt(startValues, path)) ||
-			tracker.superseded(run, path) ||
-			dependencyChanged(path, startValues);
-		const scopeStale = (): boolean => {
-			const index = dependencyIndex();
-			return (
-				changedPaths(startValues, state.values).some(
-					(changed) =>
-						(!names || names.some((name) => isWithin(changed, name) || isWithin(name, changed))) &&
-						!tracker.movedSince(run, changed),
-				) ||
-				index.watched.some(
-					(watched) =>
-						!Object.is(readAt(startValues, watched), readAt(state.values, watched)) &&
-						index.dependentsOf(watched).some(inScope),
-				)
-			);
+		const now = (path: string): string | undefined => resolveAnchor(anchorOf(startIds, path), state.ids);
+		const movedSince = (path: string): boolean => {
+			const current = now(path);
+			return current === undefined || !Object.is(readAt(state.values, current), readAt(startValues, path));
 		};
-		const decided = new Set([...Object.keys(state.validation).filter(inScope), ...Object.keys(flat)]);
-		if (mode.retry && (scopeStale() || [...decided].some(stale))) {
+		const dependencyChanged = (path: string): boolean =>
+			startIndex.watched.some(
+				(watched) => startIndex.dependentsOf(watched).includes(path) && movedSince(watched),
+			);
+		const lostContainer = (path: string): boolean =>
+			path
+				.split('.')
+				.slice(0, -1)
+				.some((_, depth, segments) => {
+					const above = segments.slice(0, depth + 1).join('.');
+					const current = now(above);
+					return (
+						current === undefined ||
+						(isStructural(readAt(startValues, above)) && !isStructural(readAt(state.values, current)))
+					);
+				});
+		const stale = (path: string, current: string | undefined): boolean =>
+			current === undefined ||
+			lostContainer(path) ||
+			movedSince(path) ||
+			tracker.superseded(run, current) ||
+			dependencyChanged(path);
+		const decided = [
+			...new Set([...Object.keys(leaves(startValidation)).filter(inScope), ...Object.keys(flat)]),
+		].map((path) => ({ path, current: now(path) }));
+		const scopeStale = (): boolean =>
+			changedPaths(startValues, state.values).some(
+				(changed) => !names || names.some((name) => isWithin(changed, name) || isWithin(name, changed)),
+			) ||
+			startIndex.watched.some((watched) => movedSince(watched) && startIndex.dependentsOf(watched).some(inScope));
+		if (mode.retry && (scopeStale() || decided.some(({ path, current }) => stale(path, current)))) {
 			return batch(() => {
 				settleRun();
 				return runValidation(names, { ...mode, retry: false });
 			});
 		}
-		const next = createMap<FormStoreError>();
-		for (const path of Object.keys(state.validation)) {
-			if (!decided.has(path) || stale(path)) next[path] = state.validation[path];
+
+		let validation = state.validation;
+		for (const { path, current } of decided.toSorted(
+			(a, b) => b.path.split('.').length - a.path.split('.').length,
+		)) {
+			if (current !== undefined && !stale(path, current)) validation = setAt(validation, current, flat[path]);
 		}
-		for (const path of Object.keys(flat)) {
-			if (!stale(path)) next[path] = flat[path];
+		let failed = state.failed;
+		if (mode.markFailed && !passed) {
+			failed = names
+				? names.reduce<Tree>((tree, name) => {
+						const current = now(name);
+						return current === undefined ? tree : markAt(tree, current);
+					}, failed)
+				: true;
 		}
-		const failedScopes =
-			mode.markFailed && !passed ? [...new Set([...state.failedScopes, ...(names ?? [''])])] : state.failedScopes;
 		tracker.finish(run);
-		commit({
-			validation: stabilize(state.validation, next),
-			failedScopes: failedScopes.length === state.failedScopes.length ? state.failedScopes : failedScopes,
-			validating: state.validating - 1,
-		});
-		return passed && !Object.keys(mergedErrors(state)).some(inScope);
+		commit({ validation, failed, validating: state.validating - 1 });
+		const scopeNow = names?.flatMap((name) => now(name) ?? []);
+		const stillInScope = (path: string): boolean =>
+			!scopeNow || (mode.exact ? scopeNow.includes(path) : scopeNow.some((name) => isWithin(path, name)));
+		return passed && !Object.keys(effectiveErrors(state).flat).some(stillInScope);
 	}
 
-	let cachedIndex: { rowIds: State['rowIds']; shape: string; index: DependencyIndex } | undefined;
+	let cachedIndex: { ids: State['ids']; shape: string; index: DependencyIndex } | undefined;
 
 	/**
 	 * The dependency index for the form's current rows.
@@ -298,30 +357,22 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 	 * @remarks
 	 * The index depends on the elements, which never change, and on how many rows each array has, so it
 	 * is rebuilt only when that row count signature changes. Writing a value, moving rows or adopting
-	 * ids leaves it as it was; the signature is not even computed while `rowIds` is the same object.
+	 * ids leaves it as it was; the signature is not even computed while the row ids are the same tree.
 	 */
 	function dependencyIndex(): DependencyIndex {
-		if (cachedIndex?.rowIds === state.rowIds) return cachedIndex.index;
-		const shape = Object.keys(state.rowIds)
-			.map((path) => `${path}:${state.rowIds[path].length}`)
+		if (cachedIndex && cachedIndex.ids === state.ids) return cachedIndex.index;
+		const lengths = flatRowIds(state);
+		const shape = Object.keys(lengths)
+			.map((path) => `${path}:${lengths[path].length}`)
 			.toSorted()
 			.join('|');
 		if (cachedIndex?.shape === shape) {
-			cachedIndex = { ...cachedIndex, rowIds: state.rowIds };
+			cachedIndex = { ...cachedIndex, ids: state.ids };
 			return cachedIndex.index;
 		}
 		const index = buildDependencyIndex(elements, toPlain(state.values) as Record<string, unknown>, registry);
-		cachedIndex = { rowIds: state.rowIds, shape, index };
+		cachedIndex = { ids: state.ids, shape, index };
 		return index;
-	}
-
-	function dependencyChanged(path: string, previousValues: NullMap): boolean {
-		const index = dependencyIndex();
-		return index.watched.some(
-			(watched) =>
-				index.dependentsOf(watched).includes(path) &&
-				!Object.is(readAt(previousValues, watched), readAt(state.values, watched)),
-		);
 	}
 
 	/** Names that must be validated after a change: the dependents of every watched path whose value moved. */
@@ -332,9 +383,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		);
 		return index
 			.expand(changed)
-			.filter((path) =>
-				shouldSurfaceDependentError({ touched: Object.hasOwn(state.touched, path), submitted: isFailed(path) }),
-			);
+			.filter((path) => shouldSurfaceDependentError({ touched: isTouched(path), submitted: isFailed(path) }));
 	}
 
 	/**
@@ -355,59 +404,61 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		if (validatesSelf && exact) void runValidation([changedPath], { ...quiet, exact }).catch(() => undefined);
 	}
 
-	function dropStaleErrors(sources: State['sources'], path: string): State['sources'] {
-		let next: Map<FormErrorSource, ErrorMap> | undefined;
-		for (const [source, errors] of sources) {
-			const kept = createMap<FormStoreError>();
-			for (const key of Object.keys(errors)) if (!isWithin(key, path)) kept[key] = errors[key];
-			if (Object.keys(kept).length !== Object.keys(errors).length) {
-				next ??= new Map(sources);
-				if (Object.keys(kept).length === 0) next.delete(source);
-				else next.set(source, kept);
-			}
-		}
-		return next ?? sources;
-	}
-
-	const scopeMapOf = (scopes: readonly string[]): NullMap<true> => {
-		const map = createMap<true>();
-		for (const scope of scopes) map[scope] = true;
-		return map;
-	};
-
 	function setValue(path: string, value: unknown): void {
 		const previousValues = state.values;
 		const branch = reconcile(readAt(previousValues, path), toInternal(value));
 		const values = setIn(previousValues, path, branch);
-		const root = path.split('.')[0];
 		if (values === previousValues) return;
+		const root = path.split('.')[0];
+		const idsRoot = syncIds(idsAt(state.ids, root), readAt(values, root), mintId);
 		batch(() => {
+			let sources = state.sources;
+			if (!path) sources = new Map();
+			else {
+				const kept = new Map<FormErrorSource, Tree>();
+				for (const [source, tree] of state.sources) {
+					const cleared = setAt(tree, path, undefined);
+					if (cleared !== undefined) kept.set(source, cleared);
+				}
+				sources = kept;
+			}
 			commit({
 				values,
-				rowIds: syncRowIds(state.rowIds, root, readAt(values, root), mintId),
-				sources: path ? dropStaleErrors(state.sources, path) : new Map(),
-				validation: pruneMissing(state.validation, path, values),
-				touched: pruneMissing(state.touched, path, values),
-				failedScopes: Object.keys(pruneMissing(scopeMapOf(state.failedScopes), path, values)),
+				ids: replaceIdsAt(state.ids, root, idsRoot),
+				sources,
+				validation: conformAt(state.validation, path, branch),
+				touched: conformAt(state.touched, path, branch),
+				failed: state.failed === true ? true : conformAt(state.failed, path, branch),
 			});
 			afterChange(previousValues, path, false);
 		});
 	}
 
+	/** The array at `path` as rows with their ids, minting an id for a row that has none. */
 	function rowsAt(path: string): RowEntry[] {
 		const value = readAt(state.values, path);
 		const rows = Array.isArray(value) ? value : [];
-		const ids = state.rowIds[path] ?? [];
-		return rows.map((row, index) => ({ from: index, value: row, id: ids[index] ?? mintId() }));
+		const nodes = idsAt(state.ids, path);
+		return rows.map((row, index) => ({
+			from: index,
+			value: row,
+			node: (Array.isArray(nodes) ? (nodes as readonly RowNode[])[index] : undefined) ?? {
+				id: mintId(),
+				below: syncIds(undefined, row, mintId),
+			},
+		}));
 	}
 
-	/** Writes the rows an operation produced, and moves every piece of row state with them in one commit. */
+	/**
+	 * Writes the rows an operation produced: one splice, applied to the values and to every state tree.
+	 *
+	 * @remarks
+	 * Each state tree has one element per row, so a row's errors, touched marks and failed check are
+	 * carried by moving the element; a row the operation adds has none.
+	 */
 	function commitRows(path: string, rows: readonly RowEntry[]): void {
 		const previousValues = state.values;
-		const target = new Map<number, number>();
-		rows.forEach((row, index) => {
-			if (row.from !== undefined) target.set(row.from, index);
-		});
+		const order = rows.map((row) => row.from);
 		const values = setIn(
 			previousValues,
 			path,
@@ -416,29 +467,34 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 				rows.map((row) => row.value),
 			),
 		);
-		const remap = <T>(map: NullMap<T>): NullMap<T> => remapRows(map, path, (oldIndex) => target.get(oldIndex));
-		const nextIds = Object.freeze(rows.map((row) => row.id));
-		const previousIds = state.rowIds[path] ?? [];
-		const idsChanged =
-			nextIds.length !== previousIds.length || nextIds.some((id, index) => id !== previousIds[index]);
-		const sources = new Map<FormErrorSource, ErrorMap>();
-		for (const [source, errors] of state.sources) sources.set(source, remap(errors));
-		const rowIds = Object.assign(createMap<readonly string[]>(), remap(state.rowIds), { [path]: nextIds });
+		const sources = new Map<FormErrorSource, Tree>();
+		for (const [source, tree] of state.sources) {
+			const moved = reorderAt(tree, path, order);
+			if (moved !== undefined) sources.set(source, moved);
+		}
+		const root = path.split('.')[0];
+		const placed = replaceIdsAt(
+			state.ids,
+			path,
+			rows.map((row) => row.node),
+		);
 		batch(() => {
-			if (values !== previousValues || idsChanged) tracker.moved(path);
 			commit({
 				values,
-				validation: remap(state.validation),
+				ids: replaceIdsAt(placed, root, syncIds(idsAt(placed, root), readAt(values, root), mintId)),
 				sources,
-				touched: remap(state.touched),
-				rowIds: syncRowIds(rowIds, path, readAt(values, path), mintId),
-				failedScopes: Object.keys(remap(scopeMapOf(state.failedScopes))),
+				validation: reorderAt(state.validation, path, order),
+				touched: reorderAt(state.touched, path, order),
+				failed: state.failed === true ? true : reorderAt(state.failed, path, order),
 			});
 			afterChange(previousValues, path, true);
 		});
 	}
 
-	const fresh = (value: unknown): RowEntry => ({ value: toInternal(value), id: mintId() });
+	const fresh = (value: unknown): RowEntry => {
+		const internal = toInternal(value);
+		return { value: internal, node: { id: mintId(), below: syncIds(undefined, internal, mintId) } };
+	};
 
 	function fieldArray(path: string): FieldArrayValue {
 		const insert = (index: number, value: unknown): void => {
@@ -455,7 +511,8 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		};
 		return {
 			get fields() {
-				return (state.rowIds[path] ?? []).map((id) => ({ id }));
+				const nodes = idsAt(state.ids, path);
+				return Array.isArray(nodes) ? (nodes as readonly RowNode[]).map(({ id }) => ({ id })) : [];
 			},
 			append: (value) => insert(rowsAt(path).length, value),
 			prepend: (value) => insert(0, value),
@@ -496,30 +553,47 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 				listeners.delete(listener);
 			};
 		},
+		subscribeTo(selector, listener, isEqual = Object.is) {
+			let selected = selector(snapshot);
+			return this.subscribe(() => {
+				const next = selector(snapshot);
+				if (isEqual(selected, next)) return;
+				selected = next;
+				listener(next);
+			});
+		},
 		getSnapshot: () => snapshot,
 		getServerSnapshot: () => serverSnapshot,
 		getValue: (path) => toPlain(readAt(state.values, path)),
+		getFieldState(path): FormFieldState {
+			const error = leafAt(effectiveErrors(state).tree, path) as FormStoreError | undefined;
+			const marked = (tree: Tree): boolean => coveredAt(tree, path) || getAt(tree, path) !== undefined;
+			return {
+				error,
+				invalid: error !== undefined,
+				isTouched: marked(state.touched),
+				isDirty: marked(state.dirty),
+			};
+		},
 		setValue,
 		blur: (path) =>
 			batch(() => {
-				if (!Object.hasOwn(state.touched, path)) {
-					commit({ touched: Object.assign(createMap<true>(), state.touched, { [path]: true }) });
-				}
+				if (!isTouched(path)) commit({ touched: markAt(state.touched, path) });
 				if (validatesOn('blur', path)) {
 					void runValidation([path], { record: true, markFailed: false }).catch(() => undefined);
 				}
 			}),
 		reset(values) {
 			const defaults = values ? (toInternal(values) as NullMap) : state.defaults;
-			tracker.moved('');
+			tracker.reset();
 			commit({
 				values: defaults,
 				defaults,
 				sources: new Map(),
-				validation: NO_ERRORS,
-				touched: createMap(),
-				rowIds: syncRowIds(createMap(), '', defaults, mintId),
-				failedScopes: [],
+				validation: undefined,
+				touched: undefined,
+				failed: undefined,
+				ids: syncIds(undefined, defaults, mintId),
 			});
 		},
 		validate: (paths) => runValidation(paths, { record: true, markFailed: true, retry: true }),
@@ -530,25 +604,30 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			}
 			const sources = new Map(state.sources);
 			sources.delete(source);
-			const entries = Object.entries(errors);
-			if (entries.length > 0) {
-				const map = createMap<FormStoreError>();
-				for (const [path, error] of entries)
-					map[path] = Object.freeze({ type: error.type ?? source, message: error.message ?? '' });
-				sources.set(source, map);
-			}
+			const tree = fromEntries(
+				Object.entries(errors).map(([path, error]) => [
+					path,
+					Object.freeze({ type: error.type ?? source, message: error.message ?? '' }),
+				]),
+			);
+			if (tree !== undefined) sources.set(source, tree);
 			commit({ sources });
 		},
 		fieldArray,
 		adoptRowIds(path, ids) {
-			const current = state.rowIds[path];
-			if (!current || current.length !== ids.length || new Set(ids).size !== ids.length) return;
-			if (current.every((id, index) => id === ids[index])) return;
+			const nodes = idsAt(state.ids, path);
+			if (!Array.isArray(nodes) || nodes.length !== ids.length || new Set(ids).size !== ids.length) return;
+			const rows = nodes as readonly RowNode[];
+			if (rows.every((row, index) => row.id === ids[index])) return;
 			for (const id of ids) adoptedIds.add(id);
 			commit({
-				rowIds: Object.assign(createMap<readonly string[]>(), state.rowIds, {
-					[path]: Object.freeze([...ids]),
-				}),
+				ids: replaceIdsAt(
+					state.ids,
+					path,
+					rows.map((row, index) =>
+						row.below === undefined ? { id: ids[index] } : { id: ids[index], below: row.below },
+					),
+				),
 			});
 		},
 	};

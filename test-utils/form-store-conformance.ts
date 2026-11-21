@@ -107,6 +107,24 @@ function fixture(overrides: Partial<FormStoreOptions> = {}): Fixture {
 				element(
 					{
 						$type: 'arrayElements',
+						name: 'groups',
+						elements: [
+							{ $type: 'input', name: 'title' },
+							{
+								$type: 'arrayElements',
+								name: 'members',
+								elements: [
+									{ $type: 'input', name: 'code', rules: [{ type: 'gate' }] },
+									{ $type: 'input', name: 'label' },
+								],
+							},
+						],
+					},
+					'array',
+				),
+				element(
+					{
+						$type: 'arrayElements',
 						name: 'invites',
 						elements: [
 							{ $type: 'input', name: 'code', rules: [{ type: 'gate' }] },
@@ -142,6 +160,13 @@ export function watchValidation(store: FormStore): { readonly started: boolean }
 		if (store.getSnapshot().isValidating) watch.started = true;
 	});
 	return watch;
+}
+
+/** The dotted paths of the leaves of a state tree, in the order the tree lists them. */
+export function leafPaths(tree: unknown, path = ''): string[] {
+	if (tree === undefined) return [];
+	if (tree === null || typeof tree !== 'object' || ('type' in tree && 'message' in tree)) return [path];
+	return Object.entries(tree).flatMap(([key, child]) => leafPaths(child, path ? `${path}.${key}` : key));
 }
 
 const error = (message: string) => ({ type: 'custom', message });
@@ -261,6 +286,78 @@ const cases: FormStoreCase[] = [
 			store.blur('name');
 			expect(store.getSnapshot().values).toBe(valuesBeforeBlur);
 			expect(store.getSnapshot().values.contacts).toBe(rows);
+		},
+	},
+	{
+		rule: 'field state in the shape of the values',
+		name: 'keeps errors and touched marks as objects and arrays like the values, one element per row',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('server', { 'contacts.1.email': error('one'), nickname: error('nick') });
+			store.blur('contacts.1.email');
+			const { errorTree, touched, errors } = store.getSnapshot();
+			expect(errorTree).toEqual({ contacts: [undefined, { email: error('one') }], nickname: error('nick') });
+			expect(touched).toEqual({ contacts: [undefined, { email: true }] });
+			expect(Object.keys(errors).toSorted()).toEqual(['contacts.1.email', 'nickname']);
+			expect(errors['contacts.1.email']).toBe((errorTree.contacts as Array<{ email: unknown }>)[1].email);
+
+			store.setValue('name', 'Grace');
+			const after = store.getSnapshot();
+			expect(after.errorTree).toBe(errorTree);
+			expect(after.errors).toBe(errors);
+			expect(after.touched).toBe(touched);
+		},
+	},
+	{
+		rule: 'field state in the shape of the values',
+		name: 'an error on a container covers the fields inside it',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('server', { contacts: error('too few'), 'contacts.0.email': error('row') });
+			expect(Object.keys(errorsOf(store))).toEqual(['contacts']);
+			expect(store.getFieldState('contacts.0.email').error?.message).toBe('too few');
+			store.blur('address');
+			expect(store.getFieldState('address.street').isTouched).toBe(true);
+		},
+	},
+	{
+		rule: 'field state in the shape of the values',
+		name: 'getFieldState reports error, touched and dirty for a path',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			expect(store.getFieldState('name')).toEqual({
+				error: undefined,
+				invalid: false,
+				isTouched: false,
+				isDirty: false,
+			});
+			store.setValue('name', 'Grace');
+			store.blur('name');
+			store.setErrors('server', { name: error('no') });
+			expect(store.getFieldState('name')).toEqual({
+				error: error('no'),
+				invalid: true,
+				isTouched: true,
+				isDirty: true,
+			});
+			store.setValue('address.street', '2 Side');
+			expect(store.getFieldState('address')).toMatchObject({ isDirty: true, isTouched: false });
+		},
+	},
+	{
+		rule: 'snapshot stability',
+		name: 'subscribeTo calls a listener only when the selected value changes',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			const listener = vi.fn();
+			const stop = store.subscribeTo((snapshot) => snapshot.values.name, listener);
+			store.setValue('nickname', 'nick');
+			expect(listener).not.toHaveBeenCalled();
+			store.setValue('name', 'Grace');
+			expect(listener).toHaveBeenCalledExactlyOnceWith('Grace');
+			stop();
+			store.setValue('name', 'Hedy');
+			expect(listener).toHaveBeenCalledTimes(1);
 		},
 	},
 	{
@@ -561,11 +658,11 @@ const cases: FormStoreCase[] = [
 			const store = createStore(fixture().options);
 			expect(store.getSnapshot().dirty).toEqual({});
 			store.setValue('address.street', '2 Side');
-			expect(store.getSnapshot().dirty).toEqual({ address: true, 'address.street': true });
+			expect(leafPaths(store.getSnapshot().dirty)).toEqual(['address.street']);
 			store.setValue('address.street', '1 Main');
 			expect(store.getSnapshot().dirty).toEqual({});
 			store.setValue('contacts.1.email', 'x@example.com');
-			expect(store.getSnapshot().dirty).toEqual({ contacts: true, 'contacts.1': true, 'contacts.1.email': true });
+			expect(leafPaths(store.getSnapshot().dirty)).toEqual(['contacts.1.email']);
 			store.setValue('name', 'Grace');
 			store.reset();
 			expect(store.getSnapshot().dirty).toEqual({});
@@ -618,7 +715,7 @@ const cases: FormStoreCase[] = [
 				expect(contacts(store)).toEqual(['b@example.com', 'a@example.com', 'c@example.com']);
 				expect(snapshot.errors['contacts.0.email']?.message).toBe('one');
 				expect(snapshot.errors['contacts.1.email']?.message).toBe('zero');
-				expect(snapshot.touched).toEqual({ 'contacts.0.email': true });
+				expect(leafPaths(snapshot.touched)).toEqual(['contacts.0.email']);
 			});
 			store.subscribe(listener);
 			store.fieldArray('contacts').swap(0, 1);
@@ -638,7 +735,7 @@ const cases: FormStoreCase[] = [
 			array.move(2, 0);
 			expect(ids(store)).toEqual([third, first, second]);
 			expect(errorsOf(store)['contacts.0.email']?.message).toBe('two');
-			expect(store.getSnapshot().touched).toEqual({ 'contacts.0.email': true });
+			expect(leafPaths(store.getSnapshot().touched)).toEqual(['contacts.0.email']);
 
 			array.prepend({ email: 'new@example.com' });
 			expect(ids(store).slice(1)).toEqual([third, first, second]);
@@ -650,7 +747,7 @@ const cases: FormStoreCase[] = [
 
 			array.remove(0);
 			expect(Object.keys(errorsOf(store))).toEqual(['contacts.1.email']);
-			expect(store.getSnapshot().touched).toEqual({ 'contacts.1.email': true });
+			expect(leafPaths(store.getSnapshot().touched)).toEqual(['contacts.1.email']);
 
 			array.remove(1);
 			expect(errorsOf(store)).toEqual({});
@@ -686,7 +783,7 @@ const cases: FormStoreCase[] = [
 			expect(ids(store)[1]).not.toBe(before[1]);
 			expect(ids(store)[2]).toBe(before[2]);
 			expect(Object.keys(errorsOf(store))).toEqual(['contacts.0.email']);
-			expect(store.getSnapshot().touched).toEqual({ 'contacts.0.email': true });
+			expect(leafPaths(store.getSnapshot().touched)).toEqual(['contacts.0.email']);
 
 			array.replace([{ email: 'r@example.com' }]);
 			expect(ids(store)).toHaveLength(1);
@@ -722,6 +819,45 @@ const cases: FormStoreCase[] = [
 			array.remove();
 			expect(contacts(store)).toEqual([]);
 			expect(store.getSnapshot().rowIds.contacts).toEqual([]);
+		},
+	},
+	{
+		rule: 'array reindexing',
+		name: 'nested and scalar arrays carry their rows state, and shrinking drops it',
+		run(createStore) {
+			const store = createStore(
+				fixture({
+					defaultValues: {
+						groups: [
+							{ title: 'a', members: [{ label: 'x' }, { label: 'y' }] },
+							{ title: 'b', members: [{ label: 'z' }] },
+						],
+						tags: ['p', 'q', 'r'],
+					},
+				}).options,
+			);
+			store.setErrors('server', {
+				'groups.0.members.1.label': error('inner'),
+				'tags.1': error('scalar'),
+			});
+			store.blur('groups.0.members.1.label');
+			store.blur('tags.2');
+
+			store.fieldArray('groups').swap(0, 1);
+			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['groups.1.members.1.label', 'tags.1']);
+			expect(leafPaths(store.getSnapshot().touched).toSorted()).toEqual(['groups.1.members.1.label', 'tags.2']);
+
+			store.fieldArray('groups.1.members').remove(0);
+			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['groups.1.members.0.label', 'tags.1']);
+
+			store.fieldArray('tags').remove(0);
+			expect(Object.keys(errorsOf(store)).toSorted()).toEqual(['groups.1.members.0.label', 'tags.0']);
+			expect(leafPaths(store.getSnapshot().touched).toSorted()).toEqual(['groups.1.members.0.label', 'tags.1']);
+
+			store.setValue('groups', [{ title: 'only', members: [] }]);
+			expect(Object.keys(errorsOf(store))).toEqual(['tags.0']);
+			expect(leafPaths(store.getSnapshot().touched)).toEqual(['tags.1']);
+			expect(store.getSnapshot().rowIds['groups.0.members']).toEqual([]);
 		},
 	},
 	{
@@ -877,7 +1013,7 @@ const cases: FormStoreCase[] = [
 	},
 	{
 		rule: 'stale async results',
-		name: 'drops a result for rows that moved while it was running',
+		name: 'applies a late result to the row it was for after the rows moved',
 		async run(createStore) {
 			const { options, gate } = fixture({
 				validationMode: 'onBlur',
@@ -895,8 +1031,75 @@ const cases: FormStoreCase[] = [
 			store.fieldArray('invites').swap(0, 1);
 			gate.settle('one', false);
 			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(store.getValue('invites.1.label')).toBe('first');
+			expect(Object.keys(errorsOf(store))).toEqual(['invites.1.code']);
+			expect(leafPaths(store.getSnapshot().touched)).toEqual(['invites.1.code']);
+		},
+	},
+	{
+		rule: 'stale async results',
+		name: 'drops a late result for a row that was removed',
+		async run(createStore) {
+			const { options, gate } = fixture({
+				validationMode: 'onBlur',
+				defaultValues: {
+					invites: [
+						{ code: 'one', label: 'first' },
+						{ code: 'one', label: 'second' },
+					],
+				},
+			});
+			const store = createStore(options);
+			gate.hold('one');
+			store.blur('invites.0.code');
+			await vi.waitFor(() => expect(gate.pending('one')).toBe(1));
+			store.fieldArray('invites').remove(0);
+			gate.settle('one', false);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
 			expect(errorsOf(store)).toEqual({});
 			expect(store.getSnapshot().checkFailed).toBe(false);
+		},
+	},
+	{
+		rule: 'stale async results',
+		name: 'drops a late result when its rows were replaced',
+		async run(createStore) {
+			const { options, gate } = fixture({
+				validationMode: 'onBlur',
+				defaultValues: { invites: [{ code: 'one', label: 'first' }] },
+			});
+			const store = createStore(options);
+			gate.hold('one');
+			store.blur('invites.0.code');
+			await vi.waitFor(() => expect(gate.pending('one')).toBe(1));
+			store.fieldArray('invites').replace([{ code: 'one', label: 'second' }]);
+			gate.settle('one', false);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(errorsOf(store)).toEqual({});
+		},
+	},
+	{
+		rule: 'stale async results',
+		name: 'follows a nested row when the rows around it move',
+		async run(createStore) {
+			const { options, gate } = fixture({
+				validationMode: 'onBlur',
+				defaultValues: {
+					groups: [
+						{ title: 'a', members: [{ code: 'x' }, { code: 'one' }] },
+						{ title: 'b', members: [{ code: 'y' }] },
+					],
+				},
+			});
+			const store = createStore(options);
+			gate.hold('one');
+			store.blur('groups.0.members.1.code');
+			await vi.waitFor(() => expect(gate.pending('one')).toBe(1));
+			store.fieldArray('groups').swap(0, 1);
+			store.fieldArray('groups.1.members').remove(0);
+			gate.settle('one', false);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(Object.keys(errorsOf(store))).toEqual(['groups.1.members.0.code']);
 		},
 	},
 	{

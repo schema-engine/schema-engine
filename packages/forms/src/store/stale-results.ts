@@ -3,64 +3,54 @@ import { isWithin } from './value-tree';
 /** One recorded validation, as the tracker sees it. */
 export interface ValidationRun {
 	readonly seq: number;
-	readonly tick: number;
+	readonly epoch: number;
 }
 
 /**
- * Decides whether a recorded validation result still describes the form.
+ * Decides whether a recorded validation result is overtaken by something that is not a value change.
  *
  * @remarks
- * A result is superseded for a path when a validation that started later asked for that path, which
- * is "the latest requester wins", or when rows at or above the path moved after the run started, or
- * the form was reset. A path's own value and its dependencies are checked by the store, which owns
- * the values.
+ * A result is superseded for a path when a validation that started later asked for that path, which is
+ * "the latest requester wins", or when the form was reset after the run started. Values, dependencies
+ * and rows are the store's to check, as it owns them.
  */
 export interface RunTracker {
 	start(scope: readonly string[] | undefined, exact: boolean): ValidationRun;
-	/** Records that every path at or below `path` changed identity: a row operation, or a reset (`''`). */
-	moved(path: string): void;
+	reset(): void;
 	finish(run: ValidationRun): void;
 	superseded(run: ValidationRun, path: string): boolean;
-	/** Whether rows at or above `path` moved, or the form was reset, since `run` started. */
-	movedSince(run: ValidationRun, path: string): boolean;
 }
 
 export function createRunTracker(): RunTracker {
 	let seq = 0;
-	let tick = 0;
+	let epoch = 0;
 	let allSeq = 0;
 	const pending = new Set<ValidationRun>();
 	const prefixSeq = new Map<string, number>();
 	const exactSeq = new Map<string, number>();
-	let changes: Array<{ tick: number; path: string }> = [];
 
 	return {
 		start(scope, exact) {
-			const run = { seq: ++seq, tick };
+			const run = { seq: ++seq, epoch };
 			pending.add(run);
 			if (!scope) allSeq = run.seq;
 			else for (const name of scope) (exact ? exactSeq : prefixSeq).set(name, run.seq);
 			return run;
 		},
-		moved(path) {
-			tick += 1;
-			if (pending.size > 0) changes.push({ tick, path });
+		reset() {
+			epoch += 1;
 		},
 		finish(run) {
 			pending.delete(run);
 			if (pending.size === 0) {
 				prefixSeq.clear();
 				exactSeq.clear();
-				changes = [];
 			}
 		},
 		superseded(run, path) {
-			if (allSeq > run.seq || (exactSeq.get(path) ?? 0) > run.seq) return true;
+			if (run.epoch !== epoch || allSeq > run.seq || (exactSeq.get(path) ?? 0) > run.seq) return true;
 			for (const [name, later] of prefixSeq) if (later > run.seq && isWithin(path, name)) return true;
-			return this.movedSince(run, path);
-		},
-		movedSince(run, path) {
-			return changes.some((change) => change.tick > run.tick && isWithin(path, change.path));
+			return false;
 		},
 	};
 }
