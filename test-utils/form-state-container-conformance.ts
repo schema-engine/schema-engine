@@ -1819,6 +1819,45 @@ const cases: FormStateContainerCase[] = [
 		},
 	},
 	{
+		rule: 'native facts',
+		name: 'a fact for a row that does not exist is ignored, and facts and params are copied so a caller cannot change a snapshot',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			store.fieldArray('contacts').remove([0, 1, 2]);
+			store.blur('contacts.0.label', { native: { type: 'valueMissing' } });
+			expect(await store.validate()).toBe(true);
+			expect(errorsOf(store)).toEqual({});
+
+			const allowed = ['first'];
+			store.setErrors('server', { name: { type: 'invalid', params: { allowed } } });
+			const fact = { type: 'rangeUnderflow', params: { list: ['a'] } };
+			await store.validate(['nickname'], { native: { nickname: fact } });
+			allowed.push('second');
+			fact.params.list.push('b');
+			expect(errorsOf(store).name.params).toEqual({ allowed: ['first'] });
+			expect(errorsOf(store).nickname.params).toEqual({ list: ['a'] });
+			expect(Object.isFrozen((errorsOf(store).name.params as { allowed: string[] }).allowed)).toBe(true);
+		},
+	},
+	{
+		rule: 'pending per field',
+		name: 'a branch write that removes rows takes their pending marks with them',
+		async run(createStore) {
+			const { options, gate } = fixture();
+			const store = createStore(options);
+			gate.hold('two');
+			const run = store.validate(['invites.1.code']);
+			await vi.waitFor(() => expect(gate.pending('two')).toBe(1));
+			expect(store.getSnapshot().validating).toEqual({ 'invites.1.code': true });
+			store.setValue('invites', []);
+			expect(store.getSnapshot().validating).toEqual({});
+			gate.settle('two', true);
+			expect(await run).toBe(false);
+			expect(store.getSnapshot().validating).toEqual({});
+			expect(store.getSnapshot().isValidating).toBe(false);
+		},
+	},
+	{
 		rule: 'participation',
 		name: 'a field a constraint hides takes no part: it does not block, count or show, however it was recorded',
 		async run(createStore) {

@@ -792,4 +792,36 @@ describe('createFormStateContainer', () => {
 			expect(store.getSnapshot().rowIds.tags).toHaveLength(1);
 		});
 	});
+
+	describe('silent checks', () => {
+		test('overlapping checkValidity calls of a debounced rule each answer for their own value', async () => {
+			vi.useFakeTimers();
+			const fetchSpy = vi
+				.spyOn(globalThis, 'fetch')
+				.mockImplementation(async () => new Response(JSON.stringify({ valid: true }), { status: 200 }));
+			try {
+				const store = createFormStateContainer({
+					registry,
+					elements: [
+						element({
+							$type: 'input',
+							name: 'email',
+							rules: [{ type: 'async', url: '/api/check', debounce: 300, disableCache: true }],
+						}),
+					],
+					defaults: { email: 'a@example.com' },
+				});
+				const first = store.checkValidity();
+				store.setValue('email', 'b@example.com');
+				const second = store.checkValidity();
+				await vi.advanceTimersByTimeAsync(400);
+
+				expect(await Promise.all([first, second])).toEqual([true, true]);
+				expect(fetchSpy).toHaveBeenCalledTimes(2);
+			} finally {
+				fetchSpy.mockRestore();
+				vi.useRealTimers();
+			}
+		});
+	});
 });

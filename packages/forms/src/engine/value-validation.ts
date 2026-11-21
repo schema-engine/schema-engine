@@ -1,6 +1,7 @@
 import { evaluateConstraints } from '../constraints/constraint-evaluator.js';
 import { expandContainerParentPaths, expandFieldTemplatePaths, getValueAtPath } from '../lib/path-values.js';
 import { walkNamedElements } from '../lib/field-scope.js';
+import { frozenCopy } from '../lib/frozen-copy.js';
 import type { ConstraintLogic } from '../schemas/base-field.js';
 import {
 	createValidationContext,
@@ -228,7 +229,7 @@ function paramsOf(rule: BaseValidationRule): Readonly<Record<string, unknown>> |
 	const params = Object.fromEntries(
 		Object.entries(rule).filter(([key, value]) => !RULE_IDENTITY_KEYS.has(key) && value !== undefined),
 	);
-	return Object.keys(params).length === 0 ? undefined : Object.freeze(params);
+	return Object.keys(params).length === 0 ? undefined : frozenCopy(params);
 }
 
 type AuthoredRule = BaseValidationRule & { readonly id?: string; readonly severity?: ValidationSeverity };

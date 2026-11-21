@@ -10,6 +10,7 @@ import {
 import { createDebounceScope } from '@/lib/debounce';
 import { resolveFieldRef } from '@/lib/field-ref';
 import { logger } from '@/lib/logger';
+import { frozenCopy } from '@/lib/frozen-copy';
 import { getValueAtPath } from '@/lib/path-values';
 import { isReservedPathKey } from '@/lib/reserved-path-keys';
 import {
@@ -293,7 +294,7 @@ function factOf(previous: NativeFact | undefined, validity: NativeValidity, valu
 	return Object.freeze({
 		validity: Object.freeze({
 			type: validity.type,
-			...(validity.params === undefined ? {} : { params: Object.freeze({ ...validity.params }) }),
+			...(validity.params === undefined ? {} : { params: frozenCopy(validity.params) }),
 			...(validity.message === undefined ? {} : { message: validity.message }),
 		}),
 		value,
@@ -323,7 +324,7 @@ function serverIssues(input: FormStateErrorInput | readonly FormStateErrorInput[
 	return (Array.isArray(input) ? (input as readonly FormStateErrorInput[]) : [input as FormStateErrorInput]).map(
 		(given) =>
 			issue(given.type ?? 'server', 'server', {
-				params: given.params === undefined ? undefined : Object.freeze({ ...given.params }),
+				params: given.params === undefined ? undefined : frozenCopy(given.params),
 				message: given.message,
 			}),
 	);
@@ -367,9 +368,9 @@ function withFact(
  * @remarks
  * Values live in null-prototype maps and come out of the snapshot as frozen plain records; both views
  * share structure, so a branch no command touched keeps its reference. Validation goes through
- * `planFormValidation` and `runValidationPlan` with one debounce scope for recorded validation. A silent
- * {@link FormStateContainer.checkValidity} gets a scope of its own, so it never replaces a debounced call of
- * the validation that writes errors.
+ * `planFormValidation` and `runValidationPlan` with one debounce scope for recorded validation. Each silent
+ * {@link FormStateContainer.checkValidity} gets a scope of its own, so it neither replaces a debounced call of
+ * the validation that writes errors nor another check's, and answers for the value it was called with.
  *
  * Errors, native facts, touched marks and checks are trees with a slot per node, in the shape of the
  * values. A row operation is one splice, applied to the values and to every tree in the same commit, so
@@ -380,7 +381,6 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	const { elements, registry, validationMode = 'onSubmit', reValidateMode = 'onChange' } = options;
 	const tracker = createRunTracker();
 	const debounceScope = createDebounceScope();
-	const silentDebounceScope = createDebounceScope();
 	const listeners = new Set<() => void>();
 	const participates = hasParticipationRules(elements);
 	let rowCounter = 0;
@@ -723,7 +723,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		try {
 			outcome = await runValidationPlan(plan, {
 				registry,
-				debounceScope: mode.record ? debounceScope : silentDebounceScope,
+				debounceScope: mode.record ? debounceScope : createDebounceScope(),
 			});
 		} catch (error) {
 			finish();
@@ -957,6 +957,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 							touched: conformAt(state.touched, path, branch),
 							failed: conformAt(state.failed, path, branch),
 							validated: conformAt(state.validated, path, branch),
+							validating: conformAt(state.validating, path, branch),
 						}
 					: {}),
 			});
@@ -1107,7 +1108,9 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		blur: (path, nativeOptions) =>
 			batch(() => {
 				assertFieldPath(path, 'blur');
-				const native = withFact(state.native, path, nativeOptions?.native, state.values);
+				const native = missingRow(path, state.values)
+					? state.native
+					: withFact(state.native, path, nativeOptions?.native, state.values);
 				if (native !== state.native) commit({ native });
 				if (!isTouched(path)) commit({ touched: markAt(state.touched, path, isArrayNow) });
 				if (validatesOn('blur', path)) validateQuietly([path], { record: true, markFailed: false });
