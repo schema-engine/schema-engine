@@ -1,9 +1,10 @@
 import { logger } from '@/lib/logger';
-import { useCallback } from 'react';
+import { useCallback, useState, type BaseSyntheticEvent } from 'react';
 import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import {
 	collectStepActions,
+	createSubmissionGuard,
 	runSubmissionLifecycle,
 	type BuilderActionBaseContext,
 	type FormActionTrigger,
@@ -30,7 +31,6 @@ interface UseFormSubmitHandlerOptions {
 	buildActionContext: () => BuilderActionBaseContext;
 	hasMatching: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
 	submission: SubmissionStateManager;
-	dispatchTrigger: (trigger: FormActionTrigger) => Promise<ActionExecutionResult[]>;
 	getCurrentStep: () => number;
 	onSubmit?: (data: FieldValues) => void | Promise<void>;
 	onAction?: (action: NormalizedFormAction, data: FieldValues) => void | Promise<void>;
@@ -62,13 +62,15 @@ export function useFormSubmitHandler({
 	buildActionContext,
 	hasMatching,
 	submission,
-	dispatchTrigger,
 	getCurrentStep,
 	onSubmit,
 	onAction,
 	onActionResults,
 	dispatchActions,
-}: UseFormSubmitHandlerOptions): { handleSubmit: (data: FieldValues) => Promise<void> } & SubmissionContextValue {
+}: UseFormSubmitHandlerOptions): {
+	submitEvent: (event?: BaseSyntheticEvent) => Promise<void>;
+} & SubmissionContextValue {
+	const [guard] = useState(createSubmissionGuard);
 	const { submissionState, setSubmissionPending, setSubmissionSuccess, setSubmissionError, clearSubmission } =
 		submission;
 
@@ -115,57 +117,47 @@ export function useFormSubmitHandler({
 		async (data: FieldValues) => {
 			setSubmissionPending();
 
-			const actions = collectStepActions(config, getCurrentStep());
-			if (actions.length > 0) {
-				try {
-					const { succeeded, results } = await runSubmissionLifecycle(
-						(input) => dispatchActions(input, true),
-						{
-							actions,
-							context: buildActionContext,
-							hasMatching,
-							onAction,
-						},
-					);
-
-					try {
-						if (results.length) await onActionResults?.(results, 'form_submit');
-					} catch (error) {
-						logger.error('Action results callback failed:', error);
-					}
-					const executionErrors: SubmissionError[] = results
-						.filter((result) => !result.success && result.shouldContinue === false)
-						.map((result) => ({
-							actionId: result.actionId,
-							message: result.error || 'Action execution failed',
-						}));
-
-					if (!succeeded) {
-						setSubmissionError({ errors: executionErrors });
-						return;
-					}
-				} catch (error) {
-					logger.error('Form action execution failed:', error);
-					setSubmissionError({
-						errors: [
-							{ actionId: 'unknown', message: error instanceof Error ? error.message : 'Unknown error' },
-						],
-					});
-					await dispatchTrigger('form_submit_error');
-					await dispatchTrigger('form_submit_complete');
-					return;
-				}
-			}
+			const { succeeded, results, failure } = await runSubmissionLifecycle(
+				(input) => dispatchActions(input, true),
+				{
+					actions: collectStepActions(config, getCurrentStep()),
+					context: buildActionContext,
+					hasMatching,
+					onAction,
+					onSubmit: () => onSubmit?.(data),
+				},
+			);
 
 			try {
-				await onSubmit?.(data);
-				setSubmissionSuccess();
+				if (results.length) await onActionResults?.(results, 'form_submit');
 			} catch (error) {
-				logger.error('Form submission failed:', error);
-				setSubmissionError({
-					errors: [{ actionId: 'submit', message: error instanceof Error ? error.message : 'Unknown error' }],
-				});
+				logger.error('Action results callback failed:', error);
 			}
+
+			if (succeeded) {
+				setSubmissionSuccess();
+				return;
+			}
+			if (failure) {
+				logger.error('Form submission failed:', failure.error);
+				setSubmissionError({
+					errors: [
+						{
+							actionId: failure.phase === 'onSubmit' ? 'submit' : 'unknown',
+							message: failure.error instanceof Error ? failure.error.message : 'Unknown error',
+						},
+					],
+				});
+				return;
+			}
+			setSubmissionError({
+				errors: results
+					.filter((result) => !result.success && result.shouldContinue === false)
+					.map((result) => ({
+						actionId: result.actionId,
+						message: result.error || 'Action execution failed',
+					})),
+			});
 		},
 		[
 			config,
@@ -175,7 +167,6 @@ export function useFormSubmitHandler({
 			dispatchActions,
 			buildActionContext,
 			hasMatching,
-			dispatchTrigger,
 			getCurrentStep,
 			setSubmissionPending,
 			setSubmissionSuccess,
@@ -183,8 +174,16 @@ export function useFormSubmitHandler({
 		],
 	);
 
+	const submitEvent = useCallback(
+		async (event?: BaseSyntheticEvent) => {
+			event?.preventDefault();
+			await guard.run(() => form.handleSubmit(handleSubmit)(event));
+		},
+		[guard, form, handleSubmit],
+	);
+
 	return {
-		handleSubmit,
+		submitEvent,
 		executeAction,
 		submissionState,
 		clearSubmission,

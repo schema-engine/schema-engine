@@ -130,13 +130,12 @@ export function FormProvider<
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
 
-	const { handleSubmit, ...submissionContext } = useFormSubmitHandler({
+	const { submitEvent, ...submissionContext } = useFormSubmitHandler({
 		form,
 		config: runtimeConfig,
 		submission,
 		buildActionContext: actionDispatchers.buildActionContext,
 		hasMatching: actionDispatchers.hasMatching,
-		dispatchTrigger: actionDispatchers.dispatchTrigger,
 		getCurrentStep,
 		onSubmit: handleFormSubmit,
 		onAction: handleFormAction,
@@ -164,7 +163,7 @@ export function FormProvider<
 			<FormInstanceContext.Provider value={formInstanceContextValue}>
 				<FormStepStateContext.Provider value={stepStates}>
 					<form
-						onSubmit={form.handleSubmit(handleSubmit)}
+						onSubmit={submitEvent}
 						className={runtimeConfig.className}
 						style={runtimeConfig.style}
 						data-se-theme={engine.getLayout().id}

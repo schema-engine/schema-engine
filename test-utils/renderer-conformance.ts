@@ -11,15 +11,31 @@ import {
 	StepIndicatorsConfigSchema,
 } from '@schema-engine/forms/recipes/built-in';
 
+/**
+ * A result whose `success` throws when the dispatcher reads it.
+ *
+ * @remarks
+ * The dispatcher turns an exception thrown by an action into a failed result, so this is the way an
+ * action makes the dispatch itself reject.
+ */
+function rejectingResult(): { success: boolean } {
+	return {
+		get success(): boolean {
+			throw new Error('Dispatch rejected');
+		},
+	};
+}
+
 export const conformanceAction = {
 	$type: 'conformance',
 	schema: v.object({ $type: v.literal('conformance'), id: v.string(), triggers: v.optional(v.array(v.string())) }),
 	metadata: { name: 'Conformance' },
-	execute: vi.fn(async (context: BuilderActionRuntimeContext<{ id: string }>) =>
-		context.config.id === 'abort'
+	execute: vi.fn(async (context: BuilderActionRuntimeContext<{ id: string }>) => {
+		if (context.config.id === 'reject-dispatch') return rejectingResult();
+		return context.config.id === 'abort'
 			? { success: false, shouldContinue: false, error: 'Submission stopped' }
-			: { success: true },
-	),
+			: { success: true };
+	}),
 };
 
 /**
@@ -54,7 +70,7 @@ export const customArrayType = 'repeater';
 export interface ConformanceMountOptions {
 	config: FormConfigView;
 	defaultValues?: Record<string, unknown>;
-	onSubmit?: (data: Record<string, unknown>) => void;
+	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
 	onAction?: () => void;
 }
@@ -1480,6 +1496,54 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(actionIds).toEqual(['abort', 'error', 'complete']);
 			expect(onSubmit).not.toHaveBeenCalled();
 			expect(onAction).not.toHaveBeenCalled();
+		});
+		describe('submission', () => {
+			const lifecycleActions = [
+				{ $type: 'conformance', id: 'success', triggers: ['form_submit_success'] },
+				{ $type: 'conformance', id: 'error', triggers: ['form_submit_error'] },
+				{ $type: 'conformance', id: 'complete', triggers: ['form_submit_complete'] },
+			];
+			test('a second submit while one is pending is ignored', async () => {
+				let finish!: () => void;
+				const onSubmit = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+				const { host } = await setup({
+					config: { ...form([input('fullName', 'Name')]), actions: lifecycleActions },
+					onSubmit,
+				});
+				const element = host.querySelector('form')!;
+				element.requestSubmit();
+				element.requestSubmit();
+				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(onSubmit).toHaveBeenCalledTimes(1);
+				finish();
+				await expect.poll(actionIds).toEqual(['success', 'complete']);
+			});
+			test('a rejected onSubmit is a failed submission', async () => {
+				const onSubmit = vi.fn(() => Promise.reject(new Error('Save failed')));
+				const { host } = await setup({
+					config: { ...form([input('fullName', 'Name')]), actions: lifecycleActions },
+					onSubmit,
+				});
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(actionIds).toEqual(['error', 'complete']);
+				expect(onSubmit).toHaveBeenCalledTimes(1);
+			});
+			test('a failing lifecycle completes once', async () => {
+				const { host } = await setup({
+					config: {
+						...form([input('fullName', 'Name')]),
+						actions: [
+							{ $type: 'conformance', id: 'success', triggers: ['form_submit_success'] },
+							{ $type: 'conformance', id: 'reject-dispatch', triggers: ['form_submit_complete'] },
+						],
+					},
+				});
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(actionIds).toEqual(['success', 'reject-dispatch']);
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(actionIds().filter((id) => id === 'reject-dispatch')).toHaveLength(1);
+			});
 		});
 		test('an action callback rejection aborts submission and later submit actions', async () => {
 			const onSubmit = vi.fn();

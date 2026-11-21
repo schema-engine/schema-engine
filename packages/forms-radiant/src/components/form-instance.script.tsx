@@ -43,8 +43,10 @@ export interface FormInstanceProps {
 	onAction?: FormProviderProps['onAction'];
 }
 
-/** Detail of `se-action-submit-complete`; `error` is set when `onSubmit` or the action lifecycle threw. */
-export interface SubmissionCompleteDetail extends SubmissionOutcome {
+/** Detail of `se-action-submit-complete`; `error` is set when `onSubmit` rejected or the action lifecycle failed. */
+export interface SubmissionCompleteDetail {
+	succeeded: boolean;
+	results: SubmissionOutcome['results'];
 	error?: unknown;
 }
 
@@ -195,6 +197,11 @@ export class FormInstanceElement extends RadiantElement {
 	@onEvent({ type: 'submit', host: true, options: { capture: true } })
 	onNativeSubmit(event: Event): void {
 		this.warnWithoutEngine();
+		if (this.submitting) {
+			event.preventDefault();
+			event.stopPropagation();
+			return;
+		}
 		const { isWizard, currentStep, totalSteps } = this.getContextValue();
 		if (!isWizard || currentStep >= totalSteps - 1) return;
 		event.preventDefault();
@@ -243,8 +250,8 @@ export class FormInstanceElement extends RadiantElement {
 	 * The instance owns the submitting state because Radiant UI clears its own
 	 * `isSubmitting` after validation, before it awaits `onSubmit`. With no
 	 * `onSubmit`, a form with `action` or `method` submits natively once its actions
-	 * succeed. A rejected `onSubmit` completes the submission as unsuccessful and is
-	 * logged, not rethrown: the event is how the page learns of it.
+	 * succeed. A rejected `onSubmit` completes the submission as unsuccessful, runs the error and
+	 * complete actions and is logged, not rethrown: the event is how the page learns of it.
 	 */
 	private async submitForm(ruiForm: RuiFormElement, data: Record<string, unknown>): Promise<void> {
 		if (this.submitting) return;
@@ -252,23 +259,29 @@ export class FormInstanceElement extends RadiantElement {
 			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		this.setSubmitting(true);
 		announce('se-action-submit-start');
-		let outcome: SubmissionCompleteDetail = { succeeded: true, results: [] };
+		const submit = async () => {
+			if (this.onSubmit) {
+				await this.onSubmit(expandValues(data));
+			} else if (ruiForm.hasAttribute('action') || ruiForm.hasAttribute('method')) {
+				ruiForm.querySelector<HTMLFormElement>('form[data-ref="form"]')?.submit();
+			}
+		};
+		let detail: SubmissionCompleteDetail;
 		try {
-			if (this.actions) outcome = await this.actions.submit();
-			if (outcome.succeeded) {
-				if (this.onSubmit) {
-					await this.onSubmit(expandValues(data));
-				} else if (ruiForm.hasAttribute('action') || ruiForm.hasAttribute('method')) {
-					ruiForm.querySelector<HTMLFormElement>('form[data-ref="form"]')?.submit();
-				}
+			if (this.actions) {
+				const { succeeded, results, failure } = await this.actions.submit(submit);
+				detail = { succeeded, results, ...(failure ? { error: failure.error } : {}) };
+			} else {
+				await submit();
+				detail = { succeeded: true, results: [] };
 			}
 		} catch (error) {
-			outcome = { succeeded: false, results: outcome.results, error };
-			logger.error('Form submission failed', error);
+			detail = { succeeded: false, results: [], error };
 		} finally {
 			this.setSubmitting(false);
-			announce('se-action-submit-complete', outcome);
 		}
+		if ('error' in detail) logger.error('Form submission failed', detail.error);
+		announce('se-action-submit-complete', detail);
 	}
 
 	private setSubmitting(submitting: boolean): void {

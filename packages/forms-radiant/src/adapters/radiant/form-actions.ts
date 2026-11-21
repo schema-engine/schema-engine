@@ -103,13 +103,13 @@ export class FormActions {
 	}
 
 	/**
-	 * Runs the submit actions before the form instance invokes its submission callback.
+	 * Runs the submission lifecycle, with `onSubmit` between the submit actions and the success or error trigger.
 	 *
 	 * @remarks
-	 * Resolves unsuccessful when the form is not ready. The caller reports the
+	 * Resolves unsuccessful, without calling `onSubmit`, when the form is not ready. The caller reports the
 	 * submission's start and completion.
 	 */
-	async submit(): Promise<SubmissionOutcome> {
+	async submit(onSubmit?: () => void | Promise<void>): Promise<SubmissionOutcome> {
 		if (!this.options.form.ready) return { succeeded: false, results: [] };
 		try {
 			const outcome = await runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
@@ -117,6 +117,7 @@ export class FormActions {
 				context: () => this.buildContext(),
 				hasMatching: (actions, trigger) => this.dispatcher.hasMatching(actions, trigger),
 				onAction: (action, data) => this.options.onAction?.(action, data),
+				onSubmit,
 			});
 			this.report('form_submit', outcome.results);
 			return outcome;
