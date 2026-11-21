@@ -250,7 +250,7 @@ const hasMarkAround = (tree: Tree<true>, path: string): boolean =>
 /**
  * The row a path names that its array does not have, if any.
  *
- * @remarks An index segment below a value that is not there names a row of an array with no rows; a name below an absent object does not.
+ * @remarks An index segment below a value that is not an array or an object (absent, or a primitive) names a row of an array with no rows; a name below an absent object does not.
  */
 function missingRow(
 	path: string,
@@ -265,7 +265,7 @@ function missingRow(
 		if (Array.isArray(value) && !(isIndex && Number(segment) < value.length)) {
 			return { segment, above, length: value.length };
 		}
-		if ((value === null || value === undefined) && isIndex) return { segment, above, length: 0 };
+		if (isIndex && !Array.isArray(value) && !isStructural(value)) return { segment, above, length: 0 };
 	}
 	return undefined;
 }
