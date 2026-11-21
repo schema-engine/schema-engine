@@ -121,4 +121,42 @@ describe('createFormValidationResolver', () => {
 			vi.useRealTimers();
 		}
 	});
+
+	test('a check replaced by a later write waits for the latest run and shows its real outcome', async () => {
+		vi.useFakeTimers();
+		const fetchSpy = vi
+			.spyOn(globalThis, 'fetch')
+			.mockImplementation(
+				async () => new Response(JSON.stringify({ valid: false, message: 'Handle is taken' }), { status: 200 }),
+			);
+		try {
+			const resolver = createFormValidationResolver(
+				[
+					{
+						name: 'handle',
+						rules: [
+							{ type: 'async', url: '/check', debounce: 100, disableCache: true } as { type: string },
+						],
+					},
+				],
+				registry,
+			);
+			const options = { fields: {}, shouldUseNativeValidation: false, names: ['handle'] };
+			const first = resolver({ handle: 'a' }, undefined, options);
+			await vi.advanceTimersByTimeAsync(20);
+			const second = resolver({ handle: 'ab' }, undefined, options);
+			await vi.advanceTimersByTimeAsync(20);
+			const submit = resolver({ handle: 'ab' }, undefined, { ...options, names: undefined });
+			await vi.advanceTimersByTimeAsync(300);
+
+			const results = await Promise.all([first, second, submit]);
+			for (const result of results) {
+				expect(result.errors).toEqual({ handle: { type: 'async', message: 'Handle is taken' } });
+			}
+			expect(JSON.stringify(results)).not.toMatch(/pending/i);
+		} finally {
+			fetchSpy.mockRestore();
+			vi.useRealTimers();
+		}
+	});
 });

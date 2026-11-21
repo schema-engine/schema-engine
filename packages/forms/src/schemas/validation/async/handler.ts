@@ -93,18 +93,18 @@ function isValidationSuccessful(data: unknown, expectedResponse?: AsyncValidatio
 /**
  * Extracts error message from validation response with proper priority.
  */
-function getErrorMessage(data: unknown, fallbackMessage?: string): string {
+function getErrorMessage(data: unknown, fallbackMessage?: string): string | undefined {
 	if (typeof data === 'object' && data !== null) {
 		const obj = data as Record<string, unknown>;
-		return (obj.message as string) || (obj.error as string) || fallbackMessage || 'Validation failed';
+		return (obj.message as string) || (obj.error as string) || fallbackMessage;
 	}
-	return fallbackMessage || 'Validation failed';
+	return fallbackMessage;
 }
 
 /**
  * Handles validation failure by adding an issue to the Zod Mini context.
  */
-function handleValidationFailure(ctx: z.core.$RefinementCtx, message: string): void {
+function handleValidationFailure(ctx: z.core.$RefinementCtx, message: string | undefined): void {
 	ctx.addIssue({
 		code: 'custom',
 		message,
@@ -116,7 +116,7 @@ function cacheError(
 	cache: typeof asyncValidationCache,
 	url: string,
 	payload: Record<string, unknown>,
-	message: string,
+	message: string | undefined,
 	cacheTTL: number,
 	disableCache?: boolean,
 ): CachedValidationResult {
@@ -163,7 +163,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 			if (!rule.disableCache) {
 				const cachedResult = asyncValidationCache.get(rule.url, payload) as CachedValidationResult | null;
 				if (cachedResult !== null) {
-					if (!cachedResult.valid && cachedResult.message) {
+					if (!cachedResult.valid) {
 						handleValidationFailure(ctx, cachedResult.message);
 					}
 					return;
@@ -192,12 +192,11 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 					});
 
 					if (!response.ok) {
-						const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
 						return cacheError(
 							asyncValidationCache,
 							rule.url,
 							payload,
-							errorMessage,
+							rule.message,
 							CACHE_TTL.HTTP_ERROR,
 							rule.disableCache,
 						);
@@ -216,13 +215,12 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 					}
 
 					return cacheResult;
-				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : 'Async validation failed';
+				} catch {
 					return cacheError(
 						asyncValidationCache,
 						rule.url,
 						payload,
-						errorMessage,
+						rule.message,
 						CACHE_TTL.NETWORK_ERROR,
 						rule.disableCache,
 					);
@@ -244,7 +242,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 				result = await performValidation();
 			}
 
-			if (!result.valid && result.message) {
+			if (!result.valid) {
 				handleValidationFailure(ctx, result.message);
 			}
 		}),

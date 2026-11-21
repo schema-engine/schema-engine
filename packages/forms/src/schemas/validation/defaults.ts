@@ -79,8 +79,7 @@ const ipv6ZonePattern = /^[0-9a-zA-Z]+$/;
  * form configuration behavior.
  */
 const createIpv6Schema = (message?: string): z.ZodMiniType => {
-	const errorMessage = message || 'Invalid IPv6 address';
-	const addressSchema = z.ipv6(errorMessage);
+	const addressSchema = z.ipv6(message);
 
 	return z.string().check(
 		z.refine((value) => {
@@ -89,7 +88,7 @@ const createIpv6Schema = (message?: string): z.ZodMiniType => {
 			const zone = zoneSeparator === -1 ? undefined : value.slice(zoneSeparator + 1);
 
 			return z.safeParse(addressSchema, address).success && (zone === undefined || ipv6ZonePattern.test(zone));
-		}, errorMessage),
+		}, message),
 	);
 };
 
@@ -106,7 +105,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		handler: (rule: RequiredRule) =>
 			z.unknown().check(
 				z.refine((val) => !isEmpty(val), {
-					message: rule.message || 'Required',
+					message: rule.message,
 				}),
 			),
 	},
@@ -171,7 +170,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		schema: PhoneRuleSchema,
 		metadata: { name: 'Phone', description: 'The text is an E.164 phone number.' },
 		category: 'string',
-		handler: (rule: PhoneRule) => z.e164(rule.message || 'Please enter a valid phone number'),
+		handler: (rule: PhoneRule) => z.e164(rule.message),
 	},
 	{
 		$type: 'cidr',
@@ -180,8 +179,8 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		category: 'string',
 		params: (rule: CidrRule) => definedParams({ version: rule.version }),
 		handler: (rule: CidrRule) => {
-			const v4 = z.cidrv4(rule.message || 'Please enter a valid IPv4 CIDR');
-			const v6 = z.cidrv6(rule.message || 'Please enter a valid IPv6 CIDR');
+			const v4 = z.cidrv4(rule.message);
+			const v6 = z.cidrv6(rule.message);
 
 			if (rule.version === 'v4') return v4;
 			if (rule.version === 'v6') return v6;
@@ -193,7 +192,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		schema: Ipv4RuleSchema,
 		metadata: { name: 'IPv4', description: 'The text is an IPv4 address.' },
 		category: 'string',
-		handler: (rule: Ipv4Rule) => z.ipv4(rule.message || 'Invalid IPv4 address'),
+		handler: (rule: Ipv4Rule) => z.ipv4(rule.message),
 	},
 	{
 		$type: 'ipv6',
@@ -241,7 +240,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		metadata: { name: 'JWT', description: 'The text is a JSON Web Token.' },
 		category: 'string',
 		params: (rule: JwtRule) => definedParams({ alg: rule.alg }),
-		handler: (rule: JwtRule) => z.jwt({ alg: rule.alg, error: rule.message || 'Invalid JWT' }),
+		handler: (rule: JwtRule) => z.jwt({ alg: rule.alg, error: rule.message }),
 	},
 	{
 		$type: 'hash',
@@ -249,7 +248,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		metadata: { name: 'Hash', description: 'The text is a hex digest of the chosen algorithm.' },
 		category: 'string',
 		params: (rule: HashRule) => ({ algorithm: rule.algorithm }),
-		handler: (rule: HashRule) => z.hash(rule.algorithm, { error: rule.message || 'Invalid hash' }),
+		handler: (rule: HashRule) => z.hash(rule.algorithm, { error: rule.message }),
 	},
 	{
 		$type: 'base64',
@@ -258,9 +257,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		category: 'string',
 		params: (rule: Base64Rule) => definedParams({ urlSafe: rule.urlSafe }),
 		handler: (rule: Base64Rule) =>
-			rule.urlSafe
-				? z.base64url({ error: rule.message || 'Invalid Base64 URL' })
-				: z.base64({ error: rule.message || 'Invalid Base64' }),
+			rule.urlSafe ? z.base64url({ error: rule.message }) : z.base64({ error: rule.message }),
 	},
 	{
 		$type: 'cuid',
@@ -300,7 +297,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 			definedParams({ precision: rule.precision, offset: rule.offset, local: rule.local }),
 		handler: (rule: DateTimeRule) =>
 			z.iso.datetime({
-				error: rule.message || 'Please enter a valid datetime',
+				error: rule.message,
 				precision: rule.precision,
 				offset: rule.offset,
 				local: rule.local,
@@ -312,7 +309,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		schema: DateRuleSchema,
 		metadata: { name: 'Date', description: 'The text is an ISO 8601 date.' },
 		category: 'date',
-		handler: (rule: DateRule) => z.iso.date({ error: rule.message || 'Please enter a valid date' }),
+		handler: (rule: DateRule) => z.iso.date({ error: rule.message }),
 	},
 
 	{
@@ -323,7 +320,7 @@ export const defaultValidations: readonly AnyValidationRegistration[] = [
 		params: (rule: TimeRule) => definedParams({ precision: rule.precision }),
 		handler: (rule: TimeRule) =>
 			z.iso.time({
-				error: rule.message || 'Please enter a valid time',
+				error: rule.message,
 				precision: rule.precision,
 			}),
 	},

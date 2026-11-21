@@ -77,18 +77,6 @@ const ASSERTIONS: Record<RelationAssert, (values: readonly unknown[]) => boolean
 	},
 };
 
-const DEFAULT_MESSAGES: Record<RelationAssert, string> = {
-	allEqual: 'These fields must match',
-	allDifferent: 'These fields must be different',
-	ascending: 'Values must be in ascending order',
-	strictlyAscending: 'Values must increase',
-	descending: 'Values must be in descending order',
-	strictlyDescending: 'Values must decrease',
-	atLeastOne: 'Fill at least one of these fields',
-	exactlyOne: 'Fill exactly one of these fields',
-	allOrNone: 'Fill all of these fields or none',
-};
-
 /**
  * Assertions whose whole job is to fire on a partly filled group.
  *
@@ -128,6 +116,6 @@ export const relateValidation: ValidationRegistration<RelateRule> = {
 				}
 
 				return ASSERTIONS[rule.assert](participating.map((entry) => coerce(entry, rule.as)));
-			}, rule.message ?? DEFAULT_MESSAGES[rule.assert]),
+			}, rule.message),
 		),
 };
