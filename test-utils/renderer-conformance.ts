@@ -1541,6 +1541,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 				await new Promise((resolve) => setTimeout(resolve, 100));
 				expect(onSubmit).toHaveBeenCalledTimes(1);
+				expect(actionIds()).toEqual([]);
 				finish();
 				await expect.poll(actionIds).toEqual(['success', 'complete']);
 			});

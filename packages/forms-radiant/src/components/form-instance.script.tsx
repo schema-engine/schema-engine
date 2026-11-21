@@ -44,9 +44,7 @@ export interface FormInstanceProps {
 }
 
 /** Detail of `se-action-submit-complete`; `error` is set when `onSubmit` rejected or the action lifecycle failed. */
-export interface SubmissionCompleteDetail {
-	succeeded: boolean;
-	results: SubmissionOutcome['results'];
+export interface SubmissionCompleteDetail extends Pick<SubmissionOutcome, 'succeeded' | 'results'> {
 	error?: unknown;
 }
 
@@ -244,7 +242,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	/**
 	 * Runs one submission and reports it with `se-action-submit-start` and
-	 * `se-action-submit-complete` (with `error` when it threw) on the `rui-form`, whether or not actions are configured.
+	 * `se-action-submit-complete` (with `error` when `onSubmit` rejected or the lifecycle failed) on the `rui-form`, whether or not actions are configured.
 	 *
 	 * @remarks
 	 * The instance owns the submitting state because Radiant UI clears its own
