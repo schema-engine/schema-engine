@@ -1497,6 +1497,31 @@ export function rendererConformance(mount: ConformanceMount): void {
 			expect(onSubmit).not.toHaveBeenCalled();
 			expect(onAction).not.toHaveBeenCalled();
 		});
+		test('only value changes trigger change', async () => {
+			const onChange = vi.fn();
+			const { host } = await setup({
+				config: {
+					...form([
+						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+						input('note', 'Note'),
+					]),
+					validationMode: 'onBlur',
+					actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_change'] }],
+				},
+				onChange,
+			});
+			await userEvent.click(getByRole(host, 'textbox', { name: /^Name/ }));
+			await userEvent.tab();
+			await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			expect(actionIds()).toEqual([]);
+			expect(onChange).not.toHaveBeenCalled();
+			await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'a');
+			await expect.poll(actionIds).toEqual(['changed']);
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			expect(actionIds()).toEqual(['changed']);
+			expect(onChange).toHaveBeenCalledTimes(1);
+		});
 		describe('submission', () => {
 			const lifecycleActions = [
 				{ $type: 'conformance', id: 'success', triggers: ['form_submit_success'] },

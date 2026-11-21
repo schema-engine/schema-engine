@@ -19,7 +19,7 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext } from '@/components/provider';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
-import { expandValues } from '@/adapters/radiant/controller/values';
+import { createChangeDetector, expandValues } from '@/adapters/radiant/controller/values';
 import { createInitialStepStates, hasConfiguredActions, type StepMachineState } from '@schema-engine/forms/engine';
 import { createFormMeta, type FormMeta } from '@/lib/instance-view';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
@@ -327,9 +327,10 @@ export class FormInstanceElement extends RadiantElement {
 			this.publishFormValues();
 			return;
 		}
+		const changed = createChangeDetector();
 		this.unwatchChanges = this.form.watchForm((values) => {
 			this.publishFormValues(values);
-			this.onChange?.(values);
+			if (changed(values)) this.onChange?.(values);
 		});
 	}
 

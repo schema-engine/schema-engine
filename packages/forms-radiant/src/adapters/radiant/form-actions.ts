@@ -10,7 +10,7 @@ import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { FormProviderProps } from '@/adapters/types';
 import { logger } from '@/lib/logger';
-import { expandValues } from './controller/values';
+import { createChangeDetector, expandValues } from './controller/values';
 import type { FormController } from './controller';
 
 /** What a submission's actions produced, in the shape `runSubmissionLifecycle` resolves. */
@@ -71,22 +71,19 @@ export class FormActions {
 	 * Dispatches `form_mount` and starts `form_change` dispatching, once, when the form is ready.
 	 *
 	 * @remarks
-	 * Safe to call on every readiness notification. The change watcher skips its
-	 * initial snapshot, and clears the attempt count when the form is not submitted.
+	 * Safe to call on every readiness notification. The change watcher takes its initial
+	 * snapshot as the baseline and dispatches `form_change` only when the values differ from
+	 * the previous one; it also clears the attempt count when the form is not submitted.
 	 */
 	start(): void {
 		const { form } = this.options;
 		if (this.started || !form.ready) return;
 		this.started = true;
 		this.dispatchQuietly('form_mount');
-		let initial = true;
-		this.unwatchChanges = form.watchForm(() => {
+		const changed = createChangeDetector();
+		this.unwatchChanges = form.watchForm((values) => {
 			if (!form.formState.isSubmitted) this.submitAttempts = 0;
-			if (initial) {
-				initial = false;
-				return;
-			}
-			this.dispatchQuietly('form_change');
+			if (changed(values)) this.dispatchQuietly('form_change');
 		});
 	}
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { expandValues, flattenValues } from '@/adapters/radiant/controller/values';
+import { createChangeDetector, expandValues, flattenValues } from '@/adapters/radiant/controller/values';
 
 describe('Radiant form value conversion', () => {
 	test('flattens null-prototype records in nested array defaults', () => {
@@ -16,5 +16,40 @@ describe('Radiant form value conversion', () => {
 		const values = Object.assign(Object.create(null) as Record<string, unknown>, { 'contacts.0': item });
 
 		expect(expandValues(values)).toEqual({ contacts: [{ role: 'Alice' }] });
+	});
+});
+
+describe('createChangeDetector', () => {
+	test('takes the first snapshot as the baseline', () => {
+		const changed = createChangeDetector();
+
+		expect(changed({ name: 'Ada' })).toBe(false);
+	});
+
+	test('reports a changed value, a nested change and an array change once each', () => {
+		const changed = createChangeDetector();
+		changed({ name: 'Ada', tags: ['a'], address: { city: 'Rome' } });
+
+		expect(changed({ name: 'Bob', tags: ['a'], address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ name: 'Bob', tags: ['a'], address: { city: 'Rome' } })).toBe(false);
+		expect(changed({ name: 'Bob', tags: ['a', 'b'], address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ name: 'Bob', tags: ['a', 'b'], address: { city: 'Oslo' } })).toBe(true);
+	});
+
+	test('does not report an equal snapshot built from new objects', () => {
+		const changed = createChangeDetector();
+		changed({ tags: ['a'], when: new Date(0) });
+
+		expect(changed({ tags: ['a'], when: new Date(0) })).toBe(false);
+	});
+
+	test('treats an absent value and an empty string as equal, but not a cleared value', () => {
+		const changed = createChangeDetector();
+		changed({ name: '' });
+
+		expect(changed({})).toBe(false);
+		expect(changed({ name: '' })).toBe(false);
+		expect(changed({ name: 'Ada' })).toBe(true);
+		expect(changed({ name: '' })).toBe(true);
 	});
 });

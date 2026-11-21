@@ -55,3 +55,39 @@ function isRemovedArrayField(values: Record<string, unknown>, name: string): boo
 	}
 	return false;
 }
+
+const isBlank = (value: unknown): boolean => value === undefined || value === '';
+
+/**
+ * @remarks
+ * An absent value and an empty string are equal: Radiant UI reports a field that re-registers while
+ * an error appears or clears as `undefined` and then `''` again, which no one edited.
+ */
+function valuesEqual(a: unknown, b: unknown): boolean {
+	if (Object.is(a, b) || (isBlank(a) && isBlank(b))) return true;
+	if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+	if (Array.isArray(a) && Array.isArray(b)) {
+		return a.length === b.length && a.every((item, index) => valuesEqual(item, b[index]));
+	}
+	if (isPlainRecord(a) && isPlainRecord(b)) {
+		return new Set([...Object.keys(a), ...Object.keys(b)]).values().every((key) => valuesEqual(a[key], b[key]));
+	}
+	return false;
+}
+
+/**
+ * Reports whether a store notification changed the values.
+ *
+ * @remarks
+ * The first snapshot is the baseline and reports no change. Touching, blurring, recording an error and
+ * updating submit state notify the store without changing a value, so a consumer of value changes
+ * compares each snapshot with the previous one instead of acting on every notification.
+ */
+export function createChangeDetector(): (values: Record<string, unknown>) => boolean {
+	let previous: Record<string, unknown> | undefined;
+	return (values) => {
+		const changed = previous !== undefined && !valuesEqual(previous, values);
+		previous = values;
+		return changed;
+	};
+}
