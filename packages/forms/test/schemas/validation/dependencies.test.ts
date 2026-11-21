@@ -62,6 +62,32 @@ describe('buildDependencyIndex', () => {
 		expect(index.dependentsOf('contacts.1.customerType')).toEqual(['contacts.1.vatNumber']);
 	});
 
+	test('says whether each reference was written relative to the row or absolute', () => {
+		const rows = [
+			{
+				$type: 'arrayElements',
+				name: 'contacts',
+				elements: [
+					{ $type: 'input', name: 'email' },
+					{
+						$type: 'input',
+						name: 'confirm',
+						rules: [
+							{ type: 'relate', fields: ['email'], assert: 'allEqual' },
+							{ type: 'relate', fields: ['contacts.0.email'], assert: 'allEqual' },
+						],
+					},
+				],
+			},
+		];
+		const index = buildDependencyIndex(rows, { contacts: [{}, {}] }, registry);
+		expect(index.readsOf('contacts.1.confirm')).toEqual([
+			{ path: 'contacts.1.email', relative: true },
+			{ path: 'contacts.0.email', relative: false },
+		]);
+		expect(index.readsOf('contacts.1.email')).toEqual([]);
+	});
+
 	test('reports no dependents for a field nothing reads', () => {
 		const index = buildDependencyIndex(passwordForm, {}, registry);
 

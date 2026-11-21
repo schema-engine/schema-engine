@@ -295,17 +295,11 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			const current = now(path);
 			return current === undefined || !Object.is(readAt(state.values, current), readAt(startValues, path));
 		};
-		const readsChanged = (watched: string, path: string): boolean => {
-			const dependent = anchorOf(startIds, path);
-			const read = anchorOf(startIds, watched);
-			const sharedRows = new Map([...read.rows].filter(([position, id]) => dependent.rows.get(position) === id));
-			const current = resolveAnchor({ path: watched, rows: sharedRows }, state.ids);
-			return current === undefined || !Object.is(readAt(state.values, current), readAt(startValues, watched));
-		};
 		const dependencyChanged = (path: string): boolean =>
-			startIndex.watched.some(
-				(watched) => startIndex.dependentsOf(watched).includes(path) && readsChanged(watched, path),
-			);
+			startIndex.readsOf(path).some(({ path: read, relative }) => {
+				const current = relative ? now(read) : read;
+				return current === undefined || !Object.is(readAt(state.values, current), readAt(startValues, read));
+			});
 		const lostContainer = (path: string): boolean =>
 			path
 				.split('.')

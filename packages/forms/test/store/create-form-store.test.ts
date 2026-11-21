@@ -616,6 +616,40 @@ describe('createFormStore', () => {
 			expect(store.getSnapshot().errors.confirm?.message).toBe('Not valid');
 		});
 
+		test('an absolute reference is not mistaken for a sibling when it starts in the same row', async () => {
+			const rule = manualRule();
+			const store = createFormStore({
+				registry: rule.registry,
+				validationMode: 'onChange',
+				elements: [
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [
+								{ $type: 'input', name: 'email' },
+								{
+									$type: 'input',
+									name: 'confirm',
+									rules: [{ type: 'manual', reads: 'contacts.0.email' }],
+								},
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { contacts: [{ email: 'a', confirm: 'a' }, { email: 'b' }] },
+			});
+			store.setValue('contacts.0.confirm', 'b');
+			await vi.waitFor(() => expect(rule.calls).toHaveLength(1));
+			store.fieldArray('contacts').swap(0, 1);
+			rule.auto();
+			rule.calls[0].resolve(false);
+			for (const call of rule.calls.slice(1)) call.resolve(true);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(store.getSnapshot().errors['contacts.1.confirm']).toBeUndefined();
+		});
+
 		test('the latest requester still wins for a row after rows move', async () => {
 			const rule = manualRule();
 			const store = createFormStore({
