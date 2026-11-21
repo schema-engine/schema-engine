@@ -1570,10 +1570,10 @@ export function rendererConformance(mount: ConformanceMount): void {
 					defaultValues: { slow: 'x' },
 					onSubmit,
 				});
-				const element = host.querySelector('form')!;
-				element.requestSubmit();
+				const submit = getByRole(host, 'button', { name: /submit/i });
+				submit.click();
 				await expect.poll(() => release.length).toBeGreaterThan(0);
-				element.requestSubmit();
+				submit.click();
 				await new Promise((resolve) => setTimeout(resolve, 50));
 				release[0]?.();
 				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);

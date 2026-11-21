@@ -195,16 +195,35 @@ export class FormInstanceElement extends RadiantElement {
 	@onEvent({ type: 'submit', host: true, options: { capture: true } })
 	onNativeSubmit(event: Event): void {
 		this.warnWithoutEngine();
-		if (this.submitting || this.form?.store?.isSubmitting) {
-			event.preventDefault();
-			event.stopPropagation();
-			return;
-		}
+		if (this.ignoreWhileSubmitting(event)) return;
 		const { isWizard, currentStep, totalSteps } = this.getContextValue();
 		if (!isWizard || currentStep >= totalSteps - 1) return;
 		event.preventDefault();
 		event.stopPropagation();
 		void this.goToNextStep();
+	}
+
+	/** Ignores a click on a submit button while a submission is running, as `onNativeSubmit` does for a submit event. */
+	@onEvent({ type: 'click', host: true, options: { capture: true } })
+	onSubmitButtonClick(event: Event): void {
+		if (event.target instanceof Element && event.target.closest('button[type="submit"]')) {
+			this.ignoreWhileSubmitting(event);
+		}
+	}
+
+	/**
+	 * Stops a submit event that arrives while a submission is validating or running.
+	 *
+	 * @remarks
+	 * Radiant UI sets its own `isSubmitting` for the validation only, and the instance sets `submitting`
+	 * from the end of validation, so together they cover the whole submission. A submit button click
+	 * reaches Radiant UI without a submit event, so both are intercepted in the capture phase.
+	 */
+	private ignoreWhileSubmitting(event: Event): boolean {
+		if (!this.submitting && !this.form?.store?.isSubmitting) return false;
+		event.preventDefault();
+		event.stopPropagation();
+		return true;
 	}
 
 	/**
