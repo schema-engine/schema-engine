@@ -99,7 +99,8 @@ export function reconcile(previous: unknown, next: unknown): unknown {
 		for (const key of keys) {
 			merged[key] = Object.hasOwn(previous, key) ? reconcile(previous[key], next[key]) : next[key];
 		}
-		return keys.length === Object.keys(previous).length && keys.every((key) => merged[key] === previous[key])
+		return keys.length === Object.keys(previous).length &&
+			keys.every((key) => Object.hasOwn(previous, key) && merged[key] === previous[key])
 			? previous
 			: merged;
 	}
@@ -180,6 +181,11 @@ export function collectDirty(value: unknown, defaultValue: unknown, path: string
 		}
 	} else {
 		dirty = true;
+		if (Array.isArray(value) && !isOpaque(value)) {
+			value.forEach((item, index) => collectDirty(item, undefined, join(path, String(index)), out));
+		} else if (isPlainObject(value) && !Array.isArray(value)) {
+			for (const key of Object.keys(value)) collectDirty(value[key], undefined, join(path, key), out);
+		}
 	}
 	if (dirty && path) out[path] = true;
 	return dirty;

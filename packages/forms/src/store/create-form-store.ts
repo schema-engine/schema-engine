@@ -281,10 +281,11 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		const previousValues = state.values;
 		const branch = reconcile(readAt(previousValues, path), toInternal(value));
 		const values = setIn(previousValues, path, branch);
+		const root = path.split('.')[0];
 		if (values === previousValues) return;
 		commit({
 			values,
-			rowIds: syncRowIds(state.rowIds, path, readAt(values, path), mintId),
+			rowIds: syncRowIds(state.rowIds, root, readAt(values, root), mintId),
 			sources: path ? dropStaleErrors(state.sources, path) : new Map(),
 		});
 		afterChange(previousValues, path);
@@ -313,6 +314,8 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			),
 		);
 		const remap = <T>(map: NullMap<T>): NullMap<T> => remapRows(map, path, (oldIndex) => target.get(oldIndex));
+		const scopeMap = createMap<true>();
+		for (const scope of state.failedScopes) scopeMap[scope] = true;
 		const nextIds = Object.freeze(rows.map((row) => row.id));
 		const previousIds = state.rowIds[path] ?? [];
 		const idsChanged =
@@ -331,9 +334,10 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 				readAt(values, path),
 				mintId,
 			),
+			failedScopes: Object.keys(remap(scopeMap)),
 			epoch: values !== previousValues || idsChanged ? state.epoch + 1 : state.epoch,
 		});
-		afterChange(previousValues, undefined);
+		afterChange(previousValues, path);
 	}
 
 	const fresh = (value: unknown): RowEntry => ({ value: toInternal(value), id: mintId() });

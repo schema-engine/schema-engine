@@ -209,4 +209,83 @@ describe('createFormStore', () => {
 			expect(({} as Record<string, unknown>).polluted).toBeUndefined();
 		});
 	});
+
+	describe('writes that reshape the tree', () => {
+		test('a nested write that adds a row gives it an id', () => {
+			const store = createFormStore({ registry, elements: [], defaultValues: { contacts: [{ email: 'a' }] } });
+			store.setValue('contacts.1.email', 'b');
+			expect(store.getSnapshot().rowIds.contacts).toHaveLength(2);
+			expect(store.fieldArray('contacts').fields).toHaveLength(2);
+		});
+
+		test('replacing a branch swaps keys whose values are undefined', () => {
+			const store = createFormStore({ registry, elements: [], defaultValues: { profile: { old: undefined } } });
+			const listener = vi.fn();
+			store.subscribe(listener);
+			store.setValue('profile', { replacement: undefined });
+			expect(listener).toHaveBeenCalledTimes(1);
+			expect(Object.keys(store.getSnapshot().values.profile as object)).toEqual(['replacement']);
+		});
+
+		test('dirty reaches the fields below a container the defaults lack', () => {
+			const store = createFormStore({ registry, elements: [] });
+			store.setValue('address.street', 'Main');
+			expect(store.getSnapshot().dirty).toEqual({ address: true, 'address.street': true });
+		});
+	});
+
+	describe('field arrays and validation', () => {
+		const contactsForm = () =>
+			createFormStore({
+				registry,
+				elements: [
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [
+								{
+									$type: 'input',
+									name: 'email',
+									rules: [{ type: 'required', message: 'Email is required' }],
+								},
+								{ $type: 'input', name: 'label' },
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { contacts: [{ email: '' }, { email: '' }] },
+			});
+
+		test('a failed check follows its row when rows move', async () => {
+			const store = contactsForm();
+			expect(await store.validate(['contacts.1.email'])).toBe(false);
+			store.fieldArray('contacts').remove(0);
+			store.setValue('contacts.0.email', 'a@example.com');
+			await vi.waitFor(() => expect(store.getSnapshot().errors['contacts.0.email']).toBeUndefined());
+		});
+
+		test('an array operation re-validates the array after a failed check', async () => {
+			const store = createFormStore({
+				registry,
+				elements: [
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'tags',
+							rules: [{ type: 'minItems', value: 1, message: 'Add a tag' }],
+							elements: [{ $type: 'input', name: 'value' }],
+						},
+						'array',
+					),
+				],
+				defaultValues: { tags: [] },
+			});
+			expect(await store.validate()).toBe(false);
+			expect(store.getSnapshot().errors.tags?.message).toBe('Add a tag');
+			store.fieldArray('tags').append('a');
+			await vi.waitFor(() => expect(store.getSnapshot().errors.tags).toBeUndefined());
+		});
+	});
 });
