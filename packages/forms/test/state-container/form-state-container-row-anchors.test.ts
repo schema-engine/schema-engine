@@ -13,6 +13,8 @@ describe('a store that finds a late result by position instead of by row', () =>
 		'drops a late result for a row that was removed',
 		'drops a late result when its rows were replaced',
 		'follows a nested row when the rows around it move',
+		'a retry checks the rows it was asked about after they moved, not the ones now at those indexes',
+		'an error for a submitted row lands on that row wherever it is now, and is dropped when the row is gone',
 	])('fails "%s"', async (name) => {
 		const entry = formStateContainerCases.find((candidate) => candidate.name === name);
 		const failure: unknown = await Promise.resolve()

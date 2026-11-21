@@ -20,6 +20,8 @@ export interface RunTracker {
 	/** `scope` is what the run asked for, as anchors; `undefined` is the whole form. */
 	start(scope: readonly RowAnchor[] | undefined, exact: boolean): ValidationRun;
 	reset(): void;
+	/** How many resets there have been: a number a submission keeps to tell whether the form was reset after it began. */
+	epoch(): number;
 	/** Whether the form was reset after `run` started: everything the run found is then moot. */
 	outdated(run: ValidationRun): boolean;
 	finish(run: ValidationRun): void;
@@ -49,6 +51,7 @@ export function createRunTracker(): RunTracker {
 		reset() {
 			epoch += 1;
 		},
+		epoch: () => epoch,
 		outdated: (run) => run.epoch !== epoch,
 		finish(run) {
 			pending.delete(run);

@@ -6,6 +6,7 @@ import {
 	FORM_ROOT,
 	type FormStateContainer,
 	type FormStateContainerFactory,
+	type FormStateIssue,
 	type FormStateSnapshot,
 } from '@/state-container/types';
 
@@ -201,7 +202,11 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	},
 	{
 		name: 'ignores what the platform reports about a control',
-		create: withOverrides(() => ({ setNativeValidity: () => undefined })),
+		create: withOverrides((inner) => ({
+			setValue: (path, value) => inner.setValue(path, value),
+			blur: (path) => inner.blur(path),
+			validate: (paths) => inner.validate(paths),
+		})),
 		caught: [
 			'native validity is an input to validation: it shows with the timing of validation, and notifies nobody alone',
 			'lists the server, then each failed rule in rule order, then the native fact, and shows the first',
@@ -234,6 +239,84 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 			},
 		})),
 		caught: ['identical errors change nothing and keep their objects, and a changed one replaces only its own'],
+	},
+	{
+		name: 'never moves the revision',
+		create: withSnapshot((snapshot) => ({ ...snapshot, revision: 0 })),
+		caught: [
+			'revision increases with every value change, native fact and reset, never with errors or marks, so a runtime can compare it',
+		],
+	},
+	{
+		name: 'reports nothing as pending',
+		create: withSnapshot((snapshot) => ({ ...snapshot, validating: {} })),
+		caught: ['lists the paths a check is running for, moves with a row, and drops a path a later check took over'],
+	},
+	{
+		name: 'applies a server answer without asking which submission it is for',
+		create: withOverrides((inner) => ({ setErrors: (source, errors) => inner.setErrors(source, errors) })),
+		caught: [
+			'a response for values that were edited since the submission began is dropped',
+			'an error for a submitted row lands on that row wherever it is now, and is dropped when the row is gone',
+			'a token from before a reset or from a superseded submission is ignored',
+		],
+	},
+	{
+		name: 'keeps the facts of a control that was released',
+		create: withOverrides(() => ({ releaseNative: () => undefined })),
+		caught: ['releasing a control withdraws its fact and the native issue recorded from it, and leaves the rest'],
+	},
+	{
+		name: 'validates fields whatever their constraints and disabled state',
+		create: (options) =>
+			createFormStateContainer({
+				...options,
+				elements: options.elements.map((element) => ({
+					...element,
+					constraints: undefined,
+					disabled: undefined,
+				})),
+			}),
+		caught: [
+			'a field a constraint hides takes no part: it does not block, count or show, however it was recorded',
+			'disabled fields, authored or by a constraint, and everything inside an excluded container, are excluded; an inactive step is not',
+		],
+	},
+	{
+		name: 'drops the identity of an issue',
+		create: withSnapshot((snapshot) => ({
+			...snapshot,
+			errors: Object.fromEntries(
+				Object.entries(snapshot.errors).map(([path, error]) => {
+					const strip = ({ ruleId: _id, params: _params, ...rest }: FormStateIssue) => rest as FormStateIssue;
+					return [path, { ...strip(error), all: error.all.map(strip) }];
+				}),
+			),
+		})),
+		caught: [
+			'every rule reports its type, id and params, two rules of one type stay apart, and a rule reports once',
+		],
+	},
+	{
+		name: 'swallows a rule that could not run',
+		create: withOverrides((inner) => ({
+			validate: (paths, options) => inner.validate(paths, options).catch(() => false),
+			checkValidity: (paths) => inner.checkValidity(paths).catch(() => false),
+		})),
+		caught: [
+			'a rule that throws is no field error: validate and checkValidity reject naming it, an automatic check records it, the others still report',
+		],
+	},
+	{
+		name: 'counts a warning as an error',
+		create: withSnapshot((snapshot) => ({
+			...snapshot,
+			errors: { ...snapshot.errors, ...snapshot.warnings },
+			isValid: Object.keys(snapshot.warnings).length === 0 && snapshot.isValid,
+		})),
+		caught: [
+			'a rule with severity warning reports advice that never blocks, with the shape and timing of an error',
+		],
 	},
 ];
 

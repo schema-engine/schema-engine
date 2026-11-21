@@ -561,11 +561,11 @@ describe('createFormStateContainer', () => {
 			expect(store.getSnapshot().errors.tags?.message).toBe('Add a tag');
 		});
 
-		test('a result for a row removed meanwhile is dropped', async () => {
+		test('a result for a row removed meanwhile is dropped, and the check resolves false: its rows are gone', async () => {
 			const store = requiredForm();
 			const run = store.validate(['contacts.0.email']);
 			store.setValue('contacts', []);
-			expect(await run).toBe(true);
+			expect(await run).toBe(false);
 			expect(store.getSnapshot().errors).toEqual({});
 		});
 	});
@@ -781,9 +781,11 @@ describe('createFormStateContainer', () => {
 			expect(store.getFieldState('toString').error?.message).toBe('no');
 			expect(store.getFieldState('valueOf')).toEqual({
 				error: undefined,
+				warning: undefined,
 				invalid: false,
 				isTouched: false,
 				isDirty: false,
+				isValidating: false,
 			});
 			expect(store.getFieldState('hasOwnProperty').isTouched).toBe(true);
 			expect(Object.hasOwn(store.getSnapshot().rowIds, 'valueOf')).toBe(false);

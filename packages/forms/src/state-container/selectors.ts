@@ -1,37 +1,56 @@
 import { getValueAtPath } from '@/lib/path-values';
-import type { FormStateError, FormStateSnapshot } from './types';
+import type { FormStateError, FormStateSnapshot, FormStateWarning } from './types';
 
 /** What is known about one field, after `getFieldState` of React Hook Form. */
 export interface FormFieldState {
 	/** The error reported for exactly this path, never one inherited from a container around it. */
 	readonly error: FormStateError | undefined;
+	/** The non-blocking advice for exactly this path. */
+	readonly warning: FormStateWarning | undefined;
+	/** Whether the path has an error. A warning does not make a field invalid. */
 	readonly invalid: boolean;
 	/** Whether the path, a path around it or a path below it has been blurred. */
 	readonly isTouched: boolean;
 	/** Whether the path or a path below it differs from the defaults. */
 	readonly isDirty: boolean;
+	/** Whether the latest check that asked for exactly this path is still running. */
+	readonly isValidating: boolean;
 }
 
 const isAround = (mark: string, path: string): boolean => path === mark || path.startsWith(`${mark}.`);
 const isBelow = (mark: string, path: string): boolean => mark.startsWith(`${path}.`);
 
-const flagIndex = (isTouched: boolean, isDirty: boolean): number => (isTouched ? 1 : 0) + (isDirty ? 2 : 0);
-const stateWithout = (index: number): FormFieldState =>
-	Object.freeze({ error: undefined, invalid: false, isTouched: (index & 1) === 1, isDirty: (index & 2) === 2 });
-const NO_ERROR_STATES = [0, 1, 2, 3].map(stateWithout);
-const stateByError = new WeakMap<FormStateError, FormFieldState[]>();
+const NO_ERROR = Object.freeze({}) as FormStateError;
+const NO_WARNING = Object.freeze({}) as FormStateWarning;
+const statesByIssues = new WeakMap<object, WeakMap<object, FormFieldState[]>>();
 
 /**
- * The one field state for an error and two flags.
+ * The one field state for an error, a warning and three flags.
  *
  * @remarks Interned, so a field that did not change has the same object in every snapshot.
  */
-function internFieldState(error: FormStateError | undefined, isTouched: boolean, isDirty: boolean): FormFieldState {
-	const index = flagIndex(isTouched, isDirty);
-	if (!error) return NO_ERROR_STATES[index];
-	let states = stateByError.get(error);
-	if (!states) stateByError.set(error, (states = []));
-	return (states[index] ??= Object.freeze({ error, invalid: true, isTouched, isDirty }));
+function internFieldState(
+	error: FormStateError | undefined,
+	warning: FormStateWarning | undefined,
+	isTouched: boolean,
+	isDirty: boolean,
+	isValidating: boolean,
+): FormFieldState {
+	const errorKey = error ?? NO_ERROR;
+	let byWarning = statesByIssues.get(errorKey);
+	if (!byWarning) statesByIssues.set(errorKey, (byWarning = new WeakMap()));
+	const warningKey = warning ?? NO_WARNING;
+	let states = byWarning.get(warningKey);
+	if (!states) byWarning.set(warningKey, (states = []));
+	const index = (isTouched ? 1 : 0) + (isDirty ? 2 : 0) + (isValidating ? 4 : 0);
+	return (states[index] ??= Object.freeze({
+		error,
+		warning,
+		invalid: error !== undefined,
+		isTouched,
+		isDirty,
+		isValidating,
+	}));
 }
 
 const fieldStates = new WeakMap<FormStateSnapshot, Map<string, FormFieldState>>();
@@ -41,8 +60,8 @@ const fieldStates = new WeakMap<FormStateSnapshot, Map<string, FormFieldState>>(
  *
  * @remarks
  * Pure and memoized: the same object comes back for the same snapshot and path, and for a later snapshot
- * while the field's error and flags are unchanged, so it is safe as a selector for `useSyncExternalStore`
- * or an external store source.
+ * while the field's error, warning and flags are unchanged, so it is safe as a selector for
+ * `useSyncExternalStore` or an external store source.
  */
 export function selectFieldState(snapshot: FormStateSnapshot, path: string): FormFieldState {
 	let states = fieldStates.get(snapshot);
@@ -53,8 +72,10 @@ export function selectFieldState(snapshot: FormStateSnapshot, path: string): For
 		const dirty = Object.keys(snapshot.dirty);
 		state = internFieldState(
 			selectError(snapshot, path),
+			selectWarning(snapshot, path),
 			touched.some((mark) => isAround(mark, path) || isBelow(mark, path)),
 			dirty.some((mark) => mark === path || isBelow(mark, path)),
+			Object.hasOwn(snapshot.validating, path),
 		);
 		states.set(path, state);
 	}
@@ -69,6 +90,11 @@ export function selectValue(snapshot: FormStateSnapshot, path: string): unknown 
 /** The error reported for exactly `path`, never one inherited from a container around it. */
 export function selectError(snapshot: FormStateSnapshot, path: string): FormStateError | undefined {
 	return Object.hasOwn(snapshot.errors, path) ? snapshot.errors[path] : undefined;
+}
+
+/** The advice reported for exactly `path`, never one inherited from a container around it. */
+export function selectWarning(snapshot: FormStateSnapshot, path: string): FormStateWarning | undefined {
+	return Object.hasOwn(snapshot.warnings, path) ? snapshot.warnings[path] : undefined;
 }
 
 const NO_ERRORS: Readonly<Record<string, FormStateError>> = Object.freeze({});

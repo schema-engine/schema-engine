@@ -6,6 +6,7 @@ vi.mock('@/state-container/stale-results', () => ({
 	createRunTracker: () => ({
 		start: () => ({ seq: 0, epoch: 0 }),
 		reset: () => undefined,
+		epoch: () => 0,
 		outdated: () => false,
 		finish: () => undefined,
 		superseded: () => false,
