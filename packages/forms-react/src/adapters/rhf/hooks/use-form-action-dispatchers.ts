@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormActionTrigger, BuilderActionBaseContext, FormConfigView } from '@schema-engine/forms';
@@ -49,6 +49,25 @@ export function useFormActionDispatchers({
 }: UseFormActionDispatchersOptions): UseFormActionDispatchersReturn {
 	const [formMountTime] = useState(() => formMountTimeProp ?? Date.now());
 
+	/**
+	 * @remarks
+	 * `form.formState` holds the values of the last render, and React Hook Form re-renders the provider only for
+	 * the fields something reads. Reading them here would be stale until a context had first been built, so
+	 * errors come from `getErrors`, which reads the live state, and touched state and the submit count are
+	 * kept from a subscription. Neither subscribes to `isValid`, which would validate the whole form.
+	 */
+	const liveState = useRef({ touchedFields: form.formState.touchedFields, submitCount: form.formState.submitCount });
+	useEffect(
+		() =>
+			form.subscribe({
+				formState: { touchedFields: true, submitCount: true },
+				callback: ({ touchedFields, submitCount }) => {
+					liveState.current = { touchedFields: touchedFields ?? {}, submitCount: submitCount ?? 0 };
+				},
+			}),
+		[form],
+	);
+
 	const formAdapter = useMemo<BuilderActionBaseContext['form']>(
 		() => ({
 			reset: () => form.reset(),
@@ -61,11 +80,11 @@ export function useFormActionDispatchers({
 	);
 
 	const buildActionContext = useCallback((): BuilderActionBaseContext => {
-		const { errors, touchedFields, submitCount } = form.formState;
+		const { touchedFields, submitCount } = liveState.current;
 		return buildFormActionContext({
 			config,
 			values: form.getValues(),
-			formState: { errors, touched: touchedFields, submitCount },
+			formState: { errors: form.getErrors(), touched: touchedFields, submitCount },
 			currentStep: getCurrentStep?.() ?? 0,
 			mountedAt: formMountTime,
 			form: formAdapter,

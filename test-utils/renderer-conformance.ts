@@ -1321,6 +1321,25 @@ export function rendererConformance(mount: ConformanceMount): void {
 				await expect.poll(() => lastActionContext()?.formData.note).toBe('hi');
 				expect(lastActionContext()?.isValid).toBe(false);
 			});
+			test('isValid and the interaction count follow an error recorded on blur', async () => {
+				const { host } = await setup({
+					config: {
+						...form([
+							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							input('note', 'Note'),
+						]),
+						validationMode: 'onBlur',
+						actions: [changeAction],
+					},
+				});
+				await userEvent.click(getByRole(host, 'textbox', { name: /^Name/ }));
+				await userEvent.click(getByRole(host, 'textbox', { name: 'Note' }));
+				await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'hi');
+				await expect.poll(() => lastActionContext()?.formData.note).toBe('hi');
+				expect(lastActionContext()?.isValid).toBe(false);
+				expect(lastActionContext()?.metadata.userInteractions).toBeGreaterThan(0);
+			});
 			test('a validity check answers for its own values while a field check is pending', async () => {
 				stubFetch((value) => (value === 'ab' ? { valid: false, message: 'Handle is taken' } : { valid: true }));
 				const { host } = await setup({
