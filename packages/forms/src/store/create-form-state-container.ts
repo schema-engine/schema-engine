@@ -111,7 +111,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return id;
 	};
 
-	const initialDefaults = toInternal(options.defaultValues ?? {}) as NullMap;
+	const initialDefaults = toInternal(options.defaults ?? {}) as NullMap;
 	let state: State = {
 		values: initialDefaults,
 		defaults: initialDefaults,

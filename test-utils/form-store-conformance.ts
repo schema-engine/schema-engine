@@ -4,7 +4,7 @@ import { markNormalizedElementConfig } from '../packages/forms/src/lib/normalize
 import type { ElementConfig } from '../packages/forms/src/schemas/field-config';
 import { createDefaultValidationRegistry } from '../packages/forms/src/schemas/validation/validation-registry';
 import { toFieldArrayValue } from '../packages/forms/src/store/field-array';
-import { selectFieldState } from '../packages/forms/src/store/selectors';
+import { selectError, selectFieldState, selectValue } from '../packages/forms/src/store/selectors';
 import {
 	FORM_PATH,
 	type FormStateContainer,
@@ -142,7 +142,7 @@ function fixture(overrides: Partial<FormStateContainerOptions> = {}): Fixture {
 					'array',
 				),
 			],
-			defaultValues: {
+			defaults: {
 				name: 'Ada',
 				nickname: 'ada',
 				slug: 'free',
@@ -225,7 +225,7 @@ const cases: FormStoreCase[] = [
 		name: 'freezes snapshots and does not alias the values it was given',
 		run(createStore) {
 			const defaults = { name: 'Ada', address: { street: '1 Main', country: 'IT' } };
-			const store = createStore(fixture({ defaultValues: defaults }).options);
+			const store = createStore(fixture({ defaults: defaults }).options);
 			const snapshot = store.getSnapshot();
 			expect(() => {
 				(snapshot.values as Record<string, unknown>).name = 'Eve';
@@ -401,6 +401,22 @@ const cases: FormStoreCase[] = [
 	},
 	{
 		rule: 'snapshot stability',
+		name: 'selectValue and selectError read a snapshot by exact path and keep their reference while it holds',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			const before = store.getSnapshot();
+			expect(selectValue(before, 'address')).toBe(before.values.address);
+			expect(selectValue(before, 'contacts.1.email')).toBe('b@example.com');
+			store.setErrors('server', { contacts: error('array') });
+			store.setValue('name', 'Grace');
+			const after = store.getSnapshot();
+			expect(selectValue(after, 'address')).toBe(selectValue(before, 'address'));
+			expect(selectError(after, 'contacts')?.message).toBe('array');
+			expect(selectError(after, 'contacts.0.email')).toBeUndefined();
+		},
+	},
+	{
+		rule: 'snapshot stability',
 		name: 'selectFieldState gives the same object for a snapshot and path, and a new one once its state changed',
 		run(createStore) {
 			const store = createStore(fixture().options);
@@ -495,7 +511,7 @@ const cases: FormStoreCase[] = [
 		rule: 'validation mode timing',
 		name: 'an empty list of paths validates nothing, and undefined validates the form',
 		async run(createStore) {
-			const store = createStore(fixture({ defaultValues: { name: '', nickname: '' } }).options);
+			const store = createStore(fixture({ defaults: { name: '', nickname: '' } }).options);
 			const watch = watchValidation(store);
 			expect(await store.validate([])).toBe(true);
 			expect(await store.checkValidity([])).toBe(true);
@@ -507,7 +523,7 @@ const cases: FormStoreCase[] = [
 		rule: 'validation mode timing',
 		name: 'a row operation validates the array own rules, and the rows inside it are not validated',
 		async run(createStore) {
-			const { options, gate } = fixture({ validationMode: 'onChange', defaultValues: { invites: [] } });
+			const { options, gate } = fixture({ validationMode: 'onChange', defaults: { invites: [] } });
 			const store = createStore(options);
 			gate.hold('x');
 			store.fieldArray('invites').append({ code: 'x', label: 'first' });
@@ -536,7 +552,7 @@ const cases: FormStoreCase[] = [
 		rule: 'validation mode timing',
 		name: 'with onChange a change validates and a blur alone does not',
 		async run(createStore) {
-			const store = createStore(fixture({ validationMode: 'onChange', defaultValues: { name: '' } }).options);
+			const store = createStore(fixture({ validationMode: 'onChange', defaults: { name: '' } }).options);
 			const watch = watchValidation(store);
 			store.blur('name');
 			await settle();
@@ -571,7 +587,7 @@ const cases: FormStoreCase[] = [
 			onChange.setValue('name', 'Ada');
 			await vi.waitFor(() => expect(errorsOf(onChange).name).toBeUndefined());
 
-			const onBlur = createStore(fixture({ validationMode: 'all', defaultValues: { name: '' } }).options);
+			const onBlur = createStore(fixture({ validationMode: 'all', defaults: { name: '' } }).options);
 			expect(errorsOf(onBlur)).toEqual({});
 			onBlur.blur('name');
 			await vi.waitFor(() => expect(errorsOf(onBlur).name?.message).toBe('Name is required'));
@@ -582,7 +598,7 @@ const cases: FormStoreCase[] = [
 		name: 'validates only the path that changed',
 		async run(createStore) {
 			const store = createStore(
-				fixture({ validationMode: 'onChange', defaultValues: { name: '', nickname: 'ada' } }).options,
+				fixture({ validationMode: 'onChange', defaults: { name: '', nickname: 'ada' } }).options,
 			);
 			store.setValue('nickname', '');
 			await vi.waitFor(() => expect(errorsOf(store).nickname?.message).toBe('Nickname is required'));
@@ -875,7 +891,7 @@ const cases: FormStoreCase[] = [
 		run(createStore) {
 			const store = createStore(
 				fixture({
-					defaultValues: {
+					defaults: {
 						groups: [
 							{ title: 'a', members: [{ label: 'x' }, { label: 'y' }] },
 							{ title: 'b', members: [{ label: 'z' }] },
@@ -968,7 +984,7 @@ const cases: FormStoreCase[] = [
 			expect(errorsOf(store).name?.message).toBe('Server says no');
 			expect(errorsOf(store).nickname?.message).toBe('Native nick');
 
-			const other = createStore(fixture({ defaultValues: { name: '', nickname: '' } }).options);
+			const other = createStore(fixture({ defaults: { name: '', nickname: '' } }).options);
 			await other.validate();
 			expect(errorsOf(other).name?.message).toBe('Name is required');
 			other.setErrors('native', { name: error('Fill in this field') });
@@ -1048,7 +1064,7 @@ const cases: FormStoreCase[] = [
 		rule: 'stale async results',
 		name: 'drops a result that arrives after a reset',
 		async run(createStore) {
-			const { options, gate } = fixture({ validationMode: 'onChange', defaultValues: { slug: 'taken' } });
+			const { options, gate } = fixture({ validationMode: 'onChange', defaults: { slug: 'taken' } });
 			const store = createStore(options);
 			gate.hold('taken');
 			store.setValue('slug', 'other');
@@ -1067,7 +1083,7 @@ const cases: FormStoreCase[] = [
 		async run(createStore) {
 			const { options, gate } = fixture({
 				validationMode: 'onBlur',
-				defaultValues: {
+				defaults: {
 					invites: [
 						{ code: 'one', label: 'first' },
 						{ code: 'one', label: 'second' },
@@ -1092,7 +1108,7 @@ const cases: FormStoreCase[] = [
 		async run(createStore) {
 			const { options, gate } = fixture({
 				validationMode: 'onBlur',
-				defaultValues: {
+				defaults: {
 					invites: [
 						{ code: 'one', label: 'first' },
 						{ code: 'one', label: 'second' },
@@ -1113,7 +1129,7 @@ const cases: FormStoreCase[] = [
 		rule: 'stale async results',
 		name: 'a validate that a reset overtook is dropped and not run again against the defaults',
 		async run(createStore) {
-			const { options, gate } = fixture({ defaultValues: { name: 'Ada', slug: 'taken' } });
+			const { options, gate } = fixture({ defaults: { name: 'Ada', slug: 'taken' } });
 			const store = createStore(options);
 			gate.hold('taken');
 			const run = store.validate(['slug']);
@@ -1135,7 +1151,7 @@ const cases: FormStoreCase[] = [
 		async run(createStore) {
 			const { options, gate } = fixture({
 				validationMode: 'onBlur',
-				defaultValues: { invites: [{ code: 'one', label: 'first' }] },
+				defaults: { invites: [{ code: 'one', label: 'first' }] },
 			});
 			const store = createStore(options);
 			gate.hold('one');
@@ -1153,7 +1169,7 @@ const cases: FormStoreCase[] = [
 		async run(createStore) {
 			const { options, gate } = fixture({
 				validationMode: 'onBlur',
-				defaultValues: {
+				defaults: {
 					groups: [
 						{ title: 'a', members: [{ code: 'x' }, { code: 'one' }] },
 						{ title: 'b', members: [{ code: 'y' }] },

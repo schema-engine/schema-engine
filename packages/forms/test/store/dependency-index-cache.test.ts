@@ -33,7 +33,7 @@ const createLinesStore = () =>
 				'array',
 			),
 		],
-		defaultValues: {
+		defaults: {
 			note: '',
 			lines: [
 				{ type: 'person', vat: '' },

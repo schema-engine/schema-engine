@@ -169,7 +169,7 @@ export interface FormStateContainer {
 export interface FormStateContainerOptions {
 	readonly elements: ValidationElementTree;
 	readonly registry: ValidationRegistry;
-	readonly defaultValues?: Record<string, unknown>;
+	readonly defaults?: Record<string, unknown>;
 	/**
 	 * The `rowIds` of a snapshot rendered elsewhere, such as the server's, to adopt for the arrays it names.
 	 *

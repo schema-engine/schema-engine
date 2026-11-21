@@ -34,6 +34,8 @@ The kind of children is decided by the shape of the value, not by how a path seg
   `snapshot.rowIds[path]`, a server render is adopted with the `rowIds` option, and a late validation
   result finds its row by id.
 
+Defaults are cloned (the `defaults` option and `reset(values)`): defaults and live values never share objects.
+
 The snapshot shows this as flat maps by exact path: `errors`, `touched` and `dirty`, with `values`,
 `defaults`, `rowIds`, `isValidating` and `isValid`.
 
@@ -55,7 +57,7 @@ The snapshot shows this as flat maps by exact path: `errors`, `touched` and `dir
 `checkValidity`, `setErrors` and `fieldArray`. No member depends on how it is called.
 
 Reads are pure selectors over the snapshot, memoized per snapshot and path, so they are safe as selectors
-for `useSyncExternalStore` or an external store source: `selectFieldState(snapshot, path)` in
+for `useSyncExternalStore` or an external store source: `selectFieldState`, `selectValue` and `selectError` in
 [selectors.ts](./selectors.ts), and `selectFields(rowIds)` and `toFieldArrayValue(rowIds, commands)` in
 [field-array.ts](./field-array.ts), which builds the React Hook Form style `FieldArrayValue` both bindings
 hand to their widgets. `fieldArray(path)` returns the same commands object for a path each time.

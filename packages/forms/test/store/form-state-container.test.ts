@@ -34,7 +34,7 @@ const wizard = (overrides: Partial<FormStateContainerOptions> = {}): FormStateCo
 				],
 			}),
 		],
-		defaultValues: { password: '', confirmPassword: 'secret' },
+		defaults: { password: '', confirmPassword: 'secret' },
 		...overrides,
 	});
 
@@ -59,7 +59,7 @@ const addressForm = (country = 'FR'): FormStateContainer =>
 				constraints: [{ field: 'address.country', action: 'require', operator: 'equals', value: 'IT' }],
 			}),
 		],
-		defaultValues: { address: { street: '1 Main', country }, vat: '' },
+		defaults: { address: { street: '1 Main', country }, vat: '' },
 	});
 
 test('catches a write to a parent of the watched path', async () => {
@@ -72,7 +72,7 @@ test('catches a write to a parent of the watched path', async () => {
 	await vi.waitFor(() => expect(store.getSnapshot().errors.vat).toBeUndefined());
 });
 
-const makeTagsStore = () => createFormStateContainer({ registry, elements: [], defaultValues: { tags: ['a', 'b'] } });
+const makeTagsStore = () => createFormStateContainer({ registry, elements: [], defaults: { tags: ['a', 'b'] } });
 
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 5));
 
@@ -158,7 +158,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: {
+				defaults: {
 					lines: [
 						{ type: 'person', vat: '' },
 						{ type: 'person', vat: '' },
@@ -183,7 +183,7 @@ describe('createFormStateContainer', () => {
 			const store = createFormStateContainer({
 				registry,
 				elements: [],
-				defaultValues: { contacts: [{ phones: ['1', '2'] }] },
+				defaults: { contacts: [{ phones: ['1', '2'] }] },
 				rowIds: { contacts: ['c1'], 'contacts.0.phones': ['p1', 'p2'] },
 			});
 			expect(store.getSnapshot().rowIds).toEqual({ contacts: ['c1'], 'contacts.0.phones': ['p1', 'p2'] });
@@ -201,7 +201,7 @@ describe('createFormStateContainer', () => {
 			const store = createFormStateContainer({
 				registry,
 				elements: [],
-				defaultValues: { address: { street: '1 Main' }, tags: [{ label: 'a' }] },
+				defaults: { address: { street: '1 Main' }, tags: [{ label: 'a' }] },
 			});
 			const { values } = store.getSnapshot();
 			expect(Object.getPrototypeOf(values)).toBe(Object.prototype);
@@ -223,7 +223,7 @@ describe('createFormStateContainer', () => {
 			const store = createFormStateContainer({
 				registry,
 				elements: [],
-				defaultValues: { contacts: [{ email: 'a' }] },
+				defaults: { contacts: [{ email: 'a' }] },
 			});
 			store.setValue('contacts.1.email', 'b');
 			expect(store.getSnapshot().rowIds.contacts).toHaveLength(2);
@@ -233,7 +233,7 @@ describe('createFormStateContainer', () => {
 			const store = createFormStateContainer({
 				registry,
 				elements: [],
-				defaultValues: { profile: { old: undefined } },
+				defaults: { profile: { old: undefined } },
 			});
 			const listener = vi.fn();
 			store.subscribe(listener);
@@ -277,7 +277,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { contacts: [{ email: '' }, { email: '' }] },
+				defaults: { contacts: [{ email: '' }, { email: '' }] },
 			});
 
 		test('a failed check follows its row when rows move', async () => {
@@ -302,7 +302,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { tags: [] },
+				defaults: { tags: [] },
 			});
 			expect(await store.validate()).toBe(false);
 			expect(store.getSnapshot().errors.tags?.message).toBe('Add a tag');
@@ -351,7 +351,7 @@ describe('createFormStateContainer', () => {
 					element({ $type: 'input', name: 'password' }),
 					element({ $type: 'input', name: 'confirm', rules: [{ type: 'matchesSlow' }] }),
 				],
-				defaultValues: { password: 'old', confirm: 'new' },
+				defaults: { password: 'old', confirm: 'new' },
 			});
 			store.blur('confirm');
 			const submit = store.validate();
@@ -383,7 +383,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { password: 'a', confirm: 'b', tags: [] },
+				defaults: { password: 'a', confirm: 'b', tags: [] },
 			});
 			const submit = store.validate();
 			await vi.waitFor(() => expect(gate.pending()).toBe(1));
@@ -422,7 +422,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { name: 'Ada', contacts: [{}] },
+				defaults: { name: 'Ada', contacts: [{}] },
 			});
 
 		test('a pass is not trusted when the value it passed changed meanwhile', async () => {
@@ -444,7 +444,7 @@ describe('createFormStateContainer', () => {
 						rules: [{ type: 'required', message: 'Name is required' }],
 					}),
 				],
-				defaultValues: { name: 'Ada' },
+				defaults: { name: 'Ada' },
 			});
 			const run = store.validate(['name']);
 			store.setValue('name', '');
@@ -479,7 +479,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { contacts: [{ label: 'a' }] },
+				defaults: { contacts: [{ label: 'a' }] },
 			});
 			store.blur('contacts.0.address.street');
 			store.setValue('contacts', []);
@@ -507,7 +507,7 @@ describe('createFormStateContainer', () => {
 						'object',
 					),
 				],
-				defaultValues: { address: {} },
+				defaults: { address: {} },
 			});
 			store.blur('address.street');
 			store.setValue('address', null);
@@ -553,7 +553,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { tags: [undefined] },
+				defaults: { tags: [undefined] },
 			});
 			const run = store.validate(['tags']);
 			store.setValue('tags', []);
@@ -623,7 +623,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { confirm: 'a', contacts: [{ email: 'a' }, { email: 'b' }] },
+				defaults: { confirm: 'a', contacts: [{ email: 'a' }, { email: 'b' }] },
 			});
 			const run = store.validate(['confirm']);
 			await vi.waitFor(() => expect(rule.calls).toHaveLength(1));
@@ -656,7 +656,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { contacts: [{ email: 'a', confirm: 'a' }, { email: 'b' }] },
+				defaults: { contacts: [{ email: 'a', confirm: 'a' }, { email: 'b' }] },
 			});
 			store.setValue('contacts.0.confirm', 'b');
 			await vi.waitFor(() => expect(rule.calls).toHaveLength(1));
@@ -690,7 +690,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { contacts: [{ email: 'a', confirm: 'a' }, { email: 'a' }] },
+				defaults: { contacts: [{ email: 'a', confirm: 'a' }, { email: 'a' }] },
 			});
 			store.setValue('contacts.0.confirm', 'b');
 			await vi.waitFor(() => expect(rule.calls).toHaveLength(1));
@@ -721,7 +721,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { contacts: [{ email: 'x' }, { email: 'y' }] },
+				defaults: { contacts: [{ email: 'x' }, { email: 'y' }] },
 			});
 			store.blur('contacts.0.email');
 			store.blur('contacts.0.email');
@@ -757,7 +757,7 @@ describe('createFormStateContainer', () => {
 						'array',
 					),
 				],
-				defaultValues: { contacts: [] },
+				defaults: { contacts: [] },
 			});
 			expect(await store.validate()).toBe(false);
 			expect(Object.keys(store.getSnapshot().errors)).toEqual(['contacts']);
@@ -775,7 +775,7 @@ describe('createFormStateContainer', () => {
 
 	describe('paths named like object methods', () => {
 		test('are ordinary paths: nothing is inherited from the prototype', () => {
-			const store = createFormStateContainer({ registry, elements: [], defaultValues: { tags: ['a'] } });
+			const store = createFormStateContainer({ registry, elements: [], defaults: { tags: ['a'] } });
 			store.setErrors('server', { toString: { message: 'no' } });
 			store.blur('hasOwnProperty');
 			expect(store.getFieldState('toString').error?.message).toBe('no');

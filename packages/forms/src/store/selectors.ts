@@ -1,3 +1,4 @@
+import { getValueAtPath } from '@/lib/path-values';
 import type { FormStateError, FormStateSnapshot } from './types';
 
 /** What is known about one field, after `getFieldState` of React Hook Form. */
@@ -28,7 +29,7 @@ export function selectFieldState(snapshot: FormStateSnapshot, path: string): For
 	if (!states) fieldStates.set(snapshot, (states = new Map()));
 	let state = states.get(path);
 	if (!state) {
-		const error = Object.hasOwn(snapshot.errors, path) ? snapshot.errors[path] : undefined;
+		const error = selectError(snapshot, path);
 		const touched = Object.keys(snapshot.touched);
 		const dirty = Object.keys(snapshot.dirty);
 		state = {
@@ -40,4 +41,14 @@ export function selectFieldState(snapshot: FormStateSnapshot, path: string): For
 		states.set(path, state);
 	}
 	return state;
+}
+
+/** The value at a dotted path of a snapshot; the same value, so the same reference, while that branch is unchanged. */
+export function selectValue(snapshot: FormStateSnapshot, path: string): unknown {
+	return getValueAtPath(snapshot.values, path);
+}
+
+/** The error reported for exactly `path`, never one inherited from a container around it. */
+export function selectError(snapshot: FormStateSnapshot, path: string): FormStateError | undefined {
+	return Object.hasOwn(snapshot.errors, path) ? snapshot.errors[path] : undefined;
 }
