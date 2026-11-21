@@ -13,6 +13,7 @@ export {
 	createStepMachine,
 	createStepNavigator,
 	runSubmissionLifecycle,
+	createSubmissionGuard,
 	buildFormActionContext,
 	checkFormValidity,
 	collectStepActions,
@@ -29,6 +30,8 @@ export type {
 	StepNavigatorOptions,
 	SubmissionActionResult,
 	SubmissionLifecycleResult,
+	SubmissionFailure,
+	SubmissionGuard,
 	FormActionContextFormState,
 } from './engine';
 export type {

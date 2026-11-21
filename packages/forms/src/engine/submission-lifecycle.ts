@@ -20,6 +20,15 @@ interface RunSubmissionLifecycleOptions {
 	 */
 	hasMatching?: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
 	onAction?: (action: FormActionConfig, data: BuilderActionBaseContext['formData']) => void | Promise<void>;
+	/**
+	 * The consumer's submission callback.
+	 *
+	 * @remarks
+	 * Runs after the submit actions and before `form_submit_success` or `form_submit_error`, and only when
+	 * the actions succeeded. A rejection fails the submission, so the error and complete triggers run
+	 * and the success trigger does not.
+	 */
+	onSubmit?: () => void | Promise<void>;
 }
 
 export type SubmissionActionResult = ActionExecutionResult & {
@@ -30,19 +39,68 @@ export type SubmissionActionResult = ActionExecutionResult & {
 	cancellationRequested?: boolean;
 };
 
+/** Where a submission failed outside its action results: the consumer's `onSubmit`, or a trigger dispatch. */
+export interface SubmissionFailure {
+	phase: 'onSubmit' | 'lifecycle';
+	error: unknown;
+}
+
 export interface SubmissionLifecycleResult {
 	succeeded: boolean;
 	results: SubmissionActionResult[];
+	/** Set when `onSubmit` rejected or a trigger dispatch failed; a failed action alone sets none. */
+	failure?: SubmissionFailure;
+}
+
+/** Admits one submission at a time. */
+export interface SubmissionGuard {
+	readonly busy: boolean;
+	/**
+	 * Runs `task` unless a submission is running, and releases the guard on every way out.
+	 *
+	 * @remarks
+	 * Resolves `undefined` when the guard was held. The guard is taken synchronously, so a renderer
+	 * wraps validation and the lifecycle in one `run` to ignore a submit that arrives while the
+	 * first is still validating.
+	 */
+	run<T>(task: () => Promise<T>): Promise<T | undefined>;
+}
+
+export function createSubmissionGuard(): SubmissionGuard {
+	let busy = false;
+	return {
+		get busy() {
+			return busy;
+		},
+		async run(task) {
+			if (busy) return undefined;
+			busy = true;
+			try {
+				return await task();
+			} finally {
+				busy = false;
+			}
+		},
+	};
 }
 
 function isGroup(entry: ActionSequenceEntry<FormActionConfig>): entry is readonly FormActionConfig[] {
 	return Array.isArray(entry);
 }
 
-/** Runs the shared form submission action triggers and returns the submit action results. */
+/**
+ * Runs the shared form submission sequence and returns the submit action results.
+ *
+ * @remarks
+ * The sequence is `form_submit_start`, the submit actions, `onSubmit`, then `form_submit_success` or
+ * `form_submit_error`, then `form_submit_complete`. It does not reject: a rejected `onSubmit` or trigger
+ * dispatch resolves unsuccessful with a `failure`, and one recovery path dispatches `form_submit_error`
+ * unless that trigger was already tried, then `form_submit_complete` exactly once even when its own
+ * dispatch rejects. Failures while recovering are dropped in favour of the first.
+ */
 export async function runSubmissionLifecycle(
 	dispatch: FormActionDispatch,
-	{ actions, context, onAction, hasMatching = () => true }: RunSubmissionLifecycleOptions,
+	{ actions, context, onAction, onSubmit, hasMatching = () => true }: RunSubmissionLifecycleOptions,
 ): Promise<SubmissionLifecycleResult> {
 	const currentContext = () => (typeof context === 'function' ? context() : context);
 	const dispatchTrigger = async (trigger: FormActionTrigger) => {
@@ -88,10 +146,46 @@ export async function runSubmissionLifecycle(
 		return results;
 	};
 
-	await dispatchTrigger('form_submit_start');
-	const results = await dispatchSubmit();
-	const succeeded = results.every((result) => result.success || result.shouldContinue !== false);
-	await dispatchTrigger(succeeded ? 'form_submit_success' : 'form_submit_error');
-	await dispatchTrigger('form_submit_complete');
-	return { succeeded, results };
+	let results: SubmissionActionResult[] = [];
+	let succeeded = false;
+	let failure: SubmissionFailure | undefined;
+	let errorTried = false;
+	const fail = (phase: SubmissionFailure['phase'], error: unknown) => {
+		succeeded = false;
+		failure ??= { phase, error };
+	};
+	try {
+		await dispatchTrigger('form_submit_start');
+		results = await dispatchSubmit();
+		succeeded = results.every((result) => result.success || result.shouldContinue !== false);
+		if (succeeded && onSubmit) {
+			try {
+				await onSubmit();
+			} catch (error) {
+				fail('onSubmit', error);
+			}
+		}
+		if (succeeded) {
+			await dispatchTrigger('form_submit_success');
+		} else {
+			errorTried = true;
+			await dispatchTrigger('form_submit_error');
+		}
+	} catch (error) {
+		fail('lifecycle', error);
+	}
+	if (!succeeded && !errorTried) {
+		errorTried = true;
+		try {
+			await dispatchTrigger('form_submit_error');
+		} catch (error) {
+			fail('lifecycle', error);
+		}
+	}
+	try {
+		await dispatchTrigger('form_submit_complete');
+	} catch (error) {
+		fail('lifecycle', error);
+	}
+	return failure ? { succeeded, results, failure } : { succeeded, results };
 }
