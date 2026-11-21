@@ -1827,6 +1827,10 @@ const cases: FormStateContainerCase[] = [
 			store.blur('contacts.0.label', { native: { type: 'valueMissing' } });
 			expect(await store.validate()).toBe(true);
 			expect(errorsOf(store)).toEqual({});
+			store.setValue('contacts', null);
+			store.blur('contacts.0.label', { native: { type: 'valueMissing' } });
+			await store.validate(undefined, { native: { 'contacts.1.label': { type: 'valueMissing' } } });
+			expect(Object.keys(errorsOf(store)).filter((path) => path.endsWith('.label'))).toEqual([]);
 
 			const allowed = ['first'];
 			store.setErrors('server', { name: { type: 'invalid', params: { allowed } } });

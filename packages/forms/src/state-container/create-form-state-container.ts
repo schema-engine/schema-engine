@@ -238,7 +238,11 @@ const publicPath = (path: string): string => (path === '' ? FORM_ROOT : path);
 const hasMarkAround = (tree: Tree<true>, path: string): boolean =>
 	coveredAt(tree, path) || nodeAt(tree, path) !== undefined;
 
-/** The row a path names that its array does not have, if any. */
+/**
+ * The row a path names that its array does not have, if any.
+ *
+ * @remarks An index segment below a value that is not there names a row of an array with no rows; a name below an absent object does not.
+ */
 function missingRow(
 	path: string,
 	values: NullMap,
@@ -247,17 +251,12 @@ function missingRow(
 	for (const [depth, segment] of segments.entries()) {
 		const above = segments.slice(0, depth).join('.');
 		const value = depth === 0 ? values : readAt(values, above);
-		if (
-			Array.isArray(value) &&
-			!(
-				Number.isInteger(Number(segment)) &&
-				String(Number(segment)) === segment &&
-				Number(segment) >= 0 &&
-				Number(segment) < value.length
-			)
-		) {
+		const isIndex =
+			String(Number(segment)) === segment && Number.isInteger(Number(segment)) && Number(segment) >= 0;
+		if (Array.isArray(value) && !(isIndex && Number(segment) < value.length)) {
 			return { segment, above, length: value.length };
 		}
+		if ((value === null || value === undefined) && isIndex) return { segment, above, length: 0 };
 	}
 	return undefined;
 }
