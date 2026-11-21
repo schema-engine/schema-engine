@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { act, render, screen, fireEvent } from '@testing-library/react';
 import {
 	FormProvider as RHFProvider,
@@ -9,16 +9,16 @@ import {
 } from 'react-hook-form';
 import { useFormContext } from '../../src/adapters/rhf/hooks/use-form-context';
 
+/** @remarks The resolver counts validation runs, which is what a tracked `isValid` would add. */
 function mountForm(Reader: () => null) {
 	let methods!: UseFormReturn<FieldValues>;
+	const resolver = vi.fn(async (values: FieldValues): Promise<ResolverResult<FieldValues>> =>
+		values.name
+			? { values, errors: {} }
+			: { values: {}, errors: { name: { type: 'required', message: 'Required' } } },
+	);
 	function Harness() {
-		methods = useForm<FieldValues>({
-			defaultValues: { name: '' },
-			resolver: async (values): Promise<ResolverResult<FieldValues>> =>
-				values.name
-					? { values, errors: {} }
-					: { values: {}, errors: { name: { type: 'required', message: 'Required' } } },
-		});
+		methods = useForm<FieldValues>({ defaultValues: { name: '' }, resolver });
 		return (
 			<RHFProvider {...methods}>
 				<input data-testid="name" {...methods.register('name')} />
@@ -27,7 +27,7 @@ function mountForm(Reader: () => null) {
 		);
 	}
 	render(<Harness />);
-	return () => methods;
+	return { methods: () => methods, resolver };
 }
 
 describe('useFormContext', () => {
@@ -39,16 +39,14 @@ describe('useFormContext', () => {
 			renders += 1;
 			return null;
 		};
-		const methods = mountForm(Reader);
+		const { methods, resolver } = mountForm(Reader);
 		const afterMount = renders;
 
 		fireEvent.change(screen.getByTestId('name'), { target: { value: 'ada' } });
-		await act(() => methods().trigger());
-		await act(() => methods().trigger('name'));
 		fireEvent.blur(screen.getByTestId('name'));
+		await act(async () => undefined);
 
-		expect(methods().control._proxyFormState.isValid).toBe(false);
-		expect(methods().control._proxyFormState.errors).toBe(false);
+		expect(resolver).not.toHaveBeenCalled();
 		expect(renders).toBe(afterMount);
 
 		await act(() => methods().handleSubmit(() => undefined)());
@@ -56,15 +54,18 @@ describe('useFormContext', () => {
 		expect(renders).toBeGreaterThan(afterMount);
 	});
 
-	test('a caller that reads isValid tracks it', () => {
+	test('a caller that reads isValid validates the form after a change', async () => {
 		const Reader = () => {
 			const { formState } = useFormContext();
 			void formState.isValid;
 			return null;
 		};
-		const methods = mountForm(Reader);
+		const { resolver } = mountForm(Reader);
 
-		expect(methods().control._proxyFormState.isValid).toBeTruthy();
+		fireEvent.change(screen.getByTestId('name'), { target: { value: 'ada' } });
+		await act(async () => undefined);
+
+		expect(resolver).toHaveBeenCalled();
 	});
 
 	test('keeps the public formState shape', () => {

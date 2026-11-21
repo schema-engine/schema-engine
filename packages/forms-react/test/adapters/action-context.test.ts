@@ -52,16 +52,21 @@ describe('useFormActionDispatchers', () => {
 		expect(result.current.buildActionContext().currentStep).toBe(0);
 	});
 
-	test('building a context does not subscribe the form to isValid', () => {
-		const { result: formResult } = renderHook(() => useForm({ defaultValues: {} }));
+	test('building a context does not validate the form on later changes', async () => {
+		const resolver = vi.fn(async (values: FieldValues) => ({ values, errors: {} }));
+		const { result: formResult } = renderHook(() =>
+			useForm<FieldValues>({ defaultValues: { email: '' }, resolver }),
+		);
 		const { result } = renderHook(() =>
 			useFormActionDispatchers({ form: formResult.current, config, registry, actionExecutor: mockDispatcher }),
 		);
 
 		const context = result.current.buildActionContext();
+		act(() => formResult.current.setValue('email', 'a@b.co'));
+		await act(async () => undefined);
 
 		expect(context.isValid).toBe(true);
-		expect(formResult.current.control._proxyFormState.isValid).toBe(false);
+		expect(resolver).not.toHaveBeenCalled();
 	});
 
 	test('a trigger no action answers builds no context and dispatches nothing', async () => {

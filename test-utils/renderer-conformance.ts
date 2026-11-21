@@ -1284,6 +1284,28 @@ export function rendererConformance(mount: ConformanceMount): void {
 				await new Promise((resolve) => setTimeout(resolve, 100));
 				expect(fetchStub).not.toHaveBeenCalled();
 			});
+			test('a form without actions runs no validator while the user types', async () => {
+				const fetchStub = stubFetch(() => ({ valid: true }));
+				const { host } = await setup({
+					config: {
+						...form([
+							{
+								...input('counted', 'Counted'),
+								rules: [{ type: 'async', url: '/conformance-count', disableCache: true }],
+							},
+							input('other', 'Other'),
+						]),
+						validationMode: 'onSubmit',
+					},
+					defaultValues: { counted: 'x' },
+				});
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Other' }), 'abc');
+				await expect
+					.poll(() => (getByRole(host, 'textbox', { name: 'Other' }) as HTMLInputElement).value)
+					.toBe('abc');
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(fetchStub).not.toHaveBeenCalled();
+			});
 			test('an action asks for current validity without showing errors', async () => {
 				const { host } = await setup({
 					config: {
