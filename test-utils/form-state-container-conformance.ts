@@ -2198,6 +2198,7 @@ const cases: FormStateContainerCase[] = [
 			expect(() => store.setValue('contacts.-1.email', 'x')).toThrow(/names row '-1'/);
 			expect(() => store.blur('contacts.5.email')).toThrow(/names row '5'/);
 			expect(() => store.setValue('name.3.x', 'x')).toThrow(/names row '3' of 'name'/);
+			expect(() => store.setValue('name.03.x', 'x')).toThrow(/names row '03' of 'name'/);
 			expect(() => store.blur('contacts.5.email', { value: 'x' })).toThrow(/names row '5'/);
 			expect(() => store.setValue('__secret', 1)).toThrow(/reserved segment/);
 			expect(store.getSnapshot()).toBe(before);

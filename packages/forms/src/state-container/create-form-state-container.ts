@@ -265,7 +265,9 @@ function missingRow(
 		if (Array.isArray(value) && !(isIndex && Number(segment) < value.length)) {
 			return { segment, above, length: value.length };
 		}
-		if (isIndex && !Array.isArray(value) && !isStructural(value)) return { segment, above, length: 0 };
+		if (/^\d+$/.test(segment) && !Array.isArray(value) && !isStructural(value)) {
+			return { segment, above, length: 0 };
+		}
 	}
 	return undefined;
 }
