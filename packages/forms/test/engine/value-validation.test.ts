@@ -13,6 +13,13 @@ import {
 	validateFormValues,
 } from '@/engine/value-validation';
 
+/** The error a field with one failed rule has. */
+const failure = (...messages: string[]) => ({
+	type: 'validation',
+	message: messages[0],
+	all: messages.map((message) => ({ type: 'validation', message })),
+});
+
 const registry = createDefaultValidationRegistry();
 
 function normalizeElement(element: ElementConfig): NormalizedElementConfig {
@@ -61,7 +68,7 @@ describe('collectStepFieldPaths', () => {
 		await expect(
 			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			'tags.0': { type: 'validation', message: 'Tag is required' },
+			'tags.0': failure('Tag is required'),
 		});
 	});
 
@@ -79,7 +86,7 @@ describe('collectStepFieldPaths', () => {
 		await expect(
 			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			'tags.0': { type: 'validation', message: 'Tag is required' },
+			'tags.0': failure('Tag is required'),
 		});
 	});
 
@@ -104,7 +111,7 @@ describe('collectStepFieldPaths', () => {
 		await expect(
 			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			'groups.0.tags.0': { type: 'validation', message: 'Tag is required' },
+			'groups.0.tags.0': failure('Tag is required'),
 		});
 	});
 
@@ -132,7 +139,7 @@ describe('collectStepFieldPaths', () => {
 		await expect(
 			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			'groups.0.0': { type: 'validation', message: 'Tag is required' },
+			'groups.0.0': failure('Tag is required'),
 		});
 	});
 });
@@ -178,7 +185,7 @@ describe('validateFieldValue', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(message).toBe('Required');
+		expect(message).toEqual(['Required']);
 	});
 
 	test('a superseded async validation never passes submission', async () => {
@@ -212,9 +219,9 @@ describe('validateFieldValue', () => {
 				debounceScope,
 			});
 
-			await expect(first).resolves.toBe('Validation pending');
+			await expect(first).resolves.toEqual(['Validation pending']);
 			await vi.advanceTimersByTimeAsync(300);
-			await expect(second).resolves.toBeUndefined();
+			await expect(second).resolves.toEqual([]);
 
 			expect(fetchSpy).toHaveBeenCalledOnce();
 			const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
@@ -247,7 +254,7 @@ describe('validateFormValues', () => {
 			names: ['address.street'],
 		});
 
-		expect(errors).toEqual({ 'address.street': { type: 'validation', message: 'Street is required' } });
+		expect(errors).toEqual({ 'address.street': failure('Street is required') });
 	});
 
 	test('requires every field inside a container while its require constraint holds', async () => {
@@ -302,10 +309,7 @@ describe('validateFormValues', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(errors.languages).toEqual({
-			type: 'validation',
-			message: 'Select a language',
-		});
+		expect(errors.languages).toEqual(failure('Select a language'));
 	});
 
 	test('validates nothing for an empty list of names and everything when names are omitted', async () => {
@@ -318,6 +322,26 @@ describe('validateFormValues', () => {
 
 		expect(await validateFormValues({ ...input, names: [] })).toEqual({});
 		expect(Object.keys(await validateFormValues(input))).toEqual(['email']);
+	});
+
+	test('reports every rule a field fails, in rule order, with the first as the error itself', async () => {
+		const field = normalizeElement({
+			$type: 'input',
+			name: 'code',
+			rules: [
+				{ type: 'minLength', value: 5, message: 'Too short' },
+				{ type: 'pattern', value: '^\\d+$', message: 'Digits only' },
+			],
+		});
+		const errors = await validateFormValues({
+			elements: [field],
+			values: { code: 'ab' },
+			registry,
+			debounceScope: createDebounceScope(),
+		});
+
+		expect(errors.code).toEqual(failure('Too short', 'Digits only'));
+		expect(errors.code.all[0]).toMatchObject({ message: errors.code.message });
 	});
 
 	test('reports a container and a row inside it that both fail, and matches names exactly on request', async () => {
@@ -338,11 +362,11 @@ describe('validateFormValues', () => {
 		};
 
 		expect(await validateFormValues(input)).toEqual({
-			contacts: { type: 'validation', message: 'Add two contacts' },
-			'contacts.0.email': { type: 'validation', message: 'Email is required' },
+			contacts: failure('Add two contacts'),
+			'contacts.0.email': failure('Email is required'),
 		});
 		expect(await validateFormValues({ ...input, names: ['contacts'], exactNames: true })).toEqual({
-			contacts: { type: 'validation', message: 'Add two contacts' },
+			contacts: failure('Add two contacts'),
 		});
 	});
 
@@ -359,14 +383,8 @@ describe('validateFormValues', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(errors['contacts.1.email']).toEqual({
-			type: 'validation',
-			message: 'Email is required',
-		});
-		expect(errors['contacts.2.email']).toEqual({
-			type: 'validation',
-			message: 'Email is required',
-		});
+		expect(errors['contacts.1.email']).toEqual(failure('Email is required'));
+		expect(errors['contacts.2.email']).toEqual(failure('Email is required'));
 	});
 
 	test('validates a nested array container against its concrete row path', async () => {

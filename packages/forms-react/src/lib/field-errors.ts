@@ -6,15 +6,19 @@ import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-va
  * Converts the engine's flat errors to the nested `FieldErrors` React Hook Form reads.
  *
  * @remarks
+ * React Hook Form keeps one error per field, so only the error to show crosses, not the rest of `all`.
+ *
  * A container's error is written first, so an error on `contacts` and one on `contacts.0.email` share
  * one nested node, as React Hook Form's own shape requires.
  */
-export function toFieldErrors(errors: Readonly<Record<string, { type: string; message: string }>>): FieldErrors {
+export function toFieldErrors(
+	errors: Readonly<Record<string, FormFieldError & { type: string; message: string }>>,
+): FieldErrors {
 	const nested: Record<string, unknown> = {};
 	for (const [path, error] of Object.entries(errors).toSorted(
 		([a], [b]) => a.split('.').length - b.split('.').length,
 	)) {
-		setValueAtPath(nested, path, { ...error });
+		setValueAtPath(nested, path, { type: error.type, message: error.message });
 	}
 	return nested as FieldErrors<FieldValues>;
 }

@@ -69,9 +69,19 @@ export interface ValidateFormValuesInput {
 	skipHidden?: boolean;
 }
 
-export interface FieldValidationError {
+/** One failed rule. */
+export interface ValidationIssue {
 	readonly type: 'validation';
 	readonly message: string;
+}
+
+/**
+ * Everything a field's validation found.
+ *
+ * @remarks `type` and `message` are those of the first failed rule, so the error reads like a single issue; `all` lists every failed rule in rule order, the first included.
+ */
+export interface FieldValidationError extends ValidationIssue {
+	readonly all: readonly ValidationIssue[];
 }
 
 /** The errors a validation found, by the dotted path of the field that failed; a container has its own. */
@@ -175,7 +185,9 @@ export function effectiveRulesFor({
 }
 
 /**
- * Validates one field value and returns its first validation message when invalid.
+ * Validates one field value and returns the message of every rule it fails, in rule order.
+ *
+ * @remarks Empty when the value passes. A rule that throws counts as one failure with a generic message.
  */
 export async function validateFieldValue({
 	element,
@@ -185,10 +197,10 @@ export async function validateFieldValue({
 	registry,
 	debounceScope,
 	inheritedRequired,
-}: ValidateFieldValueInput): Promise<string | undefined> {
+}: ValidateFieldValueInput): Promise<readonly string[]> {
 	const rules = effectiveRulesFor({ element, values, fieldPath, registry, inheritedRequired });
 	if (rules.length === 0) {
-		return undefined;
+		return [];
 	}
 
 	try {
@@ -199,14 +211,14 @@ export async function validateFieldValue({
 		});
 		const schema = createZodSchemaFromRules(rules, context, registry);
 		const result = await z.safeParseAsync(schema, value);
-		return result.success ? undefined : result.error.issues[0]?.message || 'Validation failed';
+		return result.success ? [] : result.error.issues.map((issue) => issue.message || 'Validation failed');
 	} catch {
-		return 'Validation failed';
+		return ['Validation failed'];
 	}
 }
 
 /**
- * Validates named fields and returns their errors by dotted path.
+ * Validates named fields and returns their errors by dotted path, each with every rule it failed.
  *
  * @remarks
  * `names` limits validation to matching paths and their descendants, which lets
@@ -248,10 +260,10 @@ export async function validateFormValues({
 	const fields = allFields.filter(
 		({ fieldPath }) => pathIsRequested(fieldPath, names, exactNames) && !isHidden(fieldPath),
 	);
-	const messages = await Promise.all(
+	const results = await Promise.all(
 		fields.map(async ({ element, fieldPath, hasChildren }) => ({
 			fieldPath,
-			message: await validateFieldValue({
+			messages: await validateFieldValue({
 				element,
 				value: getValueAtPath(values, fieldPath),
 				values,
@@ -264,9 +276,10 @@ export async function validateFormValues({
 	);
 
 	const errors: FormValidationErrors = {};
-	for (const { fieldPath, message } of messages) {
-		if (message) {
-			errors[fieldPath] = { type: 'validation', message };
+	for (const { fieldPath, messages: failed } of results) {
+		if (failed.length > 0) {
+			const all = failed.map((message): ValidationIssue => ({ type: 'validation', message }));
+			errors[fieldPath] = { type: 'validation', message: failed[0], all };
 		}
 	}
 

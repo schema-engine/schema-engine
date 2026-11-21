@@ -11,9 +11,9 @@ The engine exports reusable helpers for paths, effective rules, and validation.
   constraint holds. For example, `accountType` on `contacts.0.taxId` resolves to
   `contacts.0.accountType`, so conditional rules use the current array row.
 - `validateFieldValue` validates one field against the full nested values tree
-  and its rendered path, returning the first issue message or `undefined`.
-- `validateFormValues` validates named fields, filters to `names` when supplied,
-  and writes failures into a nested error object with `setValueAtPath`. A field
+  and its rendered path, returning the message of every rule it fails, in rule order (empty when it passes).
+- `validateFormValues` validates named fields, filters to `names` when supplied (an empty
+  list validates nothing), and returns the failures by dotted path, each with every failed rule in `all`. A field
   inside a fieldset or array whose `require` constraint holds is required, at any
   depth; `effectiveRulesFor` and `validateFieldValue` take that as
   `inheritedRequired`. A container's own `required` rule does not pass down.

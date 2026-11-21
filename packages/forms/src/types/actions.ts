@@ -1,10 +1,21 @@
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
 
-/** The error a field reports, as an action sees it. */
-export interface FormFieldError {
+/** One thing wrong with a field, as an action sees it. */
+export interface FormFieldIssue {
 	readonly type?: string;
 	readonly message?: string;
+	/** Who reported it: `'validation'`, `'server'` or `'native'`, where the renderer knows. */
+	readonly source?: string;
+}
+
+/**
+ * The error a field reports, as an action sees it.
+ *
+ * @remarks `type`, `message` and `source` are those of the issue to show; `all` lists every issue the field has, that one first.
+ */
+export interface FormFieldError extends FormFieldIssue {
+	readonly all?: readonly FormFieldIssue[];
 }
 
 /**

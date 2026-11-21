@@ -33,11 +33,11 @@ async function incompleteCodeError(element: Record<string, unknown>) {
 		registry: createDefaultValidationRegistry(),
 		debounceScope: createDebounceScope(),
 	});
-	return errors.code;
+	return errors.code?.message;
 }
 
 test('headless validation rejects an incomplete code and accepts an empty or complete one', async () => {
-	expect(await incompleteCodeError(code)).toEqual({ type: 'validation', message: 'Enter all 6 characters' });
+	expect(await incompleteCodeError(code)).toBe('Enter all 6 characters');
 
 	const config = configWith(code);
 	const check = (value: string) =>
@@ -52,10 +52,7 @@ test('headless validation rejects an incomplete code and accepts an empty or com
 });
 
 test('the incomplete-code message is configurable and an authored length rule replaces the default', async () => {
-	expect(await incompleteCodeError({ ...code, incompleteMessage: 'Finish the code' })).toEqual({
-		type: 'validation',
-		message: 'Finish the code',
-	});
+	expect(await incompleteCodeError({ ...code, incompleteMessage: 'Finish the code' })).toBe('Finish the code');
 	expect(
 		await incompleteCodeError({ ...code, rules: [{ type: 'minLength', value: 2, message: 'Too short' }] }),
 	).toBeUndefined();

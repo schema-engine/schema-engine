@@ -9,6 +9,7 @@ import { areaPlacementIssue, namedPlacementIssue } from './grid-checks';
 import { childPath, isTaggedConfig, issueAt, type FormValidationIssue, type ParseResult, type Path } from './issues';
 import type { ValidateFormOptions } from './options';
 import { fromSchemaIssues } from './schema-issues';
+import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
 
 function parseRegistration(schema: StandardSchemaV1, config: object, path: Path): ParseResult<unknown> {
 	const result = safeParseStandardSchema(schema, config);
@@ -109,6 +110,11 @@ function unregisteredValidationRule(
 	return undefined;
 }
 
+/** The first segment of an element's name that the engine reserves. */
+function reservedNameSegment(item: FormTaggedConfig): string | undefined {
+	return typeof item.name === 'string' ? item.name.split('.').find(isReservedPathKey) : undefined;
+}
+
 export function parseElementNode(
 	item: unknown,
 	getElement: ValidateFormOptions['getElement'],
@@ -121,6 +127,13 @@ export function parseElementNode(
 
 	if (!isTaggedConfig(item)) {
 		return fail('Invalid element configuration: missing $type.', ['$type']);
+	}
+	const reserved = reservedNameSegment(item);
+	if (reserved) {
+		return fail(
+			`Field name '${String(item.name)}' uses the reserved segment '${reserved}': a name cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
+			['name'],
+		);
 	}
 	const unregisteredRule = unregisteredValidationRule(item, hasValidation);
 	if (unregisteredRule) return fail(unregisteredRule.message, ['rules', unregisteredRule.index, 'type']);

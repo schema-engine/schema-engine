@@ -16,19 +16,16 @@ async function errorFor(element: Record<string, unknown>, value = '123') {
 		registry: createDefaultValidationRegistry(),
 		debounceScope: createDebounceScope(),
 	});
-	return errors.code;
+	return errors.code?.message;
 }
 
 test('headless validation rejects an incomplete code and accepts an empty or complete one', async () => {
-	expect(await errorFor(code)).toEqual({ type: 'validation', message: 'Enter all 6 characters' });
+	expect(await errorFor(code)).toBe('Enter all 6 characters');
 	expect(await errorFor(code, '')).toBeUndefined();
 	expect(await errorFor(code, '123456')).toBeUndefined();
 });
 
 test('the incomplete-code message is configurable and an authored length rule replaces the default', async () => {
-	expect(await errorFor({ ...code, incompleteMessage: 'Finish the code' })).toEqual({
-		type: 'validation',
-		message: 'Finish the code',
-	});
+	expect(await errorFor({ ...code, incompleteMessage: 'Finish the code' })).toBe('Finish the code');
 	expect(await errorFor({ ...code, rules: [{ type: 'minLength', value: 2, message: 'Too short' }] })).toBeUndefined();
 });

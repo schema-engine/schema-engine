@@ -7,6 +7,12 @@ import { logger } from '@/lib/logger';
 import { defineInput } from '@/types';
 import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 
+/** The error a field with one failed rule has. */
+const failure = (...messages: string[]) => ({
+	type: 'validation',
+	message: messages[0],
+	all: messages.map((message) => ({ type: 'validation', message })),
+});
 type PostcodeRule = { type: 'postcode'; message?: string };
 
 /** A custom rule written the way the docs show it: `$type`, a rule schema, metadata and a handler. */
@@ -99,7 +105,7 @@ describe('engine validation registry', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(invalid).toEqual({ postcode: { type: 'validation', message: 'Enter a postcode' } });
+		expect(invalid).toEqual({ postcode: failure('Enter a postcode') });
 		expect(valid).toEqual({});
 	});
 

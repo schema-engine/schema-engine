@@ -498,11 +498,11 @@ engine's normalized form model.
   `accountType` on `contacts.0.taxId` resolves to `contacts.0.accountType`, so
   each array row uses its own value.
 - `validateFieldValue({ element, value, values, fieldPath, registry, debounceScope })` returns
-  the first validation message, or `undefined` when the value passes.
+  the message of every rule the value fails, in rule order (empty when it passes).
 - `validateFormValues({ elements, values, registry, names?, debounceScope })` validates the
   selected paths (`exactNames` limits it to the named paths themselves) and returns
-  errors by dotted path, such as `errors['address.street'].message`; a container and a row
-  inside it can both fail.
+  errors by dotted path, such as `errors['address.street'].message`, each with every failed
+  rule in `all`; a container and a row inside it can both fail. An empty `names` validates nothing.
 
 Both helpers require a caller-owned `DebounceScope`, which carries async debounce
 state across validation calls for a form. Each rendered field path is keyed

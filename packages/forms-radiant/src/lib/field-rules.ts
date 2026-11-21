@@ -121,7 +121,7 @@ function toValidator(
 			fieldPath: fieldPath ?? '',
 			registry,
 			debounceScope,
-		}).then((message) => message ?? true);
+		}).then(([message]) => message ?? true);
 		latest = run;
 		return settle(run);
 	};
