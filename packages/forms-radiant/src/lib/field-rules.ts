@@ -1,7 +1,7 @@
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import { validateFieldValue } from '@schema-engine/forms';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
-import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { ValidationSuperseded, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
 import { getValidationRulesForElement, isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
@@ -121,8 +121,9 @@ function toValidator(
 			fieldPath: fieldPath ?? '',
 			registry,
 			debounceScope,
-		}).then(({ issues, failures }) => {
+		}).then(({ issues, failures, superseded }) => {
 			if (failures[0]) throw failures[0];
+			if (superseded) throw new ValidationSuperseded();
 			const blocking = issues.find((found) => found.severity === 'error');
 			return blocking ? (blocking.message ?? blocking.type) : true;
 		});

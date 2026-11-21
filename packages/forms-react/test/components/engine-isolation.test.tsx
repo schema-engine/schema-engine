@@ -26,7 +26,6 @@ function createValidation(message: string, minimum: number): ValidationRegistrat
 		metadata: { name: 'Minimum length' },
 		category: 'string',
 		handler: (rule) => z.string().check(z.minLength(minimum, rule.message ?? message)),
-		message: (_rule, reported) => reported,
 	};
 }
 
@@ -103,7 +102,7 @@ describe('FormRenderer engine isolation', () => {
 		fireEvent.blur(inputB);
 
 		await waitFor(() => {
-			expect(screen.getByTestId('engine-a-field-error')).toHaveTextContent('Engine A requires three characters');
+			expect(screen.getByTestId('engine-a-field-error')).toHaveTextContent('minLength');
 		});
 		expect(screen.getByTestId('engine-b-field-error')).toBeEmptyDOMElement();
 	});

@@ -5,7 +5,11 @@ import * as ts from 'typescript';
 import * as z from 'zod/mini';
 import { afterEach, expect, test, vi } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
-import { createDefaultValidationRegistry, createValidationContext } from '@schema-engine/forms/schemas/validation';
+import {
+	createDefaultValidationRegistry,
+	createValidationContext,
+	ValidationSuperseded,
+} from '@schema-engine/forms/schemas/validation';
 import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
 
 const page = readFileSync(new URL('../src/content/docs/forms/validation-custom.mdx', import.meta.url), 'utf8');
@@ -67,7 +71,7 @@ test('the documented debounced async rule settles replaced checks and keeps fiel
 	const replaced = firstField.safeParseAsync('old');
 	const latest = firstField.safeParseAsync('new');
 	const independent = secondField.safeParseAsync('other');
-	await expect(replaced).resolves.toMatchObject({ error: { issues: [{ message: 'Validation pending' }] } });
+	await expect(replaced).rejects.toBeInstanceOf(ValidationSuperseded);
 	await vi.advanceTimersByTimeAsync(500);
 	await expect(Promise.all([latest, independent])).resolves.toMatchObject([{ success: true }, { success: true }]);
 });

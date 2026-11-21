@@ -687,7 +687,7 @@ Place expensive validations last in the rule chain:
 ### Debouncing Async Validations
 
 Use the built-in async rule to debounce server-side validation. A pending check
-replaced by a different value settles with `Validation pending`; a check replaced
+replaced by a different value has no result (it throws `ValidationSuperseded`, which is no issue); a check replaced
 by the same value shares the latest result. Checks for separate fields do not
 cancel one another. See [Async Validation](/docs/forms/validation-built-in#async-validation)
 for the request and response contract.

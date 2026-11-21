@@ -196,7 +196,7 @@ describe('validateFieldValue', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(result).toEqual({ issues: [found('required', undefined)], failures: [] });
+		expect(result).toEqual({ issues: [found('required', undefined)], failures: [], superseded: false });
 	});
 
 	test('a superseded async validation never passes submission', async () => {
@@ -230,9 +230,9 @@ describe('validateFieldValue', () => {
 				debounceScope,
 			});
 
-			expect((await first).issues).toEqual([expect.objectContaining({ type: 'async' })]);
+			expect(await first).toEqual({ issues: [], failures: [], superseded: true });
 			await vi.advanceTimersByTimeAsync(300);
-			expect(await second).toEqual({ issues: [], failures: [] });
+			expect(await second).toEqual({ issues: [], failures: [], superseded: false });
 
 			expect(fetchSpy).toHaveBeenCalledOnce();
 			const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];

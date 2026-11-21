@@ -66,7 +66,7 @@ describe('toFieldRules', () => {
 		expect(typeof rules?.validate).toBe('function');
 
 		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
-		expect(await validate('+44')).toBe('Enter a complete phone number');
+		expect(await validate('+44')).toBe('phone');
 		expect(await validate('+442079460958')).toBe(true);
 	});
 
@@ -114,7 +114,7 @@ describe('toFieldRules', () => {
 		expect(typeof rules?.validate).toBe('function');
 
 		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
-		expect(await validate('+44')).toBe('Enter a complete phone number');
+		expect(await validate('+44')).toBe('phone');
 		expect(await validate('+442079460958')).toBe(true);
 	});
 

@@ -371,9 +371,10 @@ export interface ValidationRegistration<
 	 * The fallback text of an issue this rule reports, given the text its schema reported.
 	 *
 	 * @remarks
-	 * By default the text is the author's own `message` on the rule, and the schema library's generic text
-	 * is never used. A registration whose schema reports text that is its own, or the answer of a service
-	 * (`async` shows the endpoint's message), returns `reported` here.
+	 * By default the text is the author's own `message` on the rule. Text a registration makes up is the
+	 * application's language and belongs above the engine, as does the schema library's generic text, so a
+	 * registration reports a `type` and `params` and never default English. Return `reported` only for text
+	 * that genuinely comes from outside the engine, such as the message an `async` rule's endpoint answers with.
 	 */
 	message?: (rule: TRule, reported: string | undefined) => string | undefined;
 	/**

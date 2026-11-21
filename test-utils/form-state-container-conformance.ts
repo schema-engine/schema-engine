@@ -1642,6 +1642,41 @@ const cases: FormStateContainerCase[] = [
 		},
 	},
 	{
+		rule: 'pending per field',
+		name: 'a superseded async check leaves no issue and no pending mark: pending is state, never an issue',
+		async run(createStore) {
+			vi.stubGlobal(
+				'fetch',
+				vi.fn(async () => new Response(JSON.stringify({ valid: true }))),
+			);
+			try {
+				const store = createStore(
+					custom(
+						[
+							{
+								$type: 'input',
+								name: 'handle',
+								rules: [{ type: 'async', url: '/check', debounce: 30, disableCache: true }],
+							},
+						],
+						{ handle: '' },
+						{ validationMode: 'onChange' },
+					),
+				);
+				store.setValue('handle', 'a');
+				store.setValue('handle', 'ab');
+				await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false), { timeout: 2000 });
+				expect(errorsOf(store)).toEqual({});
+				expect(store.getSnapshot().warnings).toEqual({});
+				expect(store.getSnapshot().validating).toEqual({});
+				expect(JSON.stringify(store.getSnapshot())).not.toMatch(/pending/i);
+				expect(await store.validate()).toBe(true);
+			} finally {
+				vi.unstubAllGlobals();
+			}
+		},
+	},
+	{
 		rule: 'server errors tied to a submission',
 		name: 'a response for values that were edited since the submission began is dropped',
 		run(createStore) {

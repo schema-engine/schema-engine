@@ -15,7 +15,6 @@ function engineRequiring(domain: string) {
 		metadata: { name: 'Email' },
 		category: 'string',
 		handler: () => z.optional(z.string().check(z.refine((value) => value.endsWith(domain), `Use ${domain}`))),
-		message: (_rule, reported) => reported,
 		defaultFor: ['input'],
 	};
 	return createFormEngine({ elements: [{ ...InputElementRegistration, validations: [email] }] });
@@ -45,13 +44,13 @@ function mountField() {
 test('a field validates with the engine bound to its renderer, and with its replacement', async () => {
 	const { renderer, field } = mountField();
 	renderer.engine = engineRequiring('@a.test');
-	await expect.poll(() => validate(field, 'x@b.test')).toBe('Use @a.test');
+	await expect.poll(() => validate(field, 'x@b.test')).toBe('email');
 	expect(await validate(field, 'x@a.test')).toBe(true);
 
 	renderer.engine = engineRequiring('@b.test');
 
 	await expect.poll(() => validate(field, 'x@b.test')).toBe(true);
-	expect(await validate(field, 'x@a.test')).toBe('Use @b.test');
+	expect(await validate(field, 'x@a.test')).toBe('email');
 });
 
 test('a hand-written validator survives the replacement of the engine', async () => {
@@ -76,12 +75,12 @@ test('a field connected to an already bound engine drops the first engine valida
 	await expect.poll(() => renderer.provider.getContext().engine).toBeDefined();
 	renderer.append(field);
 	expect(typeof field.rules?.validate).toBe('function');
-	await expect.poll(() => validate(field, 'x@b.test')).toBe('Use @a.test');
+	await expect.poll(() => validate(field, 'x@b.test')).toBe('email');
 
 	renderer.engine = engineRequiring('@b.test');
 
 	await expect.poll(() => validate(field, 'x@b.test')).toBe(true);
-	expect(await validate(field, 'x@a.test')).toBe('Use @b.test');
+	expect(await validate(field, 'x@a.test')).toBe('email');
 });
 
 test('a client-rendered derived validator stays a single function when the engine arrives', async () => {
@@ -93,5 +92,5 @@ test('a client-rendered derived validator stays a single function when the engin
 
 	await expect.poll(() => field.rules?.validate).not.toBe(rendered);
 	expect(typeof field.rules?.validate).toBe('function');
-	expect(await validate(field, 'x@b.test')).toBe('Use @a.test');
+	expect(await validate(field, 'x@b.test')).toBe('email');
 });

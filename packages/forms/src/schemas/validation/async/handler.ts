@@ -2,6 +2,7 @@ import * as z from 'zod/mini';
 import { asyncValidationCache } from './cache';
 import type { AsyncRule, ValidationContext } from '../types.js';
 import { isEmpty } from '../empty.js';
+import { ValidationSuperseded } from '../errors.js';
 
 /**
  * HTTP methods supported for async validation requests
@@ -129,15 +130,6 @@ function cacheError(
 }
 
 /**
- * Result of a parse whose debounced request was replaced by one for a different value.
- *
- * @remarks
- * The request for this value never ran, so the parse cannot report it valid; a
- * submit-time validation superseded by a later edit must not pass.
- */
-const SUPERSEDED_RESULT: CachedValidationResult = { valid: false, message: 'Validation pending' };
-
-/**
  * Creates a Zod Mini async validation handler for server-side validation.
  * Includes debouncing, dependency resolution, and performance optimizations.
  */
@@ -246,7 +238,8 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 					debounceKey,
 					JSON.stringify(value),
 				);
-				result = outcome.status === 'completed' ? outcome.value : SUPERSEDED_RESULT;
+				if (outcome.status !== 'completed') throw new ValidationSuperseded();
+				result = outcome.value;
 			} else {
 				result = await performValidation();
 			}

@@ -12,6 +12,7 @@ import {
 import type { BaseValidationRule, RequiredRule } from '../schemas/validation/types.js';
 import type { ValidationRegistry } from '../schemas/validation/validation-registry.js';
 import type { DebounceScope } from '../lib/debounce.js';
+import { ValidationSuperseded } from '../schemas/validation/errors.js';
 import * as z from 'zod/mini';
 
 export interface ValidationElement {
@@ -112,16 +113,25 @@ export class FormValidationFailure extends Error {
 	}
 }
 
-/** What validating one field found: the rules it fails, in rule order, and the rules that could not run. */
+/**
+ * What validating one field found: the rules it fails, in rule order, and the rules that could not run.
+ *
+ * @remarks
+ * `superseded` is set when a rule's check was replaced by a later one before it ran: the field was not
+ * fully checked, so it is neither valid nor invalid and a caller must not decide on it. It is state, not an issue.
+ */
 export interface FieldValidationResult {
 	readonly issues: readonly ValidationIssue[];
 	readonly failures: readonly FormValidationFailure[];
+	readonly superseded: boolean;
 }
 
 /** What a validation found, by the dotted path of the field; a container has its own entry. Only paths with something to report appear. */
 export interface FormValidationOutcome {
 	readonly issues: Readonly<Record<string, readonly ValidationIssue[]>>;
 	readonly failures: Readonly<Record<string, readonly FormValidationFailure[]>>;
+	/** The paths a rule of which was replaced by a later check before it ran: not decided either way. */
+	readonly superseded: readonly string[];
 }
 
 interface FieldElementPath {
@@ -221,6 +231,9 @@ export function effectiveRulesFor({
 	return [requiredRule, ...rules];
 }
 
+/** What a rule reports when its check was replaced before it ran. */
+const SUPERSEDED = Symbol('superseded');
+
 type AuthoredRule = BaseValidationRule & { readonly id?: string; readonly severity?: ValidationSeverity };
 
 /**
@@ -243,7 +256,7 @@ export async function validateFieldValue({
 	const rules = effectiveRulesFor({ element, values, fieldPath, registry, inheritedRequired }) as AuthoredRule[];
 	const context = createValidationContext({ values, fieldPath, debounceScope });
 	const results = await Promise.all(
-		rules.map(async (rule): Promise<ValidationIssue | FormValidationFailure | undefined> => {
+		rules.map(async (rule): Promise<ValidationIssue | FormValidationFailure | typeof SUPERSEDED | undefined> => {
 			try {
 				const result = await z.safeParseAsync(createZodSchemaFromRules([rule], context, registry), value);
 				if (result.success) return undefined;
@@ -257,13 +270,18 @@ export async function validateFieldValue({
 					severity: rule.severity ?? 'error',
 				});
 			} catch (cause) {
+				if (cause instanceof ValidationSuperseded) return SUPERSEDED;
 				return new FormValidationFailure(fieldPath, rule, cause);
 			}
 		}),
 	);
 	return {
-		issues: results.filter((found): found is ValidationIssue => found !== undefined && !(found instanceof Error)),
+		issues: results.filter(
+			(found): found is ValidationIssue =>
+				found !== undefined && found !== SUPERSEDED && !(found instanceof Error),
+		),
 		failures: results.filter((found): found is FormValidationFailure => found instanceof FormValidationFailure),
+		superseded: results.includes(SUPERSEDED),
 	};
 }
 
@@ -376,11 +394,13 @@ export async function runValidationPlan(
 
 	const issues: Record<string, readonly ValidationIssue[]> = {};
 	const failures: Record<string, readonly FormValidationFailure[]> = {};
+	const superseded: string[] = [];
 	for (const { fieldPath, result } of results) {
 		if (result.issues.length > 0) issues[fieldPath] = result.issues;
 		if (result.failures.length > 0) failures[fieldPath] = result.failures;
+		if (result.superseded) superseded.push(fieldPath);
 	}
-	return { issues, failures };
+	return { issues, failures, superseded };
 }
 
 /**

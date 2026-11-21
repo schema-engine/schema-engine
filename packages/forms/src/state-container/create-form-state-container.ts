@@ -778,13 +778,14 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		}
 		const blocking = Object.values(found).some((entry) => entry.errors.length > 0);
 		const failure = Object.values(outcome.failures).flat()[0];
+		const unchecked = new Set(outcome.superseded);
 
 		if (!run || !startIndex) {
 			if (failure && mode.reject) throw failure;
 			const answeredByServer = entries(start.server).some(
 				([path]) => inScope(path) && !isPathExcluded(start.excluded, path),
 			);
-			return !blocking && !answeredByServer;
+			return !blocking && !answeredByServer && unchecked.size === 0;
 		}
 		if (tracker.outdated(run)) {
 			finish();
@@ -853,6 +854,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 					startIndex.dependentsOf(watched).some(inScope),
 			);
 		const overtaken =
+			unchecked.size > 0 ||
 			exclusionChanged ||
 			scopeStale() ||
 			decided.some(
@@ -870,7 +872,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		let validation = state.validation;
 		let validated = state.validated;
 		for (const { path, current } of decided) {
-			if (current === undefined || excludedNow(current) || stale(path, current)) continue;
+			if (current === undefined || excludedNow(current) || unchecked.has(path) || stale(path, current)) continue;
 			const entry = found[path] as PathFindings | undefined;
 			validation = setSelfAt(
 				validation,

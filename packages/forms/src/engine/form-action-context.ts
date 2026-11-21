@@ -112,7 +112,7 @@ interface CheckFormValidityOptions {
  * change the answer. Values `structuredClone` cannot copy reject the call.
  */
 export async function checkFormValidity({ steps, values, registry }: CheckFormValidityOptions): Promise<boolean> {
-	const { issues, failures } = await validateFormValues({
+	const { issues, failures, superseded } = await validateFormValues({
 		elements: flattenStepElements(steps),
 		values: structuredClone(values),
 		registry,
@@ -120,6 +120,7 @@ export async function checkFormValidity({ steps, values, registry }: CheckFormVa
 	});
 	const failure = Object.values(failures).flat()[0];
 	if (failure) throw failure;
+	if (superseded.length > 0) return false;
 	return !Object.values(issues).some((found) => found.some((issue) => issue.severity === 'error'));
 }
 

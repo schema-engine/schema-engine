@@ -243,8 +243,8 @@ registration, validation, and error presentation. Custom async validators keep
 debounce state in the field's validator closure, so one field instance cannot
 cancel another field's pending request. When a later validation of the same
 field supersedes an earlier one, the earlier call resolves with the later
-result, so a debounced async check superseded by the next keystroke never shows
-`Validation pending`, and a submit-time check waits for the check of the latest
+result, so a debounced async check superseded by the next keystroke shows nothing,
+and a submit-time check waits for the check of the latest
 value. `config.validationMode` and `config.reValidateMode` set the `rui-form`
 `mode` and `reValidateMode`; unset, fields validate on submit and re-validate on
 change.

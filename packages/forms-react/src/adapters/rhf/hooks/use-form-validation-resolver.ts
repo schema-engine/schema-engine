@@ -13,7 +13,7 @@ import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation
 export function createFormValidationResolver(elements: ValidationElementTree, registry: ValidationRegistry): Resolver {
 	const debounceScope = createDebounceScope();
 	return async (values: FieldValues, _context, options): Promise<ResolverResult> => {
-		const { issues, failures } = await validateFormValues({
+		const { issues, failures, superseded } = await validateFormValues({
 			elements,
 			values,
 			registry,
@@ -30,6 +30,15 @@ export function createFormValidationResolver(elements: ValidationElementTree, re
 					: [];
 			}),
 		);
+		if (superseded.length > 0) {
+			return {
+				values: {},
+				errors: toFieldErrors({
+					...errors,
+					...Object.fromEntries(superseded.map((path) => [path, { type: 'pending', message: '' }])),
+				}),
+			};
+		}
 		return Object.keys(errors).length ? { values: {}, errors: toFieldErrors(errors) } : { values, errors: {} };
 	};
 }

@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createAsyncValidationHandler } from '../../../src/schemas/validation/async/handler';
 import { createValidationContext } from '../../../src/schemas/validation/utils';
 import { createDebounceScope } from '../../../src/lib/debounce';
+import { ValidationSuperseded } from '../../../src/schemas/validation/errors';
 
 describe('createAsyncValidationHandler HTTP method', () => {
 	let fetchSpy: ReturnType<typeof vi.spyOn>;
@@ -152,7 +153,7 @@ describe('createAsyncValidationHandler debounce', () => {
 		await vi.advanceTimersByTimeAsync(100);
 		const second = schema.safeParseAsync('second@example.com');
 
-		await expect(first).resolves.toMatchObject({ error: { issues: [{ message: 'Validation pending' }] } });
+		await expect(first).rejects.toBeInstanceOf(ValidationSuperseded);
 		await vi.advanceTimersByTimeAsync(300);
 		await expect(second).resolves.toMatchObject({ success: true });
 
@@ -189,10 +190,13 @@ describe('createAsyncValidationHandler debounce', () => {
 		const first = schema.safeParseAsync('same@example.com');
 		const second = schema.safeParseAsync('same@example.com');
 		const third = schema.safeParseAsync('other@example.com');
+		const outcomes = Promise.allSettled([first, second, third]);
 		await vi.advanceTimersByTimeAsync(300);
 
-		const messages = (await Promise.all([first, second, third])).map((result) => result.error?.issues[0]?.message);
-		expect(messages).toEqual(['Validation pending', 'Validation pending', undefined]);
+		const settled = await outcomes;
+		expect(settled.map(({ status }) => status)).toEqual(['rejected', 'rejected', 'fulfilled']);
+		expect(settled[0]).toMatchObject({ reason: expect.any(ValidationSuperseded) });
+		expect(settled[2]).toMatchObject({ value: { success: true } });
 		expect(fetchSpy).toHaveBeenCalledOnce();
 	});
 
