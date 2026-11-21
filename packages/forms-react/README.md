@@ -130,8 +130,9 @@ task in Turbo. Renderer actions import the dispatcher from
 
 The React Hook Form adapter delegates validation to `validateFormValues`, step
 state to `createStepMachine`, navigation (the in-flight guard and step triggers) to
-`createStepNavigator`, and submission triggers to `runSubmissionLifecycle`
-from `@schema-engine/forms`. Every trigger dispatches the form's actions and then the
+`createStepNavigator`, and submission to `runSubmissionLifecycle` and
+`createSubmissionGuard` from `@schema-engine/forms`: `onSubmit` runs inside the lifecycle, so a rejected `onSubmit` is a failed
+submission, and a submit that arrives while one is validating or running is ignored. Every trigger dispatches the form's actions and then the
 current step's (`collectStepActions`). Unmounting the provider, which a replaced config
 causes, cancels the navigation in flight, so it dispatches no step trigger afterwards. Wizard Next validates nested fieldsets and live
 array rows; errors keep the nested value shape so field revalidation clears them.

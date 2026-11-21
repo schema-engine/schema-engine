@@ -29,8 +29,8 @@ Actions execute in response to form lifecycle triggers.
 ### Submit Lifecycle
 
 - `form_submit_start` - Submit process begins
-- `form_submit_success` - Submit completed successfully
-- `form_submit_error` - Submit failed
+- `form_submit_success` - Submit completed successfully, after the `onSubmit` callback resolved
+- `form_submit_error` - Submit failed: a submit action aborted, the `onSubmit` callback rejected, or a trigger failed
 - `form_submit_complete` - Submit finished (success or failure)
 
 ### Step Triggers

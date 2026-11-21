@@ -29,7 +29,7 @@ dispatches after it; a renderer supplies its step state, step validation and tri
 form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigation)). `runSubmissionLifecycle` accepts either a
 fixed context or a factory; use a factory when each submission trigger needs current form
 values and validation state. Its optional `hasMatching(actions, trigger)` skips a trigger no
-action answers, so no context is built for it; `ActionDispatcher.hasMatching` is the check. Its optional `onAction(action, data)` callback runs after each
+action answers, so no context is built for it; `ActionDispatcher.hasMatching` is the check. Its optional `onSubmit()` runs after the submit actions and before the success or error trigger; the function resolves with a `failure` instead of rejecting, and dispatches `form_submit_complete` once ([`createSubmissionGuard`](./submission-lifecycle.ts) admits one submission at a time). Its optional `onAction(action, data)` callback runs after each
 successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
 and later submit actions stop before error and completion triggers run. Submit sequence entries are dispatched in order; grouped actions run concurrently. Each returned result carries its `actionId`.
 `buildFormActionContext` takes nested `errors` and `touched` trees; a renderer that keys
