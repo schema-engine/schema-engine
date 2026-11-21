@@ -20,7 +20,12 @@ import { formEngineContext } from '@/components/provider';
 import { connectValidationDependencies } from '@/lib/validation-deps';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { createChangeDetector, expandValues } from '@/adapters/radiant/controller/values';
-import { createInitialStepStates, hasConfiguredActions, type StepMachineState } from '@schema-engine/forms/engine';
+import {
+	createInitialStepStates,
+	createSubmissionGuard,
+	hasConfiguredActions,
+	type StepMachineState,
+} from '@schema-engine/forms/engine';
 import { createFormMeta, type FormMeta } from '@/lib/instance-view';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
 import { createAuthoredDisabledLookup } from '@/lib/authored-disabled';
@@ -66,6 +71,8 @@ export class FormInstanceElement extends RadiantElement {
 	@state onAction?: FormProviderProps['onAction'];
 	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	@state private submitting = false;
+	private readonly submission = createSubmissionGuard();
+	private release?: () => void;
 	get isSubmitting(): boolean {
 		return this.submitting;
 	}
@@ -146,6 +153,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	override disconnectedCallback(): void {
 		this.navigation.cancel();
+		this.releaseSubmission();
 		this.stopWatchingValidationDependencies();
 		this.disposeActions();
 		if (this.form?.host) (this.form.host as RuiFormElement).onSubmit = undefined;
@@ -195,35 +203,54 @@ export class FormInstanceElement extends RadiantElement {
 	@onEvent({ type: 'submit', host: true, options: { capture: true } })
 	onNativeSubmit(event: Event): void {
 		this.warnWithoutEngine();
-		if (this.ignoreWhileSubmitting(event)) return;
 		const { isWizard, currentStep, totalSteps } = this.getContextValue();
-		if (!isWizard || currentStep >= totalSteps - 1) return;
-		event.preventDefault();
-		event.stopPropagation();
-		void this.goToNextStep();
+		if (isWizard && currentStep < totalSteps - 1) {
+			event.preventDefault();
+			event.stopPropagation();
+			void this.goToNextStep();
+			return;
+		}
+		this.claimSubmission(event);
 	}
 
-	/** Ignores a click on a submit button while a submission is running, as `onNativeSubmit` does for a submit event. */
+	/** Starts a submission from a click on a submit button, which `rui-form` handles without a submit event. */
 	@onEvent({ type: 'click', host: true, options: { capture: true } })
 	onSubmitButtonClick(event: Event): void {
 		if (event.target instanceof Element && event.target.closest('button[type="submit"]')) {
-			this.ignoreWhileSubmitting(event);
+			this.claimSubmission(event);
 		}
 	}
 
+	/** Releases the guard of a submission that failed validation, which `rui-form` reports instead of calling `onSubmit`. */
+	@onEvent({ type: 'rui-invalid', host: true })
+	onInvalid(): void {
+		this.releaseSubmission();
+	}
+
 	/**
-	 * Stops a submit event that arrives while a submission is validating or running.
+	 * Takes the submission guard for a submit event, or stops the event when a submission already holds it.
 	 *
 	 * @remarks
-	 * Radiant UI sets its own `isSubmitting` for the validation only, and the instance sets `submitting`
-	 * from the end of validation, so together they cover the whole submission. A submit button click
-	 * reaches Radiant UI without a submit event, so both are intercepted in the capture phase.
+	 * The guard is taken in the capture phase, before `rui-form` validates, so a second submit is dropped
+	 * while the first validates, and released when the submission completes, fails validation
+	 * (`rui-invalid`) or the instance disconnects.
 	 */
-	private ignoreWhileSubmitting(event: Event): boolean {
-		if (!this.submitting && !this.form?.store?.isSubmitting) return false;
-		event.preventDefault();
-		event.stopPropagation();
-		return true;
+	private claimSubmission(event: Event): void {
+		if (!this.form?.store || !(event.target instanceof Node) || !this.ruiForm?.contains(event.target)) return;
+		if (this.submission.busy) {
+			event.preventDefault();
+			event.stopPropagation();
+			return;
+		}
+		const held = new Promise<void>((resolve) => {
+			this.release = resolve;
+		});
+		void this.submission.run(() => held);
+	}
+
+	private releaseSubmission(): void {
+		this.release?.();
+		this.release = undefined;
 	}
 
 	/**
@@ -266,8 +293,8 @@ export class FormInstanceElement extends RadiantElement {
 	 * @remarks
 	 * The instance owns the submitting state because Radiant UI clears its own
 	 * `isSubmitting` after validation, before it awaits `onSubmit`. With no
-	 * `onSubmit`, a form with `action` or `method` submits natively once its actions
-	 * succeed. A rejected `onSubmit` completes the submission as unsuccessful, runs the error and
+	 * `onSubmit`, a form with `action` or `method` submits natively after its actions have
+	 * completed and succeeded, so the navigation cannot cut off the success and complete actions. A rejected `onSubmit` completes the submission as unsuccessful, runs the error and
 	 * complete actions and is logged, not rethrown: the event is how the page learns of it.
 	 */
 	private async submitForm(ruiForm: RuiFormElement, data: Record<string, unknown>): Promise<void> {
@@ -276,26 +303,29 @@ export class FormInstanceElement extends RadiantElement {
 			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		this.setSubmitting(true);
 		announce('se-action-submit-start');
-		const submit = async () => {
-			if (this.onSubmit) {
-				await this.onSubmit(expandValues(data));
-			} else if (ruiForm.hasAttribute('action') || ruiForm.hasAttribute('method')) {
+		const { onSubmit } = this;
+		const submitNatively = () => {
+			if (ruiForm.hasAttribute('action') || ruiForm.hasAttribute('method')) {
 				ruiForm.querySelector<HTMLFormElement>('form[data-ref="form"]')?.submit();
 			}
 		};
+		const callback = onSubmit ? () => onSubmit(expandValues(data)) : undefined;
 		let detail: SubmissionCompleteDetail;
 		try {
 			if (this.actions) {
-				const { succeeded, results, failure } = await this.actions.submit(submit);
+				const { succeeded, results, failure } = await this.actions.submit(callback);
+				if (succeeded && !callback) submitNatively();
 				detail = { succeeded, results, ...(failure ? { error: failure.error } : {}) };
 			} else {
-				await submit();
+				if (callback) await callback();
+				else submitNatively();
 				detail = { succeeded: true, results: [] };
 			}
 		} catch (error) {
 			detail = { succeeded: false, results: [], error };
 		} finally {
 			this.setSubmitting(false);
+			this.releaseSubmission();
 		}
 		if ('error' in detail) logger.error('Form submission failed', detail.error);
 		announce('se-action-submit-complete', detail);

@@ -135,6 +135,7 @@ export function useFormSubmitHandler({
 			}
 
 			if (succeeded) {
+				if (failure) logger.error('Form submission completed with a failing trigger:', failure.error);
 				setSubmissionSuccess();
 				return;
 			}
@@ -143,7 +144,7 @@ export function useFormSubmitHandler({
 				setSubmissionError({
 					errors: [
 						{
-							actionId: failure.phase === 'onSubmit' ? 'submit' : 'unknown',
+							actionId: failure.phase === 'callback' ? 'submit' : 'unknown',
 							message: failure.error instanceof Error ? failure.error.message : 'Unknown error',
 						},
 					],

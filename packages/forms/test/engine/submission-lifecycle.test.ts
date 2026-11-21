@@ -221,7 +221,7 @@ describe('runSubmissionLifecycle', () => {
 				onSubmit: () => Promise.reject(failure),
 			});
 
-			expect(result).toMatchObject({ succeeded: false, failure: { phase: 'onSubmit', error: failure } });
+			expect(result).toMatchObject({ succeeded: false, failure: { phase: 'callback', error: failure } });
 			expect(triggers).toEqual(['form_submit_start', 'form_submit', 'form_submit_error', 'form_submit_complete']);
 		});
 
@@ -257,8 +257,13 @@ describe('runSubmissionLifecycle', () => {
 		}
 
 		test.each([
-			['form_submit_start', ['form_submit_start', 'form_submit_error', 'form_submit_complete'], 0],
-			['form_submit', ['form_submit_start', 'form_submit', 'form_submit_error', 'form_submit_complete'], 0],
+			['form_submit_start', ['form_submit_start', 'form_submit_error', 'form_submit_complete'], 0, false],
+			[
+				'form_submit',
+				['form_submit_start', 'form_submit', 'form_submit_error', 'form_submit_complete'],
+				0,
+				false,
+			],
 			[
 				'form_submit_success',
 				[
@@ -269,17 +274,18 @@ describe('runSubmissionLifecycle', () => {
 					'form_submit_complete',
 				],
 				1,
+				false,
 			],
-			['form_submit_complete', sequence, 1],
+			['form_submit_complete', sequence, 1, true],
 		] as const)(
-			'at %s resolves unsuccessful with each trigger tried once',
-			async (rejecting, expected, submitCalls) => {
+			'at %s records the failure with each trigger tried once',
+			async (rejecting, expected, submitCalls, succeeded) => {
 				const { dispatch, triggers, boom } = rejectingAt(rejecting);
 				const onSubmit = vi.fn();
 
 				const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context, onSubmit });
 
-				expect(result).toMatchObject({ succeeded: false, failure: { phase: 'lifecycle', error: boom } });
+				expect(result).toMatchObject({ succeeded, failure: { phase: 'trigger', error: boom } });
 				expect(triggers).toEqual(expected);
 				expect(triggers.filter((trigger) => trigger === 'form_submit_complete')).toHaveLength(1);
 				expect(onSubmit).toHaveBeenCalledTimes(submitCalls);
@@ -297,7 +303,7 @@ describe('runSubmissionLifecycle', () => {
 
 			expect(triggers).toEqual(['form_submit_start', 'form_submit', 'form_submit_error', 'form_submit_complete']);
 			expect(result.failure).toEqual({
-				phase: 'onSubmit',
+				phase: 'callback',
 				error: expect.objectContaining({ message: 'Save failed' }),
 			});
 			expect(result.failure?.error).not.toBe(boom);
@@ -314,7 +320,7 @@ describe('runSubmissionLifecycle', () => {
 
 			const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context });
 
-			expect(result.failure).toEqual({ phase: 'lifecycle', error: boom });
+			expect(result.failure).toEqual({ phase: 'trigger', error: boom });
 			expect(triggers).toEqual(['form_submit_start', 'form_submit', 'form_submit_error', 'form_submit_complete']);
 		});
 
@@ -330,7 +336,7 @@ describe('runSubmissionLifecycle', () => {
 
 			const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context });
 
-			expect(result.failure).toEqual({ phase: 'lifecycle', error: first });
+			expect(result.failure).toEqual({ phase: 'trigger', error: first });
 			expect(triggers.filter((trigger) => trigger === 'form_submit_complete')).toHaveLength(1);
 		});
 	});

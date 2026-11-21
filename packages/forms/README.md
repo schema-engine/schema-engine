@@ -168,12 +168,14 @@ action. If it rejects, that action becomes a fatal failure and later submit acti
 Pass `onSubmit()` to run the consumer's submission callback inside the sequence, after the submit actions and before the
 success or error trigger, and only when the actions succeeded; a rejection fails the submission.
 The function never rejects: a rejected `onSubmit` or trigger dispatch resolves with `succeeded: false` and a
-`failure` (`{ phase: 'onSubmit' | 'lifecycle', error }`), and one recovery path dispatches `form_submit_error`
+`failure` (`{ phase: 'callback' | 'trigger', error }`), and one recovery path dispatches `form_submit_error`
 (unless it was already tried) and `form_submit_complete` exactly once, even when that dispatch rejects.
+Once `onSubmit` and `form_submit_success` have resolved, the submission is saved: a later failure of `form_submit_complete` is recorded in
+`failure` and `succeeded` stays true.
 `createSubmissionGuard()` returns a guard whose `run(task)` ignores a call while one is pending and releases on every way out; a renderer
 wraps validation and the lifecycle in one `run`, so a second submit is dropped before it validates.
 The returned `succeeded` flag is false when a submit action fails with
-`shouldContinue: false`, `onAction` rejects, `onSubmit` rejects or a trigger dispatch fails; a failed action that allows continuation
+`shouldContinue: false`, `onAction` rejects, `onSubmit` rejects or a trigger dispatch before the submission is saved fails; a failed action that allows continuation
 does not fail the submission. Each returned result carries the `actionId` of the
 configured action that produced it.
 `buildFormActionContext` is an exported utility that constructs a form action

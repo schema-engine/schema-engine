@@ -39,9 +39,9 @@ export type SubmissionActionResult = ActionExecutionResult & {
 	cancellationRequested?: boolean;
 };
 
-/** Where a submission failed outside its action results: the consumer's `onSubmit`, or a trigger dispatch. */
+/** Where a submission failed outside its action results: the consumer's `onSubmit` callback, or a trigger dispatch. */
 export interface SubmissionFailure {
-	phase: 'onSubmit' | 'lifecycle';
+	phase: 'callback' | 'trigger';
 	error: unknown;
 }
 
@@ -96,7 +96,9 @@ function isGroup(entry: ActionSequenceEntry<FormActionConfig>): entry is readonl
  * `form_submit_error`, then `form_submit_complete`. It does not reject: a rejected `onSubmit` or trigger
  * dispatch resolves unsuccessful with a `failure`, and one recovery path dispatches `form_submit_error`
  * unless that trigger was already tried, then `form_submit_complete` exactly once even when its own
- * dispatch rejects. Failures while recovering are dropped in favour of the first.
+ * dispatch rejects. Once `onSubmit` and `form_submit_success` have resolved the submission is saved: a
+ * later failure, of `form_submit_complete`, is recorded in `failure` and leaves `succeeded` true. Failures
+ * while recovering are dropped in favour of the first.
  */
 export async function runSubmissionLifecycle(
 	dispatch: FormActionDispatch,
@@ -150,8 +152,9 @@ export async function runSubmissionLifecycle(
 	let succeeded = false;
 	let failure: SubmissionFailure | undefined;
 	let errorTried = false;
+	let saved = false;
 	const fail = (phase: SubmissionFailure['phase'], error: unknown) => {
-		succeeded = false;
+		if (!saved) succeeded = false;
 		failure ??= { phase, error };
 	};
 	try {
@@ -162,30 +165,31 @@ export async function runSubmissionLifecycle(
 			try {
 				await onSubmit();
 			} catch (error) {
-				fail('onSubmit', error);
+				fail('callback', error);
 			}
 		}
 		if (succeeded) {
 			await dispatchTrigger('form_submit_success');
+			saved = true;
 		} else {
 			errorTried = true;
 			await dispatchTrigger('form_submit_error');
 		}
 	} catch (error) {
-		fail('lifecycle', error);
+		fail('trigger', error);
 	}
 	if (!succeeded && !errorTried) {
 		errorTried = true;
 		try {
 			await dispatchTrigger('form_submit_error');
 		} catch (error) {
-			fail('lifecycle', error);
+			fail('trigger', error);
 		}
 	}
 	try {
 		await dispatchTrigger('form_submit_complete');
 	} catch (error) {
-		fail('lifecycle', error);
+		fail('trigger', error);
 	}
 	return failure ? { succeeded, results, failure } : { succeeded, results };
 }
