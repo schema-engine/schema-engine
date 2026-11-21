@@ -18,13 +18,16 @@ export function toFieldErrors(errors: Readonly<Record<string, { type: string; me
 	return nested as FieldErrors<FieldValues>;
 }
 
+const hasMessage = (node: unknown): boolean =>
+	typeof node === 'object' && node !== null && 'message' in node && typeof node.message === 'string';
+
 function collect(node: unknown, path: string, out: Record<string, unknown>): void {
 	if (typeof node !== 'object' || node === null) return;
 	const recorded =
 		('message' in node && typeof node.message === 'string') || ('type' in node && typeof node.type === 'string');
 	if (recorded && path) out[path] = node;
 	for (const [key, child] of Object.entries(node)) {
-		if (recorded && (key === 'ref' || key === 'types')) continue;
+		if (recorded && (key === 'ref' || key === 'types') && !hasMessage(child)) continue;
 		collect(child, path ? `${path}.${key}` : key, out);
 	}
 }
@@ -33,8 +36,9 @@ function collect(node: unknown, path: string, out: Record<string, unknown>): voi
  * Converts the nested `FieldErrors` React Hook Form holds to the engine's flat errors.
  *
  * @remarks
- * A node is an error when it carries a string `type` or `message`; `ref` and `types` belong to the error,
- * not to a field below it. Empty containers and array holes, which React Hook Form leaves where a nested
+ * A node is an error when it carries a string `type` or `message`; its `ref` and `types` belong to the error,
+ * not to a field below it, unless the child itself carries a message, which a DOM element and a map of
+ * messages by rule do not. Empty containers and array holes, which React Hook Form leaves where a nested
  * error was cleared, record nothing. React Hook Form keeps the error of a field array itself at
  * `<array>.root`, so a `root` below an array in `values` is that array's own error.
  */
