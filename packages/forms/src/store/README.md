@@ -25,9 +25,17 @@ published is the smallest contract that works for both.
 - Where several sources set an error for a path, the source set most recently wins and the store's own
   `validation` source loses to all of them. Editing a path drops the explicit-source errors at and below it.
 - A failed `validate` starts re-validation by `reValidateMode` for the paths it covered. It marks nothing
-  submitted, so a failed wizard step does not surface errors of later steps. `checkValidity` is silent.
-- Async validation results are dropped after a `reset` or a row move, and per path when that path was
-  written while the validation ran.
+  submitted, so a failed wizard step does not surface errors of later steps. The state ends only with
+  `reset`, or when a branch write removes the rows it covered. `checkValidity` is silent. An empty list of
+  paths validates nothing; omitting the list validates the form.
+- An async result is applied path by path, and dropped for a path when that path's value was written
+  while it ran, a value the path's rules read changed, a validation that started later asked for the same
+  path, rows of an array around it moved (only that array), or the form was reset. An explicit `validate`
+  that lost part of its result runs once more and resolves with the validity of the current state.
+- A row operation validates the array's own rules, not its rows, and `reset` gives every row a new id.
+- Writing a branch drops the field state of rows and objects it removed, so a row added later at the same
+  index starts clean.
+- A command notifies subscribers once, including when it starts a validation.
 
 The rules are tests: `formStoreConformance(createStore)` in [test-utils/form-store-conformance.ts](../../../../test-utils/form-store-conformance.ts)
 registers them with vitest, like the renderer conformance suite. `test/store/form-store-rules.test.ts`
@@ -40,4 +48,5 @@ points each rule at a store written to break it.
 `buildDependencyIndex` by comparing the values at every watched path, so a write to a parent such as
 `address` re-validates a rule that reads `address.country`. Values are null-prototype maps inside and
 frozen plain records in the snapshot. The dependency index is cached per store and rebuilt only when
-an array's row count changes, not when a value is typed or rows are moved.
+the row count of any array, nested ones included, changes; typing, moving rows and adopting ids do not
+rebuild it.

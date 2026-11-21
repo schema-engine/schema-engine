@@ -129,6 +129,21 @@ function fixture(overrides: Partial<FormStoreOptions> = {}): Fixture {
 	};
 }
 
+/**
+ * Records whether a validation the store started was ever running, as a subscriber sees it.
+ *
+ * @remarks
+ * A check that nothing validated cannot pass vacuously on a short wait: every validation the store
+ * starts is observable as `isValidating` while it runs.
+ */
+export function watchValidation(store: FormStore): { readonly started: boolean } {
+	const watch = { started: false };
+	store.subscribe(() => {
+		if (store.getSnapshot().isValidating) watch.started = true;
+	});
+	return watch;
+}
+
 const error = (message: string) => ({ type: 'custom', message });
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 5));
 const errorsOf = (store: FormStore) => store.getSnapshot().errors;
@@ -305,13 +320,64 @@ const cases: FormStoreCase[] = [
 		},
 	},
 	{
+		rule: 'snapshot stability',
+		name: 'notifies once per command even when the command starts a validation',
+		run(createStore) {
+			const change = createStore(fixture({ validationMode: 'onChange' }).options);
+			const onChange = vi.fn();
+			change.subscribe(onChange);
+			change.setValue('name', '');
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(change.getSnapshot().isValidating).toBe(true);
+			change.fieldArray('contacts').swap(0, 1);
+			expect(onChange).toHaveBeenCalledTimes(2);
+
+			const blur = createStore(fixture({ validationMode: 'onBlur' }).options);
+			const onBlur = vi.fn();
+			blur.subscribe(onBlur);
+			blur.blur('name');
+			expect(onBlur).toHaveBeenCalledTimes(1);
+			expect(blur.getSnapshot().isValidating).toBe(true);
+		},
+	},
+	{
+		rule: 'validation mode timing',
+		name: 'an empty list of paths validates nothing, and undefined validates the form',
+		async run(createStore) {
+			const store = createStore(fixture({ defaultValues: { name: '', nickname: '' } }).options);
+			const watch = watchValidation(store);
+			expect(await store.validate([])).toBe(true);
+			expect(await store.checkValidity([])).toBe(true);
+			expect(watch.started).toBe(false);
+			expect(store.getSnapshot().checkFailed).toBe(false);
+			expect(await store.checkValidity()).toBe(false);
+		},
+	},
+	{
+		rule: 'validation mode timing',
+		name: 'a row operation validates the array itself, not rows the user has not reached',
+		async run(createStore) {
+			const store = createStore(
+				fixture({ validationMode: 'onChange', defaultValues: { contacts: [{ email: '' }] } }).options,
+			);
+			const watch = watchValidation(store);
+			store.fieldArray('contacts').append({ email: '' });
+			await settle();
+			expect(watch.started).toBe(true);
+			expect(store.getSnapshot().isValidating).toBe(false);
+			expect(errorsOf(store)).toEqual({});
+		},
+	},
+	{
 		rule: 'validation mode timing',
 		name: 'with onSubmit nothing validates until validate is called',
 		async run(createStore) {
 			const store = createStore(fixture({ validationMode: 'onSubmit' }).options);
+			const watch = watchValidation(store);
 			store.setValue('name', '');
 			store.blur('name');
 			await settle();
+			expect(watch.started).toBe(false);
 			expect(errorsOf(store)).toEqual({});
 			expect(await store.validate()).toBe(false);
 			expect(errorsOf(store).name?.message).toBe('Name is required');
@@ -322,8 +388,10 @@ const cases: FormStoreCase[] = [
 		name: 'with onChange a change validates and a blur alone does not',
 		async run(createStore) {
 			const store = createStore(fixture({ validationMode: 'onChange', defaultValues: { name: '' } }).options);
+			const watch = watchValidation(store);
 			store.blur('name');
 			await settle();
+			expect(watch.started).toBe(false);
 			expect(errorsOf(store)).toEqual({});
 			store.setValue('name', 'Ada');
 			store.setValue('name', '');
@@ -336,8 +404,10 @@ const cases: FormStoreCase[] = [
 		name: 'with onBlur a blur validates and a change alone does not',
 		async run(createStore) {
 			const store = createStore(fixture({ validationMode: 'onBlur' }).options);
+			const watch = watchValidation(store);
 			store.setValue('name', '');
 			await settle();
+			expect(watch.started).toBe(false);
 			expect(errorsOf(store)).toEqual({});
 			store.blur('name');
 			await vi.waitFor(() => expect(errorsOf(store).name?.message).toBe('Name is required'));
@@ -347,20 +417,16 @@ const cases: FormStoreCase[] = [
 		rule: 'validation mode timing',
 		name: 'with all both a change and a blur validate',
 		async run(createStore) {
-			const store = createStore(fixture({ validationMode: 'all' }).options);
-			store.setValue('name', '');
-			await vi.waitFor(() => expect(errorsOf(store).name).toBeDefined());
-			store.setValue('name', 'Ada');
-			await vi.waitFor(() => expect(errorsOf(store).name).toBeUndefined());
-			store.setValue('nickname', '');
-			await vi.waitFor(() => expect(errorsOf(store).nickname).toBeDefined());
-			store.setValue('nickname', 'ada');
-			await vi.waitFor(() => expect(errorsOf(store).nickname).toBeUndefined());
-			store.setValue('name', '');
-			await vi.waitFor(() => expect(errorsOf(store).name).toBeDefined());
-			store.blur('name');
-			await vi.waitFor(() => expect(store.getSnapshot().touched.name).toBe(true));
-			expect(errorsOf(store).name?.message).toBe('Name is required');
+			const onChange = createStore(fixture({ validationMode: 'all' }).options);
+			onChange.setValue('name', '');
+			await vi.waitFor(() => expect(errorsOf(onChange).name).toBeDefined());
+			onChange.setValue('name', 'Ada');
+			await vi.waitFor(() => expect(errorsOf(onChange).name).toBeUndefined());
+
+			const onBlur = createStore(fixture({ validationMode: 'all', defaultValues: { name: '' } }).options);
+			expect(errorsOf(onBlur)).toEqual({});
+			onBlur.blur('name');
+			await vi.waitFor(() => expect(errorsOf(onBlur).name?.message).toBe('Name is required'));
 		},
 	},
 	{
@@ -396,8 +462,10 @@ const cases: FormStoreCase[] = [
 			const onBlur = createStore(fixture({ validationMode: 'onSubmit', reValidateMode: 'onBlur' }).options);
 			onBlur.setValue('name', '');
 			await onBlur.validate();
+			const changeWatch = watchValidation(onBlur);
 			onBlur.setValue('name', 'Ada');
 			await settle();
+			expect(changeWatch.started).toBe(false);
 			expect(errorsOf(onBlur).name).toBeDefined();
 			onBlur.blur('name');
 			await vi.waitFor(() => expect(errorsOf(onBlur).name).toBeUndefined());
@@ -405,9 +473,11 @@ const cases: FormStoreCase[] = [
 			const onSubmit = createStore(fixture({ validationMode: 'onSubmit', reValidateMode: 'onSubmit' }).options);
 			onSubmit.setValue('name', '');
 			await onSubmit.validate();
+			const submitWatch = watchValidation(onSubmit);
 			onSubmit.setValue('name', 'Ada');
 			onSubmit.blur('name');
 			await settle();
+			expect(submitWatch.started).toBe(false);
 			expect(errorsOf(onSubmit).name).toBeDefined();
 		},
 	},
@@ -418,8 +488,10 @@ const cases: FormStoreCase[] = [
 			const store = createStore(fixture({ validationMode: 'onSubmit', reValidateMode: 'onChange' }).options);
 			store.setValue('name', '');
 			expect(await store.validate(['name'])).toBe(false);
+			const watch = watchValidation(store);
 			store.setValue('nickname', '');
 			await settle();
+			expect(watch.started).toBe(false);
 			expect(errorsOf(store).nickname).toBeUndefined();
 			store.setValue('name', 'Ada');
 			await vi.waitFor(() => expect(errorsOf(store).name).toBeUndefined());
@@ -432,16 +504,20 @@ const cases: FormStoreCase[] = [
 			const store = createStore(fixture({ validationMode: 'onSubmit', reValidateMode: 'onChange' }).options);
 			expect(await store.validate()).toBe(true);
 			expect(store.getSnapshot().checkFailed).toBe(false);
+			const afterPass = watchValidation(store);
 			store.setValue('name', '');
 			await settle();
+			expect(afterPass.started).toBe(false);
 			expect(errorsOf(store)).toEqual({});
 
 			expect(await store.validate()).toBe(false);
 			expect(store.getSnapshot().checkFailed).toBe(true);
 			store.reset();
 			expect(store.getSnapshot().checkFailed).toBe(false);
+			const afterReset = watchValidation(store);
 			store.setValue('name', '');
 			await settle();
+			expect(afterReset.started).toBe(false);
 			expect(errorsOf(store)).toEqual({});
 		},
 	},
@@ -646,6 +722,26 @@ const cases: FormStoreCase[] = [
 	},
 	{
 		rule: 'array reindexing',
+		name: 'a branch written over rows drops the state of rows that no longer exist',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			store.setErrors('server', { 'contacts.2.email': error('two') });
+			store.blur('contacts.2.email');
+			store.setValue('contacts.2.email', '');
+			expect(await store.validate(['contacts.2.email'])).toBe(false);
+			expect(store.getSnapshot().checkFailed).toBe(true);
+			store.setValue('contacts', [{ email: 'a@example.com' }]);
+			expect(errorsOf(store)).toEqual({});
+			expect(store.getSnapshot().touched).toEqual({});
+			expect(store.getSnapshot().checkFailed).toBe(false);
+			store.fieldArray('contacts').append({ email: 'fresh@example.com' });
+			store.fieldArray('contacts').append({ email: '' });
+			expect(errorsOf(store)).toEqual({});
+			expect(store.getSnapshot().touched).toEqual({});
+		},
+	},
+	{
+		rule: 'array reindexing',
 		name: 'keeps row ids by position when a branch is replaced with the same number of rows',
 		run(createStore) {
 			const store = createStore(fixture().options);
@@ -716,23 +812,47 @@ const cases: FormStoreCase[] = [
 		rule: 'stale async results',
 		name: 'drops a result that arrives after a reset',
 		async run(createStore) {
-			const { options, gate } = fixture();
+			const { options, gate } = fixture({ validationMode: 'onChange', defaultValues: { slug: 'taken' } });
 			const store = createStore(options);
 			gate.hold('taken');
+			store.setValue('slug', 'other');
 			store.setValue('slug', 'taken');
-			const run = store.validate(['slug']);
 			await vi.waitFor(() => expect(gate.pending('taken')).toBe(1));
 			store.reset();
+			expect(store.getValue('slug')).toBe('taken');
 			gate.settle('taken', false);
-			await run;
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
 			expect(errorsOf(store)).toEqual({});
 			expect(store.getSnapshot().checkFailed).toBe(false);
-			expect(store.getSnapshot().isValidating).toBe(false);
 		},
 	},
 	{
 		rule: 'stale async results',
 		name: 'drops a result for rows that moved while it was running',
+		async run(createStore) {
+			const { options, gate } = fixture({
+				validationMode: 'onBlur',
+				defaultValues: {
+					invites: [
+						{ code: 'one', label: 'first' },
+						{ code: 'one', label: 'second' },
+					],
+				},
+			});
+			const store = createStore(options);
+			gate.hold('one');
+			store.blur('invites.0.code');
+			await vi.waitFor(() => expect(gate.pending('one')).toBe(1));
+			store.fieldArray('invites').swap(0, 1);
+			gate.settle('one', false);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(errorsOf(store)).toEqual({});
+			expect(store.getSnapshot().checkFailed).toBe(false);
+		},
+	},
+	{
+		rule: 'stale async results',
+		name: 'an explicit validate that lost part of its result resolves with the current validity',
 		async run(createStore) {
 			const { options, gate } = fixture();
 			const store = createStore(options);
@@ -742,14 +862,14 @@ const cases: FormStoreCase[] = [
 			store.fieldArray('invites').swap(0, 1);
 			gate.settle('one', false);
 			gate.settle('two', true);
-			await run;
-			expect(errorsOf(store)).toEqual({});
+			expect(await run).toBe(false);
+			expect(Object.keys(errorsOf(store))).toEqual(['invites.1.code']);
 			expect(store.getSnapshot().isValidating).toBe(false);
 		},
 	},
 	{
 		rule: 'stale async results',
-		name: 'drops a result for a path whose value was written while it was running',
+		name: 'drops a result for a path whose value was written while it was running, and resolves with the current validity',
 		async run(createStore) {
 			const { options, gate } = fixture();
 			const store = createStore(options);
@@ -759,7 +879,7 @@ const cases: FormStoreCase[] = [
 			await vi.waitFor(() => expect(gate.pending('taken')).toBe(1));
 			store.setValue('slug', 'free');
 			gate.settle('taken', false);
-			await run;
+			expect(await run).toBe(true);
 			expect(errorsOf(store).slug).toBeUndefined();
 		},
 	},

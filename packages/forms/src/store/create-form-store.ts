@@ -7,7 +7,8 @@ import {
 	shouldSurfaceDependentError,
 	type DependencyIndex,
 } from '@/schemas/validation/dependencies';
-import { flattenErrors, remapRows, syncRowIds } from './field-state';
+import { flattenErrors, pruneMissing, remapRows, syncRowIds } from './field-state';
+import { createRunTracker } from './stale-results';
 import {
 	VALIDATION_ERROR_SOURCE,
 	type FormErrorSource,
@@ -35,7 +36,6 @@ type ErrorMap = NullMap<FormStoreError>;
  * Everything the store holds. Replaced as a whole by every command; no part is mutated.
  *
  * @remarks
- * `epoch` counts the changes that make a running validation stale: a reset and a row move.
  */
 interface State {
 	readonly values: NullMap;
@@ -49,7 +49,6 @@ interface State {
 	/** Paths whose validation failed, and so re-validate by `reValidateMode`; `''` is the whole form. */
 	readonly failedScopes: readonly string[];
 	readonly validating: number;
-	readonly epoch: number;
 }
 
 interface RowEntry {
@@ -77,6 +76,7 @@ const asRows = (value: unknown): unknown[] => (Array.isArray(value) ? value : [v
  */
 export function createFormStore(options: FormStoreOptions): FormStore {
 	const { elements, registry, validationMode = 'onSubmit', reValidateMode = 'onChange' } = options;
+	const tracker = createRunTracker();
 	const debounceScope = createDebounceScope();
 	const silentDebounceScope = createDebounceScope();
 	const listeners = new Set<() => void>();
@@ -99,7 +99,6 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		rowIds: syncRowIds(createMap(), '', initialDefaults, mintId),
 		failedScopes: [],
 		validating: 0,
-		epoch: 0,
 	};
 
 	let mergedFor: { sources: State['sources']; validation: ErrorMap; merged: ErrorMap } | undefined;
@@ -130,7 +129,34 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		});
 	}
 
-	/** Applies one update atomically and notifies once, and only when something observable changed. */
+	let batchDepth = 0;
+	let notifyAfterBatch = false;
+
+	function notify(): void {
+		for (const listener of listeners) listener();
+	}
+
+	/**
+	 * Runs one command's synchronous work, so every commit in it reaches subscribers as one notification.
+	 *
+	 * @remarks
+	 * A command that starts a validation commits `isValidating` before the validation's first await; the
+	 * batch folds that into the command's own update.
+	 */
+	function batch<T>(work: () => T): T {
+		batchDepth += 1;
+		try {
+			return work();
+		} finally {
+			batchDepth -= 1;
+			if (batchDepth === 0 && notifyAfterBatch) {
+				notifyAfterBatch = false;
+				notify();
+			}
+		}
+	}
+
+	/** Applies one update atomically and notifies, only when something observable changed. */
 	function commit(change: Partial<State>): void {
 		const previous = state;
 		let next: State = { ...previous, ...change };
@@ -146,7 +172,8 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		);
 		if (!changed) return;
 		snapshot = nextSnapshot;
-		for (const listener of listeners) listener();
+		if (batchDepth > 0) notifyAfterBatch = true;
+		else notify();
 	}
 
 	const isFailed = (path: string): boolean => state.failedScopes.some((scope) => isWithin(path, scope));
@@ -156,54 +183,78 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		return isFailed(path) ? reValidateMode === target : validationMode === 'all' || validationMode === target;
 	}
 
+	interface ValidationMode {
+		/** Writes the result, and tracks it against later requests; a silent check does neither. */
+		readonly record: boolean;
+		/** Starts re-validation by `reValidateMode` for the paths when they fail. */
+		readonly markFailed: boolean;
+		/** Match `names` as exact paths, not as prefixes. */
+		readonly exact?: boolean;
+		/** Run once more against the current state when part of the result is stale. */
+		readonly retry?: boolean;
+	}
+
 	/**
-	 * Validates `names` against the values as they are now.
+	 * Validates `names` (the whole form when omitted; nothing when empty) against the values as they are now.
 	 *
 	 * @remarks
-	 * A recorded result is applied only where it still describes the form: it is dropped after a reset
-	 * or a row move, and per path when that path's value was written while the validation ran. A silent
-	 * one writes nothing.
+	 * A recorded result is applied path by path, and only where it still describes the form: not when
+	 * the path's value was written while it ran, a dependency of the path changed, a later validation
+	 * asked for the path, or rows at or above it moved or the form was reset. When part of a result is
+	 * dropped, an explicit validation runs once more and resolves with the validity of the current
+	 * state; a silent check writes nothing.
 	 */
-	async function runValidation(
-		names: readonly string[] | undefined,
-		mode: { record: boolean; markFailed: boolean },
-	): Promise<boolean> {
+	async function runValidation(names: readonly string[] | undefined, mode: ValidationMode): Promise<boolean> {
+		if (names?.length === 0) return true;
 		const startValues = state.values;
-		const startEpoch = state.epoch;
-		const scope = names?.length ? names : undefined;
+		const run = mode.record ? tracker.start(names, mode.exact === true) : undefined;
 		if (mode.record) commit({ validating: state.validating + 1 });
+		const settleRun = (): void => {
+			if (!run) return;
+			tracker.finish(run);
+			commit({ validating: state.validating - 1 });
+		};
 		let flat: ErrorMap;
 		try {
 			const nested = await validateFormValues({
 				elements,
 				registry,
 				values: toPlain(startValues) as Record<string, unknown>,
-				names: scope,
+				names,
 				debounceScope: mode.record ? debounceScope : silentDebounceScope,
 			});
 			flat = flattenErrors(nested);
 		} catch (error) {
-			if (mode.record) commit({ validating: state.validating - 1 });
+			settleRun();
 			throw error;
 		}
+		const inScope = (path: string): boolean =>
+			!names || (mode.exact ? names.includes(path) : names.some((name) => isWithin(path, name)));
+		for (const path of Object.keys(flat)) if (!inScope(path)) delete flat[path];
 		const passed = Object.keys(flat).length === 0;
-		if (!mode.record) return passed;
+		if (!run) return passed;
 
-		if (state.epoch !== startEpoch) {
-			commit({ validating: state.validating - 1 });
-			return passed;
+		const stale = (path: string): boolean =>
+			!Object.is(readAt(state.values, path), readAt(startValues, path)) ||
+			tracker.superseded(run, path) ||
+			dependencyChanged(path, startValues);
+		const decided = new Set([...Object.keys(state.validation).filter(inScope), ...Object.keys(flat)]);
+		if (mode.retry && [...decided].some(stale)) {
+			return batch(() => {
+				settleRun();
+				return runValidation(names, { ...mode, retry: false });
+			});
 		}
-		const unchanged = (path: string): boolean => Object.is(readAt(state.values, path), readAt(startValues, path));
-		const inScope = (path: string): boolean => !scope || scope.some((name) => isWithin(path, name));
 		const next = createMap<FormStoreError>();
 		for (const path of Object.keys(state.validation)) {
-			if (!inScope(path) || !unchanged(path)) next[path] = state.validation[path];
+			if (!decided.has(path) || stale(path)) next[path] = state.validation[path];
 		}
 		for (const path of Object.keys(flat)) {
-			if (unchanged(path)) next[path] = flat[path];
+			if (!stale(path)) next[path] = flat[path];
 		}
 		const failedScopes =
-			mode.markFailed && !passed ? [...new Set([...state.failedScopes, ...(scope ?? [''])])] : state.failedScopes;
+			mode.markFailed && !passed ? [...new Set([...state.failedScopes, ...(names ?? [''])])] : state.failedScopes;
+		tracker.finish(run);
 		commit({
 			validation: stabilize(state.validation, next),
 			failedScopes: failedScopes.length === state.failedScopes.length ? state.failedScopes : failedScopes,
@@ -237,6 +288,15 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		return index;
 	}
 
+	function dependencyChanged(path: string, previousValues: NullMap): boolean {
+		const index = dependencyIndex();
+		return index.watched.some(
+			(watched) =>
+				index.dependentsOf(watched).includes(path) &&
+				!Object.is(readAt(previousValues, watched), readAt(state.values, watched)),
+		);
+	}
+
 	/** Names that must be validated after a change: the dependents of every watched path whose value moved. */
 	function dependentsOfChange(previousValues: NullMap): string[] {
 		const index = dependencyIndex();
@@ -254,13 +314,18 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 	 * Validates what a change calls for, without waiting for it.
 	 *
 	 * @remarks
+	 * The changed path is validated with its descendants, or alone when `exact`: a row operation
+	 * validates the array's own rules and leaves the rows, which the user has not reached, to their dependents.
 	 * A rejection is dropped: `validateFormValues` turns a failing rule into an error message, so what
 	 * can still reject is a bug in the validation itself, and the next explicit `validate` surfaces it.
 	 */
-	function afterChange(previousValues: NullMap, changedPath: string | undefined): void {
+	function afterChange(previousValues: NullMap, changedPath: string, exact: boolean): void {
 		const names = new Set(dependentsOfChange(previousValues));
-		if (changedPath !== undefined && validatesOn('change', changedPath)) names.add(changedPath);
-		if (names.size > 0) void runValidation([...names], { record: true, markFailed: false }).catch(() => undefined);
+		const validatesSelf = validatesOn('change', changedPath);
+		if (validatesSelf && !exact) names.add(changedPath);
+		const quiet = { record: true, markFailed: false } as const;
+		if (names.size > 0) void runValidation([...names], quiet).catch(() => undefined);
+		if (validatesSelf && exact) void runValidation([changedPath], { ...quiet, exact }).catch(() => undefined);
 	}
 
 	function dropStaleErrors(sources: State['sources'], path: string): State['sources'] {
@@ -277,18 +342,29 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		return next ?? sources;
 	}
 
+	const scopeMapOf = (scopes: readonly string[]): NullMap<true> => {
+		const map = createMap<true>();
+		for (const scope of scopes) map[scope] = true;
+		return map;
+	};
+
 	function setValue(path: string, value: unknown): void {
 		const previousValues = state.values;
 		const branch = reconcile(readAt(previousValues, path), toInternal(value));
 		const values = setIn(previousValues, path, branch);
 		const root = path.split('.')[0];
 		if (values === previousValues) return;
-		commit({
-			values,
-			rowIds: syncRowIds(state.rowIds, root, readAt(values, root), mintId),
-			sources: path ? dropStaleErrors(state.sources, path) : new Map(),
+		batch(() => {
+			commit({
+				values,
+				rowIds: syncRowIds(state.rowIds, root, readAt(values, root), mintId),
+				sources: path ? dropStaleErrors(state.sources, path) : new Map(),
+				validation: pruneMissing(state.validation, path, values),
+				touched: pruneMissing(state.touched, path, values),
+				failedScopes: Object.keys(pruneMissing(scopeMapOf(state.failedScopes), path, values)),
+			});
+			afterChange(previousValues, path, false);
 		});
-		afterChange(previousValues, path);
 	}
 
 	function rowsAt(path: string): RowEntry[] {
@@ -314,30 +390,25 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			),
 		);
 		const remap = <T>(map: NullMap<T>): NullMap<T> => remapRows(map, path, (oldIndex) => target.get(oldIndex));
-		const scopeMap = createMap<true>();
-		for (const scope of state.failedScopes) scopeMap[scope] = true;
 		const nextIds = Object.freeze(rows.map((row) => row.id));
 		const previousIds = state.rowIds[path] ?? [];
 		const idsChanged =
 			nextIds.length !== previousIds.length || nextIds.some((id, index) => id !== previousIds[index]);
 		const sources = new Map<FormErrorSource, ErrorMap>();
 		for (const [source, errors] of state.sources) sources.set(source, remap(errors));
-		const rowIds = remap(state.rowIds) as NullMap<readonly string[]>;
-		commit({
-			values,
-			validation: remap(state.validation),
-			sources,
-			touched: remap(state.touched),
-			rowIds: syncRowIds(
-				{ ...rowIds, [path]: nextIds } as NullMap<readonly string[]>,
-				path,
-				readAt(values, path),
-				mintId,
-			),
-			failedScopes: Object.keys(remap(scopeMap)),
-			epoch: values !== previousValues || idsChanged ? state.epoch + 1 : state.epoch,
+		const rowIds = Object.assign(createMap<readonly string[]>(), remap(state.rowIds), { [path]: nextIds });
+		batch(() => {
+			if (values !== previousValues || idsChanged) tracker.moved(path);
+			commit({
+				values,
+				validation: remap(state.validation),
+				sources,
+				touched: remap(state.touched),
+				rowIds: syncRowIds(rowIds, path, readAt(values, path), mintId),
+				failedScopes: Object.keys(remap(scopeMapOf(state.failedScopes))),
+			});
+			afterChange(previousValues, path, true);
 		});
-		afterChange(previousValues, path);
 	}
 
 	const fresh = (value: unknown): RowEntry => ({ value: toInternal(value), id: mintId() });
@@ -402,18 +473,18 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		getServerSnapshot: () => serverSnapshot,
 		getValue: (path) => toPlain(readAt(state.values, path)),
 		setValue,
-		blur(path) {
-			if (!Object.hasOwn(state.touched, path)) {
-				const touched = createMap<true>();
-				Object.assign(touched, state.touched);
-				touched[path] = true;
-				commit({ touched });
-			}
-			if (validatesOn('blur', path))
-				void runValidation([path], { record: true, markFailed: false }).catch(() => undefined);
-		},
+		blur: (path) =>
+			batch(() => {
+				if (!Object.hasOwn(state.touched, path)) {
+					commit({ touched: Object.assign(createMap<true>(), state.touched, { [path]: true }) });
+				}
+				if (validatesOn('blur', path)) {
+					void runValidation([path], { record: true, markFailed: false }).catch(() => undefined);
+				}
+			}),
 		reset(values) {
 			const defaults = values ? (toInternal(values) as NullMap) : state.defaults;
+			tracker.moved('');
 			commit({
 				values: defaults,
 				defaults,
@@ -422,10 +493,9 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 				touched: createMap(),
 				rowIds: syncRowIds(createMap(), '', defaults, mintId),
 				failedScopes: [],
-				epoch: state.epoch + 1,
 			});
 		},
-		validate: (paths) => runValidation(paths, { record: true, markFailed: true }),
+		validate: (paths) => runValidation(paths, { record: true, markFailed: true, retry: true }),
 		checkValidity: (paths) => runValidation(paths, { record: false, markFailed: false }),
 		setErrors(source, errors) {
 			if (source === VALIDATION_ERROR_SOURCE) {
@@ -448,7 +518,11 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			if (!current || current.length !== ids.length || new Set(ids).size !== ids.length) return;
 			if (current.every((id, index) => id === ids[index])) return;
 			for (const id of ids) adoptedIds.add(id);
-			commit({ rowIds: { ...state.rowIds, [path]: Object.freeze([...ids]) } as NullMap<readonly string[]> });
+			commit({
+				rowIds: Object.assign(createMap<readonly string[]>(), state.rowIds, {
+					[path]: Object.freeze([...ids]),
+				}),
+			});
 		},
 	};
 }

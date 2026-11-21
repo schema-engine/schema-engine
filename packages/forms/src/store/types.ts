@@ -99,7 +99,7 @@ export interface FormStore {
 	 */
 	reset(values?: Record<string, unknown>): void;
 	/**
-	 * Validates `paths` (the whole form when omitted), records the errors and resolves whether it passed.
+	 * Validates `paths` (the whole form when omitted, nothing when empty), records the errors and resolves whether it passed.
 	 *
 	 * @remarks
 	 * A failure starts the failed-check state for those paths, so they re-validate by `reValidateMode`

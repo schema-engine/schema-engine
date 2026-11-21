@@ -1,4 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
+import { watchValidation } from '../../../../test-utils/form-store-conformance';
+import * as z from 'zod/mini';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
@@ -82,8 +84,9 @@ describe('createFormStore', () => {
 			expect(store.getSnapshot()).not.toHaveProperty('isSubmitted');
 
 			store.setValue('password', 'other');
-			await vi.waitFor(() => expect(store.getSnapshot().errors.password).toBeUndefined());
-			await settle();
+			expect(store.getSnapshot().isValidating).toBe(true);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(store.getSnapshot().errors.password).toBeUndefined();
 			expect(store.getSnapshot().errors.confirmPassword).toBeUndefined();
 
 			store.blur('confirmPassword');
@@ -104,8 +107,10 @@ describe('createFormStore', () => {
 
 		test('without a failed check an untouched dependent stays quiet', async () => {
 			const store = wizard();
+			const watch = watchValidation(store);
 			store.setValue('password', 'other');
 			await settle();
+			expect(watch.started).toBe(false);
 			expect(store.getSnapshot().errors).toEqual({});
 		});
 	});
@@ -121,8 +126,10 @@ describe('createFormStore', () => {
 		test('ignores a write that leaves the watched value as it was', async () => {
 			const store = addressForm('IT');
 			store.blur('vat');
+			const watch = watchValidation(store);
 			store.setValue('address', { street: '2 Side', country: 'IT' });
 			await settle();
+			expect(watch.started).toBe(false);
 			expect(store.getSnapshot().errors).toEqual({});
 			store.setValue('address', { street: '2 Side', country: 'FR' });
 			store.setValue('address', { street: '2 Side', country: 'IT' });
@@ -160,8 +167,10 @@ describe('createFormStore', () => {
 			});
 			store.blur('lines.0.vat');
 			store.fieldArray('lines').swap(0, 1);
+			const watch = watchValidation(store);
 			store.setValue('lines.0.type', 'company');
 			await settle();
+			expect(watch.started).toBe(false);
 			expect(store.getSnapshot().errors).toEqual({});
 			store.setValue('lines.1.type', 'company');
 			await vi.waitFor(() => expect(store.getSnapshot().errors['lines.1.vat']).toBeDefined());
@@ -286,6 +295,101 @@ describe('createFormStore', () => {
 			expect(store.getSnapshot().errors.tags?.message).toBe('Add a tag');
 			store.fieldArray('tags').append('a');
 			await vi.waitFor(() => expect(store.getSnapshot().errors.tags).toBeUndefined());
+		});
+	});
+
+	describe('overlapping validations', () => {
+		const gatedPasswords = () => {
+			const waiting: Array<() => void> = [];
+			let holding = true;
+			const gatedRegistry = createDefaultValidationRegistry([
+				{
+					$type: 'matchesSlow',
+					schema: z.object({ type: z.literal('matchesSlow') }),
+					metadata: { name: 'Matches slowly' },
+					category: 'cross-field',
+					dependsOn: () => ['password'],
+					handler: (_rule: unknown, context: { resolve: (reference: string) => unknown }) =>
+						z.any().check(
+							z.refine((value: unknown) => {
+								const matches = value === context.resolve('password');
+								return holding
+									? new Promise<boolean>((resolve) => waiting.push(() => resolve(matches)))
+									: Promise.resolve(matches);
+							}, 'Passwords differ'),
+						),
+				} as never,
+			]);
+			return {
+				registry: gatedRegistry,
+				pending: () => waiting.length,
+				release: () => waiting.splice(0).forEach((resolve) => resolve()),
+				stopHolding: () => {
+					holding = false;
+				},
+			};
+		};
+
+		test('an older run cannot overwrite the result of a newer one for a cross-field rule', async () => {
+			const gate = gatedPasswords();
+			const store = createFormStore({
+				registry: gate.registry,
+				elements: [
+					element({ $type: 'input', name: 'password' }),
+					element({ $type: 'input', name: 'confirm', rules: [{ type: 'matchesSlow' }] }),
+				],
+				defaultValues: { password: 'old', confirm: 'new' },
+			});
+			store.blur('confirm');
+			const submit = store.validate();
+			await vi.waitFor(() => expect(gate.pending()).toBe(1));
+			gate.stopHolding();
+			store.setValue('password', 'new');
+			await vi.waitFor(() => expect(store.getSnapshot().errors.confirm).toBeUndefined());
+			gate.release();
+			expect(await submit).toBe(true);
+			expect(store.getSnapshot().errors).toEqual({});
+		});
+
+		test('a row operation drops only the results under that array, and validate resolves with the current validity', async () => {
+			const gate = gatedPasswords();
+			const store = createFormStore({
+				registry: gate.registry,
+				elements: [
+					element({ $type: 'input', name: 'password' }),
+					element({ $type: 'input', name: 'confirm', rules: [{ type: 'matchesSlow' }] }),
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'tags',
+							elements: [
+								{ $type: 'input', name: 'v' },
+								{ $type: 'input', name: 'w' },
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { password: 'a', confirm: 'b', tags: [] },
+			});
+			const submit = store.validate();
+			await vi.waitFor(() => expect(gate.pending()).toBe(1));
+			store.fieldArray('tags').append({ v: 'x' });
+			gate.release();
+			expect(await submit).toBe(false);
+			expect(store.getSnapshot().errors.confirm?.message).toBe('Passwords differ');
+			expect(store.getSnapshot().isValidating).toBe(false);
+		});
+	});
+
+	describe('internal maps', () => {
+		test('keeps the null prototype when row ids are adopted, so a path named like a method is safe', () => {
+			const store = createFormStore({ registry, elements: [], defaultValues: { contacts: [{ a: 1 }] } });
+			store.adoptRowIds('contacts', ['x']);
+			expect(store.fieldArray('valueOf').fields).toEqual([]);
+			store.fieldArray('contacts').append({ a: 2 });
+			expect(store.fieldArray('valueOf').fields).toEqual([]);
+			expect(store.getSnapshot().rowIds.contacts?.[0]).toBe('x');
 		});
 	});
 });

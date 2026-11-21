@@ -1,3 +1,4 @@
+import { getValueAtPath } from '@/lib/path-values';
 import { isPlainObject } from '@/lib/is-plain-object';
 import type { FormStoreError } from './types';
 import { createMap, isOpaque, join, stabilize, type NullMap } from './value-tree';
@@ -83,4 +84,28 @@ export function syncRowIds(
 	};
 	visit(branch, path);
 	return stabilize(rowIds, next);
+}
+
+/** Whether `path` can still hold a value: its parent is a container, and an array parent has that row. */
+export function pathExists(values: NullMap, path: string): boolean {
+	const cut = path.lastIndexOf('.');
+	if (cut < 0) return true;
+	const parent = getValueAtPath(values, path.slice(0, cut));
+	if (parent === null || typeof parent !== 'object') return false;
+	return !Array.isArray(parent) || Number(path.slice(cut + 1)) < parent.length;
+}
+
+/**
+ * Drops the entries below `path` whose location no longer exists in `values`.
+ *
+ * @remarks
+ * A branch written over `path` can remove rows and objects that carried field state. Entries for them
+ * are dropped, so a row added at the same index later does not inherit them.
+ */
+export function pruneMissing<T>(state: NullMap<T>, path: string, values: NullMap): NullMap<T> {
+	const next = createMap<T>();
+	for (const key of Object.keys(state)) {
+		if (key === path || (path && !key.startsWith(`${path}.`)) || pathExists(values, key)) next[key] = state[key];
+	}
+	return stabilize(state, next);
 }

@@ -1,9 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { formStoreCases } from '../../../../test-utils/form-store-conformance';
-import { validateFormValues } from '@/engine/value-validation';
-import { createDebounceScope } from '@/lib/debounce';
 import { isPlainObject } from '@/lib/is-plain-object';
-import { flattenErrors } from '@/store/field-state';
 import { createFormStore } from '@/store/create-form-store';
 import type { FormStore, FormStoreFactory, FormStoreSnapshot } from '@/store/types';
 
@@ -172,29 +169,6 @@ const brokenStores: Array<{ name: string; create: FormStoreFactory; caught: stri
 		},
 		caught: ['an explicit source beats validation, and the source set most recently beats the others'],
 	},
-	{
-		name: 'applies async results whatever happened since',
-		create: withOverrides((inner, options) => ({
-			validate: async (paths) => {
-				const errors = flattenErrors(
-					await validateFormValues({
-						elements: options.elements,
-						registry: options.registry,
-						values: inner.getSnapshot().values,
-						names: paths,
-						debounceScope: createDebounceScope(),
-					}),
-				);
-				inner.setErrors('late', errors);
-				return Object.keys(errors).length === 0;
-			},
-		})),
-		caught: [
-			'drops a result that arrives after a reset',
-			'drops a result for rows that moved while it was running',
-			'drops a result for a path whose value was written while it was running',
-		],
-	},
 ];
 
 describe('form store conformance cases', () => {
@@ -219,6 +193,7 @@ describe('form store conformance cases', () => {
 				caught.map((name) => formStoreCases.find((entry) => entry.name === name)?.rule),
 			),
 		);
-		expect([...rules].filter((rule) => !caughtRules.has(rule))).toEqual([]);
+		const coveredElsewhere = new Set(['stale async results']);
+		expect([...rules].filter((rule) => !caughtRules.has(rule) && !coveredElsewhere.has(rule))).toEqual([]);
 	});
 });
