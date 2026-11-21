@@ -27,26 +27,28 @@ function configWith(element: Record<string, unknown>) {
 
 async function incompleteCodeError(element: Record<string, unknown>) {
 	const config = configWith(element);
-	const errors = await validateFormValues({
+	const { issues } = await validateFormValues({
 		elements: config.steps[0]!.elements,
 		values: { code: '123' },
 		registry: createDefaultValidationRegistry(),
 		debounceScope: createDebounceScope(),
 	});
-	return errors.code?.message;
+	return issues.code?.[0]?.message;
 }
 
 test('headless validation rejects an incomplete code and accepts an empty or complete one', async () => {
 	expect(await incompleteCodeError(code)).toBe('Enter all 6 characters');
 
 	const config = configWith(code);
-	const check = (value: string) =>
-		validateFormValues({
-			elements: config.steps[0]!.elements,
-			values: { code: value },
-			registry: createDefaultValidationRegistry(),
-			debounceScope: createDebounceScope(),
-		});
+	const check = async (value: string) =>
+		(
+			await validateFormValues({
+				elements: config.steps[0]!.elements,
+				values: { code: value },
+				registry: createDefaultValidationRegistry(),
+				debounceScope: createDebounceScope(),
+			})
+		).issues;
 	expect(await check('')).toEqual({});
 	expect(await check('123456')).toEqual({});
 });

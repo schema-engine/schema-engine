@@ -100,9 +100,11 @@ interface CheckFormValidityOptions {
 }
 
 /**
- * Whether `values` pass the validation of every field of every step that a constraint does not hide.
+ * Whether `values` pass the validation of every field of every step that takes part in validation.
  *
  * @remarks
+ * Fields hidden or disabled by their config or a constraint do not take part (`resolveExcludedPaths`), and
+ * a warning never fails the check. A rule that cannot run rejects the call with a `FormValidationFailure`.
  * Silent: it records and shows no errors, though an async rule still makes its request. It validates under a debounce scope of
  * its own, so it never replaces a debounced check a field has pending in the
  * form's scope, at the cost of waiting out a debounced rule's delay instead of
@@ -110,14 +112,15 @@ interface CheckFormValidityOptions {
  * change the answer. Values `structuredClone` cannot copy reject the call.
  */
 export async function checkFormValidity({ steps, values, registry }: CheckFormValidityOptions): Promise<boolean> {
-	const errors = await validateFormValues({
+	const { issues, failures } = await validateFormValues({
 		elements: flattenStepElements(steps),
 		values: structuredClone(values),
 		registry,
 		debounceScope: createDebounceScope(),
-		skipHidden: true,
 	});
-	return Object.keys(errors).length === 0;
+	const failure = Object.values(failures).flat()[0];
+	if (failure) throw failure;
+	return !Object.values(issues).some((found) => found.some((issue) => issue.severity === 'error'));
 }
 
 interface ActionScopes<TAction> {

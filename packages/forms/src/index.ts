@@ -7,7 +7,14 @@
 
 export { createFormEngine, FormEngine, SchemaMetadataCatalog, ActionDispatcher } from './engine';
 export type { CreateFormEngineOptions } from './engine';
-export { collectStepFieldPaths, effectiveRulesFor, validateFieldValue, validateFormValues } from './engine';
+export {
+	collectStepFieldPaths,
+	effectiveRulesFor,
+	FormValidationFailure,
+	resolveExcludedPaths,
+	validateFieldValue,
+	validateFormValues,
+} from './engine';
 export {
 	createInitialStepStates,
 	createStepMachine,
@@ -36,8 +43,10 @@ export type {
 } from './engine';
 export type {
 	EffectiveRulesInput,
-	FieldValidationError,
-	FormValidationErrors,
+	FieldValidationResult,
+	FormValidationOutcome,
+	ValidationIssue,
+	ValidationSeverity,
 	ValidateFieldValueInput,
 	ValidateFormValuesInput,
 	ValidationElement,

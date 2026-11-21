@@ -68,7 +68,7 @@ describe('createFormValidationResolver', () => {
 			fields: {},
 			shouldUseNativeValidation: false,
 		});
-		expect(resolved.errors).toEqual({ address: { street: { type: 'validation', message: 'Street is required' } } });
+		expect(resolved.errors).toEqual({ address: { street: { type: 'required', message: 'Street is required' } } });
 	});
 
 	test('rejects a phone country prefix while accepting a complete international number', async () => {

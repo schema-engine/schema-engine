@@ -156,6 +156,8 @@ function skippingEmpty(schema: z.ZodMiniType): z.ZodMiniType {
  * can be left blank; `required` is what rejects it. Rules of other categories, such as `minItems`, are
  * unchanged.
  *
+ * A rule that cannot be built throws `ValidationRuleError`; it is never skipped.
+ *
  * `context` is required. Callers with no form values to offer pass
  * `createValidationContext()` explicitly, so omitting the form context is a
  * decision in the diff rather than an accident nobody notices until a
@@ -173,14 +175,8 @@ export function createZodSchemaFromRules(
 	const schemas: z.ZodMiniType[] = [];
 	for (const rule of rules) {
 		const ruleSchema = registry.createSchema(rule as ValidationRule, context);
-		if (ruleSchema) {
-			const category = registry.get(rule.type)?.category;
-			schemas.push(category && FORMAT_CATEGORIES.has(category) ? skippingEmpty(ruleSchema) : ruleSchema);
-		}
-	}
-
-	if (schemas.length === 0) {
-		return z.unknown();
+		const category = registry.get(rule.type)?.category;
+		schemas.push(category && FORMAT_CATEGORIES.has(category) ? skippingEmpty(ruleSchema) : ruleSchema);
 	}
 
 	let combinedSchema = schemas[0];

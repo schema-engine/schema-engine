@@ -8,7 +8,8 @@ import type {
 	ValidationRegistrationConstraint,
 } from './types.js';
 import { defaultValidations } from './defaults.js';
-import { logger } from '@/lib/logger.js';
+import { ValidationRuleError } from './errors.js';
+import { createValidationContext } from './utils.js';
 
 /** @remarks Rule-specific handlers are checked where a registration is defined, then stored together by rule type. */
 type StoredValidationRegistration = ValidationRegistration<any>;
@@ -45,13 +46,17 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	getByCategory(category: string): AnyValidationRegistration[];
 
 	/**
-	 * Create a Zod Mini schema from a validation rule, or `null` when the rule type is not registered
-	 * or its handler throws.
+	 * Create a Zod Mini schema from a validation rule.
 	 *
 	 * @param rule - The validation rule
 	 * @param context - Form context for rules that read other fields
+	 * @throws {ValidationRuleError} When the rule type is not registered or its handler throws
 	 *
 	 * @remarks
+	 * A rule that cannot be built is never skipped: a form that silently skipped it would accept values
+	 * the author meant to reject. A config is checked with {@link ValidationRegistry.check} when it is
+	 * validated, so reaching this error at run time means the registry changed after that.
+	 *
 	 * `context` is required rather than optional so a caller cannot silently omit
 	 * it: a renderer that did exactly that is why cross-field rules were inert on
 	 * one of the two renderers. Build it with `createValidationContext`.
@@ -59,7 +64,17 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	 * The rule type is generic, not `{ type: string }`, so a rule literal with extra properties such as
 	 * `{ type: 'min', value: 10 }` is not rejected as an excess-property error.
 	 */
-	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType | null;
+	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType;
+
+	/**
+	 * Why a rule cannot be used, or `undefined` when it can.
+	 *
+	 * @remarks
+	 * Checks that the type is registered and that the handler builds a schema for the rule, so a bad
+	 * pattern is found when the form config is validated and not when a user first types. The shape of the
+	 * rule is checked by the element's own schema, which reports the key at fault.
+	 */
+	check(rule: { type: string }): string | undefined;
 }
 
 function deriveDefaultRules(
@@ -114,15 +129,27 @@ export function createValidationRegistry(
 		createSchema: (rule, context) => {
 			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
 			if (!registration) {
-				return null;
+				throw new ValidationRuleError(rule.type, `Validation rule '${rule.type}' has no registered handler.`);
 			}
 
 			try {
 				return registration.handler(rule, context);
-			} catch (error) {
-				logger.error(`Failed to create schema for validation rule '${rule.type}'`, { error });
-				return null;
+			} catch (cause) {
+				throw new ValidationRuleError(rule.type, `Validation rule '${rule.type}' could not be built.`, {
+					cause,
+				});
 			}
+		},
+		check: (rule) => {
+			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
+			if (!registration) return `Validation rule '${rule.type}' has no registered handler.`;
+			try {
+				registration.handler(rule, createValidationContext());
+			} catch (error) {
+				const reason = error instanceof Error ? error.message : String(error);
+				return `Validation rule '${rule.type}' could not be built: ${reason}`;
+			}
+			return undefined;
 		},
 	};
 	return Object.freeze(api);

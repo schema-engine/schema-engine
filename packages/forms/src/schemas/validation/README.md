@@ -31,6 +31,16 @@ Validation rules are plain JavaScript objects that describe how to validate a fi
 { type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
 ```
 
+Every rule may also carry an `id` and a `severity`:
+
+```typescript
+{ type: 'minLength', value: 8, id: 'password-strength', severity: 'warning', message: 'Weak password' }
+```
+
+`message` is the fallback text. `id` is the stable name a translation is keyed to, so two `pattern` rules stay
+apart. A rule with `severity: 'warning'` reports advice: it never makes the form invalid. A failed rule is
+reported as an issue with its `type`, `ruleId` and `params` (its options as authored, here `{ value: 8 }`).
+
 ### ValidationRegistry
 
 The `ValidationRegistry` is the central hub that:
@@ -244,7 +254,7 @@ The core `phone` rule checks E.164 numbers. The phone-input registration can rep
 
 Format rules skip an empty value. A rule of the `string` or `date` category (`email`, `url`, `pattern`, `minLength`, `phone`, and a consumer's registrations in those categories) passes `undefined`, `null` and `''`, so an optional field can be left blank; `required` is the rule that rejects it, and it reports alone for an empty value. `createZodSchemaFromRules` wraps those rules, re-raising a filled value's issues unchanged. Rules of other categories (`minItems`, `min`) are not wrapped.
 
-Required validation, `relate` emptiness assertions, constraint `is_empty` and `is_not_empty`, and async validation skips share one definition of empty: `undefined`, `null`, `''`, and `[]`. Values such as `false` and `0` are present. `validateForm` and `validateElement` reject a rule without a registered handler with a `FormValidationError` that identifies the field and rule type, at the path of that rule's `type` (for example `['steps', 0, 'elements', 2, 'rules', 1, 'type']`).
+Required validation, `relate` emptiness assertions, constraint `is_empty` and `is_not_empty`, and async validation skips share one definition of empty: `undefined`, `null`, `''`, and `[]`. Values such as `false` and `0` are present. `validateForm` and `validateElement` reject a rule without a registered handler, or one its handler cannot build (an invalid `pattern`), with a `FormValidationError` that identifies the field and rule type, at the path of that rule's `type` (for example `['steps', 0, 'elements', 2, 'rules', 1, 'type']`).
 
 Debounced async rules share timers only within their caller-owned scope. Replacing a pending validation for the same rendered field path, endpoint, and dependency/extra payload sends only the latest request. A replaced parse of the same value shares that request's result. A replaced parse of a different value fails at once with `Validation pending`, because its value was never checked, so a superseded submit-time validation cannot pass. Renderers do not show it while the user types: React Hook Form drops a result for a value that has changed, and Radiant resolves a superseded call with the latest call's result. Different forms use separate scopes, and different field paths in one scope do not cancel each other.
 
@@ -601,7 +611,8 @@ Build one with `createValidationRegistry(list)` or `createDefaultValidationRegis
 - `has(type: string): boolean` - Check if validation type exists
 - `get(type: string): ValidationRegistration | undefined` - The registration for a type
 - `keys()` - All registered type names, in first-registration order
-- `createSchema(rule: ValidationRule, context: ValidationContext): z.ZodMiniType | null` - Create a Zod Mini schema from one rule, or return `null` if no handler is registered
+- `createSchema(rule: ValidationRule, context: ValidationContext): z.ZodMiniType` - Create a Zod Mini schema from one rule. It throws a `ValidationRuleError` naming the type when no handler is registered or the handler throws; a rule is never skipped
+- `check(rule): string | undefined` - Why a rule cannot be used (no handler, or a handler that cannot build it, such as an invalid pattern), or `undefined`. A form config is validated with it
 - `getByCategory(category: string): ValidationRegistration[]` - Get validations by category
 - `getDefaultRulesForFieldType(fieldType: string): readonly BaseValidationRule[]` - The `defaultFor` rules for a field `$type`, derived at build and frozen. A replaced registration keeps the position its first registration had among a field type's defaults
 - `getRuleDependencies(rule): readonly string[]` - The field references a rule's `dependsOn` reports

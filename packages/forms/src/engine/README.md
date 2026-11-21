@@ -11,12 +11,18 @@ The engine exports reusable helpers for paths, effective rules, and validation.
   constraint holds. For example, `accountType` on `contacts.0.taxId` resolves to
   `contacts.0.accountType`, so conditional rules use the current array row.
 - `validateFieldValue` validates one field against the full nested values tree
-  and its rendered path, returning the message of every rule it fails, in rule order (empty when it passes).
+  and its rendered path. It returns `{ issues, failures }`: `issues` has one entry for each rule the value
+  fails, in rule order, with the rule's `type`, its `id` as `ruleId`, its options as `params`, a fallback
+  `message` and its `severity` (`'error'`, or `'warning'` for advice that never blocks); `failures` lists the
+  rules that could not run (a `FormValidationFailure` naming the path and rule), which say nothing of the value.
 - `validateFormValues` validates named fields, filters to `names` when supplied (an empty
-  list validates nothing), and returns the failures by dotted path, each with every failed rule in `all`. A field
-  inside a fieldset or array whose `require` constraint holds is required, at any
+  list validates nothing), and returns `{ issues, failures }` by dotted path, each path with every rule it
+  fails. A field inside a fieldset or array whose `require` constraint holds is required, at any
   depth; `effectiveRulesFor` and `validateFieldValue` take that as
-  `inheritedRequired`. A container's own `required` rule does not pass down.
+  `inheritedRequired`. A container's own `required` rule does not pass down. It skips the paths
+  `resolveExcludedPaths` lists: fields hidden by a `show` or `hide` constraint, disabled fields (authored or
+  by a constraint) and everything inside them. `planFormValidation` and `runValidationPlan` are its two
+  halves, for a caller that needs to know the planned paths before it runs.
 
 For `validateFormValues`, omitted `names` validates every named field. A list validates only the
 requested paths and their descendants, or only those paths with `exactNames`; an empty list validates nothing.

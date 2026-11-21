@@ -10,16 +10,26 @@ import type { NormalizedElementConfig } from '@/lib/normalized-form-config';
 import {
 	collectStepFieldPaths,
 	effectiveRulesFor,
+	isPathExcluded,
+	resolveExcludedPaths,
 	validateFieldValue,
 	validateFormValues,
 } from '@/engine/value-validation';
 
-/** The error a field with one failed rule has. */
-const failure = (...messages: string[]) => ({
-	type: 'validation',
-	message: messages[0],
-	all: messages.map((message) => ({ type: 'validation', message })),
+/** The issue of a failed rule. */
+const found = (type: string, message: string, extra: Record<string, unknown> = {}) => ({
+	type,
+	message,
+	severity: 'error',
+	...extra,
 });
+
+/** What a validation found, without the rules that could not run. */
+const issuesOf = async (input: Parameters<typeof validateFormValues>[0]) => {
+	const { issues, failures } = await validateFormValues(input);
+	expect(failures).toEqual({});
+	return issues;
+};
 
 const registry = createDefaultValidationRegistry();
 
@@ -67,9 +77,9 @@ describe('collectStepFieldPaths', () => {
 
 		expect(collectStepFieldPaths(step, values)).toEqual(['tags', 'tags.0', 'tags.1']);
 		await expect(
-			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+			issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			'tags.0': failure('Tag is required'),
+			'tags.0': [found('required', 'Tag is required')],
 		});
 	});
 
@@ -85,9 +95,9 @@ describe('collectStepFieldPaths', () => {
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['tags', 'tags.0']);
 		await expect(
-			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+			issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			'tags.0': failure('Tag is required'),
+			'tags.0': [found('required', 'Tag is required')],
 		});
 	});
 
@@ -110,9 +120,9 @@ describe('collectStepFieldPaths', () => {
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toContain('groups.0.tags.0');
 		await expect(
-			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+			issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			'groups.0.tags.0': failure('Tag is required'),
+			'groups.0.tags.0': [found('required', 'Tag is required')],
 		});
 	});
 
@@ -138,9 +148,9 @@ describe('collectStepFieldPaths', () => {
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['groups', 'groups.0', 'groups.0.0']);
 		await expect(
-			validateFormValues({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+			issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
-			'groups.0.0': failure('Tag is required'),
+			'groups.0.0': [found('required', 'Tag is required')],
 		});
 	});
 });
@@ -173,7 +183,7 @@ describe('effectiveRulesFor', () => {
 
 describe('validateFieldValue', () => {
 	test('validates conditional rules with the rendered field path', async () => {
-		const message = await validateFieldValue({
+		const result = await validateFieldValue({
 			element: normalizeElement({
 				$type: 'input',
 				name: 'taxId',
@@ -186,7 +196,7 @@ describe('validateFieldValue', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(message).toEqual(['Required']);
+		expect(result).toEqual({ issues: [found('required', 'Required')], failures: [] });
 	});
 
 	test('a superseded async validation never passes submission', async () => {
@@ -220,9 +230,11 @@ describe('validateFieldValue', () => {
 				debounceScope,
 			});
 
-			await expect(first).resolves.toEqual(['Validation pending']);
+			expect((await first).issues).toEqual([
+				expect.objectContaining({ type: 'async', message: 'Validation pending' }),
+			]);
 			await vi.advanceTimersByTimeAsync(300);
-			await expect(second).resolves.toEqual([]);
+			expect(await second).toEqual({ issues: [], failures: [] });
 
 			expect(fetchSpy).toHaveBeenCalledOnce();
 			const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
@@ -247,7 +259,7 @@ describe('validateFormValues', () => {
 	]);
 
 	test('returns nested address errors and validates only requested names', async () => {
-		const errors = await validateFormValues({
+		const errors = await issuesOf({
 			elements,
 			values: { address: { street: '' }, email: '' },
 			registry,
@@ -255,7 +267,7 @@ describe('validateFormValues', () => {
 			names: ['address.street'],
 		});
 
-		expect(errors).toEqual({ 'address.street': failure('Street is required') });
+		expect(errors).toEqual({ 'address.street': [found('required', 'Street is required')] });
 	});
 
 	test('requires every field inside a container while its require constraint holds', async () => {
@@ -269,7 +281,7 @@ describe('validateFormValues', () => {
 			],
 		});
 		const validate = (kind: string) =>
-			validateFormValues({
+			issuesOf({
 				elements: [{ $type: 'input', name: 'kind' }, company],
 				values: { kind, company: { vat: '', office: { street: '' } } },
 				registry,
@@ -287,7 +299,7 @@ describe('validateFormValues', () => {
 			rules: [{ type: 'required' }],
 			elements: [{ $type: 'input', name: 'vat' }],
 		});
-		const errors = await validateFormValues({
+		const errors = await issuesOf({
 			elements: [company],
 			values: { company: { vat: '' } },
 			registry,
@@ -303,17 +315,17 @@ describe('validateFormValues', () => {
 			name: 'languages',
 			rules: [{ type: 'minItems', value: 1, message: 'Select a language' }],
 		});
-		const errors = await validateFormValues({
+		const errors = await issuesOf({
 			elements: [languages],
 			values: { languages: [] },
 			registry,
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(errors.languages).toEqual(failure('Select a language'));
+		expect(errors.languages).toEqual([found('minItems', 'Select a language', { params: { value: 1 } })]);
 	});
 
-	test('a rule that throws does not hide the failures of the others', async () => {
+	test('a rule that throws is a failure to run, and does not hide the issues of the others', async () => {
 		const throwing = createDefaultValidationRegistry([
 			{
 				$type: 'boom',
@@ -328,7 +340,7 @@ describe('validateFormValues', () => {
 					),
 			} as never,
 		]);
-		const messages = await validateFieldValue({
+		const result = await validateFieldValue({
 			element: normalizeElement({
 				$type: 'input',
 				name: 'code',
@@ -341,7 +353,9 @@ describe('validateFormValues', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(messages).toEqual(['Too short', 'Validation failed']);
+		expect(result.issues).toEqual([found('minLength', 'Too short', { params: { value: 5 } })]);
+		expect(result.failures).toHaveLength(1);
+		expect(result.failures[0]).toMatchObject({ name: 'FormValidationFailure', path: 'code', ruleType: 'boom' });
 	});
 
 	test('validates nothing for an empty list of names and everything when names are omitted', async () => {
@@ -352,8 +366,8 @@ describe('validateFormValues', () => {
 		});
 		const input = { elements: [field], values: {}, registry, debounceScope: createDebounceScope() };
 
-		expect(await validateFormValues({ ...input, names: [] })).toEqual({});
-		expect(Object.keys(await validateFormValues(input))).toEqual(['email']);
+		expect(await issuesOf({ ...input, names: [] })).toEqual({});
+		expect(Object.keys(await issuesOf(input))).toEqual(['email']);
 	});
 
 	test('reports every rule a field fails, in rule order, with the first as the error itself', async () => {
@@ -365,15 +379,17 @@ describe('validateFormValues', () => {
 				{ type: 'pattern', value: '^\\d+$', message: 'Digits only' },
 			],
 		});
-		const errors = await validateFormValues({
+		const errors = await issuesOf({
 			elements: [field],
 			values: { code: 'ab' },
 			registry,
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(errors.code).toEqual(failure('Too short', 'Digits only'));
-		expect(errors.code.all[0]).toMatchObject({ message: errors.code.message });
+		expect(errors.code).toEqual([
+			found('minLength', 'Too short', { params: { value: 5 } }),
+			found('pattern', 'Digits only', { params: { value: '^\\d+$' } }),
+		]);
 	});
 
 	test('reports a container and a row inside it that both fail, and matches names exactly on request', async () => {
@@ -393,12 +409,12 @@ describe('validateFormValues', () => {
 			debounceScope: createDebounceScope(),
 		};
 
-		expect(await validateFormValues(input)).toEqual({
-			contacts: failure('Add two contacts'),
-			'contacts.0.email': failure('Email is required'),
+		expect(await issuesOf(input)).toEqual({
+			contacts: [found('minItems', 'Add two contacts', { params: { value: 2 } })],
+			'contacts.0.email': [found('required', 'Email is required')],
 		});
-		expect(await validateFormValues({ ...input, names: ['contacts'], exactNames: true })).toEqual({
-			contacts: failure('Add two contacts'),
+		expect(await issuesOf({ ...input, names: ['contacts'], exactNames: true })).toEqual({
+			contacts: [found('minItems', 'Add two contacts', { params: { value: 2 } })],
 		});
 	});
 
@@ -408,15 +424,15 @@ describe('validateFormValues', () => {
 			name: 'contacts',
 			elements: [{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Email is required' }] }],
 		});
-		const errors = await validateFormValues({
+		const errors = await issuesOf({
 			elements: [contacts],
 			values: { contacts: [{ email: 'ada@example.com' }, { name: 'Grace' }, { email: undefined }] },
 			registry,
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(errors['contacts.1.email']).toEqual(failure('Email is required'));
-		expect(errors['contacts.2.email']).toEqual(failure('Email is required'));
+		expect(errors['contacts.1.email']).toEqual([found('required', 'Email is required')]);
+		expect(errors['contacts.2.email']).toEqual([found('required', 'Email is required')]);
 	});
 
 	test('validates a nested array container against its concrete row path', async () => {
@@ -432,7 +448,7 @@ describe('validateFormValues', () => {
 				},
 			],
 		});
-		const errors = await validateFormValues({
+		const errors = await issuesOf({
 			elements: [contacts],
 			values: { contacts: [{ phones: ['555'] }] },
 			registry,
@@ -440,5 +456,100 @@ describe('validateFormValues', () => {
 		});
 
 		expect(errors).toEqual({});
+	});
+});
+
+describe('resolveExcludedPaths', () => {
+	const elements = normalizeElements([
+		{ $type: 'input', name: 'kind' },
+		{
+			$type: 'input',
+			name: 'company',
+			constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+		},
+		{ $type: 'input', name: 'locked', disabled: true },
+		{
+			$type: 'arrayElements',
+			name: 'contacts',
+			elements: [
+				{ $type: 'input', name: 'role' },
+				{
+					$type: 'input',
+					name: 'fax',
+					constraints: [{ field: 'role', operator: 'equals', value: 'office', action: 'hide' }],
+				},
+			],
+		},
+	]);
+
+	test('lists the fields hidden or disabled by their config or a constraint, resolved per row', () => {
+		const excluded = resolveExcludedPaths(elements, {
+			kind: 'person',
+			contacts: [{ role: 'office' }, { role: 'home' }],
+		});
+
+		expect(excluded.toSorted()).toEqual(['company', 'contacts.0.fax', 'locked']);
+		expect(resolveExcludedPaths(elements, { kind: 'business', contacts: [] })).toEqual(['locked']);
+	});
+
+	test('leaves out a path inside an excluded container, which the container covers', () => {
+		const grouped = normalizeElements([
+			{
+				$type: 'fieldset',
+				name: 'extra',
+				disabled: true,
+				elements: [{ $type: 'input', name: 'note', disabled: true }],
+			},
+		]);
+
+		expect(resolveExcludedPaths(grouped, { extra: { note: '' } })).toEqual(['extra']);
+		expect(isPathExcluded(['extra'], 'extra.note')).toBe(true);
+		expect(isPathExcluded(['extra'], 'extras')).toBe(false);
+	});
+
+	test('validateFormValues does not run the rules of an excluded path', async () => {
+		const required = normalizeElements([
+			{ $type: 'input', name: 'locked', disabled: true, rules: [{ type: 'required' }] },
+			{ $type: 'input', name: 'open', rules: [{ type: 'required' }] },
+		]);
+		const { issues } = await validateFormValues({
+			elements: required,
+			values: { locked: '', open: '' },
+			registry,
+			debounceScope: createDebounceScope(),
+		});
+
+		expect(Object.keys(issues)).toEqual(['open']);
+	});
+});
+
+describe('rule issues', () => {
+	test('carry the rule type, id, params and severity, and one issue comes from each failing rule', async () => {
+		const result = await validateFieldValue({
+			element: normalizeElement({
+				$type: 'input',
+				name: 'email',
+				rules: [
+					{ type: 'email', id: 'email-format', message: 'Not an email', pattern: '@corp\\.com$' },
+					{ type: 'minLength', value: 30, severity: 'warning' },
+				],
+			}),
+			value: 'a@b.c',
+			values: { email: 'a@b.c' },
+			fieldPath: 'email',
+			registry,
+			debounceScope: createDebounceScope(),
+		});
+
+		expect(result.issues).toEqual([
+			{
+				type: 'email',
+				ruleId: 'email-format',
+				params: { pattern: '@corp\\.com$' },
+				message: 'Not an email',
+				severity: 'error',
+			},
+			{ type: 'minLength', params: { value: 30 }, message: expect.any(String), severity: 'warning' },
+		]);
 	});
 });

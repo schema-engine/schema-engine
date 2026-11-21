@@ -3,10 +3,16 @@ import type { ActionRuntimeContext } from '@schema-engine/actions';
 
 /** One thing wrong with a field, as an action sees it. */
 export interface FormFieldIssue {
+	/** The rule type (`'minLength'`), the native `ValidityState` flag or the server's code. */
 	readonly type?: string;
+	/** Fallback text: translate from `type`, `ruleId` and `params` where the host has the text. */
 	readonly message?: string;
 	/** Who reported it: `'validation'`, `'server'` or `'native'`, where the renderer knows. */
 	readonly source?: string;
+	/** The author's stable name for the rule that reported it. */
+	readonly ruleId?: string;
+	/** What the text is built from, serializable (`{ value: 8 }`). */
+	readonly params?: Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -42,7 +48,7 @@ export interface BuilderActionBaseContext {
 	 * Call `form.checkValidity()` to validate the current values.
 	 */
 	isValid: boolean;
-	/** Validation errors by dotted field path; `''` is the form itself. */
+	/** Validation errors by dotted field path; `'__root__'` is the form itself. Warnings are not included. */
 	errors: Readonly<Record<string, FormFieldError>>;
 	/** Form metadata and timing information */
 	metadata: {

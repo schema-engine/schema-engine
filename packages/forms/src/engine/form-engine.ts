@@ -220,7 +220,7 @@ export class FormEngine<
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 			getElement: (id: string) => this.getElement(id),
 			getAction: (id: string) => this.getAction(id),
-			hasValidation: (type: string) => this.validationRegistry.has(type),
+			checkRule: (rule: { type: string }) => this.validationRegistry.check(rule),
 			axes: this.layout.axes,
 		};
 	}
@@ -252,7 +252,7 @@ export class FormEngine<
 	validateElement(config: unknown): NormalizedElementConfig<TOutputs['elements']> {
 		return validateElementConfig(config, {
 			getElement: (id) => this.getElement(id),
-			hasValidation: (type) => this.validationRegistry.has(type),
+			checkRule: (rule) => this.validationRegistry.check(rule),
 			axes: this.layout.axes,
 		}) as unknown as NormalizedElementConfig<TOutputs['elements']>;
 	}

@@ -251,15 +251,13 @@ describe('ValidationRegistry', () => {
 	});
 
 	describe('Error Handling', () => {
-		it('should return null for unregistered validation types', () => {
-			const schema = createValidationRegistry([]).createSchema(
-				{ type: 'nonexistent' },
-				createValidationContext(),
-			);
-			expect(schema).toBeNull();
+		it('throws, naming the type, for an unregistered validation type', () => {
+			expect(() =>
+				createValidationRegistry([]).createSchema({ type: 'nonexistent' }, createValidationContext()),
+			).toThrow(expect.objectContaining({ name: 'ValidationRuleError', ruleType: 'nonexistent' }));
 		});
 
-		it('should handle errors in validation handlers gracefully', () => {
+		it('throws, keeping the cause, when a handler cannot build the rule', () => {
 			const registry = createValidationRegistry([
 				registration('faulty', {
 					handler: () => {
@@ -268,12 +266,24 @@ describe('ValidationRegistry', () => {
 				}),
 			]);
 
-			const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-			const schema = registry.createSchema({ type: 'faulty' }, createValidationContext());
+			expect(() => registry.createSchema({ type: 'faulty' }, createValidationContext())).toThrow(
+				expect.objectContaining({ ruleType: 'faulty', cause: new Error('Validation handler error') }),
+			);
+		});
 
-			expect(schema).toBeNull();
-			expect(consoleErrorSpy).toHaveBeenCalled();
-			consoleErrorSpy.mockRestore();
+		it('says why a rule cannot be used, or nothing when it can', () => {
+			const registry = createValidationRegistry([
+				registration('faulty', {
+					handler: () => {
+						throw new Error('no good');
+					},
+				}),
+				registration('fine', { handler: () => z.string() }),
+			]);
+
+			expect(registry.check({ type: 'fine' })).toBeUndefined();
+			expect(registry.check({ type: 'nonexistent' })).toMatch(/no registered handler/);
+			expect(registry.check({ type: 'faulty' })).toMatch(/could not be built: no good/);
 		});
 
 		it('lets the later registration of a type win without logging', () => {
@@ -284,7 +294,7 @@ describe('ValidationRegistry', () => {
 			]);
 
 			const schema = registry.createSchema({ type: 'test' }, createValidationContext());
-			expect(schema?.parse(123)).toBe(123);
+			expect(schema.parse(123)).toBe(123);
 			expect(registry.size).toBe(1);
 			for (const spy of spies) {
 				expect(spy).not.toHaveBeenCalled();

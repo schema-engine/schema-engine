@@ -121,7 +121,11 @@ function toValidator(
 			fieldPath: fieldPath ?? '',
 			registry,
 			debounceScope,
-		}).then(([message]) => message ?? true);
+		}).then(({ issues, failures }) => {
+			if (failures[0]) throw failures[0];
+			const blocking = issues.find((found) => found.severity === 'error');
+			return blocking ? (blocking.message ?? blocking.type) : true;
+		});
 		latest = run;
 		return settle(run);
 	};

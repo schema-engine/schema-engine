@@ -549,6 +549,41 @@ describe('validateFormConfig', () => {
 		).toThrow(/field 'quantity'.*rule 'unregistered'/i);
 	});
 
+	test('rejects a rule its handler cannot build, rather than skipping it when a user types', () => {
+		const field = defineInput({
+			$type: 'field',
+			schema: z.looseObject({
+				$type: z.literal('field'),
+				id: z.string(),
+				name: z.string(),
+				rules: z.optional(z.array(z.looseObject({ type: z.string() }))),
+			}),
+			metadata: { name: 'Field', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({ elements: [field] });
+
+		expect(() =>
+			engine.validateForm({
+				id: 'broken-rule',
+				steps: [
+					{
+						id: 'main',
+						title: 'Main',
+						elements: [
+							{
+								$type: 'field',
+								id: 'code',
+								name: 'code',
+								rules: [{ type: 'pattern', value: '(' }],
+							},
+						],
+					},
+				],
+			}),
+		).toThrow(/field 'code'.*rule 'pattern' could not be built/i);
+	});
+
 	test.each(['__root__', '__proto__', 'constructor', 'address.__private', 'prototype'])(
 		'rejects the reserved field name %s',
 		(name) => {

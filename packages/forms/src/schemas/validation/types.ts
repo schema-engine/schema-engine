@@ -13,134 +13,149 @@ const RegexPatternSchema = z.string().check(
 	}, 'Must be a valid regular expression'),
 );
 
+/**
+ * What every rule can say about itself besides its `type`.
+ *
+ * @remarks
+ * `message` is the fallback text of the issue the rule reports. `id` is the author's stable name for the
+ * rule, so two rules of one type (two `pattern`s) stay distinguishable and a translation can be keyed to
+ * one of them. A `severity` of `'warning'` makes the rule advice: its issue goes to `warnings`, and never
+ * decides whether the form is valid.
+ */
+const ruleFields = {
+	message: z.optional(z.string()),
+	id: z.optional(z.string()),
+	severity: z.optional(z.enum(['error', 'warning'])),
+};
+
 export const BaseValidationRuleSchema = z.object({
 	type: z.string(),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const RequiredRuleSchema = z.object({
 	type: z.literal('required'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const MinLengthRuleSchema = z.object({
 	type: z.literal('minLength'),
 	value: z.number(),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const MaxLengthRuleSchema = z.object({
 	type: z.literal('maxLength'),
 	value: z.number(),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const EmailRuleSchema = z.object({
 	type: z.literal('email'),
 	pattern: z.optional(RegexPatternSchema),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const PhoneRuleSchema = z.object({
 	type: z.literal('phone'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const PatternRuleSchema = z.object({
 	type: z.literal('pattern'),
 	value: RegexPatternSchema,
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const UrlRuleSchema = z.object({
 	type: z.literal('url'),
 	protocol: z.optional(RegexPatternSchema),
 	hostname: z.optional(RegexPatternSchema),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const UuidRuleSchema = z.object({
 	type: z.literal('uuid'),
 	version: z.optional(z.enum(['v1', 'v2', 'v3', 'v4', 'v5'])),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const Ipv4RuleSchema = z.object({
 	type: z.literal('ipv4'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const Ipv6RuleSchema = z.object({
 	type: z.literal('ipv6'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const CidrRuleSchema = z.object({
 	type: z.literal('cidr'),
 	version: z.optional(z.enum(['v4', 'v6'])),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const JwtRuleSchema = z.object({
 	type: z.literal('jwt'),
 	alg: z.optional(z.string()),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const HashRuleSchema = z.object({
 	type: z.literal('hash'),
 	algorithm: z.enum(['md5', 'sha1', 'sha256', 'sha384', 'sha512']),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const Base64RuleSchema = z.object({
 	type: z.literal('base64'),
 	urlSafe: z.optional(z.boolean()),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const CuidRuleSchema = z.object({
 	type: z.literal('cuid'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const Cuid2RuleSchema = z.object({
 	type: z.literal('cuid2'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const UlidRuleSchema = z.object({
 	type: z.literal('ulid'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const HexRuleSchema = z.object({
 	type: z.literal('hex'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const MinRuleSchema = z.object({
 	type: z.literal('min'),
 	value: z.number(),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const MaxRuleSchema = z.object({
 	type: z.literal('max'),
 	value: z.number(),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const MinItemsRuleSchema = z.object({
 	type: z.literal('minItems'),
 	value: z.number(),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const MaxItemsRuleSchema = z.object({
 	type: z.literal('maxItems'),
 	value: z.number(),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const DateTimeRuleSchema = z.object({
@@ -148,18 +163,18 @@ export const DateTimeRuleSchema = z.object({
 	precision: z.optional(z.number()),
 	offset: z.optional(z.boolean()),
 	local: z.optional(z.boolean()),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const DateRuleSchema = z.object({
 	type: z.literal('date'),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const TimeRuleSchema = z.object({
 	type: z.literal('time'),
 	precision: z.optional(z.number()),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const AsyncRuleSchema = z.object({
@@ -172,11 +187,11 @@ export const AsyncRuleSchema = z.object({
 		z.object({
 			valid: z.optional(z.boolean()),
 			success: z.optional(z.boolean()),
-			message: z.optional(z.string()),
+			...ruleFields,
 			error: z.optional(z.string()),
 		}),
 	),
-	message: z.optional(z.string()),
+	...ruleFields,
 	dependencies: z.optional(z.array(z.string())),
 	debounce: z.optional(z.number()),
 	cacheTTL: z.optional(z.number()),
@@ -222,7 +237,7 @@ export const RelateRuleSchema = z.object({
 				'Stay quiet while any participating value is empty. Ignored by the assertions about emptiness: `atLeastOne`, `exactlyOne`, `allOrNone`.',
 			),
 		),
-	message: z.optional(z.string()),
+	...ruleFields,
 });
 
 export const ValidationRuleSchema = z.union([

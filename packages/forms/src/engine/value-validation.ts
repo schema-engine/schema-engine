@@ -20,6 +20,8 @@ export interface ValidationElement {
 	readonly $type?: string;
 	readonly rules?: readonly BaseValidationRule[];
 	readonly constraints?: readonly ConstraintLogic[];
+	/** Authored `disabled`: a disabled field takes no part in validation. */
+	readonly disabled?: boolean;
 }
 export type ValidationElementTree = ReadonlyArray<ValidationElement>;
 export interface ValidationStep {
@@ -60,32 +62,66 @@ export interface ValidateFormValuesInput {
 	/** Keyed async validation state for this caller's form lifetime; see `ValidateFieldValueInput`. */
 	debounceScope: DebounceScope;
 	/**
-	 * Skips a field a `show` or `hide` constraint hides, and every field inside a hidden container.
+	 * The paths that take no part, when the caller already has them from {@link resolveExcludedPaths}.
 	 *
-	 * @remarks
-	 * Renderers validate only the fields they render, so a caller that validates the whole form without
-	 * naming fields sets this to agree with what a submission checks.
+	 * @remarks Computed from `elements` and `values` when omitted: no caller opts out of participation.
 	 */
-	skipHidden?: boolean;
+	excluded?: readonly string[];
 }
 
-/** One failed rule. */
+/** Whether a failed rule blocks the form (`error`) or only advises (`warning`). */
+export type ValidationSeverity = 'error' | 'warning';
+
+/**
+ * One rule a value fails, with what a translation needs to say so.
+ *
+ * @remarks
+ * `type` is the rule's type, `ruleId` the author's stable name for that rule and `params` its options as
+ * authored (`{ value: 8 }` for a `minLength`), so a message is composed from the issue and not parsed out
+ * of the text. `message` is the fallback text: the rule's own, else the schema library's. A rule reports
+ * one issue however many checks its schema runs.
+ */
 export interface ValidationIssue {
-	readonly type: 'validation';
-	readonly message: string;
+	readonly type: string;
+	readonly ruleId?: string;
+	readonly params?: Readonly<Record<string, unknown>>;
+	readonly message?: string;
+	readonly severity: ValidationSeverity;
 }
 
 /**
- * Everything a field's validation found.
+ * A rule that could not run: its schema could not be built, or it threw while checking the value.
  *
- * @remarks `type` and `message` are those of the first failed rule, so the error reads like a single issue; `all` lists every failed rule in rule order, the first included.
+ * @remarks
+ * Not a field error. The value is neither valid nor invalid as far as this rule goes, and the cause is
+ * the author's or the integration's to fix. `path` and `ruleType` say where; `cause` is what was thrown.
  */
-export interface FieldValidationError extends ValidationIssue {
-	readonly all: readonly ValidationIssue[];
+export class FormValidationFailure extends Error {
+	readonly path: string;
+	readonly ruleType: string;
+	readonly ruleId?: string;
+
+	constructor(path: string, rule: { readonly type: string; readonly id?: string }, cause: unknown) {
+		const reason = cause instanceof Error ? cause.message : String(cause);
+		super(`Validation rule '${rule.type}' could not run for '${path}': ${reason}`, { cause });
+		this.name = 'FormValidationFailure';
+		this.path = path;
+		this.ruleType = rule.type;
+		if (rule.id !== undefined) this.ruleId = rule.id;
+	}
 }
 
-/** The errors a validation found, by the dotted path of the field that failed; a container has its own. */
-export type FormValidationErrors = Record<string, FieldValidationError>;
+/** What validating one field found: the rules it fails, in rule order, and the rules that could not run. */
+export interface FieldValidationResult {
+	readonly issues: readonly ValidationIssue[];
+	readonly failures: readonly FormValidationFailure[];
+}
+
+/** What a validation found, by the dotted path of the field; a container has its own entry. Only paths with something to report appear. */
+export interface FormValidationOutcome {
+	readonly issues: Readonly<Record<string, readonly ValidationIssue[]>>;
+	readonly failures: Readonly<Record<string, readonly FormValidationFailure[]>>;
+}
 
 interface FieldElementPath {
 	readonly element: ValidationElement;
@@ -184,10 +220,26 @@ export function effectiveRulesFor({
 	return [requiredRule, ...rules];
 }
 
+/** The keys of a rule that say who it is rather than how it checks. */
+const RULE_IDENTITY_KEYS: ReadonlySet<string> = new Set(['type', 'message', 'id', 'severity']);
+
+/** The options a rule was authored with, which a translation can interpolate; `undefined` when it has none. */
+function paramsOf(rule: BaseValidationRule): Readonly<Record<string, unknown>> | undefined {
+	const params = Object.fromEntries(
+		Object.entries(rule).filter(([key, value]) => !RULE_IDENTITY_KEYS.has(key) && value !== undefined),
+	);
+	return Object.keys(params).length === 0 ? undefined : Object.freeze(params);
+}
+
+type AuthoredRule = BaseValidationRule & { readonly id?: string; readonly severity?: ValidationSeverity };
+
 /**
- * Validates one field value and returns the message of every rule it fails, in rule order.
+ * Validates one field value against each of its rules.
  *
- * @remarks Empty when the value passes. A rule that throws counts as one failure with a generic message, and the other rules still report theirs.
+ * @remarks
+ * `issues` lists the rules the value fails in rule order, whatever order they finish in, one issue per
+ * rule. A rule that cannot run is a failure rather than an issue, and the other rules still report: it
+ * says nothing about the value.
  */
 export async function validateFieldValue({
 	element,
@@ -197,101 +249,159 @@ export async function validateFieldValue({
 	registry,
 	debounceScope,
 	inheritedRequired,
-}: ValidateFieldValueInput): Promise<readonly string[]> {
-	const rules = effectiveRulesFor({ element, values, fieldPath, registry, inheritedRequired });
-	if (rules.length === 0) {
-		return [];
-	}
+}: ValidateFieldValueInput): Promise<FieldValidationResult> {
+	const rules = effectiveRulesFor({ element, values, fieldPath, registry, inheritedRequired }) as AuthoredRule[];
+	const context = createValidationContext({ values, fieldPath, debounceScope });
+	const results = await Promise.all(
+		rules.map(async (rule): Promise<ValidationIssue | FormValidationFailure | undefined> => {
+			try {
+				const result = await z.safeParseAsync(createZodSchemaFromRules([rule], context, registry), value);
+				if (result.success) return undefined;
+				const message = result.error.issues[0]?.message;
+				return Object.freeze({
+					type: rule.type,
+					...(rule.id === undefined ? {} : { ruleId: rule.id }),
+					...(paramsOf(rule) === undefined ? {} : { params: paramsOf(rule) }),
+					...(message ? { message } : {}),
+					severity: rule.severity ?? 'error',
+				});
+			} catch (cause) {
+				return new FormValidationFailure(fieldPath, rule, cause);
+			}
+		}),
+	);
+	return {
+		issues: results.filter((found): found is ValidationIssue => found !== undefined && !(found instanceof Error)),
+		failures: results.filter((found): found is FormValidationFailure => found instanceof FormValidationFailure),
+	};
+}
 
-	try {
-		const context = createValidationContext({
-			values,
-			fieldPath,
-			debounceScope,
-		});
-		const failures = await Promise.all(
-			rules.map(async (rule) => {
-				try {
-					const result = await z.safeParseAsync(createZodSchemaFromRules([rule], context, registry), value);
-					return result.success
-						? []
-						: result.error.issues.map((issue) => issue.message || 'Validation failed');
-				} catch {
-					return ['Validation failed'];
-				}
-			}),
-		);
-		return failures.flat();
-	} catch {
-		return ['Validation failed'];
-	}
+/** Whether `path` is an excluded path or lies below one. */
+export const isPathExcluded = (excluded: readonly string[], path: string): boolean =>
+	excluded.some((around) => path === around || path.startsWith(`${around}.`));
+
+/**
+ * The paths that take no part in validation, from the config and the current values.
+ *
+ * @remarks
+ * One rule for every consumer of "does this field count": a field a `show` or `hide` constraint hides,
+ * and a field that is disabled, whether authored (`disabled`) or by a constraint (`disable`, `enable`),
+ * is excluded together with everything below it. Constraints are resolved by `evaluateConstraints`,
+ * against each row's own path. An inactive wizard step is not excluded: it is only not rendered.
+ */
+export function resolveExcludedPaths(elements: ValidationElementTree, values: Record<string, unknown>): string[] {
+	const excluded = fieldElementPathsFor(elements, values)
+		.filter(({ element, fieldPath }) => {
+			if (element.disabled === true) return true;
+			if (!element.constraints?.length) return false;
+			const { shouldShow, shouldDisable } = evaluateConstraints({
+				constraints: element.constraints,
+				values,
+				fieldPath,
+			});
+			return !shouldShow || shouldDisable;
+		})
+		.map(({ fieldPath }) => fieldPath);
+	return [...new Set(excluded)].filter(
+		(path) =>
+			!isPathExcluded(
+				excluded.filter((other) => other !== path),
+				path,
+			),
+	);
+}
+
+/** Whether a config has anything that can exclude a path, so a container may skip resolving exclusions. */
+export function hasParticipationRules(elements: ValidationElementTree): boolean {
+	return walkNamedElements(elements).some(
+		({ element }) => element.disabled === true || Boolean(element.constraints?.length),
+	);
+}
+
+/** The fields a validation covers, and the values it was planned over. */
+export interface ValidationPlan {
+	readonly fields: readonly PlannedField[];
+	readonly values: Record<string, unknown>;
+}
+
+/** One field to validate: its element, its rendered path and whether a `require` constraint of a container around it holds. */
+export interface PlannedField extends FieldElementPath {
+	readonly inheritedRequired: boolean;
 }
 
 /**
- * Validates named fields and returns their errors by dotted path, each with every rule it failed.
+ * Lists the fields a validation of `names` covers: the requested paths that take part, expanded over live rows.
  *
  * @remarks
- * `names` limits validation to matching paths and their descendants, which lets
- * callers validate a wizard step without surfacing errors from later steps;
- * `exactNames` limits it to the named paths themselves. The errors are flat so that
- * a container and a row inside it can both fail: `contacts` and `contacts.0.email`
- * are separate keys.
- *
- * A field inside a container (fieldset or array) whose `require` constraint
- * holds is required, at any depth. The container's own `required` rule does not
- * pass down.
+ * A field inside a container (fieldset or array) whose `require` constraint holds is required, at any
+ * depth. The container's own `required` rule does not pass down. A planned path is one the validation
+ * will report on, so a caller can say which paths are pending before it starts.
  */
-export async function validateFormValues({
+export function planFormValidation({
 	elements,
 	values,
-	registry,
 	names,
 	exactNames = false,
-	debounceScope,
-	skipHidden = false,
-}: ValidateFormValuesInput): Promise<FormValidationErrors> {
+	excluded = resolveExcludedPaths(elements, values),
+}: Pick<ValidateFormValuesInput, 'elements' | 'values' | 'names' | 'exactNames' | 'excluded'>): ValidationPlan {
 	const allFields = fieldElementPathsFor(elements, values);
-	const hiddenPaths = skipHidden
-		? allFields
-				.filter(
-					({ element, fieldPath }) =>
-						!evaluateConstraints({ constraints: element.constraints, values, fieldPath }).shouldShow,
-				)
-				.map(({ fieldPath }) => fieldPath)
-		: [];
-	const isHidden = (fieldPath: string) =>
-		hiddenPaths.some((hidden) => fieldPath === hidden || fieldPath.startsWith(`${hidden}.`));
 	const requiredContainers = allFields
 		.filter(
 			({ element, fieldPath, hasChildren }) =>
 				hasChildren && evaluateConstraints({ constraints: element.constraints, values, fieldPath }).isRequired,
 		)
 		.map(({ fieldPath }) => `${fieldPath}.`);
-	const fields = allFields.filter(
-		({ fieldPath }) => pathIsRequested(fieldPath, names, exactNames) && !isHidden(fieldPath),
-	);
+	const fields = allFields
+		.filter(
+			({ fieldPath }) => pathIsRequested(fieldPath, names, exactNames) && !isPathExcluded(excluded, fieldPath),
+		)
+		.map((field) => ({
+			...field,
+			inheritedRequired:
+				!field.hasChildren && requiredContainers.some((prefix) => field.fieldPath.startsWith(prefix)),
+		}));
+	return { fields, values };
+}
+
+/** Runs a plan: every planned field against its value and rules, in parallel. */
+export async function runValidationPlan(
+	plan: ValidationPlan,
+	{ registry, debounceScope }: Pick<ValidateFormValuesInput, 'registry' | 'debounceScope'>,
+): Promise<FormValidationOutcome> {
 	const results = await Promise.all(
-		fields.map(async ({ element, fieldPath, hasChildren }) => ({
+		plan.fields.map(async ({ element, fieldPath, inheritedRequired }) => ({
 			fieldPath,
-			messages: await validateFieldValue({
+			result: await validateFieldValue({
 				element,
-				value: getValueAtPath(values, fieldPath),
-				values,
+				value: getValueAtPath(plan.values, fieldPath),
+				values: plan.values,
 				fieldPath,
 				registry,
 				debounceScope,
-				inheritedRequired: !hasChildren && requiredContainers.some((prefix) => fieldPath.startsWith(prefix)),
+				inheritedRequired,
 			}),
 		})),
 	);
 
-	const errors: FormValidationErrors = {};
-	for (const { fieldPath, messages: failed } of results) {
-		if (failed.length > 0) {
-			const all = failed.map((message): ValidationIssue => ({ type: 'validation', message }));
-			errors[fieldPath] = { type: 'validation', message: failed[0], all };
-		}
+	const issues: Record<string, readonly ValidationIssue[]> = {};
+	const failures: Record<string, readonly FormValidationFailure[]> = {};
+	for (const { fieldPath, result } of results) {
+		if (result.issues.length > 0) issues[fieldPath] = result.issues;
+		if (result.failures.length > 0) failures[fieldPath] = result.failures;
 	}
+	return { issues, failures };
+}
 
-	return errors;
+/**
+ * Validates named fields and returns what each failed rule reported, by dotted path.
+ *
+ * @remarks
+ * `names` limits validation to matching paths and their descendants, which lets callers validate a
+ * wizard step without surfacing errors from later steps; `exactNames` limits it to the named paths
+ * themselves. The results are flat so that a container and a row inside it can both fail: `contacts` and
+ * `contacts.0.email` are separate keys. Paths that do not take part, see {@link resolveExcludedPaths},
+ * are not validated.
+ */
+export async function validateFormValues(input: ValidateFormValuesInput): Promise<FormValidationOutcome> {
+	return runValidationPlan(planFormValidation(input), input);
 }

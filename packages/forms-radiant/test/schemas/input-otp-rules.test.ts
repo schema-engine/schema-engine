@@ -10,13 +10,13 @@ const code = { $type: 'input-otp', id: 'code', name: 'code', label: 'Code', leng
 
 async function errorFor(element: Record<string, unknown>, value = '123') {
 	const config = engine.validateForm({ id: 'otp-form', steps: [{ id: 'main', title: 'Main', elements: [element] }] });
-	const errors = await validateFormValues({
+	const { issues } = await validateFormValues({
 		elements: config.steps[0]!.elements,
 		values: { code: value },
 		registry: createDefaultValidationRegistry(),
 		debounceScope: createDebounceScope(),
 	});
-	return errors.code?.message;
+	return issues.code?.[0]?.message;
 }
 
 test('headless validation rejects an incomplete code and accepts an empty or complete one', async () => {

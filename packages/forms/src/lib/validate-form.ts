@@ -43,9 +43,9 @@ const ACTION_REGISTER_HINT = 'createFormEngine({ actions: [...] })';
  */
 export function validateElementConfig(
 	config: unknown,
-	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation' | 'axes'>,
+	options: Pick<ValidateFormOptions, 'getElement' | 'checkRule' | 'axes'>,
 ): NormalizedElementConfig {
-	const parsed = parseElementNode(config, options.getElement, options.hasValidation, [], {
+	const parsed = parseElementNode(config, options.getElement, options.checkRule, [], {
 		axes: options.axes ?? getDefaultLayoutTheme().axes,
 		inherited: {},
 	});
@@ -123,7 +123,7 @@ export function safeValidateFormConfig(
 		const elements = parseElementList(
 			step.elements,
 			options.getElement,
-			options.hasValidation,
+			options.checkRule,
 			stepPath,
 			stepAppearance.childScope,
 		);

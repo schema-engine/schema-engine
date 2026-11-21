@@ -90,10 +90,10 @@ export function parseActionList(
 	return { issues, items: next };
 }
 
-/** The first rule of an element with a `type` no validation handler is registered for. */
-function unregisteredValidationRule(
+/** The first rule of an element that cannot be used: no handler for its `type`, invalid options, or a handler that throws. */
+function unusableValidationRule(
 	item: FormTaggedConfig,
-	hasValidation: ValidateFormOptions['hasValidation'],
+	checkRule: ValidateFormOptions['checkRule'],
 ): { index: number; message: string } | undefined {
 	if (!Array.isArray(item.rules)) return undefined;
 
@@ -101,9 +101,10 @@ function unregisteredValidationRule(
 		if (typeof rule !== 'object' || rule === null || !('type' in rule) || typeof rule.type !== 'string') {
 			continue;
 		}
-		if (!hasValidation(rule.type)) {
+		const problem = checkRule(rule as { type: string });
+		if (problem) {
 			const fieldName = typeof item.name === 'string' ? `Field '${item.name}'` : 'Element';
-			return { index, message: `${fieldName} uses validation rule '${rule.type}' with no registered handler.` };
+			return { index, message: `${fieldName}: ${problem}` };
 		}
 	}
 
@@ -118,7 +119,7 @@ function reservedNameSegment(item: FormTaggedConfig): string | undefined {
 export function parseElementNode(
 	item: unknown,
 	getElement: ValidateFormOptions['getElement'],
-	hasValidation: ValidateFormOptions['hasValidation'],
+	checkRule: ValidateFormOptions['checkRule'],
 	path: Path,
 	appearance: AppearanceScope,
 	nested = false,
@@ -135,9 +136,6 @@ export function parseElementNode(
 			['name'],
 		);
 	}
-	const unregisteredRule = unregisteredValidationRule(item, hasValidation);
-	if (unregisteredRule) return fail(unregisteredRule.message, ['rules', unregisteredRule.index, 'type']);
-
 	const { appearance: authoredAppearance, ...authored } = item;
 	const parsed = parseTypedConfig(
 		'element',
@@ -149,6 +147,8 @@ export function parseElementNode(
 	if (!parsed.ok) {
 		return { issues: parsed.issues };
 	}
+	const unusableRule = unusableValidationRule(parsed.data, checkRule);
+	if (unusableRule) return fail(unusableRule.message, ['rules', unusableRule.index, 'type']);
 	const parsedReserved = reservedNameSegment(parsed.data);
 	if (parsedReserved) {
 		return fail(
@@ -180,7 +180,7 @@ export function parseElementNode(
 		const parsedChild = parseElementNode(
 			children[index],
 			getElement,
-			hasValidation,
+			checkRule,
 			childPath(path, index),
 			childScope,
 			true,
@@ -203,7 +203,7 @@ export function parseElementNode(
 export function parseElementList(
 	items: unknown[] | undefined,
 	getElement: ValidateFormOptions['getElement'],
-	hasValidation: ValidateFormOptions['hasValidation'],
+	checkRule: ValidateFormOptions['checkRule'],
 	parentPath: Path,
 	appearance: AppearanceScope,
 ): { issues: FormValidationIssue[]; items?: FormTaggedConfig[]; byIndex: Array<FormTaggedConfig | undefined> } {
@@ -213,13 +213,7 @@ export function parseElementList(
 	const byIndex: Array<FormTaggedConfig | undefined> = [];
 	const issues: FormValidationIssue[] = [];
 	for (let index = 0; index < items.length; index += 1) {
-		const parsed = parseElementNode(
-			items[index],
-			getElement,
-			hasValidation,
-			childPath(parentPath, index),
-			appearance,
-		);
+		const parsed = parseElementNode(items[index], getElement, checkRule, childPath(parentPath, index), appearance);
 		issues.push(...parsed.issues);
 		byIndex.push(parsed.item);
 		if (parsed.item) next.push(parsed.item);
