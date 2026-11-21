@@ -189,6 +189,4 @@ export interface FormAuthoringInput<
 	style?: Record<string, string | number>;
 	appearance?: AppearanceInput<TAppearance>;
 	actions?: Array<FormAuthoringAction<TActions> | FormAuthoringAction<TActions>[]>;
-	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
-	onChange?: (data: Record<string, unknown>) => void;
 }

@@ -74,6 +74,19 @@ engine.defineForm({
 	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
 });
 
+engine.defineForm({
+	id: 'callbacks',
+	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+	// @ts-expect-error -- form callbacks belong on the renderer props or a registered action
+	onSubmit: () => undefined,
+});
+engine.defineForm({
+	id: 'callbacks',
+	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
+	// @ts-expect-error -- form callbacks belong on the renderer props or a registered action
+	onChange: () => undefined,
+});
+
 type _defineFormReturnsNormalized = Assert<typeof defined extends NormalizedFormConfig ? true : false>;
 
 const rawForm: FormConfig = {

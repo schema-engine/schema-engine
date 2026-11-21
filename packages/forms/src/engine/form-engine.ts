@@ -229,7 +229,13 @@ export class FormEngine<
 	 * Author a form from this engine's registered elements, recipes, and actions.
 	 * Same runtime pipeline as {@link validateForm}.
 	 */
-	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions, TAppearance>>(
+	defineForm<
+		const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions, TAppearance> & {
+			/** @remarks Rejects the callbacks `FormConfig` no longer has, which an inferred generic would let through. */
+			onSubmit?: never;
+			onChange?: never;
+		},
+	>(
 		config: TConfig & { view?: ExactViewConfig<TConfig['view'], TRecipes, TAppearance> } & ExactFormAppearance<
 				TConfig,
 				TAppearance
