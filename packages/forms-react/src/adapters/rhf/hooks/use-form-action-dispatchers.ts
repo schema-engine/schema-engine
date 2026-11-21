@@ -52,17 +52,25 @@ export function useFormActionDispatchers({
 	/**
 	 * @remarks
 	 * `form.formState` holds the values of the last render, and React Hook Form re-renders the provider only for
-	 * the fields something reads. Reading them here would be stale until a context had first been built, so
-	 * errors come from `getErrors`, which reads the live state, and touched state and the submit count are
-	 * kept from a subscription. Neither subscribes to `isValid`, which would validate the whole form.
+	 * the fields something reads, so reading it here would be stale until a context had first been built. A
+	 * subscription keeps the live errors, touched state and submit count instead. It never subscribes to
+	 * `isValid`, which would validate the whole form after every change.
 	 */
-	const liveState = useRef({ touchedFields: form.formState.touchedFields, submitCount: form.formState.submitCount });
+	const liveState = useRef({
+		errors: form.formState.errors,
+		touchedFields: form.formState.touchedFields,
+		submitCount: form.formState.submitCount,
+	});
 	useEffect(
 		() =>
 			form.subscribe({
-				formState: { touchedFields: true, submitCount: true },
-				callback: ({ touchedFields, submitCount }) => {
-					liveState.current = { touchedFields: touchedFields ?? {}, submitCount: submitCount ?? 0 };
+				formState: { errors: true, touchedFields: true, submitCount: true },
+				callback: ({ errors, touchedFields, submitCount }) => {
+					liveState.current = {
+						errors: errors ?? {},
+						touchedFields: touchedFields ?? {},
+						submitCount: submitCount ?? 0,
+					};
 				},
 			}),
 		[form],
@@ -80,11 +88,11 @@ export function useFormActionDispatchers({
 	);
 
 	const buildActionContext = useCallback((): BuilderActionBaseContext => {
-		const { touchedFields, submitCount } = liveState.current;
+		const { errors, touchedFields, submitCount } = liveState.current;
 		return buildFormActionContext({
 			config,
 			values: form.getValues(),
-			formState: { errors: form.getErrors(), touched: touchedFields, submitCount },
+			formState: { errors, touched: touchedFields, submitCount },
 			currentStep: getCurrentStep?.() ?? 0,
 			mountedAt: formMountTime,
 			form: formAdapter,
