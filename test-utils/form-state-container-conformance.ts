@@ -1223,6 +1223,12 @@ const cases: FormStateContainerCase[] = [
 			expect(() => store.setErrors('server', { 'contacts.-1.email': { message: 'x' } })).toThrow(
 				/names row '-1'/,
 			);
+			expect(() => store.setErrors('server', { 'contacts.1e-7.email': { message: 'x' } })).toThrow(
+				/names row '1e-7'/,
+			);
+			expect(() => store.setErrors('server', { 'contacts.01.email': { message: 'x' } })).toThrow(
+				/names row '01'/,
+			);
 			expect(store.getSnapshot().errors).toEqual({});
 			expect(() =>
 				store.setErrors('server', { 'nothing.here': { message: 'fine' }, [FORM_ROOT]: { message: 'form' } }),
