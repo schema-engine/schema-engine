@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { formStoreCases } from '../../../../test-utils/form-store-conformance';
+import { formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
 import { isPlainObject } from '@/lib/is-plain-object';
-import { createFormStateContainer } from '@/store/create-form-state-container';
-import type { FormStateContainer, FormStateContainerFactory, FormStateSnapshot } from '@/store/types';
+import { createFormStateContainer } from '@/state-container/create-form-state-container';
+import type { FormStateContainer, FormStateContainerFactory, FormStateSnapshot } from '@/state-container/types';
 
 const withOverrides =
 	(
@@ -207,10 +207,10 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	},
 ];
 
-describe('form store conformance cases', () => {
+describe('form state container conformance cases', () => {
 	test.each(brokenStores)('a store that $name fails the matching case', async ({ create, caught }) => {
 		for (const name of caught) {
-			const entry = formStoreCases.find((candidate) => candidate.name === name);
+			const entry = formStateContainerCases.find((candidate) => candidate.name === name);
 			expect(entry, `no case named "${name}"`).toBeDefined();
 			const failure: unknown = await Promise.resolve()
 				.then(() => entry!.run(create))
@@ -223,10 +223,10 @@ describe('form store conformance cases', () => {
 	});
 
 	test('every rule is exercised by a broken store', () => {
-		const rules = new Set(formStoreCases.map(({ rule }) => rule));
+		const rules = new Set(formStateContainerCases.map(({ rule }) => rule));
 		const caughtRules = new Set(
 			brokenStores.flatMap(({ caught }) =>
-				caught.map((name) => formStoreCases.find((entry) => entry.name === name)?.rule),
+				caught.map((name) => formStateContainerCases.find((entry) => entry.name === name)?.rule),
 			),
 		);
 		const coveredElsewhere = new Set(['stale async results']);

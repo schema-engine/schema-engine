@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
-import { createFormStateContainer } from '@/store/create-form-state-container';
+import { createFormStateContainer } from '@/state-container/create-form-state-container';
 
 /**
  * A local copy of the interface a host that bridges native controls into a form state container needs,

@@ -1,11 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
-import { watchValidation } from '../../../../test-utils/form-store-conformance';
+import { watchValidation } from '../../../../test-utils/form-state-container-conformance';
 import * as z from 'zod/mini';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
-import { createFormStateContainer } from '@/store/create-form-state-container';
-import type { FormStateContainer, FormStateContainerOptions } from '@/store/types';
+import { createFormStateContainer } from '@/state-container/create-form-state-container';
+import type { FormStateContainer, FormStateContainerOptions } from '@/state-container/types';
 
 const registry = createDefaultValidationRegistry();
 const element = (config: Record<string, unknown>, containerKind?: 'array' | 'object') =>

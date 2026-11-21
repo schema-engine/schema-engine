@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import { buildDependencyIndex, createDefaultValidationRegistry } from '@/schemas/validation';
-import { createFormStateContainer } from '@/store/create-form-state-container';
+import { createFormStateContainer } from '@/state-container/create-form-state-container';
 
 vi.mock('@/schemas/validation/dependencies', async (importOriginal) => {
 	const original = await importOriginal<typeof import('@/schemas/validation/dependencies')>();

@@ -18,7 +18,7 @@ export interface FieldArrayValue {
 	remove: (index?: number | number[]) => void;
 }
 
-/** The operations of a field array, which a store keeps one set of per array path. */
+/** The operations of a field array, which a container keeps one set of per array path. */
 export type FieldArrayCommands = Omit<FieldArrayValue, 'fields'>;
 
 const NO_FIELDS: ReadonlyArray<{ id: string }> = Object.freeze([]);
@@ -41,7 +41,7 @@ export function selectFields(rowIds: readonly string[] | undefined): Array<{ id:
  * Builds the React Hook Form style field array a binding hands to its widgets.
  *
  * @param rowIds - The ids of the array's rows, from `snapshot.rowIds[path]`.
- * @param commands - The store's commands for the array, from `fieldArray(path)`.
+ * @param commands - The container's commands for the array, from `fieldArray(path)`.
  */
 export function toFieldArrayValue(
 	rowIds: readonly string[] | undefined,

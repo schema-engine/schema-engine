@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
-import { formStoreCases } from '../../../../test-utils/form-store-conformance';
-import { createFormStateContainer } from '@/store/create-form-state-container';
+import { formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
+import { createFormStateContainer } from '@/state-container/create-form-state-container';
 
-vi.mock('@/store/row-ids', async (importOriginal) => {
-	const original = await importOriginal<typeof import('@/store/row-ids')>();
+vi.mock('@/state-container/row-ids', async (importOriginal) => {
+	const original = await importOriginal<typeof import('@/state-container/row-ids')>();
 	return { ...original, resolveAnchor: (anchor: { path: string }) => anchor.path };
 });
 
@@ -14,7 +14,7 @@ describe('a store that finds a late result by position instead of by row', () =>
 		'drops a late result when its rows were replaced',
 		'follows a nested row when the rows around it move',
 	])('fails "%s"', async (name) => {
-		const entry = formStoreCases.find((candidate) => candidate.name === name);
+		const entry = formStateContainerCases.find((candidate) => candidate.name === name);
 		const failure: unknown = await Promise.resolve()
 			.then(() => entry?.run(createFormStateContainer))
 			.then(

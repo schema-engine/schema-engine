@@ -14,7 +14,7 @@ export interface ValidationRun {
  * A result is superseded for a path when a validation that started later asked for that path, which is
  * "the latest requester wins", or when the form was reset after the run started. What a validation asked
  * for is kept as row anchors, and resolved against the rows as they are when the question is asked, so
- * the answer follows rows that moved. Values, dependencies and rows are the store's to check.
+ * the answer follows rows that moved. Values, dependencies and rows are the container's to check.
  */
 export interface RunTracker {
 	/** `scope` is what the run asked for, as anchors; `undefined` is the whole form. */

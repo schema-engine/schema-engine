@@ -3,23 +3,23 @@ import * as z from 'zod/mini';
 import { markNormalizedElementConfig } from '../packages/forms/src/lib/normalized-form-config';
 import type { ElementConfig } from '../packages/forms/src/schemas/field-config';
 import { createDefaultValidationRegistry } from '../packages/forms/src/schemas/validation/validation-registry';
-import { toFieldArrayValue } from '../packages/forms/src/store/field-array';
-import { selectError, selectFieldState, selectValue } from '../packages/forms/src/store/selectors';
+import { toFieldArrayValue } from '../packages/forms/src/state-container/field-array';
+import { selectError, selectFieldState, selectValue } from '../packages/forms/src/state-container/selectors';
 import {
 	FORM_PATH,
 	type FormStateContainer,
 	type FormStateContainerFactory,
 	type FormStateContainerOptions,
-} from '../packages/forms/src/store/types';
+} from '../packages/forms/src/state-container/types';
 
 /**
  * One rule of the internal form store contract, with the check that proves it.
  *
  * @remarks
- * `run` throws when the store breaks the rule. {@link formStoreCases} lists them so a test can point a
- * deliberately broken store at the rule it breaks; {@link formStoreConformance} registers them as tests.
+ * `run` throws when the store breaks the rule. {@link formStateContainerCases} lists them so a test can point a
+ * deliberately broken store at the rule it breaks; {@link formStateContainerConformance} registers them as tests.
  */
-export interface FormStoreCase {
+export interface FormStateContainerCase {
 	readonly rule: string;
 	readonly name: string;
 	readonly run: (createStore: FormStateContainerFactory) => void | Promise<void>;
@@ -182,7 +182,7 @@ const contacts = (store: FormStateContainer) =>
 /** The row ids of `contacts`, in row order. */
 const ids = (store: FormStateContainer) => store.getSnapshot().rowIds.contacts ?? [];
 
-const cases: FormStoreCase[] = [
+const cases: FormStateContainerCase[] = [
 	{
 		rule: 'snapshot stability',
 		name: 'returns the same snapshot until something changes, and notifies once per change',
@@ -1223,7 +1223,7 @@ const cases: FormStoreCase[] = [
 ];
 
 /** Every rule of the contract, for a test that checks a deliberately broken store fails the rule it breaks. */
-export const formStoreCases: readonly FormStoreCase[] = cases;
+export const formStateContainerCases: readonly FormStateContainerCase[] = cases;
 
 /**
  * Registers the internal form store contract as vitest tests against the store `createStore` builds.
@@ -1231,8 +1231,8 @@ export const formStoreCases: readonly FormStoreCase[] = cases;
  * @remarks
  * Call it from a test file, like `rendererConformance`. A fresh store is built for each test.
  */
-export function formStoreConformance(createStore: FormStateContainerFactory): void {
-	describe('form store conformance', () => {
+export function formStateContainerConformance(createStore: FormStateContainerFactory): void {
+	describe('form state container conformance', () => {
 		for (const rule of new Set(cases.map((entry) => entry.rule))) {
 			describe(rule, () => {
 				for (const entry of cases.filter((candidate) => candidate.rule === rule)) {

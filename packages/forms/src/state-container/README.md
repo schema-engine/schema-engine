@@ -95,10 +95,10 @@ hand to their widgets. `fieldArray(path)` returns the same commands object for a
 - A row operation validates the array's own rules, not its rows, and `reset` gives every row a new id.
 - A command notifies subscribers once, including when it starts a validation.
 
-The rules are tests: `formStoreConformance(createStore)` in [test-utils/form-store-conformance.ts](../../../../test-utils/form-store-conformance.ts)
-registers them with vitest, like the renderer conformance suite. `test/store/form-store-rules.test.ts`
+The rules are tests: `formStateContainerConformance(createStore)` in [test-utils/form-state-container-conformance.ts](../../../../test-utils/form-state-container-conformance.ts)
+registers them with vitest, like the renderer conformance suite. `test/store/form-state-container-rules.test.ts`
 points each rule at a container written to break it, and two files mock the run tracker and the row anchors
-to show the late-result cases fail without them. `test/store/form-store-interface.test.ts` checks the
+to show the late-result cases fail without them. `test/store/form-state-container-interface.test.ts` checks the
 container against a local copy of the interface a bridge host needs; it checks the copy, so the host's own
 declaration has to match it.
 

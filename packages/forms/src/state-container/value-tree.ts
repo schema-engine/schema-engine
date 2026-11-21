@@ -1,7 +1,7 @@
 import { isPlainObject } from '@/lib/is-plain-object';
 import { assertWritablePathKey, isReservedPathKey } from '@/lib/reserved-path-keys';
 
-/** A map held by the store: null-prototype, replaced rather than mutated. */
+/** A map held by the container: null-prototype, replaced rather than mutated. */
 export type NullMap<T = unknown> = Record<string, T>;
 
 export const isStructural = (node: unknown): node is NullMap | unknown[] =>

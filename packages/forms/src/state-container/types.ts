@@ -182,5 +182,5 @@ export interface FormStateContainerOptions {
 	readonly reValidateMode?: FormReValidateMode;
 }
 
-/** What `formStoreConformance` builds the container under test with. */
+/** What `formStateContainerConformance` builds the container under test with. */
 export type FormStateContainerFactory = (options: FormStateContainerOptions) => FormStateContainer;
