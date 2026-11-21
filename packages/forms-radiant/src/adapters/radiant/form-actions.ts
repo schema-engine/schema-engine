@@ -8,9 +8,10 @@ import {
 } from '@schema-engine/forms/engine';
 import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
+import type { FormFieldError } from '@schema-engine/forms/types';
 import type { FormProviderProps } from '@/adapters/types';
 import { logger } from '@/lib/logger';
-import { createChangeDetector, expandValues } from './controller/values';
+import { createChangeDetector } from './controller/values';
 import type { FormController } from './controller';
 
 /** What a submission's actions produced, in the shape `runSubmissionLifecycle` resolves. */
@@ -35,6 +36,17 @@ export interface FormActionsOptions {
  * through `se-action-results` events on the `rui-form`; the instance reports the
  * submission itself.
  */
+/**
+ * The errors Radiant UI holds, without the keys it types as possibly cleared.
+ *
+ * @remarks Radiant UI types its errors as a partial record, so an entry can be `undefined` in the type; the engine's context records only errors.
+ */
+function recordedErrors(errors: Readonly<Partial<Record<string, FormFieldError>>>): Record<string, FormFieldError> {
+	return Object.fromEntries(
+		Object.entries(errors).filter((entry): entry is [string, FormFieldError] => entry[1] !== undefined),
+	);
+}
+
 export class FormActions {
 	private readonly dispatcher: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private readonly mountedAt = Date.now();
@@ -152,8 +164,7 @@ export class FormActions {
 
 	/**
 	 * @remarks
-	 * Radiant UI keys errors and touched state by flat field name, as the engine's flat
-	 * errors are; touched state is expanded into the engine's nested tree. The store records only whether the form was
+	 * Radiant UI keys errors and touched state by flat field name, as the engine's context does. The store records only whether the form was
 	 * submitted, so `submitCount` counts the attempts Radiant UI reports instead:
 	 * `rui-invalid` for one that failed validation, and a finished submission
 	 * lifecycle, which is when React Hook Form counts it too.
@@ -167,8 +178,8 @@ export class FormActions {
 			config: this.options.config(),
 			values: form.getValues(),
 			formState: {
-				errors,
-				touched: expandValues(touched),
+				errors: recordedErrors(errors),
+				touched,
 				submitCount: this.submitAttempts,
 			},
 			currentStep: currentStep(),

@@ -32,8 +32,8 @@ values and validation state. Its optional `hasMatching(actions, trigger)` skips 
 action answers, so no context is built for it; `ActionDispatcher.hasMatching` is the check. Its optional `onSubmit()` runs after the submit actions and before the success or error trigger; the function resolves with a `failure` instead of rejecting, and dispatches `form_submit_complete` once ([`createSubmissionGuard`](./submission-lifecycle.ts) admits one submission at a time). Its optional `onAction(action, data)` callback runs after each
 successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
 and later submit actions stop before error and completion triggers run. Submit sequence entries are dispatched in order; grouped actions run concurrently. Each returned result carries its `actionId`.
-`buildFormActionContext` takes `errors` by dotted path and a nested `touched` tree; a renderer
-that keeps errors in another shape converts them first. `validateFieldValue` and `validateFormValues`
+`buildFormActionContext` takes `errors` and `touched` by dotted path; a renderer that keeps them in
+another shape converts them first. `validateFieldValue` and `validateFormValues`
 require a `debounceScope` owned by the form.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
@@ -55,9 +55,9 @@ form issues.
 ## Action context form state
 
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass
-`touched` and `submitCount`, both required, key `errors` by dotted path
-(`{ 'address.street': … }`) and nest `touched` like the values (`{ address: { street: … } }`). A React Hook Form
-caller passes `touchedFields` as `touched`.
+`touched` and `submitCount`, both required, key `errors` and `touched` by dotted path
+(`{ 'address.street': … }`). A React Hook Form
+caller flattens `touchedFields` to paths first.
 
 The form state has no `isValid`: the context's `isValid` is true when `errors` holds no entry,
 in every renderer, and `form.checkValidity()` validates the current values without

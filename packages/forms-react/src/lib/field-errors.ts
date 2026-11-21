@@ -1,4 +1,5 @@
 import type { FieldErrors, FieldValues } from 'react-hook-form';
+import type { FormFieldError } from '@schema-engine/forms/types';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 
 /**
@@ -18,11 +19,11 @@ export function toFieldErrors(errors: Readonly<Record<string, { type: string; me
 	return nested as FieldErrors<FieldValues>;
 }
 
-function collect(node: unknown, path: string, out: Record<string, unknown>): void {
+function collect(node: unknown, path: string, out: Record<string, FormFieldError>): void {
 	if (typeof node !== 'object' || node === null) return;
 	const recorded =
 		('message' in node && typeof node.message === 'string') || ('type' in node && typeof node.type === 'string');
-	if (recorded && path) out[path] = node;
+	if (recorded && path) out[path] = node as FormFieldError;
 	for (const [key, child] of Object.entries(node)) {
 		if (recorded && (key === 'ref' || key === 'types')) continue;
 		collect(child, path ? `${path}.${key}` : key, out);
@@ -40,13 +41,32 @@ function collect(node: unknown, path: string, out: Record<string, unknown>): voi
  * error was cleared, record nothing. React Hook Form keeps the error of a field array itself at
  * `<array>.root`, so a `root` below an array in `values` is that array's own error.
  */
-export function fromFieldErrors(errors: FieldErrors, values: unknown): Record<string, unknown> {
-	const nested: Record<string, unknown> = {};
+export function fromFieldErrors(errors: FieldErrors, values: unknown): Record<string, FormFieldError> {
+	const nested: Record<string, FormFieldError> = {};
 	collect(errors, '', nested);
-	const flat: Record<string, unknown> = {};
+	const flat: Record<string, FormFieldError> = {};
 	for (const [path, error] of Object.entries(nested)) {
 		const parent = path.endsWith('.root') ? path.slice(0, -'.root'.length) : undefined;
 		flat[parent !== undefined && Array.isArray(getValueAtPath(values, parent)) ? parent : path] = error;
 	}
 	return flat;
+}
+
+/**
+ * Converts the nested `touchedFields` React Hook Form holds to the engine's flat touched map.
+ *
+ * @remarks Array holes, which React Hook Form leaves for rows that were never touched, record nothing.
+ */
+export function fromTouchedFields(
+	touched: unknown,
+	path = '',
+	out: Record<string, boolean> = {},
+): Record<string, boolean> {
+	if (touched === true) {
+		if (path) out[path] = true;
+	} else if (typeof touched === 'object' && touched !== null) {
+		for (const [key, child] of Object.entries(touched))
+			fromTouchedFields(child, path ? `${path}.${key}` : key, out);
+	}
+	return out;
 }

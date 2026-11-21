@@ -308,6 +308,18 @@ describe('validateFormValues', () => {
 		});
 	});
 
+	test('validates nothing for an empty list of names and everything when names are omitted', async () => {
+		const field = normalizeElement({
+			$type: 'input',
+			name: 'email',
+			rules: [{ type: 'required', message: 'Email is required' }],
+		});
+		const input = { elements: [field], values: {}, registry, debounceScope: createDebounceScope() };
+
+		expect(await validateFormValues({ ...input, names: [] })).toEqual({});
+		expect(Object.keys(await validateFormValues(input))).toEqual(['email']);
+	});
+
 	test('reports a container and a row inside it that both fail, and matches names exactly on request', async () => {
 		const contacts = normalizeContainerFixture({
 			$type: 'arrayElements',

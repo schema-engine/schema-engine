@@ -1,6 +1,6 @@
 import type { FieldErrors } from 'react-hook-form';
 import { describe, expect, test } from 'vitest';
-import { fromFieldErrors, toFieldErrors } from '@/lib/field-errors';
+import { fromFieldErrors, fromTouchedFields, toFieldErrors } from '@/lib/field-errors';
 
 /** Hand-written nested errors, which React Hook Form's own types cannot express for a field named `ref`. */
 const nested = (value: unknown): FieldErrors => value as FieldErrors;
@@ -47,5 +47,15 @@ describe('field errors at the React Hook Form boundary', () => {
 			contacts: expect.objectContaining({ message: 'Add two contacts' }),
 			'contacts.0.email': expect.objectContaining({ message: 'Email is required' }),
 		});
+	});
+
+	test('flattens touched fields to paths and skips the holes of untouched rows', () => {
+		expect(
+			fromTouchedFields({
+				name: true,
+				address: { street: true, zip: false },
+				contacts: [undefined, { email: true }],
+			}),
+		).toEqual({ name: true, 'address.street': true, 'contacts.1.email': true });
 	});
 });

@@ -180,8 +180,7 @@ does not fail the submission. Each returned result carries the `actionId` of the
 configured action that produced it.
 `buildFormActionContext` is an exported utility that constructs a form action
 context with form data and timing metadata, including a stable step start time that resets
-when the active step changes. Its form state takes `errors` by dotted path and `touched` nested like the
-values, so a handler reads `context.errors['address.street']` in every renderer, and
+when the active step changes. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
 The form state no longer accepts `touchedFields` or `isSubmitted`: pass `touched` and
 `submitCount`, both required; the context's `isValid` is derived from `errors` (see [action context form state](src/engine/README.md#action-context-form-state)).

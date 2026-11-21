@@ -1,6 +1,12 @@
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
 
+/** The error a field reports, as an action sees it. */
+export interface FormFieldError {
+	readonly type?: string;
+	readonly message?: string;
+}
+
 /**
  * Base action context for the builder pattern.
  *
@@ -25,8 +31,8 @@ export interface BuilderActionBaseContext {
 	 * Call `form.checkValidity()` to validate the current values.
 	 */
 	isValid: boolean;
-	/** Validation errors by field name */
-	errors: Record<string, unknown>;
+	/** Validation errors by dotted field path; `''` is the form itself. */
+	errors: Readonly<Record<string, FormFieldError>>;
 	/** Form metadata and timing information */
 	metadata: {
 		/** Timestamp when current step started */

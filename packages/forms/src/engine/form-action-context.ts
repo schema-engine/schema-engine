@@ -1,4 +1,4 @@
-import type { BuilderActionBaseContext } from '@/types';
+import type { BuilderActionBaseContext, FormFieldError } from '@/types';
 import { createDebounceScope } from '../lib/debounce';
 import { flattenStepElements } from '../lib/field-scope';
 import type { ValidationRegistry } from '../schemas/validation/validation-registry';
@@ -10,8 +10,8 @@ import { validateFormValues } from './value-validation';
  * @remarks
  * `errors` is flat, one entry per dotted field path, so `address.street` is read as
  * `errors['address.street']` in every renderer and a container and a row inside it
- * can both fail. `touched` is nested like the form values. A renderer that keeps
- * errors in another shape converts them before building the context.
+ * can both fail, and `touched` is flat the same way. A renderer that keeps them in another shape
+ * converts them before building the context.
  *
  * There is no `isValid` here: the context's `isValid` is true when `errors` records
  * no error, in every renderer. It says nothing about fields no validation has
@@ -19,9 +19,9 @@ import { validateFormValues } from './value-validation';
  */
 export interface FormActionContextFormState {
 	/** Errors by dotted field path, as `validateFormValues` returns them. */
-	errors: Record<string, unknown>;
-	/** Nested touched state with `true` at each touched field. */
-	touched: Record<string, unknown>;
+	errors: Readonly<Record<string, FormFieldError>>;
+	/** Touched fields by dotted path, `true` at each field the user has touched. */
+	touched: Readonly<Partial<Record<string, boolean>>>;
 	submitCount: number;
 }
 
@@ -42,11 +42,8 @@ interface BuildFormActionContextOptions<TForm extends BuilderActionBaseContext['
 
 const stepTimings = new WeakMap<object, StepTiming>();
 
-function countTouched(touched: unknown): number {
-	if (touched === true) return 1;
-	if (typeof touched !== 'object' || touched === null) return 0;
-	return Object.values(touched).reduce<number>((count, child) => count + countTouched(child), 0);
-}
+const countTouched = (touched: Readonly<Partial<Record<string, boolean>>>): number =>
+	Object.values(touched).filter((isTouched) => isTouched === true).length;
 
 function getStepStartTime(form: object, currentStep: number, mountedAt: number, now: number): number {
 	const timing = stepTimings.get(form);

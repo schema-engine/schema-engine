@@ -37,13 +37,18 @@ describe('buildFormActionContext', () => {
 		expect(nextStep.metadata).toEqual({ stepStartTime: 1_050, totalFormTime: 150, userInteractions: 3 });
 	});
 
-	test('counts each touched nested field and array row field as one interaction', () => {
+	test('counts each touched field by path as one interaction', () => {
 		const context = buildFormActionContext({
 			config: { id: 'contact', steps: [{}] },
 			values: {},
 			formState: {
 				errors: {},
-				touched: { address: { street: true, city: true, zip: false }, contacts: [{ email: true }, undefined] },
+				touched: {
+					'address.street': true,
+					'address.city': true,
+					'address.zip': false,
+					'contacts.0.email': true,
+				},
 				submitCount: 1,
 			},
 			currentStep: 0,

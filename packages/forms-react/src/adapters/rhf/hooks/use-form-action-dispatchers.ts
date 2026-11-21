@@ -1,4 +1,4 @@
-import { fromFieldErrors } from '@/lib/field-errors';
+import { fromFieldErrors, fromTouchedFields } from '@/lib/field-errors';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 import type { UseFormReturn } from 'react-hook-form';
@@ -93,7 +93,11 @@ export function useFormActionDispatchers({
 		return buildFormActionContext({
 			config,
 			values: form.getValues(),
-			formState: { errors: fromFieldErrors(errors, form.getValues()), touched: touchedFields, submitCount },
+			formState: {
+				errors: fromFieldErrors(errors, form.getValues()),
+				touched: fromTouchedFields(touchedFields),
+				submitCount,
+			},
 			currentStep: getCurrentStep?.() ?? 0,
 			mountedAt: formMountTime,
 			form: formAdapter,

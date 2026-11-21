@@ -52,7 +52,7 @@ export interface ValidateFormValuesInput {
 	/**
 	 * Limits validation to these paths, and to the paths below them unless `exactNames` is set.
 	 *
-	 * @remarks An empty list validates every field.
+	 * @remarks Omitted, every field is validated; an empty list validates nothing, as `validate([])` of the form state container does.
 	 */
 	names?: readonly string[];
 	/** Match `names` as whole paths: a field below a named container is not validated. */
@@ -110,7 +110,7 @@ function expandArrayItemPaths(values: Record<string, unknown>, templatePath: str
 }
 
 function pathIsRequested(path: string, names?: readonly string[], exact = false): boolean {
-	if (!names?.length) {
+	if (!names) {
 		return true;
 	}
 
