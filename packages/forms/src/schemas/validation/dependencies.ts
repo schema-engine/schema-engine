@@ -59,8 +59,8 @@ function readsOf(references: readonly string[], fieldPath: string): DependencyRe
 	const reads = new Map<string, DependencyRead>();
 	for (const reference of references) {
 		const path = resolveFieldRef(reference, fieldPath);
-		const relative = !reference.includes('.') && (reads.get(path)?.relative ?? true);
-		reads.set(path, { path, relative });
+		const relative = !reference.includes('.');
+		reads.set(`${relative}:${path}`, { path, relative });
 	}
 	return [...reads.values()];
 }

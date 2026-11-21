@@ -88,6 +88,28 @@ describe('buildDependencyIndex', () => {
 		expect(index.readsOf('contacts.1.email')).toEqual([]);
 	});
 
+	test('keeps both readings when a sibling and an absolute reference name the same field', () => {
+		const rows = [
+			{
+				$type: 'arrayElements',
+				name: 'contacts',
+				elements: [
+					{ $type: 'input', name: 'email' },
+					{
+						$type: 'input',
+						name: 'confirm',
+						rules: [{ type: 'relate', fields: ['email', 'contacts.0.email'], assert: 'allEqual' }],
+					},
+				],
+			},
+		];
+		const index = buildDependencyIndex(rows, { contacts: [{}] }, registry);
+		expect(index.readsOf('contacts.0.confirm')).toEqual([
+			{ path: 'contacts.0.email', relative: true },
+			{ path: 'contacts.0.email', relative: false },
+		]);
+	});
+
 	test('reports no dependents for a field nothing reads', () => {
 		const index = buildDependencyIndex(passwordForm, {}, registry);
 

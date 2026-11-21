@@ -562,17 +562,23 @@ describe('createFormStore', () => {
 		const manualRule = () => {
 			const calls: Array<{ resolve: (valid: boolean) => void }> = [];
 			let manual = true;
+			const readsOf = (rule: { reads?: string | string[] }): string[] => [rule.reads ?? []].flat();
 			const manualRegistry = createDefaultValidationRegistry([
 				{
 					$type: 'manual',
 					schema: z.object({ type: z.literal('manual') }),
 					metadata: { name: 'Manual' },
 					category: 'cross-field',
-					dependsOn: (rule: { reads?: string }) => (rule.reads ? [rule.reads] : []),
-					handler: (rule: { reads?: string }, context: { resolve: (reference: string) => unknown }) =>
+					dependsOn: readsOf,
+					handler: (
+						rule: { reads?: string | string[] },
+						context: { resolve: (reference: string) => unknown },
+					) =>
 						z.any().check(
 							z.refine((value: unknown) => {
-								const valid = rule.reads === undefined || value === context.resolve(rule.reads);
+								const reads = readsOf(rule);
+								const valid =
+									reads.length === 0 || reads.some((read) => value === context.resolve(read));
 								return manual
 									? new Promise<boolean>((resolve) => calls.push({ resolve }))
 									: Promise.resolve(valid);
@@ -643,6 +649,41 @@ describe('createFormStore', () => {
 			store.setValue('contacts.0.confirm', 'b');
 			await vi.waitFor(() => expect(rule.calls).toHaveLength(1));
 			store.fieldArray('contacts').swap(0, 1);
+			rule.auto();
+			rule.calls[0].resolve(false);
+			for (const call of rule.calls.slice(1)) call.resolve(true);
+			await vi.waitFor(() => expect(store.getSnapshot().isValidating).toBe(false));
+			expect(store.getSnapshot().errors['contacts.1.confirm']).toBeUndefined();
+		});
+
+		test('a sibling read is still watched when an absolute reference names the same field', async () => {
+			const rule = manualRule();
+			const store = createFormStore({
+				registry: rule.registry,
+				validationMode: 'onChange',
+				elements: [
+					element(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [
+								{ $type: 'input', name: 'email' },
+								{
+									$type: 'input',
+									name: 'confirm',
+									rules: [{ type: 'manual', reads: ['email', 'contacts.0.email'] }],
+								},
+							],
+						},
+						'array',
+					),
+				],
+				defaultValues: { contacts: [{ email: 'a', confirm: 'a' }, { email: 'a' }] },
+			});
+			store.setValue('contacts.0.confirm', 'b');
+			await vi.waitFor(() => expect(rule.calls).toHaveLength(1));
+			store.fieldArray('contacts').swap(0, 1);
+			store.setValue('contacts.1.email', 'b');
 			rule.auto();
 			rule.calls[0].resolve(false);
 			for (const call of rule.calls.slice(1)) call.resolve(true);
