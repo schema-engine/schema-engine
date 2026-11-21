@@ -66,12 +66,12 @@ const isRow = (index: number, length: number): boolean => Number.isInteger(index
 const asRows = (value: unknown): unknown[] => (Array.isArray(value) ? value : [value]);
 
 /**
- * Creates the engine's reference {@link FormStore}: dependency-free, with no framework in sight.
+ * Creates the engine's reference {@link FormStore}: dependency-free, with no framework.
  *
  * @remarks
  * Values live in null-prototype maps and come out of the snapshot as frozen plain records; both views
  * share structure, so a branch no command touched keeps its reference. Validation goes through
- * `validateFormValues` with one debounce scope for the form's lifetime. A silent
+ * `validateFormValues` with one debounce scope for recorded validation. A silent
  * {@link FormStore.checkValidity} gets a scope of its own, so it never replaces a debounced call of
  * the validation that writes errors.
  */
@@ -81,7 +81,12 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 	const silentDebounceScope = createDebounceScope();
 	const listeners = new Set<() => void>();
 	let rowCounter = 0;
-	const mintId = (): string => `row-${++rowCounter}`;
+	const adoptedIds = new Set<string>();
+	const mintId = (): string => {
+		let id = `row-${++rowCounter}`;
+		while (adoptedIds.has(id)) id = `row-${++rowCounter}`;
+		return id;
+	};
 
 	const initialDefaults = toInternal(options.defaultValues ?? {}) as NullMap;
 	let state: State = {
@@ -245,6 +250,13 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			);
 	}
 
+	/**
+	 * Validates what a change calls for, without waiting for it.
+	 *
+	 * @remarks
+	 * A rejection is dropped: `validateFormValues` turns a failing rule into an error message, so what
+	 * can still reject is a bug in the validation itself, and the next explicit `validate` surfaces it.
+	 */
 	function afterChange(previousValues: NullMap, changedPath: string | undefined): void {
 		const names = new Set(dependentsOfChange(previousValues));
 		if (changedPath !== undefined && validatesOn('change', changedPath)) names.add(changedPath);
@@ -266,17 +278,16 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 	}
 
 	function setValue(path: string, value: unknown): void {
-		const key = path;
 		const previousValues = state.values;
-		const branch = reconcile(readAt(previousValues, key), toInternal(value));
-		const values = setIn(previousValues, key, branch);
+		const branch = reconcile(readAt(previousValues, path), toInternal(value));
+		const values = setIn(previousValues, path, branch);
 		if (values === previousValues) return;
 		commit({
 			values,
-			rowIds: syncRowIds(state.rowIds, key, readAt(values, key), mintId),
-			sources: key ? dropStaleErrors(state.sources, key) : new Map(),
+			rowIds: syncRowIds(state.rowIds, path, readAt(values, path), mintId),
+			sources: path ? dropStaleErrors(state.sources, path) : new Map(),
 		});
-		afterChange(previousValues, key);
+		afterChange(previousValues, path);
 	}
 
 	function rowsAt(path: string): RowEntry[] {
@@ -293,15 +304,19 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		rows.forEach((row, index) => {
 			if (row.from !== undefined) target.set(row.from, index);
 		});
-		const mapping = (oldIndex: number): number | undefined => target.get(oldIndex);
 		const values = setIn(
 			previousValues,
 			path,
-			rows.map((row) => row.value),
+			reconcile(
+				readAt(previousValues, path),
+				rows.map((row) => row.value),
+			),
 		);
-		const moved = new Set(rows.flatMap((row) => (row.from === undefined ? [] : [row.from])));
-		const lost = (oldIndex: number): number | undefined => (moved.has(oldIndex) ? mapping(oldIndex) : undefined);
-		const remap = <T>(map: NullMap<T>): NullMap<T> => remapRows(map, path, lost);
+		const remap = <T>(map: NullMap<T>): NullMap<T> => remapRows(map, path, (oldIndex) => target.get(oldIndex));
+		const nextIds = Object.freeze(rows.map((row) => row.id));
+		const previousIds = state.rowIds[path] ?? [];
+		const idsChanged =
+			nextIds.length !== previousIds.length || nextIds.some((id, index) => id !== previousIds[index]);
 		const sources = new Map<FormErrorSource, ErrorMap>();
 		for (const [source, errors] of state.sources) sources.set(source, remap(errors));
 		const rowIds = remap(state.rowIds) as NullMap<readonly string[]>;
@@ -311,12 +326,12 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			sources,
 			touched: remap(state.touched),
 			rowIds: syncRowIds(
-				{ ...rowIds, [path]: rows.map((row) => row.id) } as NullMap<readonly string[]>,
+				{ ...rowIds, [path]: nextIds } as NullMap<readonly string[]>,
 				path,
 				readAt(values, path),
 				mintId,
 			),
-			epoch: state.epoch + 1,
+			epoch: values !== previousValues || idsChanged ? state.epoch + 1 : state.epoch,
 		});
 		afterChange(previousValues, undefined);
 	}
@@ -361,7 +376,7 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 			replace: (values) => commitRows(path, values.map(fresh)),
 			remove: (index) => {
 				const rows = rowsAt(path);
-				if (index === undefined) return commitRows(path, []);
+				if (index === undefined) return rows.length > 0 ? commitRows(path, []) : undefined;
 				const removed = new Set((Array.isArray(index) ? index : [index]).filter((i) => isRow(i, rows.length)));
 				if (removed.size > 0)
 					commitRows(
@@ -426,8 +441,10 @@ export function createFormStore(options: FormStoreOptions): FormStore {
 		fieldArray,
 		adoptRowIds(path, ids) {
 			const current = state.rowIds[path];
-			if (!current || current.length !== ids.length) return;
-			commit({ rowIds: { ...state.rowIds, [path]: [...ids] } as NullMap<readonly string[]> });
+			if (!current || current.length !== ids.length || new Set(ids).size !== ids.length) return;
+			if (current.every((id, index) => id === ids[index])) return;
+			for (const id of ids) adoptedIds.add(id);
+			commit({ rowIds: { ...state.rowIds, [path]: Object.freeze([...ids]) } as NullMap<readonly string[]> });
 		},
 	};
 }

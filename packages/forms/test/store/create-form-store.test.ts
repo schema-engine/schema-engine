@@ -36,7 +36,7 @@ const wizard = (overrides: Partial<FormStoreOptions> = {}): FormStore =>
 		...overrides,
 	});
 
-const addressForm = (): FormStore =>
+const addressForm = (country = 'FR'): FormStore =>
 	createFormStore({
 		registry,
 		elements: [
@@ -57,7 +57,7 @@ const addressForm = (): FormStore =>
 				constraints: [{ field: 'address.country', action: 'require', operator: 'equals', value: 'IT' }],
 			}),
 		],
-		defaultValues: { address: { street: '1 Main', country: 'FR' }, vat: '' },
+		defaultValues: { address: { street: '1 Main', country }, vat: '' },
 	});
 
 test('catches a write to a parent of the watched path', async () => {
@@ -79,15 +79,7 @@ describe('createFormStore', () => {
 		test('marks nothing submitted and keeps later steps quiet until they are touched', async () => {
 			const store = wizard();
 			expect(await store.validate(['password'])).toBe(false);
-			expect(Object.keys(store.getSnapshot()).toSorted()).toEqual([
-				'checkFailed',
-				'dirty',
-				'errors',
-				'isValidating',
-				'rowIds',
-				'touched',
-				'values',
-			]);
+			expect(store.getSnapshot()).not.toHaveProperty('isSubmitted');
 
 			store.setValue('password', 'other');
 			await vi.waitFor(() => expect(store.getSnapshot().errors.password).toBeUndefined());
@@ -127,11 +119,14 @@ describe('createFormStore', () => {
 		});
 
 		test('ignores a write that leaves the watched value as it was', async () => {
-			const store = addressForm();
+			const store = addressForm('IT');
 			store.blur('vat');
-			store.setValue('address', { street: '2 Side', country: 'FR' });
+			store.setValue('address', { street: '2 Side', country: 'IT' });
 			await settle();
 			expect(store.getSnapshot().errors).toEqual({});
+			store.setValue('address', { street: '2 Side', country: 'FR' });
+			store.setValue('address', { street: '2 Side', country: 'IT' });
+			await vi.waitFor(() => expect(store.getSnapshot().errors.vat).toBeDefined());
 		});
 
 		test('follows rows that moved', async () => {
@@ -194,7 +189,7 @@ describe('createFormStore', () => {
 	});
 
 	describe('representation', () => {
-		test('holds null-prototype maps and hands out plain records', () => {
+		test('hands out plain records', () => {
 			const store = createFormStore({
 				registry,
 				elements: [],

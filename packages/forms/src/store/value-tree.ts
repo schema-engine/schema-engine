@@ -117,7 +117,8 @@ function assertWritable(segments: readonly string[]): void {
  *
  * @remarks
  * A missing or non-container parent becomes an array when the next segment is an index and a map
- * otherwise. Returns `root` itself when the value at `path` is already `value`.
+ * otherwise. Returns `root` itself when the value at `path` is already `value`. An empty `path` replaces the root,
+ * but only with a plain record; anything else leaves `root` as it is.
  */
 export function setIn(root: NullMap, path: string, value: unknown): NullMap {
 	if (!path) return isPlainObject(value) ? (value as NullMap) : root;

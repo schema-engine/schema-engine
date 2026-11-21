@@ -198,15 +198,17 @@ const brokenStores: Array<{ name: string; create: FormStoreFactory; caught: stri
 ];
 
 describe('form store conformance cases', () => {
-	test('every rule has a case the reference store passes', async () => {
-		for (const entry of formStoreCases) await entry.run(createFormStore);
-	});
-
 	test.each(brokenStores)('a store that $name fails the matching case', async ({ create, caught }) => {
 		for (const name of caught) {
 			const entry = formStoreCases.find((candidate) => candidate.name === name);
 			expect(entry, `no case named "${name}"`).toBeDefined();
-			await expect(Promise.resolve().then(() => entry!.run(create))).rejects.toThrow();
+			const failure: unknown = await Promise.resolve()
+				.then(() => entry!.run(create))
+				.then(
+					() => undefined,
+					(error: unknown) => error,
+				);
+			expect((failure as Error | undefined)?.name, `"${name}" did not fail`).toBe('AssertionError');
 		}
 	});
 

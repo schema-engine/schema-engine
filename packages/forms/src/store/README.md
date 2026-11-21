@@ -36,7 +36,7 @@ points each rule at a store written to break it.
 ## Reference store
 
 `createFormStore(options)` implements the contract with no framework. Validation goes through
-`validateFormValues` and one debounce scope; dependents of a changed value are found with
+`validateFormValues`, with one debounce scope for recorded validation and one for `checkValidity`; dependents of a changed value are found with
 `buildDependencyIndex` by comparing the values at every watched path, so a write to a parent such as
 `address` re-validates a rule that reads `address.country`. Values are null-prototype maps inside and
 frozen plain records in the snapshot. The dependency index is cached per store and rebuilt only when

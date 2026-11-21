@@ -70,8 +70,11 @@ export function syncRowIds(
 				previous.length === value.length
 					? previous
 					: previous.length > value.length
-						? previous.slice(0, value.length)
-						: [...previous, ...Array.from({ length: value.length - previous.length }, mintId)];
+						? Object.freeze(previous.slice(0, value.length))
+						: Object.freeze([
+								...previous,
+								...Array.from({ length: value.length - previous.length }, mintId),
+							]);
 			next[at] = ids;
 			value.forEach((item, index) => visit(item, join(at, String(index))));
 			return;
