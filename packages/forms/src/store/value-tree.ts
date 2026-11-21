@@ -1,5 +1,5 @@
 import { isPlainObject } from '@/lib/is-plain-object';
-import { RESERVED_PATH_KEYS } from '@/lib/path-values';
+import { assertWritablePathKey, isReservedPathKey } from '@/lib/reserved-path-keys';
 
 /** A map held by the store: null-prototype, replaced rather than mutated. */
 export type NullMap<T = unknown> = Record<string, T>;
@@ -29,7 +29,7 @@ export function toInternal(value: unknown): unknown {
 	if (isPlainObject(value)) {
 		const copy = createMap();
 		for (const [key, child] of Object.entries(value)) {
-			if (!RESERVED_PATH_KEYS.has(key)) copy[key] = toInternal(child);
+			if (!isReservedPathKey(key)) copy[key] = toInternal(child);
 		}
 		return copy;
 	}
@@ -107,12 +107,6 @@ export function reconcile(previous: unknown, next: unknown): unknown {
 	return next;
 }
 
-function assertWritable(segments: readonly string[]): void {
-	for (const segment of segments) {
-		if (RESERVED_PATH_KEYS.has(segment)) throw new Error(`Rejected path segment '${segment}'`);
-	}
-}
-
 /**
  * Writes `value` at `path` without mutating `root`: only the containers along the path are copied.
  *
@@ -124,7 +118,7 @@ function assertWritable(segments: readonly string[]): void {
 export function setIn(root: NullMap, path: string, value: unknown): NullMap {
 	if (!path) return isPlainObject(value) ? (value as NullMap) : root;
 	const segments = path.split('.');
-	assertWritable(segments);
+	segments.forEach(assertWritablePathKey);
 	const write = (node: unknown, depth: number): unknown => {
 		const segment = segments[depth];
 		const isLast = depth === segments.length - 1;
