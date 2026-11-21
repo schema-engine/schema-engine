@@ -27,8 +27,7 @@ export function dirtyTree(value: unknown, defaultValue: unknown): Tree<true> {
 	if (!isStructural(value)) return { self: true };
 	if (Array.isArray(value)) {
 		const before = Array.isArray(defaultValue) && isStructural(defaultValue) ? defaultValue : undefined;
-		const own =
-			value.length !== (before?.length ?? 0) || (defaultValue !== undefined && !before) ? true : undefined;
+		const own = !before || value.length !== before.length ? true : undefined;
 		return nodeOf(own, rows(value.map((row, index) => dirtyTree(row, before?.[index]))));
 	}
 	const before = isStructural(defaultValue) && !Array.isArray(defaultValue) ? (defaultValue as NullMap) : undefined;

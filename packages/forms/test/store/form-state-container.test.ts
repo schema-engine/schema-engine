@@ -242,6 +242,13 @@ describe('createFormStateContainer', () => {
 			expect(Object.keys(store.getSnapshot().values.profile as object)).toEqual(['replacement']);
 		});
 
+		test('an empty array written where the defaults have nothing is dirty', () => {
+			const store = createFormStateContainer({ registry, elements: [] });
+			store.setValue('tags', []);
+			expect(store.getSnapshot().dirty).toEqual({ tags: true });
+			expect(store.getFieldState('tags').isDirty).toBe(true);
+		});
+
 		test('dirty reaches the fields below a container the defaults lack', () => {
 			const store = createFormStateContainer({ registry, elements: [] });
 			store.setValue('address.street', 'Main');
