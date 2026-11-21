@@ -17,6 +17,8 @@ import {
 	type ArrayElementsProps,
 } from '@/components/schema-engine/forms/inputs/form-array-elements.types';
 import { FormArrayElements } from '@/components/schema-engine/forms/inputs/form-array-elements';
+import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
+import { CheckboxGroupElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox-group.registration';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
@@ -47,6 +49,8 @@ rendererConformance(async ({ config, ...props }) => {
 		elements: [
 			{ ...InputElementRegistration, appearanceAxes: conformanceInputAxes },
 			ArrayElementRegistration,
+			CheckboxElementRegistration,
+			CheckboxGroupElementRegistration,
 			CustomArrayRegistration,
 			FieldSetRegistration,
 			SubmitButtonElementRegistration,

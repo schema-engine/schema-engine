@@ -36,32 +36,22 @@ describe('createChangeDetector', () => {
 		expect(changed({ name: 'Bob', tags: ['a', 'b'], address: { city: 'Oslo' } })).toBe(true);
 	});
 
-	test('does not report an equal snapshot built from new objects', () => {
+	test('compares dates by time and arrays by order', () => {
 		const changed = createChangeDetector();
-		changed({ tags: ['a'], when: new Date(0) });
+		changed({ when: new Date(0), tags: ['a', 'b'] });
 
-		expect(changed({ tags: ['a'], when: new Date(0) })).toBe(false);
+		expect(changed({ when: new Date(0), tags: ['a', 'b'] })).toBe(false);
+		expect(changed({ when: new Date(1), tags: ['a', 'b'] })).toBe(true);
+		expect(changed({ when: new Date(1), tags: ['b', 'a'] })).toBe(true);
 	});
 
-	test('reports a differing date, a reordered array, a null and a key added inside a record', () => {
+	test('reports a key added to or removed from a record, and a value that becomes empty', () => {
 		const changed = createChangeDetector();
-		changed({ when: new Date(0), tags: ['a', 'b'], note: '', address: { city: 'Rome' } });
+		changed({ name: 'Ada', address: { city: 'Rome' } });
 
-		expect(changed({ when: new Date(1), tags: ['a', 'b'], note: '', address: { city: 'Rome' } })).toBe(true);
-		expect(changed({ when: new Date(1), tags: ['b', 'a'], note: '', address: { city: 'Rome' } })).toBe(true);
-		expect(changed({ when: new Date(1), tags: ['b', 'a'], note: null, address: { city: 'Rome' } })).toBe(true);
-		expect(changed({ when: new Date(1), tags: ['b', 'a'], note: null, address: { city: 'Rome', zip: '1' } })).toBe(
-			true,
-		);
-	});
-
-	test('treats an absent value and an empty string as equal, but not a cleared value', () => {
-		const changed = createChangeDetector();
-		changed({ name: '' });
-
-		expect(changed({})).toBe(false);
-		expect(changed({ name: '' })).toBe(false);
-		expect(changed({ name: 'Ada' })).toBe(true);
-		expect(changed({ name: '' })).toBe(true);
+		expect(changed({ name: 'Ada', address: { city: 'Rome', zip: '1' } })).toBe(true);
+		expect(changed({ name: 'Ada', address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ name: '', address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ address: { city: 'Rome' } })).toBe(true);
 	});
 });

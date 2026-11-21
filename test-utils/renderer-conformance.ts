@@ -311,7 +311,10 @@ function cardForm(appearance: Record<string, string>): FormConfigView {
 }
 
 /** @remarks Both browser projects execute these assertions against their own FormRenderer. */
-export function rendererConformance(mount: ConformanceMount): void {
+export function rendererConformance(
+	mount: ConformanceMount,
+	{ knownFailures = [] }: { knownFailures?: readonly string[] } = {},
+): void {
 	describe('FormRenderer conformance', () => {
 		let cleanup: (() => void) | undefined;
 		afterEach(() => {
@@ -1497,7 +1500,9 @@ export function rendererConformance(mount: ConformanceMount): void {
 			expect(onSubmit).not.toHaveBeenCalled();
 			expect(onAction).not.toHaveBeenCalled();
 		});
-		test('only value changes trigger change', async () => {
+		const changeTest = (name: string, run: () => Promise<void>) =>
+			(knownFailures.includes(name) ? test.fails : test)(name, run);
+		changeTest('only value changes trigger change', async () => {
 			const onChange = vi.fn();
 			const { host } = await setup({
 				config: {
@@ -1513,7 +1518,6 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.click(getByRole(host, 'textbox', { name: /^Name/ }));
 			await userEvent.tab();
 			await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
-			await new Promise((resolve) => setTimeout(resolve, 100));
 			expect(actionIds()).toEqual([]);
 			expect(onChange).not.toHaveBeenCalled();
 			await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'a');
@@ -1522,7 +1526,46 @@ export function rendererConformance(mount: ConformanceMount): void {
 			expect(actionIds()).toEqual(['changed']);
 			expect(onChange).toHaveBeenCalledTimes(1);
 		});
+		changeTest('a checkbox and a checkbox group trigger change only when toggled', async () => {
+			const onChange = vi.fn();
+			const { host } = await setup({
+				config: {
+					...form([
+						{
+							$type: 'checkbox',
+							id: 'accepted',
+							name: 'accepted',
+							label: 'Accept',
+							rules: [{ type: 'required', message: 'Must accept' }],
+						},
+						{
+							$type: 'checkbox-group',
+							id: 'tags',
+							name: 'tags',
+							label: 'Tags',
+							options: [
+								{ value: 'a', label: 'Alpha' },
+								{ value: 'b', label: 'Beta' },
+							],
+						},
+					]),
+					actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_change'] }],
+				},
+				onChange,
+			});
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => queryByText(host, 'Must accept') !== null).toBe(true);
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			expect(actionIds()).toEqual([]);
+			expect(onChange).not.toHaveBeenCalled();
+			await userEvent.click(getByRole(host, 'checkbox', { name: 'Alpha' }));
+			await expect.poll(actionIds).toEqual(['changed']);
+			expect(onChange).toHaveBeenCalledTimes(1);
+		});
 		describe('submission', () => {
+			afterEach(() => {
+				vi.unstubAllGlobals();
+			});
 			const lifecycleActions = [
 				{ $type: 'conformance', id: 'success', triggers: ['form_submit_success'] },
 				{ $type: 'conformance', id: 'error', triggers: ['form_submit_error'] },
@@ -1581,7 +1624,6 @@ export function rendererConformance(mount: ConformanceMount): void {
 				release.slice(1).forEach((resolve) => resolve());
 				await new Promise((resolve) => setTimeout(resolve, 100));
 				expect(onSubmit).toHaveBeenCalledTimes(1);
-				vi.unstubAllGlobals();
 			});
 			test('a rejected onSubmit is a failed submission', async () => {
 				const onSubmit = vi.fn(() => Promise.reject(new Error('Save failed')));

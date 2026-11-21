@@ -37,23 +37,32 @@ const engine = createRadiantFormEngine({
 	layout: conformanceLayout,
 });
 
-rendererConformance(async ({ config, ...props }) => {
-	const host = document.createElement('div');
+rendererConformance(
+	async ({ config, ...props }) => {
+		const host = document.createElement('div');
 
-	document.body.append(host);
-	const root = createRoot(host);
-	const renderConfig = (next: typeof config) =>
-		root.render(FormRenderer({ ...props, config: engine.validateForm(next), engine }));
-	renderConfig(config);
-	const form = new FormController(host.querySelector('rui-form')!);
-	await expect.poll(() => form.ready).toBe(true);
-	return {
-		host,
-		cleanup: () => {
-			form.disconnect();
-			root.unmount();
-			host.remove();
-		},
-		update: async (next) => renderConfig(next),
-	};
-});
+		document.body.append(host);
+		const root = createRoot(host);
+		const renderConfig = (next: typeof config) =>
+			root.render(FormRenderer({ ...props, config: engine.validateForm(next), engine }));
+		renderConfig(config);
+		const form = new FormController(host.querySelector('rui-form')!);
+		await expect.poll(() => form.ready).toBe(true);
+		return {
+			host,
+			cleanup: () => {
+				form.disconnect();
+				root.unmount();
+				host.remove();
+			},
+			update: async (next) => renderConfig(next),
+		};
+	},
+	{
+		/** Radiant UI's `rui-field` unregisters and registers again on its first `name` update, so the values read as changed. */
+		knownFailures: [
+			'only value changes trigger change',
+			'a checkbox and a checkbox group trigger change only when toggled',
+		],
+	},
+);

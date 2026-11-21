@@ -56,21 +56,16 @@ function isRemovedArrayField(values: Record<string, unknown>, name: string): boo
 	return false;
 }
 
-const isBlank = (value: unknown): boolean => value === undefined || value === '';
-
-/**
- * @remarks
- * An absent value and an empty string are equal: Radiant UI reports a field that re-registers while
- * an error appears or clears as `undefined` and then `''` again, which no one edited.
- */
-function valuesEqual(a: unknown, b: unknown): boolean {
-	if (Object.is(a, b) || (isBlank(a) && isBlank(b))) return true;
-	if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
-	if (Array.isArray(a) && Array.isArray(b)) {
-		return a.length === b.length && a.every((item, index) => valuesEqual(item, b[index]));
+function valuesEqual(previous: unknown, next: unknown): boolean {
+	if (Object.is(previous, next)) return true;
+	if (previous instanceof Date && next instanceof Date) return previous.getTime() === next.getTime();
+	if (Array.isArray(previous) && Array.isArray(next)) {
+		return previous.length === next.length && previous.every((item, index) => valuesEqual(item, next[index]));
 	}
-	if (isPlainRecord(a) && isPlainRecord(b)) {
-		return [...new Set([...Object.keys(a), ...Object.keys(b)])].every((key) => valuesEqual(a[key], b[key]));
+	if (isPlainRecord(previous) && isPlainRecord(next)) {
+		return [...new Set([...Object.keys(previous), ...Object.keys(next)])].every((key) =>
+			valuesEqual(previous[key], next[key]),
+		);
 	}
 	return false;
 }
