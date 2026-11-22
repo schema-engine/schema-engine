@@ -601,9 +601,7 @@ Recipe metadata has no `deprecated` property.
 React uses the engine's validation, step state, submission triggers and action
 context builder; see the [React renderer contract](../forms-react/README.md#validation-navigation-and-action-contexts).
 Action context `form` objects must implement `reset`, `setValue`, `getValue`, `validate`
-and `checkValidity`, including for custom renderer integrations. `checkFormValidity`
-validates values against every step's fields under a debounce scope of its own, so a
-renderer can answer `checkValidity` without recording errors.
+and `checkValidity`, including for custom renderer integrations.
 
 The validation dependency index also tracks `require` constraints, so renderers
 can clear conditional required errors when a controlling value changes.

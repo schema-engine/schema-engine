@@ -74,7 +74,7 @@ adds a hidden input to a native post. `extend` inherits both. See [CSRF](../csrf
 The form state carries `isValid`, the container's `snapshot.isValid`: true when no error is recorded for a
 path that takes part, in every renderer, and the context passes it on as it is. A renderer without a container
 derives it from the errors it has. `form.checkValidity()` validates the current values without
-recording errors (`checkFormValidity`). It skips fields a `show` or `hide` constraint hides, and
+recording errors. It skips fields a `show` or `hide` constraint hides, and
 the fields inside a hidden container; a disabled field is still checked, as in a submission.
 
 `submitCount` is the number of submit attempts since the form was last reset,

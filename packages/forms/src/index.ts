@@ -22,7 +22,6 @@ export {
 	runSubmissionLifecycle,
 	createSubmissionGuard,
 	buildFormActionContext,
-	checkFormValidity,
 	collectStepActions,
 	hasConfiguredActions,
 } from './engine';
