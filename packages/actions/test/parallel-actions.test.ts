@@ -164,3 +164,50 @@ test('preserves a thrown error for the caller', async () => {
 	expect(results[0]).toMatchObject({ actionId: 'save', success: false, error: 'Network failed', cause: failure });
 	expect(results[0].cause).toBe(failure);
 });
+
+describe('an outer signal', () => {
+	test('is chained into the signal each action receives, and stops the sequence once aborted', async () => {
+		const outer = new AbortController();
+		const release = deferred<void>();
+		const started: string[] = [];
+		const seen: AbortSignal[] = [];
+		const dispatcher = setup(async (config, signal) => {
+			started.push(config.id);
+			seen.push(signal);
+			await release.promise;
+			return { success: true };
+		});
+		const running = dispatcher.dispatch({
+			actions: [action('a', 'wait'), action('b', 'wait')],
+			trigger: 'submit',
+			context: {},
+			signal: outer.signal,
+		});
+		await Promise.resolve();
+		outer.abort();
+		release.resolve();
+		const results = await running;
+		expect(seen[0]?.aborted).toBe(true);
+		expect(started).toEqual(['a']);
+		expect(results.map(({ actionId }) => actionId)).toEqual(['a']);
+	});
+
+	test('runs nothing when it is aborted before the dispatch', async () => {
+		const outer = new AbortController();
+		outer.abort();
+		const started: string[] = [];
+		const dispatcher = setup(async (config) => {
+			started.push(config.id);
+			return { success: true };
+		});
+		expect(
+			await dispatcher.dispatch({
+				actions: [action('a', 'wait')],
+				trigger: 'submit',
+				context: {},
+				signal: outer.signal,
+			}),
+		).toEqual([]);
+		expect(started).toEqual([]);
+	});
+});
