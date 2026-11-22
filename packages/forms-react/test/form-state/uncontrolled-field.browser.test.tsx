@@ -207,6 +207,84 @@ describe('an uncontrolled field', () => {
 		expect(container.getSnapshot().values.rows).toEqual(['two', 'one!']);
 	});
 
+	test('a control that replaces another of the same field takes the container value, not the one React rendered first', async () => {
+		function Swappable({ tag }: { tag: 'input' | 'textarea' }) {
+			const { defaultValue, fieldProps } = useFormField(config('note'));
+			const text = fieldText(defaultValue);
+			return tag === 'input' ? (
+				<input key="input" aria-label="note" defaultValue={text} {...fieldProps} />
+			) : (
+				<textarea key="textarea" aria-label="note" defaultValue={text} {...fieldProps} />
+			);
+		}
+		const { container, rerender } = mount(
+			<Swappable tag="input" />,
+			{ note: 'server' },
+			{ elements: declared('note') },
+		);
+		await userEvent.type(screen.getByRole('textbox', { name: 'note' }), ' edited');
+
+		rerender(
+			<ContainerHarness container={container}>
+				<Swappable tag="textarea" />
+			</ContainerHarness>,
+		);
+
+		expect(screen.getByRole('textbox', { name: 'note' }).tagName).toBe('TEXTAREA');
+		expect(screen.getByRole('textbox', { name: 'note' })).toHaveValue('server edited');
+		expect(valueOf(container, 'note')).toBe('server edited');
+	});
+
+	test('removing the first row keeps the text of the rows after it with their rows', async () => {
+		const handle: { remove?: () => void } = {};
+		function Rows() {
+			const array = useFieldArray('rows');
+			useEffect(() => {
+				handle.remove = () => array.remove(0);
+			});
+			return (
+				<>
+					{array.fields.map((field, index) => (
+						<TextField key={field.id} name={`rows.${index}`} />
+					))}
+				</>
+			);
+		}
+		const { container } = mount(<Rows />, { rows: ['one', 'two', 'three'] }, { elements: declared('rows') });
+		await userEvent.type(screen.getByRole('textbox', { name: 'rows.1' }), '!');
+
+		act(() => handle.remove?.());
+
+		expect(screen.getAllByRole('textbox').map((input) => (input as HTMLInputElement).value)).toEqual([
+			'two!',
+			'three',
+		]);
+		expect(container.getSnapshot().values.rows).toEqual(['two!', 'three']);
+	});
+
+	test('a textarea and a multiple select report what the user does', async () => {
+		function Mixed() {
+			const note = useFormField(config('note'));
+			const colors = useFormField(config('colors'));
+			return (
+				<>
+					<textarea aria-label="note" defaultValue={fieldText(note.defaultValue)} {...note.fieldProps} />
+					<select multiple aria-label="colors" {...colors.fieldProps}>
+						<option value="red">red</option>
+						<option value="green">green</option>
+					</select>
+				</>
+			);
+		}
+		const { container } = mount(<Mixed />, { note: '', colors: [] }, { elements: declared('note', 'colors') });
+
+		await userEvent.type(screen.getByRole('textbox', { name: 'note' }), 'hi');
+		await userEvent.selectOptions(screen.getByRole('listbox', { name: 'colors' }), ['green']);
+
+		expect(valueOf(container, 'note')).toBe('hi');
+		expect(valueOf(container, 'colors')).toEqual(['green']);
+	});
+
 	test('attaching twice under Strict Mode is harmless', async () => {
 		const { container } = mount(
 			<StrictMode>

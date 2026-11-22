@@ -142,12 +142,19 @@ function TextField({ config }: { config: InputFieldConfig }) {
 }
 ```
 
-A checkbox takes `defaultChecked={Boolean(defaultValue)}` (a checkbox with a `value` attribute reads and writes membership in an array), a radio group takes `defaultChecked={defaultValue === option}` on each radio, and a `select multiple` reads its selected options; every control of a group shares `fieldProps`.
+A checkbox takes `defaultChecked={Boolean(defaultValue)}` (a checkbox with a `value` attribute reads and writes membership in an array), a radio group takes `defaultChecked={defaultValue === option}` on each radio, and a `select multiple` reads its selected options; every control of a group shares `fieldProps`, so give each its own `id` after the spread.
 
 ```tsx
 {
 	options.map((option) => (
-		<input key={option} type="radio" value={option} defaultChecked={defaultValue === option} {...fieldProps} />
+		<input
+			key={option}
+			type="radio"
+			value={option}
+			defaultChecked={defaultValue === option}
+			{...fieldProps}
+			id={`${config.id}-${option}`}
+		/>
 	));
 }
 ```

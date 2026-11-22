@@ -18,8 +18,8 @@ describe('the field registry', () => {
 		const registry = registryOf();
 		const first = control();
 		const second = control();
-		registry.register('other', second, 'uncontrolled');
-		registry.register('contacts.0.email', first, 'uncontrolled');
+		registry.register('other', second, { mode: 'controlled' });
+		registry.register('contacts.0.email', first, { mode: 'controlled' });
 
 		registry.focusFirst(['other', 'contacts']);
 
@@ -30,8 +30,8 @@ describe('the field registry', () => {
 		const registry = registryOf();
 		const earlier = control();
 		const later = control();
-		registry.register('name', earlier, 'uncontrolled');
-		const release = registry.register('name', later, 'uncontrolled');
+		registry.register('name', earlier, { mode: 'controlled' });
+		const release = registry.register('name', later, { mode: 'controlled' });
 
 		release();
 		registry.focus('name');

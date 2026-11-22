@@ -77,7 +77,7 @@ function TextField({ config }: { config: InputFieldConfig }) {
 ```
 
 A checkbox takes `defaultChecked`, and a radio group takes `defaultChecked={defaultValue === option}`
-on each radio, all sharing `fieldProps`:
+on each radio, all sharing `fieldProps` (give each radio its own `id` after the spread):
 
 ```tsx
 function CheckboxField({ config }: { config: CheckboxFieldConfig }) {
@@ -88,7 +88,14 @@ function CheckboxField({ config }: { config: CheckboxFieldConfig }) {
 function RadioField({ config }: { config: RadioFieldConfig }) {
 	const { defaultValue, fieldProps } = useFormField(config);
 	return config.options.map(({ value }) => (
-		<input key={value} type="radio" value={value} {...fieldProps} defaultChecked={defaultValue === value} />
+		<input
+			key={value}
+			type="radio"
+			value={value}
+			{...fieldProps}
+			id={`${config.id}-${value}`}
+			defaultChecked={defaultValue === value}
+		/>
 	));
 }
 ```
@@ -100,7 +107,7 @@ the checked radio, a `select multiple` from its selected options, a number input
 its files. When the container changes (a reset, `setValue` in code, a row update) the form
 writes the change back into the control, and only when the control differs, so the cursor,
 an IME composition and a number input that holds `1e` are left alone. Text typed before
-hydration is kept: the container takes it when the control attaches.
+hydration is kept: when a control attaches showing something other than what React rendered, the container takes it.
 
 **Controlled** is for a component that takes only `value` and `onChange` props, such as
 a Radix or Base UI checkbox, select or slider, or a date picker. Pass `{ controlled: true }`:

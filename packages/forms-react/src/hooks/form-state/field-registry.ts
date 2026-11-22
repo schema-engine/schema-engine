@@ -11,10 +11,12 @@ import {
 } from './native-control';
 
 /**
- * Who owns the value of a control: the browser, which the registry reads and writes back, or a component
- * that renders it from the container's value.
+ * Who owns the value of a control. An uncontrolled control keeps its own value, which the registry reads and
+ * writes back, and `rendered` is the value React gave it when the field rendered. A controlled control is
+ * rendered by a component from the container's value, and the registry only reads its validity.
  */
-export type FieldMode = 'uncontrolled' | 'controlled';
+export type FieldBinding =
+	{ readonly mode: 'controlled' } | { readonly mode: 'uncontrolled'; readonly rendered: unknown };
 
 /**
  * The controls of a form by field path, which `setFocus` and a failed submit move focus to, and the only
@@ -25,11 +27,13 @@ export interface FieldRegistry {
 	 * Records a control of `path`; returns the function that removes that control.
 	 *
 	 * @remarks
-	 * An uncontrolled native control that differs from the container's value is adopted: the user typed
-	 * before the form hydrated, so the container takes what the control shows. Every native control reports
-	 * its validity on attach and withdraws it when it leaves, unless another control of the path remains.
+	 * An uncontrolled native control that differs from the value React rendered it with was changed by the
+	 * user before the form hydrated, so the container takes what it shows. One that still shows what React
+	 * rendered takes the container's value instead, which is newer when the control is a new element of a
+	 * field that has been edited since. Every native control reports its validity on attach and withdraws it
+	 * when it leaves, unless another control of the path remains.
 	 */
-	register(path: string, element: HTMLElement, mode: FieldMode): () => void;
+	register(path: string, element: HTMLElement, binding: FieldBinding): () => void;
 	/** Writes what the user did to `element` into the container and reports its validity. */
 	change(path: string, element: HTMLElement): void;
 	/** Reports the validity of the controls of `path`, then marks the path blurred. */
@@ -47,7 +51,7 @@ export interface FieldRegistry {
 
 interface Registration {
 	readonly element: HTMLElement;
-	readonly mode: FieldMode;
+	readonly binding: FieldBinding;
 }
 
 function focusFirstInDocument(elements: readonly HTMLElement[]): void {
@@ -118,7 +122,7 @@ export function createFieldRegistry(container: FormStateContainer): FieldRegistr
 		lastRowIds = snapshot.rowIds;
 		for (const [path, registrations] of Array.from(controls)) {
 			if (reshaped.some((array) => path.startsWith(`${array}.`))) continue;
-			const natives = nativeControls(registrations.filter(({ mode }) => mode === 'uncontrolled'));
+			const natives = nativeControls(registrations.filter(({ binding }) => binding.mode === 'uncontrolled'));
 			const value = selectValue(snapshot, path);
 			const stale = natives.filter((control) => !controlMatches(control, value));
 			if (stale.length === 0) continue;
@@ -127,22 +131,26 @@ export function createFieldRegistry(container: FormStateContainer): FieldRegistr
 		}
 	};
 
-	const adopt = (path: string, control: NativeControl): void => {
+	const settle = (path: string, control: NativeControl, rendered: unknown): void => {
 		const value = selectValue(container.getSnapshot(), path);
 		if (controlMatches(control, value)) return;
+		if (controlMatches(control, rendered)) {
+			writeControl(control, value);
+			return;
+		}
 		const read = readControl(control, value);
 		if (!sameValue(read, value)) container.setValue(path, read);
 	};
 
 	return {
-		register(path, element, mode) {
-			const registration: Registration = { element, mode };
+		register(path, element, binding) {
+			const registration: Registration = { element, binding };
 			controls.set(path, [...(controls.get(path) ?? []), registration]);
 			if (!unsubscribe) {
 				lastRowIds = container.getSnapshot().rowIds;
 				unsubscribe = container.subscribe(writeBack);
 			}
-			if (mode === 'uncontrolled' && isNativeControl(element)) adopt(path, element);
+			if (binding.mode === 'uncontrolled' && isNativeControl(element)) settle(path, element, binding.rendered);
 			reportNative(path);
 			return () => {
 				const remaining = (controls.get(path) ?? []).filter((control) => control !== registration);

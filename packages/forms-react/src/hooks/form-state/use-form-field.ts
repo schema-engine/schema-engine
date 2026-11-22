@@ -77,6 +77,28 @@ function useDefaultValue(path: string): unknown {
 }
 
 /**
+ * The `ref` of the field's controls.
+ *
+ * @remarks
+ * Relies on React 19, where a ref callback returns its own cleanup: the registry's disposer runs when the
+ * control detaches or the path changes, and the callback is never called with `null`.
+ */
+function useFieldRef(path: string, controlled: boolean, rendered: unknown) {
+	const { fields } = useFormStateContext();
+	return useCallback(
+		(element: HTMLElement | null) =>
+			element
+				? fields.register(
+						path,
+						element,
+						controlled ? { mode: 'controlled' } : { mode: 'uncontrolled', rendered },
+					)
+				: undefined,
+		[fields, path, controlled, rendered],
+	);
+}
+
+/**
  * Reports what the browser says about the field's native control after each render, and warns in development
  * when an uncontrolled field has none.
  *
@@ -162,11 +184,7 @@ export function useFormField(
 	const defaultValue = useDefaultValue(path);
 	useNativeBinding(path, controlled, config !== undefined);
 
-	const ref = useCallback(
-		(element: HTMLElement | null) =>
-			element ? fields.register(path, element, controlled ? 'controlled' : 'uncontrolled') : undefined,
-		[fields, path, controlled],
-	);
+	const ref = useFieldRef(path, controlled, defaultValue);
 	const onNativeChange = useCallback(
 		(event: ChangeEvent<HTMLElement>) => fields.change(path, event.currentTarget),
 		[fields, path],
