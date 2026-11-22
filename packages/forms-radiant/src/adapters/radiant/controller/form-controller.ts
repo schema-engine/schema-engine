@@ -127,7 +127,7 @@ export class FormController {
 	 *
 	 * @remarks `undefined` when neither gives text, never the issue's `type`.
 	 */
-	formatIssue(issue: FormStateIssue | FormSubmissionIssue, path: string): string | undefined {
+	formatIssue(issue: FormStateIssue | FormSubmissionIssue, { path }: { readonly path: string }): string | undefined {
 		return describeIssue(issue, path, this.context()?.formatIssue);
 	}
 }

@@ -19,13 +19,13 @@ describe('FormController over the form instance container', () => {
 
 	test('shows an issue through the formatter of the form, else its message, never its type', () => {
 		const { form } = createTestForm({}, [], (issue, { path }) => `${path}:${issue.type}`);
-		expect(form.formatIssue({ type: 'required', source: 'validation' }, 'title')).toBe('title:required');
+		expect(form.formatIssue({ type: 'required', source: 'validation' }, { path: 'title' })).toBe('title:required');
 
 		const bare = createTestForm({});
-		expect(bare.form.formatIssue({ type: 'minLength', source: 'validation' }, 'title')).toBeUndefined();
-		expect(bare.form.formatIssue({ type: 'minLength', source: 'validation', message: 'Too short' }, 'title')).toBe(
-			'Too short',
-		);
+		expect(bare.form.formatIssue({ type: 'minLength', source: 'validation' }, { path: 'title' })).toBeUndefined();
+		expect(
+			bare.form.formatIssue({ type: 'minLength', source: 'validation', message: 'Too short' }, { path: 'title' }),
+		).toBe('Too short');
 	});
 
 	test('uses the nearest form and never selects an unrelated form', () => {

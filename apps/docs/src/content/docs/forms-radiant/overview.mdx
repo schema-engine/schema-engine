@@ -41,7 +41,7 @@ Its `engine` and `ready` getters expose the nearest renderer engine, while
 `connect()` and `disconnect()` manage the context subscription.
 
 Use `form.container` for commands and reads (`getValue(path)`, `setValue`, `validate`, `fieldArray(path)`), `select(selector)` for a signal over
-the container's snapshot, and `formatIssue(issue, path)` for an issue's text. Values are nested and
+the container's snapshot, and `formatIssue(issue, { path })` for an issue's text. Values are nested and
 paths are dotted (`contacts.0.email`), the engine container's own shape. Shipped
 `FormFieldElement` extends Radiant UI's field element; array components use the container's
 row ids.

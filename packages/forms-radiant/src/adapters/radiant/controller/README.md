@@ -43,7 +43,7 @@ class ContactCount extends HTMLElement {
 
 Create the signals once, as fields, and read them inside an `effect` or a `computed`, or `subscribe` to them. A signal is total: it reads `undefined` while the form has no container (a `rui-form` or an engine that arrives late) and on the server, and it follows the container the instance has now.
 
-- `formatIssue(issue, path)` is the text the form shows for an issue: the renderer's `formatIssue`, else the engine's, else the issue's own `message`, else `undefined`.
+- `formatIssue(issue, { path })` is the text the form shows for an issue: the renderer's `formatIssue`, else the engine's, else the issue's own `message`, else `undefined`.
 
 ```ts
 const form = new FormController(host);
