@@ -92,7 +92,7 @@ test('Enter on an early wizard step does not submit and shows no errors on later
 	);
 	const form = host.querySelector('rui-form')!;
 	let invalid = 0;
-	form.addEventListener('rui-invalid', () => invalid++);
+	form.addEventListener('se-action-submit-invalid', () => invalid++);
 	await expect.poll(() => host.querySelector('se-wizard-actions button')).toBeTruthy();
 	expect(form.querySelector('button[type="submit"]')).toBeNull();
 
@@ -121,7 +121,7 @@ test('Enter in the only text input of a wizard goes to the next step instead of 
 	const form = host.querySelector('rui-form')!;
 	const instance = host.querySelector<FormInstanceElement>('se-form-instance')!;
 	let invalid = 0;
-	form.addEventListener('rui-invalid', () => invalid++);
+	form.addEventListener('se-action-submit-invalid', () => invalid++);
 	await expect.poll(() => host.querySelector('se-wizard-actions button')).toBeTruthy();
 
 	await userEvent.click(form.querySelector<HTMLInputElement>('input[name="only"]')!);

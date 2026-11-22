@@ -28,6 +28,7 @@ import type { RuiFormElement, RuiFormSubmitContext } from '@ecopages/radiant-ui/
 import {
 	createInitialStepStates,
 	createSubmissionGuard,
+	type SubmissionGuard,
 	hasConfiguredActions,
 	type StepMachineState,
 } from '@schema-engine/forms/engine';
@@ -63,13 +64,16 @@ export interface SubmissionCompleteDetail extends Pick<SubmissionOutcome, 'succe
 /**
  * The form a `se-form-instance` holds: its state container and the `rui-form` the container is injected into.
  *
- * @remarks Identity of the three decides whether the form is the same: a new config or engine is a new form.
+ * @remarks Identity of the config, engine, `rui-form` and default values decides whether the form is the same: a new one of them is a new form.
  */
 interface BoundForm {
 	readonly config: NormalizedFormConfig;
 	readonly engine: CoreFormEngine;
 	readonly host: RuiFormElement;
+	readonly defaultValues: Record<string, unknown> | undefined;
 	readonly container: FormStateContainer;
+	/** Admits one submission of this form at a time: a validation that hangs on an old form never holds back the next. */
+	readonly submission: SubmissionGuard;
 }
 
 /**
@@ -106,7 +110,9 @@ export class FormInstanceElement extends RadiantElement {
 	@state formatIssue?: FormIssueFormatter;
 	@state private submitting = false;
 	@state private attempts = 0;
-	private readonly submission = createSubmissionGuard();
+	private rendererFormatIssue?: FormIssueFormatter;
+	/** Whether no form has been built yet, so the form to build is the one the server rendered, if it did. */
+	private firstForm = true;
 	get isSubmitting(): boolean {
 		return this.submitting;
 	}
@@ -178,6 +184,13 @@ export class FormInstanceElement extends RadiantElement {
 	 * An `engine` assigned to this host directly wins: only an unset engine, or one that came
 	 * from the renderer, is replaced.
 	 */
+	@onContextUpdate({ context: formEngineContext, select: (context) => context?.formatIssue, requestUpdate: false })
+	onRendererFormatIssue(formatIssue: FormIssueFormatter | undefined): void {
+		if (formatIssue === this.rendererFormatIssue) return;
+		this.rendererFormatIssue = formatIssue;
+		this.refreshIssueText();
+	}
+
 	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
 	onRendererEngine(engine: CoreFormEngine | undefined): void {
 		if (!engine) return;
@@ -190,7 +203,7 @@ export class FormInstanceElement extends RadiantElement {
 		super.disconnectedCallback();
 	}
 
-	@onUpdated(['config'])
+	@onUpdated(['config', 'defaultValues'])
 	onConfigUpdated(): void {
 		this.resetStepState();
 		this.connectForm();
@@ -202,14 +215,18 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 	}
 
-	/** The formatter for this form: the one given to the instance, else the engine's default. */
+	/** The formatter for this form: the instance's own, else its renderer's, else the engine's default. */
 	private issueFormatter(): FormIssueFormatter | undefined {
-		return this.formatIssue ?? this.engine?.getIssueFormatter();
+		return this.formatIssue ?? this.rendererFormatIssue ?? this.engine?.getIssueFormatter();
 	}
 
 	/** Shows the text of the new formatter: the form presents issues through it. */
 	@onUpdated(['formatIssue'])
 	onFormatIssueUpdated(): void {
+		this.refreshIssueText();
+	}
+
+	private refreshIssueText(): void {
 		if (this.bound) this.attachForm(this.bound);
 		this.publish();
 	}
@@ -270,7 +287,16 @@ export class FormInstanceElement extends RadiantElement {
 			this.releaseBound();
 			return;
 		}
-		if (this.bound?.config === config && this.bound.engine === engine && this.bound.host === ruiForm) return;
+		const { defaultValues } = this;
+		const current = this.bound;
+		if (
+			current?.config === config &&
+			current.engine === engine &&
+			current.host === ruiForm &&
+			current.defaultValues === defaultValues
+		) {
+			return;
+		}
 		if (typeof ruiForm.connect !== 'function') {
 			void customElements.whenDefined('rui-form').then(() => this.connectForm());
 			return;
@@ -287,16 +313,19 @@ export class FormInstanceElement extends RadiantElement {
 			config,
 			engine,
 			host: ruiForm,
+			defaultValues,
+			submission: createSubmissionGuard(),
 			container: createFormStateContainer({
 				elements,
 				registry: engine.getValidationRegistry(),
-				defaults: collectInitialValues(elements, this.defaultValues ?? {}),
-				rowIds: this.serverRowIds(),
+				defaults: collectInitialValues(elements, defaultValues ?? {}),
+				rowIds: this.firstForm && this.isServerRendered ? this.serverRowIds() : undefined,
 				validationMode: normalized.data.validationMode,
 				reValidateMode: normalized.data.reValidateMode,
 				payload: normalized.data.payload,
 			}),
 		};
+		this.firstForm = false;
 		this.bound = bound;
 		this.attempts = 0;
 		this.resetStepState();
@@ -310,9 +339,10 @@ export class FormInstanceElement extends RadiantElement {
 	 * The row ids the server rendered for each array that already holds them.
 	 *
 	 * @remarks
-	 * The container mints ids deterministically, so a client built from the same defaults matches the server
-	 * without these. They matter when the server rendered rows other than the defaults, so the container adopts
-	 * the ids the markup carries instead of replacing every row.
+	 * Read only while hydrating the form the server rendered, because only then do the arrays in the document
+	 * describe the container's defaults. The container mints ids deterministically, so a client built from the same
+	 * defaults matches the server without these; they matter when the server rendered rows other than the defaults,
+	 * so the container adopts the ids the markup carries instead of replacing every row.
 	 */
 	private serverRowIds(): Record<string, readonly string[]> {
 		const ids: Record<string, readonly string[]> = {};
@@ -358,19 +388,28 @@ export class FormInstanceElement extends RadiantElement {
 	 * The container validates under a submission token: `passed` submits exactly the values that were
 	 * validated, `invalid` focuses the first field with an error, and `overtaken` (an edit, a row move or a
 	 * reset outran the check) submits nothing and leaves the user to try again. A validation that could not
-	 * run (a validator threw, a service was down) is not a field error: the submission stops and is logged.
+	 * run (a validator threw, a service was down) is not a field error: the submission stops, is logged, counts as an attempt
+	 * and completes unsuccessfully with the failure as `detail.error`.
 	 */
 	private async submitForm(context: RuiFormSubmitContext<FormStateError>): Promise<void> {
-		await this.submission.run(async () => {
-			const { bound } = this;
-			if (!bound) return;
+		const { bound } = this;
+		if (!bound) return;
+		await bound.submission.run(async () => {
 			const { container, host } = bound;
 			const submission = container.beginSubmission();
 			try {
 				await container.validate(undefined, { native: context.readNativeValidity(), submission });
 			} catch (error) {
+				if (this.bound !== bound) return;
+				this.countAttempt();
 				logger.error('Form validation could not run', error);
-				if (this.bound === bound) this.countAttempt();
+				host.dispatchEvent(
+					new CustomEvent('se-action-submit-complete', {
+						bubbles: true,
+						composed: true,
+						detail: { succeeded: false, results: [], error } satisfies SubmissionCompleteDetail,
+					}),
+				);
 				return;
 			}
 			if (this.bound !== bound) return;
@@ -559,5 +598,11 @@ export class FormInstanceElement extends RadiantElement {
 
 	private publish(): void {
 		this.provider.setContext(this.getContextValue());
+	}
+}
+
+declare global {
+	interface HTMLElementTagNameMap {
+		'se-form-instance': FormInstanceElement;
 	}
 }

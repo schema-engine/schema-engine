@@ -115,6 +115,37 @@ describe('FormController over the form instance container', () => {
 		form.disconnect();
 	});
 
+	test('a selection is total: undefined before the form has a container, and it binds when one arrives', () => {
+		const element = document.createElement('div');
+		const host = document.createElement('div');
+		element.append(host);
+		const provider = provideTestContainer(element, undefined);
+		const form = new FormController(host);
+		const title = form.select((snapshot) => snapshot.values['title']);
+		const listener = vi.fn();
+
+		expect(title.get()).toBeUndefined();
+		const stop = title.subscribe(listener);
+		expect(title.get()).toBeUndefined();
+
+		const { container } = createTestForm({ title: 'Arrived' });
+		provider.setContext({ ...provider.getContext(), container });
+
+		expect(listener).toHaveBeenCalled();
+		expect(title.get()).toBe('Arrived');
+		stop();
+	});
+
+	test('a selection reads undefined where there is no instance at all, as on the server', () => {
+		const form = new FormController(document.createElement('div'));
+		const rows = form.select((snapshot) => snapshot.rowIds['contacts']?.length ?? 0);
+
+		expect(rows.get()).toBeUndefined();
+		const stop = rows.subscribe(() => {});
+		expect(rows.get()).toBeUndefined();
+		stop();
+	});
+
 	test('a field binding and a selection follow the container the instance replaces', () => {
 		const first = createTestForm({ title: 'First' });
 		const second = createTestForm({ title: 'Second' });

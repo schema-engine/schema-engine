@@ -5,22 +5,11 @@ import {
 	type ElementGridConfig,
 } from '@schema-engine/layout';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
-import type { FieldRules } from '@ecopages/radiant-ui/form';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { bindTo, customElement, onUpdated, prop, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { constraintContext, formValuesContext, type ConstraintState } from '@/contexts/constraint-context';
-
-/**
- * The rules a field carries to say it is required, which is all the field reads them for.
- *
- * @remarks
- * `rui-field` takes `aria-required` from `rules.required`. The form's state container validates, and
- * `rui-form` ignores field rules once it holds one, so this object states the requirement for the field's
- * presentation and checks nothing.
- */
-const REQUIRED_RULES: FieldRules = { required: true };
 
 /** RuiField's registration and presentation, restoring the required state and defaults. */
 @customElement('se-field')
@@ -29,8 +18,8 @@ export class FormFieldElement extends RuiFieldElement {
 	private isAuthoredDisabled?: (renderedPath: string) => boolean;
 
 	/**
-	 * Whether the config authors the field required, which survives server rendering as an attribute because
-	 * the `rules` property does not.
+	 * Whether the config authors the field required. `required` follows it and the constraints around the field,
+	 * so this keeps what the config said.
 	 */
 	@prop({ type: Boolean, attribute: 'data-se-required' }) authoredRequired = false;
 
@@ -92,11 +81,10 @@ export class FormFieldElement extends RuiFieldElement {
 		this.showRequired(constraint.required || this.authoredRequired);
 	}
 
+	/** What the field announces (`aria-required`) and the label marker shows; neither validates anything. */
 	private showRequired(required: boolean): void {
 		this.requiredShown = required;
-		if (Boolean(this.rules?.required) === required) return;
-		this.rules = required ? REQUIRED_RULES : undefined;
-		this.onRulesUpdated();
+		this.required = required;
 	}
 
 	/**
@@ -125,7 +113,7 @@ export class FormFieldElement extends RuiFieldElement {
 /**
  * @remarks
  * `required` is the config's own requirement, as a field label shows it. It reaches the field as an
- * attribute and as `rules`, so a server-rendered field has `aria-required` and a hydrated one restores it.
+ * attribute and as the field's presentational `required`, so a server-rendered field has `aria-required` and a hydrated one restores it.
  * Validation is not here: the form's state container runs the engine rules.
  */
 export function FormField({
@@ -138,7 +126,7 @@ export function FormField({
 	style,
 	appearance,
 	...props
-}: Omit<JsxCustomElementAttributes<FormFieldElement, RuiFieldProps>, 'rules'> & {
+}: Omit<JsxCustomElementAttributes<FormFieldElement, RuiFieldProps>, 'rules' | 'required'> & {
 	appearance?: AppearanceSelection;
 	required?: boolean;
 	grid?: ElementGridConfig;
@@ -153,7 +141,7 @@ export function FormField({
 			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			{...getAppearanceAttributes(appearance)}
-			prop:rules={required ? REQUIRED_RULES : undefined}
+			required={required}
 			data-se-required={required ? '' : undefined}
 			defaultValue={defaultValue}
 			data={{

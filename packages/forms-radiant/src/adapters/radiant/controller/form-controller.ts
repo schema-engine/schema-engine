@@ -164,23 +164,24 @@ export class FormController {
 	}
 
 	/**
-	 * A signal over a selector of the container's snapshot.
+	 * A signal over a selector of the container's snapshot, `undefined` while the form has no container.
 	 *
 	 * @remarks
 	 * Selectors are pure functions of the snapshot, such as `selectFieldState` or
 	 * `(snapshot) => snapshot.rowIds['contacts']?.length ?? 0`. The signal notifies only when the
-	 * selected value changes. Read it once subscribed, in a computed or an effect, because an
-	 * unsubscribed read answers with the container's server snapshot. It follows the instance's
-	 * container: a new one, after a config change, replaces the old and the signal reads and notifies from it.
+	 * selected value changes. Create it once, as a field, and read it in an effect or a computed, which subscribe
+	 * it: an unsubscribed read answers with the container's server snapshot. It is total: before the container
+	 * exists (a `rui-form` or an engine that arrives late) and on the server it reads `undefined`, and it follows
+	 * the instance's container, so one that arrives or replaces the old reads and notifies from it.
 	 */
-	select<Selected>(selector: (snapshot: FormStateSnapshot) => Selected): Signal<Selected> {
-		return fromExternalStore<FormStateSnapshot, Selected>(
+	select<Selected>(selector: (snapshot: FormStateSnapshot) => Selected): Signal<Selected | undefined> {
+		return fromExternalStore<FormStateSnapshot | undefined, Selected | undefined>(
 			{
 				subscribe: (listener) => this.watchContainer(listener, false),
-				getSnapshot: () => this.requireContainer().getSnapshot(),
-				getServerSnapshot: () => this.requireContainer().getServerSnapshot(),
+				getSnapshot: () => this.container?.getSnapshot(),
+				getServerSnapshot: () => this.container?.getServerSnapshot(),
 			},
-			selector,
+			(snapshot) => (snapshot === undefined ? undefined : selector(snapshot)),
 		);
 	}
 

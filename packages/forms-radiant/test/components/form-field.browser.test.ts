@@ -28,7 +28,7 @@ function mountField(required: boolean) {
 test('a field the config requires announces it and says so as an attribute for hydration', async () => {
 	const { host, root, field } = mountField(true);
 	try {
-		await expect.poll(() => field().rules?.required).toBe(true);
+		await expect.poll(() => field().required).toBe(true);
 		expect(field().hasAttribute('data-se-required')).toBe(true);
 		await expect.poll(() => host.querySelector('input')?.getAttribute('aria-required')).toBe('true');
 	} finally {
@@ -40,7 +40,7 @@ test('a field the config does not require announces nothing and carries no rules
 	const { host, root, field } = mountField(false);
 	try {
 		await expect.poll(() => host.querySelector('input')?.getAttribute('aria-invalid')).toBe('false');
-		expect(field().rules).toBeFalsy();
+		expect(field().required).toBe(false);
 		expect(field().hasAttribute('data-se-required')).toBe(false);
 		expect(host.querySelector('input')?.hasAttribute('aria-required')).toBe(false);
 	} finally {
@@ -53,5 +53,5 @@ test('a field restores its required state from the attribute when the rules prop
 	host.innerHTML = `<rui-form><form data-ref="form" novalidate><se-field name="email" data-se-required><input name="email" data-rui-control /></se-field></form></rui-form>`;
 	document.body.append(host);
 	const field = host.querySelector<FormFieldElement>('se-field')!;
-	await expect.poll(() => field.rules?.required).toBe(true);
+	await expect.poll(() => field.required).toBe(true);
 });

@@ -1,6 +1,7 @@
 import { customElement, onUpdated, prop, RadiantElement, registerSsrPreparationCallback } from '@ecopages/radiant';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
+import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormProviderProps } from '@/adapters/types';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -27,7 +28,11 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
  */
 @customElement('se-form-renderer')
 export class FormRendererElement extends RadiantElement {
-	declare readonly [JSX_PROPS]?: { engine?: FormEngine; defaultValues?: Record<string, unknown> };
+	declare readonly [JSX_PROPS]?: {
+		engine?: FormEngine;
+		defaultValues?: Record<string, unknown>;
+		formatIssue?: FormIssueFormatter;
+	};
 
 	/**
 	 * The engine every host below this renderer reads from the context it publishes.
@@ -42,6 +47,12 @@ export class FormRendererElement extends RadiantElement {
 	 */
 	@prop({ type: Object, attribute: false }) engine?: FormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
+	/**
+	 * Turns an issue into text for every form below this renderer, over the engine's `formatIssue` and under an instance's own.
+	 *
+	 * @remarks Property-only (`attribute: false`): a function is never serialized into the server markup.
+	 */
+	@prop({ type: Object, attribute: false }) formatIssue?: FormIssueFormatter;
 
 	@provideContext<typeof formEngineContext>({
 		context: formEngineContext,
@@ -59,7 +70,7 @@ export class FormRendererElement extends RadiantElement {
 		this.publishContext();
 	}
 
-	@onUpdated(['engine'])
+	@onUpdated(['engine', 'formatIssue'])
 	onEngineUpdated(): void {
 		this.publishContext();
 	}
@@ -69,6 +80,12 @@ export class FormRendererElement extends RadiantElement {
 		if (!engine) {
 			return;
 		}
-		this.provider.setContext({ engine } satisfies FormEngineContextValue);
+		this.provider.setContext({ engine, formatIssue: this.formatIssue } satisfies FormEngineContextValue);
+	}
+}
+
+declare global {
+	interface HTMLElementTagNameMap {
+		'se-form-renderer': FormRendererElement;
 	}
 }

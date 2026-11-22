@@ -13,7 +13,7 @@ import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import {
-	createFormStateContainer,
+	mintRowIds,
 	selectError,
 	type FormIssueFormatter,
 	type FormStateContainer,
@@ -187,26 +187,6 @@ function renderArrayContent({ config, rows, initialValues, renderValues, fieldEr
 			<RuiFieldError id={arrayErrorId(config)} error={fieldError ?? ''} />
 		</div>
 	);
-}
-
-/**
- * The ids the form's container gives the rows of the array at `path` when it starts from `defaults`.
- *
- * @remarks
- * The container mints row ids deterministically, in the walk order of its defaults, so a server render and
- * a client container built from the same defaults agree on them without sending ids. This builds a container
- * only to read them.
- */
-function seedRowIds(path: string, defaults: Record<string, unknown>, engine: FormEngine | undefined): string[] {
-	if (!engine) return [];
-	const container = createFormStateContainer({
-		elements: [],
-		registry: engine.getValidationRegistry(),
-		defaults,
-		validationMode: 'onSubmit',
-		reValidateMode: 'onChange',
-	});
-	return [...(container.getSnapshot().rowIds[path] ?? [])];
 }
 
 @customElement('se-form-array')
@@ -446,7 +426,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 	const arrayConfig = {
 		...fieldConfig,
 		ssrInitialRows: initialRows ?? [],
-		ssrRowIds: seedRowIds(fieldConfig.name, initialValues, engine),
+		ssrRowIds: mintRowIds(initialValues)[fieldConfig.name] ?? [],
 		initialFormValues,
 	};
 	const children = engine
@@ -478,4 +458,10 @@ export function FormArrayElements(config: ArrayElementsProps) {
 			<SeFormArray config={arrayConfig}>{children}</SeFormArray>
 		</fieldset>
 	);
+}
+
+declare global {
+	interface HTMLElementTagNameMap {
+		'se-form-array': SeFormArray;
+	}
 }

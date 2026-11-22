@@ -66,27 +66,34 @@ where you need one.
 
 - `container` is the engine container itself: `getSnapshot()`, `subscribe()`, `validate()`, `blur()`, `setErrors()` and the other commands of `FormStateContainer`.
 - `getValues()` returns the container's nested values, the same object until a value changes; `getValue(path)` reads a dotted path.
-- `setValue(path, value)` writes a branch, `reset(values?)` restores the defaults or replaces them, `trigger(paths?)` validates.
+- `setValue(path, value)` writes a branch, `reset(values?)` restores the defaults or replaces them, `trigger(paths?)` validates with the facts the controls have already reported to the container (typing, blur, a store write), not a fresh read of the controls: a submit and a wizard step read them, and an action's check reads them too.
 - `field(path)` provides live `value` and `error` getters, `onChange`, and `onBlur`. `error` is the issue's text from the application's `formatIssue`, else its `message`.
 - `select(selector)` returns a signal over a pure selector of the snapshot, built with `fromExternalStore`:
 
 ```ts
+import { effect } from '@ecopages/signals';
 import { selectFieldState } from '@schema-engine/forms/state-container';
 
 class ContactCount extends HTMLElement {
 	readonly form = new FormController(this);
+	readonly count = this.form.select((snapshot) => snapshot.rowIds['contacts']?.length ?? 0);
+	readonly invalid = this.form.select((snapshot) => selectFieldState(snapshot, 'contacts.0.email').invalid);
+
+	private stop?: () => void;
 
 	connectedCallback() {
-		this.form.connect(() => {
-			const count = this.form.select((snapshot) => snapshot.rowIds['contacts']?.length ?? 0);
-			const invalid = this.form.select((snapshot) => selectFieldState(snapshot, 'contacts.0.email').invalid);
-			this.textContent = `${count.get()} contacts, first invalid: ${invalid.get()}`;
+		this.stop = effect(() => {
+			this.textContent = `${this.count.get() ?? 0} contacts, first invalid: ${this.invalid.get() ?? false}`;
 		});
+	}
+
+	disconnectedCallback() {
+		this.stop?.();
 	}
 }
 ```
 
-Read a signal once it is subscribed (in a computed or an effect): an unsubscribed read answers with the container's server snapshot.
+Create the signals once, as fields, and read them inside an `effect` or a `computed`, which subscribe them. A signal is total: it reads `undefined` while the form has no container (a `rui-form` or an engine that arrives late) and on the server, and it follows the container the instance has now.
 
 - `formState` is the container's snapshot: `values`, `errors` and `warnings` by path, `touched`, `dirty`, `rowIds`, `validating`, `isValid`.
 - `fieldArray(path)` provides `fields`, `append`, `prepend`, `insert`, `swap`,

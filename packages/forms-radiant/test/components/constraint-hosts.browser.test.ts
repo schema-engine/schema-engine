@@ -152,9 +152,9 @@ test('a fieldset require reaches its children and releases them', async () => {
 	});
 	try {
 		form.setValue('mode', 'need');
-		await expect.poll(() => city.rules?.required).toBe(true);
+		await expect.poll(() => city.required).toBe(true);
 		form.setValue('mode', 'open');
-		await expect.poll(() => city.rules?.required).toBeFalsy();
+		await expect.poll(() => city.required).toBeFalsy();
 	} finally {
 		cleanup();
 	}
@@ -169,7 +169,7 @@ test('a child keeps its own required marker after live constraints', async () =>
 		form.setValue('mode', 'hide');
 		await expect.poll(() => wrapper.hidden).toBe(true);
 		expect(city.querySelector('[data-se-required-marker]')?.hasAttribute('hidden')).toBe(false);
-		expect(city.rules?.required).toBeTruthy();
+		expect(city.required).toBeTruthy();
 	} finally {
 		cleanup();
 	}
@@ -317,10 +317,10 @@ test.each(wrapperSources)('a field takes the require of the %s wrapper around it
 		const marker = () => city.querySelector('[data-se-required-marker]')!.hasAttribute('hidden');
 		expect(marker()).toBe(true);
 		form.setValue(`ctl.need${source}`, 'x');
-		await expect.poll(() => city.rules?.required).toBe(true);
+		await expect.poll(() => city.required).toBe(true);
 		expect(marker()).toBe(false);
 		form.setValue(`ctl.need${source}`, '');
-		await expect.poll(() => city.rules?.required).toBeFalsy();
+		await expect.poll(() => city.required).toBeFalsy();
 		expect(marker()).toBe(true);
 	} finally {
 		cleanup();
@@ -334,7 +334,7 @@ test('a field keeps the union of its wrappers while one of them releases', async
 			form.setValue(`ctl.lock${source}`, 'x');
 			form.setValue(`ctl.need${source}`, 'x');
 		}
-		await expect.poll(() => city.disabled && city.rules?.required === true).toBe(true);
+		await expect.poll(() => city.disabled && city.required === true).toBe(true);
 
 		form.setValue('ctl.lockArray', '');
 		form.setValue('ctl.needArray', '');
@@ -342,12 +342,12 @@ test('a field keeps the union of its wrappers while one of them releases', async
 		form.setValue('ctl.needBox', '');
 		await new Promise((resolve) => setTimeout(resolve, 50));
 		expect(city.disabled).toBe(true);
-		expect(city.rules?.required).toBe(true);
+		expect(city.required).toBe(true);
 
 		form.setValue('ctl.lockCity', '');
 		form.setValue('ctl.needCity', '');
 		await expect.poll(() => city.disabled).toBe(false);
-		expect(city.rules?.required).toBeFalsy();
+		expect(city.required).toBeFalsy();
 	} finally {
 		cleanup();
 	}
@@ -395,7 +395,7 @@ test('a constraint that turns require on shows no error on a field nobody has re
 	const { form, code, cleanup } = await mountRequireOnDependent();
 	try {
 		form.setValue('mode', 'need');
-		await expect.poll(() => code.rules?.required).toBe(true);
+		await expect.poll(() => code.required).toBe(true);
 		await new Promise((resolve) => setTimeout(resolve, 50));
 		expect(form.formState.errors.code).toBeUndefined();
 	} finally {
@@ -408,7 +408,7 @@ test('a constraint that turns require on validates a field the user already touc
 	try {
 		form.container!.blur('code');
 		form.setValue('mode', 'need');
-		await expect.poll(() => code.rules?.required).toBe(true);
+		await expect.poll(() => code.required).toBe(true);
 		await expect.poll(() => form.formState.errors.code).toBeTruthy();
 	} finally {
 		cleanup();
@@ -418,11 +418,11 @@ test('a constraint that turns require on validates a field the user already touc
 test('turning require on and off changes only what the field announces', async () => {
 	const { form, code, cleanup } = await mountRequireOnDependent();
 	try {
-		expect(code.rules).toBeFalsy();
+		expect(code.required).toBe(false);
 		form.setValue('mode', 'need');
-		await expect.poll(() => code.rules?.required).toBe(true);
+		await expect.poll(() => code.required).toBe(true);
 		form.setValue('mode', '');
-		await expect.poll(() => code.rules?.required).toBeFalsy();
+		await expect.poll(() => code.required).toBeFalsy();
 	} finally {
 		cleanup();
 	}
@@ -517,7 +517,7 @@ test('a require released on a touched field clears its error', async () => {
 
 		form.setValue('mode', '');
 
-		await expect.poll(() => code.rules?.required).toBeFalsy();
+		await expect.poll(() => code.required).toBeFalsy();
 		await expect.poll(() => form.formState.errors.code).toBeUndefined();
 	} finally {
 		cleanup();

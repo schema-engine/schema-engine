@@ -5,7 +5,7 @@ import { FormInstance } from '@/components/form-instance';
 
 export function FormProvider<TFormData extends Record<string, unknown> = Record<string, unknown>>({
 	config,
-	defaultValues = {},
+	defaultValues,
 	onSubmit,
 	onChange,
 	onAction,

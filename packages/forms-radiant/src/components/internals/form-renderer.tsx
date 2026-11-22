@@ -29,6 +29,7 @@ export function FormRenderer({
 			style={style}
 			engine={resolvedEngine}
 			defaultValues={props.defaultValues}
+			formatIssue={props.formatIssue}
 		>
 			<FormProvider
 				config={props.config}
@@ -36,7 +37,6 @@ export function FormRenderer({
 				onSubmit={props.onSubmit}
 				onChange={props.onChange}
 				onAction={props.onAction}
-				formatIssue={props.formatIssue}
 				engine={resolvedEngine}
 			>
 				{children}
