@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Check, X } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { combineHandlers, useControlledFormElement } from '@schema-engine/forms-react/hooks';
+import { combineHandlers, fieldText, useControlledFormElement } from '@schema-engine/forms-react/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { SelectFieldProps, SelectOption } from '@/components/schema-engine/forms/inputs/form-select.types';
 
@@ -23,7 +23,7 @@ export function FormSelect({
 
 	const selectedValues = isMultiple ? (Array.isArray(value) ? value : []).map(String) : [];
 	const selectedOptions = config.options.filter((option) => selectedValues.includes(optionKey(option)));
-	const selectValue = value === null || value === undefined ? '' : String(value);
+	const selectValue = fieldText(value);
 
 	const commitMultiple = (next: string[]) => {
 		combineHandlers(onChange, propsOnChange)(next);

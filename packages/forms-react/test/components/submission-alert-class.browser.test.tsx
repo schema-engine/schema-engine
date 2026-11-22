@@ -4,7 +4,6 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine, type BuilderActionRegistration } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { SubmissionAlertElementRegistration } from '@/components/schema-engine/forms/content/form-submission-alert.registration';
@@ -46,7 +45,7 @@ function renderAlert(showOn: string[], actionId?: string) {
 		],
 		actions: actionId ? [{ $type: 'gate', id: actionId, triggers: ['form_submit'] }] : [],
 	});
-	render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} onSubmit={() => undefined} />);
+	render(<FormRenderer config={config} engine={engine} onSubmit={() => undefined} />);
 }
 
 /** @remarks `classList` collapses a repeated class, so the attribute is counted. */

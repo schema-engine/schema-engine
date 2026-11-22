@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormTemplates } from '@/stories/shared/sample-forms';
-import { rhfAdapter } from '@/stories/shared/form-builder.ui';
 import { recipeStoryDecorators, recipeStoryEngine } from './shared/recipe-story';
 
 const meta = {
@@ -9,7 +8,6 @@ const meta = {
 	component: FormRenderer,
 	args: {
 		engine: recipeStoryEngine,
-		adapter: rhfAdapter,
 	},
 	parameters: {
 		layout: 'padded',
@@ -23,7 +21,6 @@ const meta = {
 	decorators: recipeStoryDecorators,
 	argTypes: {
 		engine: { table: { disable: true } },
-		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form config with `view.$type: "sidebar-wizard"`',

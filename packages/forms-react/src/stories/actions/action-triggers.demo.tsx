@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormEngineProvider } from '@/components/form-engine-provider';
-import { getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -360,7 +360,7 @@ export const InteractiveActionDemo = () => {
 	};
 
 	return (
-		<FormEngineProvider engine={demoEngine} adapter={rhfAdapter}>
+		<FormEngineProvider engine={demoEngine}>
 			<div className="space-y-6">
 				<div className="flex items-center justify-between">
 					<div>
@@ -387,12 +387,7 @@ export const InteractiveActionDemo = () => {
 								<CardDescription>Fill out the form to trigger actions</CardDescription>
 							</CardHeader>
 							<CardContent>
-								<FormRenderer
-									key={formKey}
-									config={demoFormConfig}
-									engine={demoEngine}
-									adapter={rhfAdapter}
-								/>
+								<FormRenderer key={formKey} config={demoFormConfig} engine={demoEngine} />
 							</CardContent>
 						</Card>
 

@@ -7,7 +7,6 @@ import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
 import { InputOTPElementRegistration } from '@/components/schema-engine/forms/inputs/form-input-otp.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 
 const engine = createFormEngine({ elements: [InputOTPElementRegistration, SubmitButtonElementRegistration] });
 const code = { $type: 'input-otp', id: 'code', name: 'code', label: 'Code', length: 6 };
@@ -61,7 +60,7 @@ test('the incomplete-code message is configurable and an authored length rule re
 });
 
 test('the React OTP shows the incomplete-code error on submit', async () => {
-	render(<FormRenderer config={configWith(code)} engine={engine} adapter={rhfAdapter} />);
+	render(<FormRenderer config={configWith(code)} engine={engine} />);
 
 	await userEvent.type(screen.getByRole('textbox'), '123');
 	await userEvent.click(screen.getByRole('button', { name: /submit/i }));

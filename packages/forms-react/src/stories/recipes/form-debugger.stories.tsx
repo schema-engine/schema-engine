@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormDebugger } from '@/components/form-debugger';
 import { FormTemplates } from '@/stories/shared/sample-forms';
-import { rhfAdapter } from '@/stories/shared/form-builder.ui';
 import { recipeStoryDecorators, recipeStoryEngine } from './shared/recipe-story';
 
 const meta = {
@@ -10,7 +9,6 @@ const meta = {
 	component: FormRenderer,
 	args: {
 		engine: recipeStoryEngine,
-		adapter: rhfAdapter,
 		children: <FormDebugger />,
 	},
 	parameters: {
@@ -25,7 +23,6 @@ const meta = {
 	decorators: recipeStoryDecorators,
 	argTypes: {
 		engine: { table: { disable: true } },
-		adapter: { table: { disable: true } },
 	},
 } satisfies Meta<typeof FormRenderer>;
 

@@ -1,15 +1,16 @@
+import { fieldText } from '@/hooks/field-text';
 import { useState } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { useFormContext, useController } from 'react-hook-form';
 import * as z from 'zod/mini';
 import { createFormEngine, type BuilderActionRuntimeContext } from '@schema-engine/forms';
-import { FormProvider } from '../../src/adapters/rhf/form-provider';
+import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
+import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
+import { FormProvider } from '../../src/components/form-provider';
 import { FormRenderer } from '../../src/components/internals/form-renderer';
 import { FormEngineContext } from '../../src/components/provider';
-import { FormAdapterContext } from '../../src/adapters/context';
-import { rhfAdapter } from '../../src/adapters/react-hook-form';
+import { useFormContext, useFormField } from '../../src/adapters';
 import { useFormInstanceActions } from '../../src/hooks/use-form-context';
 import { useControlledFormElement } from '../../src/hooks/use-field';
 import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
@@ -18,6 +19,7 @@ const handled: string[] = [];
 const contexts: BuilderActionRuntimeContext[] = [];
 const validationResults: boolean[] = [];
 const engine = createFormEngine({
+	elements: [InputElementRegistration, FieldSetRegistration],
 	actions: [
 		{
 			$type: 'probe',
@@ -59,7 +61,7 @@ const config: FormConfig = {
 			title: 'One',
 			elements: [
 				{
-					$type: 'fieldset',
+					$type: 'fieldSet',
 					name: 'address',
 					elements: [
 						{
@@ -76,18 +78,23 @@ const config: FormConfig = {
 };
 
 function Field({ name }: { name: string }) {
-	const { field, fieldState } = useController({ name });
+	const { value, error, onChange, onBlur } = useFormField({ $type: 'input', name, id: name });
 	return (
 		<label>
 			{name}
-			<input {...field} value={field.value ?? ''} />
-			<span role="alert">{fieldState.error?.message ?? ''}</span>
+			<input
+				name={name}
+				value={fieldText(value)}
+				onChange={(event) => onChange(event.target.value)}
+				onBlur={onBlur}
+			/>
+			<span role="alert">{error ?? ''}</span>
 		</label>
 	);
 }
 function Controls({ action }: { action?: FormActionConfig }) {
 	const { currentStep, goToNext, executeAction, submissionState } = useFormInstanceActions();
-	const form = useFormContext();
+	const { trigger } = useFormContext();
 	const [actionResult, setActionResult] = useState<unknown>();
 	return (
 		<>
@@ -106,7 +113,7 @@ function Controls({ action }: { action?: FormActionConfig }) {
 					Execute
 				</button>
 			)}
-			<button type="button" onClick={() => void form.trigger()}>
+			<button type="button" onClick={() => void trigger()}>
 				Validate
 			</button>
 		</>
@@ -119,15 +126,13 @@ function mount(
 ) {
 	return render(
 		<FormEngineContext.Provider value={{ engine }}>
-			<FormAdapterContext.Provider value={rhfAdapter}>
-				<FormProvider
-					config={formConfig}
-					defaultValues={{ address: { street: '' }, customerType: 'company', vatNumber: '' }}
-					onAction={onAction}
-				>
-					{children}
-				</FormProvider>
-			</FormAdapterContext.Provider>
+			<FormProvider
+				config={engine.validateForm(formConfig)}
+				defaultValues={{ address: { street: '' }, customerType: 'company', vatNumber: '' }}
+				onAction={onAction}
+			>
+				{children}
+			</FormProvider>
 		</FormEngineContext.Provider>,
 	);
 }
@@ -196,9 +201,10 @@ test('a require constraint makes the field required', async () => {
 	);
 	expect(screen.getByRole('textbox', { name: 'VAT' })).toBeRequired();
 	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-	await waitFor(() => expect(screen.getByLabelText('VAT error').textContent).not.toBe(''));
+	await waitFor(() => expect(screen.getByRole('textbox', { name: 'VAT' })).toHaveAttribute('aria-invalid', 'true'));
+	expect(screen.getByLabelText('VAT error')).toHaveTextContent(/^$/);
 	await userEvent.fill(screen.getByRole('textbox', { name: 'customerType' }), 'individual');
-	await waitFor(() => expect(screen.getByLabelText('VAT error')).toHaveTextContent(/^$/));
+	await waitFor(() => expect(screen.getByRole('textbox', { name: 'VAT' })).toHaveAttribute('aria-invalid', 'false'));
 	expect(screen.getByRole('textbox', { name: 'VAT' })).not.toBeRequired();
 });
 
@@ -260,7 +266,7 @@ test('submission validates once before invoking the submit callback', async () =
 	render(
 		<FormEngineContext.Provider value={{ engine }}>
 			<FormProvider
-				config={{
+				config={engine.validateForm({
 					...config,
 					steps: [
 						{
@@ -275,7 +281,7 @@ test('submission validates once before invoking the submit callback', async () =
 							],
 						},
 					],
-				}}
+				})}
 				defaultValues={{ email: 'a@example.com' }}
 				onSubmit={submitted}
 			>
@@ -330,7 +336,7 @@ test('reports grouped action outcomes through the React renderer', async () => {
 		],
 	};
 	render(
-		<FormRenderer config={formConfig} engine={engine} adapter={rhfAdapter} onActionResults={results}>
+		<FormRenderer config={formConfig} engine={engine} onActionResults={results}>
 			<Controls action={{ id: 'manual', $type: 'probe', triggers: ['form_submit'] }} />
 			<ManualSubmitTrigger />
 		</FormRenderer>,

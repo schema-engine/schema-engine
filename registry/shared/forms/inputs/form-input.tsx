@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useControlledFormElement, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
 import type { InputFieldProps } from './form-input.types';
 
 export function FormInput({
@@ -28,7 +28,7 @@ export function FormInput({
 				data-se-control
 				{...fieldProps}
 				type={inputType}
-				value={value || ''}
+				value={fieldText(value)}
 				onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
 				onBlur={combineHandlers(onBlur, propsOnBlur)}
 				onFocus={propsOnFocus}

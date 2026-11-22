@@ -1,18 +1,19 @@
-import { fromFieldErrors, fromTouchedFields } from '@/lib/field-errors';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { logger } from '@/lib/logger';
-import type { UseFormReturn } from 'react-hook-form';
+import type { FormStateContainer } from '@schema-engine/forms/state-container';
+import type { SubmissionStatusStore } from '@/adapters/submission-status';
 import type { FormActionTrigger, BuilderActionBaseContext, FormConfigView } from '@schema-engine/forms';
-import { buildFormActionContext, checkFormValidity, collectStepActions } from '@schema-engine/forms';
+import { buildFormActionContext, collectStepActions } from '@schema-engine/forms';
 import type { ActionSequenceEntry } from '@schema-engine/actions';
 import type { ActionDispatcher, ActionDispatchInput, ActionDispatchResult } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
-import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 
 interface UseFormActionDispatchersOptions {
-	form: UseFormReturn;
+	container: FormStateContainer;
+	status: SubmissionStatusStore;
+	/** The engine's `fetch`, which the context hands to actions. */
+	fetch: BuilderActionBaseContext['fetch'];
 	config: FormConfigView;
-	registry: ValidationRegistry;
 	actionExecutor: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	getCurrentStep?: () => number;
 	/** Seed for elapsed-time metadata; defaults to the form mount. */
@@ -38,11 +39,16 @@ interface UseFormActionDispatchersReturn {
 /**
  * Provides action context building and trigger dispatching capabilities.
  * Encapsulates the logic for creating execution context and dispatching form actions.
+ *
+ * @remarks
+ * A context reads the container's current snapshot and builds no validation: `isValid` reports the errors
+ * recorded, and an action that needs fresh validity asks `context.form.checkValidity()`.
  */
 export function useFormActionDispatchers({
-	form,
+	container,
+	status,
+	fetch,
 	config,
-	registry,
 	actionExecutor,
 	getCurrentStep,
 	formMountTime: formMountTimeProp,
@@ -50,62 +56,32 @@ export function useFormActionDispatchers({
 }: UseFormActionDispatchersOptions): UseFormActionDispatchersReturn {
 	const [formMountTime] = useState(() => formMountTimeProp ?? Date.now());
 
-	/**
-	 * @remarks
-	 * `form.formState` holds the values of the last render, and React Hook Form re-renders the provider only for
-	 * the fields something reads, so reading it here would be stale until a context had first been built. A
-	 * subscription keeps the live errors, touched state and submit count instead. It never subscribes to
-	 * `isValid`, which would validate the whole form after every change.
-	 */
-	const liveState = useRef({
-		errors: form.formState.errors,
-		touchedFields: form.formState.touchedFields,
-		submitCount: form.formState.submitCount,
-	});
-	useEffect(
-		() =>
-			form.subscribe({
-				formState: { errors: true, touchedFields: true, submitCount: true },
-				callback: ({ errors, touchedFields, submitCount }) => {
-					liveState.current = {
-						errors: errors ?? {},
-						touchedFields: touchedFields ?? {},
-						submitCount: submitCount ?? 0,
-					};
-				},
-			}),
-		[form],
-	);
-
 	const formAdapter = useMemo<BuilderActionBaseContext['form']>(
 		() => ({
-			reset: () => form.reset(),
-			setValue: (name, value) => form.setValue(name, value),
-			getValue: (name) => form.getValues(name),
-			validate: () => form.trigger(),
-			checkValidity: () => checkFormValidity({ steps: config.steps, values: form.getValues(), registry }),
+			reset: () => {
+				container.reset();
+				status.clear();
+			},
+			setValue: (name, value) => container.setValue(name, value),
+			getValue: (name) => container.getValue(name),
+			validate: () => container.validate(),
+			checkValidity: () => container.checkValidity(),
 		}),
-		[form, config.steps, registry],
+		[container, status],
 	);
 
 	const buildActionContext = useCallback((): BuilderActionBaseContext => {
-		const { errors, touchedFields, submitCount } = liveState.current;
-		const recorded = fromFieldErrors(errors, form.getValues());
+		const { values, errors, touched, isValid } = container.getSnapshot();
 		return buildFormActionContext({
 			config,
-			values: form.getValues(),
-			formState: {
-				isValid: Object.keys(recorded).length === 0,
-				errors: recorded,
-				touched: fromTouchedFields(touchedFields),
-				submitCount,
-			},
+			values,
+			formState: { isValid, errors, touched, submitCount: status.getSnapshot().submitCount },
 			currentStep: getCurrentStep?.() ?? 0,
 			mountedAt: formMountTime,
 			form: formAdapter,
-			fetch: registry.fetch,
+			fetch,
 		});
-	}, [form, config, getCurrentStep, formAdapter, formMountTime, registry]);
+	}, [container, status, config, getCurrentStep, formAdapter, formMountTime, fetch]);
 
 	const dispatchActions = useCallback(
 		async (

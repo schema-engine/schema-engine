@@ -177,7 +177,7 @@ export class FormActions {
 	 * Radiant UI keys errors and touched state by flat field name, as the engine's context does. The store records only whether the form was
 	 * submitted, so `submitCount` counts the attempts Radiant UI reports instead:
 	 * `rui-invalid` for one that failed validation, and a finished submission
-	 * lifecycle, which is when React Hook Form counts it too.
+	 * lifecycle, which is when React counts it too.
 	 * A reset clears the store's submitted flag and notifies the store, and the
 	 * change watcher then clears the count.
 	 */

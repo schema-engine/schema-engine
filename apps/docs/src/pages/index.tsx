@@ -42,7 +42,7 @@ const EXPLORE_ARTICLES: HomeFeedArticleData[] = [
 		href: '/docs/forms-react/overview',
 		label: 'React',
 		title: 'Production-ready React layer',
-		description: 'React Hook Form-backed components, view recipes, and a strict builder pattern.',
+		description: 'Form-state-backed components, view recipes, and a strict builder pattern.',
 	},
 	{
 		href: '/docs/actions/overview',

@@ -4,7 +4,6 @@ import * as z from 'zod/mini';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 
 const inputSchema = z.object({
@@ -99,7 +98,7 @@ describe('FormRenderer missing-recipe fallback', () => {
 		});
 
 		try {
-			render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+			render(<FormRenderer config={config} engine={engine} />);
 
 			expect(screen.getByLabelText('First name')).toBeInTheDocument();
 			expect(screen.getByLabelText('Last name')).toBeInTheDocument();
@@ -140,7 +139,7 @@ describe('native Standard Schema through FormRenderer', () => {
 			],
 		});
 
-		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+		render(<FormRenderer config={config} engine={engine} />);
 		expect(screen.getByLabelText('Fixture')).toBeInTheDocument();
 	});
 });
@@ -191,7 +190,7 @@ describe('transformed element configs through FormRenderer', () => {
 			],
 		});
 
-		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+		render(<FormRenderer config={config} engine={engine} />);
 		expect(screen.getByLabelText('Count')).toHaveAttribute('data-count', '7');
 		expect(screen.getByLabelText('Count')).toHaveAttribute('data-type', 'count');
 	});
@@ -222,7 +221,7 @@ describe('registry DOM prop boundaries', () => {
 				],
 			});
 
-			render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+			render(<FormRenderer config={config} engine={engine} />);
 
 			expect(screen.getByRole('textbox', { name: 'Email' })).not.toHaveAttribute('$type');
 			expect(consoleError.mock.calls.flat().some((argument) => String(argument).includes('$type'))).toBe(false);
@@ -253,7 +252,7 @@ describe('registry DOM prop boundaries', () => {
 			],
 		});
 
-		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+		render(<FormRenderer config={config} engine={engine} />);
 
 		const input = screen.getByRole('textbox', { name: 'Email' });
 		expect(input).toHaveAttribute('data-testid', 'email-field');

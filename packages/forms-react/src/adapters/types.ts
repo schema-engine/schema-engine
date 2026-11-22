@@ -1,28 +1,65 @@
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
-import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
+import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { FormActionTrigger, NormalizedFormConfig, SubmissionActionResult } from '@schema-engine/forms';
-import type { FieldArrayValue } from '@schema-engine/forms/adapters';
+import type { FieldArrayValue, FormIssueFormatter, NativeOptions } from '@schema-engine/forms/state-container';
 import type { ReactNode, RefCallback } from 'react';
 
-export interface FormContextValue<TFormData = Record<string, unknown>> {
-	getValues: () => TFormData;
-	setValue: (name: string, value: unknown) => void;
-	trigger: (name?: string | string[]) => Promise<boolean>;
+/** The nested values of a form, as the container holds them and a submission hands them over. */
+export type FormValues = Readonly<Record<string, unknown>>;
+
+/**
+ * What `useFormContext` returns: the commands over the form and a lazily tracked `formState`.
+ *
+ * @remarks
+ * `formState` is read through getters, and a component re-renders only for the keys it reads: a submit
+ * button that reads `isSubmitting` does not re-render while the user types. `errors` and `touchedFields`
+ * are flat by dotted path (`contacts.0.email`). An error is its text, which the provider's `formatIssue`
+ * makes or else the issue's own `message`, and it is absent when there is neither.
+ */
+export interface FormContextValue {
+	/** The values the form holds now. */
+	getValues: () => FormValues;
+	/**
+	 * Writes the branch at `name` as a change.
+	 *
+	 * @remarks
+	 * A widget that wraps a native input with constraints passes what the control reports with the value,
+	 * `{ native: { type: 'tooShort', params: { minLength: 8 } } }`, or `{ native: null }` when it reports itself
+	 * valid. A controlled widget passes none and relies on the engine's rules.
+	 */
+	setValue: (name: string, value: unknown, options?: NativeOptions) => void;
+	/** Validates `name` (a path or several; the whole form when omitted) and resolves whether it passed. */
+	trigger: (name?: string | readonly string[]) => Promise<boolean>;
+	/** Focuses the control a field registered with the `ref` of `useFormField`. */
 	setFocus: (name: string) => void;
 	formState: {
 		errors: Record<string, { message?: string }>;
+		/** Whether no error from any source is recorded. Cheap, and no proof that the values are valid. */
 		isValid: boolean;
 		isSubmitting: boolean;
 		touchedFields: Record<string, boolean>;
+		/** The submissions that ended, whether they passed or failed validation. */
 		submitCount: number;
-		defaultValues?: Partial<TFormData>;
+		defaultValues?: FormValues;
 	};
 }
 
-export interface FormFieldValue<TFieldValue = unknown> {
-	value: TFieldValue;
+/**
+ * What `useFormField` binds a widget to.
+ *
+ * @remarks
+ * `error` and `warning` are texts, from the provider's `formatIssue` or else the issue's own `message`.
+ * A field can be `invalid` with no `error` to show, when nothing says what is wrong in words, so a widget
+ * marks itself invalid from `invalid` and not from the text.
+ */
+export interface FormFieldValue {
+	value: unknown;
 	error?: string;
-	onChange: (value: TFieldValue) => void;
+	warning?: string;
+	/** Whether the field has a blocking error, whatever its text. */
+	invalid: boolean;
+	/** Writes the value; a widget that wraps a native input with constraints adds `{ native }`. */
+	onChange: (value: unknown, options?: NativeOptions) => void;
 	onBlur: () => void;
 	name: string;
 	required: boolean;
@@ -35,56 +72,29 @@ export type { FieldArrayValue };
 /**
  * Props for the FormProvider component
  */
-export interface FormProviderProps<
-	TFormData = Record<string, unknown>,
-	TElements extends Record<string, unknown> = Record<string, unknown>,
-	TRecipes extends Record<string, unknown> = Record<string, unknown>,
-	TActions extends Record<string, unknown> = Record<string, unknown>,
-	TOutputs extends EngineOutputMaps = EngineOutputMaps,
-> {
-	/** Form configuration object defining structure, rules, and actions */
-	config:
-		| FormConfig<TElements, TRecipes, TActions>
-		| NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
+export interface FormProviderProps<TOutputs extends EngineOutputMaps = EngineOutputMaps> {
+	/**
+	 * The form, normalized by the engine (`engine.validateForm`).
+	 *
+	 * @remarks Its `validationMode`, `reValidateMode` and `payload` go to the form's container as they are.
+	 */
+	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	/** Optional default values for form fields */
-	defaultValues?: Partial<TFormData>;
+	defaultValues?: Record<string, unknown>;
 	/** React children to render inside the form context */
 	children: ReactNode;
-	/** Callback function executed on successful form submission */
-	onSubmit?: (data: TFormData) => void | Promise<void>;
+	/** Callback function executed on successful form submission, with the values that passed validation */
+	onSubmit?: (data: FormValues) => void | Promise<void>;
 	/** Callback function executed whenever form data changes */
-	onChange?: (data: Partial<TFormData>) => void;
+	onChange?: (data: FormValues) => void;
 	/** Callback function executed when a form action is triggered */
-	onAction?: (action: FormActionConfig<TOutputs['actions']>, data: TFormData) => void | Promise<void>;
+	onAction?: (action: FormActionConfig<TOutputs['actions']>, data: FormValues) => void | Promise<void>;
 	/** Results of each action trigger, including submission failures. */
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
-}
-
-/**
- * Interface for form adapter implementation.
- *
- * Adapters are the stable integration boundary for form libraries.
- * Field-level validation should be driven through the adapter's form context
- * (`trigger`, `setValue`, `setFocus`) rather than adapter-specific helper
- * methods so different implementations can stay aligned.
- */
-export interface FormAdapter<
-	TFormData = Record<string, unknown>,
-	TElements extends Record<string, unknown> = Record<string, unknown>,
-	TRecipes extends Record<string, unknown> = Record<string, unknown>,
-	TActions extends Record<string, unknown> = Record<string, unknown>,
-	TOutputs extends EngineOutputMaps = EngineOutputMaps,
-> {
-	/** Hook to access form context (values, errors, state) */
-	useFormContext: () => FormContextValue<TFormData>;
-	/** Hook to register and manage a specific form field */
-	useFormField: <TFieldValue = unknown>(config: ElementConfig<TElements>) => FormFieldValue<TFieldValue>;
-	/** Hook to watch a specific field value */
-	useWatchField: <TWatchValue = unknown>(name: string | string[]) => TWatchValue;
-	/** Hook to watch the entire form value tree */
-	useWatchForm: () => TFormData;
-	/** Hook to manage a field array */
-	useFieldArray: (name: string) => FieldArrayValue;
-	/** The FormProvider component to wrap the form */
-	FormProvider: React.ComponentType<FormProviderProps<TFormData, TElements, TRecipes, TActions, TOutputs>>;
+	/**
+	 * Turns an issue into the text a field shows, for this form.
+	 *
+	 * @remarks Overrides the engine's `formatIssue` (`createFormEngine({ formatIssue })`) and the one of the enclosing `FormEngineProvider`.
+	 */
+	formatIssue?: FormIssueFormatter;
 }

@@ -1,45 +1,64 @@
-import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
-import { createContext, useContext } from 'react';
-import type { FormAdapter } from './types';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
+import { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
+import type {
+	FormIssueFormatter,
+	FormStateContainer,
+	FormStateIssue,
+	FormStateSnapshot,
+} from '@schema-engine/forms/state-container';
+import type { FieldRegistry } from './field-registry';
+import type { SubmissionStatusStore } from './submission-status';
 
-export const FormAdapterContext = createContext<FormAdapter | null>(null);
+/**
+ * What a form instance provides to the hooks under it.
+ *
+ * @remarks The container is the only form state. The rest is what React adds around it: the issue text, the controls to focus and the submission status the container does not own.
+ */
+export interface FormStateContextValue {
+	readonly container: FormStateContainer;
+	readonly formatIssue: FormIssueFormatter | undefined;
+	readonly fields: FieldRegistry;
+	readonly status: SubmissionStatusStore;
+}
 
-export function useFormAdapter<
-	TFormData = Record<string, unknown>,
-	TElements extends Record<string, unknown> = Record<string, unknown>,
-	TRecipes extends Record<string, unknown> = Record<string, unknown>,
-	TActions extends Record<string, unknown> = Record<string, unknown>,
-	TOutputs extends EngineOutputMaps = EngineOutputMaps,
->(): FormAdapter<TFormData, TElements, TRecipes, TActions, TOutputs> {
-	const adapter = useContext(FormAdapterContext);
-	if (!adapter) {
-		throw new Error('useFormAdapter must be used within a FormEngine with a valid adapter');
+export const FormStateContext = createContext<FormStateContextValue | null>(null);
+
+export function useFormStateContext(): FormStateContextValue {
+	const context = useContext(FormStateContext);
+	if (!context) {
+		throw new Error('Form hooks must be used within a FormProvider or a FormRenderer');
 	}
-	return adapter as unknown as FormAdapter<TFormData, TElements, TRecipes, TActions, TOutputs>;
+	return context;
 }
 
-export function useFormContext<TFormData = Record<string, unknown>>() {
-	const adapter = useFormAdapter<TFormData>();
-	return adapter.useFormContext();
+/**
+ * Reads a pure selector of the container's snapshot and re-renders when its result changes.
+ *
+ * @remarks
+ * The selectors of `@schema-engine/forms/state-container` return the same object while what they read is
+ * unchanged, so `useSyncExternalStore` compares results by reference. A selector that builds a new result on
+ * each call must be memoized by the caller. The first render, on the server and while hydrating, reads the
+ * container's server snapshot, so both render the same.
+ */
+export function useContainerSelector<T>(selector: (snapshot: FormStateSnapshot) => T): T {
+	const { container } = useFormStateContext();
+	const subscribe = useCallback((listener: () => void) => container.subscribe(listener), [container]);
+	return useSyncExternalStore(
+		subscribe,
+		() => selector(container.getSnapshot()),
+		() => selector(container.getServerSnapshot()),
+	);
 }
 
-export function useFormField<TFieldValue = unknown>(config: ElementConfig) {
-	const adapter = useFormAdapter();
-	return adapter.useFormField<TFieldValue>(config);
-}
-
-export function useWatchField<TWatchValue = unknown, TFormData = Record<string, unknown>>(name: string | string[]) {
-	const adapter = useFormAdapter<TFormData>();
-	return adapter.useWatchField<TWatchValue>(name);
-}
-
-export function useWatchForm<TFormData = Record<string, unknown>>() {
-	const adapter = useFormAdapter<TFormData>();
-	return adapter.useWatchForm();
-}
-
-export function useFieldArray(name: string) {
-	const adapter = useFormAdapter();
-	return adapter.useFieldArray(name);
+/**
+ * The text of an issue: what the host's formatter says, else the issue's own `message`, else nothing.
+ *
+ * @remarks A formatter that returns an empty text says nothing worth showing. The rule type is never shown.
+ */
+export function formatIssueText(
+	issue: FormStateIssue,
+	path: string,
+	formatIssue: FormIssueFormatter | undefined,
+): string | undefined {
+	const formatted = formatIssue?.(issue, { path });
+	return formatted || issue.message || undefined;
 }

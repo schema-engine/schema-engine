@@ -1,5 +1,4 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { FormEngineProvider } from '@/components/form-engine-provider';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import {
@@ -22,10 +21,10 @@ import {
  * Markup-only document from the renderer’s server output (no injected theme CSS).
  */
 export function renderSsrLayoutAcceptanceHtml(): string {
-	const { engine, config, adapter } = getSsrAcceptanceFixture();
+	const { engine, config } = getSsrAcceptanceFixture();
 	const body = renderToStaticMarkup(
-		<FormEngineProvider engine={engine} adapter={adapter}>
-			<FormRenderer engine={engine} adapter={adapter} config={config} />
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={config} />
 		</FormEngineProvider>,
 	);
 
@@ -34,10 +33,10 @@ export function renderSsrLayoutAcceptanceHtml(): string {
 
 /** Markup-only document for the named width fixture. */
 export function renderSsrWidthsAcceptanceHtml(): string {
-	const { engine, config, adapter } = getSsrWidthsFixture();
+	const { engine, config } = getSsrWidthsFixture();
 	const body = renderToStaticMarkup(
-		<FormEngineProvider engine={engine} adapter={adapter}>
-			<FormRenderer engine={engine} adapter={adapter} config={config} />
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={config} />
 		</FormEngineProvider>,
 	);
 
@@ -46,10 +45,10 @@ export function renderSsrWidthsAcceptanceHtml(): string {
 
 /** Markup-only document for the nested width fixture: a fieldset and one array row. */
 export function renderSsrNestedWidthsAcceptanceHtml(): string {
-	const { engine, config, adapter } = getSsrNestedWidthsFixture();
+	const { engine, config } = getSsrNestedWidthsFixture();
 	const body = renderToStaticMarkup(
-		<FormEngineProvider engine={engine} adapter={adapter}>
-			<FormRenderer engine={engine} adapter={adapter} config={config} defaultValues={{ rows: [{}] }} />
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={config} defaultValues={{ rows: [{}] }} />
 		</FormEngineProvider>,
 	);
 
@@ -58,10 +57,10 @@ export function renderSsrNestedWidthsAcceptanceHtml(): string {
 
 /** Markup-only document for the drawn layout fixture. */
 export function renderSsrAreasAcceptanceHtml(): string {
-	const { engine, config, adapter } = getSsrAreasFixture();
+	const { engine, config } = getSsrAreasFixture();
 	const body = renderToStaticMarkup(
-		<FormEngineProvider engine={engine} adapter={adapter}>
-			<FormRenderer engine={engine} adapter={adapter} config={config} />
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={config} />
 		</FormEngineProvider>,
 	);
 
@@ -70,10 +69,10 @@ export function renderSsrAreasAcceptanceHtml(): string {
 
 /** Markup-only document for the stepped fixture: one step with its own template and one without. */
 export function renderSsrSteppedAcceptanceHtml(): string {
-	const { engine, config, adapter } = getSsrSteppedFixture();
+	const { engine, config } = getSsrSteppedFixture();
 	const body = renderToStaticMarkup(
-		<FormEngineProvider engine={engine} adapter={adapter}>
-			<FormRenderer engine={engine} adapter={adapter} config={config} />
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={config} />
 		</FormEngineProvider>,
 	);
 
@@ -103,12 +102,8 @@ function renderNestedThemeForm(
 ): { html: string; layout: LayoutThemeLike } {
 	const engine = createSsrAcceptanceEngine(layout);
 	const html = renderToStaticMarkup(
-		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
-			<FormRenderer
-				engine={engine}
-				adapter={rhfAdapter}
-				config={engine.validateForm(nestedThemeForm('ssr-input', options))}
-			/>
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={engine.validateForm(nestedThemeForm('ssr-input', options))} />
 		</FormEngineProvider>,
 	);
 	return { html, layout: engine.getLayout() };
@@ -124,8 +119,8 @@ export function renderSsrFormsOnOnePage(engines: Array<ReturnType<typeof createS
 	return renderToStaticMarkup(
 		<>
 			{engines.map((engine, index) => (
-				<FormEngineProvider key={index} engine={engine} adapter={rhfAdapter}>
-					<FormRenderer engine={engine} adapter={rhfAdapter} config={engine.validateForm(THEMED_FORM)} />
+				<FormEngineProvider key={index} engine={engine}>
+					<FormRenderer engine={engine} config={engine.validateForm(THEMED_FORM)} />
 				</FormEngineProvider>
 			))}
 		</>,

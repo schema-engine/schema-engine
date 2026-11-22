@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
+import type { FormStateContainer } from '@schema-engine/forms/state-container';
+import type { FieldRegistry } from '@/adapters/field-registry';
 import {
 	collectStepFieldPaths,
 	createInitialStepStates,
@@ -41,14 +42,18 @@ type DispatchTrigger = (
 ) => Promise<ActionExecutionResult[]>;
 
 /**
- * @remarks The navigator is created on first navigation, outside render as the React refs rule
+ * @remarks
+ * A step is validated with the container, which marks nothing submitted, so a failed step does not light up
+ * the later ones, and a field that failed re-validates by `reValidateMode` from then on.
+ *
+ * The navigator is created on first navigation, outside render as the React refs rule
  * requires, and lives as long as the hook, so its in-flight guard survives re-renders; the reducer
  * and callbacks are read through a ref. Unmounting, which a replaced config causes, cancels the
  * navigation in flight so it dispatches no step trigger for the discarded form.
  */
-export function useRHFMultiStep(
+export function useMultiStep(
 	config: FormConfigView,
-	form: UseFormReturn,
+	{ container, fields }: { container: FormStateContainer; fields: FieldRegistry },
 	dispatchTrigger: DispatchTrigger,
 	options?: { onStepIndexChange?: (index: number) => void },
 ): MultiStepContextValue {
@@ -61,40 +66,15 @@ export function useRHFMultiStep(
 	const stateRef = useRef(state);
 	const onStepIndexChange = options?.onStepIndexChange;
 
-	/**
-	 * @remarks
-	 * React Hook Form applies `reValidateMode` only after a submit, and a step check is a `trigger`,
-	 * not a submit. Without this, an error a failed step check left stays until the field blurs,
-	 * and on mousedown of Next that blur removes the error text, shifts the button and loses the click.
-	 * Once a step check has failed, a field that has an error is validated again on every change, as
-	 * it is after a failed submit. After a submit React Hook Form already does that, so the extra
-	 * `trigger` is skipped there and async rules do not run twice. A reset, which React Hook Form
-	 * reports without a field name, clears the flag.
-	 */
-	const stepCheckFailed = useRef(false);
-	useEffect(() => {
-		const subscription = form.watch((_values, { name }) => {
-			if (!name) {
-				stepCheckFailed.current = false;
-				return;
-			}
-			if (stepCheckFailed.current && !form.formState.isSubmitted && form.getFieldState(name).invalid) {
-				void form.trigger(name);
-			}
-		});
-		return () => subscription.unsubscribe();
-	}, [form]);
-
 	const validateStep = useCallback(
 		async (index: number) => {
-			const names = collectStepFieldPaths(config.steps[index], form.getValues());
+			const names = collectStepFieldPaths(config.steps[index], container.getSnapshot().values);
 			if (!names.length) return true;
 			try {
-				const valid = await form.trigger(names);
+				const valid = await container.validate(names);
 				if (!valid) {
-					stepCheckFailed.current = true;
-					const firstInvalid = names.find((name) => form.getFieldState(name).invalid);
-					if (firstInvalid) form.setFocus(firstInvalid);
+					const { errors } = container.getSnapshot();
+					fields.focusFirst(names.filter((name) => Object.hasOwn(errors, name)));
 				}
 				return valid;
 			} catch (error) {
@@ -102,7 +82,7 @@ export function useRHFMultiStep(
 				return false;
 			}
 		},
-		[config.steps, form],
+		[config.steps, container, fields],
 	);
 
 	const latest = useRef({ reduce, validateStep, dispatchTrigger, onStepIndexChange });

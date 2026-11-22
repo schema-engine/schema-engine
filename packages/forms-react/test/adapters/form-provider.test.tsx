@@ -1,11 +1,34 @@
+import { fieldText } from '@/hooks/field-text';
 import { getDefaultLayoutTheme } from '@schema-engine/layout';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { FormProvider } from '../../src/adapters/rhf/form-provider';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import { FormProvider } from '../../src/components/form-provider';
+import { useFormField } from '../../src/adapters';
+import type { ElementConfig, FormConfig } from '@schema-engine/forms/schemas';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import * as z from 'zod/mini';
+import { createFormEngine, defineInput } from '@schema-engine/forms';
 import { mockDispatch } from '../utils/use-action-executor.mock';
-import { useFormContext as useReactHookFormContext } from 'react-hook-form';
+
+/** @remarks The real registrations import the mocked engine hook, so this engine registers a bare input. */
+const testEngine = createFormEngine({
+	elements: [
+		defineInput({
+			$type: 'input',
+			schema: z.looseObject({ $type: z.literal('input'), name: z.string() }),
+			metadata: { name: 'Input', category: 'input' },
+			render: (config: ElementConfig) => <input name={config.name} readOnly />,
+		}),
+	],
+	actions: [
+		{
+			$type: 'submit',
+			schema: z.looseObject({ $type: z.literal('submit'), id: z.string() }),
+			metadata: { name: 'Submit' },
+			execute: async () => ({ success: true }),
+		},
+	],
+});
 
 vi.mock('@schema-engine/forms/actions', async () => {
 	const { mockDispatch, mockDispatchSync } = await import('../utils/use-action-executor.mock');
@@ -23,12 +46,9 @@ vi.mock('@/hooks/use-form-context', () => ({
 		engine: {
 			getValidationRegistry: () => createDefaultValidationRegistry(),
 			getLayout: () => getDefaultLayoutTheme(),
+			getIssueFormatter: () => undefined,
 		},
 	}),
-}));
-
-vi.mock('../../src/adapters/rhf/hooks/use-form-validation-resolver', () => ({
-	useFormValidationResolver: () => async () => ({ values: {}, errors: {} }),
 }));
 
 describe('FormProvider', () => {
@@ -72,13 +92,24 @@ describe('FormProvider', () => {
 	});
 
 	function RegisteredInput() {
-		const form = useReactHookFormContext();
-		return <input data-testid="field1" {...form.register('field1')} />;
+		const { value, onChange, onBlur } = useFormField({
+			$type: 'input',
+			name: 'field1',
+			id: 'field1',
+		});
+		return (
+			<input
+				data-testid="field1"
+				value={fieldText(value)}
+				onChange={(event) => onChange(event.target.value)}
+				onBlur={onBlur}
+			/>
+		);
 	}
 
 	it('should fire form_mount on mount', async () => {
 		render(
-			<FormProvider config={config}>
+			<FormProvider config={testEngine.validateForm(config)}>
 				<div>Form Content</div>
 			</FormProvider>,
 		);
@@ -94,7 +125,7 @@ describe('FormProvider', () => {
 
 	it('should fire form_submit_start before form_submit on submit', async () => {
 		render(
-			<FormProvider config={config}>
+			<FormProvider config={testEngine.validateForm(config)}>
 				<button type="submit">Submit</button>
 			</FormProvider>,
 		);
@@ -138,7 +169,7 @@ describe('FormProvider', () => {
 		});
 
 		render(
-			<FormProvider config={config}>
+			<FormProvider config={testEngine.validateForm(config)}>
 				<RegisteredInput />
 				<button type="submit">Submit</button>
 			</FormProvider>,
@@ -165,7 +196,7 @@ describe('FormProvider', () => {
 		});
 
 		render(
-			<FormProvider config={config} onChange={onChange}>
+			<FormProvider config={testEngine.validateForm(config)} onChange={onChange}>
 				<RegisteredInput />
 			</FormProvider>,
 		);
@@ -192,7 +223,7 @@ describe('FormProvider', () => {
 		const injected = { ...config, onSubmit: configOnSubmit, onChange: configOnChange } as FormConfig;
 
 		render(
-			<FormProvider config={injected} onSubmit={onSubmit} onChange={onChange}>
+			<FormProvider config={testEngine.validateForm(injected)} onSubmit={onSubmit} onChange={onChange}>
 				<RegisteredInput />
 				<button type="submit">Submit</button>
 			</FormProvider>,

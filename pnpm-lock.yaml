@@ -575,9 +575,6 @@ importers:
       react-dropzone:
         specifier: ^14.3.8
         version: 14.4.1(react@19.3.0)
-      react-hook-form:
-        specifier: ^7.60.0
-        version: 7.88.0(react@19.3.0)
       react-phone-number-input:
         specifier: ^3.4.12
         version: 3.4.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -5125,12 +5122,6 @@ packages:
   react-dropzone@14.4.1:
     resolution: {integrity: sha512-QDuV76v3uKbHiH34SpwifZ+gOLi1+RdsCO1kl5vxMT4wW8R82+sthjvBw4th3NHF/XX6FBsqDYZVNN+pnhaw0g==}
     engines: {node: '>= 10.13'}
-    peerDependencies:
-      react: ^19.3.0
-
-  react-hook-form@7.88.0:
-    resolution: {integrity: sha512-QRaLOWhX93YCnMiRfnOFRSwWXZNt8qhm2JTZwypoDvKpSffTJHmpzMXt8U6PV5UThvL3IiiLDUWe2nHMtz6Mmw==}
-    engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^19.3.0
 
@@ -10473,10 +10464,6 @@ snapshots:
       attr-accept: 2.2.5
       file-selector: 2.1.2
       prop-types: 15.8.1
-      react: 19.3.0
-
-  react-hook-form@7.88.0(react@19.3.0):
-    dependencies:
       react: 19.3.0
 
   react-is@16.13.1: {}

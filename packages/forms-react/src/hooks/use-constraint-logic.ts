@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useWatchField } from '@/adapters/context';
+import { useWatchField } from '@/adapters/use-watch-field';
 import {
 	evaluateResolvedConstraints,
 	resolveConstraintPaths,
@@ -26,12 +26,12 @@ export function useConstraintLogic(
 ): UseConstraintLogicResult {
 	const watchedFields = useMemo(() => resolveConstraintPaths(constraints, fieldPath), [constraints, fieldPath]);
 
-	const watchedValues = useWatchField<unknown[]>(watchedFields);
+	const watchedValues = useWatchField(watchedFields);
 
 	const fieldValues = useMemo(() => {
 		const map: Record<string, unknown> = {};
 		constraints.forEach((constraint, index) => {
-			map[constraint.field] = Array.isArray(watchedValues) ? watchedValues[index] : watchedValues;
+			map[constraint.field] = watchedValues[index];
 		});
 		return map;
 	}, [constraints, watchedValues]);

@@ -1,6 +1,6 @@
 import { PhoneInput } from '@/components/ui/schema-engine/components/phone-input';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useControlledFormElement, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import type { PhoneInputFieldProps } from './form-phone-input.types';
 import type { Country } from 'react-phone-number-input';
@@ -29,7 +29,7 @@ export function FormPhoneInput({
 		>
 			<PhoneInput
 				{...fieldProps}
-				value={value || ''}
+				value={fieldText(value)}
 				defaultCountry={defaultCountry as Country | undefined}
 				international={international}
 				onChange={combineHandlers(onChange, propsOnChange)}

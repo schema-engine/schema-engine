@@ -1,12 +1,24 @@
 import { useState, useCallback, useContext } from 'react';
 import { FormInstanceContext } from '@/components/provider';
+import { useFormatIssue } from '@/adapters/use-form-error';
+import { FORM_ROOT } from '@schema-engine/forms/state-container';
 
 /**
  * Submission error from a failed action
  */
+export type SubmissionErrorType = 'actionFailed' | 'noResult' | 'callbackFailed' | 'triggerFailed' | 'validationFailed';
+
+/**
+ * Why a submission failed, as a typed failure the application words.
+ *
+ * @remarks
+ * `message` is only the text the failure itself carried (an action's error, an exception's message) and is
+ * absent when it carried none. Use `formatError` of {@link useSubmissionState} for the text to show.
+ */
 export interface SubmissionError {
 	actionId: string;
-	message: string;
+	type: SubmissionErrorType;
+	message?: string;
 }
 
 /**
@@ -18,11 +30,9 @@ export interface SubmissionState {
 	status: SubmissionStatus;
 	/** Errors from failed actions */
 	errors: SubmissionError[];
-	/** Success message (uses default if not provided) */
+	/** Success message the submission supplied, if any */
 	successMessage: string | null;
 }
-
-const DEFAULT_SUCCESS_MESSAGE = 'Form submitted successfully';
 
 const initialState: SubmissionState = {
 	status: 'idle',
@@ -61,7 +71,7 @@ export function useSubmissionStateManager(): UseSubmissionStateReturn {
 		setSubmissionState({
 			status: 'success',
 			errors: [],
-			successMessage: params?.message ?? DEFAULT_SUCCESS_MESSAGE,
+			successMessage: params?.message ?? null,
 		});
 	}, []);
 
@@ -102,6 +112,9 @@ export function useSubmissionStateManager(): UseSubmissionStateReturn {
  */
 export function useSubmissionState() {
 	const context = useContext(FormInstanceContext);
+	const formatIssue = useFormatIssue();
+	const formatError = (error: SubmissionError): string | undefined =>
+		formatIssue({ type: error.type, source: 'server', message: error.message }, FORM_ROOT);
 
 	if (!context) {
 		throw new Error('useSubmissionState must be used within a FormProvider');
@@ -110,5 +123,6 @@ export function useSubmissionState() {
 	return {
 		submissionState: context.submissionState,
 		clearSubmission: context.clearSubmission,
+		formatError,
 	};
 }

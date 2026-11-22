@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { defineStoryForm, getEngine, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { defineStoryForm, getEngine } from '@/stories/shared/form-builder.ui';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 import { responsiveColumnsPlay, responsiveFieldSpansPlay } from './layout.play';
 
@@ -10,7 +10,6 @@ const meta = {
 	component: FormRenderer,
 	args: {
 		engine,
-		adapter: rhfAdapter,
 		config: defineStoryForm({
 			id: 'layout-responsive-columns',
 			title: 'Responsive columns',

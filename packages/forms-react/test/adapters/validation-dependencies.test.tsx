@@ -1,27 +1,9 @@
-import { getDefaultLayoutTheme } from '@schema-engine/layout';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { FormProvider } from '../../src/adapters/rhf/form-provider';
-import { useFormContext as useReactHookFormContext } from 'react-hook-form';
+import { fieldText } from '@/hooks/field-text';
+import { describe, it, expect } from 'vitest';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
-
-vi.mock('@/hooks/use-form-context', () => ({
-	useFormEngine: () => ({
-		engine: {
-			getValidationRegistry: () => createDefaultValidationRegistry(),
-			getLayout: () => getDefaultLayoutTheme(),
-		},
-	}),
-}));
-
-vi.mock('@schema-engine/forms/actions', () => ({
-	ActionDispatcher: class {
-		dispatch = vi.fn().mockResolvedValue([]);
-		dispatchSync = vi.fn();
-		hasMatching = () => true;
-	},
-}));
+import { useFormField } from '../../src/adapters';
+import { renderProvider } from '../utils/form-harness';
 
 const config: FormConfig = {
 	id: 'dependency-form',
@@ -54,21 +36,27 @@ const config: FormConfig = {
 };
 
 function Probe({ name }: { name: string }) {
-	const { register, formState } = useReactHookFormContext();
+	const { value, error, onChange, onBlur } = useFormField({ $type: 'input', name, id: name });
 	return (
 		<>
-			<input data-testid={name} {...register(name)} />
-			<span data-testid={`${name}-error`}>{(formState.errors[name]?.message as string) ?? ''}</span>
+			<input
+				data-testid={name}
+				value={fieldText(value)}
+				onChange={(event) => onChange(event.target.value)}
+				onBlur={onBlur}
+			/>
+			<span data-testid={`${name}-error`}>{error ?? ''}</span>
 		</>
 	);
 }
 
 function renderForm() {
-	render(
-		<FormProvider config={config}>
+	renderProvider(
+		config,
+		<>
 			<Probe name="password" />
 			<Probe name="confirmPassword" />
-		</FormProvider>,
+		</>,
 	);
 
 	return {
@@ -84,7 +72,8 @@ describe('cross-field revalidation', () => {
 
 		fireEvent.change(password, { target: { value: 'hunter2' } });
 
-		await waitFor(() => expect(confirmError()).toBe(''));
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		expect(confirmError()).toBe('');
 	});
 
 	it('surfaces the mismatch on a touched confirmation when the password changes', async () => {

@@ -1,21 +1,18 @@
+import { fieldText } from '@/hooks/field-text';
 import { afterEach, expect, test } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { useController, useFormContext } from 'react-hook-form';
-import { createFormEngine } from '@schema-engine/forms';
-import { FormProvider } from '../../src/adapters/rhf/form-provider';
-import { FormEngineContext } from '../../src/components/provider';
-import { FormAdapterContext } from '../../src/adapters/context';
-import { rhfAdapter } from '../../src/adapters/react-hook-form';
-import { useFormInstanceActions } from '../../src/hooks/use-form-context';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-
-const engine = createFormEngine({});
+import { useFormField } from '../../src/adapters';
+import { useFormStateContext } from '../../src/adapters/context';
+import { useFormInstanceActions } from '../../src/hooks/use-form-context';
+import { renderProvider } from '../utils/form-harness';
 
 afterEach(cleanup);
 
 const config: FormConfig = {
 	id: 'revalidation',
+	validationMode: 'onBlur',
 	steps: [
 		{
 			id: 'account',
@@ -38,24 +35,29 @@ const config: FormConfig = {
 
 /** @remarks The error is a block above the buttons, so it leaving the page moves Next up, as a real field's error does. */
 function Field() {
-	const { field, fieldState } = useController({ name: 'password' });
+	const { value, error, onChange, onBlur, ref } = useFormField(config.steps[0].elements![0]);
 	return (
 		<div>
 			<label>
 				Password
-				<input {...field} value={field.value ?? ''} />
+				<input
+					ref={ref}
+					value={fieldText(value)}
+					onChange={(event) => onChange(event.target.value)}
+					onBlur={onBlur}
+				/>
 			</label>
-			<p role="alert">{fieldState.error?.message ?? ''}</p>
+			<p role="alert">{error ?? ''}</p>
 		</div>
 	);
 }
 
 function Controls() {
 	const { currentStep, goToNext } = useFormInstanceActions();
-	const form = useFormContext();
+	const { container } = useFormStateContext();
 	return (
 		<>
-			<button type="button" onClick={() => form.reset()}>
+			<button type="button" onClick={() => container.reset()}>
 				Reset
 			</button>
 			<output aria-label="step">{currentStep}</output>
@@ -67,15 +69,12 @@ function Controls() {
 }
 
 function mount() {
-	return render(
-		<FormEngineContext.Provider value={{ engine }}>
-			<FormAdapterContext.Provider value={rhfAdapter}>
-				<FormProvider config={config}>
-					<Field />
-					<Controls />
-				</FormProvider>
-			</FormAdapterContext.Provider>
-		</FormEngineContext.Provider>,
+	return renderProvider(
+		config,
+		<>
+			<Field />
+			<Controls />
+		</>,
 	);
 }
 
@@ -100,6 +99,13 @@ test('a field that failed the step check reports its current error while it is e
 	await userEvent.fill(screen.getByRole('textbox'), 'abc');
 	await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Use at least 8 characters'));
 	expect(screen.getByLabelText('step')).toHaveTextContent('0');
+});
+
+test('a failed step check focuses its first invalid field and does not mark the form submitted', async () => {
+	mount();
+	await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+	await waitFor(() => expect(screen.getByRole('textbox')).toHaveFocus());
 });
 
 test('a field keeps its blur error while edited before any step check has failed', async () => {

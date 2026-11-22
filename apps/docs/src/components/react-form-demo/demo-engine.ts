@@ -1,5 +1,4 @@
 import { createFormEngine } from '@schema-engine/forms';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 import { demoFormRegistrations } from './demo-registrations.react';
 import { demoRecipeRegistrations } from './demo-recipes.react';
 import { createDocsDemoActions } from '@/lib/docs-demo-actions';
@@ -17,9 +16,7 @@ import { brandTheme } from '@/lib/recipes/brand-theme';
  * entrypoints outside `src/`, so the demo graph must not reach into the
  * `registry/shared/` shadcn sources that the package aliases expose. The shadcn
  * example uses a copy of that source under `src/generated/shadcn` instead (see
- * `shadcn-engine.ts`). The adapter imports from
- * `@schema-engine/forms-react/adapters/react-hook-form`, the subpath that keeps
- * `react-hook-form` an optional peer.
+ * `shadcn-engine.ts`).
  */
 export const docsReactFormEngine = createFormEngine({
 	elements: demoFormRegistrations,
@@ -27,5 +24,3 @@ export const docsReactFormEngine = createFormEngine({
 	actions: createDocsDemoActions(),
 	layout: brandTheme,
 });
-
-export { rhfAdapter };

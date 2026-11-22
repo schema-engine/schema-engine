@@ -3,7 +3,6 @@ import { useState } from 'react';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from './demo-engine';
 
 /**
  * A form with the result region the docs demos show after a valid submit.
@@ -16,8 +15,8 @@ export function ReactFormContent({ config, engine }: { config: FormConfig; engin
 	const [submitted, setSubmitted] = useState<Record<string, unknown> | null>(null);
 
 	return (
-		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
-			<FormRenderer config={config} engine={engine} adapter={rhfAdapter} onSubmit={setSubmitted} />
+		<FormEngineProvider engine={engine}>
+			<FormRenderer config={config} engine={engine} onSubmit={setSubmitted} />
 			{submitted ? (
 				<output className="docs-react-form-result" data-se-demo-result>
 					<strong>Form submitted successfully.</strong>

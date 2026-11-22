@@ -3,7 +3,6 @@ import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import type { ElementGridConfig, LayoutInput } from '@schema-engine/layout';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
 import { useLayoutThemeId } from '@/hooks/use-form-context';
 import { createFormEngine } from '@schema-engine/forms';
@@ -60,7 +59,6 @@ let cachedFixture:
 	| {
 			engine: FormEngine;
 			config: NormalizedFormConfig;
-			adapter: typeof rhfAdapter;
 	  }
 	| undefined;
 
@@ -99,7 +97,7 @@ export function getSsrAcceptanceFixture() {
 				},
 			],
 		});
-		cachedFixture = { engine, config, adapter: rhfAdapter };
+		cachedFixture = { engine, config };
 	}
 	return cachedFixture;
 }
@@ -109,7 +107,7 @@ let cachedWidthsFixture: ReturnType<typeof getSsrAcceptanceFixture> | undefined;
 /** Same engine as {@link getSsrAcceptanceFixture}, with a form that places fields by named width. */
 export function getSsrWidthsFixture() {
 	if (!cachedWidthsFixture) {
-		const { engine, adapter } = getSsrAcceptanceFixture();
+		const { engine } = getSsrAcceptanceFixture();
 		const config = engine.validateForm({
 			id: 'ssr-widths-acceptance',
 			title: 'SSR widths acceptance',
@@ -127,7 +125,7 @@ export function getSsrWidthsFixture() {
 				},
 			],
 		});
-		cachedWidthsFixture = { engine, config, adapter };
+		cachedWidthsFixture = { engine, config };
 	}
 	return cachedWidthsFixture;
 }
@@ -137,7 +135,7 @@ let cachedNestedFixture: ReturnType<typeof getSsrAcceptanceFixture> | undefined;
 /** Same engine, with a fieldset and an array row whose children set widths. */
 export function getSsrNestedWidthsFixture() {
 	if (!cachedNestedFixture) {
-		const { engine, adapter } = getSsrAcceptanceFixture();
+		const { engine } = getSsrAcceptanceFixture();
 		const children = (prefix: 'Nest' | 'Row') =>
 			ssrNestedFields(prefix).map(({ id, label, grid }) => ({ $type: 'ssr-input', id, name: id, label, grid }));
 		const config = engine.validateForm({
@@ -161,19 +159,19 @@ export function getSsrNestedWidthsFixture() {
 				},
 			],
 		});
-		cachedNestedFixture = { engine, config, adapter };
+		cachedNestedFixture = { engine, config };
 	}
 	return cachedNestedFixture;
 }
 
 /** Same engine as {@link getSsrAcceptanceFixture}, with a step grid that draws its layout from areas. */
 export function getSsrAreasFixture() {
-	const { engine, adapter } = getSsrAcceptanceFixture();
-	return { engine, config: engine.validateForm(ssrAreasForm('ssr-input')), adapter };
+	const { engine } = getSsrAcceptanceFixture();
+	return { engine, config: engine.validateForm(ssrAreasForm('ssr-input')) };
 }
 
 /** Same engine, with a step that draws its own responsive template beside a step on the form grid. */
 export function getSsrSteppedFixture() {
-	const { engine, adapter } = getSsrAcceptanceFixture();
-	return { engine, config: engine.validateForm(ssrSteppedForm('ssr-input')), adapter };
+	const { engine } = getSsrAcceptanceFixture();
+	return { engine, config: engine.validateForm(ssrSteppedForm('ssr-input')) };
 }

@@ -6,7 +6,7 @@ import {
 	FieldContent,
 	FieldHint,
 } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useControlledFormElement, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
 import type { RadioFieldProps } from './form-radio.types';
 import { Label } from '@/components/ui/label';
 
@@ -29,7 +29,7 @@ export function FormRadio({
 			<FieldContent className="space-y-3">
 				<RadioGroup
 					{...fieldProps}
-					value={value || ''}
+					value={fieldText(value)}
 					onValueChange={(val: unknown) => combineHandlers(onChange, propsOnChange)(String(val))}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					onFocus={propsOnFocus}

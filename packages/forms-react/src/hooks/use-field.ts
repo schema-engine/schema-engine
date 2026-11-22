@@ -9,7 +9,7 @@ import {
 	type ElementGridConfig,
 } from '@schema-engine/layout';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
-import { useFormField } from '@/adapters/context';
+import { useFormField } from '@/adapters/use-form-field';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
 import { FieldHostContext, FieldConstraintContext } from '@/contexts/field-constraint-context';
 import { isElementRequired } from '@/hooks/is-element-required';
@@ -98,12 +98,11 @@ export function combineHandlers<T>(controllerHandler: (value: T) => void, propsH
 
 /**
  * Field chrome and value binding for consumer-owned registry components.
- * Goes through the active FormAdapter — not a specific form library.
+ * Binds the field to the form container the enclosing provider created.
  *
  * @remarks
- * The field value is `any` because one hook serves every registry input: each
- * component binds `value` to its own control type (string, number, array), and
- * `unknown` would force a cast in every consumer.
+ * The field `value` is `unknown`, as the container holds it: each component narrows it to its own control's
+ * type (a string, a number, a list).
  *
  * Under `FormElement`, `isRequired` comes from the constraints that element
  * already evaluated for this field path. A field rendered without one watches
@@ -128,7 +127,7 @@ export function useControlledFormElement(config: ElementConfig) {
 		!evaluated && isElementRequired(config, registry),
 	);
 	const { isRequired } = evaluated ?? standalone;
-	const { value, error, onChange, onBlur, name, disabled, ref } = useFormField<any>(config);
+	const { value, error, warning, invalid, onChange, onBlur, name, disabled, ref } = useFormField(config);
 
 	const fieldProps = mergeControlProps(
 		{
@@ -138,7 +137,7 @@ export function useControlledFormElement(config: ElementConfig) {
 			disabled,
 			readOnly: config.readonly,
 			ref,
-			'aria-invalid': Boolean(error),
+			'aria-invalid': invalid,
 			'aria-describedby': error ? `${config.id}-error` : undefined,
 		},
 		config.htmlAttributes,
@@ -163,6 +162,8 @@ export function useControlledFormElement(config: ElementConfig) {
 	return {
 		value,
 		error,
+		warning,
+		invalid,
 		isRequired,
 		onChange,
 		onBlur,
@@ -172,7 +173,7 @@ export function useControlledFormElement(config: ElementConfig) {
 		containerStyles,
 		fieldState: {
 			error: error ? { message: error } : undefined,
-			invalid: Boolean(error),
+			invalid,
 		},
 		config,
 		combineHandlers,

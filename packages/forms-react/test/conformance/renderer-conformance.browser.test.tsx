@@ -9,7 +9,6 @@ import {
 	customArrayType,
 } from '../../../../test-utils/renderer-conformance';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import {
@@ -60,7 +59,7 @@ rendererConformance(async ({ config, ...props }) => {
 		layout: conformanceLayout,
 	});
 	const renderConfig = (next: typeof config) => (
-		<FormRenderer {...props} config={engine.validateForm(next)} engine={engine} adapter={rhfAdapter} />
+		<FormRenderer {...props} config={engine.validateForm(next)} engine={engine} />
 	);
 	const view = render(renderConfig(config));
 	return {

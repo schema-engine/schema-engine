@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useFormContext, useWatchForm } from '@/adapters/context';
+import { useFormContext, useWatchForm } from '@/adapters';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { useOptionalViewContext } from '@/contexts/view-context';
 import './form-debugger.css';

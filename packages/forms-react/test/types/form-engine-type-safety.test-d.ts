@@ -83,9 +83,7 @@ const transformedForm = transformedEngine.defineForm({
 	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'transformed', name: 'count', count: '1' }] }],
 });
 type TransformedProvider =
-	typeof transformedEngine extends FormEngine<infer E, infer R, infer A, infer O>
-		? FormProviderProps<Record<string, unknown>, E, R, A, O>
-		: never;
+	typeof transformedEngine extends FormEngine<infer _E, infer _R, infer _A, infer O> ? FormProviderProps<O> : never;
 type TransformedRenderer =
 	typeof transformedEngine extends FormEngine<infer E, infer R, infer A, infer O>
 		? FormRendererProps<E, R, A, O>

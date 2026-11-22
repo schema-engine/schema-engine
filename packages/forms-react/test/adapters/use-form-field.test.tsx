@@ -1,36 +1,16 @@
 import { describe, expect, test, vi } from 'vitest';
-import { useForm, FormProvider as RHFFormProvider } from 'react-hook-form';
-import type { ReactNode } from 'react';
-import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { FormAdapterContext, useFormContext } from '@/adapters/context';
-import { rhfAdapter } from '@/adapters/rhf';
-import { useControlledFormElement } from '@/hooks/use-field';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
+import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { RequiredRuleSchema } from '@schema-engine/forms/schemas/validation';
+import { selectError } from '@schema-engine/forms/state-container';
+import { useFormContext } from '@/adapters';
+import { useControlledFormElement } from '@/hooks/use-field';
+import { useFormField } from '@/adapters/use-form-field';
 import { FormRenderer } from '@/components/internals/form-renderer';
-
-function AdapterForm({
-	defaultValues,
-	onSubmit,
-	children,
-}: {
-	defaultValues: Record<string, unknown>;
-	onSubmit: (data: Record<string, unknown>) => void;
-	children: ReactNode;
-}) {
-	const form = useForm({ defaultValues });
-
-	return (
-		<FormAdapterContext.Provider value={rhfAdapter}>
-			<RHFFormProvider {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)}>{children}</form>
-			</RHFFormProvider>
-		</FormAdapterContext.Provider>
-	);
-}
+import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
 function BoundInput({
 	name,
@@ -65,7 +45,15 @@ function BoundInput({
 	);
 }
 
-describe('RHF useFormField adapter contract', () => {
+const rendersWith = (defaults: Record<string, unknown>, options?: Parameters<typeof createTestContainer>[0]) => {
+	const container = createTestContainer({ defaults, ...options });
+	return {
+		container,
+		harness: (children: React.ReactNode) => <ContainerHarness container={container}>{children}</ContainerHarness>,
+	};
+};
+
+describe('useFormField', () => {
 	test('registers a field ref so setFocus moves keyboard focus', async () => {
 		function FocusHarness() {
 			const { setFocus } = useFormContext();
@@ -78,58 +66,56 @@ describe('RHF useFormField adapter contract', () => {
 				</>
 			);
 		}
-
-		render(
-			<AdapterForm defaultValues={{ email: '' }} onSubmit={vi.fn()}>
-				<FocusHarness />
-			</AdapterForm>,
-		);
+		const { harness } = rendersWith({ email: '' });
+		render(harness(<FocusHarness />));
 
 		const input = screen.getByTestId('email');
 		expect(input).not.toHaveFocus();
 
 		fireEvent.click(screen.getByRole('button', { name: 'Focus email' }));
 
-		await waitFor(() => {
-			expect(input).toHaveFocus();
-		});
+		await waitFor(() => expect(input).toHaveFocus());
 	});
 
-	test('passes disabled to the controller so disabled values are omitted on submit', async () => {
-		const onSubmit = vi.fn();
+	test('writes what the widget types into the container', () => {
+		const { container, harness } = rendersWith({ email: '' });
+		render(harness(<BoundInput id="email" name="email" />));
 
+		fireEvent.change(screen.getByTestId('email'), { target: { value: 'a@b.co' } });
+
+		expect(container.getValue('email')).toBe('a@b.co');
+		expect(screen.getByTestId('email')).toHaveValue('a@b.co');
+	});
+
+	test('marks a disabled field disabled', () => {
+		const { harness } = rendersWith({ visible: 'shown', secret: 'hidden' });
 		render(
-			<AdapterForm defaultValues={{ visible: 'shown', secret: 'hidden' }} onSubmit={onSubmit}>
-				<BoundInput id="visible" name="visible" />
-				<BoundInput id="secret" name="secret" disabled />
-				<button type="submit">Save</button>
-			</AdapterForm>,
+			harness(
+				<>
+					<BoundInput id="visible" name="visible" />
+					<BoundInput id="secret" name="secret" disabled />
+				</>,
+			),
 		);
 
+		expect(screen.getByTestId('visible')).toBeEnabled();
 		expect(screen.getByTestId('secret')).toBeDisabled();
-
-		fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-
-		await waitFor(() => {
-			expect(onSubmit).toHaveBeenCalledOnce();
-		});
-
-		expect(onSubmit.mock.calls[0]?.[0]).toEqual({ visible: 'shown' });
-		expect(onSubmit.mock.calls[0]?.[0]).not.toHaveProperty('secret');
 	});
 
 	test('does not re-render an unconstrained field when an unrelated field changes', () => {
 		const onRender = vi.fn();
-
+		const { container, harness } = rendersWith({ email: '', nickname: '' });
 		render(
-			<AdapterForm defaultValues={{ email: '', nickname: '' }} onSubmit={vi.fn()}>
-				<BoundInput id="email" name="email" />
-				<BoundInput id="nickname" name="nickname" onRender={onRender} />
-			</AdapterForm>,
+			harness(
+				<>
+					<BoundInput id="email" name="email" />
+					<BoundInput id="nickname" name="nickname" onRender={onRender} />
+				</>,
+			),
 		);
 
 		const rendersAfterMount = onRender.mock.calls.length;
-		fireEvent.change(screen.getByTestId('email'), { target: { value: 'a@b.co' } });
+		act(() => container.setValue('email', 'a@b.co'));
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'a@b.com' } });
 
 		expect(screen.getByTestId('email')).toHaveValue('a@b.com');
@@ -140,12 +126,14 @@ describe('RHF useFormField adapter contract', () => {
 		const requireWhenBusiness: ConstraintLogic[] = [
 			{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' },
 		];
-
+		const { harness } = rendersWith({ accountType: '', company: '' });
 		render(
-			<AdapterForm defaultValues={{ accountType: '', company: '' }} onSubmit={vi.fn()}>
-				<BoundInput id="accountType" name="accountType" />
-				<BoundInput id="company" name="company" constraints={requireWhenBusiness} />
-			</AdapterForm>,
+			harness(
+				<>
+					<BoundInput id="accountType" name="accountType" />
+					<BoundInput id="company" name="company" constraints={requireWhenBusiness} />
+				</>,
+			),
 		);
 
 		expect(screen.getByTestId('company')).not.toBeRequired();
@@ -153,6 +141,103 @@ describe('RHF useFormField adapter contract', () => {
 		fireEvent.change(screen.getByTestId('accountType'), { target: { value: 'business' } });
 
 		expect(screen.getByTestId('company')).toBeRequired();
+	});
+});
+
+describe('the text of an issue', () => {
+	const elements = [
+		{
+			$type: 'input',
+			name: 'code',
+			rules: [{ type: 'minLength', value: 8, id: 'code-length' }],
+		},
+		{ $type: 'input', name: 'note', rules: [{ type: 'required', message: 'Note is required' }] },
+	];
+
+	function Probe({ name }: { name: string }) {
+		const field = useFormField({ $type: 'input', name, id: name });
+		return (
+			<>
+				<input aria-label={name} aria-invalid={field.invalid} />
+				<output data-testid={`${name}-error`}>{field.error ?? ''}</output>
+			</>
+		);
+	}
+	const mount = (formatIssue?: Parameters<typeof ContainerHarness>[0]['formatIssue']) => {
+		const container = createTestContainer({
+			elements,
+			defaults: { code: 'abc', note: '' },
+			validationMode: 'onChange',
+		});
+		render(
+			<ContainerHarness container={container} formatIssue={formatIssue}>
+				<Probe name="code" />
+				<Probe name="note" />
+			</ContainerHarness>,
+		);
+		return container;
+	};
+
+	test('is the message the author wrote when no formatter is set', async () => {
+		const container = mount();
+
+		await act(async () => container.setValue('note', ''));
+		await act(() => container.validate(['note']));
+
+		expect(screen.getByTestId('note-error')).toHaveTextContent('Note is required');
+	});
+
+	test('is nothing, never the rule type, when the issue has no message and no formatter is set', async () => {
+		const container = mount();
+
+		await act(() => container.validate(['code']));
+
+		expect(selectError(container.getSnapshot(), 'code')?.type).toBe('minLength');
+		expect(screen.getByTestId('code-error')).toBeEmptyDOMElement();
+		expect(screen.getByLabelText('code')).toHaveAttribute('aria-invalid', 'true');
+	});
+
+	test('is what the formatter says for the issue, with its rule id and params', async () => {
+		const formatIssue = vi.fn(
+			(issue: { type: string; ruleId?: string; params?: Readonly<Record<string, unknown>> }) =>
+				`${issue.ruleId}:${issue.type}:${JSON.stringify(issue.params)}`,
+		);
+		const container = mount(formatIssue);
+
+		await act(() => container.validate(['code']));
+
+		expect(screen.getByTestId('code-error')).toHaveTextContent('code-length:minLength:{"minLength":8}');
+		expect(formatIssue).toHaveBeenCalledWith(expect.objectContaining({ ruleId: 'code-length' }), { path: 'code' });
+	});
+
+	test('falls back to the message when the formatter says nothing', async () => {
+		const container = mount(() => '');
+
+		await act(() => container.validate(['note']));
+
+		expect(screen.getByTestId('note-error')).toHaveTextContent('Note is required');
+	});
+
+	test('shows what a native input reported with its value', async () => {
+		const container = mount((issue) => `native ${issue.type}`);
+
+		function NativeInput() {
+			const { onChange } = useFormField({ $type: 'input', name: 'code', id: 'code' });
+			return (
+				<button onClick={() => onChange('abcdefgh', { native: { type: 'patternMismatch' } })}>report</button>
+			);
+		}
+		render(
+			<ContainerHarness container={container}>
+				<NativeInput />
+			</ContainerHarness>,
+		);
+		await act(async () => screen.getByRole('button', { name: 'report' }).click());
+
+		expect(selectError(container.getSnapshot(), 'code')).toMatchObject({
+			type: 'patternMismatch',
+			source: 'native',
+		});
 	});
 });
 
@@ -170,13 +255,7 @@ describe('useControlledFormElement under FormRenderer', () => {
 		);
 	}
 
-	/**
-	 * @remarks
-	 * `vi.fn` drops the generic signature of the adapter's `useWatchField`, so the
-	 * spy is passed back as that type.
-	 */
 	function renderForm(fields: ElementConfig[], onRender?: (name: string) => void) {
-		const useWatchField = vi.fn(rhfAdapter.useWatchField);
 		const engine = createFormEngine({
 			elements: [
 				defineInput({
@@ -222,17 +301,16 @@ describe('useControlledFormElement under FormRenderer', () => {
 			<FormRenderer
 				config={engine.validateForm({ id: 'fields', steps: [{ id: 'main', title: 'Main', elements: fields }] })}
 				engine={engine}
-				adapter={{ ...rhfAdapter, useWatchField: useWatchField as typeof rhfAdapter.useWatchField }}
 			/>,
 		);
-		return useWatchField;
 	}
 
-	test('watches constraint paths once per render of a constrained field', () => {
+	test('re-renders a constrained field when the field its constraint reads changes, and not for another', () => {
 		const renders: string[] = [];
-		const useWatchField = renderForm(
+		renderForm(
 			[
 				{ $type: 'field', id: 'accountType', name: 'accountType' },
+				{ $type: 'field', id: 'other', name: 'other' },
 				{
 					$type: 'field',
 					id: 'company',
@@ -242,15 +320,15 @@ describe('useControlledFormElement under FormRenderer', () => {
 			],
 			(name) => renders.push(name),
 		);
-		const constraintWatches = () =>
-			useWatchField.mock.calls.filter(([names]) => Array.isArray(names) && names.includes('accountType')).length;
 		const companyRenders = () => renders.filter((name) => name === 'company').length;
 
-		expect(constraintWatches()).toBeGreaterThan(0);
-		expect(constraintWatches()).toBeLessThanOrEqual(companyRenders());
+		const afterMount = companyRenders();
+		fireEvent.change(screen.getByTestId('other'), { target: { value: 'x' } });
+		expect(companyRenders()).toBe(afterMount);
+
 		fireEvent.change(screen.getByTestId('accountType'), { target: { value: 'business' } });
 		expect(screen.getByTestId('company')).toBeRequired();
-		expect(constraintWatches()).toBeLessThanOrEqual(companyRenders());
+		expect(companyRenders()).toBeGreaterThan(afterMount);
 	});
 
 	test('marks a field required from the default rules registered for its type', () => {

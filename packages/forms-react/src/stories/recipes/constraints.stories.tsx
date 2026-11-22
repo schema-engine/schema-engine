@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { getEngine, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { getEngine } from '@/stories/shared/form-builder.ui';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 
 const engine = getEngine();
@@ -11,7 +11,6 @@ const meta = {
 	component: FormRenderer,
 	args: {
 		engine,
-		adapter: rhfAdapter,
 		config: {
 			id: 'conditional-support-ticket',
 			title: 'Contact details',

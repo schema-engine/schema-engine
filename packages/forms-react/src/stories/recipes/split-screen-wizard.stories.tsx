@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormTemplates } from '@/stories/shared/sample-forms';
-import { rhfAdapter } from '@/stories/shared/form-builder.ui';
 import { recipeStoryDecorators, recipeStoryEngine } from './shared/recipe-story';
 
 const registrationForm = FormTemplates.registrationForm;
@@ -11,7 +10,6 @@ const meta = {
 	component: FormRenderer,
 	args: {
 		engine: recipeStoryEngine,
-		adapter: rhfAdapter,
 	},
 	parameters: {
 		layout: 'fullscreen',
@@ -25,7 +23,6 @@ const meta = {
 	decorators: recipeStoryDecorators,
 	argTypes: {
 		engine: { table: { disable: true } },
-		adapter: { table: { disable: true } },
 		config: {
 			control: false,
 			description: 'Form config with `view.$type: "split-screen-wizard"`',

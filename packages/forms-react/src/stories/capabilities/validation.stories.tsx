@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { defineStoryForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 import {
 	asyncUsernameAvailabilityPlay,
@@ -15,7 +15,6 @@ const meta = {
 	component: FormRenderer,
 	args: {
 		engine,
-		adapter: rhfAdapter,
 		config: defineStoryForm({
 			id: 'validation-feedback',
 			title: 'Validation feedback',

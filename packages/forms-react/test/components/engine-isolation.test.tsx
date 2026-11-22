@@ -10,7 +10,6 @@ import {
 	type ValidationRegistration,
 } from '@schema-engine/forms/schemas/validation';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useControlledFormElement } from '@/hooks/use-field';
 
 const isolatedInputSchema = z.extend(BaseFieldSchema, {
@@ -89,8 +88,8 @@ describe('FormRenderer engine isolation', () => {
 
 		render(
 			<>
-				<FormRenderer config={createConfig('engine-a')} engine={engineA} adapter={rhfAdapter} />
-				<FormRenderer config={createConfig('engine-b')} engine={engineB} adapter={rhfAdapter} />
+				<FormRenderer config={createConfig('engine-a')} engine={engineA} />
+				<FormRenderer config={createConfig('engine-b')} engine={engineB} />
 			</>,
 		);
 
@@ -102,8 +101,8 @@ describe('FormRenderer engine isolation', () => {
 		fireEvent.blur(inputB);
 
 		await waitFor(() => {
-			expect(screen.getByTestId('engine-a-field-error')).toHaveTextContent('minLength');
+			expect(inputA).toHaveAttribute('aria-invalid', 'true');
 		});
-		expect(screen.getByTestId('engine-b-field-error')).toBeEmptyDOMElement();
+		expect(inputB).toHaveAttribute('aria-invalid', 'false');
 	});
 });

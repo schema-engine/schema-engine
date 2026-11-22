@@ -1,5 +1,5 @@
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useControlledFormElement, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp';
 import type { InputOTPFieldProps } from './form-input-otp.types';
 
@@ -12,7 +12,7 @@ export function FormInputOTP({
 	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
 		useControlledFormElement(config);
 
-	const otpValue = String(value || '');
+	const otpValue = fieldText(value);
 	const length = config.length || 6;
 	const firstHalf = Math.ceil(length / 2);
 	const secondHalf = length - firstHalf;

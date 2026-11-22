@@ -1,4 +1,5 @@
 export * from '@/hooks/use-field';
+export * from '@/hooks/field-text';
 export * from '@/hooks/use-constraint-logic';
 export * from '@/hooks/use-form-context';
 export * from '@/hooks/use-debounce';
@@ -8,6 +9,7 @@ export {
 	type SubmissionState,
 	type SubmissionStatus,
 	type SubmissionError,
+	type SubmissionErrorType,
 } from '@/hooks/use-submission-state';
 export {
 	useViewContext,

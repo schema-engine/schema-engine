@@ -3,7 +3,7 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 import { getSsrAcceptanceFixture } from '../../../test/ssr/ssr-fixture';
 
-const { engine, config, adapter } = getSsrAcceptanceFixture();
+const { engine, config } = getSsrAcceptanceFixture();
 
 const meta = {
 	title: 'Capabilities/SSR acceptance',
@@ -18,7 +18,6 @@ const meta = {
 	},
 	args: {
 		engine,
-		adapter,
 		config,
 	},
 	decorators: [

@@ -1,6 +1,9 @@
 import { logger } from '@/lib/logger';
 import { useCallback, useState, type BaseSyntheticEvent } from 'react';
-import type { FieldValues, UseFormReturn } from 'react-hook-form';
+import type { FormStateContainer } from '@schema-engine/forms/state-container';
+import type { FieldRegistry } from '@/adapters/field-registry';
+import type { SubmissionStatusStore } from '@/adapters/submission-status';
+import type { FormValues } from '@/adapters/types';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import {
 	collectStepActions,
@@ -26,14 +29,16 @@ interface SubmissionStateManager {
 export type NormalizedFormAction = Exclude<NonNullable<FormConfigView['actions']>[number], readonly unknown[]>;
 
 interface UseFormSubmitHandlerOptions {
-	form: UseFormReturn;
+	container: FormStateContainer;
+	status: SubmissionStatusStore;
+	fields: FieldRegistry;
 	config: FormConfigView;
 	buildActionContext: () => BuilderActionBaseContext;
 	hasMatching: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
 	submission: SubmissionStateManager;
 	getCurrentStep: () => number;
-	onSubmit?: (data: FieldValues) => void | Promise<void>;
-	onAction?: (action: NormalizedFormAction, data: FieldValues) => void | Promise<void>;
+	onSubmit?: (data: FormValues) => void | Promise<void>;
+	onAction?: (action: NormalizedFormAction, data: FormValues) => void | Promise<void>;
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 	dispatchActions: (
 		input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
@@ -50,14 +55,22 @@ export type SubmissionContextValue = {
 /**
  * Handles form submission with full action lifecycle support.
  * Manages the complete submission flow including:
- * - form_submit_start, form_submit, form_submit_success/error, form_submit_complete triggers
+ * - the guard, which ignores a submit while one runs, and the container's submission: it begins one, validates
+ *   the whole form with it and reads how that ended
+ * - on `passed`: form_submit_start, form_submit, form_submit_success/error, form_submit_complete triggers,
+ *   with `onSubmit` given exactly the values that passed; on `invalid`: the first error's control is focused;
+ *   on `overtaken`: nothing, since an edit outran the check and the user can submit again
  * - Error handling and state management
  * - User-provided onSubmit and onAction callbacks
  *
- * @remarks Callbacks receive the frozen normalized action snapshot.
+ * @remarks
+ * Callbacks receive the frozen normalized action snapshot. React reports no native validity of its own, so
+ * the check runs on the container's rules and on the facts widgets reported with their values.
  */
 export function useFormSubmitHandler({
-	form,
+	container,
+	status,
+	fields,
 	config,
 	buildActionContext,
 	hasMatching,
@@ -79,11 +92,15 @@ export function useFormSubmitHandler({
 			setSubmissionPending();
 			return dispatchActions({ actions: [action], trigger: 'form_submit', context: buildActionContext() })
 				.then(async (results) => {
-					const result = results[0] || { success: false, error: 'No result returned' };
+					const result = results[0];
+					if (!result) {
+						setSubmissionError({ errors: [{ actionId: action.id, type: 'noResult' }] });
+						return { success: false };
+					}
 
 					if (result.success) {
 						try {
-							await onAction?.(action, form.getValues());
+							await onAction?.(action, container.getSnapshot().values);
 							setSubmissionSuccess();
 						} catch (actionError) {
 							logger.error('Action callback failed:', actionError);
@@ -91,19 +108,21 @@ export function useFormSubmitHandler({
 						}
 					} else {
 						setSubmissionError({
-							errors: [{ actionId: action.id, message: result.error || 'Unknown action error' }],
+							errors: [{ actionId: action.id, type: 'actionFailed', message: result.error || undefined }],
 						});
 					}
 					return result;
 				})
 				.catch((error) => {
-					const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-					setSubmissionError({ errors: [{ actionId: action.id, message: errorMessage }] });
+					const errorMessage = error instanceof Error ? error.message : undefined;
+					setSubmissionError({
+						errors: [{ actionId: action.id, type: 'actionFailed', message: errorMessage }],
+					});
 					return { success: false, error: errorMessage };
 				});
 		},
 		[
-			form,
+			container,
 			onAction,
 			dispatchActions,
 			buildActionContext,
@@ -114,7 +133,7 @@ export function useFormSubmitHandler({
 	);
 
 	const handleSubmit = useCallback(
-		async (data: FieldValues) => {
+		async (data: FormValues) => {
 			setSubmissionPending();
 
 			const { succeeded, results, failure } = await runSubmissionLifecycle(
@@ -145,7 +164,8 @@ export function useFormSubmitHandler({
 					errors: [
 						{
 							actionId: failure.phase === 'callback' ? 'submit' : 'unknown',
-							message: failure.error instanceof Error ? failure.error.message : 'Unknown error',
+							type: failure.phase === 'callback' ? 'callbackFailed' : 'triggerFailed',
+							message: failure.error instanceof Error ? failure.error.message : undefined,
 						},
 					],
 				});
@@ -156,7 +176,8 @@ export function useFormSubmitHandler({
 					.filter((result) => !result.success && result.shouldContinue === false)
 					.map((result) => ({
 						actionId: result.actionId,
-						message: result.error || 'Action execution failed',
+						type: 'actionFailed' as const,
+						message: result.error || undefined,
 					})),
 			});
 		},
@@ -178,9 +199,36 @@ export function useFormSubmitHandler({
 	const submitEvent = useCallback(
 		async (event?: BaseSyntheticEvent) => {
 			event?.preventDefault();
-			await guard.run(() => form.handleSubmit(handleSubmit)(event));
+			await guard.run(async () => {
+				status.begin();
+				let ended = false;
+				try {
+					const token = container.beginSubmission();
+					await container.validate(undefined, { submission: token });
+					if (token.outcome === 'passed') {
+						ended = true;
+						await handleSubmit(token.values);
+					} else if (token.outcome === 'invalid') {
+						ended = true;
+						fields.focusFirst(Object.keys(container.getSnapshot().errors));
+					}
+				} catch (error) {
+					logger.error('Form validation failed:', error);
+					setSubmissionError({
+						errors: [
+							{
+								actionId: 'validation',
+								type: 'validationFailed',
+								message: error instanceof Error ? error.message : undefined,
+							},
+						],
+					});
+				} finally {
+					status.end(ended);
+				}
+			});
 		},
-		[guard, form, handleSubmit],
+		[guard, container, status, fields, handleSubmit, setSubmissionError],
 	);
 
 	return {
