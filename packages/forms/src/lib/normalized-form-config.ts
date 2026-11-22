@@ -1,7 +1,7 @@
 import type { ContainerKind } from '../types/registration.js';
 import { isPlainObject } from './is-plain-object.js';
 import type { DeepReadonly } from './deep-readonly.js';
-import type { FormConfig, FormStep } from '@/schemas/form-config';
+import type { FormConfig, FormStep, FormValidationModes } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import type { BaseField } from '@/schemas/base-field';
 
@@ -75,10 +75,11 @@ export type NormalizedFormConfig<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
-> = Omit<DeepReadonly<FormConfig<TElements, TRecipes, TActions>>, 'steps'> & {
-	readonly steps: ReadonlyArray<NormalizedStep<TElements, TActions>>;
-	readonly [NORMALIZED_FORM_CONFIG]: NormalizedFormProvenance;
-};
+> = Omit<DeepReadonly<FormConfig<TElements, TRecipes, TActions>>, 'steps' | keyof FormValidationModes> &
+	Readonly<FormValidationModes> & {
+		readonly steps: ReadonlyArray<NormalizedStep<TElements, TActions>>;
+		readonly [NORMALIZED_FORM_CONFIG]: NormalizedFormProvenance;
+	};
 
 export function isNormalizedElementConfig(value: unknown): value is NormalizedElementConfig {
 	if (typeof value !== 'object' || value === null || !Object.isFrozen(value)) return false;

@@ -156,6 +156,7 @@ export const demoFormConfig = demoEngine.defineForm({
 	id: 'action-demo-form',
 	title: 'Action Triggers Demo',
 	description: 'Interact with the form to see actions trigger in real-time',
+	validationMode: 'onBlur',
 	steps: [
 		{
 			id: 'demo',

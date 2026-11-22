@@ -170,6 +170,26 @@ A rule that cannot run is no field error: it says nothing about the value.
   submit path is blocked all the same, because `validate()` rejects while the rule fails. The next check of
   the path replaces it.
 
+## Timing, and what a submission carries
+
+- **Timing comes from the config only.** The form config's `validationMode` (`onSubmit`, `onChange`, `onBlur`,
+  `onTouched`, `all`) and `reValidateMode` (`onSubmit`, `onChange`, `onBlur`) default to `'onSubmit'` and
+  `'onChange'` in the config schema, which normalization applies, so a normalized config always carries both
+  and the JSON Schema export lists the defaults. The container's options take both from it and have no
+  fallback of their own, so no renderer can differ.
+- **`submission.values`** are the values that passed, without the paths that took no part (disabled, or hidden
+  by a `show`/`hide` constraint, and everything inside them), plus the config's `payload`: serializable data
+  that always travels with a submission, such as ids or context a hidden input used to carry. The payload is
+  never rendered, never a value of the form (not in `snapshot.values`, not dirty) and never validated. A key
+  that names a field, or a reserved segment, is rejected when the config is validated.
+- **One formatter.** `createFormEngine({ formatIssue })` is the `FormIssueFormatter` both bindings read from
+  `engine.getIssueFormatter()`; a renderer or provider may override it for one form.
+
+## Entry point
+
+`@schema-engine/forms/state-container` (`src/state-container/index.ts`) exports the contract types, the factory,
+the selectors, the field-array helpers, `FORM_ROOT` and `FormIssueFormatter`. The conformance suite is not part of it.
+
 ## Contract
 
 [types.ts](./types.ts) is the contract: `subscribe`, a stable immutable `getSnapshot`, a stable
@@ -207,8 +227,9 @@ every snapshot while it is unchanged.
 - `validate` resolves `false` while any error, from any source, or any native fact, remains at the
   validated paths that take part; `checkValidity` gives the same answer without writing. Writing identical
   errors changes nothing and notifies nobody.
-- A failed `validate` starts re-validation by `reValidateMode` for the paths it covered. It marks nothing
-  submitted, so a failed wizard step does not surface errors of later steps. The state ends only with
+- An explicit `validate` starts re-validation by `reValidateMode` for the paths it covered, whether it passed or
+  failed. It marks nothing submitted, so a wizard step, passed or failed, affects only the paths it checked and
+  does not surface errors of later steps. The state ends only with
   `reset`, or when a branch write removes the rows it covered. An empty list of paths validates nothing;
   omitting the list validates the form.
 - An async result is applied where its fields are now, only while its scope is current (see freshness).

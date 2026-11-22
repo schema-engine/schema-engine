@@ -52,7 +52,7 @@ export interface BuilderActionBaseContext {
 		 * Resolves to whether the values current at the call are valid, recording and showing no errors.
 		 *
 		 * @remarks
-		 * Covers every field of every step except those a `show` or `hide` constraint hides, unlike a step-scoped `validate`; a submission can still validate a field that was visible before it was hidden. A disabled field is still checked. Does not cancel a field validation
+		 * Covers every field of every step, unlike a step-scoped `validate`. Fields hidden or disabled, by their config or a constraint, take no part and are not checked (`resolveExcludedPaths`). Does not cancel a field validation
 		 * that is pending, and a later edit does not change the answer. A debounced async rule waits out its delay.
 		 */
 		checkValidity: () => Promise<boolean>;

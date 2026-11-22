@@ -1,3 +1,4 @@
+import type { FormIssueFormatter } from '@/state-container/types';
 import { buildFormEngine } from './build-form-engine';
 import type {
 	MergedRegistrationMap,
@@ -47,6 +48,15 @@ export interface CreateFormEngineOptions<
 	 */
 	defaultWizardRecipe?: string;
 	/**
+	 * Turns an issue into the text to show: the one formatter both renderer bindings read.
+	 *
+	 * @remarks
+	 * The engine reports what is wrong (`type`, `ruleId`, `params`) and owns no text, so the application's
+	 * i18n layer supplies it here once, as `(issue, { path }) => string`. A renderer or provider may still pass
+	 * its own for one form, and the issue's own `message` is the fallback. {@link FormEngine.extend} inherits it.
+	 */
+	formatIssue?: FormIssueFormatter;
+	/**
 	 * The layout theme: a compiled theme from `createLayoutTheme`, or inline `{ grid, appearance }` options.
 	 *
 	 * @remarks
@@ -69,7 +79,7 @@ export type ExtendFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	TActions extends readonly ActionRegistrationConstraint[] = readonly [],
-> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'layout' | 'defaultWizardRecipe'>;
+> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'layout' | 'defaultWizardRecipe' | 'formatIssue'>;
 
 /** {@link FormEngine} specialization produced from registration lists. */
 export type FormEngineFromOptions<
@@ -112,5 +122,6 @@ export function createFormEngine<
 		catalog: options?.catalog,
 		layout: options?.layout,
 		defaultWizardRecipe: options?.defaultWizardRecipe,
+		formatIssue: options?.formatIssue,
 	}) as unknown as FormEngineFromOptions<TElements, TRecipes, TActions, TLayout>;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { watchValidation } from '../../../../test-utils/form-state-container-conformance';
+import { defaultModes, watchValidation } from '../../../../test-utils/form-state-container-conformance';
 import * as z from 'zod/mini';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
@@ -13,6 +13,7 @@ const element = (config: Record<string, unknown>, containerKind?: 'array' | 'obj
 
 const wizard = (overrides: Partial<FormStateContainerOptions> = {}): FormStateContainer =>
 	createFormStateContainer({
+		...defaultModes,
 		registry,
 		elements: [
 			element({
@@ -40,6 +41,7 @@ const wizard = (overrides: Partial<FormStateContainerOptions> = {}): FormStateCo
 
 const addressForm = (country = 'FR'): FormStateContainer =>
 	createFormStateContainer({
+		...defaultModes,
 		registry,
 		elements: [
 			element(
@@ -72,7 +74,8 @@ test('catches a write to a parent of the watched path', async () => {
 	await vi.waitFor(() => expect(store.getSnapshot().errors.vat).toBeUndefined());
 });
 
-const makeTagsStore = () => createFormStateContainer({ registry, elements: [], defaults: { tags: ['a', 'b'] } });
+const makeTagsStore = () =>
+	createFormStateContainer({ ...defaultModes, registry, elements: [], defaults: { tags: ['a', 'b'] } });
 
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 5));
 
@@ -138,6 +141,7 @@ describe('createFormStateContainer', () => {
 
 		test('follows rows that moved', async () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [
 					element(
@@ -181,6 +185,7 @@ describe('createFormStateContainer', () => {
 	describe('row ids', () => {
 		test('adopts ids for an array nested in a row, and they move with the row', () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [],
 				defaults: { contacts: [{ phones: ['1', '2'] }] },
@@ -199,6 +204,7 @@ describe('createFormStateContainer', () => {
 	describe('representation', () => {
 		test('hands out plain records', () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [],
 				defaults: { address: { street: '1 Main' }, tags: [{ label: 'a' }] },
@@ -212,7 +218,7 @@ describe('createFormStateContainer', () => {
 		});
 
 		test('rejects a path that would reach a prototype', () => {
-			const store = createFormStateContainer({ registry, elements: [] });
+			const store = createFormStateContainer({ ...defaultModes, registry, elements: [] });
 			expect(() => store.setValue('__proto__.polluted', true)).toThrow(/reserved segment/);
 			expect(({} as Record<string, unknown>).polluted).toBeUndefined();
 		});
@@ -221,6 +227,7 @@ describe('createFormStateContainer', () => {
 	describe('writes that reshape the tree', () => {
 		test('a nested write below a row appended meanwhile gives it an id', () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [],
 				defaults: { contacts: [{ email: 'a' }] },
@@ -232,6 +239,7 @@ describe('createFormStateContainer', () => {
 
 		test('replacing a branch swaps keys whose values are undefined', () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [],
 				defaults: { profile: { old: undefined } },
@@ -244,14 +252,14 @@ describe('createFormStateContainer', () => {
 		});
 
 		test('an empty array written where the defaults have nothing is dirty', () => {
-			const store = createFormStateContainer({ registry, elements: [] });
+			const store = createFormStateContainer({ ...defaultModes, registry, elements: [] });
 			store.setValue('tags', []);
 			expect(store.getSnapshot().dirty).toEqual({ tags: true });
 			expect(store.getFieldState('tags').isDirty).toBe(true);
 		});
 
 		test('dirty reaches the fields below a container the defaults lack', () => {
-			const store = createFormStateContainer({ registry, elements: [] });
+			const store = createFormStateContainer({ ...defaultModes, registry, elements: [] });
 			store.setValue('address.street', 'Main');
 			expect(store.getSnapshot().dirty).toEqual({ 'address.street': true });
 		});
@@ -260,6 +268,7 @@ describe('createFormStateContainer', () => {
 	describe('field arrays and validation', () => {
 		const contactsForm = () =>
 			createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [
 					element(
@@ -291,6 +300,7 @@ describe('createFormStateContainer', () => {
 
 		test('an array operation re-validates the array after a failed check', async () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [
 					element(
@@ -347,6 +357,7 @@ describe('createFormStateContainer', () => {
 		test('an older run cannot overwrite the result of a newer one for a cross-field rule', async () => {
 			const gate = gatedPasswords();
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry: gate.registry,
 				elements: [
 					element({ $type: 'input', name: 'password' }),
@@ -368,6 +379,7 @@ describe('createFormStateContainer', () => {
 		test('a row operation during validate makes it resolve with the validity of the current state', async () => {
 			const gate = gatedPasswords();
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry: gate.registry,
 				elements: [
 					element({ $type: 'input', name: 'password' }),
@@ -400,6 +412,7 @@ describe('createFormStateContainer', () => {
 	describe('validate while the form is edited', () => {
 		const requiredForm = () =>
 			createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [
 					element({
@@ -436,6 +449,7 @@ describe('createFormStateContainer', () => {
 
 		test('a pass is not trusted when a later on-change validation took over its path', async () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				validationMode: 'onChange',
 				elements: [
@@ -455,6 +469,7 @@ describe('createFormStateContainer', () => {
 
 		test('a result below a row removed meanwhile is dropped even when its parent object never existed', async () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				validationMode: 'onBlur',
 				elements: [
@@ -490,6 +505,7 @@ describe('createFormStateContainer', () => {
 
 		test('a result below an object replaced by null meanwhile is dropped', async () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				validationMode: 'onBlur',
 				elements: [
@@ -518,6 +534,7 @@ describe('createFormStateContainer', () => {
 
 		test('required fields below a missing object are reported', async () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [
 					element(
@@ -542,6 +559,7 @@ describe('createFormStateContainer', () => {
 
 		test('a shorter array is seen as changed even when the removed rows were undefined', async () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				elements: [
 					element(
@@ -605,6 +623,7 @@ describe('createFormStateContainer', () => {
 		test('a rule that reads an absolute indexed path is invalidated when rows move under it', async () => {
 			const rule = manualRule();
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry: rule.registry,
 				elements: [
 					element({
@@ -638,6 +657,7 @@ describe('createFormStateContainer', () => {
 		test('an absolute reference is not mistaken for a sibling when it starts in the same row', async () => {
 			const rule = manualRule();
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry: rule.registry,
 				validationMode: 'onChange',
 				elements: [
@@ -672,6 +692,7 @@ describe('createFormStateContainer', () => {
 		test('a sibling read is still watched when an absolute reference names the same field', async () => {
 			const rule = manualRule();
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry: rule.registry,
 				validationMode: 'onChange',
 				elements: [
@@ -707,6 +728,7 @@ describe('createFormStateContainer', () => {
 		test('the latest requester still wins for a row after rows move', async () => {
 			const rule = manualRule();
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry: rule.registry,
 				validationMode: 'onBlur',
 				elements: [
@@ -737,6 +759,7 @@ describe('createFormStateContainer', () => {
 
 		test('a container and a row inside it fail together, and each clears on its own', async () => {
 			const store = createFormStateContainer({
+				...defaultModes,
 				registry,
 				validationMode: 'onSubmit',
 				reValidateMode: 'onSubmit',
@@ -776,7 +799,12 @@ describe('createFormStateContainer', () => {
 
 	describe('paths named like object methods', () => {
 		test('are ordinary paths: nothing is inherited from the prototype', () => {
-			const store = createFormStateContainer({ registry, elements: [], defaults: { tags: ['a'] } });
+			const store = createFormStateContainer({
+				...defaultModes,
+				registry,
+				elements: [],
+				defaults: { tags: ['a'] },
+			});
 			store.setErrors('server', { toString: { message: 'no' } });
 			store.blur('hasOwnProperty');
 			expect(store.getFieldState('toString').error?.message).toBe('no');
@@ -802,6 +830,7 @@ describe('createFormStateContainer', () => {
 				.mockImplementation(async () => new Response(JSON.stringify({ valid: true }), { status: 200 }));
 			try {
 				const store = createFormStateContainer({
+					...defaultModes,
 					registry,
 					elements: [
 						element({

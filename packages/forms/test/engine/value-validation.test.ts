@@ -551,3 +551,36 @@ describe('rule issues', () => {
 		]);
 	});
 });
+
+describe('an array with one child', () => {
+	const rows = (values: Record<string, unknown>) => {
+		const element = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'users',
+			elements: [{ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Name is required' }] }],
+		});
+		return issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() });
+	};
+
+	test('is validated at the field of each row when its rows are objects', async () => {
+		expect(Object.keys(await rows({ users: [{ name: '' }, { name: 'Ada' }] }))).toEqual(['users.0.name']);
+	});
+
+	test('is validated at the row itself when its rows are scalars', async () => {
+		expect(Object.keys(await rows({ users: ['', 'Ada'] }))).toEqual(['users.0']);
+	});
+
+	test('lists the same paths for the rows it holds', () => {
+		const element = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'users',
+			elements: [{ $type: 'input', name: 'name' }],
+		});
+
+		expect(collectStepFieldPaths({ elements: [element] }, { users: [{ name: 'a' }] })).toEqual([
+			'users',
+			'users.0.name',
+		]);
+		expect(collectStepFieldPaths({ elements: [element] }, { users: ['a'] })).toEqual(['users', 'users.0']);
+	});
+});

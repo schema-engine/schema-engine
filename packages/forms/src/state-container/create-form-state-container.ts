@@ -143,6 +143,7 @@ interface PathFindings {
 
 const HOST_SOURCES: readonly string[] = ['server'] satisfies readonly FormErrorSource[];
 const NO_ISSUES: Issues = Object.freeze([]);
+const NO_PAYLOAD: Readonly<Record<string, unknown>> = Object.freeze({});
 const readAt = (root: NullMap, path: string): unknown => getValueAtPath(root, path);
 const isRow = (index: number, length: number): boolean => Number.isInteger(index) && index >= 0 && index < length;
 const asRows = (value: unknown): unknown[] => (Array.isArray(value) ? value : [value]);
@@ -410,7 +411,7 @@ function withFact(
  * row id, not by index, and is applied only while the scope it covered is current.
  */
 export function createFormStateContainer(options: FormStateContainerOptions): FormStateContainer {
-	const { elements, registry, validationMode = 'onSubmit', reValidateMode = 'onChange' } = options;
+	const { elements, registry, validationMode, reValidateMode } = options;
 	const tracker = createRunTracker();
 	const debounceScope = createDebounceScope();
 	const listeners = new Set<() => void>();
@@ -900,7 +901,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			if (plannedSet.has(path)) validated = setSelfAt(validated, current, true, isArrayNow);
 		}
 		let failed = state.failed;
-		if (mode.markFailed && blocking) {
+		if (mode.markFailed) {
 			failed = names
 				? names.reduce((tree, name) => {
 						const current = now(name);
@@ -922,6 +923,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		if (passed && mode.submission && mode.submission.epoch === tracker.epoch()) {
 			mode.submission.values = start.values;
 			mode.submission.ids = start.ids;
+			mode.submission.excluded = start.excluded;
 		}
 		if (mode.submission) mode.submission.outcome = passed ? 'passed' : 'invalid';
 		return passed;
@@ -1253,6 +1255,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				if (submission && paths?.length === 0) {
 					submission.values = state.values;
 					submission.ids = state.ids;
+					submission.excluded = state.excluded;
 					submission.outcome = 'passed';
 					return Promise.resolve(true);
 				}
@@ -1273,6 +1276,8 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				outcome: undefined,
 				values: state.values,
 				ids: state.ids,
+				excluded: state.excluded,
+				payload: options.payload ?? NO_PAYLOAD,
 				epoch: tracker.epoch(),
 			});
 			latestSubmission = token;

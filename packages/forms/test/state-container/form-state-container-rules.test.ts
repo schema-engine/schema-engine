@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
+import { defaultModes, formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
 import {
@@ -302,6 +302,7 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 		name: 'validates fields whatever their constraints and disabled state',
 		create: (options) =>
 			createFormStateContainer({
+				...defaultModes,
 				...options,
 				elements: options.elements.map((element) => ({
 					...element,

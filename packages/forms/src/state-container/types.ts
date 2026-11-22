@@ -424,10 +424,16 @@ export interface FormStateContainerOptions {
 	 * adopted, and a warning says so.
 	 */
 	readonly rowIds?: Readonly<Record<string, readonly string[]>>;
-	/** @defaultValue `'onSubmit'` */
-	readonly validationMode?: FormValidationMode;
-	/** @defaultValue `'onChange'` */
-	readonly reValidateMode?: FormReValidateMode;
+	/** When a field validates before a check of it has failed: the config's `validationMode`, which its normalization always fills. */
+	readonly validationMode: FormValidationMode;
+	/** When a field validates once a check of it has run: the config's `reValidateMode`, which its normalization always fills. */
+	readonly reValidateMode: FormReValidateMode;
+	/**
+	 * Data that travels with every submission: the config's `payload`.
+	 *
+	 * @remarks It is merged into `submission.values` and is never a value of the form: not in the snapshot, not dirty, not validated. Its keys cannot name fields, which the config validation checks.
+	 */
+	readonly payload?: Readonly<Record<string, unknown>>;
 }
 
 /** What `formStateContainerConformance` builds the container under test with. */

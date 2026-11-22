@@ -178,13 +178,26 @@ export interface FormAuthoringInput<
 	view?: DiscriminatedConfigs<TRecipes>;
 	grid?: GridLayoutConfig;
 	/**
-	 * When a field validates before the form is submitted.
+	 * When a field validates before a check of it has failed: on `change`, on `blur`, on both (`all`), on the
+	 * first `blur` and every change after it (`onTouched`) or only on an explicit check.
 	 *
-	 * @remarks Both renderers honour it. Unset, React validates on blur and Radiant on submit.
+	 * @remarks Normalization fills it with `'onSubmit'` when unset, so a normalized form always has it and both renderers agree.
 	 */
-	validationMode?: 'onSubmit' | 'onChange' | 'onBlur' | 'all';
-	/** When a field re-validates after a submit; unset, on change in both renderers. */
+	validationMode?: 'onSubmit' | 'onChange' | 'onBlur' | 'onTouched' | 'all';
+	/**
+	 * When a field validates again once an explicit check of it has run, whether that check passed or failed.
+	 *
+	 * @remarks Normalization fills it with `'onChange'` when unset.
+	 */
 	reValidateMode?: 'onSubmit' | 'onChange' | 'onBlur';
+	/**
+	 * Serializable data that always travels with a submission, such as ids or context.
+	 *
+	 * @remarks
+	 * Merged into `submission.values`. It is never rendered, never a value of the form and never validated, and a
+	 * key cannot name a field of the form or be a reserved segment: the config is rejected when it does.
+	 */
+	payload?: Record<string, unknown>;
 	className?: string;
 	style?: Record<string, string | number>;
 	appearance?: AppearanceInput<TAppearance>;

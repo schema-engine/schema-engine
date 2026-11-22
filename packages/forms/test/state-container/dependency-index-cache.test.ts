@@ -1,3 +1,4 @@
+import { defaultModes } from '../../../../test-utils/form-state-container-conformance';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
@@ -14,6 +15,7 @@ const element = (config: Record<string, unknown>, containerKind?: 'array' | 'obj
 
 const createLinesStore = () =>
 	createFormStateContainer({
+		...defaultModes,
 		registry: createDefaultValidationRegistry(),
 		elements: [
 			element({ $type: 'input', name: 'note' }),

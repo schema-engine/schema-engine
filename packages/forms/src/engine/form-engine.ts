@@ -1,3 +1,4 @@
+import type { FormIssueFormatter } from '@/state-container/types';
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
 import { ComponentType } from './component-type';
@@ -51,6 +52,7 @@ export interface EngineRegistries {
 	/** The validations passed to `createFormEngine`, kept so {@link FormEngine.extend} can rebuild the registry. */
 	validations: readonly ValidationRegistrationConstraint[];
 	defaultWizardRecipe?: string;
+	formatIssue?: FormIssueFormatter;
 }
 
 export class FormEngine<
@@ -82,6 +84,7 @@ export class FormEngine<
 			validationRegistry: registries.validationRegistry,
 			validations: registries.validations,
 			defaultWizardRecipe: registries.defaultWizardRecipe,
+			formatIssue: registries.formatIssue,
 		};
 		this.schemaArtifacts = registries.schemaArtifacts;
 		this.layout = registries.layout;
@@ -138,6 +141,11 @@ export class FormEngine<
 	 */
 	getLayout(): LayoutTheme {
 		return this.layout;
+	}
+
+	/** The formatter of issues given to `createFormEngine`, which both renderer bindings read; `undefined` when none was. */
+	getIssueFormatter(): FormIssueFormatter | undefined {
+		return this.registries.formatIssue;
 	}
 
 	getValidationRegistry(): ValidationRegistry {
@@ -388,6 +396,7 @@ export class FormEngine<
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
 			layout: this.layout,
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
+			formatIssue: this.registries.formatIssue,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,

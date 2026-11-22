@@ -89,13 +89,20 @@ export type FormStep<
 	actions?: Array<FormActionConfig<TActions> | FormActionConfig<TActions>[]>;
 };
 
+/**
+ * The validation timing a form config carries: authors may leave both out, and normalization fills them
+ * with `'onSubmit'` and `'onChange'`, so a normalized config always has both.
+ */
+export type FormValidationModes = Pick<InferredForm, 'validationMode' | 'reValidateMode'>;
+
 /** Form config narrowed to one engine's registered elements, recipes, and actions. */
 export type FormConfig<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
-> = Omit<InferredForm, 'steps' | 'view' | 'actions'> & {
-	steps: Array<FormStep<TElements, TActions>>;
-	view?: FormViewConfig<TRecipes>;
-	actions?: Array<FormActionConfig<TActions> | FormActionConfig<TActions>[]>;
-};
+> = Omit<InferredForm, 'steps' | 'view' | 'actions' | keyof FormValidationModes> &
+	Partial<FormValidationModes> & {
+		steps: Array<FormStep<TElements, TActions>>;
+		view?: FormViewConfig<TRecipes>;
+		actions?: Array<FormActionConfig<TActions> | FormActionConfig<TActions>[]>;
+	};

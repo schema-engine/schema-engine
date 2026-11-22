@@ -1,6 +1,6 @@
 import { evaluateConstraints } from '../constraints/constraint-evaluator.js';
 import { expandContainerParentPaths, expandFieldTemplatePaths, getValueAtPath } from '../lib/path-values.js';
-import { walkNamedElements } from '../lib/field-scope.js';
+import { scalarItemsIn, walkNamedElements } from '../lib/field-scope.js';
 import { frozenCopy } from '../lib/frozen-copy.js';
 import type { ConstraintLogic } from '../schemas/base-field.js';
 import {
@@ -178,14 +178,16 @@ function pathIsRequested(path: string, names?: readonly string[], exact = false)
 }
 
 function fieldElementPathsFor(elements: ValidationElementTree, values: Record<string, unknown>): FieldElementPath[] {
-	return walkNamedElements(elements).flatMap(({ path, element, hasChildren, arrayItemDepth }) => {
-		const paths = arrayItemDepth
-			? expandArrayItemPaths(values, path, arrayItemDepth)
-			: hasChildren
-				? expandContainerTemplatePaths(values, path)
-				: expandFieldTemplatePaths(values, path);
-		return paths.map((fieldPath) => ({ element, fieldPath, hasChildren }));
-	});
+	return walkNamedElements(elements, '', false, scalarItemsIn(values)).flatMap(
+		({ path, element, hasChildren, arrayItemDepth }) => {
+			const paths = arrayItemDepth
+				? expandArrayItemPaths(values, path, arrayItemDepth)
+				: hasChildren
+					? expandContainerTemplatePaths(values, path)
+					: expandFieldTemplatePaths(values, path);
+			return paths.map((fieldPath) => ({ element, fieldPath, hasChildren }));
+		},
+	);
 }
 
 /**

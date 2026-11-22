@@ -1,3 +1,4 @@
+import { defaultModes } from '../../../../test-utils/form-state-container-conformance';
 import { describe, expect, test } from 'vitest';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
@@ -59,7 +60,11 @@ const formatIssue = (issue: FormStateIssue, field: { path: string }): string => 
 
 describe('the form state container as a bridge host sees it', () => {
 	test('is assignable to the bridge interface with strict function types', async () => {
-		const container = createFormStateContainer({ registry: createDefaultValidationRegistry(), elements: [] });
+		const container = createFormStateContainer({
+			...defaultModes,
+			registry: createDefaultValidationRegistry(),
+			elements: [],
+		});
 		const bridge = asBridge(container);
 		bridge.setValue('name', '', { native: { type: 'valueMissing', message: 'Fill in this field' } });
 		bridge.blur('name', { native: { type: 'valueMissing', message: 'Fill in this field' } });
@@ -75,7 +80,11 @@ describe('the form state container as a bridge host sees it', () => {
 	test('the issue the container reports is the one a host formatter takes, without a cast', () => {
 		const forHost: BridgeFormatter<FormStateIssue> = formatIssue;
 		const forEngine: FormIssueFormatter = formatIssue;
-		const container = createFormStateContainer({ registry: createDefaultValidationRegistry(), elements: [] });
+		const container = createFormStateContainer({
+			...defaultModes,
+			registry: createDefaultValidationRegistry(),
+			elements: [],
+		});
 		container.setErrors('server', { name: { type: 'taken' } });
 		const error = asBridge(container).getSnapshot().errors.name;
 		expect(forHost(error, { path: 'name' })).toBe('name: taken');
@@ -83,7 +92,11 @@ describe('the form state container as a bridge host sees it', () => {
 	});
 
 	test('is checked strictly', () => {
-		const container = createFormStateContainer({ registry: createDefaultValidationRegistry(), elements: [] });
+		const container = createFormStateContainer({
+			...defaultModes,
+			registry: createDefaultValidationRegistry(),
+			elements: [],
+		});
 		// @ts-expect-error the container resolves a boolean, so it does not fit a validate that resolves a string
 		const notFit: NotTheBridge = container;
 		expect(notFit).toBe(container);

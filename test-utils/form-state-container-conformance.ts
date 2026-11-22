@@ -63,6 +63,9 @@ function createGate() {
 const element = (config: Record<string, unknown>, containerKind?: 'array' | 'object') =>
 	markNormalizedElementConfig(config as unknown as ElementConfig, containerKind);
 
+/** The timing a normalized form config always carries, for a container built without a config. */
+export const defaultModes = { validationMode: 'onSubmit', reValidateMode: 'onChange' } as const;
+
 interface Fixture {
 	readonly options: FormStateContainerOptions;
 	readonly gate: ReturnType<typeof createGate>;
@@ -83,7 +86,7 @@ function fixture(overrides: Partial<FormStateContainerOptions> = {}): Fixture {
 		gate,
 		options: {
 			registry,
-			validationMode: 'onSubmit',
+			...defaultModes,
 			elements: [
 				element({ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Name is required' }] }),
 				element({
@@ -195,7 +198,7 @@ function custom(
 	]);
 	return {
 		registry,
-		validationMode: 'onSubmit',
+		...defaultModes,
 		elements: configs.map((config) => element(config, containerKinds[String(config.$type)])),
 		defaults,
 		...overrides,
@@ -738,15 +741,20 @@ const cases: FormStateContainerCase[] = [
 	},
 	{
 		rule: 're-validation after a failed check',
-		name: 'a passing validate does not start re-validation, and reset ends it',
+		name: 'a passing validate starts re-validation of the paths it checked, and no others, and reset ends it',
 		async run(createStore) {
 			const store = createStore(fixture({ validationMode: 'onSubmit', reValidateMode: 'onChange' }).options);
-			expect(await store.validate()).toBe(true);
-			const afterPass = watchValidation(store);
+			expect(await store.validate(['nickname'])).toBe(true);
+			const other = watchValidation(store);
 			store.setValue('name', '');
 			await settle();
-			expect(afterPass.started).toBe(false);
+			expect(other.started).toBe(false);
 			expect(errorsOf(store)).toEqual({});
+			store.setValue('name', 'Ada');
+
+			expect(await store.validate()).toBe(true);
+			store.setValue('name', '');
+			await vi.waitFor(() => expect(errorsOf(store).name?.type).toBe('required'));
 
 			expect(await store.validate()).toBe(false);
 			store.reset();
@@ -2424,6 +2432,68 @@ const cases: FormStateContainerCase[] = [
 			} finally {
 				vi.unstubAllGlobals();
 			}
+		},
+	},
+	{
+		rule: 'submission-bound validation',
+		name: 'the values of a submission leave out the paths that take no part, and carry the payload, which is never rendered or validated',
+		async run(createStore) {
+			const options = custom(
+				[
+					{ $type: 'input', name: 'kind' },
+					{
+						$type: 'input',
+						name: 'company',
+						rules: [{ type: 'required' }],
+						constraints: [{ field: 'kind', action: 'show', operator: 'equals', value: 'business' }],
+					},
+					{ $type: 'input', name: 'locked', disabled: true },
+					{
+						$type: 'arrayElements',
+						name: 'rows',
+						elements: [
+							{ $type: 'input', name: 'role' },
+							{
+								$type: 'input',
+								name: 'fax',
+								constraints: [{ field: 'role', action: 'hide', operator: 'equals', value: 'office' }],
+							},
+						],
+					},
+				],
+				{
+					kind: 'person',
+					company: 'Acme',
+					locked: 'x',
+					rows: [
+						{ role: 'office', fax: '1' },
+						{ role: 'home', fax: '2' },
+					],
+				},
+				{ payload: { tenant: 't1', context: { source: 'email' } } },
+			);
+			const store = createStore(options);
+			const submission = store.beginSubmission();
+			expect(submission.values).toEqual({
+				kind: 'person',
+				rows: [{ role: 'office' }, { role: 'home', fax: '2' }],
+				tenant: 't1',
+				context: { source: 'email' },
+			});
+			expect(await store.validate(undefined, { submission })).toBe(true);
+			expect(submission.values).toEqual({
+				kind: 'person',
+				rows: [{ role: 'office' }, { role: 'home', fax: '2' }],
+				tenant: 't1',
+				context: { source: 'email' },
+			});
+			expect(Object.isFrozen(submission.values)).toBe(true);
+			expect(store.getSnapshot().values).not.toHaveProperty('tenant');
+			expect(store.getSnapshot().dirty).toEqual({});
+			store.setValue('kind', 'business');
+			const next = store.beginSubmission();
+			expect(next.values).toMatchObject({ company: 'Acme', tenant: 't1' });
+			expect(next.values).not.toHaveProperty('locked');
 		},
 	},
 	{
