@@ -1401,7 +1401,8 @@ export function rendererConformance(mount: ConformanceMount): void {
 				);
 				const requested = () =>
 					fetchStub.mock.calls.map(
-						([, init]) => (JSON.parse(String(init?.body ?? '{}')) as { value: unknown }).value,
+						([, init]) =>
+							(JSON.parse(typeof init?.body === 'string' ? init.body : '{}') as { value: unknown }).value,
 					);
 				const { host } = await setup({
 					config: {
