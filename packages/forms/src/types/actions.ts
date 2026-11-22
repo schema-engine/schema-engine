@@ -2,7 +2,7 @@ import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
 import type { FormStateError } from '@/state-container/types';
 
-export type { FormIssueFormatter, FormStateError, FormStateIssue } from '@/state-container/types';
+export type { FormIssueFormatter, FormStateError, FormStateIssue, FormSubmissionIssue } from '@/state-container/types';
 
 /**
  * Base action context for the builder pattern.

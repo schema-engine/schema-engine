@@ -1,4 +1,4 @@
-import { defaultModes } from '../../../../test-utils/form-state-container-conformance';
+import { containerOptions } from '../../../../test-utils/form-state-container-conformance';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
@@ -14,35 +14,38 @@ const element = (config: Record<string, unknown>, containerKind?: 'array' | 'obj
 	markNormalizedElementConfig(config as unknown as ElementConfig, containerKind);
 
 const createLinesStore = () =>
-	createFormStateContainer({
-		...defaultModes,
-		registry: createDefaultValidationRegistry(),
-		elements: [
-			element({ $type: 'input', name: 'note' }),
-			element(
-				{
-					$type: 'arrayElements',
-					name: 'lines',
-					elements: [
-						{ $type: 'input', name: 'type' },
-						{
-							$type: 'input',
-							name: 'vat',
-							constraints: [{ field: 'type', action: 'require', operator: 'equals', value: 'company' }],
-						},
-					],
-				},
-				'array',
-			),
-		],
-		defaults: {
-			note: '',
-			lines: [
-				{ type: 'person', vat: '' },
-				{ type: 'person', vat: '' },
+	createFormStateContainer(
+		containerOptions({
+			registry: createDefaultValidationRegistry(),
+			elements: [
+				element({ $type: 'input', name: 'note' }),
+				element(
+					{
+						$type: 'arrayElements',
+						name: 'lines',
+						elements: [
+							{ $type: 'input', name: 'type' },
+							{
+								$type: 'input',
+								name: 'vat',
+								constraints: [
+									{ field: 'type', action: 'require', operator: 'equals', value: 'company' },
+								],
+							},
+						],
+					},
+					'array',
+				),
 			],
-		},
-	});
+			defaults: {
+				note: '',
+				lines: [
+					{ type: 'person', vat: '' },
+					{ type: 'person', vat: '' },
+				],
+			},
+		}),
+	);
 
 describe('the dependency index of a form store', () => {
 	beforeEach(() => {

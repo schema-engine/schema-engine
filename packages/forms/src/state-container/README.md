@@ -9,19 +9,19 @@ is `FormStateContainer`, its factory `createFormStateContainer` and its snapshot
 
 ## Ownership
 
-| Owns                                                           | Does not own                                                                                                         |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| The nested value tree and the defaults                         | Submission: `handleSubmit`, `isSubmitting`, `submitCount`, guards                                                    |
-| Field state: errors, warnings, touched, dirty, pending, checks | Control registration: a host bridges a control with `setValue`/`blur` and flushes it with `validate`/`checkValidity` |
-| Native facts, tied to the value they describe                  | Focus and native submit: the host supplies them                                                                      |
-| Row ids of field arrays                                        | Operational status (a service that is down): the runtime's (#336)                                                    |
-| Which paths take part in validation                            |                                                                                                                      |
-| Atomic updates: one command, one notification                  |                                                                                                                      |
+| Owns                                                           | Does not own                                                                                                              |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| The nested value tree and the defaults                         | Submission: `handleSubmit`, `isSubmitting`, `submitCount`, guards                                                         |
+| Field state: errors, warnings, touched, dirty, pending, checks | Control registration: a host bridges a control with `setValue`/`blur` and reports its native validity with `reportNative` |
+| Native facts, tied to the value they describe                  | Focus and native submit: the host supplies them                                                                           |
+| Row ids of field arrays                                        | Operational status (a service that is down): the runtime's (#336)                                                         |
+| Which paths take part in validation                            |                                                                                                                           |
+| Atomic updates: one command, one notification                  |                                                                                                                           |
 
 ## Paths and field state
 
 A path is a plain dotted path with the row index in it (`contacts.1.email`) everywhere in the API. The form
-itself is `FORM_ROOT` (`'__root__'`), where an error about the form rather than a field is kept. Path segments that start with `__`, and `constructor` and `prototype`, are reserved: a field name with one is rejected when a form config is validated, and the container rejects such paths except `FORM_ROOT`. A write (`setValue`, `blur`) and `setErrors` also reject a path that names a row its array does not have, so a write cannot leave holes or rows without an id: rows are made with `fieldArray`. Validation modes are `onSubmit`, `onChange`, `onBlur`, `onTouched` (the first blur, then every change, as in React Hook Form) and `all`.
+itself is `FORM_ROOT` (`'__root__'`), where an error about the form rather than a field is kept. Path segments that start with `__`, and `constructor` and `prototype`, are reserved: a field name with one is rejected when a form config is validated, and the container rejects such paths except `FORM_ROOT`. A write (`setValue`, `blur`) and `setServerErrors` also reject a path that names a row its array does not have, so a write cannot leave holes or rows without an id: rows are made with `fieldArray`. Validation modes are `onSubmit`, `onChange`, `onBlur`, `onTouched` (the first blur, then every change, as in React Hook Form) and `all`.
 
 Internally, what the container's checks recorded, server errors, native facts, touched, validated and failed
 marks and pending marks are trees with one node per value (`state-tree.ts`): a node holds the state of its
@@ -39,8 +39,9 @@ how a path segment is spelled.
 
 Defaults are cloned (the `defaults` option and `reset(values)`): defaults and live values never share objects.
 
-The snapshot shows this as flat maps by exact path: `errors`, `warnings`, `touched`, `dirty`, `validating`
-and `validationFailures`, with `values`, `defaults`, `rowIds`, `isValidating` and `isValid`.
+The snapshot shows this as flat maps by exact path: `errors`, `warnings`, `touched`, `dirty` and `validating`,
+with `values`, `rowIds` and `isValid`. That is all of it: the defaults are what `reset` restores, and a rule that
+could not run is logged or rejected, never kept in the snapshot.
 
 - **Errors are never inherited.** `errors['contacts']` is the array's own error and `errors['contacts.0.email']`
   the row's; both can be present. The error of a field is the entry for exactly its path.
@@ -59,21 +60,21 @@ message? }`: `type` is the rule type (`'minLength'`), the `ValidityState` flag o
   list reaches a snapshot, an action context or a formatter.
 - **Text is the host's.** `FormIssueFormatter = (issue, { path }) => string` is the one seam: a binding takes
   one from its host, calls it for the issue to show and for each issue of `all`, and falls back to
-  `issue.message`. The action context carries the same `FormStateError`.
+  `issue.message`. The action context carries the same `FormStateError`. The formatter also takes a
+  `FormSubmissionIssue`, `{ type, source: 'submission', params?, message? }`, for a failure of a submission as a
+  whole; the snapshot never holds one.
 - **Warnings** have exactly that shape and timing, from rules declared `severity: 'warning'`. They never
   affect `isValid`, `validate` or `checkValidity`, and a path that takes no part has none. A server cannot
   send them yet: that is future work, with no change to the shape.
 - **Pending is state.** `validating[path]` lists the paths a check is running for, and it moves with its
   row. A path stays pending only while the latest check that asked for it runs: a check a later check took
-  over does not keep it spinning. `isValidating` is the aggregate: any recorded check in flight, even an
-  overtaken one.
+  over does not keep it spinning.
 - **Touched covers.** A mark on a container covers the fields below it.
 - **Dirty** marks the paths whose value differs from the defaults. An array's own mark means its row count
   changed; rows are compared index by index, so appending a row does not make the rows before it dirty.
 - **`isValid`** is cheap: no error is recorded right now for a path that takes part. It does not prove the
   form is valid (nothing may have been checked) and does not say whether a retry is allowed. A submit button
   should not be disabled by it: a server error makes it `false`, and only the next attempt clears that.
-- **`validationFailures`** are plain data, `{ path, ruleType, ruleId? }`, so a snapshot holds no error object.
 
 ## Freshness
 
@@ -91,37 +92,37 @@ index), the native facts, the exclusions, the reset generation and the rows it n
 - `checkValidity()` answers for the values, native facts, server errors and exclusions current when it was
   called, and for no later state. It is never retried, and it never mixes those with errors set after. Its
   answer may be out of date when it resolves.
-- **How it ended.** `submission.outcome` is `'passed'`, `'invalid'` (the scope was current and an error blocks: show the errors and focus) or `'overtaken'` (an edit, a row move, a reset or a superseded check outran it: no verdict, ask again and show nothing the user did not cause). A rejected call leaves it unset. A token a later `beginSubmission` or a reset superseded ends `'overtaken'` whatever it ended before, and validating no paths (`validate([], { submission })`) is `'passed'` and captures the values.
-- **The runtime's contract.** `beginSubmission()` returns a token, and `validate(paths, { submission })` leaves
-  it holding exactly the values the validation covered when it resolves `true`, from the run that resolved: an
-  edit during the check followed by a retry that passes leaves the edit. The runtime submits `submission.values`,
-  frozen, and gives the server's answer back with the same token, which is judged against those values. No
-  version number is compared.
+- **How a submission ended.** `submit()` resolves `{ outcome: 'passed', values, setServerErrors }`, `{ outcome: 'invalid' }`
+  (the scope was current and an error blocks: show the errors and focus) or `{ outcome: 'overtaken' }` (an
+  edit, a row move, a reset, a later submission or a superseded check outran it: no verdict, ask again and show
+  nothing the user did not cause). A call that rejects, with a `FormValidationFailure`, is no outcome.
+- **What a submission is.** `submit()` clears the server's answer to the last submission, then validates the whole
+  form as `validate()` does, with the same freshness and the same single retry over the same rows. `values` are
+  exactly the values that passed, frozen, from the run that resolved: an edit during the check followed by a
+  retry that passes leaves the edit. No version number is compared and no token is handed out.
 
 ## Native facts
 
 A native fact is what a platform control reports (`{ type, params?, message? }`: the `ValidityState` flag,
-the constraint behind it, the control's own text). It travels with the input that produced it:
-`setValue(path, value, { native })`, `blur(path, { value?, native })` and, for a submit or an action,
-`validate(paths, { native })` and `checkValidity(paths, { native })` with a fact for each control. `null` says
-the control reports itself valid and withdraws its fact. `blur` with a `value` writes it and marks the touch in
-one command and one notification.
+the constraint behind it, the control's own text). A host reports it with `reportNative(facts)`, the one
+channel for it: a record by path, `null` for a control that reports itself valid or goes away. A single
+path is a record of one. Nothing else carries a fact: not `setValue`, not `blur`, and not `validate`,
+`checkValidity` or `submit`, which count the facts held.
 
-- A fact is stored with the value it describes, in the same shaped trees as the rest, so it moves with its
-  row. Once the value at its path changes it is dropped: a write without a fact, such as a programmatic
-  `setValue`, never reuses an old one, and a write that leaves the value as it is keeps it.
+- A fact binds to the value held now and is stored with it, in the same shaped trees as the rest, so it moves
+  with its row. Once the value at its path changes it is dropped, so a write, a programmatic `setValue` too,
+  never reuses an old one: a host reports again after it writes a control.
 - A fact is an input to validation, not an error. When a check runs for a path, by mode, by a failed check or
   explicitly, its result is the failed rules followed by the fact, so native validity has exactly the timing
   of rules. `validate` and `checkValidity` count the facts of the paths in scope.
-- A write that leaves the value as it is changes nothing, and the fact it carries is not stored. A control that
-  reports on its own (after a reset, or when its constraints change) uses `reportNative(path, fact)`: it binds the
-  fact to the value held now, is no change (nothing dirty or touched), re-validates the path only when it was
-  validated before or is in a failed scope, and ignores a path the container does not hold.
-- **Hosts with controls flush on every check.** A host that has native controls passes `native` to `checkValidity` and to step validation (`validate(stepPaths, { native })`), not only to the submit: a check without it counts the facts stored by the last write or blur, which a control may since have outgrown.
-- **A flush is the whole truth.** The map of `validate` or `checkValidity` replaces the facts for that check:
-  a control that is not in it is not mounted, cannot vouch for its value, and its fact is not counted, so
-  the engine's rules alone cover that path. `validate` drops the facts that are not in the map; `checkValidity`
-  leaves the stored ones alone. Facts for a row that does not exist are ignored. `reset` clears them.
+- Reporting is no change: nothing becomes dirty or touched, and facts alone never notify, as they are not in the
+  snapshot. One call is one commit. It re-validates, in one run, only the paths whose fact changed that were
+  validated before, are in a failed scope or have a check in flight, never to start validating a pristine path.
+  A fact identical to the one held is a no-op.
+- A path the container does not hold (a removed row, an absent object) is ignored. A reserved path throws for
+  the whole call, before any fact is written.
+- A fact stays held until its control withdraws it with `null`, which a host does when the control disconnects.
+  A control that is not reporting is not assumed gone. `reset` clears every fact.
 
 ## Participation
 
@@ -140,17 +141,19 @@ is excluded together with everything below it. An inactive wizard step is not ex
 
 ## Server errors
 
-A host sets `server` errors, which describe the response to one submission.
+A host sets `server` errors, which describe the response to one submission, with the `setServerErrors` of the
+`'passed'` result of `submit()`.
 
-- `beginSubmission()` returns a token that captures the submitted values and rows, and clears the
-  source. A later `beginSubmission`, and `reset`, supersede it.
-- `setErrors('server', errors, { submission })` resolves index paths through the submission's rows: an
-  error for the submitted `contacts.0.email` lands on that row wherever it is now, and is dropped when the
-  row is gone. It is applied only if its target, and the values its path's rules read (from the dependency
-  index), are as they were when the submission began; a form-level error needs every value unchanged. A
-  superseded or pre-reset token is ignored. The map replaces the whole source: one call is one complete answer.
-- Without a token the errors are the host's, outside a submission, and apply as they are.
-- Either way an error is cleared when its path, a path below it, a path around it (the form included) or a
+- `submit()` clears the server's answer to the last submission and captures the submitted values and rows. A
+  later `submit()`, and `reset`, supersede it.
+- `setServerErrors(errors)` resolves index paths through the submission's rows: an error for the submitted
+  `contacts.0.email` lands on that row wherever it is now, and is dropped when the row is gone. It is applied
+  only if its target, and the values its path's rules read (from the dependency index), are as they were
+  when the submission was captured; a form-level error needs every value unchanged. Once the submission is
+  superseded, or a reset came between, the call does nothing. The map replaces the whole answer: one call is one
+  complete answer, and `{}` clears it. Paths are checked first: a reserved path (except `FORM_ROOT`) or a row
+  the submitted values did not have throws.
+- An error is cleared when its path, a path below it, a path around it (the form included) or a
   value its rules read is edited, because what it described changed.
 - A path takes one issue or a list, each `{ type?, params?, message? }`; a missing `type` is `'server'`.
   An issue with only a type still blocks.
@@ -164,20 +167,19 @@ A rule that cannot run is no field error: it says nothing about the value.
 - An invalid rule is rejected when the form config is validated: `ValidationRegistry.check(rule)` finds a
   type with no handler or a handler that throws, so nothing is skipped silently. `createSchema` throws a
   `ValidationRuleError` for the same.
-- A rule that throws while it runs is a `FormValidationFailure` naming the path and the rule, with the
-  cause. `validate()` and `checkValidity()` reject with it. An automatic check records it in `snapshot.validationFailures[path]`
-  and keeps the other rules' results; each failure says why: `reason` is `'unavailable'` (the service the rule asks could not answer) or `'error'` (the rule threw). It does not affect `isValid`: nothing says the value is wrong. The
-  submit path is blocked all the same, because `validate()` rejects while the rule fails. The next check of
-  the path replaces it.
+- A rule that throws while it runs is a `FormValidationFailure` naming the path and the rule, with `reason`
+  (`'unavailable'`: the service the rule asks could not answer, or `'error'`: the rule threw) and `cause`.
+  `validate()`, `checkValidity()` and `submit()` reject with it, so a submission stops. An automatic check logs
+  it and keeps the other rules' results; nothing is recorded in the snapshot, and `isValid` is unaffected.
 
 ## Timing, and what a submission carries
 
 - **Timing comes from the config only.** The form config's `validationMode` (`onSubmit`, `onChange`, `onBlur`,
   `onTouched`, `all`) and `reValidateMode` (`onSubmit`, `onChange`, `onBlur`) default to `'onSubmit'` and
   `'onChange'` in the config schema, which normalization applies, so a normalized config always carries both
-  and the JSON Schema export lists the defaults. The container's options take both from it and have no
-  fallback of their own, so no renderer can differ.
-- **`submission.values`** are the values that passed, without the paths that took no part (disabled, or hidden
+  and the JSON Schema export lists the defaults. The container takes both from the config it is
+  given and has no fallback of its own, so no renderer can differ.
+- **The `values` of a passed submission** are the values that passed, without the paths that took no part (disabled, or hidden
   by a `show`/`hide` constraint, and everything inside them), plus the config's `payload`: serializable data
   that always travels with a submission, such as ids or context a hidden input used to carry. The payload is
   never rendered, never a value of the form (not in `snapshot.values`, not dirty) and never validated. A key
@@ -188,36 +190,40 @@ A rule that cannot run is no field error: it says nothing about the value.
 ## Entry point
 
 `@schema-engine/forms/state-container` (`src/state-container/index.ts`) exports the contract types, the factory,
-the selectors, the field-array helpers, `FORM_ROOT` and `FormIssueFormatter`. The conformance suite is not part of it.
+`selectFieldState`, `selectValue`, `selectError`, `selectWarning`, `toFieldArrayValue`, `FORM_ROOT`, `FormIssueFormatter`
+and `FormValidationFailure`. The conformance suite is not part of it.
+
+`createFormStateContainer({ config, registry, defaults?, rowIds? })` is the whole option list: the elements, the
+validation timing and the payload come from the normalized form config.
 
 ## Contract
 
 [types.ts](./types.ts) is the contract: `subscribe`, a stable immutable `getSnapshot`, a stable
-`getServerSnapshot` and the commands `getValue`, `getFieldState`, `setValue`, `blur`, `reset`,
-`validate`, `checkValidity`, `beginSubmission`, `setErrors` and `fieldArray`. No member depends on how it is called.
+`getServerSnapshot` and the commands `getValue`, `setValue`, `blur`, `reportNative`, `reset`,
+`validate`, `checkValidity`, `submit` and `fieldArray`. No member depends on how it is called.
 
 Reads are pure selectors over the snapshot, memoized per snapshot and path, so they are safe as selectors
-for `useSyncExternalStore` or an external store source: `selectFieldState`, `selectValue`, `selectError`,
-`selectWarning` and `selectErrorsUnder` ("does this row or section have errors") in [selectors.ts](./selectors.ts), and `selectFields(rowIds)` and `toFieldArrayValue(rowIds, commands)` in
+for `useSyncExternalStore` or an external store source: `selectFieldState`, `selectValue`, `selectError` and
+`selectWarning` in [selectors.ts](./selectors.ts), and `toFieldArrayValue(rowIds, commands)` in
 [field-array.ts](./field-array.ts), which builds the React Hook Form style `FieldArrayValue` both bindings
 hand to their widgets, memoized by the commands and the row ids. `fieldArray(path)` returns the same commands
 object for a path each time, and a path names a position: `contacts.0.phones` is whatever row is at index 0 now.
 A field state (`error`, `warning`, `invalid`, `isTouched`, `isDirty`, `isValidating`) is the same object in
-every snapshot while it is unchanged.
+every snapshot while it is unchanged. `selectErrorsUnder` and `selectFields` are internal helpers of the module.
 
 ### Naming, after React Hook Form
 
-| Here                                          | React Hook Form             | Difference                                                                                             |
-| --------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `selectFieldState(snapshot, path)`            | `getFieldState`             | `{ error, warning, invalid, isTouched, isDirty, isValidating }`; an error is never inherited           |
-| `beginSubmission()` and `setErrors('server')` | `setError`/`clearErrors`    | Errors are tied to the submission they answer, resolved to rows and applied only to unchanged targets  |
-| `setValue(path, v, { native })`               | `shouldUseNativeValidation` | Native validity travels with its input, is tied to the value, and has the timing of rules              |
-| `validate(paths?, { native })`                | `trigger`                   | Resolves `true` only when its scope is still current; `checkValidity` is the silent one                |
-| `snapshot.validating`                         | `validatingFields`          | Superseded checks do not keep a path pending                                                           |
-| `snapshot.warnings`                           | none                        | A separate, never blocking channel with the shape of errors                                            |
-| `fieldArray(path)` and `rowIds`               | `useFieldArray`             | The same operations and `fields` with stable ids; falsy rows are kept, and row state travels with rows |
-| `subscribe` and selectors                     | `watch`/`useWatch`          | The reader names what it reads through a pure selector; no proxy tracking                              |
-| `reset(values?)`                              | `reset`                     | Default values are copied, never aliased with the live values                                          |
+| Here                                 | React Hook Form             | Difference                                                                                             |
+| ------------------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `selectFieldState(snapshot, path)`   | `getFieldState`             | `{ error, warning, invalid, isTouched, isDirty, isValidating }`; an error is never inherited           |
+| `submit()` and its `setServerErrors` | `setError`/`clearErrors`    | Errors are tied to the submission they answer, resolved to rows and applied only to unchanged targets  |
+| `reportNative(facts)`                | `shouldUseNativeValidation` | Native validity is reported on its own, is tied to the value, and has the timing of rules              |
+| `validate(paths?)`                   | `trigger`                   | Resolves `true` only when its scope is still current; `checkValidity()` is the silent one              |
+| `snapshot.validating`                | `validatingFields`          | Superseded checks do not keep a path pending                                                           |
+| `snapshot.warnings`                  | none                        | A separate, never blocking channel with the shape of errors                                            |
+| `fieldArray(path)` and `rowIds`      | `useFieldArray`             | The same operations and `fields` with stable ids; falsy rows are kept, and row state travels with rows |
+| `subscribe` and selectors            | `watch`/`useWatch`          | The reader names what it reads through a pure selector; no proxy tracking                              |
+| `reset(values?)`                     | `reset`                     | Default values are copied, never aliased with the live values                                          |
 
 ### Rules a container must keep
 

@@ -4,7 +4,6 @@ import {
 	planFormValidation,
 	resolveExcludedPaths,
 	runValidationPlan,
-	type FormValidationFailure,
 	type ValidationIssue,
 } from '@/engine/value-validation';
 import { createDebounceScope } from '@/lib/debounce';
@@ -21,8 +20,7 @@ import {
 import { dirtyTree } from './dirty';
 import type { FieldArrayCommands } from './field-array';
 import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
-import { selectFieldState } from './selectors';
-import { Submission, type SubmissionRecord } from './submission';
+import { submittedValues, type SubmissionRecord } from './submission';
 import { createRunTracker } from './stale-results';
 import {
 	clearAround,
@@ -43,15 +41,14 @@ import {
 } from './state-tree';
 import {
 	FORM_ROOT,
-	type FormErrorSource,
 	type FormStateContainer,
 	type FormStateContainerOptions,
 	type FormStateError,
 	type FormStateErrorInput,
-	type FormStateFailure,
+	type FormStateErrorsInput,
 	type FormStateIssue,
 	type FormStateSnapshot,
-	type NativeOptions,
+	type FormSubmitResult,
 	type NativeValidity,
 } from './types';
 import {
@@ -74,12 +71,11 @@ type Issues = readonly FormStateIssue[];
 /**
  * What the container's own validation recorded for one path.
  *
- * @remarks Nothing is stored for a path that has no errors, warnings or failures.
+ * @remarks Nothing is stored for a path that has no errors or warnings.
  */
 interface Finding {
 	readonly errors: Issues;
 	readonly warnings: Issues;
-	readonly failures: readonly FormStateFailure[];
 }
 
 /** What a rule of a path read when a server error was applied, so an edit of it clears the error. */
@@ -122,7 +118,6 @@ interface State {
 	readonly validating: Tree<true>;
 	readonly dirty: Tree<true>;
 	readonly ids: IdTree | undefined;
-	readonly running: number;
 	readonly excluded: readonly string[];
 	readonly exclusionVersion: number;
 }
@@ -138,10 +133,8 @@ interface RowEntry {
 interface PathFindings {
 	readonly errors: FormStateIssue[];
 	readonly warnings: FormStateIssue[];
-	readonly failures: FormStateFailure[];
 }
 
-const HOST_SOURCES: readonly string[] = ['server'] satisfies readonly FormErrorSource[];
 const NO_ISSUES: Issues = Object.freeze([]);
 const NO_PAYLOAD: Readonly<Record<string, unknown>> = Object.freeze({});
 const readAt = (root: NullMap, path: string): unknown => getValueAtPath(root, path);
@@ -189,41 +182,13 @@ const sameIssues = (a: Issues, b: Issues): boolean =>
 const reuseIssues = (previous: Issues | undefined, next: Issues): Issues =>
 	previous && sameIssues(previous, next) ? previous : Object.freeze([...next]);
 
-const sameFailure = (a: FormStateFailure, b: FormStateFailure): boolean =>
-	a.path === b.path && a.ruleType === b.ruleType && a.ruleId === b.ruleId && a.reason === b.reason;
-
-/** What a snapshot keeps of a rule that could not run: plain data, without the error and its cause. */
-const failureData = (failure: FormValidationFailure): FormStateFailure =>
-	Object.freeze({
-		path: failure.path,
-		ruleType: failure.ruleType,
-		reason: failure.reason,
-		...(failure.ruleId === undefined ? {} : { ruleId: failure.ruleId }),
-	});
-
-const sameFailures = (a: readonly FormStateFailure[], b: readonly FormStateFailure[]): boolean =>
-	a.length === b.length && a.every((known, index) => sameFailure(known, b[index]));
-
 /** The previous finding when `next` reports the same, `undefined` when it reports nothing. */
-function reuseFinding(
-	previous: Finding | undefined,
-	errors: Issues,
-	warnings: Issues,
-	failures: readonly FormStateFailure[],
-): Finding | undefined {
-	if (errors.length === 0 && warnings.length === 0 && failures.length === 0) return undefined;
-	if (
-		previous &&
-		sameIssues(previous.errors, errors) &&
-		sameIssues(previous.warnings, warnings) &&
-		sameFailures(previous.failures, failures)
-	) {
-		return previous;
-	}
+function reuseFinding(previous: Finding | undefined, errors: Issues, warnings: Issues): Finding | undefined {
+	if (errors.length === 0 && warnings.length === 0) return undefined;
+	if (previous && sameIssues(previous.errors, errors) && sameIssues(previous.warnings, warnings)) return previous;
 	return Object.freeze({
 		errors: errors.length === 0 ? NO_ISSUES : Object.freeze([...errors]),
 		warnings: warnings.length === 0 ? NO_ISSUES : Object.freeze([...warnings]),
-		failures: Object.freeze([...failures]),
 	});
 }
 
@@ -326,25 +291,6 @@ function pruneNative(tree: Tree<NativeFact>, values: NullMap): Tree<NativeFact> 
 	);
 }
 
-/**
- * The facts a flush reports, and no others: a control that is not in the map is not mounted and cannot vouch for its value.
- *
- * @remarks Reuses `previous` where nothing changed, and ignores facts for rows that do not exist.
- */
-function flushedFacts(
-	previous: Tree<NativeFact>,
-	reported: Readonly<Record<string, NativeValidity | null>>,
-	values: NullMap,
-): Tree<NativeFact> {
-	let facts: Tree<NativeFact>;
-	for (const [path, validity] of Object.entries(reported)) {
-		assertFieldPath(path, 'native');
-		if (validity === null || missingRow(path, values)) continue;
-		facts = setSelfAt(facts, path, factOf(selfAt(previous, path), validity, readAt(values, path)), arrayIn(values));
-	}
-	return stable(previous, facts);
-}
-
 /** What a path's rules read, as the values they have now. */
 function dependenciesOf(path: string, values: NullMap, index: DependencyIndex): readonly Dependency[] {
 	return index
@@ -378,21 +324,22 @@ function assertRowsExist(path: string, values: NullMap): void {
 	const missing = missingRow(path, values);
 	if (missing) {
 		throw new Error(
-			`setErrors: '${path}' names row '${missing.segment}' of '${missing.above}', which has ${missing.length} rows.`,
+			`setServerErrors: '${path}' names row '${missing.segment}' of '${missing.above}', which has ${missing.length} rows.`,
 		);
 	}
 }
 
-/** The facts with `reported` recorded for `path`: absent leaves them, `null` withdraws, a fact is kept with the value it describes. */
+/** The facts with `reported` recorded for `path`: `null` withdraws, a fact is kept with the value it describes. */
 function withFact(
 	tree: Tree<NativeFact>,
 	path: string,
-	reported: NativeValidity | null | undefined,
+	reported: NativeValidity | null,
 	values: NullMap,
 ): Tree<NativeFact> {
-	if (reported === undefined) return tree;
 	if (reported === null) return stable(tree, clearSelfAt(tree, path));
-	return setSelfAt(tree, path, factOf(selfAt(tree, path), reported, readAt(values, path)), arrayIn(values));
+	const known = selfAt(tree, path);
+	const fact = factOf(known, reported, readAt(values, path));
+	return fact === known ? tree : setSelfAt(tree, path, fact, arrayIn(values));
 }
 
 /**
@@ -411,7 +358,9 @@ function withFact(
  * row id, not by index, and is applied only while the scope it covered is current.
  */
 export function createFormStateContainer(options: FormStateContainerOptions): FormStateContainer {
-	const { elements, registry, validationMode, reValidateMode } = options;
+	const { config, registry } = options;
+	const { validationMode, reValidateMode } = config;
+	const elements = config.steps.flatMap((step) => step.elements);
 	const tracker = createRunTracker();
 	const debounceScope = createDebounceScope();
 	const listeners = new Set<() => void>();
@@ -437,7 +386,6 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		validating: undefined,
 		dirty: undefined,
 		ids: adoptAll(syncIds(undefined, initialDefaults, mintId), options.rowIds ?? {}),
-		running: 0,
 		excluded: Object.freeze(
 			participates ? resolveExcludedPaths(elements, toPlain(initialDefaults) as Record<string, unknown>) : [],
 		),
@@ -488,12 +436,11 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		readonly excluded: readonly string[];
 		readonly errors: NullMap<FormStateError>;
 		readonly warnings: NullMap<FormStateError>;
-		readonly failures: NullMap<readonly FormStateFailure[]>;
 	}
 	let derivedFor: Derived | undefined;
 
 	/**
-	 * The error and the warning of each path, and the rules that could not run.
+	 * The error and the warning of each path.
 	 *
 	 * @remarks
 	 * An error lists what the server said, then what the container's validation recorded (the rules in
@@ -517,13 +464,11 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			(errors[publicPath(path)] ??= []).push(...entry.issues);
 		}
 		const warnings = createMap<FormStateIssue[]>();
-		const failures = createMap<readonly FormStateFailure[]>();
 		const before = derivedFor;
 		for (const [path, finding] of entries(current.validation).filter(takesPart)) {
 			const where = publicPath(path);
 			if (finding.errors.length > 0) (errors[where] ??= []).push(...finding.errors);
 			if (finding.warnings.length > 0) warnings[where] = [...finding.warnings];
-			if (finding.failures.length > 0) failures[where] = finding.failures;
 		}
 		derivedFor = {
 			validation: current.validation,
@@ -531,7 +476,6 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			excluded: current.excluded,
 			errors: shapeErrors(errors, before?.errors),
 			warnings: shapeErrors(warnings, before?.warnings),
-			failures: stabilize(before?.failures ?? createMap(), failures),
 		};
 		return derivedFor;
 	}
@@ -559,15 +503,12 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		const derived = derive(current);
 		return Object.freeze({
 			values: toPlain(current.values) as FormStateSnapshot['values'],
-			defaults: toPlain(current.defaults) as FormStateSnapshot['defaults'],
 			errors: toPlainMap(derived.errors),
 			warnings: toPlainMap(derived.warnings),
 			touched: toPlainMap(marks('touched', current.touched)),
 			dirty: toPlainMap(marks('dirty', current.dirty)),
 			rowIds: toPlainMap(flatRowIds(current)),
 			validating: toPlainMap(marks('validating', current.validating, current.excluded)),
-			validationFailures: toPlainMap(derived.failures),
-			isValidating: current.running > 0,
 			isValid: Object.keys(derived.errors).length === 0,
 		});
 	}
@@ -682,13 +623,11 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		readonly retry?: boolean;
 		/** Reject, rather than only record, when a rule could not run. */
 		readonly reject?: boolean;
-		/** The facts this call alone judges by, from a flush of a silent check; the stored ones otherwise. */
-		readonly facts?: { readonly tree: Tree<NativeFact> };
 		/** The submission this check validates: it keeps the values of the run that passed. */
 		readonly submission?: SubmissionRecord;
 	}
 
-	/** Runs a check nobody awaits: an automatic one, which records a rule that could not run and never rejects for it. */
+	/** Runs a check nobody awaits: an automatic one, which logs a rule that could not run and never rejects for it. */
 	function validateQuietly(names: readonly string[], mode: ValidationMode): void {
 		runValidation(names, mode).catch((error: unknown) => {
 			logger.error('A validation the form state container started on its own failed.', { error });
@@ -716,7 +655,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			values: state.values,
 			ids: state.ids,
 			validation: state.validation,
-			native: mode.facts ? mode.facts.tree : state.native,
+			native: state.native,
 			server: state.server,
 			excluded: state.excluded,
 			exclusionVersion: state.exclusionVersion,
@@ -738,7 +677,6 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			: undefined;
 		if (run) {
 			commit({
-				running: state.running + 1,
 				validating: planned.reduce((tree, path) => setSelfAt(tree, path, true, isArrayNow), state.validating),
 			});
 		}
@@ -753,7 +691,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				}
 			}
 			tracker.finish(run);
-			commit({ ...extra, validating, running: state.running - 1 });
+			commit({ ...extra, validating });
 		};
 		let outcome: Awaited<ReturnType<typeof runValidationPlan>>;
 		try {
@@ -768,20 +706,26 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		const inScope = (path: string): boolean =>
 			!names || (mode.exact ? names.includes(path) : names.some((name) => isWithin(path, name)));
 		const found = createMap<PathFindings>();
-		const at = (path: string): PathFindings => (found[path] ??= { errors: [], warnings: [], failures: [] });
+		const at = (path: string): PathFindings => (found[path] ??= { errors: [], warnings: [] });
 		for (const [path, issues] of Object.entries(outcome.issues)) {
 			for (const raised of issues) {
 				at(path)[raised.severity === 'warning' ? 'warnings' : 'errors'].push(ruleIssue(raised));
 			}
 		}
-		for (const [path, failures] of Object.entries(outcome.failures))
-			at(path).failures.push(...failures.map(failureData));
 		for (const [path, fact] of entries(start.native)) {
 			if (inScope(path) && !isPathExcluded(start.excluded, path))
 				at(path).errors.push(nativeIssue(fact.validity));
 		}
 		const blocking = Object.values(found).some((entry) => entry.errors.length > 0);
-		const failure = Object.values(outcome.failures).flat()[0];
+		const failures = Object.values(outcome.failures).flat();
+		const failure = failures[0];
+		if (!mode.reject) {
+			for (const unrun of failures) {
+				logger.error(`A rule could not run during an automatic validation of '${unrun.path}'.`, {
+					error: unrun,
+				});
+			}
+		}
 		const unchecked = new Set(outcome.superseded);
 
 		if (!run || !startIndex) {
@@ -879,23 +823,14 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 
 		let validation = state.validation;
 		let validated = state.validated;
-		const askAgain: string[] = [];
 		for (const { path, current } of decided) {
 			if (current === undefined || excludedNow(current) || unchecked.has(path)) continue;
-			if (stale(path, current)) {
-				if (!mode.reject && factMoved(path, current) && !outrun(path, current)) askAgain.push(current);
-				continue;
-			}
+			if (stale(path, current)) continue;
 			const entry = found[path] as PathFindings | undefined;
 			validation = setSelfAt(
 				validation,
 				current,
-				reuseFinding(
-					selfAt(validation, current),
-					entry?.errors ?? NO_ISSUES,
-					entry?.warnings ?? NO_ISSUES,
-					entry?.failures ?? [],
-				),
+				reuseFinding(selfAt(validation, current), entry?.errors ?? NO_ISSUES, entry?.warnings ?? NO_ISSUES),
 				isArrayNow,
 			);
 			if (plannedSet.has(path)) validated = setSelfAt(validated, current, true, isArrayNow);
@@ -910,7 +845,6 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				: setSelfAt(failed, '', true, isArrayNow);
 		}
 		finish({ validation, validated, failed });
-		if (askAgain.length > 0) validateQuietly(askAgain, { record: true, markFailed: false, exact: true });
 		if (overtaken) {
 			if (mode.submission) mode.submission.outcome = 'overtaken';
 			return false;
@@ -972,8 +906,8 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	 * @remarks
 	 * The changed path is validated with its descendants, or alone when `exact`: a row operation
 	 * validates the array's own rules and leaves the rows, which the user has not reached, to their dependents.
-	 * A rule that could not run is recorded by the check itself; what can still reject is a bug in the
-	 * validation, which is logged.
+	 * A rule that could not run is logged by the check itself; what can still reject is a bug in the
+	 * validation, which is logged too.
 	 */
 	function afterChange(
 		previousValues: NullMap,
@@ -997,19 +931,11 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	}
 
 	/**
-	 * Writes a control's value, native fact and touch as one command, for `setValue` and `blur`.
+	 * Rejects a path `setValue` or `blur` may not write.
 	 *
-	 * @remarks
-	 * A path must name rows its arrays have: rows are made with `fieldArray`, so a write cannot leave holes
-	 * or rows without an id. What a change calls for runs after the one commit.
+	 * @remarks A path must name rows its arrays have: rows are made with `fieldArray`, so a write cannot leave holes or rows without an id.
 	 */
-	function write(
-		command: 'setValue' | 'blur',
-		path: string,
-		input: { readonly has: boolean; readonly value?: unknown },
-		nativeOptions: NativeOptions | undefined,
-		touch: boolean,
-	): void {
+	function assertWritable(command: 'setValue' | 'blur', path: string): void {
 		assertFieldPath(path, command);
 		const missing = missingRow(path, state.values);
 		if (missing) {
@@ -1017,52 +943,36 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				`${command}: '${path}' names row '${missing.segment}' of '${missing.above}', which has ${missing.length} rows; add rows with fieldArray.`,
 			);
 		}
+	}
+
+	function setValue(path: string, value: unknown): void {
+		assertWritable('setValue', path);
 		const previousValues = state.values;
-		const branch = input.has
-			? reconcile(readAt(previousValues, path), toInternal(input.value))
-			: readAt(previousValues, path);
-		const values = input.has ? setIn(previousValues, path, branch) : previousValues;
-		const valueChanged = values !== previousValues;
-		if (command === 'setValue' && !valueChanged) return;
-		const native = withFact(
-			valueChanged ? stable(state.native, conformAt(state.native, path, branch)) : state.native,
-			path,
-			nativeOptions?.native,
-			values,
-		);
-		const factChanged = native !== state.native;
-		if (!touch && !valueChanged && !factChanged) return;
-		const touched = valueChanged
-			? (touch ? markAt : (tree: Tree<true>) => tree)(
-					conformAt(state.touched, path, branch),
-					path,
-					arrayIn(values),
-				)
-			: touch
-				? markAt(state.touched, path, arrayIn(values))
-				: state.touched;
+		const branch = reconcile(readAt(previousValues, path), toInternal(value));
+		const values = setIn(previousValues, path, branch);
+		if (values === previousValues) return;
 		const root = path.split('.')[0];
 		batch(() => {
 			commit({
 				values,
-				native,
-				touched,
-				...(valueChanged
-					? {
-							ids: replaceIdsAt(
-								state.ids,
-								root,
-								syncIds(idsAt(state.ids, root), readAt(values, root), mintId),
-							),
-							server: dropHostErrors(path, true),
-							validation: conformAt(state.validation, path, branch),
-							failed: conformAt(state.failed, path, branch),
-							validated: conformAt(state.validated, path, branch),
-							validating: conformAt(state.validating, path, branch),
-						}
-					: {}),
+				ids: replaceIdsAt(state.ids, root, syncIds(idsAt(state.ids, root), readAt(values, root), mintId)),
+				server: dropHostErrors(path, true),
+				validation: conformAt(state.validation, path, branch),
+				native: stable(state.native, conformAt(state.native, path, branch)),
+				touched: conformAt(state.touched, path, branch),
+				failed: conformAt(state.failed, path, branch),
+				validated: conformAt(state.validated, path, branch),
+				validating: conformAt(state.validating, path, branch),
 			});
-			afterChange(previousValues, path, false, { change: valueChanged || factChanged, blur: touch });
+			afterChange(previousValues, path, false);
+		});
+	}
+
+	function blur(path: string): void {
+		assertWritable('blur', path);
+		batch(() => {
+			commit({ touched: markAt(state.touched, path, isArrayNow) });
+			afterChange(state.values, path, false, { change: false, blur: true });
 		});
 	}
 
@@ -1177,7 +1087,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return commands;
 	}
 
-	let latestSubmission: Submission | undefined;
+	let latestSubmission: SubmissionRecord | undefined;
 
 	/** Whether the target of a server error, and the values its path's rules read, are as they were when the submission began. */
 	function targetUnchanged(record: SubmissionRecord, was: string, now: string, index: DependencyIndex): boolean {
@@ -1193,6 +1103,101 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			);
 	}
 
+	/** Reports facts for the paths the container holds, in one commit and one validation run. */
+	function reportNative(facts: Readonly<Record<string, NativeValidity | null>>): void {
+		const reported = Object.entries(facts);
+		for (const [path] of reported) assertFieldPath(path, 'reportNative');
+		let native = state.native;
+		const changed: string[] = [];
+		for (const [path, validity] of reported) {
+			if (!holds(path, state.values)) continue;
+			const next = withFact(native, path, validity, state.values);
+			if (next === native) continue;
+			native = next;
+			changed.push(path);
+		}
+		if (changed.length === 0) return;
+		batch(() => {
+			commit({ native });
+			const again = changed.filter(
+				(path) =>
+					hasMarkAround(state.validated, path) || hasMarkAround(state.validating, path) || isFailed(path),
+			);
+			if (again.length > 0) validateQuietly(again, { record: true, markFailed: false });
+		});
+	}
+
+	/**
+	 * Applies the server's answer to the submission `record`, if it is still the latest.
+	 *
+	 * @remarks The paths are checked first, so a bad one throws whether or not the answer would apply.
+	 */
+	function setServerErrors(record: SubmissionRecord, errors: FormStateErrorsInput): void {
+		const given = Object.entries(errors).map(([path, input]) => {
+			if (path !== FORM_ROOT) assertFieldPath(path, 'setServerErrors');
+			assertRowsExist(path, record.values);
+			return [path, serverIssues(input)] as const;
+		});
+		if (record !== latestSubmission) return;
+		const index = dependencyIndex();
+		const known = state.server;
+		const applied: Array<[string, ServerEntry]> = [];
+		for (const [path, issues] of given) {
+			if (issues.length === 0) continue;
+			const was = internalPath(path);
+			const where = resolveAnchor(anchorOf(record.ids, was), state.ids);
+			if (where === undefined || !targetUnchanged(record, was, where, index)) continue;
+			const dependencies = where === '' ? [] : dependenciesOf(where, state.values, index);
+			const previous = selfAt(known, where);
+			const kept = reuseIssues(previous?.issues, issues);
+			applied.push([
+				where,
+				previous &&
+				previous.issues === kept &&
+				previous.dependencies.length === dependencies.length &&
+				previous.dependencies.every(
+					(one, position) =>
+						one.reference === dependencies[position].reference &&
+						Object.is(one.value, dependencies[position].value),
+				)
+					? previous
+					: { issues: kept, dependencies },
+			]);
+		}
+		commit({ server: stable(known, fromEntries(applied, isArrayNow)) });
+	}
+
+	async function submit(): Promise<FormSubmitResult> {
+		const record: SubmissionRecord = {
+			outcome: undefined,
+			values: state.values,
+			ids: state.ids,
+			excluded: state.excluded,
+			payload: config.payload ?? NO_PAYLOAD,
+			epoch: tracker.epoch(),
+		};
+		latestSubmission = record;
+		await batch(() => {
+			commit({ server: undefined });
+			return runValidation(undefined, {
+				record: true,
+				markFailed: true,
+				retry: true,
+				reject: true,
+				submission: record,
+			});
+		});
+		const outcome = latestSubmission === record ? record.outcome : undefined;
+		if (outcome === 'passed') {
+			return {
+				outcome,
+				values: submittedValues(record),
+				setServerErrors: (errors) => setServerErrors(record, errors),
+			};
+		}
+		return { outcome: outcome === 'invalid' ? 'invalid' : 'overtaken' };
+	}
+
 	return {
 		subscribe(listener) {
 			listeners.add(listener);
@@ -1203,28 +1208,9 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		getSnapshot: () => snapshot,
 		getServerSnapshot: () => serverSnapshot,
 		getValue: (path) => toPlain(readAt(state.values, path)),
-		getFieldState: (path) => selectFieldState(snapshot, path),
-		setValue: (path, value, nativeOptions) => write('setValue', path, { has: true, value }, nativeOptions, false),
-		blur: (path, blurOptions) =>
-			write(
-				'blur',
-				path,
-				{ has: blurOptions !== undefined && Object.hasOwn(blurOptions, 'value'), value: blurOptions?.value },
-				blurOptions,
-				true,
-			),
-		reportNative(path, reported) {
-			assertFieldPath(path, 'reportNative');
-			if (!holds(path, state.values)) return;
-			const native = withFact(state.native, path, reported, state.values);
-			if (native === state.native) return;
-			batch(() => {
-				commit({ native });
-				if (hasMarkAround(state.validated, path) || isFailed(path)) {
-					validateQuietly([path], { record: true, markFailed: false });
-				}
-			});
-		},
+		setValue,
+		blur,
+		reportNative,
 		reset(values) {
 			const defaults = values ? (toInternal(values) as NullMap) : state.defaults;
 			tracker.reset();
@@ -1242,87 +1228,9 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				ids: syncIds(undefined, defaults, mintId),
 			});
 		},
-		async validate(paths, validateOptions) {
-			return batch(() => {
-				if (validateOptions?.native) {
-					const facts = flushedFacts(state.native, validateOptions.native, state.values);
-					if (facts !== state.native) commit({ native: facts });
-				}
-				const token = validateOptions?.submission;
-				const record = Submission.recordOf(token);
-				const submission = record && token === latestSubmission ? record : undefined;
-				if (record) record.outcome = submission ? undefined : 'overtaken';
-				if (submission && paths?.length === 0) {
-					submission.values = state.values;
-					submission.ids = state.ids;
-					submission.excluded = state.excluded;
-					submission.outcome = 'passed';
-					return Promise.resolve(true);
-				}
-				return runValidation(paths, { record: true, markFailed: true, retry: true, reject: true, submission });
-			});
-		},
-		checkValidity: async (paths, checkOptions) =>
-			runValidation(paths, {
-				record: false,
-				markFailed: false,
-				reject: true,
-				facts: checkOptions?.native
-					? { tree: flushedFacts(state.native, checkOptions.native, state.values) }
-					: undefined,
-			}),
-		beginSubmission() {
-			const token = new Submission({
-				outcome: undefined,
-				values: state.values,
-				ids: state.ids,
-				excluded: state.excluded,
-				payload: options.payload ?? NO_PAYLOAD,
-				epoch: tracker.epoch(),
-			});
-			latestSubmission = token;
-			commit({ server: undefined });
-			return token;
-		},
-		setErrors(source, errors, setOptions) {
-			if (!HOST_SOURCES.includes(source)) {
-				throw new Error(`Unknown error source '${String(source)}': a host sets ${HOST_SOURCES.join(', ')}.`);
-			}
-			const token = setOptions?.submission;
-			const record = Submission.recordOf(token);
-			const given = Object.entries(errors).map(([path, input]) => {
-				if (path !== FORM_ROOT) assertFieldPath(path, 'setErrors');
-				assertRowsExist(path, record?.values ?? state.values);
-				return [path, serverIssues(input)] as const;
-			});
-			if (token && (!record || token !== latestSubmission || record.epoch !== tracker.epoch())) return;
-			const index = dependencyIndex();
-			const known = state.server;
-			const applied: Array<[string, ServerEntry]> = [];
-			for (const [path, issues] of given) {
-				if (issues.length === 0) continue;
-				const was = internalPath(path);
-				const where = record ? resolveAnchor(anchorOf(record.ids, was), state.ids) : was;
-				if (where === undefined || (record && !targetUnchanged(record, was, where, index))) continue;
-				const dependencies = where === '' ? [] : dependenciesOf(where, state.values, index);
-				const previous = selfAt(known, where);
-				const kept = reuseIssues(previous?.issues, issues);
-				applied.push([
-					where,
-					previous &&
-					previous.issues === kept &&
-					previous.dependencies.length === dependencies.length &&
-					previous.dependencies.every(
-						(one, position) =>
-							one.reference === dependencies[position].reference &&
-							Object.is(one.value, dependencies[position].value),
-					)
-						? previous
-						: { issues: kept, dependencies },
-				]);
-			}
-			commit({ server: stable(known, fromEntries(applied, isArrayNow)) });
-		},
+		validate: async (paths) => runValidation(paths, { record: true, markFailed: true, retry: true, reject: true }),
+		checkValidity: async () => runValidation(undefined, { record: false, markFailed: false, reject: true }),
+		submit,
 		fieldArray,
 	};
 }

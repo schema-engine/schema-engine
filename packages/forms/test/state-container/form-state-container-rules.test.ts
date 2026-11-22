@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { defaultModes, formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
+import { containerOptions, formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
 import {
@@ -8,6 +8,7 @@ import {
 	type FormStateContainerFactory,
 	type FormStateIssue,
 	type FormStateSnapshot,
+	type FormSubmitResult,
 } from '@/state-container/types';
 
 const withOverrides =
@@ -43,6 +44,15 @@ const thaw = <T>(value: T): T =>
 		: isPlainObject(value)
 			? (Object.fromEntries(Object.entries(value).map(([key, child]) => [key, thaw(child)])) as T)
 			: value;
+
+/** Every path of a nested value tree, containers and leaves, as the snapshot's flat maps name them. */
+const valuePaths = (value: unknown, prefix = ''): string[] =>
+	Array.isArray(value) || isPlainObject(value)
+		? Object.entries(value).flatMap(([key, child]) => {
+				const path = prefix ? `${prefix}.${key}` : key;
+				return [path, ...valuePaths(child, path)];
+			})
+		: [];
 
 /**
  * Each entry is a store that breaks one rule of the contract, and the cases that must notice.
@@ -137,12 +147,12 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	},
 	{
 		name: 'never records the errors of validate',
-		create: withOverrides((inner) => ({ validate: (paths) => inner.checkValidity(paths) })),
+		create: withOverrides((inner) => ({ validate: () => inner.checkValidity() })),
 		caught: ['with onSubmit nothing validates until validate is called'],
 	},
 	{
 		name: 'writes errors from checkValidity',
-		create: withOverrides((inner) => ({ checkValidity: (paths) => inner.validate(paths) })),
+		create: withOverrides((inner) => ({ checkValidity: () => inner.validate() })),
 		caught: ['checkValidity reports validity and changes nothing, not even for subscribers'],
 	},
 	{
@@ -157,16 +167,16 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	},
 	{
 		name: 'shows the error of a container or of the form on every field below it',
-		create: withOverrides((inner) => ({
-			getFieldState: (path) => {
-				const state = inner.getFieldState(path);
-				const around = Object.keys(inner.getSnapshot().errors).find(
+		create: withSnapshot((snapshot) => {
+			const errors = { ...snapshot.errors };
+			for (const path of valuePaths(snapshot.values)) {
+				const around = Object.keys(snapshot.errors).find(
 					(key) => key === FORM_ROOT || path.startsWith(`${key}.`),
 				);
-				const error = state.error ?? (around === undefined ? undefined : inner.getSnapshot().errors[around]);
-				return { ...state, error, invalid: error !== undefined };
-			},
-		})),
+				if (around !== undefined && !(path in errors)) errors[path] = snapshot.errors[around];
+			}
+			return { ...snapshot, errors };
+		}),
 		caught: [
 			'an error is never inherited: a container and a row inside it can both have one',
 			'an error about the form is its own entry and is no field error',
@@ -174,10 +184,8 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	},
 	{
 		name: 'reports a field untouched however it was blurred',
-		create: withOverrides((inner) => ({
-			getFieldState: (path) => ({ ...inner.getFieldState(path), isTouched: false }),
-		})),
-		caught: ['getFieldState reports error, touched and dirty for a path'],
+		create: withSnapshot((snapshot) => ({ ...snapshot, touched: {} })),
+		caught: ['selectFieldState reports error, touched and dirty for a path'],
 	},
 	{
 		name: 'never reports dirty fields',
@@ -202,14 +210,63 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	},
 	{
 		name: 'ignores what the platform reports about a control',
-		create: withOverrides((inner) => ({
-			setValue: (path, value) => inner.setValue(path, value),
-			blur: (path) => inner.blur(path),
-			validate: (paths) => inner.validate(paths),
-		})),
+		create: withOverrides(() => ({ reportNative: () => undefined })),
 		caught: [
 			'native validity is an input to validation: it shows with the timing of validation, and notifies nobody alone',
 			'lists the server, then each failed rule in rule order, then the native fact, and shows the first',
+		],
+	},
+	{
+		name: 'treats each report as the whole truth, withdrawing the facts it leaves out',
+		create: withOverrides((inner) => {
+			const held = new Set<string>();
+			return {
+				reportNative: (facts) => {
+					const withdrawn = Object.fromEntries([...held].map((path) => [path, null]));
+					held.clear();
+					for (const [path, fact] of Object.entries(facts)) if (fact !== null) held.add(path);
+					inner.reportNative({ ...withdrawn, ...facts });
+				},
+			};
+		}),
+		caught: [
+			'a fact stays held until its control withdraws it: every held fact counts for validate and checkValidity',
+		],
+	},
+	{
+		name: 'skips a reserved path instead of rejecting the call',
+		create: withOverrides((inner) => ({
+			reportNative: (facts) =>
+				inner.reportNative(
+					Object.fromEntries(Object.entries(facts).filter(([path]) => !path.startsWith('__'))),
+				),
+		})),
+		caught: [
+			'a reserved path rejects the whole reportNative call before any write, and every reserved segment is named',
+			'refuses a reserved path and a row that does not exist, and writes nothing',
+		],
+	},
+	{
+		name: 'writes the facts that come before a reserved path',
+		create: withOverrides((inner) => ({
+			reportNative: (facts) => {
+				for (const [path, fact] of Object.entries(facts)) inner.reportNative({ [path]: fact });
+			},
+		})),
+		caught: [
+			'a reserved path rejects the whole reportNative call before any write, and every reserved segment is named',
+		],
+	},
+	{
+		name: 'marks a path touched when its control reports',
+		create: withOverrides((inner) => ({
+			reportNative: (facts) => {
+				inner.reportNative(facts);
+				for (const path of Object.keys(facts)) inner.blur(path);
+			},
+		})),
+		caught: [
+			'reportNative binds facts to the values held now, validates only paths already checked, and is no user change',
 		],
 	},
 	{
@@ -233,9 +290,16 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	{
 		name: 'clears and rewrites a source on every write, even an identical one',
 		create: withOverrides((inner) => ({
-			setErrors: (source, errors) => {
-				inner.setErrors(source, {});
-				inner.setErrors(source, errors);
+			submit: async () => {
+				const result = await inner.submit();
+				if (result.outcome !== 'passed') return result;
+				return {
+					...result,
+					setServerErrors: (errors) => {
+						result.setServerErrors({});
+						result.setServerErrors(errors);
+					},
+				};
 			},
 		})),
 		caught: ['identical errors change nothing and keep their objects, and a changed one replaces only its own'],
@@ -246,49 +310,56 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 		caught: ['lists the paths a check is running for, moves with a row, and drops a path a later check took over'],
 	},
 	{
-		name: 'applies a server answer without asking which submission it is for',
-		create: withOverrides((inner) => ({ setErrors: (source, errors) => inner.setErrors(source, errors) })),
-		caught: [
-			'a response for values that were edited since the submission began is dropped',
-			'an error for a submitted row lands on that row wherever it is now, and is dropped when the row is gone',
-			'a token from before a reset or from a superseded submission is ignored',
-		],
+		name: 'answers through the latest submission, whichever one the answer is for',
+		create: withOverrides((inner) => {
+			let latest: Extract<FormSubmitResult, { outcome: 'passed' }> | undefined;
+			return {
+				submit: async () => {
+					const result = await inner.submit();
+					if (result.outcome !== 'passed') return result;
+					latest = result;
+					return { ...result, setServerErrors: (errors) => latest?.setServerErrors(errors) };
+				},
+			};
+		}),
+		caught: ['an answer to a submission from before a reset, or to a superseded one, is ignored'],
 	},
 	{
-		name: 'keeps counting the facts of a control a flush left out',
+		name: 'hands back the values it had before the validation ended',
 		create: withOverrides((inner) => ({
-			checkValidity: (paths) => inner.checkValidity(paths),
-			validate: (paths, options) => inner.validate(paths, options && { ...options, native: undefined }),
-		})),
-		caught: [
-			'a flush is the whole truth: a control that is not in the map is not counted, for validate and for checkValidity',
-		],
-	},
-	{
-		name: 'stops the token from following the validation',
-		create: withOverrides((inner) => ({
-			validate: (paths, options) => inner.validate(paths, options && { ...options, submission: undefined }),
-		})),
-		caught: [
-			'an edit during validation followed by a passing retry leaves the token holding the edited values, and the server answer for them applies',
-		],
-	},
-	{
-		name: 'writes the value and the touch as two commands',
-		create: withOverrides((inner) => ({
-			blur: (path, options) => {
-				if (options && Object.hasOwn(options, 'value')) inner.setValue(path, options.value, options);
-				inner.blur(path, options && { native: options.native });
+			submit: async () => {
+				const before = inner.getSnapshot().values;
+				const result = await inner.submit();
+				return result.outcome === 'passed' ? { ...result, values: before } : result;
 			},
 		})),
-		caught: ['blur writes the value and marks the field touched as one command with one notification'],
+		caught: [
+			'an edit during validation followed by a passing retry submits the edited values, and the server answer for them applies',
+		],
+	},
+	{
+		name: 'never ends a submission overtaken',
+		create: withOverrides((inner) => ({
+			submit: async () => {
+				const result = await inner.submit();
+				return result.outcome === 'overtaken' ? { outcome: 'invalid' } : result;
+			},
+		})),
+		caught: ['a submission ends passed, invalid, or overtaken'],
+	},
+	{
+		name: 'never marks a path touched when it is blurred',
+		create: withOverrides(() => ({ blur: () => undefined })),
+		caught: [
+			'blur marks the path touched in one notification and validates by mode; written first, the value ends as one command would leave it',
+		],
 	},
 	{
 		name: 'writes past the end of an array',
 		create: withOverrides((inner) => ({
-			setValue: (path, value, options) => {
+			setValue: (path, value) => {
 				try {
-					inner.setValue(path, value, options);
+					inner.setValue(path, value);
 				} catch {
 					return undefined;
 				}
@@ -301,15 +372,17 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	{
 		name: 'validates fields whatever their constraints and disabled state',
 		create: (options) =>
-			createFormStateContainer({
-				...defaultModes,
-				...options,
-				elements: options.elements.map((element) => ({
-					...element,
-					constraints: undefined,
-					disabled: undefined,
-				})),
-			}),
+			createFormStateContainer(
+				containerOptions({
+					registry: options.registry,
+					defaults: options.defaults,
+					rowIds: options.rowIds,
+					...options.config,
+					elements: options.config.steps
+						.flatMap((step) => step.elements)
+						.map((element) => ({ ...element, constraints: undefined, disabled: undefined })),
+				}),
+			),
 		caught: [
 			'a field a constraint hides takes no part: it does not block, count or show, however it was recorded',
 			'disabled fields, authored or by a constraint, and everything inside an excluded container, are excluded; an inactive step is not',
@@ -333,11 +406,12 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	{
 		name: 'swallows a rule that could not run',
 		create: withOverrides((inner) => ({
-			validate: (paths, options) => inner.validate(paths, options).catch(() => false),
-			checkValidity: (paths) => inner.checkValidity(paths).catch(() => false),
+			validate: (paths) => inner.validate(paths).catch(() => false),
+			checkValidity: () => inner.checkValidity().catch(() => false),
 		})),
 		caught: [
-			'a rule that throws is no field error: validate and checkValidity reject naming it, an automatic check records it, the others still report',
+			'a rule that throws is no field error: validate and checkValidity reject naming it, an automatic check logs it, the others still report',
+			'a failure says why a rule did not run: the service was unavailable, or the rule threw',
 		],
 	},
 	{
