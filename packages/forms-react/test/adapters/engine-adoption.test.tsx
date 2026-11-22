@@ -301,7 +301,10 @@ test('submission validates once before invoking the submit callback', async () =
 	);
 	await userEvent.click(screen.getByRole('button', { name: 'Submit once' }));
 	await waitFor(() =>
-		expect(submitted).toHaveBeenCalledWith({ email: 'a@example.com' }, { setServerErrors: expect.any(Function) }),
+		expect(submitted).toHaveBeenCalledWith(
+			{ email: 'a@example.com' },
+			{ setServerErrors: expect.any(Function), fetch: expect.any(Function) },
+		),
 	);
 	expect(fetch).toHaveBeenCalledTimes(1);
 });
@@ -416,6 +419,27 @@ test('every context of a submission carries the submitted values: without exclud
 	await waitFor(() => expect(onAction).toHaveBeenCalled());
 	const expected = { a: 'x', campaign: 'spring' };
 	expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'saved' }), expected);
-	expect(submitted).toHaveBeenCalledWith(expected, { setServerErrors: expect.any(Function) });
+	expect(submitted).toHaveBeenCalledWith(expected, {
+		setServerErrors: expect.any(Function),
+		fetch: expect.any(Function),
+	});
 	expect(contexts.find((context) => context.trigger === 'form_submit')?.formData).toEqual(expected);
+});
+
+test('onSubmit is handed the fetch of the engine', async () => {
+	const submitted = vi.fn();
+	mount(
+		config,
+		<>
+			<Field name="address.street" />
+			<Controls />
+		</>,
+		undefined,
+		submitted,
+		{ address: { street: 'Main Street' }, customerType: 'person', vatNumber: '' },
+	);
+	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+	await waitFor(() => expect(submitted).toHaveBeenCalled());
+	expect(submitted.mock.calls[0]?.[1].fetch).toBe(engine.fetch);
 });

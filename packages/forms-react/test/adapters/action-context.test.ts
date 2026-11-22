@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useFormActionDispatchers } from '../../src/components/form-runtime/use-form-action-dispatchers';
+import { createFormEngine } from '@schema-engine/forms';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { ActionDispatcher } from '@schema-engine/actions';
 import { createSubmissionStore } from '../../src/hooks/form-state/submission-store';
@@ -13,6 +14,8 @@ const config: FormConfig = {
 		{ id: 'step-2', title: 'Step 2', elements: [] },
 	],
 };
+
+const { fetch } = createFormEngine({ elements: [] });
 
 const mockDispatcher = {
 	dispatch: async () => [],
@@ -30,6 +33,7 @@ function setup(
 		useFormActionDispatchers({
 			container,
 			submission,
+			fetch,
 			config,
 			actionExecutor: mockDispatcher,
 			...overrides,
@@ -64,7 +68,7 @@ describe('useFormActionDispatchers', () => {
 		});
 		const submission = createSubmissionStore();
 		const { result } = renderHook(() =>
-			useFormActionDispatchers({ container, submission, config, actionExecutor: mockDispatcher }),
+			useFormActionDispatchers({ container, submission, fetch, config, actionExecutor: mockDispatcher }),
 		);
 		await container.validate();
 		submission.begin();
@@ -78,6 +82,12 @@ describe('useFormActionDispatchers', () => {
 		expect(context.metadata?.userInteractions).toBe(1);
 	});
 
+	test('a context hands actions the fetch of the engine', () => {
+		const { result } = setup();
+
+		expect(result.current.buildActionContext().fetch).toBe(fetch);
+	});
+
 	test('building a context does not validate the form on later changes', async () => {
 		const container = createTestContainer({
 			elements: [{ $type: 'input', name: 'email', rules: [{ type: 'required' }] }],
@@ -87,7 +97,7 @@ describe('useFormActionDispatchers', () => {
 		const validate = vi.spyOn(container, 'validate');
 		const submission = createSubmissionStore();
 		const { result } = renderHook(() =>
-			useFormActionDispatchers({ container, submission, config, actionExecutor: mockDispatcher }),
+			useFormActionDispatchers({ container, submission, fetch, config, actionExecutor: mockDispatcher }),
 		);
 
 		const context = result.current.buildActionContext();
@@ -117,7 +127,7 @@ describe('useFormActionDispatchers', () => {
 		});
 		const submission = createSubmissionStore();
 		const { result } = renderHook(() =>
-			useFormActionDispatchers({ container, submission, config, actionExecutor: mockDispatcher }),
+			useFormActionDispatchers({ container, submission, fetch, config, actionExecutor: mockDispatcher }),
 		);
 
 		const form = result.current.buildActionContext().form;

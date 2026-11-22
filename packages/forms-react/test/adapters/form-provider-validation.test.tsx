@@ -184,7 +184,7 @@ describe('FormProvider validation', () => {
 		await waitFor(() =>
 			expect(onSubmit).toHaveBeenCalledWith(
 				{ email: 'a@b.co', campaign: 'spring' },
-				{ setServerErrors: expect.any(Function) },
+				{ setServerErrors: expect.any(Function), fetch: expect.any(Function) },
 			),
 		);
 	});
@@ -280,7 +280,7 @@ describe('FormProvider validation', () => {
 		await waitFor(() => {
 			expect(onSubmit).toHaveBeenCalledWith(
 				{ email: 'reader@example.com' },
-				{ setServerErrors: expect.any(Function) },
+				{ setServerErrors: expect.any(Function), fetch: expect.any(Function) },
 			);
 		});
 		expect(screen.getByTestId('email-error')).toHaveTextContent('');
@@ -324,7 +324,10 @@ describe('FormProvider validation', () => {
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'b@example.com' } });
 
 		await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-		expect(onSubmit).toHaveBeenCalledWith({ email: 'b@example.com' }, { setServerErrors: expect.any(Function) });
+		expect(onSubmit).toHaveBeenCalledWith(
+			{ email: 'b@example.com' },
+			{ setServerErrors: expect.any(Function), fetch: expect.any(Function) },
+		);
 		slow.mockRestore();
 	});
 });
