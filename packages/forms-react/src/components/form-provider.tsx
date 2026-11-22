@@ -135,6 +135,11 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 				<FormStepStateContext.Provider value={stepStates}>
 					<form
 						onSubmit={submitEvent}
+						onReset={(event) => {
+							event.preventDefault();
+							container.reset();
+							submission.reset();
+						}}
 						className={runtimeConfig.className}
 						style={runtimeConfig.style}
 						data-se-theme={engine.getLayout().id}
@@ -160,7 +165,10 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
  * instance starts. The hooks under the provider read the container with `useSyncExternalStore`.
  *
  * The form is submitted by `onSubmit` and never by a React 19 `<form action>`: React resets the uncontrolled
- * fields of a form after an action, which would erase text the container still holds.
+ * fields of a form after an action, which would erase text the container still holds. A native reset button
+ * is the same: the browser would put the controls back to their `defaultValue` attributes behind the
+ * container, so the form handles `reset` itself, restoring the defaults through the container, whose
+ * write-back updates the controls.
  *
  * The submission state (`status`, `failures`, `submitCount`) is the provider's own until the form runtime of
  * #336 owns the lifecycle. The one formatter of the form is `formatIssue`, else the engine's.
