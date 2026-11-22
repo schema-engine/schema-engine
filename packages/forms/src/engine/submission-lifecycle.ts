@@ -4,22 +4,23 @@ import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { BuilderActionBaseContext } from '@/types';
 
 type Entry = NonNullable<FormConfigView['actions']>[number];
-type FormActionConfig = Exclude<Entry, readonly unknown[]>;
+/** The loosely typed action of a form config, which a typed action extends. */
+export type FormActionConfig = Exclude<Entry, readonly unknown[]>;
 
-type FormActionDispatch = (
-	input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
+type FormActionDispatch<TAction extends FormActionConfig> = (
+	input: ActionDispatchInput<TAction, BuilderActionBaseContext, FormActionTrigger>,
 ) => Promise<Array<ActionExecutionResult & { actionId?: string; sequenceIndex?: number; groupIndex?: number }>>;
 
-interface RunSubmissionLifecycleOptions {
-	actions: readonly ActionSequenceEntry<FormActionConfig>[];
+interface RunSubmissionLifecycleOptions<TAction extends FormActionConfig> {
+	actions: readonly ActionSequenceEntry<TAction>[];
 	context: BuilderActionBaseContext | (() => BuilderActionBaseContext);
 	/**
 	 * Whether any action answers the trigger. A trigger nothing answers is not dispatched and builds no context.
 	 *
 	 * @remarks Defaults to answering every trigger.
 	 */
-	hasMatching?: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
-	onAction?: (action: FormActionConfig, data: BuilderActionBaseContext['formData']) => void | Promise<void>;
+	hasMatching?: (actions: readonly ActionSequenceEntry<TAction>[], trigger: FormActionTrigger) => boolean;
+	onAction?: (action: TAction, data: BuilderActionBaseContext['formData']) => void | Promise<void>;
 	/**
 	 * The consumer's submission callback.
 	 *
@@ -84,7 +85,7 @@ export function createSubmissionGuard(): SubmissionGuard {
 	};
 }
 
-function isGroup(entry: ActionSequenceEntry<FormActionConfig>): entry is readonly FormActionConfig[] {
+function isGroup<TAction extends FormActionConfig>(entry: ActionSequenceEntry<TAction>): entry is readonly TAction[] {
 	return Array.isArray(entry);
 }
 
@@ -100,9 +101,9 @@ function isGroup(entry: ActionSequenceEntry<FormActionConfig>): entry is readonl
  * later failure, of `form_submit_complete`, is recorded in `failure` and leaves `succeeded` true. Failures
  * while recovering are dropped in favour of the first.
  */
-export async function runSubmissionLifecycle(
-	dispatch: FormActionDispatch,
-	{ actions, context, onAction, onSubmit, hasMatching = () => true }: RunSubmissionLifecycleOptions,
+export async function runSubmissionLifecycle<TAction extends FormActionConfig = FormActionConfig>(
+	dispatch: FormActionDispatch<TAction>,
+	{ actions, context, onAction, onSubmit, hasMatching = () => true }: RunSubmissionLifecycleOptions<TAction>,
 ): Promise<SubmissionLifecycleResult> {
 	const currentContext = () => (typeof context === 'function' ? context() : context);
 	const dispatchTrigger = async (trigger: FormActionTrigger) => {
