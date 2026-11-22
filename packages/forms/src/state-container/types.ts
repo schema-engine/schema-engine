@@ -223,6 +223,14 @@ export interface FormStateSnapshot {
 	readonly validating: Readonly<Record<string, true>>;
 	/** Whether no error from any source is recorded for a path that takes part. Cheap, and not a fresh check. */
 	readonly isValid: boolean;
+	/**
+	 * How many times the form was reset: it goes up by one on every {@link FormStateContainer.reset} and on nothing else.
+	 *
+	 * @remarks
+	 * It lets what lives around the container, such as a runtime's submission and step state, notice a reset
+	 * that no one told it about, since `reset` is the only way back and any caller may use it.
+	 */
+	readonly generation: number;
 }
 
 /**

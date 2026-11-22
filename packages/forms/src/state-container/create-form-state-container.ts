@@ -125,6 +125,8 @@ interface State {
 	/** The values with the excluded paths absent, as constraints read them. */
 	readonly visible: Record<string, unknown>;
 	readonly exclusionVersion: number;
+	/** Resets so far. */
+	readonly generation: number;
 }
 
 /** A row while an operation rebuilds an array: where it was, and what it is now. */
@@ -395,6 +397,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		ids: hydrated ? hydrated.ids : syncIds(undefined, initialValues, mintId),
 		...participationOf(initialValues),
 		exclusionVersion: 0,
+		generation: 0,
 	};
 
 	const declaredFor = new WeakMap<NullMap, ReadonlySet<string>>();
@@ -499,6 +502,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			rowIds: toPlainMap(flatRowIds(current)),
 			validating: toPlainMap(marks('validating', current.validating, current.excluded)),
 			isValid: Object.keys(derived.errors).length === 0,
+			generation: current.generation,
 		});
 	}
 
@@ -1233,6 +1237,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				validated: undefined,
 				validating: undefined,
 				ids: syncIds(undefined, defaults, mintId),
+				generation: state.generation + 1,
 			});
 		},
 		validate: async (paths) => runValidation(paths, { record: true, markFailed: true, retry: true, reject: true }),

@@ -63,6 +63,25 @@ const valuePaths = (value: unknown, prefix = ''): string[] =>
  */
 const brokenStores: Array<{ name: string; create: FormStateContainerFactory; caught: string[] }> = [
 	{
+		name: 'never counts a reset in the generation',
+		create: withSnapshot((snapshot) => ({ ...snapshot, generation: 0 })),
+		caught: [
+			'the snapshot counts resets in generation: it starts at the server snapshot, goes up by one on every reset and on nothing else',
+		],
+	},
+	{
+		name: 'ignores the constraints of a step',
+		create: (options) =>
+			createFormStateContainer({
+				...options,
+				config: { ...options.config, steps: options.config.steps.map(({ elements }) => ({ elements })) },
+			}),
+		caught: [
+			'a step its constraints hide is skipped: its fields take no part, its values are kept and the submitted values leave them out',
+			'a value that takes no part is absent for the constraints after it, in order: a skipped step cannot keep a later field shown',
+		],
+	},
+	{
 		name: 'drops an answer for a path no field declares',
 		create: withOverrides((inner) => ({
 			submit: async () => {
