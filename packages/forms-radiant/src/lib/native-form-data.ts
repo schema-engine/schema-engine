@@ -5,7 +5,8 @@
  * Nested values use dotted names (`address.street`), and an array of records indexed ones
  * (`contacts.0.email`), as the rows of an array render. An array of plain values repeats its name, as a
  * multiple select or a group of checkboxes does, and an array of files is one entry for each file. `null`
- * and `undefined` send nothing, and every other plain value is its text.
+ * and `undefined` send nothing, a boolean follows the native checkbox (`true` sends `'on'`, `false` sends nothing),
+ * and every other plain value is its text.
  */
 export function nativeEntries(values: Readonly<Record<string, unknown>>): Array<[string, string | Blob]> {
 	const entries: Array<[string, string | Blob]> = [];
@@ -22,7 +23,9 @@ export function nativeEntries(values: Readonly<Record<string, unknown>>): Array<
 			for (const [key, child] of Object.entries(value)) add(`${name}.${key}`, child);
 		} else if (typeof value === 'string') {
 			entries.push([name, value]);
-		} else if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+		} else if (typeof value === 'boolean') {
+			if (value) entries.push([name, 'on']);
+		} else if (typeof value === 'number' || typeof value === 'bigint') {
 			entries.push([name, String(value)]);
 		}
 	};

@@ -10,6 +10,7 @@ test('names nested values with dots, rows of records with indexes and plain arra
 			tags: ['a', 'b'],
 			age: 3,
 			agreed: true,
+			declined: false,
 			skipped: null,
 			missing: undefined,
 		}),
@@ -21,7 +22,7 @@ test('names nested values with dots, rows of records with indexes and plain arra
 		['tags', 'a'],
 		['tags', 'b'],
 		['age', '3'],
-		['agreed', 'true'],
+		['agreed', 'on'],
 	]);
 });
 
