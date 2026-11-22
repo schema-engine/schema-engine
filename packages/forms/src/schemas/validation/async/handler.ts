@@ -182,7 +182,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 				const hasBody = method !== 'GET';
 				let data: unknown;
 				try {
-					const response = await fetch(rule.url, {
+					const response = await context.fetch(rule.url, {
 						method,
 						headers: {
 							...(hasBody ? { 'Content-Type': 'application/json' } : {}),

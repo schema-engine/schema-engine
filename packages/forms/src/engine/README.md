@@ -58,10 +58,17 @@ and indexes (`['steps', 0, 'elements', 2, 'grid', 'width']`, `[]` for the whole 
 checks made at build time (`buildFormEngine`) throw a plain `Error` naming the registration; they are not
 form issues.
 
+## Requests
+
+`createFormEngine({ fetch?, csrf? })`: `fetch` defaults to the global one, and every request the engine makes goes
+through it (today the `async` validation rule, built by the engine's validation registry, `registry.fetch`).
+`engine.fetch` is that function with the CSRF policy applied, and `engine.getCsrf()` the policy, for a binding that
+adds a hidden input to a native post. `extend` inherits both. See [CSRF](../csrf/README.md).
+
 ## Action context form state
 
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass
-`isValid`, `touched` and `submitCount`, all required, key `errors` and `touched` by dotted path
+`fetch` (the engine's), `isValid`, `touched` and `submitCount`, all required, key `errors` and `touched` by dotted path
 (`{ 'address.street': … }`). A React Hook Form
 caller flattens `touchedFields` to paths first.
 

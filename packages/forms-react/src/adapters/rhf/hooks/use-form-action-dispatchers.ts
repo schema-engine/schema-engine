@@ -103,8 +103,9 @@ export function useFormActionDispatchers({
 			currentStep: getCurrentStep?.() ?? 0,
 			mountedAt: formMountTime,
 			form: formAdapter,
+			fetch: registry.fetch,
 		});
-	}, [form, config, getCurrentStep, formAdapter, formMountTime]);
+	}, [form, config, getCurrentStep, formAdapter, formMountTime, registry]);
 
 	const dispatchActions = useCallback(
 		async (

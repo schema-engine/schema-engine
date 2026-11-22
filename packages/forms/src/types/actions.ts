@@ -1,3 +1,4 @@
+import type { FormFetch } from '@/lib/form-fetch';
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
 import type { FormStateError } from '@/state-container/types';
@@ -39,6 +40,12 @@ export interface BuilderActionBaseContext {
 		/** Number of user interactions */
 		userInteractions: number;
 	};
+	/**
+	 * The engine's request function, with its CSRF policy applied.
+	 *
+	 * @remarks Use it for every request an action makes: a same-origin unsafe request then carries the token, and nothing else does.
+	 */
+	fetch: FormFetch;
 	/** Form controller methods (framework-agnostic) */
 	form: {
 		/** Reset form to initial values */

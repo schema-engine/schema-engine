@@ -1,3 +1,4 @@
+import { globalFetch } from '@/lib/form-fetch';
 import type { BuilderActionRuntimeContext } from '@/types/actions';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
 
@@ -17,6 +18,7 @@ export function createMockBuilderContext<TConfig = unknown>(
 		errors: {},
 		trigger: 'form_submit',
 		signal: new AbortController().signal,
+		fetch: globalFetch,
 		form: {
 			reset: () => {},
 			setValue: () => {},

@@ -87,6 +87,12 @@ Completing the last step is a submission: use `form_submit_success`, not `step_l
 Factories return action registrations with configurable handlers. Register the
 returned value in `createFormEngine({ actions })`.
 
+### `context.fetch`
+
+Every action context carries `fetch`, the engine's request function with its [CSRF policy](../csrf/README.md)
+applied. Use it for any request an action makes: a same-origin unsafe request then carries the token, and a custom
+action never has to remember it. `formSubmitPlugin` uses it unless `request` is set.
+
 ### `formSubmitPlugin`
 
 ```typescript

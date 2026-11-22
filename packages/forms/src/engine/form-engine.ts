@@ -1,3 +1,4 @@
+import type { CsrfPolicy, FormFetch } from '@/lib/form-fetch';
 import type { FormIssueFormatter } from '@/state-container/types';
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
@@ -53,6 +54,11 @@ export interface EngineRegistries {
 	validations: readonly ValidationRegistrationConstraint[];
 	defaultWizardRecipe?: string;
 	formatIssue?: FormIssueFormatter;
+	/** The engine's request function, with the CSRF policy applied. */
+	fetch: FormFetch;
+	/** The `fetch` given to `createFormEngine`, without the policy, so {@link FormEngine.extend} can rebuild. */
+	baseFetch?: FormFetch;
+	csrf?: CsrfPolicy;
 }
 
 export class FormEngine<
@@ -66,6 +72,12 @@ export class FormEngine<
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
 	private readonly layout: LayoutTheme;
 	private readonly validationRegistry: ValidationRegistry;
+
+	/**
+	 * Every request the engine makes goes through this: the `fetch` given to `createFormEngine`, or the global one,
+	 * with the CSRF policy applied. Bindings and actions use it (`context.fetch`) so no one remembers a token.
+	 */
+	readonly fetch: FormFetch;
 
 	/**
 	 * @remarks
@@ -85,7 +97,11 @@ export class FormEngine<
 			validations: registries.validations,
 			defaultWizardRecipe: registries.defaultWizardRecipe,
 			formatIssue: registries.formatIssue,
+			fetch: registries.fetch,
+			baseFetch: registries.baseFetch,
+			csrf: registries.csrf,
 		};
+		this.fetch = registries.fetch;
 		this.schemaArtifacts = registries.schemaArtifacts;
 		this.layout = registries.layout;
 		this.validationRegistry = registries.validationRegistry;
@@ -146,6 +162,11 @@ export class FormEngine<
 	/** The formatter of issues given to `createFormEngine`, which both renderer bindings read; `undefined` when none was. */
 	getIssueFormatter(): FormIssueFormatter | undefined {
 		return this.registries.formatIssue;
+	}
+
+	/** The CSRF policy given to `createFormEngine`, for a binding that adds a hidden input to a native post; `undefined` when there is none. */
+	getCsrf(): CsrfPolicy | undefined {
+		return this.registries.csrf;
 	}
 
 	getValidationRegistry(): ValidationRegistry {
@@ -397,6 +418,8 @@ export class FormEngine<
 			layout: this.layout,
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 			formatIssue: this.registries.formatIssue,
+			fetch: this.registries.baseFetch,
+			csrf: this.registries.csrf,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,

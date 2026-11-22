@@ -1,3 +1,4 @@
+import { globalFetch, type FormFetch } from '@/lib/form-fetch';
 import * as z from 'zod/mini';
 import type { ValidationContext, ValidationRule, BaseValidationRule } from './types.js';
 import type { BaseField } from '../base-field.js';
@@ -91,6 +92,8 @@ export interface ValidationContextInput {
 	fieldPath?: string;
 	/** Reuse keyed async validation state across calls when the caller owns its lifetime. */
 	debounceScope?: DebounceScope;
+	/** The request function for rules that make requests; the global `fetch` by default. */
+	fetch?: FormFetch;
 }
 
 /**
@@ -106,12 +109,14 @@ export function createValidationContext({
 	values = {},
 	fieldPath = '',
 	debounceScope,
+	fetch = globalFetch,
 }: ValidationContextInput = {}): ValidationContext {
 	return {
 		values,
 		fieldPath,
 		resolve: (fieldRef) => getValueAtPath(values, resolveFieldRef(fieldRef, fieldPath)),
 		debounceScope: debounceScope ?? createDebounceScope(),
+		fetch,
 	};
 }
 

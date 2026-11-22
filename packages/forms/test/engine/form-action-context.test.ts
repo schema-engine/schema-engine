@@ -8,6 +8,7 @@ const form = {
 	validate: async () => true,
 	checkValidity: async () => true,
 };
+const fetch = async () => new Response(null);
 
 describe('buildFormActionContext', () => {
 	afterEach(() => {
@@ -24,6 +25,7 @@ describe('buildFormActionContext', () => {
 			currentStep: 0,
 			mountedAt: 900,
 			form,
+			fetch,
 		};
 
 		const first = buildFormActionContext(input);
@@ -55,6 +57,7 @@ describe('buildFormActionContext', () => {
 			currentStep: 0,
 			mountedAt: 1_800,
 			form,
+			fetch,
 		});
 
 		expect(context.metadata.userInteractions).toBe(4);
@@ -67,6 +70,7 @@ describe('buildFormActionContext', () => {
 			currentStep: 0,
 			mountedAt: 1_900,
 			form,
+			fetch,
 		};
 
 		const pristine = buildFormActionContext({
@@ -147,6 +151,7 @@ describe('buildFormActionContext', () => {
 			currentStep: 0,
 			mountedAt: 1_900,
 			form,
+			fetch,
 			formState: { isValid: true, errors: { email: error }, touched: {}, submitCount: 0 },
 		});
 

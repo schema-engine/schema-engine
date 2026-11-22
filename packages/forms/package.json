@@ -132,6 +132,10 @@
 			"types": "./dist/state-container/index.d.ts",
 			"import": "./dist/state-container/index.js"
 		},
+		"./csrf": {
+			"types": "./dist/csrf/index.d.ts",
+			"import": "./dist/csrf/index.js"
+		},
 		"./server-errors": {
 			"types": "./dist/server-errors/index.d.ts",
 			"import": "./dist/server-errors/index.js"

@@ -1,3 +1,4 @@
+import type { CsrfPolicy, FormFetch } from '@/lib/form-fetch';
 import type { FormIssueFormatter } from '@/state-container/types';
 import { buildFormEngine } from './build-form-engine';
 import type {
@@ -72,6 +73,24 @@ export interface CreateFormEngineOptions<
 	 * {@link FormEngine.extend} inherits it.
 	 */
 	layout?: TLayout;
+	/**
+	 * The request function every request the engine makes goes through; the global `fetch` by default.
+	 *
+	 * @remarks
+	 * Today that is the `async` validation rule, and actions receive it as `context.fetch`. It is exposed as
+	 * {@link FormEngine.fetch}, with the CSRF policy applied. {@link FormEngine.extend} inherits it.
+	 */
+	fetch?: FormFetch;
+	/**
+	 * Where a CSRF token comes from, from `csrf.fromMeta`, `csrf.fromCookie` or `csrf.custom` of `@schema-engine/forms/csrf`.
+	 *
+	 * @remarks
+	 * Off unless set. The engine's `fetch` then adds the token as the policy's header to same-origin requests with an
+	 * unsafe method, and a binding reads the policy with {@link FormEngine.getCsrf} to add a hidden input to a native
+	 * post. The token is read at request time and is never part of the config, the payload or the submitted values.
+	 * {@link FormEngine.extend} inherits it.
+	 */
+	csrf?: CsrfPolicy;
 }
 
 /** Options for {@link FormEngine.extend}; layout theme and default wizard recipe are always inherited from the source engine. */
@@ -79,7 +98,10 @@ export type ExtendFormEngineOptions<
 	TElements extends readonly ElementRegistrationConstraint[] = readonly [],
 	TRecipes extends readonly RecipeRegistrationConstraint[] = readonly [],
 	TActions extends readonly ActionRegistrationConstraint[] = readonly [],
-> = Omit<CreateFormEngineOptions<TElements, TRecipes, TActions>, 'layout' | 'defaultWizardRecipe' | 'formatIssue'>;
+> = Omit<
+	CreateFormEngineOptions<TElements, TRecipes, TActions>,
+	'layout' | 'defaultWizardRecipe' | 'formatIssue' | 'fetch' | 'csrf'
+>;
 
 /** {@link FormEngine} specialization produced from registration lists. */
 export type FormEngineFromOptions<
@@ -123,5 +145,7 @@ export function createFormEngine<
 		layout: options?.layout,
 		defaultWizardRecipe: options?.defaultWizardRecipe,
 		formatIssue: options?.formatIssue,
+		fetch: options?.fetch,
+		csrf: options?.csrf,
 	}) as unknown as FormEngineFromOptions<TElements, TRecipes, TActions, TLayout>;
 }

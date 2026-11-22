@@ -1,3 +1,4 @@
+import type { FormFetch } from '../lib/form-fetch';
 import type { BuilderActionBaseContext, FormStateError } from '@/types';
 import { createDebounceScope } from '../lib/debounce';
 import { flattenStepElements } from '../lib/field-scope';
@@ -40,6 +41,8 @@ interface BuildFormActionContextOptions<TForm extends BuilderActionBaseContext['
 	currentStep: number;
 	mountedAt: number;
 	form: TForm;
+	/** The engine's `fetch`, which the context hands to actions. */
+	fetch: FormFetch;
 }
 
 const stepTimings = new WeakMap<object, StepTiming>();
@@ -76,6 +79,7 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 	currentStep,
 	mountedAt,
 	form,
+	fetch,
 }: BuildFormActionContextOptions<TForm>): BuilderActionBaseContext {
 	const now = Date.now();
 
@@ -92,6 +96,7 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 			userInteractions: countTouched(formState.touched) + formState.submitCount,
 		},
 		form,
+		fetch,
 	};
 }
 

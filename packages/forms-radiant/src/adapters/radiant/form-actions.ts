@@ -197,6 +197,7 @@ export class FormActions {
 			currentStep: currentStep(),
 			mountedAt: this.mountedAt,
 			form: this.actionForm,
+			fetch: this.engine.fetch,
 		});
 	}
 }

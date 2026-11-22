@@ -1,3 +1,4 @@
+import type { FormFetch } from '@/lib/form-fetch';
 import * as z from 'zod/mini';
 import type { BaseRegistration, RegistrationMetadata } from '@schema-engine/registry';
 import type { DebounceScope } from '../../lib/debounce.js';
@@ -324,6 +325,8 @@ export interface ValidationContext {
 	readonly resolve: (fieldRef: string) => unknown;
 	/** Debounced work shared by parses that receive this scope. */
 	readonly debounceScope: DebounceScope;
+	/** Makes the requests of a rule: the engine's `fetch`, with its CSRF policy applied. A registry sets it on every context it builds a schema from. */
+	readonly fetch: FormFetch;
 }
 
 /**
