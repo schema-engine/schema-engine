@@ -22,7 +22,7 @@ import { dirtyTree } from './dirty';
 import { readHydration } from './hydration';
 import type { FieldArrayCommands } from './field-array';
 import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
-import { submittedValues, type SubmissionRecord } from './submission';
+import { submittedTree, submittedValues, toFormPath, type SubmissionRecord } from './submission';
 import { createRunTracker } from './stale-results';
 import {
 	clearAround,
@@ -1114,14 +1114,16 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	 * @remarks The paths are checked first, so a bad one throws whether or not the answer would apply.
 	 */
 	function setServerErrors(record: SubmissionRecord, errors: FormStateErrorsInput): void {
-		const declared = declaredPaths(record.values);
+		const submitted = submittedTree(record);
+		const declared = declaredPaths(submitted);
 		const given: Array<readonly [string, Issues]> = [];
 		const undeclared: FormStateIssue[] = [];
 		for (const [path, input] of Object.entries(errors)) {
 			if (path !== FORM_ROOT) assertFieldPath(path, 'setServerErrors');
-			assertRowsExist(path, record.values);
+			assertRowsExist(path, submitted);
 			const issues = serverIssues(input);
-			if (path === FORM_ROOT || declared.has(path)) given.push([path, issues]);
+			if (path === FORM_ROOT) given.push([path, issues]);
+			else if (declared.has(path)) given.push([toFormPath(record, path), issues]);
 			else undeclared.push(...issues);
 		}
 		const root = given.findIndex(([path]) => path === FORM_ROOT);

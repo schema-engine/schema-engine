@@ -25,6 +25,12 @@ export function isOpaque(value: unknown): boolean {
 	return !isPlainObject(value);
 }
 
+/** The frozen plain-record view of an internal record. */
+export function toPlainRecord(record: NullMap): Readonly<Record<string, unknown>> {
+	const plain = toPlain(record);
+	return isPlainObject(plain) ? plain : {};
+}
+
 /** Copies the structural part of `record` into a null-prototype map; opaque values are kept as they are. */
 export function toInternalRecord(record: Readonly<Record<string, unknown>>): NullMap {
 	const copy = createMap();

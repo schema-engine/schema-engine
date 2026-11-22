@@ -1,7 +1,8 @@
 import { isPathExcluded } from '@/engine/value-validation';
 import { frozenCopy } from '@/lib/frozen-copy';
 import type { IdTree } from './row-ids';
-import { toPlain, type NullMap } from './value-tree';
+import { getValueAtPath } from '@/lib/path-values';
+import { join, toInternalRecord, toPlainRecord, type NullMap } from './value-tree';
 import type { FormSubmitResult } from './types';
 
 /**
@@ -23,6 +24,7 @@ export interface SubmissionRecord {
 		readonly values: NullMap;
 		readonly excluded: readonly string[];
 		readonly plain: Readonly<Record<string, unknown>>;
+		readonly tree: NullMap;
 	};
 }
 
@@ -44,20 +46,60 @@ function omitExcluded(value: unknown, excluded: readonly string[], path = ''): u
 	return value;
 }
 
+/** `values` without the paths `excluded` lists, as a record. */
+const omitExcludedFrom = (
+	values: Readonly<Record<string, unknown>>,
+	excluded: readonly string[],
+): Record<string, unknown> =>
+	Object.fromEntries(
+		Object.entries(values).flatMap(([key, child]) =>
+			isPathExcluded(excluded, key) ? [] : [[key, omitExcluded(child, excluded, key)]],
+		),
+	);
+
+function viewOf(record: SubmissionRecord): NonNullable<SubmissionRecord['view']> {
+	const { values, excluded, payload } = record;
+	if (record.view?.values === values && record.view.excluded === excluded) return record.view;
+	const kept = omitExcludedFrom(toPlainRecord(values), excluded);
+	const view = {
+		values,
+		excluded,
+		plain: Object.freeze({ ...kept, ...frozenCopy(payload) }),
+		tree: toInternalRecord(kept),
+	};
+	record.view = view;
+	return view;
+}
+
 /**
  * The values a submission submits: those captured, without the paths that took no part, and the payload.
  *
  * @remarks
  * The same frozen object while the captured values are the same. A row that took no part is left out of its array,
- * so an index in these values can differ from the row's index in the form. `setServerErrors` addresses rows by
- * their index in the form when it was submitted, excluded rows counted, not by an index in these values: a server
- * that answers by the index it saw in the submitted values must map it back when rows were excluded.
+ * so an index in these values can differ from the row's index in the form. `setServerErrors` takes paths as they
+ * are in these values and maps them to the form's rows itself (see {@link toFormPath}).
  */
-export function submittedValues(record: SubmissionRecord): Readonly<Record<string, unknown>> {
-	const { values, excluded, payload } = record;
-	if (record.view?.values === values && record.view.excluded === excluded) return record.view.plain;
-	const kept = omitExcluded(toPlain(values), excluded) as Record<string, unknown>;
-	const plain = Object.freeze({ ...kept, ...frozenCopy(payload) });
-	record.view = { values, excluded, plain };
-	return plain;
+export const submittedValues = (record: SubmissionRecord): Readonly<Record<string, unknown>> => viewOf(record).plain;
+
+/** The submitted values as the container holds them, without the payload: what a path of `setServerErrors` is read against. */
+export const submittedTree = (record: SubmissionRecord): NullMap => viewOf(record).tree;
+
+/**
+ * The path in the form, as it was when the submission was captured, of a path in the submitted values.
+ *
+ * @remarks
+ * An index into an array counts only the rows that took part, so with the middle row of three left out, submitted
+ * row `1` is the form's row `2`. The path must name rows the submitted values have.
+ */
+export function toFormPath(record: SubmissionRecord, path: string): string {
+	return path === ''
+		? ''
+		: path.split('.').reduce((full, segment) => {
+				const node: unknown = full === '' ? record.values : getValueAtPath(record.values, full);
+				if (!Array.isArray(node)) return join(full, segment);
+				const kept = node.flatMap((_, row) =>
+					isPathExcluded(record.excluded, join(full, String(row))) ? [] : [row],
+				);
+				return join(full, String(kept[Number(segment)]));
+			}, '');
 }

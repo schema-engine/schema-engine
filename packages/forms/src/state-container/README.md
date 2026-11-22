@@ -159,8 +159,9 @@ A host sets `server` errors, which describe the response to one submission, with
   an RFC 9457 or JSON:API response (see its [README](../server-errors/README.md)).
 - A path no field declares (for the submitted values) cannot be shown at a field, so its issues move to `FORM_ROOT`,
   keeping `type`, `params` and `message`, after the form's own; the user still sees them. A row or an object that
-  holds declared fields is declared. Index paths are those of the form's rows when it was submitted, excluded rows
-  counted, not the indexes of the submitted `values`, which leave excluded rows out.
+  holds declared fields is declared. Paths are as they are in the submitted `values`, which leave out the rows that took no part: an index
+  counts only the rows that took part, and the container maps it to the form's row through the submission, so a
+  server never has to know which rows were left out.
 - An error is cleared when its path, a path below it, a path around it (the form included) or a
   value its rules read is edited, because what it described changed.
 - A path takes one issue or a list, each `{ type?, params?, message? }`; a missing `type` is `'server'`.

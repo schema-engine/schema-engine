@@ -166,7 +166,7 @@ export type FormSubmitResult =
 			 * @remarks
 			 * Each path takes one issue or a list, and {@link FORM_ROOT} stands for the form. Throws for a path with
 			 * a reserved `__` segment other than `FORM_ROOT`, and for a path that names a row the submitted values
-			 * did not have. Index paths are those of the form's rows when it was submitted, rows that took no part counted (so they differ from the indexes of `values` when a row was left out): an error for `contacts.0.email` lands
+			 * did not have. Paths are as they are in `values`: an index counts only the rows that took part, and the container maps it to the form's row (so with the middle one of three rows left out, `rows.1` is the third row). An error for `contacts.0.email` lands
 			 * on that row wherever it is now, and is dropped when the row is gone. A path no field declares cannot be
 			 * shown at a field, so its issues move to `FORM_ROOT`, keeping their type, params and message. An error is applied only when its
 			 * target, and every value its rules read, are unchanged since the submission, and only while this is the
