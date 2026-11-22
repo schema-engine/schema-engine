@@ -32,7 +32,7 @@ export function StepIndicators() {
 		>
 			<ol className="se-step-indicators__list">
 				{steps.map((step, index) => {
-					const isDisabled = !step.isVisited && index > currentStepIndex;
+					const isDisabled = !step.isActive && !navigation.canGoToStep(step.id);
 					return (
 						<li
 							key={step.id}
@@ -44,7 +44,7 @@ export function StepIndicators() {
 							<Button
 								type="button"
 								variant="ghost"
-								onClick={() => navigation.goToStep(index)}
+								onClick={() => navigation.goToStep(step.id)}
 								disabled={isDisabled}
 								aria-current={step.isActive ? 'step' : undefined}
 								className={cn(

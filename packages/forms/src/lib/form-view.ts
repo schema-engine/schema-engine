@@ -24,9 +24,9 @@ export function stepGrid<TGrid>(
  * A recipe owns wizard navigation, so with a `view` only the current step is rendered.
  * Without a `view`, every step is flattened onto one page so later fields stay reachable.
  */
-export function getRenderableSteps<T extends FormConfigView>(config: T, currentStep: number): T['steps'] {
+export function getRenderableSteps<T extends FormConfigView>(config: T, currentStep: string): T['steps'] {
 	if (config.view) {
-		const step = config.steps[currentStep] ?? config.steps[0];
+		const step = config.steps.find(({ id }) => id === currentStep) ?? config.steps[0];
 		return step ? [step] : [];
 	}
 	return config.steps;

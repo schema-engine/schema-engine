@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormContext, useWatch } from '@/hooks/form-state';
-import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { useOptionalViewContext } from '@/contexts/view-context';
 import './form-debugger.css';
 
@@ -83,7 +82,7 @@ function DebuggerSteps({
 		id: string;
 		title?: string;
 		description?: string;
-		isValid?: boolean;
+		isInvalid?: boolean;
 		isVisited?: boolean;
 	}>;
 	currentStep: number;
@@ -104,10 +103,10 @@ function DebuggerSteps({
 								<div className="form-debugger__step-description">{step.description}</div>
 							)}
 							<div className="form-debugger__timeline-meta">
-								{step.isValid && (
+								{!step.isInvalid && step.isVisited && (
 									<span className="form-debugger__badge form-debugger__badge--valid">Valid</span>
 								)}
-								{!step.isValid && step.isVisited && (
+								{step.isInvalid && (
 									<span className="form-debugger__badge form-debugger__badge--invalid">Invalid</span>
 								)}
 								{step.isVisited && (
@@ -126,12 +125,12 @@ function DebuggerFormState({
 	formState,
 	formValues,
 	submissionStatus,
-	stepStates,
+	invalidSteps,
 }: {
 	formState: { isValid: boolean; errors: Record<string, unknown> };
 	formValues: unknown;
 	submissionStatus: string;
-	stepStates?: { valid: boolean[] } | null;
+	invalidSteps?: string[];
 }) {
 	return (
 		<div>
@@ -145,10 +144,10 @@ function DebuggerFormState({
 					<span className="form-debugger__detail-label">Submission</span>
 					<code className="form-debugger__detail-value">{submissionStatus}</code>
 				</div>
-				{stepStates ? (
+				{invalidSteps ? (
 					<div className="form-debugger__detail-row">
-						<span className="form-debugger__detail-label">Step states</span>
-						<code className="form-debugger__detail-value">{JSON.stringify(stepStates.valid)}</code>
+						<span className="form-debugger__detail-label">Invalid steps</span>
+						<code className="form-debugger__detail-value">{JSON.stringify(invalidSteps)}</code>
 					</div>
 				) : null}
 			</div>
@@ -170,7 +169,8 @@ function DebuggerNav({
 	navigation: {
 		goToPreviousStep: () => void;
 		goToNextStep: () => void;
-		goToStep: (index: number) => void;
+		goToStep: (stepId: string) => void;
+		canGoToStep: (stepId: string) => boolean;
 		isFirstStep: boolean;
 		canGoNext: boolean;
 	};
@@ -190,13 +190,15 @@ function DebuggerNav({
 					<button
 						key={step.id}
 						type="button"
-						onClick={() => navigation.goToStep(index)}
-						disabled={!step.isVisited && index > currentStep}
+						onClick={() => navigation.goToStep(step.id)}
+						disabled={index !== currentStep && !navigation.canGoToStep(step.id)}
 						className={[
 							'form-debugger__nav-dot',
 							index === currentStep && 'form-debugger__nav-dot--active',
 							index < currentStep && 'form-debugger__nav-dot--completed',
-							!step.isVisited && index > currentStep && 'form-debugger__nav-dot--disabled',
+							index !== currentStep &&
+								!navigation.canGoToStep(step.id) &&
+								'form-debugger__nav-dot--disabled',
 						]
 							.filter(Boolean)
 							.join(' ')}
@@ -223,10 +225,12 @@ function FormDebuggerPanel({
 }: { onClose: () => void } & Required<Omit<FormDebuggerProps, 'defaultOpen'>>) {
 	const { formState } = useFormContext();
 	const formValues = useWatch();
-	const { currentStep, totalSteps, stepStates, navigation } = useFormInstanceActions();
 	const view = useOptionalViewContext();
 
 	const steps = view?.steps ?? [];
+	const currentStep = view?.currentStepIndex ?? 0;
+	const totalSteps = steps.length;
+	const navigation = view?.navigation;
 	const isMultiStep = totalSteps > 1;
 
 	return (
@@ -247,7 +251,7 @@ function FormDebuggerPanel({
 						formState={formState}
 						formValues={formValues}
 						submissionStatus={formState.submission.status}
-						stepStates={stepStates}
+						invalidSteps={steps.filter(({ isInvalid }) => isInvalid).map(({ id }) => id)}
 					/>
 				)}
 			</div>

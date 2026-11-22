@@ -13,6 +13,9 @@ import type {
 	FormSubmissionIssue,
 } from '@/state-container/types';
 
+/** An action as the runtime reads it: the loose shape every typed action of a normalized config extends. */
+export type FormRuntimeAction = FormActionConfig;
+
 /** The nested values of a form, as the container holds them and a submission hands them over. */
 export type FormValues = Readonly<Record<string, unknown>>;
 

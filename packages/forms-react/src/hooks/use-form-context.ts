@@ -1,22 +1,41 @@
-import { useContext, useMemo } from 'react';
-import type { StepStates } from '@schema-engine/forms';
+import { useContext, useMemo, useSyncExternalStore } from 'react';
+import type { FormRuntime, FormStepState } from '@schema-engine/forms';
+import { useFormStateContext } from './form-state/context';
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import { GRID_CLASS, getDefaultLayoutTheme, getGridVariables, type CssVariables } from '@schema-engine/layout';
-import { FormEngineContext, FormInstanceContext } from '../components/provider';
-import { FormStepStateContext } from '../components/form-step-state-context';
-import type { FormEngineContextValue, FormInstanceContextValue } from '../components/provider';
+import { FormEngineContext } from '../components/provider';
+import type { FormEngineContextValue } from '../components/provider';
 
 /**
- * Hook to access form actions and navigation
+ * What a component reads of the form's wizard: where it is, and the commands that move it.
+ *
+ * @remarks
+ * The commands are those of the form's runtime and end with an outcome (`'moved'`, `'invalid'`, `'busy'`, ...). `steps` lists every
+ * step in order with `skipped`, `visited`, `complete` and `invalid`; a skipped step is passed over by `next` and `back` and refused by `goTo`.
+ */
+export interface FormInstanceContextValue {
+	/** The id of the current step. */
+	current: string;
+	steps: readonly FormStepState[];
+	/** A `next`, `back` or `goTo` runs. */
+	navigating: boolean;
+	next: FormRuntime['next'];
+	back: FormRuntime['back'];
+	goTo: FormRuntime['goTo'];
+}
+
+/**
+ * Hook to access the form's wizard state and navigation
  * Must be used within a FormProvider
  */
-export function useFormInstanceActions(): FormInstanceContextValue & { stepStates: StepStates } {
-	const context = useContext(FormInstanceContext);
-	const stepStates = useContext(FormStepStateContext);
-	if (!context || !stepStates) {
-		throw new Error('useFormInstanceActions must be used within a FormProvider');
-	}
-	return useMemo(() => ({ ...context, stepStates }), [context, stepStates]);
+export function useFormInstanceActions(): FormInstanceContextValue {
+	const { runtime } = useFormStateContext();
+	const { steps } = useSyncExternalStore(runtime.subscribe, runtime.getSnapshot, runtime.getServerSnapshot);
+	const { current, navigating, list } = steps;
+	return useMemo(
+		() => ({ current, steps: list, navigating, next: runtime.next, back: runtime.back, goTo: runtime.goTo }),
+		[runtime, current, navigating, list],
+	);
 }
 
 /**

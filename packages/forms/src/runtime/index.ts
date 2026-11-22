@@ -4,6 +4,7 @@ export type {
 	FormRuntime,
 	FormRuntimeConfig,
 	FormRuntimeHost,
+	FormRuntimeAction,
 	FormRuntimeOutcome,
 	FormRuntimeSnapshot,
 	FormRuntimeStep,

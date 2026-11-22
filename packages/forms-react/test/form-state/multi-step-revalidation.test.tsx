@@ -48,7 +48,8 @@ function Field() {
 }
 
 function Controls() {
-	const { currentStep, goToNext } = useFormInstanceActions();
+	const { steps, current, next } = useFormInstanceActions();
+	const currentStep = steps.filter(({ skipped }) => !skipped).findIndex(({ id }) => id === current);
 	const { container } = useFormStateContext();
 	return (
 		<>
@@ -56,7 +57,7 @@ function Controls() {
 				Reset
 			</button>
 			<output aria-label="step">{currentStep}</output>
-			<button type="button" onClick={goToNext}>
+			<button type="button" onClick={() => void next()}>
 				Next
 			</button>
 		</>

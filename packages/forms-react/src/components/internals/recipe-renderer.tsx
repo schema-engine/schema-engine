@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type React from 'react';
 import { type FormConfigView, type RecipeRegistration } from '@schema-engine/forms';
-import { buildViewModel } from '@schema-engine/forms/recipes';
+import { buildViewModel, createViewNavigation } from '@schema-engine/forms/recipes';
 import { useFormContext } from '@/hooks/form-state';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
@@ -32,7 +32,7 @@ interface RecipeRendererProps {
 
 export function RecipeRenderer({ config, recipe, children, renderFields }: RecipeRendererProps) {
 	const { formState } = useFormContext();
-	const { stepStates, currentStep, navigation } = useFormInstanceActions();
+	const { current, steps, next, back, goTo } = useFormInstanceActions();
 	const isSubmitting = formState.submission.status === 'pending';
 	const viewContext = useMemo(
 		() =>
@@ -40,14 +40,14 @@ export function RecipeRenderer({ config, recipe, children, renderFields }: Recip
 				? buildViewModel({
 						config,
 						kind: recipe.kind,
-						currentStepIndex: currentStep,
-						navigation,
+						states: steps,
+						current,
+						navigation: createViewNavigation(steps, current, { next, back, goTo }, config.navigation),
 						isSubmitting,
 						viewConfig: config.view as Record<string, unknown>,
-						stepStates,
 					})
 				: undefined,
-		[recipe, config, currentStep, navigation, isSubmitting, stepStates],
+		[recipe, config, steps, current, next, back, goTo, isSubmitting],
 	);
 	const adapter = recipe ? getRecipeAdapter(recipe as ReactRecipeRegistration) : undefined;
 	/** @remarks Slot elements are built once per recipe so React skips a slot whose view context did not change. */

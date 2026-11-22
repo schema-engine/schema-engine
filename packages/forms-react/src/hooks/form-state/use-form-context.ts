@@ -40,7 +40,7 @@ function createTexts(formatIssue: FormIssueFormatter | undefined) {
  * subscription starts, so no change is missed.
  */
 function createTrackedFormState(
-	{ container, submission }: Pick<FormStateContextValue, 'container' | 'submission'>,
+	{ container, runtime }: Pick<FormStateContextValue, 'container' | 'runtime'>,
 	formatIssue: FormIssueFormatter | undefined,
 ) {
 	const seen = new Map<FormStateKey, unknown>();
@@ -53,7 +53,7 @@ function createTrackedFormState(
 			case 'isValid':
 				return container.getSnapshot().isValid;
 			case 'submission':
-				return submission.getSnapshot();
+				return runtime.getSnapshot().submission;
 		}
 	};
 	const track = <T>(key: FormStateKey, value: T): T => {
@@ -69,7 +69,7 @@ function createTrackedFormState(
 			return track('isValid', container.getSnapshot().isValid);
 		},
 		get submission() {
-			return track('submission', submission.getSnapshot());
+			return track('submission', runtime.getSnapshot().submission);
 		},
 	};
 
@@ -93,11 +93,11 @@ function createTrackedFormState(
 		subscribe: (listener: () => void) => {
 			const onChange = () => notify(listener);
 			const stopContainer = container.subscribe(onChange);
-			const stopSubmission = submission.subscribe(onChange);
+			const stopRuntime = runtime.subscribe(onChange);
 			onChange();
 			return () => {
 				stopContainer();
-				stopSubmission();
+				stopRuntime();
 			};
 		},
 		getSnapshot: () => version,
@@ -113,10 +113,10 @@ function createTrackedFormState(
  * and never validates. The returned object keeps its identity while the form's formatter does.
  */
 export function useFormContext(): FormContextValue {
-	const { container, formatIssue, fields, submission } = useFormStateContext();
+	const { container, formatIssue, fields, runtime } = useFormStateContext();
 	const tracked = useMemo(
-		() => createTrackedFormState({ container, submission }, formatIssue),
-		[container, submission, formatIssue],
+		() => createTrackedFormState({ container, runtime }, formatIssue),
+		[container, runtime, formatIssue],
 	);
 	useSyncExternalStore(tracked.subscribe, tracked.getSnapshot, tracked.getSnapshot);
 
@@ -125,16 +125,13 @@ export function useFormContext(): FormContextValue {
 			getValues: () => container.getSnapshot().values,
 			setValue: (name, value) => container.setValue(name, value),
 			validate: (name) => container.validate(typeof name === 'string' ? [name] : name),
-			reset: (values) => {
-				container.reset(values);
-				submission.reset();
-			},
+			reset: (values) => container.reset(values),
 			setFocus: (name) => fields.focus(name),
 			formatIssue: (issue: FormStateIssue | FormSubmissionIssue, { path }) =>
 				formatIssueText(issue, path, formatIssue),
-			clearSubmission: () => submission.clear(),
+			clearSubmission: () => runtime.clearSubmission(),
 			formState: tracked.formState,
 		}),
-		[container, fields, submission, formatIssue, tracked],
+		[container, fields, runtime, formatIssue, tracked],
 	);
 }
