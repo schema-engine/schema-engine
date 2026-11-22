@@ -92,7 +92,7 @@ Keep the formatter's identity stable (define it at module level or memoize it): 
 
 Without a formatter, or when it returns an empty text, an issue shows its own `message`: the text the author wrote on the rule, or the one a server or control sent. With none of them it shows nothing, and never its rule type, so a field can be invalid with no text. Widgets mark themselves invalid from `invalid`, which `useFormField` returns, and not from the text. The registry submission alert falls back to its `errorMessage` only when a failure has no text.
 
-React reports no native validity: a widget calls `onChange(value)` and relies on the engine's rules.
+React reports native validity too, as Radiant does: when `fieldProps.ref` lands on an input, select or textarea, the form reads its `validity` on attach, after each change, on blur and after each render, and reports it as the container's native facts (`valueMissing`, `typeMismatch`, `patternMismatch`, `tooShort`, `tooLong`, `rangeUnderflow`, `rangeOverflow`, `stepMismatch` and `badInput`, with the constraint as `params`). A number input that holds `1e` reports `badInput` instead of looking empty. The facts follow the form's validation timing, and a rule's error wins the display.
 
 ## Public entry points
 
@@ -106,13 +106,14 @@ React reports no native validity: a widget calls `onChange(value)` and relies on
 
 Use these from `/hooks` inside the active form:
 
-| Hook                   | Returns                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useFormField(config)` | The field of an element: `{ value, error, warning, issue, invalid, isTouched, isDirty, isValidating, onChange, onBlur, ref, name, required, disabled, fieldProps, labelProps, errorProps, containerStyles }`. `error` and `warning` are formatted texts, `issue` is the engine's error (`type`, `ruleId`, `params`, every issue in `all`), and `required` is evaluated against the element's constraints |
-| `useFormField(path)`   | The same state and texts of a path alone, without the config-derived parts (`required`, `disabled`, `fieldProps`, `labelProps`, `errorProps`, `containerStyles`); `FORM_ROOT` is the form itself                                                                                                                                                                                                         |
-| `useFieldArray(path)`  | `{ fields, append, prepend, insert, swap, move, update, replace, remove }`                                                                                                                                                                                                                                                                                                                               |
-| `useWatch(path?)`      | The whole value tree with no argument, the value at a path, or the values at a list of paths, in order                                                                                                                                                                                                                                                                                                   |
-| `useFormContext()`     | `{ getValues, setValue, validate, reset, setFocus, formatIssue, clearSubmission, formState }`                                                                                                                                                                                                                                                                                                            |
+| Hook                                         | Returns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useFormField(config)`                       | The field of an element, uncontrolled: `{ error, warning, issue, invalid, isTouched, isDirty, isValidating, required, disabled, defaultValue, fieldProps, labelProps, errorProps, containerStyles }`. The control keeps its own value, so the field renders for an error, a warning or a flag and never for a keystroke. `error` and `warning` are formatted texts, `issue` is the engine's error (`type`, `ruleId`, `params`, every issue in `all`), and `required` is evaluated against the element's constraints |
+| `useFormField(config, { controlled: true })` | The same, plus `value`, `onChange(value)` and `onBlur()`, for a component that takes only `value` and `onChange` props (Radix, Base UI, react-aria, a date picker, a slider). The field renders whenever its value changes, and `fieldProps` has no change handler                                                                                                                                                                                                                                                  |
+| `useFormField(path)`                         | The state and texts of a path alone (`error`, `warning`, `issue`, `invalid` and the flags), with no value and none of the config-derived parts; `FORM_ROOT` is the form itself. `useWatch(path)` reads the value                                                                                                                                                                                                                                                                                                    |
+| `useFieldArray(path)`                        | `{ fields, append, prepend, insert, swap, move, update, replace, remove }`                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `useWatch(path?)`                            | The whole value tree with no argument, the value at a path, or the values at a list of paths, in order                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `useFormContext()`                           | `{ getValues, setValue, validate, reset, setFocus, formatIssue, clearSubmission, formState }`                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 `useFieldArray` keeps falsy scalar rows such as `tags: ['', '']`. Errors and touched state move with their rows, and an operation that adds a row focuses its first control; dirty state is the comparison with the defaults, index by index. An operation naming a row that does not exist does nothing, `remove` removes a repeated index once, and `reset` gives every row a new id, and a `setValue` of the whole array keeps the ids by position.
 
@@ -124,7 +125,43 @@ Use `useFormEngine`, `useFormInstanceActions`, `useFieldHost`, and `useConstrain
 
 ## Consumer-owned fields and styling
 
-`useFormField(config)` binds a field to the form's container and returns its value, error, handlers, control attributes, and field chrome attributes. Spread `fieldProps` onto the control, `labelProps` onto its label, and `errorProps` onto its error message when present. These attributes describe semantics and state; applications choose their styling.
+`useFormField(config)` binds a field to the form's container and returns its state, control attributes and field chrome attributes. Spread `fieldProps` onto the control, `labelProps` onto its label, and `errorProps` onto its error message when present. These attributes describe semantics and state; applications choose their styling.
+
+By default a field is uncontrolled: the control keeps its own value, `fieldProps` carries `onChange` and `onBlur`, and `defaultValue` (frozen when the field mounts, and the server's value while the form hydrates) is what the control starts with. The form reads what the user did from the control, and writes the container's changes back into it (a reset, `setValue` in code, a row update) only when the control differs, so the cursor, an IME composition and a number input's unparsable text stay where they are. For the same reason the form submits through `onSubmit` and never a React 19 `<form action>`, which would reset the uncontrolled fields after the action.
+
+```tsx
+function TextField({ config }: { config: InputFieldConfig }) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<>
+			<label {...labelProps}>{config.label}</label>
+			<input {...fieldProps} type="text" defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</>
+	);
+}
+```
+
+A checkbox takes `defaultChecked={Boolean(defaultValue)}` (a checkbox with a `value` attribute reads and writes membership in an array), a radio group takes `defaultChecked={defaultValue === option}` on each radio, and a `select multiple` reads its selected options; every control of a group shares `fieldProps`.
+
+```tsx
+{
+	options.map((option) => (
+		<input key={option} type="radio" value={option} defaultChecked={defaultValue === option} {...fieldProps} />
+	));
+}
+```
+
+A component that takes only `value` and `onChange` props passes `{ controlled: true }`. The field then re-renders with its value, and `onChange(value)` and `onBlur()` replace the control's handlers.
+
+```tsx
+function DateField({ config }: { config: DateFieldConfig }) {
+	const { value, onChange, onBlur, fieldProps } = useFormField(config, { controlled: true });
+	return <DatePicker {...fieldProps} value={toDate(value)} onChange={onChange} onBlur={onBlur} />;
+}
+```
+
+In development, an uncontrolled field whose `ref` lands on something that is not an input, select or textarea logs a warning that names `{ controlled: true }`.
 
 The runtime exposes `se-*` class hooks and grid variables. Consumers do not need to scan the package's built files with Tailwind; applications own their styles, and registry components can bring their own UI library and styling dependencies. The layout stylesheet selects only `.se-grid`, `.se-grid-item` and `[data-se-theme]`; the hooks add `se-grid` and `se-grid-item` beside `se-form-grid` and `se-form-field`. Use `useFieldHost` for the grid host of custom elements (`useLayoutThemeId` gives the `data-se-theme` value for a host built by hand). A custom container whose children use `width` or `offset` spreads `useChildGridProps(elements)` on the wrapper of its `FormElements`, so the children lay out on the container's own grid. Fields, steps and the form element carry their resolved `appearance` as `data-se-<axis>` attributes (`FieldGroupRoot` and `useFieldHost` emit it, and the field's `className`, on the field host; `useFieldAppearanceAttributes` and `useFieldClassName` do it for a host built by hand), and `FormRenderer` emits the engine's layout theme stylesheet (grid and appearance token rules) once, and the form element carries `data-se-theme`. A step renders as `<div class="se-form-step" data-se-step="<id>">` carrying its authored `className` and custom-property `style`. Each step's grid is its own `grid` when it has one, else the form's.
 

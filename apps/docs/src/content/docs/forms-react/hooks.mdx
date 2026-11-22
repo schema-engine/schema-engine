@@ -41,12 +41,89 @@ Import the form hooks from `@schema-engine/forms-react/hooks`.
 and `submission: { status, failures, submitCount }`). Its fields
 subscribe the caller only when read, so a component that reads `submission`
 re-renders when that changes and not while the user types; reading `isValid`
-reports the recorded errors and validates nothing. `useFormField(config)` binds an
-element registration to its field, with the props of its control, label and error;
-`useFormField(path)` gives the state and text of a path alone (`FORM_ROOT` is the
-form). `useWatch` (no argument, a path or a list of paths) and `useFieldArray` cover
-observation and array editing. `useFieldArray` provides `fields` plus `append`, `prepend`,
-`insert`, `swap`, `move`, `update`, `replace`, and `remove`.
+reports the recorded errors and validates nothing. `useWatch` (no argument, a path
+or a list of paths) and `useFieldArray` cover observation and array editing.
+`useFieldArray` provides `fields` plus `append`, `prepend`, `insert`, `swap`, `move`,
+`update`, `replace`, and `remove`.
+
+### useFormField
+
+`useFormField` binds a widget to one field. It has three forms:
+
+| Call | Returns |
+| ---- | ------- |
+| `useFormField(config)` | An uncontrolled field: the state (`error`, `warning`, `issue`, `invalid`, `isTouched`, `isDirty`, `isValidating`), `required`, `disabled`, `defaultValue`, and the props `fieldProps`, `labelProps`, `errorProps` and `containerStyles` |
+| `useFormField(config, { controlled: true })` | The same, plus `value`, `onChange(value)` and `onBlur()`. `fieldProps` has no change handler |
+| `useFormField(path)` | The state and texts of a path alone (`FORM_ROOT` is the form), with no value. `useWatch(path)` reads the value |
+
+**Uncontrolled is the default.** The control keeps its own value. The field re-renders
+when its error, warning or flags change and never for a keystroke, so typing in a row
+does not render the array around it. Spread `fieldProps` on the control (it carries `ref`,
+`id`, `name`, `required`, `disabled`, `aria-*`, `onChange` and `onBlur`) and give it
+`defaultValue`, which is frozen when the field mounts and is the server's value while
+the form hydrates:
+
+```tsx
+function TextField({ config }: { config: InputFieldConfig }) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<>
+			<label {...labelProps}>{config.label}</label>
+			<input {...fieldProps} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</>
+	);
+}
+```
+
+A checkbox takes `defaultChecked`, and a radio group takes `defaultChecked={defaultValue === option}`
+on each radio, all sharing `fieldProps`:
+
+```tsx
+function CheckboxField({ config }: { config: CheckboxFieldConfig }) {
+	const { defaultValue, fieldProps } = useFormField(config);
+	return <input type="checkbox" {...fieldProps} defaultChecked={Boolean(defaultValue)} />;
+}
+
+function RadioField({ config }: { config: RadioFieldConfig }) {
+	const { defaultValue, fieldProps } = useFormField(config);
+	return config.options.map(({ value }) => (
+		<input key={value} type="radio" value={value} {...fieldProps} defaultChecked={defaultValue === value} />
+	));
+}
+```
+
+The form reads what the user did from the control: text from `.value`, a checkbox
+from `.checked` (a checkbox with a `value` attribute adds or removes that value in an array), a radio group from
+the checked radio, a `select multiple` from its selected options, a number input from
+`valueAsNumber` (`undefined` when it is empty or not a number) and a file input from
+its files. When the container changes (a reset, `setValue` in code, a row update) the form
+writes the change back into the control, and only when the control differs, so the cursor,
+an IME composition and a number input that holds `1e` are left alone. Text typed before
+hydration is kept: the container takes it when the control attaches.
+
+**Controlled** is for a component that takes only `value` and `onChange` props, such as
+a Radix or Base UI checkbox, select or slider, or a date picker. Pass `{ controlled: true }`:
+
+```tsx
+function DateField({ config }: { config: DateFieldConfig }) {
+	const { value, onChange, onBlur, fieldProps } = useFormField(config, { controlled: true });
+	return <DatePicker {...fieldProps} value={toDate(value)} onChange={onChange} onBlur={onBlur} />;
+}
+```
+
+The field re-renders whenever its value changes. In development, an uncontrolled
+field whose `ref` lands on something that is not an input, select or textarea logs a
+warning that names `{ controlled: true }`.
+
+**Native facts.** In both modes, when `fieldProps.ref` lands on an input, select or
+textarea, React reports what the browser says about its value (`element.validity`) to the
+form: on attach, after each change, on blur and after each render, as `valueMissing`,
+`typeMismatch`, `patternMismatch`, `tooShort`, `tooLong`, `rangeUnderflow`,
+`rangeOverflow`, `stepMismatch` or `badInput`, with the constraint as `params`. A control
+that leaves withdraws its fact. A number input that holds `1e` therefore reports
+`badInput` instead of looking empty. The facts follow the form's validation timing and
+a rule's error wins the display.
 
 ## Engine hooks
 

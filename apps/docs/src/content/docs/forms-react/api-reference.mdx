@@ -74,5 +74,13 @@ as omitting `FormRenderer`, which still lives in this package.
 and `useFieldArray`. They can be used
 inside recipe blocks as well as ordinary form elements.
 
+`useFormField(config)` is uncontrolled: it returns `defaultValue` and `fieldProps` (with
+`onChange` and `onBlur`) for a native control, and the field renders for an error, warning or
+flag, never for a keystroke. `useFormField(config, { controlled: true })` returns `value`,
+`onChange(value)` and `onBlur()` for a component that takes `value` and `onChange` props.
+`useFormField(path)` returns the state and texts of a path, with no value. In both modes the form
+reports the browser's validity of a native control as native facts. See
+[Hooks](/docs/forms-react/hooks#useformfield).
+
 `useFieldArray` returns `fields` and the mutation methods `append`, `prepend`,
 `insert`, `swap`, `move`, `update`, `replace`, and `remove`.
