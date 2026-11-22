@@ -52,13 +52,13 @@ describe('SSR array hydration', () => {
 			document.body.append(isolatedApp);
 			await Promise.resolve();
 			expect(isolatedApp.querySelector('.se-form-array')).toBe(isolatedRows[0]?.parentElement);
-			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="seed-0"]')).toBe(isolatedRows[0]);
-			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="seed-1"]')).toBe(isolatedRows[1]);
+			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="row-1"]')).toBe(isolatedRows[0]);
+			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="row-2"]')).toBe(isolatedRows[1]);
 
 			renderer.engine = engine;
 			document.body.append(app);
 			await expect.poll(() => form.ready).toBe(true);
-			expect(app.querySelector('.se-form-array__item[data-se-row-id="seed-0"]')).toBe(serverRows[0]);
+			expect(app.querySelector('.se-form-array__item[data-se-row-id="row-1"]')).toBe(serverRows[0]);
 			await expect.poll(() => form.getValues()).toEqual({ contacts: [{ role: 'Alice' }, { role: 'Bob' }] });
 			await expect
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
@@ -67,13 +67,11 @@ describe('SSR array hydration', () => {
 			const ruiForm = app.querySelector('rui-form');
 			const submitButton = app.querySelector<HTMLButtonElement>('button[type="submit"]');
 			if (!ruiForm || !submitButton) throw new Error('Expected the form submit control');
-			let invalidSubmissions = 0;
-			let validSubmissions = 0;
-			ruiForm.addEventListener('rui-invalid', () => invalidSubmissions++);
-			ruiForm.addEventListener('rui-submit', () => validSubmissions++);
+			let completedSubmissions = 0;
+			ruiForm.addEventListener('se-action-submit-complete', () => completedSubmissions++);
 			submitButton.click();
-			await expect.poll(() => invalidSubmissions).toBe(1);
-			expect(validSubmissions).toBe(0);
+			await expect.poll(() => form.formState.errors.contacts?.message).toBe('Add at least three contacts');
+			expect(completedSubmissions).toBe(0);
 
 			await expect(form.trigger()).resolves.toBe(false);
 			expect(form.field('contacts').error).toBe('Add at least three contacts');

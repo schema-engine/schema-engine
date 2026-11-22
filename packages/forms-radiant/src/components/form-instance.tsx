@@ -4,7 +4,6 @@ import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/e
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
-import { flattenValues } from '@/adapters/radiant/controller/values';
 import type { FormProviderProps } from '@/adapters/types';
 
 /** Registers `<se-form-instance>` when this view is imported. */
@@ -30,6 +29,7 @@ export function FormInstance({
 	onSubmit,
 	onChange,
 	onAction,
+	formatIssue,
 	children,
 }: {
 	config: NormalizedFormConfig;
@@ -38,6 +38,7 @@ export function FormInstance({
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
 	onAction?: FormProviderProps['onAction'];
+	formatIssue?: FormProviderProps['formatIssue'];
 	children?: JsxRenderable;
 }): JsxRenderable {
 	const initialValues = collectFormInitialValues(config, defaultValues);
@@ -49,13 +50,9 @@ export function FormInstance({
 			onSubmit={onSubmit}
 			onChange={onChange}
 			onAction={onAction}
+			formatIssue={formatIssue}
 		>
-			<ConfiguredRuiForm
-				config={config}
-				defaultValues={defaultValues}
-				initialValues={flattenValues(initialValues)}
-				layoutThemeId={engine.getLayout().id}
-			>
+			<ConfiguredRuiForm config={config} layoutThemeId={engine.getLayout().id}>
 				<RecipeRenderer
 					config={config}
 					engine={engine}

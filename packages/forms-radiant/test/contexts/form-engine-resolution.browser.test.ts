@@ -1,6 +1,7 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
-import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
-import { provideTestFormStore } from '../adapters/test-form';
+import { createFormStateContainer } from '@schema-engine/forms/state-container';
+import { FormController } from '@/adapters/radiant/controller';
+import { provideTestContainer } from '../adapters/test-form';
 import { gtmPlugin } from '@schema-engine/forms';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { formEngineContext } from '@/components/provider';
@@ -293,24 +294,30 @@ describe('Radiant form engine resolution', () => {
 		});
 	});
 
-	test('a form array renders its fields once the form store arrives', async () => {
+	const contactsContainer = (engine: ReturnType<typeof createArrayEngine>) =>
+		createFormStateContainer({
+			elements: [],
+			registry: engine.getValidationRegistry(),
+			validationMode: 'onSubmit',
+			reValidateMode: 'onChange',
+			defaults: { contacts: [{ email: 'person@example.test' }] },
+		});
+
+	test('a form array renders its fields once the form container arrives', async () => {
 		const engine = createArrayEngine();
 		const renderer = document.createElement('se-form-renderer') as FormRendererElement;
 		renderer.engine = engine;
 		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
-		const formProvider = provideTestFormStore(form, undefined, false);
+		const formProvider = provideTestContainer(form, undefined);
 		form.append(array);
 		renderer.append(form);
 		document.body.append(renderer);
 		await vi.waitFor(() => {
 			expect(array.querySelector('.se-form-array__empty')).not.toBeNull();
 		});
-		formProvider.setContext({
-			ready: true,
-			store: new FormStore<FieldValues>({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
-		});
+		formProvider.setContext({ ...formProvider.getContext(), container: contactsContainer(engine) });
 		await vi.waitFor(() => {
 			expect(array.querySelector('input')).not.toBeNull();
 		});
@@ -323,14 +330,11 @@ describe('Radiant form engine resolution', () => {
 		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
-		provideTestFormStore(
-			form,
-			new FormStore<FieldValues>({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
-		);
+		provideTestContainer(form, contactsContainer(engine));
 		form.append(array);
 		renderer.append(form);
 		document.body.append(renderer);
-		await vi.waitFor(() => expect(array.form.ready).toBe(true));
+		await vi.waitFor(() => expect(new FormController(array).ready).toBe(true));
 		expect(array.querySelector('input')).toBeNull();
 
 		renderer.engine = engine;
@@ -346,10 +350,7 @@ describe('Radiant form engine resolution', () => {
 		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
-		provideTestFormStore(
-			form,
-			new FormStore<FieldValues>({ defaultValues: { contacts: [{ email: 'person@example.test' }] } }),
-		);
+		provideTestContainer(form, contactsContainer(engine));
 		renderer.engine = engine;
 		form.append(array);
 		renderer.append(form);

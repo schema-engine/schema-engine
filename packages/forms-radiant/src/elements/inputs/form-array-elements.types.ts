@@ -26,6 +26,8 @@ export type ArrayElementsProps = ElementRenderProps<
 	typeof ArrayElementConfigSchema,
 	{
 		ssrInitialRows?: readonly unknown[];
+		/** The ids of the rows the server rendered, which the client's container gives the same rows. */
+		ssrRowIds?: readonly string[];
 		initialFormValues?: Record<string, unknown>;
 	}
 >;

@@ -17,12 +17,12 @@ export function FormRadio(config: RadioFieldProps) {
 			label={config.label || config.name}
 			hiddenLabel={!config.label}
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
+			authoredRequired={isFieldRequired(config.rules)}
 			description={config.description}
 			grid={config.grid}
 			appearance={config.appearance}
 			class={config.className}
 			style={config.style}
-			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

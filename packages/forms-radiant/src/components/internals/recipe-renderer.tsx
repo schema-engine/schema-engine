@@ -8,8 +8,7 @@ import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
 import { createFormMeta } from '@/lib/instance-view';
 import { FormElements } from './form-elements';
-import { collectFormDefaultValues } from '@/adapters/radiant/rui-form-shell';
-import { expandValues } from '@/adapters/radiant/controller/values';
+import { collectFormInitialValues } from '@/adapters/radiant/rui-form-shell';
 import { FormStep } from '@/components/form-step';
 
 /**
@@ -37,7 +36,7 @@ export function RecipeRenderer({
 	children?: JsxRenderable;
 	initialValues?: Record<string, unknown>;
 }): JsxRenderable {
-	const values = expandValues(initialValues ?? collectFormDefaultValues(config));
+	const values = initialValues ?? collectFormInitialValues(config);
 	const layout = engine.getLayout();
 	const viewConfig = (config.view as Record<string, unknown> | undefined) ?? {};
 	const meta = createFormMeta(config);

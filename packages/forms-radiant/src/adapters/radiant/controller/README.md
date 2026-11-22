@@ -1,11 +1,15 @@
 # Radiant form controller
 
-`FormController` reads Radiant UI's `formContext` from its host. Place the host
-inside `rui-form`, or pass `rui-form` itself. The controller asks `formContext`
-on the host, then on ancestors, until a store answers. It does not search
-descendants or use a global active form. `FormFieldElement` extends
-`RuiFieldElement`; Radiant UI continues to register controls and own validation,
-error presentation, and ARIA. `SeFormArray` uses the same controller for row edits.
+`FormController` reads the form instance's context from its host. Place the host
+inside `se-form-instance` (the form a `FormRenderer` renders). The controller
+asks `formInstanceContext` on the host, then on ancestors, until an instance
+answers; it does not search descendants or use a global active form. The
+instance owns one engine `FormStateContainer`, with nested values, and provides
+it on that context, so a dotted path (`contacts.0.email`) names a value in every
+read and write and nothing is translated. `FormFieldElement` extends
+`RuiFieldElement`; Radiant UI registers controls and presents errors, and the
+container validates. `SeFormArray` uses `container.fieldArray(path)` and the
+container's row ids.
 
 ## Explicit lifecycle
 
@@ -30,14 +34,11 @@ class FormSummary extends HTMLElement {
 customElements.define('form-summary', FormSummary);
 ```
 
-Place the consumer inside `rui-form`. `connect` waits for the ancestor form's
-context to become ready and then notifies on presentation changes. Reads and
-mutations require a ready form; use `form.ready` before reading during an early
-render. `connect` replaces only the context subscription, so a watch created
-before it (or before a second `connect`) keeps running. `disconnect` removes
-context subscriptions and all watches created by that controller. A watch
-stays on the store it subscribed to, so after moving a host to another form call
-`disconnect`, then `connect`, then watch again.
+`connect` waits for the instance to have a container, then calls the listener
+once and after each change of the container's state. A new container replaces the
+old one when the instance's config or engine changes; the controller follows it.
+Reads and mutations require a container; use `form.ready` before reading during an
+early render. `disconnect` removes the subscriptions.
 
 ## Optional decorator
 
@@ -56,33 +57,48 @@ class FormSummary extends RadiantElement {
 ```
 
 The decorator connects on mount, requests an update when the form changes, and
-cleans up on disconnect. It uses the same controller as the explicit lifecycle.
-It supports TC39 standard field decorators and TypeScript
+cleans up on disconnect. It supports TC39 standard field decorators and TypeScript
 `experimentalDecorators`, the same dual dispatch as Radiant. The shipped
-`se-field` host has no controller of its own, so a field is not updated on
-every store notification; construct `new FormController(fieldElement)` where you
-need one.
+`se-field` host has no controller of its own; construct `new FormController(fieldElement)`
+where you need one.
 
-## Reads, watches, and mutations
+## Reads, selectors and mutations
 
-- `getValues()` returns a nested snapshot; `getValue(name)` reads a dotted path.
-- `setValue(name, value)` writes the value and updates registered controls.
-- `field(name)` provides live `value` and `error` getters, `onChange`, and `onBlur`.
-- `watchField(name, listener)` and `watchForm(listener)` call the listener
-  immediately and on every store notification, including touched, error and submit-state
-  updates that leave the values as they were. Both return an unsubscribe function. A consumer
-  of value changes compares snapshots with `createChangeDetector` (`values.ts`).
-- `formState` exposes Radiant UI state with nested values. `trigger(names?)`
-  validates registered fields; `reset(values?)` resets the Radiant UI store.
-- `fieldArray(name)` provides `fields`, `append`, `prepend`, `insert`, `swap`,
+- `container` is the engine container itself: `getSnapshot()`, `subscribe()`, `validate()`, `blur()`, `setErrors()` and the other commands of `FormStateContainer`.
+- `getValues()` returns the container's nested values, the same object until a value changes; `getValue(path)` reads a dotted path.
+- `setValue(path, value)` writes a branch, `reset(values?)` restores the defaults or replaces them, `trigger(paths?)` validates.
+- `field(path)` provides live `value` and `error` getters, `onChange`, and `onBlur`. `error` is the issue's text from the application's `formatIssue`, else its `message`.
+- `select(selector)` returns a signal over a pure selector of the snapshot, built with `fromExternalStore`:
+
+```ts
+import { selectFieldState } from '@schema-engine/forms/state-container';
+
+class ContactCount extends HTMLElement {
+	readonly form = new FormController(this);
+
+	connectedCallback() {
+		this.form.connect(() => {
+			const count = this.form.select((snapshot) => snapshot.rowIds['contacts']?.length ?? 0);
+			const invalid = this.form.select((snapshot) => selectFieldState(snapshot, 'contacts.0.email').invalid);
+			this.textContent = `${count.get()} contacts, first invalid: ${invalid.get()}`;
+		});
+	}
+}
+```
+
+Read a signal once it is subscribed (in a computed or an effect): an unsubscribed read answers with the container's server snapshot.
+
+- `formState` is the container's snapshot: `values`, `errors` and `warnings` by path, `touched`, `dirty`, `rowIds`, `validating`, `isValid`.
+- `fieldArray(path)` provides `fields`, `append`, `prepend`, `insert`, `swap`,
   `move`, `update`, `replace`, and `remove`. `append`, `prepend`, and `insert`
   accept one item or an array of items. `remove()` clears the array;
-  `remove(index)` and `remove(indices)` remove selected rows.
+  `remove(index)` and `remove(indices)` remove selected rows. Call it again for the
+  current `fields`: each object is a snapshot of the rows.
 
-IDs follow rows through insertion, reordering, and removal. `update` creates a
-new ID for the updated row, and `replace` creates new IDs for all rows. Array
-operations reindex errors, touched flags, and dirty flags alongside values.
-Invalid insertion, update, swap, and move indices are ignored.
+Row ids follow rows through insertion, reordering, and removal; `update` gives the
+updated row a new id and `replace` gives every row one. Errors, touched, dirty and
+native facts move with their rows in one update. Ids the container mints are
+deterministic, so server-rendered rows and the client's agree without sending ids.
 
 ## Engine access
 
@@ -104,25 +120,19 @@ Invalid insertion, update, swap, and move indices are ignored.
 
 ## Runtime boundary
 
-Radiant UI publishes the live store on `formContext`. `FormController` reads
-that context from the host and is the get/update API for Schema Engine consumers.
-Use `getValue` / `setValue` /
-`reset` / `watchForm`; `form.store` is the Radiant UI store when a method is
-not wrapped yet.
-
-Radiant UI uses flat field names. `values.ts` expands them for reads and submission
-and flattens defaults for registration. `write-value.ts` replaces a value branch
-and updates its registered controls before notifying controller subscribers.
-Use controller methods for programmatic branch replacement so stale descendant
-values are removed. Raw Radiant UI store subscribers still follow Radiant UI's
-per-control notification behavior.
+The instance provides the container; `rui-form` is typed by Radiant UI's own
+`FormStateStore` interface and is handed the container with `connect`, so a host
+element reads state from the instance's context and never from `rui-form`'s.
+`watchField`, `watchForm`, the flat/nested translation and `createChangeDetector`
+are removed: select from the snapshot, or observe `values` for changes (the
+container keeps the same `values` object until a value changes).
 
 ## Migration from the disconnected hooks
 
 The old `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`,
 `useFieldArray`, and `getActiveFormStore` exports are removed. Create a scoped
 controller instead. Replace snapshot hook calls with `getValue` / `getValues`,
-and use `watchField` / `watchForm` when an actual subscription is needed. Apply
+and use `select` when an actual subscription is needed. Apply
 fallbacks at the read site (`form.getValue('title') ?? 'Untitled'`).
 
 `FormProvider` supplies the Radiant form integration; it does not emulate React hooks.
@@ -130,8 +140,5 @@ fallbacks at the read site (`form.getValue('title') ?? 'Untitled'`).
 `bindControlledFormElement` export has been removed; use `form.field(name)` for
 scoped programmatic field access.
 
-`FormContextValue` is removed. `formState` uses Radiant UI's state contract
-(`touched`, `dirty`, and `isSubmitted`); it does not synthesize the former
-`touchedFields` or `submitCount` properties. Required and disabled presentation
-remain on field configuration and `RuiFieldElement`, rather than on the
-controller's value binding.
+`FormContextValue` is removed. `formState` is the engine's snapshot (`touched`, `dirty`,
+`errors`, `isValid`); `submitCount` and `isSubmitting` are on `formInstanceContext`.

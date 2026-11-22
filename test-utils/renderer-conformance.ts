@@ -875,6 +875,55 @@ export function rendererConformance(
 			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
 		});
+		describe('a failed wizard step', () => {
+			const dependentStep: FormConfigView = {
+				...wizard(
+					[
+						{
+							...input('password', 'Password'),
+							rules: [{ type: 'required', message: 'Password is required' }],
+						},
+					],
+					[
+						{
+							...input('confirm', 'Confirm'),
+							rules: [
+								{ type: 'required', message: 'Confirm is required' },
+								{
+									type: 'relate',
+									fields: ['password'],
+									assert: 'allEqual',
+									message: 'Must match password',
+								},
+							],
+						},
+					],
+				),
+				actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_change'] }],
+			};
+			test('leaves an untouched dependent field of a later step without an error', async () => {
+				const { host } = await setup({ config: dependentStep });
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => queryByText(host, 'Password is required') !== null).toBe(true);
+				expect(queryByText(host, 'Confirm is required')).toBeNull();
+				await userEvent.type(getByRole(host, 'textbox', { name: /^Password/ }), 'secret');
+				await expect.poll(() => queryByText(host, 'Password is required')).toBeNull();
+				expect(queryByText(host, 'Must match password')).toBeNull();
+				expect(queryByText(host, 'Confirm is required')).toBeNull();
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => queryAllByRole(host, 'textbox', { name: /^Confirm/ }).length).toBe(1);
+				expect(queryByText(host, 'Must match password')).toBeNull();
+				expect(queryByText(host, 'Confirm is required')).toBeNull();
+			});
+			test('does not count as a submit attempt', async () => {
+				const { host } = await setup({ config: dependentStep });
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => queryByText(host, 'Password is required') !== null).toBe(true);
+				await userEvent.type(getByRole(host, 'textbox', { name: /^Password/ }), 'secret');
+				await expect.poll(actionIds).toContain('changed');
+				expect(lastActionContext()?.metadata.userInteractions).toBe(0);
+			});
+		});
 		test('dispatches step leave, change and enter when the wizard advances', async () => {
 			const { host } = await setup({
 				config: {

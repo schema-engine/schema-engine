@@ -57,5 +57,8 @@ export function deriveInitialInstance(config: FormMeta): FormInstanceContextValu
 		markStepCompleted: () => {},
 		markStepVisited: () => {},
 		isSubmitting: false,
+		submitCount: 0,
+		container: undefined,
+		formatIssue: undefined,
 	};
 }

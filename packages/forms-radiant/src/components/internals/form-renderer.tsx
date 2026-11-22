@@ -36,6 +36,7 @@ export function FormRenderer({
 				onSubmit={props.onSubmit}
 				onChange={props.onChange}
 				onAction={props.onAction}
+				formatIssue={props.formatIssue}
 				engine={resolvedEngine}
 			>
 				{children}

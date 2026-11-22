@@ -12,14 +12,19 @@ import type { JSX_PROPS } from '@ecopages/jsx';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
-import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
+import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import {
+	createFormStateContainer,
+	FORM_ROOT,
+	type FormIssueFormatter,
+	type FormStateContainer,
+	type FormStateError,
+} from '@schema-engine/forms/state-container';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext } from '@/components/provider';
-import { connectValidationDependencies } from '@/lib/validation-deps';
-import type { RuiFormElement } from '@ecopages/radiant-ui/form';
-import { createChangeDetector, expandValues } from '@/adapters/radiant/controller/values';
+import type { RuiFormElement, RuiFormSubmitContext } from '@ecopages/radiant-ui/form';
 import {
 	createInitialStepStates,
 	createSubmissionGuard,
@@ -29,10 +34,10 @@ import {
 import { createFormMeta, type FormMeta } from '@/lib/instance-view';
 import { createInstanceNavigation } from '@/lib/instance-navigation';
 import { createAuthoredDisabledLookup } from '@/lib/authored-disabled';
+import { observeValues } from '@/lib/observe-values';
 import { formValuesContext, type FormValuesContextValue } from '@/contexts/constraint-context';
 import { logger } from '@/lib/logger';
 import type { FormProviderProps } from '@/adapters/types';
-import { FormController } from '@/adapters/radiant/controller';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
 
 const MISSING_ENGINE_MESSAGE =
@@ -46,6 +51,7 @@ export interface FormInstanceProps {
 	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: FormProviderProps['onChange'];
 	onAction?: FormProviderProps['onAction'];
+	formatIssue?: FormIssueFormatter;
 }
 
 /** Detail of `se-action-submit-complete`; `error` is set when `onSubmit` rejected or the action lifecycle failed. */
@@ -53,14 +59,36 @@ export interface SubmissionCompleteDetail extends Pick<SubmissionOutcome, 'succe
 	error?: unknown;
 }
 
-/** Behavior and engine navigation state for one composed form. */
+/**
+ * The form a `se-form-instance` holds: its state container and the `rui-form` the container is injected into.
+ *
+ * @remarks Identity of the three decides whether the form is the same: a new config or engine is a new form.
+ */
+interface BoundForm {
+	readonly config: NormalizedFormConfig;
+	readonly engine: CoreFormEngine;
+	readonly host: RuiFormElement;
+	readonly container: FormStateContainer;
+}
+
+/**
+ * Behavior and engine navigation state for one composed form.
+ *
+ * @remarks
+ * The instance creates one state container per form from the normalized config, the engine's validation
+ * registry and the defaults, and hands it to its `rui-form` with `connect`: the form then bridges its
+ * controls into the container and presents what the container holds, and the container owns values,
+ * validation timing, field state and field arrays. The instance provides the container on its own
+ * context, runs a submission through it, and counts the attempts.
+ */
 @customElement('se-form-instance')
 export class FormInstanceElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: FormInstanceProps;
 
 	private readonly navigation = createInstanceNavigation(
 		this,
-		() => this.form,
+		() => this.bound?.container,
+		() => this.ruiForm,
 		() => this.actions,
 	);
 	/** Frozen config from `engine.defineForm` / `engine.validateForm` via `FormProvider`. */
@@ -70,14 +98,21 @@ export class FormInstanceElement extends RadiantElement {
 	@state onChange?: FormProviderProps['onChange'];
 	@state onAction?: FormProviderProps['onAction'];
 	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	/**
+	 * Turns an issue into text for this form, over the engine's `formatIssue`; with neither, an issue shows its own
+	 * `message` and otherwise nothing.
+	 */
+	@state formatIssue?: FormIssueFormatter;
 	@state private submitting = false;
+	@state private attempts = 0;
 	private readonly submission = createSubmissionGuard();
-	private release?: () => void;
 	get isSubmitting(): boolean {
 		return this.submitting;
 	}
 	@query('rui-form') private ruiForm!: RuiFormElement | null;
-	private unwatchChanges?: () => void;
+	private bound?: BoundForm;
+	private releaseForm?: () => void;
+	private unwatchValues?: () => void;
 	private actions?: FormActions;
 
 	@state private machineState: StepMachineState = { currentStepIndex: 0, ...createInitialStepStates(1) };
@@ -101,10 +136,8 @@ export class FormInstanceElement extends RadiantElement {
 	get stepStates(): StepStates {
 		return this.machine;
 	}
-	private form?: FormController;
 	private rendererEngine?: CoreFormEngine;
 	private reportedMissingEngine = false;
-	private unwatchValidationDependencies?: () => void;
 
 	@provideContext<typeof formInstanceContext>({
 		context: formInstanceContext,
@@ -153,14 +186,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	override disconnectedCallback(): void {
 		this.navigation.cancel();
-		this.releaseSubmission();
-		this.stopWatchingValidationDependencies();
-		this.disposeActions();
-		if (this.form?.host) (this.form.host as RuiFormElement).onSubmit = undefined;
-		this.unwatchChanges?.();
-		this.unwatchChanges = undefined;
-		this.form?.disconnect();
-		this.form = undefined;
+		this.releaseBound();
 		super.disconnectedCallback();
 	}
 
@@ -173,6 +199,18 @@ export class FormInstanceElement extends RadiantElement {
 	@onUpdated(['engine'])
 	onEngineUpdated(): void {
 		this.connectForm();
+		this.publish();
+	}
+
+	/** The formatter for this form: the one given to the instance, else the engine's default. */
+	private issueFormatter(): FormIssueFormatter | undefined {
+		return this.formatIssue ?? this.engine?.getIssueFormatter();
+	}
+
+	/** Shows the text of the new formatter: the form presents issues through it. */
+	@onUpdated(['formatIssue'])
+	onFormatIssueUpdated(): void {
+		if (this.bound) this.attachForm(this.bound);
 		this.publish();
 	}
 
@@ -197,7 +235,7 @@ export class FormInstanceElement extends RadiantElement {
 	 * @remarks
 	 * Removing the submit button only stops implicit submission when the form has two or
 	 * more fields that block it. A wizard with one text input would submit on Enter, and
-	 * `rui-form` would then mark the later steps invalid. The capture phase runs before
+	 * the form would then validate the later steps too. The capture phase runs before
 	 * `rui-form` sees the event.
 	 */
 	@onEvent({ type: 'submit', host: true, options: { capture: true } })
@@ -208,125 +246,163 @@ export class FormInstanceElement extends RadiantElement {
 			event.preventDefault();
 			event.stopPropagation();
 			void this.goToNextStep();
-			return;
 		}
-		this.claimSubmission(event);
-	}
-
-	/** Starts a submission from a click on a submit button, which `rui-form` handles without a submit event. */
-	@onEvent({ type: 'click', host: true, options: { capture: true } })
-	onSubmitButtonClick(event: Event): void {
-		if (event.target instanceof Element && event.target.closest('button[type="submit"]')) {
-			this.claimSubmission(event);
-		}
-	}
-
-	/** Releases the guard of a submission that failed validation, which `rui-form` reports instead of calling `onSubmit`. */
-	@onEvent({ type: 'rui-invalid', host: true })
-	onInvalid(): void {
-		this.releaseSubmission();
 	}
 
 	/**
-	 * Takes the submission guard for a submit event, or stops the event when a submission already holds it.
+	 * Creates the form's container for the current config, engine and `rui-form`, and hands it to the form.
 	 *
 	 * @remarks
-	 * The guard is taken in the capture phase, before `rui-form` validates, so a second submit is dropped
-	 * while the first validates, and released when the submission completes, fails validation
-	 * (`rui-invalid`) or the instance disconnects.
-	 */
-	private claimSubmission(event: Event): void {
-		if (!this.form?.store || !(event.target instanceof Node) || !this.ruiForm?.contains(event.target)) return;
-		if (this.submission.busy) {
-			event.preventDefault();
-			event.stopPropagation();
-			return;
-		}
-		const held = new Promise<void>((resolve) => {
-			this.release = resolve;
-		});
-		void this.submission.run(() => held);
-	}
-
-	private releaseSubmission(): void {
-		this.release?.();
-		this.release = undefined;
-	}
-
-	/**
-	 * Connects the `rui-form`'s controller once per form element, then keeps
-	 * constraints, validation dependencies and actions in step with the config
-	 * and engine each time it runs.
+	 * The container follows the identity of the normalized config and of the engine, so replacing either starts
+	 * a fresh form with its defaults and step state. An equal config object keeps the form. A `rui-form` that
+	 * has not upgraded yet has no `connect`, so the form is built when its element is defined. A host that is not
+	 * connected, as while it is rendered on the server, builds nothing.
+	 *
+	 * A config that came through server markup is plain data without the engine's normalization (the container
+	 * kind of an array does not survive serialization), so the engine normalizes it again before the container
+	 * reads its elements. A config the engine already normalized comes back as it is.
 	 */
 	private connectForm(): void {
-		const ruiForm = this.ruiForm;
-		this.stopWatchingValidationDependencies();
-		if (!ruiForm) {
-			this.disposeActions();
-			this.form?.disconnect();
-			this.form = undefined;
+		if (!this.isConnected) return;
+		const { config, engine, ruiForm } = this;
+		if (!config || !engine || !ruiForm) {
+			this.releaseBound();
 			return;
 		}
-		if (this.form?.host === ruiForm) {
-			this.onFormReady();
+		if (this.bound?.config === config && this.bound.engine === engine && this.bound.host === ruiForm) return;
+		if (typeof ruiForm.connect !== 'function') {
+			void customElements.whenDefined('rui-form').then(() => this.connectForm());
 			return;
 		}
-		this.unwatchChanges?.();
-		this.unwatchChanges = undefined;
-		this.disposeActions();
-		this.form?.disconnect();
-		this.form = new FormController(ruiForm);
-		ruiForm.onSubmit = (data) => this.submitForm(ruiForm, data);
-		this.form.connect(() => this.onFormReady());
+		this.releaseBound(true);
+		const normalized = engine.safeValidateForm(config);
+		if (!normalized.success) {
+			logger.error('The form config is not valid for its engine, so the form has no state', normalized.issues);
+			this.releaseBound();
+			return;
+		}
+		const elements = flattenStepElements(normalized.data.steps);
+		const bound: BoundForm = {
+			config,
+			engine,
+			host: ruiForm,
+			container: createFormStateContainer({
+				elements,
+				registry: engine.getValidationRegistry(),
+				defaults: collectInitialValues(elements, this.defaultValues ?? {}),
+				validationMode: normalized.data.validationMode,
+				reValidateMode: normalized.data.reValidateMode,
+				payload: normalized.data.payload,
+			}),
+		};
+		this.bound = bound;
+		this.attempts = 0;
+		this.resetStepState();
+		this.attachForm(bound);
+		this.watchValues(bound.container);
+		this.syncActions(bound);
+		this.publish();
 	}
 
-	private onFormReady(): void {
-		this.watchFormChanges();
-		this.watchValidationDependencies();
-		this.syncActions();
+	/** Injects the container into the `rui-form`, replacing the earlier binding, with the handlers of this instance. */
+	private attachForm({ host, container }: BoundForm): void {
+		this.releaseForm = host.connect(container, {
+			formatError: (issue, field) => this.issueFormatter()?.(issue, field) ?? '',
+			submitHandler: (context) => this.submitForm(context),
+			resetHandler: () => this.resetForm(),
+		});
 	}
 
 	/**
-	 * Runs one submission and reports it with `se-action-submit-start` and
-	 * `se-action-submit-complete` (with `error` when `onSubmit` rejected or the lifecycle failed) on the `rui-form`, whether or not actions are configured.
+	 * @param keepForm - Leaves the `rui-form` bound to the old container, for a caller about to `connect` the next one, which replaces the binding without putting the form back on its own store in between.
+	 */
+	private releaseBound(keepForm = false): void {
+		this.unwatchValues?.();
+		this.unwatchValues = undefined;
+		this.disposeActions();
+		if (!keepForm) {
+			this.releaseForm?.();
+			this.releaseForm = undefined;
+		}
+		const hadForm = this.bound !== undefined;
+		this.bound = undefined;
+		if (hadForm) this.publish();
+	}
+
+	/**
+	 * Runs one submission through the container, and runs the actions and `onSubmit` for the values that passed.
 	 *
 	 * @remarks
-	 * The instance owns the submitting state because Radiant UI clears its own
-	 * `isSubmitting` after validation, before it awaits `onSubmit`. With no
-	 * `onSubmit`, a form with `action` or `method` submits natively after its actions have
-	 * completed and succeeded, so the navigation cannot cut off the success and complete actions. A rejected `onSubmit` completes the submission as unsuccessful, runs the error and
-	 * complete actions and is logged, not rethrown: the event is how the page learns of it.
+	 * `rui-form` calls this on a submit with the controls' values already written to the container. The guard
+	 * holds from here until the lifecycle ends, so a second submit while the first validates or runs is dropped.
+	 * The container validates under a submission token: `passed` submits exactly the values that were
+	 * validated, `invalid` focuses the first field with an error, and `overtaken` (an edit, a row move or a
+	 * reset outran the check) submits nothing and leaves the user to try again. A validation that could not
+	 * run (a validator threw, a service was down) is not a field error: the submission stops and is logged.
 	 */
-	private async submitForm(ruiForm: RuiFormElement, data: Record<string, unknown>): Promise<void> {
-		if (this.submitting) return;
+	private async submitForm(context: RuiFormSubmitContext<FormStateError>): Promise<void> {
+		await this.submission.run(async () => {
+			const { bound } = this;
+			if (!bound) return;
+			const { container, host } = bound;
+			const submission = container.beginSubmission();
+			try {
+				await container.validate(undefined, { native: context.readNativeValidity(), submission });
+			} catch (error) {
+				logger.error('Form validation could not run', error);
+				if (this.bound === bound) this.countAttempt();
+				return;
+			}
+			if (this.bound !== bound) return;
+			if (submission.outcome === 'invalid') {
+				this.countAttempt();
+				host.dispatchEvent(new CustomEvent('se-action-submit-invalid', { bubbles: true, composed: true }));
+				const [first] = Object.keys(container.getSnapshot().errors).filter((path) => path !== FORM_ROOT);
+				if (first !== undefined) context.focus(first);
+				return;
+			}
+			if (submission.outcome === 'passed') await this.completeSubmission(host, submission.values, context);
+		});
+	}
+
+	/**
+	 * Reports a submission with `se-action-submit-start` and `se-action-submit-complete` (with `error` when
+	 * `onSubmit` rejected or the lifecycle failed) on the `rui-form`, whether or not actions are configured.
+	 *
+	 * @remarks
+	 * With no `onSubmit`, a form with `action` or `method` submits natively after its actions have
+	 * completed and succeeded, so the navigation cannot cut off the success and complete actions. A rejected
+	 * `onSubmit` completes the submission as unsuccessful, runs the error and complete actions and is logged,
+	 * not rethrown: the event is how the page learns of it.
+	 */
+	private async completeSubmission(
+		host: RuiFormElement,
+		values: Readonly<Record<string, unknown>>,
+		context: Pick<RuiFormSubmitContext, 'submitNatively'>,
+	): Promise<void> {
 		const announce = (type: string, detail?: unknown) =>
-			ruiForm.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
+			host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		this.setSubmitting(true);
 		announce('se-action-submit-start');
 		const { onSubmit } = this;
-		const submitNatively = () => {
-			if (ruiForm.hasAttribute('action') || ruiForm.hasAttribute('method')) {
-				ruiForm.querySelector<HTMLFormElement>('form[data-ref="form"]')?.submit();
-			}
-		};
-		const callback = onSubmit ? () => onSubmit(expandValues(data)) : undefined;
+		const callback = onSubmit ? () => onSubmit(values) : undefined;
 		let detail: SubmissionCompleteDetail;
 		try {
 			if (this.actions) {
 				const { succeeded, results, failure } = await this.actions.submit(callback);
-				if (succeeded && !callback) submitNatively();
+				if (succeeded && !callback) context.submitNatively();
 				detail = { succeeded, results, ...(failure ? { error: failure.error } : {}) };
 			} else {
 				if (callback) await callback();
-				else submitNatively();
+				else context.submitNatively();
 				detail = { succeeded: true, results: [] };
 			}
 		} catch (error) {
 			detail = { succeeded: false, results: [], error };
 		} finally {
 			this.setSubmitting(false);
-			this.releaseSubmission();
 		}
+		this.countAttempt();
 		if ('error' in detail) logger.error('Form submission failed', detail.error);
 		announce('se-action-submit-complete', detail);
 	}
@@ -336,30 +412,37 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 	}
 
+	private countAttempt(): void {
+		this.attempts += 1;
+		this.publish();
+	}
+
+	/** Restores the container's defaults, the first step and the attempt count. */
+	private resetForm(): void {
+		this.bound?.container.reset();
+		this.attempts = 0;
+		this.resetStepState();
+	}
+
 	/**
-	 * Builds the actions for the current engine, or drops them when the form configures none.
+	 * Builds the actions for the current container, or drops them when the form configures none.
 	 *
 	 * @remarks
-	 * `FormProvider` re-validates the config on each render, so a new but equal config
-	 * must not rebuild the actions: that would fire `form_mount` again and reset the
-	 * submit attempts. Only an engine change rebuilds them.
+	 * The actions belong to one container, so a new form builds new ones and fires `form_mount` again.
 	 */
-	private syncActions(): void {
-		const { config, engine, form } = this;
-		if (!form || !config || !engine || !hasConfiguredActions(config)) {
-			this.disposeActions();
-			return;
-		}
-		if (this.actions?.engine !== engine) {
-			this.disposeActions();
-			this.actions = new FormActions({
-				config: () => this.config,
-				engine,
-				form,
-				currentStep: () => this.currentStep,
-				onAction: (action, data) => this.onAction?.(action, data),
-			});
-		}
+	private syncActions({ config, engine, container, host }: BoundForm): void {
+		this.disposeActions();
+		if (!hasConfiguredActions(config)) return;
+		this.actions = new FormActions({
+			config: () => this.config,
+			engine,
+			container,
+			host,
+			currentStep: () => this.currentStep,
+			submitCount: () => this.attempts,
+			reset: () => this.resetForm(),
+			onAction: (action, data) => this.onAction?.(action, data),
+		});
 		this.actions.start();
 	}
 
@@ -368,33 +451,14 @@ export class FormInstanceElement extends RadiantElement {
 		this.actions = undefined;
 	}
 
-	private watchFormChanges(): void {
-		if (!this.form?.ready) return;
-		if (this.unwatchChanges) {
-			this.publishFormValues();
-			return;
-		}
-		const changed = createChangeDetector();
-		this.unwatchChanges = this.form.watchForm((values) => {
+	/** Hands the live values to the constraint hosts and calls `onChange` when a value changes. */
+	private watchValues(container: FormStateContainer): void {
+		this.unwatchValues?.();
+		this.publishFormValues(container.getSnapshot().values);
+		this.unwatchValues = observeValues(container, (values) => {
 			this.publishFormValues(values);
-			if (changed(values)) this.onChange?.(values);
+			this.onChange?.(values);
 		});
-	}
-
-	private watchValidationDependencies(): void {
-		if (this.unwatchValidationDependencies || !this.config || !this.form?.ready || !this.engine) {
-			return;
-		}
-		this.unwatchValidationDependencies = connectValidationDependencies(
-			this.form,
-			flattenStepElements(this.config.steps),
-			this.engine.getValidationRegistry(),
-		);
-	}
-
-	private stopWatchingValidationDependencies(): void {
-		this.unwatchValidationDependencies?.();
-		this.unwatchValidationDependencies = undefined;
 	}
 
 	/** @remarks Cancels a navigation in flight so it cannot overwrite the reset state or dispatch step triggers after it. */
@@ -423,6 +487,9 @@ export class FormInstanceElement extends RadiantElement {
 			markStepCompleted: this.markStepCompleted,
 			markStepVisited: this.markStepVisited,
 			isSubmitting: this.submitting,
+			submitCount: this.attempts,
+			container: this.bound?.container,
+			formatIssue: this.issueFormatter(),
 		};
 	}
 
@@ -451,9 +518,9 @@ export class FormInstanceElement extends RadiantElement {
 	 * The authored-disabled lookup is rebuilt only when the config changes, so a field that
 	 * selects it is notified by a new config and not by a value change.
 	 */
-	private publishFormValues(values = this.form?.getValues()): void {
+	private publishFormValues(values: Readonly<Record<string, unknown>>): void {
 		const { config } = this;
-		if (!values || !config) return;
+		if (!config) return;
 		if (this.authoredDisabled?.config !== config) {
 			this.authoredDisabled = { config, lookup: createAuthoredDisabledLookup(config) };
 		}

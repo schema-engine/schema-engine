@@ -49,14 +49,14 @@ export class SeSubmissionAlert extends RadiantElement {
 
 		form.addEventListener('se-action-submit-start', onSubmitStart);
 		form.addEventListener('se-action-submit-complete', onSubmitComplete);
-		form.addEventListener('rui-invalid', onInvalid);
+		form.addEventListener('se-action-submit-invalid', onInvalid);
 		this.registerCleanupCallback(() => {
 			if (this.dismissTimer) {
 				clearTimeout(this.dismissTimer);
 			}
 			form.removeEventListener('se-action-submit-start', onSubmitStart);
 			form.removeEventListener('se-action-submit-complete', onSubmitComplete);
-			form.removeEventListener('rui-invalid', onInvalid);
+			form.removeEventListener('se-action-submit-invalid', onInvalid);
 		});
 	}
 

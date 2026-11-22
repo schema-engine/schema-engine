@@ -397,7 +397,7 @@ test('a constraint that turns require on shows no error on a field nobody has re
 		form.setValue('mode', 'need');
 		await expect.poll(() => code.rules?.required).toBe(true);
 		await new Promise((resolve) => setTimeout(resolve, 50));
-		expect(form.store!.getFieldError('code')).toBeUndefined();
+		expect(form.formState.errors.code).toBeUndefined();
 	} finally {
 		cleanup();
 	}
@@ -406,38 +406,23 @@ test('a constraint that turns require on shows no error on a field nobody has re
 test('a constraint that turns require on validates a field the user already touched', async () => {
 	const { form, code, cleanup } = await mountRequireOnDependent();
 	try {
-		await form.store!.handleFieldBlur('code');
+		form.container!.blur('code');
 		form.setValue('mode', 'need');
 		await expect.poll(() => code.rules?.required).toBe(true);
-		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
+		await expect.poll(() => form.formState.errors.code).toBeTruthy();
 	} finally {
 		cleanup();
 	}
 });
 
-test('a constraint that turns require on validates any field once the form was submitted', async () => {
-	const { form, code, host, cleanup } = await mountRequireOnDependent();
-	try {
-		host.querySelector('form')!.requestSubmit();
-		await expect.poll(() => form.store!.getState().isSubmitted).toBe(true);
-		form.setValue('mode', 'need');
-		await expect.poll(() => code.rules?.required).toBe(true);
-		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
-	} finally {
-		cleanup();
-	}
-});
-
-test('turning require on and off keeps the authored rule objects', async () => {
+test('turning require on and off changes only what the field announces', async () => {
 	const { form, code, cleanup } = await mountRequireOnDependent();
 	try {
-		const before = code.rules;
+		expect(code.rules).toBeFalsy();
 		form.setValue('mode', 'need');
 		await expect.poll(() => code.rules?.required).toBe(true);
-		expect(code.rules?.validate).toBe(before?.validate);
 		form.setValue('mode', '');
 		await expect.poll(() => code.rules?.required).toBeFalsy();
-		expect(code.rules?.validate).toBe(before?.validate);
 	} finally {
 		cleanup();
 	}
@@ -526,21 +511,21 @@ test('a require released on a touched field clears its error', async () => {
 	]);
 	try {
 		const code = host.querySelector<FormFieldElement>('se-field[name="code"]')!;
-		await form.store!.handleFieldBlur('code');
+		form.container!.blur('code');
 		form.setValue('mode', 'need');
-		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
+		await expect.poll(() => form.formState.errors.code).toBeTruthy();
 
 		form.setValue('mode', '');
 
 		await expect.poll(() => code.rules?.required).toBeFalsy();
-		await expect.poll(() => form.store!.getFieldError('code')).toBeUndefined();
+		await expect.poll(() => form.formState.errors.code).toBeUndefined();
 	} finally {
 		cleanup();
 	}
 });
 
-test('a require released after submit clears its error', async () => {
-	const { form, host, cleanup } = await mountForm([
+test('a require released after a failed check clears its error', async () => {
+	const { form, cleanup } = await mountForm([
 		{ $type: 'input', id: 'mode', name: 'mode' },
 		{
 			$type: 'input',
@@ -550,14 +535,13 @@ test('a require released after submit clears its error', async () => {
 		},
 	]);
 	try {
-		host.querySelector('form')!.requestSubmit();
-		await expect.poll(() => form.store!.getState().isSubmitted).toBe(true);
 		form.setValue('mode', 'need');
-		await expect.poll(() => form.store!.getFieldError('code')).toBeTruthy();
+		expect(await form.trigger()).toBe(false);
+		expect(form.formState.errors.code).toBeTruthy();
 
 		form.setValue('mode', '');
 
-		await expect.poll(() => form.store!.getFieldError('code')).toBeUndefined();
+		await expect.poll(() => form.formState.errors.code).toBeUndefined();
 	} finally {
 		cleanup();
 	}
@@ -624,24 +608,6 @@ test('a server-rendered hidden wrapper keeps its snapshot while no instance publ
 		expect(wrapper.hidden).toBe(true);
 	} finally {
 		host.remove();
-	}
-});
-
-test('rules set on a constrained field from outside become its baseline for the next constraint change', async () => {
-	const { form, code, cleanup } = await mountRequireOnDependent();
-	try {
-		form.setValue('mode', 'need');
-		await expect.poll(() => code.rules?.required).toBe(true);
-
-		code.rules = { maxLength: 5 };
-		await expect.poll(() => code.rules?.required).toBe(true);
-		expect(code.rules?.maxLength).toBe(5);
-
-		form.setValue('mode', '');
-		await expect.poll(() => code.rules?.required).toBeFalsy();
-		expect(code.rules?.maxLength).toBe(5);
-	} finally {
-		cleanup();
 	}
 });
 

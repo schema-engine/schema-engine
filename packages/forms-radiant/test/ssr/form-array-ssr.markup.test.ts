@@ -67,13 +67,13 @@ describe('SSR array markup', () => {
 		expect(html).toContain('value="Alice"');
 	});
 
-	test('renders default rows with deterministic engine seed ids', () => {
+	test('renders default rows with the ids the client container mints', () => {
 		const html = renderArraySsrAcceptanceHtml();
 
 		expect(html.match(/class="se-form-array__item"/g) ?? []).toHaveLength(2);
 		expect(html).not.toContain('<template data-radiant-slotted');
-		expect(html).toContain('data-se-row-id="seed-0"');
-		expect(html).toContain('data-se-row-id="seed-1"');
+		expect(html).toContain('data-se-row-id="row-1"');
+		expect(html).toContain('data-se-row-id="row-2"');
 		expect(html).toContain('data-default-value');
 		expect(html).toContain('Alice');
 		expect(html).toContain('Bob');

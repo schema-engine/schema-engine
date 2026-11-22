@@ -16,8 +16,6 @@ test('serializes the seeded rows it rendered when the caller passes no ssrInitia
 		),
 	);
 
-	console.log(html);
-	console.log(html);
 	const serialized = html.match(/ssrInitialRows&quot;:\[([^\]]*)\]/)?.[1] ?? '';
 	expect(serialized.split('},{')).toHaveLength(2);
 });

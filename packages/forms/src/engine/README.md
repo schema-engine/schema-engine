@@ -81,8 +81,7 @@ the fields inside a hidden container; a disabled field is still checked, as in a
 including attempts that failed validation. An attempt counts once its validation has
 failed, or once its submission lifecycle has run, so the triggers of a submission
 see the attempts before it. React passes the provider's own `submitCount`, which counts
-this way, except that a submission an edit overtook is not counted. Radiant UI's form store keeps only a submitted flag, so Radiant counts the
-`rui-invalid` events of its form and its finished submission lifecycles instead.
+this way, except that a submission an edit overtook is not counted. Radiant's `se-form-instance` counts its own attempts.
 
 ## Schema artifacts and extension
 

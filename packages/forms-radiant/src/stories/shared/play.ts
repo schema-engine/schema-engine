@@ -30,8 +30,8 @@ function waitForFormDecision(root: ParentNode): Promise<void> {
 
 	return new Promise((resolve) => {
 		const finish = () => resolve();
-		ruiForm.addEventListener('rui-invalid', finish, { once: true });
-		ruiForm.addEventListener('rui-submit', finish, { once: true });
+		ruiForm.addEventListener('se-action-submit-invalid', finish, { once: true });
+		ruiForm.addEventListener('se-action-submit-complete', finish, { once: true });
 		window.setTimeout(finish, 2000);
 	});
 }

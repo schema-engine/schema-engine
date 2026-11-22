@@ -5,9 +5,14 @@ import { FormController } from '@/adapters/radiant/controller';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { WizardRecipe } from '@/recipes';
-import { normalizedTestConfig } from '../adapters/test-config';
 
 afterEach(() => document.body.replaceChildren());
+
+/** The container the instance made for the `rui-form` in its light DOM, once it exists. */
+async function containerOf(host: HTMLElement) {
+	await expect.poll(() => new FormController(host).ready).toBe(true);
+	return new FormController(host).container!;
+}
 
 test('Next validates the current step, blocks invalid navigation, and updates wizard visibility', async () => {
 	const instance = new FormInstanceElement();
@@ -29,10 +34,10 @@ test('Next validates the current step, blocks invalid navigation, and updates wi
 	});
 	instance.append(host);
 	document.body.append(instance);
-	const validate = vi.spyOn(new FormController(host).store!, 'validateField').mockResolvedValue(false);
+	const validate = vi.spyOn(await containerOf(host), 'validate').mockResolvedValue(false);
 	await expect.poll(() => steps[1]?.hidden).toBe(true);
 	await instance.goToNextStep();
-	expect(validate).toHaveBeenCalledWith('email');
+	expect(validate).toHaveBeenCalledWith(['email'], { native: {} });
 	expect(instance.currentStep).toBe(0);
 	expect(instance.stepStates.valid).toEqual([false, false]);
 	validate.mockResolvedValue(true);
@@ -64,7 +69,7 @@ test('a step whose index changes is judged against the current step, not step 0'
 	});
 	instance.append(host);
 	document.body.append(instance);
-	vi.spyOn(new FormController(host).store!, 'validateField').mockResolvedValue(true);
+	vi.spyOn(await containerOf(host), 'validate').mockResolvedValue(true);
 	await expect.poll(() => steps[1]?.hidden).toBe(true);
 	await instance.goToNextStep();
 	await expect.poll(() => steps.map((step) => step.hidden)).toEqual([true, false]);
@@ -107,19 +112,19 @@ test('a hidden step unhides when the config changes from a wizard to a non-wizar
 
 test('Next on the last step validates it and marks it valid', async () => {
 	const instance = new FormInstanceElement();
-	instance.config = normalizedTestConfig({
+	instance.engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+	instance.config = instance.engine.validateForm({
 		id: 'wizard',
 		steps: [{ id: 'only', title: 'Only', elements: [{ $type: 'input', id: 'email', name: 'email' }] }],
 	});
 	const host = document.createElement('rui-form');
 	instance.append(host);
 	document.body.append(instance);
-	const validate = vi.spyOn(new FormController(host).store!, 'validateField').mockResolvedValue(true);
-	await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+	const validate = vi.spyOn(await containerOf(host), 'validate').mockResolvedValue(true);
 
 	await instance.goToNextStep();
 
-	expect(validate).toHaveBeenCalledWith('email');
+	expect(validate).toHaveBeenCalledWith(['email'], { native: {} });
 	expect(instance.currentStep).toBe(0);
 	expect(instance.stepStates.valid).toEqual([true]);
 });

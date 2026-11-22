@@ -1,16 +1,8 @@
 import { RuiForm } from '@ecopages/radiant-ui/form';
 import type { FormConfigView } from '@schema-engine/forms';
 import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
-import { flattenValues } from './controller/values';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { getAppearanceAttributes } from '@schema-engine/layout';
-
-export function collectFormDefaultValues(
-	config: FormConfigView,
-	userDefaults: Partial<Record<string, unknown>> = {},
-): Partial<Record<string, unknown>> {
-	return flattenValues(collectFormInitialValues(config, userDefaults));
-}
 
 export function collectFormInitialValues(
 	config: FormConfigView,
@@ -19,26 +11,19 @@ export function collectFormInitialValues(
 	return collectInitialValues(flattenStepElements(config.steps), userDefaults);
 }
 
-function rememberInvalidErrors(event: Event): void {
-	const ruiForm = event.currentTarget as HTMLElement | null;
-	const detail = (event as CustomEvent<{ errors: Record<string, { message?: string }> }>).detail;
-	ruiForm?.setAttribute('data-se-last-invalid', JSON.stringify(detail?.errors ?? {}));
-}
-
-function clearInvalidErrors(event: Event): void {
-	(event.currentTarget as HTMLElement | null)?.removeAttribute('data-se-last-invalid');
-}
-
+/**
+ * The `rui-form` of a form instance: chrome and layout only.
+ *
+ * @remarks
+ * It carries no validation timing, default values or rules. `se-form-instance` injects the form's state
+ * container with `connect`, and the container owns all three.
+ */
 export function ConfiguredRuiForm({
 	config,
-	defaultValues = {},
-	initialValues,
 	layoutThemeId,
 	children,
 }: {
 	config: FormConfigView;
-	defaultValues?: Partial<Record<string, unknown>>;
-	initialValues?: Record<string, unknown>;
 	/** The engine's layout theme id, which scopes its token rules to this form. */
 	layoutThemeId?: string;
 	children: JsxRenderable;
@@ -49,11 +34,6 @@ export function ConfiguredRuiForm({
 			style={config.style}
 			data-se-theme={layoutThemeId}
 			{...getAppearanceAttributes(config.appearance)}
-			mode={config.validationMode ?? 'onSubmit'}
-			reValidateMode={config.reValidateMode ?? 'onChange'}
-			defaultValues={initialValues ?? collectFormDefaultValues(config, defaultValues)}
-			on:rui-invalid={rememberInvalidErrors}
-			on:rui-submit={clearInvalidErrors}
 		>
 			{children}
 		</RuiForm>

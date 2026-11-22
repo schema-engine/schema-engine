@@ -25,7 +25,29 @@ export function renderHydrationHtml(): string {
 	return withRadiantServerCustomElementRenderBridge(() => {
 		const engine = createHydrationEngine();
 		const rules = [{ type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Must match password' }];
-		const config = { id: 'hydration', steps: [{ id: 'main', title: 'Main', elements: [] }] };
+		const config = engine.validateForm({
+			id: 'hydration',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{ $type: 'textarea', id: 'confirm', name: 'confirm', rules },
+						{ $type: 'select', id: 'choice', name: 'choice', options: [{ value: 'x', label: 'X' }], rules },
+						{ $type: 'checkbox', id: 'accepted', name: 'accepted', rules },
+						{ $type: 'slider', id: 'amount', name: 'amount', rules },
+						{ $type: 'input', id: 'contact', name: 'contact' },
+						{ $type: 'phone-input', id: 'phone', name: 'phone' },
+						{
+							$type: 'input',
+							id: 'vat',
+							name: 'vat',
+							constraints: [{ field: 'contact', operator: 'equals', value: 'show', action: 'show' }],
+						},
+					],
+				},
+			],
+		});
 		const fields = [
 			jsx(FormField, {
 				name: 'address.street',

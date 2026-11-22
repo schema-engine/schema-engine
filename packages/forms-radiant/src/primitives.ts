@@ -5,7 +5,6 @@ export { combineHandlers } from '@/hooks/bind-field';
 export { FormElement } from '@/components/internals/field-renderer';
 
 export { FormField, FormFieldElement } from '@/elements/form-field';
-export type { FieldRulesSource } from '@/lib/field-rules';
 export {
 	FormController,
 	FormEngineController,

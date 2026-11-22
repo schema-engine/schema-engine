@@ -1,50 +1,75 @@
 import { ContextProvider } from '@ecopages/radiant/context';
-import { FormStore, formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
+import {
+	createFormStateContainer,
+	type FormIssueFormatter,
+	type FormStateContainer,
+} from '@schema-engine/forms/state-container';
 import { FormController } from '@/adapters/radiant/controller';
-import { flattenValues } from '@/adapters/radiant/controller/values';
+import { formInstanceContext } from '@/contexts/form-instance-context';
+import { createInitialStepStates } from '@schema-engine/forms/engine';
+import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
+import { createRadiantFormEngine } from '@/registries/builder-registry';
+import { schemaFormRegistrations } from '@/registrations';
 
-const noopUnregister = () => {};
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
 /**
- * Publishes `formContext` on a plain element, standing in for `rui-form`.
+ * Publishes `formInstanceContext` with `container` on a plain element, standing in for `se-form-instance`.
  *
  * @remarks
- * `ContextProvider` types its host as a Radiant element, but it only listens
- * for and dispatches context events on it, which any element supports.
- *
- * Pass a plain element in browser tests. A defined `rui-form` already provides
- * `formContext`, and a Radiant provider that answers stops immediate
- * propagation, so a second provider on the same element is never reached. A
- * test that needs a real `rui-form` reads its own store instead.
+ * `ContextProvider` types its host as a Radiant element, but it only listens for and dispatches context
+ * events on it, which any element supports. Pass a plain element: a defined `se-form-instance` already
+ * provides the context, and a provider that answers stops propagation.
  */
-export function provideTestFormStore(host: HTMLElement, store?: FormStore, ready = true) {
-	return new ContextProvider<typeof formContext>(
+export function provideTestContainer(
+	host: HTMLElement,
+	container: FormStateContainer | undefined,
+	formatIssue?: FormIssueFormatter,
+) {
+	return new ContextProvider<typeof formInstanceContext>(
 		host as unknown as ConstructorParameters<typeof ContextProvider>[0],
 		{
-			context: formContext,
+			context: formInstanceContext,
 			initialValue: {
-				ready,
-				store,
-				revision: 0,
-				fields: {},
-				errors: {},
-				actions: {
-					register: () => noopUnregister,
-					updateFieldOptions: () => {},
-					handleFieldChange: () => {},
-					handleFieldBlur: () => {},
-					subscribePresentation: () => noopUnregister,
-				},
-			} satisfies FormContextValue,
+				currentStep: 0,
+				totalSteps: 1,
+				isWizard: false,
+				stepStates: createInitialStepStates(1),
+				goToStep: async () => {},
+				goToNextStep: async () => {},
+				goToPreviousStep: async () => {},
+				markStepCompleted: () => {},
+				markStepVisited: () => {},
+				isSubmitting: false,
+				submitCount: 0,
+				container,
+				formatIssue,
+			},
 		},
 	);
 }
 
-export function createTestForm(defaultValues: Record<string, unknown> = {}) {
+/**
+ * A form controller over a real container, for a host inside a stand-in form instance.
+ *
+ * @param fields - The form's elements, validated by an engine, whose rules the container runs.
+ */
+export function createTestForm(
+	defaults: Record<string, unknown> = {},
+	fields: Record<string, unknown>[] = [],
+	formatIssue?: FormIssueFormatter,
+) {
+	const { steps } = engine.validateForm({ id: 'test', steps: [{ id: 'main', title: 'Main', elements: fields }] });
+	const element = document.createElement('div');
 	const host = document.createElement('div');
-	const element = document.createElement('rui-form');
-	const store = new FormStore({ defaultValues: flattenValues(defaultValues) });
-	provideTestFormStore(element, store);
+	const container = createFormStateContainer({
+		elements: flattenStepElements(steps),
+		registry: engine.getValidationRegistry(),
+		validationMode: 'onSubmit',
+		reValidateMode: 'onChange',
+		defaults,
+	});
+	provideTestContainer(element, container, formatIssue);
 	element.append(host);
-	return { form: new FormController(host), store, host, element };
+	return { form: new FormController(host), container, host, element };
 }

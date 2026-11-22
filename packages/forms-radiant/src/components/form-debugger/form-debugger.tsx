@@ -145,9 +145,11 @@ function DebuggerSteps({
 
 function DebuggerFormState({
 	formState,
+	isSubmitting,
 	stepStates,
 }: {
 	formState: FormController['formState'] | undefined;
+	isSubmitting: boolean;
 	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 }) {
 	return (
@@ -156,7 +158,7 @@ function DebuggerFormState({
 			<div class="se-form-debugger__details">
 				<div class="se-form-debugger__row">
 					<span class="se-form-debugger__detail-label">Submitting</span>
-					<code class="se-form-debugger__detail-value">{String(formState?.isSubmitting ?? false)}</code>
+					<code class="se-form-debugger__detail-value">{String(isSubmitting)}</code>
 				</div>
 				<div class="se-form-debugger__row">
 					<span class="se-form-debugger__detail-label">Valid</span>
@@ -303,7 +305,11 @@ export class FormDebuggerElement extends RadiantElement {
 							/>
 						) : null}
 						{this.showFormState ? (
-							<DebuggerFormState formState={formState} stepStates={stepStates} />
+							<DebuggerFormState
+								formState={formState}
+								isSubmitting={this.instance?.isSubmitting ?? false}
+								stepStates={stepStates}
+							/>
 						) : null}
 					</div>
 					{isMultiStep ? (

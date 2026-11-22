@@ -205,10 +205,10 @@ export const ControllerOperations: Story = {
 		const arrayHost = canvasElement.querySelector<HTMLElement>('se-form-array');
 		if (!arrayHost) throw new Error('Expected array component');
 		const form = new FormController(arrayHost);
-		const array = form.fieldArray('emergencyContacts');
+		const array = () => form.fieldArray('emergencyContacts');
 		const names = () => canvas.getAllByLabelText<HTMLInputElement>(/full name/i);
 		const listener = fn();
-		const stop = form.watchField('emergencyContacts', listener);
+		const stop = form.select((snapshot) => snapshot.values['emergencyContacts']).subscribe(listener);
 
 		await step('Default values populate registered controls', async () => {
 			const firstNameField = canvasElement.querySelector<HTMLElement>(
@@ -225,14 +225,14 @@ export const ControllerOperations: Story = {
 			await expect(form.getValue('emergencyContacts.1.contactName')).toBe('Typed Bob');
 		});
 		await step('Move and remove keep row identity, DOM values, and submission aligned', async () => {
-			const originalIds = array.fields;
-			array.move(0, 1);
+			const originalIds = array().fields;
+			array().move(0, 1);
 			await expect(form.getValue('emergencyContacts.0.contactName')).toBe('Typed Bob');
 			await expect(form.getValue('emergencyContacts.1.contactName')).toBe('Updated Alice');
 			await waitFor(async () =>
 				expect(names().map((input) => input.value)).toEqual(['Typed Bob', 'Updated Alice']),
 			);
-			await expect(array.fields).toEqual([originalIds[1], originalIds[0]]);
+			await expect(array().fields).toEqual([originalIds[1], originalIds[0]]);
 			await userEvent.click(canvas.getAllByRole('button', { name: /remove contact/i })[0]);
 			await waitFor(async () => expect(names().map((input) => input.value)).toEqual(['Updated Alice']));
 			await userEvent.click(canvas.getByRole('button', { name: /save contacts/i }));
@@ -275,25 +275,14 @@ export const ControllerLifecycle: Story = {
 		const consumer = document.createElement('se-test-form-consumer') as PlainFormConsumer;
 		host.append(consumer);
 		await waitFor(async () => expect(consumer.updates).toBeGreaterThan(0));
+		const updates = consumer.updates;
 		first.setValue('title', 'First form');
 		await expect(consumer.form.getValue('title')).toBe('First form');
-
-		const secondHost = document.createElement('rui-form');
-		Reflect.set(secondHost, 'defaultValues', { title: 'Second form' });
-		canvasElement.append(secondHost);
-		secondHost.append(consumer);
-		await expect(consumer.form.getValue('title')).toBe('Second form');
-		const updates = consumer.updates;
-		first.setValue('title', 'Unrelated change');
-		await expect(consumer.updates).toBe(updates);
-		consumer.form.setValue('title', 'Changed second');
-		await expect(consumer.updates).toBeGreaterThan(updates);
-		const second = new FormController(secondHost);
+		await waitFor(async () => expect(consumer.updates).toBeGreaterThan(updates));
 		consumer.remove();
 		const disconnectedUpdates = consumer.updates;
-		second.setValue('title', 'After disconnect');
+		first.setValue('title', 'After disconnect');
 		await expect(consumer.updates).toBe(disconnectedUpdates);
-		secondHost.remove();
 		first.disconnect();
 	},
 };

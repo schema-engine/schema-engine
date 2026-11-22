@@ -1,18 +1,12 @@
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import {
-	buildFormActionContext,
-	checkFormValidity,
-	collectStepActions,
-	runSubmissionLifecycle,
-} from '@schema-engine/forms/engine';
+import { buildFormActionContext, collectStepActions, runSubmissionLifecycle } from '@schema-engine/forms/engine';
 import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
-import type { FormStateError } from '@schema-engine/forms/types';
+import type { FormStateContainer } from '@schema-engine/forms/state-container';
 import type { FormProviderProps } from '@/adapters/types';
 import { logger } from '@/lib/logger';
-import { createChangeDetector } from './controller/values';
-import type { FormController } from './controller';
+import { observeValues } from '@/lib/observe-values';
 
 /** What a submission's actions produced, in the shape `runSubmissionLifecycle` resolves. */
 export type SubmissionOutcome = Awaited<ReturnType<typeof runSubmissionLifecycle>>;
@@ -21,9 +15,15 @@ export interface FormActionsOptions {
 	/** Reads the current config on each trigger, so a re-validated equal config does not rebuild the actions. */
 	config: () => FormConfigView;
 	engine: FormEngine;
-	/** The form instance's controller, scoped to its `rui-form`. */
-	form: FormController;
+	/** The form instance's state container. */
+	container: FormStateContainer;
+	/** The instance's `rui-form`, which the action results are reported on. */
+	host: HTMLElement;
 	currentStep: () => number;
+	/** Submission attempts so far, which the instance counts. */
+	submitCount: () => number;
+	/** Resets the whole form instance: values, field state, steps and the attempt count. */
+	reset: () => void;
 	onAction?: FormProviderProps['onAction'];
 }
 
@@ -31,82 +31,46 @@ export interface FormActionsOptions {
  * Runs the configured form actions of one form instance.
  *
  * @remarks
- * Built by `se-form-instance` for one engine and discarded with it; the config
- * is read through a getter, so the actions outlive a config change. It reports
- * through `se-action-results` events on the `rui-form`; the instance reports the
- * submission itself.
+ * Built by `se-form-instance` for one state container and discarded with it. It reports through
+ * `se-action-results` events on the `rui-form`; the instance reports the submission itself and counts its
+ * attempts.
  */
-/**
- * The errors Radiant UI holds, without the keys it types as possibly cleared.
- *
- * @remarks Radiant UI types its errors as a partial record, so an entry can be `undefined` in the type; the engine's context records only errors.
- */
-function recordedErrors(
-	errors: Readonly<Partial<Record<string, { readonly type?: string; readonly message?: string }>>>,
-): Record<string, FormStateError> {
-	return Object.fromEntries(
-		Object.entries(errors).flatMap(([path, error]) => {
-			if (error === undefined) return [];
-			const issue = {
-				type: error.type ?? 'validation',
-				source: 'validation' as const,
-				...(error.message === undefined ? {} : { message: error.message }),
-			};
-			return [[path, { ...issue, all: [issue] }]];
-		}),
-	);
-}
-
 export class FormActions {
 	private readonly dispatcher: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private readonly mountedAt = Date.now();
 	private readonly actionForm: BuilderActionBaseContext['form'];
 	private unwatchChanges?: () => void;
 	private started = false;
-	private submitAttempts = 0;
-	private readonly countInvalid = () => {
-		this.submitAttempts += 1;
-	};
 
 	readonly engine: FormEngine;
+	readonly container: FormStateContainer;
 
 	constructor(private readonly options: FormActionsOptions) {
-		const { engine, form } = options;
+		const { engine, container } = options;
 		this.engine = engine;
+		this.container = container;
 		this.dispatcher = new ActionDispatcher(engine);
 		this.actionForm = {
-			reset: () => form.reset(),
-			setValue: (name, value) => form.setValue(name, value),
-			getValue: (name) => form.getValue(name),
-			validate: () => form.trigger(),
-			checkValidity: () =>
-				checkFormValidity({
-					steps: options.config().steps,
-					values: form.getValues(),
-					registry: engine.getValidationRegistry(),
-				}),
+			reset: options.reset,
+			setValue: (name, value) => container.setValue(name, value),
+			getValue: (name) => container.getValue(name),
+			validate: () => container.validate(),
+			checkValidity: () => container.checkValidity(),
 		};
-		form.host.addEventListener('rui-invalid', this.countInvalid);
 	}
 
 	/**
-	 * Dispatches `form_mount` and starts `form_change` dispatching, once, when the form is ready.
+	 * Dispatches `form_mount` and starts `form_change` dispatching, once.
 	 *
 	 * @remarks
-	 * Safe to call on every readiness notification. The change watcher takes its initial
-	 * snapshot as the baseline and dispatches `form_change` only when the values differ from
-	 * the previous one; it also clears the attempt count when the form is not submitted.
+	 * `form_change` follows a change of the values only: touching a field, recording an error or
+	 * counting a submission is no change.
 	 */
 	start(): void {
-		const { form } = this.options;
-		if (this.started || !form.ready) return;
+		if (this.started) return;
 		this.started = true;
 		this.dispatchQuietly('form_mount');
-		const changed = createChangeDetector();
-		this.unwatchChanges = form.watchForm((values) => {
-			if (!form.formState.isSubmitted) this.submitAttempts = 0;
-			if (changed(values)) this.dispatchQuietly('form_change');
-		});
+		this.unwatchChanges = observeValues(this.container, () => this.dispatchQuietly('form_change'));
 	}
 
 	private dispatchQuietly(trigger: FormActionTrigger): void {
@@ -116,7 +80,6 @@ export class FormActions {
 	}
 
 	dispose(): void {
-		this.options.form.host.removeEventListener('rui-invalid', this.countInvalid);
 		this.unwatchChanges?.();
 		this.unwatchChanges = undefined;
 	}
@@ -124,31 +87,24 @@ export class FormActions {
 	/**
 	 * Runs the submission lifecycle, with `onSubmit` between the submit actions and the success or error trigger.
 	 *
-	 * @remarks
-	 * Resolves unsuccessful, without calling `onSubmit`, when the form is not ready. The caller reports the
-	 * submission's start and completion.
+	 * @remarks The caller reports the submission's start and completion, and counts the attempt.
 	 */
 	async submit(onSubmit?: () => void | Promise<void>): Promise<SubmissionOutcome> {
-		if (!this.options.form.ready) return { succeeded: false, results: [] };
-		try {
-			const outcome = await runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
-				actions: this.activeActions(),
-				context: () => this.buildContext(),
-				hasMatching: (actions, trigger) => this.dispatcher.hasMatching(actions, trigger),
-				onAction: (action, data) => this.options.onAction?.(action, data),
-				onSubmit,
-			});
-			this.report('form_submit', outcome.results);
-			return outcome;
-		} finally {
-			this.submitAttempts += 1;
-		}
+		const outcome = await runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
+			actions: this.activeActions(),
+			context: () => this.buildContext(),
+			hasMatching: (actions, trigger) => this.dispatcher.hasMatching(actions, trigger),
+			onAction: (action, data) => this.options.onAction?.(action, data),
+			onSubmit,
+		});
+		this.report('form_submit', outcome.results);
+		return outcome;
 	}
 
-	/** Dispatches one trigger's actions for the current step; resolves empty when none are configured or before the form is ready. */
+	/** Dispatches one trigger's actions for the current step; resolves empty when none are configured. */
 	async dispatchTrigger(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
 		const actions = this.activeActions();
-		if (!this.options.form.ready || !this.dispatcher.hasMatching(actions, trigger)) return [];
+		if (!this.dispatcher.hasMatching(actions, trigger)) return [];
 		return this.dispatchActions({ actions, trigger, context: this.buildContext() });
 	}
 
@@ -163,7 +119,7 @@ export class FormActions {
 
 	private report(trigger: FormActionTrigger, results: unknown[]): void {
 		if (!results.length) return;
-		this.options.form.host.dispatchEvent(
+		this.options.host.dispatchEvent(
 			new CustomEvent('se-action-results', { bubbles: true, composed: true, detail: { trigger, results } }),
 		);
 	}
@@ -174,26 +130,16 @@ export class FormActions {
 
 	/**
 	 * @remarks
-	 * Radiant UI keys errors and touched state by flat field name, as the engine's context does. The store records only whether the form was
-	 * submitted, so `submitCount` counts the attempts Radiant UI reports instead:
-	 * `rui-invalid` for one that failed validation, and a finished submission
-	 * lifecycle, which is when React counts it too.
-	 * A reset clears the store's submitted flag and notifies the store, and the
-	 * change watcher then clears the count.
+	 * The container's errors and touched marks are flat by dotted path, as the engine's context is, so
+	 * they go in as they are. The attempt count is the instance's.
 	 */
 	private buildContext(): BuilderActionBaseContext {
-		const { form, currentStep } = this.options;
-		const { errors, touched } = form.formState;
-		const recorded = recordedErrors(errors);
+		const { container, currentStep, submitCount } = this.options;
+		const { values, errors, touched, isValid } = container.getSnapshot();
 		return buildFormActionContext({
 			config: this.options.config(),
-			values: form.getValues(),
-			formState: {
-				isValid: Object.keys(recorded).length === 0,
-				errors: recorded,
-				touched,
-				submitCount: this.submitAttempts,
-			},
+			values,
+			formState: { isValid, errors, touched, submitCount: submitCount() },
 			currentStep: currentStep(),
 			mountedAt: this.mountedAt,
 			form: this.actionForm,

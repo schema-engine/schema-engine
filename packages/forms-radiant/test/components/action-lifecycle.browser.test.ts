@@ -2,14 +2,14 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
 import type { FormConfigView, NormalizedFormConfig } from '@schema-engine/forms';
-import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
+import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
+import { createFormStateContainer } from '@schema-engine/forms/state-container';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormActions } from '@/adapters/radiant/form-actions';
 import { FormInstanceElement } from '@/components/form-instance.script';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
-import { provideTestFormStore } from '../adapters/test-form';
 import { testAction, type TestActionContext } from '../adapters/test-actions';
 
 afterEach(() => document.body.replaceChildren());
@@ -19,20 +19,31 @@ const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() 
 function mountActions(
 	engine: FormEngineRuntime,
 	config: FormConfigView,
-	options: { store?: FormStore; onAction?: ConstructorParameters<typeof FormActions>[0]['onAction'] } = {},
+	options: {
+		defaults?: Record<string, unknown>;
+		onAction?: ConstructorParameters<typeof FormActions>[0]['onAction'];
+	} = {},
 ) {
 	const host = document.createElement('div');
-	provideTestFormStore(host, options.store ?? new FormStore());
 	document.body.append(host);
-	const form = new FormController(host);
+	const container = createFormStateContainer({
+		elements: flattenStepElements(config.steps),
+		registry: engine.getValidationRegistry(),
+		validationMode: 'onSubmit',
+		reValidateMode: 'onChange',
+		defaults: options.defaults,
+	});
 	const formActions = new FormActions({
 		config: () => config,
 		engine,
-		form,
+		container,
+		host,
 		currentStep: () => 0,
+		submitCount: () => 0,
+		reset: () => container.reset(),
 		onAction: options.onAction,
 	});
-	return { host, form, formActions };
+	return { host, container, formActions };
 }
 
 function mountInstance(engine: FormEngineRuntime, config: NormalizedFormConfig) {
@@ -41,7 +52,7 @@ function mountInstance(engine: FormEngineRuntime, config: NormalizedFormConfig) 
 	instance.engine = engine;
 	instance.config = config;
 	instance.append(host);
-	return { host, instance, store: () => new FormController(host).store! };
+	return { host, instance, container: () => new FormController(host).container! };
 }
 
 const oneStep = (id: string) => ({ id, steps: [{ id: 'main', title: 'Main', elements: [] }] });
@@ -53,18 +64,14 @@ test('submission action callback receives the successful action and nested value
 	const onAction = vi.fn(async () => {
 		events.push('callback');
 	});
-	const { form, formActions } = mountActions(
+	const { formActions } = mountActions(
 		engine,
 		engine.defineForm({ ...oneStep('save'), actions: [{ id: 'save', $type: 'submit', endpoint: '/save' }] }),
 		{
-			store: new FormStore<FieldValues>({ defaultValues: { 'address.street': 'Main' } }),
+			defaults: { address: { street: 'Main' } },
 			onAction,
 		},
 	);
-	const ready = vi.spyOn(form, 'ready', 'get').mockReturnValue(false);
-	await expect(formActions.submit()).resolves.toEqual({ succeeded: false, results: [] });
-	expect(events).toEqual([]);
-	ready.mockRestore();
 
 	await expect(formActions.submit()).resolves.toMatchObject({ succeeded: true });
 
@@ -80,17 +87,17 @@ test('submission action callback receives the successful action and nested value
 test('a trigger no action answers builds no context and runs no validation', async () => {
 	const execute = vi.fn(async (_context: TestActionContext) => ({ success: true }));
 	const engine = createFormEngine({ elements: [], actions: [testAction('audit', ['form_submit'], execute)] });
-	const { form, formActions } = mountActions(
+	const { container, formActions } = mountActions(
 		engine,
 		engine.defineForm({ ...oneStep('quiet'), actions: [{ id: 'audit', $type: 'audit' }] }),
 	);
-	const getValues = vi.spyOn(form, 'getValues');
-	const trigger = vi.spyOn(form, 'trigger');
+	const getSnapshot = vi.spyOn(container, 'getSnapshot');
+	const validate = vi.spyOn(container, 'validate');
 
 	await expect(formActions.dispatchTrigger('form_change')).resolves.toEqual([]);
 
-	expect(getValues).not.toHaveBeenCalled();
-	expect(trigger).not.toHaveBeenCalled();
+	expect(getSnapshot).not.toHaveBeenCalled();
+	expect(validate).not.toHaveBeenCalled();
 	expect(execute).not.toHaveBeenCalled();
 });
 
@@ -105,8 +112,7 @@ test('an action context reports recorded errors as isValid and checks validity w
 			}),
 		],
 	});
-	const store = new FormStore<FieldValues>();
-	const { formActions } = mountActions(
+	const { container, formActions } = mountActions(
 		engine,
 		engine.defineForm({
 			id: 'checked',
@@ -121,14 +127,13 @@ test('an action context reports recorded errors as isValid and checks validity w
 			],
 			actions: [{ id: 'audit', $type: 'audit' }],
 		}),
-		{ store },
 	);
 
 	await formActions.dispatchTrigger('form_change');
 
 	expect(seen?.isValid).toBe(true);
 	await expect(seen?.form.checkValidity()).resolves.toBe(false);
-	expect(store.errors).toEqual({});
+	expect(container.getSnapshot().errors).toEqual({});
 });
 
 test('refreshes action context between submission triggers and keeps form operations stable', async () => {
@@ -146,9 +151,7 @@ test('refreshes action context between submission triggers and keeps form operat
 	const { formActions } = mountActions(
 		engine,
 		engine.defineForm({ ...oneStep('prepare'), actions: [{ id: 'prepare', $type: 'submit', endpoint: '/save' }] }),
-		{
-			store: new FormStore<FieldValues>({ defaultValues: { status: 'draft' } }),
-		},
+		{ defaults: { status: 'draft' } },
 	);
 
 	await formActions.submit();
@@ -260,35 +263,38 @@ test('the instance runs mount actions again after its engine changes', async () 
 	expect(executeA).toHaveBeenCalledTimes(1);
 });
 
-test('the instance rebuilds its actions when only the engine changes', async () => {
-	const executeA = vi.fn(async () => ({ success: true }));
-	const executeB = vi.fn(async () => ({ success: true }));
-	const engineA = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], executeA)] });
-	const engineB = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], executeB)] });
-	const config = engineA.defineForm({ ...oneStep('engine-only'), actions: [{ id: 'mount', $type: 'mount' }] });
-	const { instance } = mountInstance(engineA, config);
-	document.body.append(instance);
-	await expect.poll(() => executeA.mock.calls.length).toBe(1);
-
-	instance.engine = engineB;
-
-	await expect.poll(() => executeB.mock.calls.length).toBe(1);
-	expect(executeA).toHaveBeenCalledTimes(1);
-});
-
-test('re-rendering with an equal but new config does not fire form_mount again', async () => {
+test('a new config starts a fresh form: its container and its mount actions', async () => {
 	const execute = vi.fn(async () => ({ success: true }));
 	const engine = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], execute)] });
-	const define = () => engine.defineForm({ ...oneStep('equal-config'), actions: [{ id: 'mount', $type: 'mount' }] });
-	const { instance } = mountInstance(engine, define());
+	const define = () => engine.defineForm({ ...oneStep('new-config'), actions: [{ id: 'mount', $type: 'mount' }] });
+	const { instance, container } = mountInstance(engine, define());
 	document.body.append(instance);
 	await expect.poll(() => execute.mock.calls.length).toBe(1);
+	const first = container();
+	first.setValue('note', 'typed');
 
 	instance.config = define();
+
+	await expect.poll(() => execute.mock.calls.length).toBe(2);
+	expect(container()).not.toBe(first);
+	expect(container().getValue('note')).toBeUndefined();
+});
+
+test('the same config object, handed to the instance again, keeps the form', async () => {
+	const execute = vi.fn(async () => ({ success: true }));
+	const engine = createFormEngine({ elements: [], actions: [testAction('mount', ['form_mount'], execute)] });
+	const config = engine.defineForm({ ...oneStep('same-config'), actions: [{ id: 'mount', $type: 'mount' }] });
+	const { instance, container } = mountInstance(engine, config);
+	document.body.append(instance);
+	await expect.poll(() => execute.mock.calls.length).toBe(1);
+	const first = container();
+
+	instance.config = config;
 	await nextFrame();
 	await nextFrame();
 
 	expect(execute).toHaveBeenCalledTimes(1);
+	expect(container()).toBe(first);
 });
 
 test('form_change actions keep running after the instance reconnects', async () => {
@@ -302,20 +308,20 @@ test('form_change actions keep running after the instance reconnects', async () 
 			}),
 		],
 	});
-	const { instance, store: readStore } = mountInstance(
+	const { instance, container } = mountInstance(
 		engine,
 		engine.defineForm({ ...oneStep('changes'), actions: [{ id: 'changed', $type: 'change' }] }),
 	);
 	document.body.append(instance);
 	await expect.poll(() => changes.length).toBe(1);
-	const store = readStore();
 
-	store.setValue('note', 'first');
+	container().setValue('note', 'first');
 	await expect.poll(() => changes.at(-1)).toBe('first');
 	instance.remove();
 	document.body.append(instance);
-	await expect.poll(() => changes.filter((note) => note === 'first').length).toBe(2);
-	store.setValue('note', 'second');
+	await expect.poll(() => changes.length).toBe(3);
+	expect(changes.at(-1)).toBeUndefined();
+	container().setValue('note', 'second');
 	await expect.poll(() => changes.at(-1)).toBe('second');
 });
 
@@ -332,7 +338,7 @@ test('form_change actions run after mount when the renderer context supplies the
 	});
 	const renderer = new FormRendererElement();
 	renderer.engine = engine;
-	const { instance, store: readStore } = mountInstance(
+	const { instance, container } = mountInstance(
 		engine,
 		engine.defineForm({ ...oneStep('changes'), actions: [{ id: 'changed', $type: 'change' }] }),
 	);
@@ -340,9 +346,8 @@ test('form_change actions run after mount when the renderer context supplies the
 	renderer.append(instance);
 	document.body.append(renderer);
 	await expect.poll(() => changes.length).toBe(1);
-	const store = readStore();
 
-	store.setValue('note', 'typed');
+	container().setValue('note', 'typed');
 
 	await expect.poll(() => changes.at(-1)).toBe('typed');
 });

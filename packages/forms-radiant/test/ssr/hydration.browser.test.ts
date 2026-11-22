@@ -51,64 +51,62 @@ afterEach(() => {
 	expect(engineWarnings).toEqual([]);
 });
 
+const containerOf = async (field: HTMLElement) => {
+	await expect.poll(() => formOf(field).ready).toBe(true);
+	return formOf(field).container!;
+};
+
 test.each(['confirm', 'choice', 'accepted', 'amount'])(
 	'a cross-field rule on hydrated %s reports its message',
 	async (name) => {
 		const { root } = mount();
 		const field = root.querySelector(`se-field[name="${name}"]`) as FormFieldElement;
-		await expect.poll(() => typeof field.rules?.validate).toBe('function');
-		const store = formOf(field).store;
-		expect(store).toBeDefined();
+		const container = await containerOf(field);
 		const mismatch = name === 'amount' ? 7 : 'different';
-		store?.setValue('password', 'secret');
+		container.setValue('password', 'secret');
 		if (name === 'confirm') {
 			await userEvent.fill(field.querySelector('textarea')!, 'different');
 		} else {
-			store?.setValue(name, mismatch);
+			container.setValue(name, mismatch);
 		}
-		store?.markTouched(name);
-		await store?.validateField(name);
-		expect(store?.getState().errors[name]?.message).toBe('Must match password');
+		await container.validate([name]);
+		expect(container.getSnapshot().errors[name]?.message).toBe('Must match password');
 		root.remove();
 		document.body.append(root);
-		const reconnectedStore = formOf(field).store;
-		reconnectedStore?.setValue('password', 'changed');
-		reconnectedStore?.setValue(name, mismatch);
-		await reconnectedStore?.validateField(name);
-		expect(reconnectedStore?.getState().errors[name]?.message).toBe('Must match password');
+		const reconnected = await containerOf(field);
+		expect(reconnected).not.toBe(container);
+		reconnected.setValue('password', 'changed');
+		reconnected.setValue(name, mismatch);
+		await reconnected.validate([name]);
+		expect(reconnected.getSnapshot().errors[name]?.message).toBe('Must match password');
 	},
 );
 
-test('a hydrated field has its cross-field validator from first connect when the engine is bound before upgrade', async () => {
+test('a hydrated form validates with the engine bound before upgrade', async () => {
 	const { root } = mount({ bindBeforeUpgrade: true });
 	const field = root.querySelector('se-field[name="confirm"]') as FormFieldElement;
-
-	await expect.poll(() => typeof field.rules?.validate).toBe('function');
-	const store = formOf(field).store!;
-	store.setValue('password', 'secret');
-	store.setValue('confirm', 'different');
-	store.markTouched('confirm');
-	await store.validateField('confirm');
-	expect(store.getState().errors.confirm?.message).toBe('Must match password');
+	const container = await containerOf(field);
+	container.setValue('password', 'secret');
+	container.setValue('confirm', 'different');
+	await container.validate(['confirm']);
+	expect(container.getSnapshot().errors.confirm?.message).toBe('Must match password');
 });
 
 test('hydrated submit delivers the nested value tree', async () => {
 	const { instance, form } = mount();
 	const onSubmit = vi.fn();
 	instance.onSubmit = onSubmit;
-	await expect.poll(() => typeof form.onSubmit).toBe('function');
-	for (const field of form.querySelectorAll('se-field:not([name="address.street"])')) field.remove();
-	const field = form.querySelector('se-field') as FormFieldElement;
-	formOf(field).store?.setValue('address', { street: 'old' });
+	const field = form.querySelector('se-field[name="address.street"]') as FormFieldElement;
+	await containerOf(field);
 	await userEvent.fill(field.querySelector('input')!, 'x');
 	form.querySelector('form')!.requestSubmit();
-	await expect.poll(() => onSubmit.mock.calls).toEqual([[{ address: { street: 'x' } }]]);
+	await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+	expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ address: { street: 'x' } });
 });
 
 test('a form without onSubmit keeps native submission until a callback is set', async () => {
 	const { instance, form } = mount();
-	await expect.poll(() => typeof form.onSubmit).toBe('function');
-	for (const field of form.querySelectorAll('se-field')) field.remove();
+	await containerOf(form.querySelector('se-field') as FormFieldElement);
 	form.action = '/native';
 	const nativeSubmit = vi.spyOn(form.querySelector('form')!, 'submit').mockImplementation(() => {});
 	form.querySelector('form')!.requestSubmit();
@@ -165,15 +163,13 @@ test('onChange receives a nested value tree and reconnects without duplicate wat
 test.each([
 	['contact', 'not an email', 'email'],
 	['phone', '+1555', 'phone'],
-])('hydrated %s reports the rule its registration attaches by default', async (name, value, message) => {
+])('hydrated %s reports the rule its registration attaches by default', async (name, value, type) => {
 	const { root } = mount();
 	const field = root.querySelector(`se-field[name="${name}"]`) as FormFieldElement;
-	await expect.poll(() => formOf(field).ready).toBe(true);
-	const store = formOf(field).store!;
-	store.setValue(name, value);
-	store.markTouched(name);
-	await store.validateField(name);
-	expect(store.getState().errors[name]?.message).toBe(message);
+	const container = await containerOf(field);
+	container.setValue(name, value);
+	await container.validate([name]);
+	expect(container.getSnapshot().errors[name]?.type).toBe(type);
 });
 
 test('a hydrated constraint host keeps its server node and follows the form values', async () => {

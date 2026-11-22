@@ -3,7 +3,6 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { type AppearanceSelection, type ElementGridConfig } from '@schema-engine/layout';
-import type { FieldRulesSource } from '@/lib/field-rules';
 
 export interface FieldGroupProps {
 	/** Omit when the control renders its own label, as a checkbox does. */
@@ -13,7 +12,14 @@ export interface FieldGroupProps {
 	hiddenLabel?: boolean;
 	/** Places the label after the control, as a switch does. */
 	labelAfter?: boolean;
+	/** Whether the label shows the required marker, from the config's rules or a render overlay. */
 	required?: boolean;
+	/**
+	 * Whether the config's own rules require the field, which a constraint can lift, unlike a render overlay.
+	 *
+	 * @remarks It is what the field announces as required (`aria-required`) before a constraint says otherwise.
+	 */
+	authoredRequired?: boolean;
 	description?: string;
 	class?: string;
 	children: JsxRenderable;
@@ -22,7 +28,6 @@ export interface FieldGroupProps {
 	/** The field's resolved appearance, emitted on the host as `data-se-<axis>` attributes. */
 	appearance?: AppearanceSelection;
 	name?: string;
-	validation?: FieldRulesSource;
 	defaultValue?: unknown;
 	disabled?: boolean;
 }
@@ -55,6 +60,7 @@ export function FieldGroup({
 	hiddenLabel = false,
 	labelAfter = false,
 	required = false,
+	authoredRequired = false,
 	description,
 	class: className,
 	children,
@@ -62,7 +68,6 @@ export function FieldGroup({
 	appearance,
 	grid,
 	name,
-	validation,
 	defaultValue,
 	disabled,
 }: FieldGroupProps) {
@@ -76,7 +81,7 @@ export function FieldGroup({
 	return (
 		<FormField
 			name={name ?? htmlFor ?? label ?? ''}
-			validation={validation}
+			required={authoredRequired}
 			defaultValueData={defaultValue !== undefined ? JSON.stringify(defaultValue) : undefined}
 			disabled={disabled}
 			class={className}

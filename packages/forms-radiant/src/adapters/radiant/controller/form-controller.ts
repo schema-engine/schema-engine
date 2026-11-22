@@ -1,86 +1,97 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
-import { FormStore, formContext } from '@ecopages/radiant-ui/form';
-import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
-import { expandValues, flattenValues, readValue } from './values';
-import { writeValue, isWritingValue } from './write-value';
-import { getFieldArray } from './field-array';
+import { fromExternalStore, type Signal } from '@ecopages/signals';
+import {
+	selectError,
+	toFieldArrayValue,
+	type FormStateContainer,
+	type FormStateSnapshot,
+} from '@schema-engine/forms/state-container';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { describeIssue } from '@/lib/describe-issue';
 import type { FieldArrayValue, FormFieldValue } from '../../types';
 
 /**
- * Form operations scoped to the host's Radiant UI `formContext`.
+ * Form operations scoped to the `se-form-instance` that contains the host.
  *
  * @remarks
- * Place the host inside `rui-form` (or pass `rui-form` itself). The controller
- * asks `formContext` on the host, then on ancestors, until a store answers. It
- * does not search descendants or the document. Reads are snapshots. `watchField`
- * and `watchForm` subscribe and return cleanup functions. `connect` waits for
- * context readiness and presentation updates and keeps existing watch
- * subscriptions, each on the store it subscribed to; call `disconnect` when a
- * manually managed host disconnects or moves to another form, which also ends
- * every watch subscription.
+ * The instance owns one {@link FormStateContainer} and provides it on its own context, so a host reads
+ * the form it belongs to and there is no global active form. Place the host inside the instance (or in
+ * the form a `FormRenderer` renders). The container is the engine's own, with nested values, so a
+ * dotted path (`contacts.0.email`) names a value in every read and write and nothing is translated.
+ *
+ * Reads are snapshots; follow changes with {@link FormController.select}, which returns a signal
+ * over a selector of the snapshot, or with `connect`. A new container replaces the old one when the
+ * instance's config or engine changes, so the controller resolves it from the context on each use
+ * and keeps no copy. `connect` waits for the container and requests an update on each change; call
+ * `disconnect` when a manually managed host disconnects or moves to another form.
  */
 export class FormController {
 	private unsubscribeContext?: () => void;
-	private formStore?: FormStore;
-	private readonly subscriptions = new Set<() => void>();
+	private unsubscribeContainer?: () => void;
+	private subscribed?: FormInstanceContextValue;
 
 	constructor(readonly host: HTMLElement) {}
 
 	get ready(): boolean {
-		return this.store !== undefined;
+		return this.container !== undefined;
 	}
 
-	/** Live Radiant UI store from `formContext`, once the form is ready. */
-	get store(): FormStore | undefined {
-		if (!this.formStore) {
-			const resolved = this.resolveStore();
-			if (resolved) this.formStore = resolved.store;
-		}
-		return this.formStore;
+	/** The form's state container, once the instance has one. */
+	get container(): FormStateContainer | undefined {
+		return this.context()?.container;
 	}
 
-	private requireStore(): FormStore {
-		const store = this.store;
-		if (!store) throw new Error('FormController requires a connected rui-form.');
-		return store;
+	private context(): FormInstanceContextValue | undefined {
+		if (this.unsubscribeContext) return this.subscribed;
+		return this.resolve()?.context;
 	}
 
-	private resolveStore(): { target: HTMLElement; store: FormStore } | undefined {
+	/** The nearest provider of the instance context at or above the host, and what it holds. */
+	private resolve(): { target: HTMLElement; context: FormInstanceContextValue } | undefined {
 		let current: Node | null = this.host;
 		while (current) {
 			if (current instanceof HTMLElement) {
-				const store = this.readStore(current);
-				if (store) return { target: current, store };
+				const context = this.read(current);
+				if (context) return { target: current, context };
 			}
 			current = current.parentNode;
 		}
 		return undefined;
 	}
 
-	private providerHost(): HTMLElement {
-		return this.resolveStore()?.target ?? this.host;
-	}
-
-	private readStore(target: HTMLElement): FormStore | undefined {
-		let store: FormStore | undefined;
+	private read(target: HTMLElement): FormInstanceContextValue | undefined {
+		let value: FormInstanceContextValue | undefined;
 		target.dispatchEvent(
-			new ContextSubscriptionRequestEvent(formContext, (context) => {
-				store = context.store;
+			new ContextSubscriptionRequestEvent(formInstanceContext, (context) => {
+				value = context;
 			}),
 		);
-		return store instanceof FormStore ? store : undefined;
+		return value;
 	}
 
+	private requireContainer(): FormStateContainer {
+		const container = this.container;
+		if (!container) throw new Error('FormController requires a connected se-form-instance.');
+		return container;
+	}
+
+	/**
+	 * Calls `onChange` when the form's container becomes available or is replaced, and after each change of
+	 * the container's state.
+	 */
 	connect(onChange: () => void = () => {}): void {
-		this.releaseContext();
-		const target = this.providerHost();
-		target.dispatchEvent(
+		this.disconnect();
+		(this.resolve()?.target ?? this.host).dispatchEvent(
 			new ContextSubscriptionRequestEvent(
-				formContext,
+				formInstanceContext,
 				(context, unsubscribe) => {
-					this.unsubscribeContext = unsubscribe;
-					this.formStore = context.store instanceof FormStore ? context.store : undefined;
-					if (context.ready && this.formStore && !isWritingValue(this.formStore)) onChange();
+					if (unsubscribe) this.unsubscribeContext = unsubscribe;
+					const previous = this.subscribed?.container;
+					this.subscribed = context;
+					if (context?.container === previous) return;
+					this.unsubscribeContainer?.();
+					this.unsubscribeContainer = context?.container?.subscribe(onChange);
+					if (context?.container) onChange();
 				},
 				undefined,
 				true,
@@ -92,84 +103,76 @@ export class FormController {
 	}
 
 	disconnect(): void {
-		this.releaseContext();
-		for (const unsubscribe of this.subscriptions) unsubscribe();
-		this.subscriptions.clear();
-	}
-
-	private releaseContext(): void {
 		this.unsubscribeContext?.();
 		this.unsubscribeContext = undefined;
-		this.formStore = undefined;
+		this.unsubscribeContainer?.();
+		this.unsubscribeContainer = undefined;
+		this.subscribed = undefined;
 	}
 
-	getValues(): Record<string, unknown> {
-		return expandValues(this.requireStore().getValues());
+	/** The nested values now; the same object until a value changes. */
+	getValues(): Readonly<Record<string, unknown>> {
+		return this.requireContainer().getSnapshot().values;
 	}
 
-	getValue(name: string): unknown {
-		return readValue(this.requireStore().getValues(), name);
+	getValue(path: string): unknown {
+		return this.requireContainer().getValue(path);
 	}
 
-	setValue(name: string, value: unknown): void {
-		writeValue(this.requireStore(), name, value);
+	setValue(path: string, value: unknown): void {
+		this.requireContainer().setValue(path, value);
 	}
 
+	/** Restores the defaults, or replaces them with `values` first, and clears the form's field state. */
 	reset(values?: Record<string, unknown>): void {
-		this.requireStore().reset(values === undefined ? undefined : flattenValues(values));
+		this.requireContainer().reset(values);
 	}
 
-	get formState() {
-		return { ...this.requireStore().getState(), values: this.getValues() };
+	/** The container's snapshot now. */
+	get formState(): FormStateSnapshot {
+		return this.requireContainer().getSnapshot();
 	}
 
+	/** Validates `names` (the whole form when omitted) and resolves whether they are valid. */
 	async trigger(names?: string | string[]): Promise<boolean> {
-		const store = this.requireStore();
-		if (names === undefined) return store.validateAll();
-		const results = await Promise.all(
-			(Array.isArray(names) ? names : [names]).map((name) => store.validateField(name)),
-		);
-		return results.every(Boolean);
+		const paths = names === undefined ? undefined : Array.isArray(names) ? names : [names];
+		return this.requireContainer().validate(paths);
 	}
 
-	field(name: string): FormFieldValue {
-		const store = this.requireStore();
+	/**
+	 * A signal over a selector of the container's snapshot.
+	 *
+	 * @remarks
+	 * Selectors are pure functions of the snapshot, such as `selectFieldState` or
+	 * `(snapshot) => snapshot.rowIds['contacts']?.length ?? 0`. The signal notifies only when the
+	 * selected value changes. Read it once subscribed, in a computed or an effect, because an
+	 * unsubscribed read answers with the container's server snapshot. A new container, after a config change,
+	 * is a new form: select again from `connect`'s callback.
+	 */
+	select<Selected>(selector: (snapshot: FormStateSnapshot) => Selected): Signal<Selected> {
+		return fromExternalStore(this.requireContainer(), selector);
+	}
+
+	field(path: string): FormFieldValue {
+		const context = this.context();
+		const container = this.requireContainer();
 		return {
-			name,
+			name: path,
 			get value() {
-				return readValue(store.getValues(), name);
+				return container.getValue(path);
 			},
 			get error() {
-				return store.getFieldError(name);
+				const issue = selectError(container.getSnapshot(), path);
+				return issue && describeIssue(issue, path, context?.formatIssue);
 			},
-			onChange: (value) => writeValue(store, name, value),
-			onBlur: () => {
-				void store.handleFieldBlur(name);
-			},
+			onChange: (value) => container.setValue(path, value),
+			onBlur: () => container.blur(path),
 		};
 	}
 
-	fieldArray(name: string): FieldArrayValue {
-		return getFieldArray(this.requireStore(), name);
-	}
-
-	watchField(name: string, listener: (value: unknown) => void): () => void {
-		return this.watchForm((values) => listener(getValueAtPath(values, name)));
-	}
-
-	/** The listener receives an initial snapshot and each subsequent store notification. */
-	watchForm(listener: (values: Record<string, unknown>) => void): () => void {
-		const store = this.requireStore();
-		const notify = () => {
-			if (!isWritingValue(store)) listener(expandValues(store.getValues()));
-		};
-		const unsubscribeStore = store.subscribe(notify);
-		const unsubscribe = () => {
-			unsubscribeStore();
-			this.subscriptions.delete(unsubscribe);
-		};
-		this.subscriptions.add(unsubscribe);
-		notify();
-		return unsubscribe;
+	/** The row commands of the array at `path`, with its current rows. */
+	fieldArray(path: string): FieldArrayValue {
+		const container = this.requireContainer();
+		return toFieldArrayValue(container.getSnapshot().rowIds[path], container.fieldArray(path));
 	}
 }

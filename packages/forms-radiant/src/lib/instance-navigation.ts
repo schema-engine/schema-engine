@@ -1,15 +1,21 @@
 import type { FormInstanceElement } from '@/components/form-instance.script';
 import type { FormActions } from '@/adapters/radiant/form-actions';
-import type { FormController } from '@/adapters/radiant/controller';
+import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { collectStepFieldPaths, createStepMachine, createStepNavigator } from '@schema-engine/forms';
-import { validateCurrentStepFields } from './validate-current-step';
+import type { FormStateContainer } from '@schema-engine/forms/state-container';
+import { logger } from './logger';
 
 /**
- * @remarks Step triggers go to the instance's actions; a form that configures none dispatches nothing.
+ * @remarks
+ * Step triggers go to the instance's actions; a form that configures none dispatches nothing. A step is
+ * checked with the container, over the step's own fields and with the native validity of the controls, and a
+ * failed check re-validates those fields as the form's `reValidateMode` says. It marks nothing submitted, so a
+ * later step stays clean.
  */
 export function createInstanceNavigation(
 	host: FormInstanceElement,
-	readForm: () => FormController | undefined,
+	readContainer: () => FormStateContainer | undefined,
+	readRuiForm: () => RuiFormElement | null,
 	readActions: () => FormActions | undefined,
 ) {
 	const { navigate, cancel } = createStepNavigator({
@@ -19,12 +25,16 @@ export function createInstanceNavigation(
 			host.machine = machine;
 		},
 		validateStep: async (index) => {
-			const form = readForm();
-			if (!form?.store) return false;
-			return validateCurrentStepFields(
-				form.store,
-				collectStepFieldPaths(host.config.steps[index], form.getValues()),
-			);
+			const container = readContainer();
+			const ruiForm = readRuiForm();
+			if (!container || !ruiForm) return false;
+			const paths = collectStepFieldPaths(host.config.steps[index], container.getSnapshot().values);
+			try {
+				return await container.validate(paths, { native: ruiForm.readNativeValidity() });
+			} catch (error) {
+				logger.error('Step validation could not run', error);
+				return false;
+			}
 		},
 		dispatchTrigger: async (trigger) => readActions()?.dispatchTrigger(trigger),
 	});
@@ -45,7 +55,7 @@ export function createInstanceNavigation(
 		},
 		goToStep: (index: number): Promise<void> => navigate({ type: 'go-to', index }),
 		goToNextStep: async (): Promise<void> => {
-			if (readForm()?.store) await navigate({ type: 'next' });
+			if (readContainer()) await navigate({ type: 'next' });
 		},
 		goToPreviousStep: (): Promise<void> => navigate({ type: 'previous' }),
 		cancel,
