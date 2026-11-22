@@ -2,7 +2,7 @@
 
 The engine exports reusable helpers for paths, effective rules, and validation.
 `validateFormValues` takes `ValidationElementTree`, and
-`collectStepFieldPaths` takes `ValidationStep`, both accepting structural read-only views or normalized snapshots.
+`collectStepFieldPaths` and `resolveParticipation` take `ValidationStep` (`id`, `elements` and `constraints`), all accepting structural read-only views or normalized snapshots.
 
 - `collectStepFieldPaths(step, values)` keeps container paths whole and expands
   field templates for live array rows.
@@ -20,26 +20,28 @@ The engine exports reusable helpers for paths, effective rules, and validation.
   fails. A field inside a fieldset or array whose `require` constraint holds is required, at any
   depth; `effectiveRulesFor` and `validateFieldValue` take that as
   `inheritedRequired`. A container's own `required` rule does not pass down. It skips the paths
-  `resolveExcludedPaths` lists: fields hidden by a `show` or `hide` constraint, disabled fields (authored or
-  by a constraint) and everything inside them. `planFormValidation` and `runValidationPlan` are its two
+  that take no part (`resolveParticipation`, below). `planFormValidation` and `runValidationPlan` are its two
   halves, for a caller that needs to know the planned paths before it runs.
+- `resolveParticipation(steps, values)` is the one rule for "does this field count": it returns
+  `{ excluded, skippedSteps, visible }`. A step its `show`/`hide` constraints hide is skipped and excludes the
+  fields it holds; a field hidden by a `show` or `hide` constraint, a disabled field (authored or by a
+  constraint) and everything inside them are excluded. Steps and fields resolve in order and `visible` is the
+  value tree with the excluded paths absent, which is what later constraints (including `require`) read, so a
+  skipped step that still holds `'yes'` cannot keep a later field shown or required.
+  `resolveExcludedPaths(elements, values)` is its single-step case. The container applies the same rule.
 
 For `validateFormValues`, omitted `names` validates every named field. A list validates only the
 requested paths and their descendants, or only those paths with `exactNames`; an empty list validates nothing.
 
-React and Radiant delegate to these helpers. `createStepNavigator` owns the wizard's
-in-flight guard, the `step_leave` / `step_change` / `step_enter` order and `cancel`, which a
-renderer calls on every step state reset so a navigation in flight neither writes state nor
-dispatches after it; a renderer supplies its step state, step validation and trigger dispatch.
-`collectStepActions` gives the actions a trigger dispatches on the current step: the
-form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigation)). `runSubmissionLifecycle` accepts either a
-fixed context or a factory; use a factory when each submission trigger needs current form
-values and validation state. Its optional `hasMatching(actions, trigger)` skips a trigger no
-action answers, so no context is built for it; `ActionDispatcher.hasMatching` is the check. Its optional `onSubmit()` runs after the submit actions and before the success or error trigger; the function resolves with a `failure` instead of rejecting, and dispatches `form_submit_complete` once ([`createSubmissionGuard`](./submission-lifecycle.ts) admits one submission at a time). Its optional `onAction(action, data)` callback runs after each
-successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
-and later submit actions stop before error and completion triggers run. Submit sequence entries are dispatched in order; grouped actions run concurrently. Each returned result carries its `actionId`.
-`buildFormActionContext` takes `errors` and `touched` by dotted path; a renderer that keeps them in
-another shape converts them first. `validateFieldValue` and `validateFormValues`
+React and Radiant delegate to these helpers through [`createFormRuntime`](../runtime/README.md), which owns the
+wizard's lock, the `step_leave` / `step_change` / `step_enter` order, the submission sequence and every action
+dispatch; none of them is a renderer's to call. `step-machine.ts` holds its pure part: step state by id
+(`startProgress`, `moveProgress`, `deriveStepStates`, `stepAfter`, `stepBefore`, `stepsWithErrors`), where only
+`visited` and `complete` are stored and `skipped` and `invalid` are derived.
+`collectStepActions(config, stepId)` gives the actions a trigger dispatches on the current step: the
+form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigation)).
+`buildFormActionContext` takes `errors` and `touched` by dotted path, and the current step as its id, its
+position among the active steps and their number; the context carries `stepId`, `currentStep` and `totalSteps`. `validateFieldValue` and `validateFormValues`
 require a `debounceScope` owned by the form.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
@@ -47,7 +49,7 @@ The public usage examples are in the [forms package README](../../README.md#engi
 ## Form configuration validation
 
 `validateForm` and `safeValidateForm` share one pipeline (`safeValidateFormConfig` in `lib/validate-form.ts`, which also re-exports the public pieces). The checks it
-runs live next to it in `lib/validate-form/`: `issues.ts` (issue types and path helpers), `validation-error.ts`
+runs live next to it in `lib/validate-form/`: `step-checks.ts` (unique step ids; a step constraint reads only non-row fields of earlier steps, so the first step has none), `issues.ts` (issue types and path helpers), `validation-error.ts`
 (`FormValidationError`, `formatIssuePath`), `schema-issues.ts` (schema issues to form issues, including the
 closest-union-branch choice), `grid-checks.ts` (named placement, areas and template checks), `parse-elements.ts`
 (elements and actions) and `parse-view.ts` (the view recipe).

@@ -133,54 +133,33 @@ has recipes for Node, Bun, Vite and fetch.
 
 The styling guides are in the docs: [Styling and layout](../../apps/docs/src/content/docs/styling/overview.mdx), [Layout themes](../../apps/docs/src/content/docs/styling/layout-themes.mdx) and [Registries and the catalog](../../apps/docs/src/content/docs/registry/registries.mdx).
 
-### Shared step and submission logic
+### The form runtime
 
-`createInitialStepStates(totalSteps)` creates completion, validity, and visitation arrays;
-the first step starts visited. `createStepMachine(config)` returns a reducer for `next`,
-`previous`, and `go-to` actions. A `next` action receives the caller-supplied `isValid`
-value; the reducer does not validate fields. When it is true on a non-final step, the
-reducer completes the active step and advances. On the final step, it updates validity
-without marking that step complete or advancing. When `isValid` is false, it leaves the
-active step in place. Pass the resulting state to `buildViewModel` as `stepStates`; `buildViewSteps(steps, currentStep, stepStates)` is the step projection `buildViewModel` and Radiant's blocks share.
+`createFormRuntime({ engine, config, defaults, snapshot, host, onSubmit, onChange, onAction, onActionResults })` is
+the one lifecycle every renderer shares: it builds the form's container and owns the submission, the wizard's
+steps and navigation, `form_mount` and `form_change`, and every action dispatch. A renderer only supplies the
+`host` (`focus(paths)`, and `sync` and `submitNatively` where it needs them). See the
+[runtime guide](./src/runtime/README.md) for the API, the outcomes and the rules (one lock, the reset rule,
+submit as Next, skipped steps).
 
-`createStepNavigator({ reduce, getState, setState, validateStep, dispatchTrigger })` wraps
-that reducer in the navigation both renderers share. It returns `{ navigate, cancel }`.
-`navigate(action)` takes `{ type: 'next' }` without `isValid`, `{ type: 'previous' }` or
-`{ type: 'go-to', index }`. `next` awaits `validateStep` for the
-active step before reducing. A request made while another is in flight resolves without doing anything, so a
-double click on Next advances one step. When the step index changes, `step_leave` runs
-before the new state is set and `step_change` then `step_enter` run after it. Call
-`cancel()` when you reset the step state: the navigation in flight then writes no state
-and dispatches no further trigger, and the next request is accepted without waiting for it.
+A step takes `constraints` (`show` or `hide`, on fields of earlier steps) to be skipped, and the form takes
+`navigation: 'linear' | 'free'`. `collectStepActions(config, stepId)` lists the actions a trigger dispatches
+while that step is current: the form's `actions`, then the step's own. `hasConfiguredActions(config)`
+reports whether the form or any step configures one. Steps no longer accept `rules`, `onStepEnter`,
+`onStepLeave` or `onStepValidate`; those never ran. Move an enter or leave hook into the step's `actions` with
+`triggers: ['step_enter']` or `['step_leave']`; `onStepValidate` has no replacement. A JSON config that still
+sets them has the keys stripped.
 
-`collectStepActions(config, stepIndex)` lists the actions a trigger dispatches while that
-step is current: the form's `actions`, then the step's own. `hasConfiguredActions(config)`
-reports whether the form or any step configures one. Steps no longer accept
-`onStepEnter`, `onStepLeave` or `onStepValidate`; those hooks never ran. Move an enter or
-leave hook into the step's `actions` with `triggers: ['step_enter']` or `['step_leave']`;
-`onStepValidate` has no replacement. A JSON config that still sets them has the keys stripped.
-
-Action lists may contain inner arrays for parallel groups; see the [actions guide](./src/actions/README.md). `runSubmissionLifecycle(dispatch, { actions, context })` dispatches the form submit start,
-submit, success or error, and complete triggers. Pass a fixed `context` when every trigger
-uses the same snapshot, or a context factory when each trigger needs a fresh form-state
-snapshot. Pass `onAction(action, data)` to run a callback after each successful submit
-action. If it rejects, that action becomes a fatal failure and later submit actions stop.
-Pass `onSubmit()` to run the consumer's submission callback inside the sequence, after the submit actions and before the
-success or error trigger, and only when the actions succeeded; a rejection fails the submission.
-The function never rejects: a rejected `onSubmit` or trigger dispatch resolves with `succeeded: false` and a
-`failure` (`{ phase: 'callback' | 'trigger', error }`), and one recovery path dispatches `form_submit_error`
-(unless it was already tried) and `form_submit_complete` exactly once, even when that dispatch rejects.
-Once `onSubmit` and `form_submit_success` have resolved, the submission is saved: a later failure of `form_submit_complete` is recorded in
-`failure` and `succeeded` stays true.
-`createSubmissionGuard()` returns a guard whose `run(task)` ignores a call while one is pending and releases on every way out; a renderer
-wraps validation and the lifecycle in one `run`, so a second submit is dropped before it validates.
-The returned `succeeded` flag is false when a submit action fails with
-`shouldContinue: false`, `onAction` rejects, `onSubmit` rejects or a trigger dispatch before the submission is saved fails; a failed action that allows continuation
-does not fail the submission. Each returned result carries the `actionId` of the
-configured action that produced it.
+Action lists may contain inner arrays for parallel groups; see the [actions guide](./src/actions/README.md).
+The runtime dispatches the form submit start, submit, success or error, and complete triggers; `onAction(action,
+data)` runs after each successful submit action, and if it rejects that action becomes a fatal failure and later
+submit actions stop. `onSubmit` runs after the submit actions and before the success or error trigger, and only
+when the actions succeeded; a rejection fails the submission. A submission that failed leaves its reason in
+`snapshot.submission.failures` as issues the form's one formatter words. Each result of the submit actions
+carries the `actionId` of the configured action that produced it.
 `buildFormActionContext` is an exported utility that constructs a form action
 context with form data and timing metadata, including a stable step start time that resets
-when the active step changes. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
+when the current step changes; it carries the current `stepId`, and `currentStep` and `totalSteps` count the steps that are not skipped. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
 The form state no longer accepts `touchedFields` or `isSubmitted`: pass `isValid`, `touched` and
 `submitCount`, all required; the context's `isValid` is the one passed, the container's `snapshot.isValid` (see [action context form state](src/engine/README.md#action-context-form-state)).
@@ -555,12 +534,12 @@ adapter.
 
 ## Who owns visual chrome
 
-| Layer                                                           | Owns                                                                                                                                                           |
-| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form state container (`@schema-engine/forms/state-container`), `FieldArrayValue` — no widget `$type` schemas |
-| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/hooks`; the form state is the engine's container                                                          |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                    |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                         |
+| Layer                                                           | Owns                                                                                                                                                                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form runtime (`createFormRuntime`), the form state container (`@schema-engine/forms/state-container`), `FieldArrayValue` — no widget `$type` schemas |
+| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/hooks`; the form state is the engine's container                                                                                                  |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                                                            |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                                                                 |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 

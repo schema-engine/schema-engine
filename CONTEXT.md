@@ -46,20 +46,18 @@ into the container. The instance provides the container on `formInstanceContext`
 The application gives the engine a `formatIssue` that turns an issue (`type`, `ruleId`, `params`) into
 text, and a renderer may override it for its forms (renderer over engine);
 without one an issue shows its own `message` and otherwise nothing.
-`se-form-instance` coordinates one submission per form instance through `container.submit()`: it owns the submitting state, the attempt count and the submission events, and runs the configured form actions
-through a plain `FormActions` object built for its config and engine, not through
-elements that find each other in the document. The app binds the client engine by
+`se-form-instance` creates the form's **form runtime** (below), mounts it on connect and unmounts it on disconnect, and keeps only what an element can do: the focus, `rui-form`'s `sync`, the native submit with its CSRF field and the `se-action-*` events. The submission, the steps and every action dispatch are the runtime's, not those of elements that find each other in the document. The app binds the client engine by
 assigning `engine` to `se-form-renderer`, before or after it upgrades, and the instance,
 array and fields follow the renderer's context, so they catch up with an engine that
 arrives or changes later.
 
 ## React form state
 
-The form's state container is created once per form instance, and its lifetime follows the
+The form's **form runtime** (below) is created once per form instance, and its lifetime follows the
 identity of the normalized form config passed to `FormRenderer`. Replacing that config starts a
-fresh container with its defaults and step state. The container is the only form state: the hooks
+fresh runtime and container with its defaults and step state. The container is the only form state: the hooks
 read it with `useSyncExternalStore` through the engine's pure selectors, so a field re-renders only
-for its own value, error or flags. The change effect subscribes to the container and compares its
+for its own value, error or flags. The runtime's change watch compares the container's
 `values`, so a parent render by itself does not call `onChange` or dispatch a `form_change` action.
 
 An issue (a field's, or why a submission failed) shows as the text of the `formatIssue` formatter set on `FormProvider`/`FormRenderer` for one form, else on the engine, else as its own `message`, else as nothing: the rule type is never shown, so a field
@@ -129,26 +127,82 @@ A multi-step form that omits `view` gets the engine's **default wizard recipe**
 Engine build rejects a default that is not a wizard recipe. When the default is not
 registered, `validateForm` warns once per form id and every step renders on one page.
 
+## Form runtime
+
+`createFormRuntime` (`@schema-engine/forms`) is one framework-free instance per rendered form, shared by
+every renderer, so no renderer keeps its own copy of the lifecycle. It builds the **container** from the
+normalized config, the engine's validation registry and the defaults, and owns what is around it: the
+**submission** (`status`, `failures`, `submitCount`), the one lock, `form_mount`, `form_change` and
+`onChange` (only when the values change), every action dispatch, the wizard's step state and navigation,
+the action context and submit as Next. The container owns values, field state, validation, participation
+(including skipped steps), the captured submission and `reset()`. The renderer owns the element and its
+context, focus, `sync`, the native submit and its events, and passes them in as the runtime's `host`.
+
+Every command (`next`, `back`, `goTo`, `submit`) returns one string of `FormRuntimeOutcome`: `moved`,
+`submitted`, `failed`, `invalid`, `overtaken`, `refused`, `busy` or `cancelled`. Why a submission failed is in
+`snapshot.submission.failures`, never in the return value. One lock covers navigation and submission, so a
+command made while another runs is `busy`; a revoked command checks after every await and is `cancelled`.
+
+**Reset rule.** `container.reset()` is the only reset, and there is no `runtime.reset()`: the container's
+snapshot carries `generation`, which goes up on every reset, and when it changes the runtime revokes the
+command in flight, returns the submission to idle with `submitCount` 0 and the steps to the first, firing no
+step trigger. An action's `form.reset`, `useFormContext().reset`, a native reset and
+`FormController.container.reset()` therefore reset everything.
+
 ## Wizard navigation
 
-The engine's step navigator (`createStepNavigator`) owns wizard navigation for every
-renderer: it ignores a request while another is in flight, validates the active step
-before `next`, and dispatches `step_leave` before the step changes and `step_change`
-then `step_enter` after. A renderer supplies where its step state lives, how to
-validate a step and how to dispatch a trigger, so a new renderer inherits the guard and the trigger order.
-A step state reset calls the navigator's `cancel`: the navigation in flight writes no
-state and dispatches no further trigger, and the next request is accepted at once.
-Radiant cancels when its config changes or the instance disconnects or reconnects; React
-cancels on unmount, which a replaced config causes.
+The form runtime owns wizard navigation for every renderer. Steps are keyed by **step id** (config
+validation rejects duplicates). The runtime stores only `current`, `visited` and `complete`; a step's
+`skipped` and `invalid` flags are derived from the values and the errors, so they cannot go stale. The
+snapshot's `steps` lists every step in order with those flags, and **active** steps are those not skipped:
+progress, "step 2 of 3" and a stepper count only them.
+
+- `next()` syncs the host, validates the current step's fields, focuses its errors and stays when they fail
+  (`invalid`, or `overtaken` when an edit outran the check, which focuses nothing), and otherwise marks the
+  step complete and moves to the next active step. On the last active step it is `refused`. It never marks
+  the form submitted.
+- `back()` never validates and moves to the previous active step.
+- `goTo(id)` refuses a skipped or unknown step; going back is always allowed; going forward follows the
+  form's **navigation setting**, `navigation: 'linear' | 'free'` (default `'linear'`). Linear reaches only
+  visited steps and validates the current step and every active step in between, landing on the first that
+  fails; free reaches any active step without validating. `next()` validates in both.
+- `submit()` before the last active step acts as `next()` in every renderer (**submit as Next**), so Enter in
+  a field of an early step is a Next. On the last active step it runs `container.submit()` (every active step
+  takes part), then the actions, then `onSubmit`. When validation fails it moves to the first active step
+  with an error, firing the step triggers, and focuses that step's fields; an error about the form itself
+  belongs to no step and stays put. After `onSubmit`, a server error that lands on another step moves there
+  by the same rule, so it is never invisible. `submitCount` counts submissions that passed or failed
+  validation, not a Next.
+
+`step_leave` fires before the step changes and `step_change` then `step_enter` after it, and only when the
+current step changes. **Step actions cannot block a move**, since the step's validation is the guard; their
+failures are reported through `onActionResults`.
 
 A step's **step actions** (its `actions`) are active while that step is current: every
 trigger dispatches the form's `actions`, then the current step's, and
-`collectStepActions` is the single rule both renderers use. Because `step_leave`
+`collectStepActions` is the single rule. Because `step_leave`
 fires while the step being left is current and `step_change` and `step_enter` once the
 entered step is, a step's `step_enter` action runs on entering that step and its
-`step_leave` action on leaving it, by Next, Previous or a jump. Completing the last
+`step_leave` action on leaving it, by Next, Back or a jump. Completing the last
 step is a submission, not a step trigger: track it with `form_submit_success`.
-Steps have no separate enter, leave or validate hooks.
+Steps have no separate enter, leave or validate hooks. The action context carries the current `stepId`; its
+`currentStep` is the position among the active steps and `totalSteps` their number.
+
+### Skipped steps
+
+A step takes `constraints` restricted to `show` and `hide`, with the constraint logic of fields. A step its
+constraints hide is a **skipped step**: it is passed over by `next` and `back`, refused by `goTo`, hidden from
+progress and the stepper by default (a recipe may show it disabled from the view model's `allSteps`), and its
+fields take no part, as hidden fields do not: they are not validated, do not block, and are left out of
+`checkValidity` and of the submitted values. Their values are kept and come back when the step is shown
+again. Config validation allows a step constraint to read only non-row fields of earlier steps, so the first
+step has none, the start is deterministic, one step is always active and there is no cycle. If the current
+step becomes skipped, the runtime moves back to the nearest active step before it, firing the step triggers,
+and never forward without validating.
+
+**Excluded values are absent.** Steps and fields resolve in order (`resolveParticipation`), and the value of a
+skipped step, or of a hidden field, counts as absent for every later constraint that reads it. Otherwise a
+skipped step still holding `'yes'` would keep a later field shown and required.
 
 ## Array rows
 

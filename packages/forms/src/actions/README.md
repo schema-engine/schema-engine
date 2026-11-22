@@ -65,22 +65,28 @@ The forms action trigger type contains these events:
 
 | Trigger                | When it runs                           |
 | ---------------------- | -------------------------------------- |
-| `form_mount`           | The form is initialized                |
-| `form_change`          | A field value changes                  |
-| `form_submit`          | Form submission starts                 |
+| `form_mount`           | The runtime mounts, once               |
+| `form_change`          | The form's values change               |
+| `form_submit`          | The submit actions run                 |
 | `form_submit_start`    | Submission begins after validation     |
 | `form_submit_success`  | Submission completes successfully      |
 | `form_submit_error`    | Submission fails                       |
 | `form_submit_complete` | Submission finishes with either result |
-| `step_change`          | The active step changes                |
-| `step_enter`           | A step becomes active                  |
-| `step_leave`           | A step stops being active              |
+| `step_change`          | The current step changes               |
+| `step_enter`           | A step becomes the current step        |
+| `step_leave`           | The current step is about to change    |
 
-Actions execute sequentially in the order provided to the dispatcher, except that an inner array is a parallel group. Both renderers
-dispatch the form's `actions` and then the current step's `actions`, so a step's
+Actions execute sequentially in the order provided to the dispatcher, except that an inner array is a parallel group. The runtime dispatches the form's `actions` and then the current step's `actions`, so a step's
 `step_enter` action runs on entering that step and its `step_leave` action on leaving it.
 The first step is current on mount, so its `step_enter` runs only when the user returns to it.
 Completing the last step is a submission: use `form_submit_success`, not `step_leave`.
+
+The step triggers fire in the order `step_leave`, `step_change`, `step_enter`, and only when the current step
+changes: by Next, Back or a jump, by the move to the first step with an error after a failed or server-rejected
+submission, and by the move off a step that became skipped. A reset fires none. A step action cannot block a
+move, since the step's validation is the guard; its failure is reported through `onActionResults`. The submit
+sequence runs `form_submit_start`, the submit actions (`form_submit`), `onSubmit`, then `form_submit_success` or
+`form_submit_error`, then `form_submit_complete`.
 
 ## Plugin factories
 

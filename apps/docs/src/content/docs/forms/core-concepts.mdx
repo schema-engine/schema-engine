@@ -82,6 +82,11 @@ not registered the form validates without a `view`, `validateForm` warns, and
 the renderer paints fields without chrome. Renderers read the normalized `view`
 and do not apply defaults themselves.
 
+A multi-step form is a wizard. A step may take `constraints` (`show` or `hide`, on non-row fields of earlier steps; the
+first step has none) and is skipped when they hide it, and the form's `navigation` is `'linear'` (default) or `'free'`.
+Both renderers run the wizard, the submission and every action through one form runtime (`createFormRuntime`), so
+step ids, skipped steps, submit as Next and the reset rule behave the same in React and Radiant.
+
 React and Radiant render that normalized form. They do not re-parse element
 input schemas. A field created outside a form must go through
 `engine.validateElement()` first.

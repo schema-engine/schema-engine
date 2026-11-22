@@ -198,13 +198,19 @@ task in Turbo. Renderer actions import the dispatcher from
 
 ## Validation, navigation and action contexts
 
-The form container delegates validation to the engine's `validateFormValues`, and the provider delegates step
-state to `createStepMachine`, navigation (the in-flight guard and step triggers) to
-`createStepNavigator`, and submission to `runSubmissionLifecycle` and
-`createSubmissionGuard` from `@schema-engine/forms`: `onSubmit` runs inside the lifecycle, so a rejected `onSubmit` is a failed
-submission, and a submit that arrives while one is validating or running is ignored. Every trigger dispatches the form's actions and then the
-current step's (`collectStepActions`). Unmounting the provider, which a replaced config
-causes, cancels the navigation in flight, so it dispatches no step trigger afterwards. Wizard Next validates nested fieldsets and live
+The form container delegates validation to the engine's `validateFormValues`, and `FormProvider` creates one
+[form runtime](../forms/src/runtime/README.md) (`createFormRuntime`) per form, keyed by the identity of the config and the
+engine, with stable callback wrappers that read the latest `onSubmit`, `onChange`, `onAction` and `onActionResults`; it
+mounts the runtime in an effect (`form_mount` once, then the change watch; the cleanup revokes any command in flight) and
+provides it. The runtime owns the steps, the navigation (the one lock, the step triggers, skipped steps and the
+`navigation` setting) and the submission: `onSubmit` runs inside the lifecycle, so a rejected `onSubmit` is a failed
+submission, and a command that arrives while another is validating or running is `busy`. `useFormContext().formState.submission`
+reads the runtime's snapshot (`status`, `failures`, `submitCount`), `useFormInstanceActions()` gives the current step id,
+the step states and `next`, `back` and `goTo`, and a submit before the last step of a wizard is a Next. A reset of any kind
+(`useFormContext().reset`, an action's `form.reset`, a native reset button, `container.reset()`) bumps the container's
+`generation`, which returns the runtime to the first step and an idle submission. Every trigger dispatches the form's actions and then the
+current step's (`collectStepActions`); `onAction` is typed by the engine's actions. Unmounting the provider, which a replaced config
+causes, revokes the command in flight, so it dispatches no step trigger afterwards. Wizard Next validates nested fieldsets and live
 array rows, and the container re-validates a field that failed by `reValidateMode`, so its error clears as soon as the value is valid.
 A `require` constraint supplies both the control's required state and validation.
 A `require` constraint on a fieldset or array makes every field inside it required,

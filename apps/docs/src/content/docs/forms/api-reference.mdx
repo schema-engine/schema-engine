@@ -145,6 +145,77 @@ for runtime validation. Their provider-specific JSON Schema is not introspected
 in this iteration; mixed form config exports retain the registered `$type`
 envelope for those schemas.
 
+## createFormRuntime
+
+One framework-free instance per rendered form, shared by React and Radiant. It builds the form's state container and
+owns the submission, the wizard's steps and navigation, `form_mount` and `form_change`, and every action dispatch. A
+renderer supplies only what it alone can do, as the `host`.
+
+```ts
+import { createFormRuntime } from '@schema-engine/forms';
+
+const runtime = createFormRuntime({
+	engine,
+	config, // the normalized form
+	defaults, // optional
+	snapshot, // optional: the server's container snapshot
+	host: { focus: (paths) => {}, sync: () => {}, submitNatively: () => {} }, // sync and submitNatively are optional
+	onSubmit,
+	onChange,
+	onAction, // typed by the engine's actions
+	onActionResults,
+});
+
+const unmount = runtime.mount(); // form_mount once, and the change watch; the cleanup revokes anything in flight
+runtime.container; // the form state
+runtime.getSnapshot(); // { submission: { status, failures, submitCount }, steps: { current, navigating, list } }
+runtime.subscribe(listener);
+
+await runtime.next();
+await runtime.back();
+await runtime.goTo('payment');
+await runtime.submit();
+runtime.clearSubmission();
+```
+
+Every command returns one string of a single union; why a submission failed is read from
+`snapshot.submission.failures`, never from the return value.
+
+```ts
+type FormRuntimeOutcome = 'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled';
+type NavigationOutcome = Extract<
+	FormRuntimeOutcome,
+	'moved' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
+>;
+type SubmitOutcome = Extract<
+	FormRuntimeOutcome,
+	'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'busy' | 'cancelled'
+>;
+
+interface FormStepState {
+	id: string;
+	skipped: boolean; // the step's constraints hide it
+	visited: boolean;
+	complete: boolean;
+	invalid: boolean; // an error is recorded at one of its fields
+}
+```
+
+- One lock covers navigation and submission: a command made while another runs is `'busy'`, and a reset or an unmount
+  revokes the command in flight, which is `'cancelled'` and writes nothing.
+- `container.reset()` is the only reset. The container snapshot's `generation` goes up with it, and the runtime then
+  returns the submission to idle with a count of 0 and the steps to the first, firing no step trigger.
+- `next()` validates the current step and moves to the next active step (`'refused'` on the last); `back()` never
+  validates; `goTo(id)` refuses a skipped or unknown step, always allows going back and, going forward, follows the
+  form's `navigation` (`'linear'`: visited steps only, validating every step on the way; `'free'`: any active step).
+- `submit()` before the last active step acts as `next()`. On the last it validates every active step, runs the
+  actions and `onSubmit`, and on `'invalid'` moves to the first step with an error and focuses it. A server error that
+  `onSubmit` sets on an earlier step moves there too.
+- A step takes `constraints` restricted to `show` and `hide`, on non-row fields of earlier steps; a step they hide is
+  skipped, and its fields take no part in validation or in the submitted values.
+
+See the [runtime guide](https://github.com/andeeplus/schema-engine/blob/main/packages/forms/src/runtime/README.md) for the rules in full.
+
 ## RecipeRegistration
 
 ```ts

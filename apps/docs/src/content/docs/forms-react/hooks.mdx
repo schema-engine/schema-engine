@@ -38,7 +38,8 @@ Import the form hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormContext` exposes `getValues`, `setValue`, `validate`, `reset`, `setFocus`,
 `formatIssue` and `clearSubmission`, plus a lazy `formState` (`errors`, `isValid`
-and `submission: { status, failures, submitCount }`). Its fields
+and `submission: { status, failures, submitCount }`, the runtime's: `submitCount` counts the submissions
+that passed or failed validation). Its fields
 subscribe the caller only when read, so a component that reads `submission`
 re-renders when that changes and not while the user types; reading `isValid`
 reports the recorded errors and validates nothing. `useWatch` (no argument, a path
@@ -50,11 +51,11 @@ or a list of paths) and `useFieldArray` cover observation and array editing.
 
 `useFormField` binds a widget to one field. It has three forms:
 
-| Call | Returns |
-| ---- | ------- |
-| `useFormField(config)` | An uncontrolled field: the state (`error`, `warning`, `issue`, `invalid`, `isTouched`, `isDirty`, `isValidating`), `required`, `disabled`, `defaultValue`, and the props `fieldProps`, `labelProps`, `errorProps` and `containerStyles` |
-| `useFormField(config, { controlled: true })` | The same, plus `value`, `onChange(value)` and `onBlur()`. `fieldProps` has no change handler |
-| `useFormField(path)` | The state and texts of a path alone (`FORM_ROOT` is the form), with no value. `useWatch(path)` reads the value |
+| Call                                         | Returns                                                                                                                                                                                                                                 |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useFormField(config)`                       | An uncontrolled field: the state (`error`, `warning`, `issue`, `invalid`, `isTouched`, `isDirty`, `isValidating`), `required`, `disabled`, `defaultValue`, and the props `fieldProps`, `labelProps`, `errorProps` and `containerStyles` |
+| `useFormField(config, { controlled: true })` | The same, plus `value`, `onChange(value)` and `onBlur()`. `fieldProps` has no change handler                                                                                                                                            |
+| `useFormField(path)`                         | The state and texts of a path alone (`FORM_ROOT` is the form), with no value. `useWatch(path)` reads the value                                                                                                                          |
 
 **Uncontrolled is the default.** The control keeps its own value. The field re-renders
 when its error, warning or flags change and never for a keystroke, so typing in a row
@@ -137,4 +138,14 @@ a rule's error wins the display.
 Import engine hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormEngine` reads the `FormEngine` supplied by `FormEngineProvider`, while
-`useFormInstanceActions` exposes step navigation and trigger dispatch.
+`useFormInstanceActions` exposes the form's wizard: `current` (the id of the current step), `steps` (every step in
+order, each with `skipped`, `visited`, `complete` and `invalid`), `navigating`, and the commands `next()`, `back()`
+and `goTo(id)`. Each command resolves to one outcome string: `'moved'`, `'invalid'` (the step has errors, which are
+shown and focused), `'overtaken'` (an edit outran the check), `'refused'` (nowhere to go, or a skipped or
+unreachable step), `'busy'` (another command is running) or `'cancelled'` (a reset or an unmount revoked it).
+Submitting before the last step of a wizard is a Next. Steps are keyed by id, and a step that the answers skip
+is passed over by `next` and `back` and refused by `goTo`.
+
+The form's runtime ([`createFormRuntime`](/docs/forms/api-reference)) owns all of this and the submission, so
+`useFormContext().reset`, an action's `form.reset` and a native reset button all return the form to its first
+step with an idle submission.
