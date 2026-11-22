@@ -182,8 +182,8 @@ configured action that produced it.
 context with form data and timing metadata, including a stable step start time that resets
 when the active step changes. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
-The form state no longer accepts `touchedFields` or `isSubmitted`: pass `touched` and
-`submitCount`, both required; the context's `isValid` is derived from `errors` (see [action context form state](src/engine/README.md#action-context-form-state)).
+The form state no longer accepts `touchedFields` or `isSubmitted`: pass `isValid`, `touched` and
+`submitCount`, all required; the context's `isValid` is the one passed, the container's `snapshot.isValid` (see [action context form state](src/engine/README.md#action-context-form-state)).
 The engine entry point also re-exports `ActionDispatcher` so
 both renderers can use the same action dispatcher class.
 
