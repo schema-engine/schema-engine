@@ -97,7 +97,11 @@ export interface FormRuntimeHost {
 	focus(paths: readonly string[]): void;
 	/** Writes the controls' values to the container and reports their native validity, as a submit does, before a check. */
 	sync?(): void;
-	/** Submits the form natively. The runtime calls it once the actions succeeded, when there is no `onSubmit`. */
+	/**
+	 * Called once a submission succeeded, after its actions and `onSubmit`, so a host whose form can post natively may do it.
+	 *
+	 * @remarks The host decides whether it posts: Radiant does when the application gave no `onSubmit`. The navigation cannot cut off the success and complete triggers, which ran first.
+	 */
 	submitNatively?(): void;
 }
 

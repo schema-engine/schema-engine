@@ -56,7 +56,6 @@ export function RecipeRenderer({
 				<FormStep
 					key={step.id}
 					stepId={step.id}
-					stepIndex={index}
 					hidden={isWizard && index !== 0}
 					class={step.className}
 					style={step.style}

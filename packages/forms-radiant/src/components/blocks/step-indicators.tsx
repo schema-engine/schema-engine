@@ -9,7 +9,7 @@ import { formatStepLabel, type StepIndicatorsConfig } from '@schema-engine/forms
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
+import { deriveFormSteps, deriveInitialInstance, deriveNavigation } from '@/lib/instance-view';
 
 /**
  * One indicator, as `MapItems` receives it.
@@ -59,14 +59,15 @@ export class StepIndicatorsElement extends RadiantElement {
 		);
 	}
 
-	private goToStep(index: number): void {
-		void this.instance?.goToStep(index);
+	private goToStep(id: string): void {
+		void this.instance?.goTo(id);
 	}
 
 	override render(): JsxRenderable {
 		const meta = this.meta;
 		if (!meta) return null;
 		const instance = this.instance ?? deriveInitialInstance(meta);
+		const navigation = deriveNavigation(meta, instance);
 
 		const indicatorsConfig = this.slotConfig;
 		if (!indicatorsConfig) return null;
@@ -74,7 +75,7 @@ export class StepIndicatorsElement extends RadiantElement {
 		this.publishItems(
 			deriveFormSteps(meta, instance).map((step) => ({
 				step,
-				disabled: !step.isVisited && step.index > instance.currentStep,
+				disabled: !step.isActive && !navigation.canGoToStep(step.id),
 				config: indicatorsConfig,
 			})),
 		);
@@ -97,7 +98,7 @@ export class StepIndicatorsElement extends RadiantElement {
 				<RuiButton
 					type="button"
 					variant="ghost"
-					on:click={() => this.goToStep(step.index)}
+					on:click={() => this.goToStep(step.id)}
 					data={{
 						active: step.isActive,
 						completed: step.isCompleted,

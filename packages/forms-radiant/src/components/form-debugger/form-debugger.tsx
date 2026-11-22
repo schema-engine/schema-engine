@@ -6,7 +6,8 @@ import type { JSX_PROPS } from '@ecopages/jsx';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import type { FormMeta } from '@/lib/instance-view';
+import { deriveFormSteps, deriveNavigation } from '@/lib/instance-view';
+import type { ViewNavigation, ViewStep } from '@schema-engine/forms/recipes';
 import type { FormStateSnapshot } from '@schema-engine/forms/state-container';
 
 function BugIcon() {
@@ -94,12 +95,10 @@ function DebuggerProgress({ currentStep, totalSteps }: { currentStep: number; to
 function DebuggerSteps({
 	steps,
 	currentStep,
-	stepStates,
 	showDetails,
 }: {
-	steps: FormMeta['steps'];
+	steps: ViewStep[];
 	currentStep: number;
-	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 	showDetails: boolean;
 }) {
 	return (
@@ -114,7 +113,7 @@ function DebuggerSteps({
 								<div class="se-form-debugger__step-description">{step.description}</div>
 							) : null}
 							<div class="se-form-debugger__timeline-meta">
-								{stepStates?.valid?.[index] ? (
+								{step.isVisited && !step.isInvalid ? (
 									<RuiBadge
 										variant="filled"
 										class="se-form-debugger__badge se-form-debugger__badge--valid"
@@ -122,7 +121,7 @@ function DebuggerSteps({
 										Valid
 									</RuiBadge>
 								) : null}
-								{!stepStates?.valid?.[index] && stepStates?.visited?.[index] ? (
+								{step.isInvalid ? (
 									<RuiBadge
 										variant="filled"
 										class="se-form-debugger__badge se-form-debugger__badge--invalid"
@@ -130,7 +129,7 @@ function DebuggerSteps({
 										Invalid
 									</RuiBadge>
 								) : null}
-								{stepStates?.visited?.[index] ? (
+								{step.isVisited ? (
 									<RuiBadge variant="muted" class="se-form-debugger__badge">
 										Visited
 									</RuiBadge>
@@ -147,11 +146,11 @@ function DebuggerSteps({
 function DebuggerFormState({
 	formState,
 	isSubmitting,
-	stepStates,
+	invalidSteps,
 }: {
 	formState: FormStateSnapshot | undefined;
 	isSubmitting: boolean;
-	stepStates: FormInstanceContextValue['stepStates'] | undefined;
+	invalidSteps: string[] | undefined;
 }) {
 	return (
 		<section>
@@ -165,10 +164,10 @@ function DebuggerFormState({
 					<span class="se-form-debugger__detail-label">Valid</span>
 					<code class="se-form-debugger__detail-value">{String(formState?.isValid ?? true)}</code>
 				</div>
-				{stepStates ? (
+				{invalidSteps ? (
 					<div class="se-form-debugger__row">
-						<span class="se-form-debugger__detail-label">Step states</span>
-						<code class="se-form-debugger__detail-value">{JSON.stringify(stepStates.valid)}</code>
+						<span class="se-form-debugger__detail-label">Invalid steps</span>
+						<code class="se-form-debugger__detail-value">{JSON.stringify(invalidSteps)}</code>
 					</div>
 				) : null}
 			</div>
@@ -183,21 +182,27 @@ function DebuggerFormState({
 function DebuggerNav({
 	steps,
 	currentStep,
-	stepStates,
+	navigation,
 	onPrevious,
 	onNext,
 	onGoTo,
 }: {
 	onPrevious: () => void;
 	onNext: () => void;
-	onGoTo: (index: number) => void;
-	steps: FormMeta['steps'];
+	onGoTo: (id: string) => void;
+	steps: ViewStep[];
 	currentStep: number;
-	stepStates: FormInstanceContextValue['stepStates'] | undefined;
+	navigation: ViewNavigation;
 }) {
 	return (
 		<footer class="se-form-debugger__nav">
-			<RuiButton type="button" variant="outline" size="sm" on:click={onPrevious} disabled={currentStep === 0}>
+			<RuiButton
+				type="button"
+				variant="outline"
+				size="sm"
+				on:click={onPrevious}
+				disabled={navigation.isFirstStep}
+			>
 				Previous
 			</RuiButton>
 			<div class="se-form-debugger__nav-dots">
@@ -209,19 +214,13 @@ function DebuggerNav({
 							active: index === currentStep,
 							completed: index < currentStep,
 						}}
-						on:click={() => onGoTo(index)}
-						disabled={!stepStates?.visited?.[index] && index > currentStep}
+						on:click={() => onGoTo(step.id)}
+						disabled={index !== currentStep && !navigation.canGoToStep(step.id)}
 						aria-label={`Go to ${step.title ?? `step ${index + 1}`}`}
 					/>
 				))}
 			</div>
-			<RuiButton
-				type="button"
-				variant="outline"
-				size="sm"
-				on:click={onNext}
-				disabled={currentStep >= steps.length - 1}
-			>
+			<RuiButton type="button" variant="outline" size="sm" on:click={onNext} disabled={!navigation.canGoNext}>
 				Next
 			</RuiButton>
 		</footer>
@@ -272,15 +271,15 @@ export class FormDebuggerElement extends RadiantElement {
 	};
 
 	private readonly goPrevious = (): void => {
-		void this.instance?.goToPreviousStep();
+		void this.instance?.back();
 	};
 
 	private readonly goNext = (): void => {
-		void this.instance?.goToNextStep();
+		void this.instance?.next();
 	};
 
-	private readonly goToStep = (index: number): void => {
-		void this.instance?.goToStep(index);
+	private readonly goToStep = (id: string): void => {
+		void this.instance?.goTo(id);
 	};
 
 	override render() {
@@ -289,10 +288,14 @@ export class FormDebuggerElement extends RadiantElement {
 		}
 
 		const formState = this.formState.get();
-		const currentStep = this.instance?.currentStep ?? 0;
-		const stepStates = this.instance?.stepStates;
-		const meta = this.instance?.meta;
-		const steps = meta?.steps ?? [];
+		const { instance } = this;
+		const meta = instance?.meta;
+		const steps = meta && instance ? deriveFormSteps(meta, instance) : [];
+		const navigation = meta && instance ? deriveNavigation(meta, instance) : undefined;
+		const currentStep = Math.max(
+			steps.findIndex(({ isActive }) => isActive),
+			0,
+		);
 		const isMultiStep = steps.length > 1;
 
 		return (
@@ -307,26 +310,21 @@ export class FormDebuggerElement extends RadiantElement {
 					<div class="se-form-debugger__content">
 						{isMultiStep ? <DebuggerProgress currentStep={currentStep} totalSteps={steps.length} /> : null}
 						{isMultiStep ? (
-							<DebuggerSteps
-								steps={steps}
-								currentStep={currentStep}
-								stepStates={stepStates}
-								showDetails={this.showStepDetails}
-							/>
+							<DebuggerSteps steps={steps} currentStep={currentStep} showDetails={this.showStepDetails} />
 						) : null}
 						{this.showFormState ? (
 							<DebuggerFormState
 								formState={formState}
-								isSubmitting={this.instance?.isSubmitting ?? false}
-								stepStates={stepStates}
+								isSubmitting={this.instance?.submission.status === 'pending'}
+								invalidSteps={steps.filter(({ isInvalid }) => isInvalid).map(({ id }) => id)}
 							/>
 						) : null}
 					</div>
-					{isMultiStep ? (
+					{isMultiStep && navigation ? (
 						<DebuggerNav
 							steps={steps}
 							currentStep={currentStep}
-							stepStates={stepStates}
+							navigation={navigation}
 							onPrevious={this.goPrevious}
 							onNext={this.goNext}
 							onGoTo={this.goToStep}

@@ -1,12 +1,12 @@
 import { afterEach, expect, test } from 'vitest';
 import { page } from 'vitest/browser';
 import * as z from 'zod/mini';
-import { createInitialStepStates } from '@schema-engine/forms/engine';
 import { MinimalProgressConfigSchema, StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import '@/components/blocks/wizard-blocks.css';
 import { MinimalProgressElement } from '@/components/blocks/minimal-progress';
 import { StepIndicatorsElement } from '@/components/blocks/step-indicators';
-import { deriveInitialInstance, type FormMeta } from '@/lib/instance-view';
+import type { FormMeta } from '@/lib/instance-view';
+import { instanceAt } from '../adapters/test-instance';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -15,12 +15,7 @@ function createMeta(titles: string[]): FormMeta {
 }
 
 function createInstance(meta: FormMeta, currentStep: number, completed: boolean[]) {
-	const initial = deriveInitialInstance(meta);
-	return {
-		...initial,
-		currentStep,
-		stepStates: { ...createInitialStepStates(meta.steps.length), completed, visited: meta.steps.map(() => true) },
-	};
+	return instanceAt(meta, currentStep, { completed, visited: meta.steps.map(() => true) });
 }
 
 async function mountIndicators(meta: FormMeta, slotConfig: Record<string, unknown> = {}) {

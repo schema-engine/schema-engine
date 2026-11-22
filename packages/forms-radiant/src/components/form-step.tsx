@@ -20,9 +20,9 @@ import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engin
  */
 @customElement('se-form-step')
 export class FormStepElement extends RadiantElement {
-	declare readonly [JSX_PROPS]?: { stepIndex?: number };
+	declare readonly [JSX_PROPS]?: { stepId?: string };
 
-	@prop({ type: Number, defaultValue: 0 }) stepIndex = 0;
+	@prop({ type: String, defaultValue: '' }) stepId = '';
 
 	@state
 	@bindTo({ bool: 'hidden' })
@@ -46,21 +46,20 @@ export class FormStepElement extends RadiantElement {
 		this.syncHidden();
 	}
 
-	@onUpdated(['stepIndex'])
-	onStepIndexUpdated(): void {
+	@onUpdated(['stepId'])
+	onStepIdUpdated(): void {
 		this.syncHidden();
 	}
 
 	private syncHidden(): void {
 		const { instance } = this;
 		if (instance?.isWizard === undefined) return;
-		this.hiddenStep = instance.isWizard && instance.currentStep !== this.stepIndex;
+		this.hiddenStep = instance.isWizard && instance.current !== this.stepId;
 	}
 }
 
 export function FormStep({
 	stepId,
-	stepIndex,
 	hidden = false,
 	class: className,
 	style,
@@ -68,7 +67,6 @@ export function FormStep({
 	children,
 }: {
 	stepId: string;
-	stepIndex: number;
 	/** The server-rendered visibility: true for every step but the first of a wizard. */
 	hidden?: boolean;
 	/** The step's authored `className`. */
@@ -81,7 +79,7 @@ export function FormStep({
 }): JsxRenderable {
 	return (
 		<FormStepElement
-			stepIndex={stepIndex}
+			stepId={stepId}
 			hidden={hidden}
 			classes={['se-form-step', className]}
 			style={style}

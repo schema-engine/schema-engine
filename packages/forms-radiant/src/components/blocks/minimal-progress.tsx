@@ -5,7 +5,7 @@ import { formatStepLabel, type MinimalProgressConfig } from '@schema-engine/form
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveInitialInstance } from '@/lib/instance-view';
+import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
 
 /**
  * @remarks
@@ -34,8 +34,14 @@ export class MinimalProgressElement extends RadiantElement {
 		if (!config) return null;
 		const { labels } = config;
 		const labelId = `${meta.id}-progress-label`;
-		const current = instance.currentStep + 1;
-		const percent = Math.round((current / instance.totalSteps) * 100);
+		const steps = deriveFormSteps(meta, instance);
+		const total = steps.length;
+		const current =
+			Math.max(
+				steps.findIndex(({ isActive }) => isActive),
+				0,
+			) + 1;
+		const percent = Math.round((current / total) * 100);
 		return (
 			<div class="se-minimal-progress">
 				<div class="se-minimal-progress__labels">
@@ -54,7 +60,7 @@ export class MinimalProgressElement extends RadiantElement {
 					aria-valuemin={0}
 					aria-valuemax={100}
 					aria-valuenow={percent}
-					aria-valuetext={formatStepLabel(labels.valueText, current, instance.totalSteps)}
+					aria-valuetext={formatStepLabel(labels.valueText, current, total)}
 				>
 					<div class="se-minimal-progress__track" aria-hidden="true">
 						<div class="se-minimal-progress__fill" style={{ width: `${percent}%` }} />

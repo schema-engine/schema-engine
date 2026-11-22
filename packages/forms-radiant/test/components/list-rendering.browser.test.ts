@@ -1,7 +1,6 @@
 import { afterEach, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createRoot } from '@ecopages/jsx/client';
-import { createInitialStepStates } from '@schema-engine/forms/engine';
 import { StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StepIndicatorsElement } from '@/components/blocks/step-indicators';
@@ -10,7 +9,8 @@ import { FormController } from '@/adapters/radiant/controller';
 import { containerOf } from './mount-field';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
-import { deriveInitialInstance, type FormMeta } from '@/lib/instance-view';
+import type { FormMeta } from '@/lib/instance-view';
+import { instanceAt } from '../adapters/test-instance';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -169,18 +169,6 @@ test('typing into a row survives a sibling being added', async () => {
 
 function createMeta(titles: string[]): FormMeta {
 	return { id: 'wizard', steps: titles.map((title, index) => ({ id: `step-${index}`, title })) };
-}
-
-function instanceAt(meta: FormMeta, currentStep: number) {
-	return {
-		...deriveInitialInstance(meta),
-		currentStep,
-		stepStates: {
-			...createInitialStepStates(meta.steps.length),
-			completed: meta.steps.map((_, index) => index < currentStep),
-			visited: meta.steps.map((_, index) => index <= currentStep),
-		},
-	};
 }
 
 test('navigating a wizard keeps the step indicator nodes and only changes their state attributes', async () => {

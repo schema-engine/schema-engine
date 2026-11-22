@@ -26,7 +26,7 @@ describe('submit on the last active step', () => {
 	test('runs the actions and onSubmit with the values that passed, then reports success and counts the submission', async () => {
 		const onSubmit = vi.fn();
 		const onAction = vi.fn();
-		const { runtime, seen, host } = setup(wizardConfig(), { onSubmit, onAction });
+		const { runtime, seen } = setup(wizardConfig(), { onSubmit, onAction });
 		await toLastStep(runtime);
 		fill(runtime, { card: 'c' });
 		expect(await runtime.submit()).toBe('submitted');
@@ -41,10 +41,9 @@ describe('submit on the last active step', () => {
 			'form_submit_complete',
 		]);
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'success', failures: [], submitCount: 1 });
-		expect(host.submitNatively).not.toHaveBeenCalled();
 	});
 
-	test('submits natively through the host when there is no onSubmit and the actions succeeded', async () => {
+	test('hands the host the native submit once a submission succeeded, and not after a failure', async () => {
 		const { runtime, host, failing } = setup();
 		await toLastStep(runtime);
 		fill(runtime, { card: 'c' });

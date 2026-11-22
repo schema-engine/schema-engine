@@ -6,7 +6,6 @@ import {
 } from '@schema-engine/forms/state-container';
 import { FormController } from '@/adapters/radiant/controller';
 import { formInstanceContext } from '@/contexts/form-instance-context';
-import { createInitialStepStates } from '@schema-engine/forms/engine';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 
@@ -30,17 +29,14 @@ export function provideTestContainer(
 		{
 			context: formInstanceContext,
 			initialValue: {
-				currentStep: 0,
-				totalSteps: 1,
+				current: 'main',
+				steps: [{ id: 'main', skipped: false, visited: true, complete: false, invalid: false }],
+				navigating: false,
 				isWizard: false,
-				stepStates: createInitialStepStates(1),
-				goToStep: async () => {},
-				goToNextStep: async () => {},
-				goToPreviousStep: async () => {},
-				markStepCompleted: () => {},
-				markStepVisited: () => {},
-				isSubmitting: false,
-				submitCount: 0,
+				next: async () => 'refused',
+				back: async () => 'refused',
+				goTo: async () => 'refused',
+				submission: { status: 'idle', failures: [], submitCount: 0 },
 				container,
 				formatIssue,
 			},

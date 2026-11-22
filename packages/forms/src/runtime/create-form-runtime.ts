@@ -461,7 +461,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			logger.error('Action results callback failed:', error);
 		}
 		if (!live(op)) return 'cancelled';
-		if (succeeded && !onSubmit) host.submitNatively?.();
+		if (succeeded) host.submitNatively?.();
 
 		const count = submission.submitCount + 1;
 		if (succeeded) {

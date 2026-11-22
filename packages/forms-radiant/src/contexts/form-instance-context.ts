@@ -1,27 +1,31 @@
 import { createContext } from '@ecopages/radiant/context';
 
-import type { StepStates } from '@schema-engine/forms/engine';
+import type { FormStepState, FormSubmissionState, NavigationOutcome } from '@schema-engine/forms';
 import type { FormIssueFormatter, FormStateContainer } from '@schema-engine/forms/state-container';
 import type { FormMeta } from '@/lib/instance-view';
-export type { StepStates };
 
+/**
+ * What a `se-form-instance` publishes to the hosts under it.
+ *
+ * @remarks
+ * Step state and commands are those of the form's runtime. `steps` lists every step in order with `skipped`, `visited`, `complete` and `invalid`, and
+ * the commands end with an outcome (`'moved'`, `'invalid'`, `'busy'`, ...).
+ */
 export interface FormInstanceContextValue {
-	currentStep: number;
-	totalSteps: number;
+	/** The id of the current step. */
+	current: string;
+	steps: readonly FormStepState[];
+	/** A `next`, `back` or `goTo` runs. */
+	navigating: boolean;
 	/** True when a wizard recipe owns navigation and steps toggle visibility. */
 	isWizard: boolean;
-	stepStates: StepStates;
 	/** Serializable form chrome, so a consumer needs no walk to the instance for its config. */
 	meta?: FormMeta;
-	goToStep: (index: number) => Promise<void>;
-	/** On the last step, validates it and records the result without moving. */
-	goToNextStep: () => Promise<void>;
-	goToPreviousStep: () => Promise<void>;
-	markStepCompleted: (index: number) => void;
-	markStepVisited: (index: number) => void;
-	isSubmitting: boolean;
-	/** Submission attempts that reached a verdict, a failed validation included, since the form was created or reset. */
-	submitCount: number;
+	next: () => Promise<NavigationOutcome>;
+	back: () => Promise<NavigationOutcome>;
+	goTo: (id: string) => Promise<NavigationOutcome>;
+	/** The runtime's submission: its status (`pending` while one runs), its failures and the submissions that ended, a failed validation included, since the form was created or reset. */
+	submission: FormSubmissionState;
 	/**
 	 * The form's state container: values, field state, row ids and validation.
 	 *

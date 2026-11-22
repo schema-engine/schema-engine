@@ -93,7 +93,7 @@ test('a submission a reset outran submits nothing and is not an attempt', async 
 
 	expect(onSubmit).not.toHaveBeenCalled();
 	expect(completed).not.toHaveBeenCalled();
-	expect(instance.getContextValue().submitCount).toBe(0);
+	expect(instance.getContextValue().submission.submitCount).toBe(0);
 });
 
 test('a submission outrun by edits again and again submits nothing', async () => {
@@ -117,7 +117,7 @@ test('a submission outrun by edits again and again submits nothing', async () =>
 	for (const [call] of onSubmit.mock.calls) expect(call).toMatchObject({ name: 'Ada Lov' });
 });
 
-test('a validator that cannot run completes the submission unsuccessfully with its failure, and is an attempt', async () => {
+test('a validator that cannot run completes the submission unsuccessfully with its failure, and is no attempt', async () => {
 	const { host, container, instance, onSubmit, completed } = await mount([checked]);
 	await userEvent.fill(host.querySelector('input')!, 'Ada');
 	gate.status = 500;
@@ -128,8 +128,11 @@ test('a validator that cannot run completes the submission unsuccessfully with i
 
 	const [event] = completed.mock.calls[0] ?? [];
 	expect(event).toBeInstanceOf(CustomEvent);
-	expect(event instanceof CustomEvent && event.detail).toMatchObject({ succeeded: false, error: expect.anything() });
-	expect(instance.getContextValue().submitCount).toBe(1);
+	expect(event instanceof CustomEvent && event.detail).toMatchObject({
+		succeeded: false,
+		failures: [{ type: 'validationFailed', source: 'submission' }],
+	});
+	expect(instance.getContextValue().submission.submitCount).toBe(0);
 	expect(onSubmit).not.toHaveBeenCalled();
 	expect(container.getSnapshot().errors).toEqual({});
 	logged.mockRestore();
@@ -148,7 +151,7 @@ test('an invalid submission counts, reports itself and focuses the first invalid
 	submit(host);
 
 	await expect.poll(() => invalid.mock.calls.length).toBe(1);
-	expect(instance.getContextValue().submitCount).toBe(1);
+	expect(instance.getContextValue().submission.submitCount).toBe(1);
 	expect(onSubmit).not.toHaveBeenCalled();
 	await expect.poll(() => document.activeElement?.closest('se-field')?.getAttribute('name')).toBe('second');
 });
@@ -169,7 +172,7 @@ test('a config replaced while a submission validates does not submit the old val
 	}
 
 	expect(onSubmit).not.toHaveBeenCalled();
-	expect(instance.getContextValue().submitCount).toBe(0);
+	expect(instance.getContextValue().submission.submitCount).toBe(0);
 });
 
 test('a validation hung on an old form does not hold back the next form', async () => {
@@ -193,7 +196,6 @@ test('moving the instance keeps its form, and the controls still write to it', a
 	]);
 	await userEvent.fill(host.querySelector('input')!, 'Ada');
 	container.blur('name');
-	instance.markStepVisited(0);
 	const other = document.createElement('section');
 	document.body.append(other);
 
@@ -203,7 +205,7 @@ test('moving the instance keeps its form, and the controls still write to it', a
 	const moved = new FormController(other.querySelector('rui-form')!);
 	expect(moved.container).toBe(container);
 	expect(container.getSnapshot().touched['name']).toBe(true);
-	expect(instance.stepStates.visited[0]).toBe(true);
+	expect(instance.getContextValue().steps[0]?.visited).toBe(true);
 	await userEvent.fill(other.querySelector('input')!, 'Grace');
 	await expect.poll(() => container.getSnapshot().values['name']).toBe('Grace');
 	container.setValue('name', 'Linus');
