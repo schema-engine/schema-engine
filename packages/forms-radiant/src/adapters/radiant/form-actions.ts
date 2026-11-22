@@ -133,7 +133,8 @@ export class FormActions {
 	}
 
 	private activeActions() {
-		return collectStepActions(this.options.config(), this.options.currentStep());
+		const config = this.options.config();
+		return collectStepActions(config, config.steps[this.options.currentStep()]?.id ?? '');
 	}
 
 	/**
@@ -144,11 +145,12 @@ export class FormActions {
 	private buildContext(): BuilderActionBaseContext {
 		const { container, currentStep, submitCount } = this.options;
 		const { values, errors, touched, isValid } = container.getSnapshot();
+		const config = this.options.config();
 		return buildFormActionContext({
-			config: this.options.config(),
+			config,
 			values,
 			formState: { isValid, errors, touched, submitCount: submitCount() },
-			currentStep: currentStep(),
+			step: { id: config.steps[currentStep()]?.id ?? '', position: currentStep(), total: config.steps.length },
 			mountedAt: this.mountedAt,
 			form: this.actionForm,
 			fetch: this.engine.fetch,

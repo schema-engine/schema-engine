@@ -24,7 +24,7 @@ interface UseFormSubmitHandlerOptions<TAction extends RuntimeAction> {
 	fields: FieldRegistry;
 	config: {
 		readonly actions?: readonly ActionSequenceEntry<TAction>[];
-		readonly steps: readonly { readonly actions?: readonly ActionSequenceEntry<TAction>[] }[];
+		readonly steps: readonly { readonly id: string; readonly actions?: readonly ActionSequenceEntry<TAction>[] }[];
 	};
 	buildActionContext: (values?: FormValues) => BuilderActionBaseContext;
 	hasMatching: (actions: readonly ActionSequenceEntry<TAction>[], trigger: FormActionTrigger) => boolean;
@@ -92,7 +92,7 @@ export function useFormSubmitHandler<TAction extends RuntimeAction>({
 			const { succeeded, results, failure } = await runSubmissionLifecycle(
 				(input) => dispatchActions(input, true),
 				{
-					actions: collectStepActions(config, getCurrentStep()),
+					actions: collectStepActions(config, config.steps[getCurrentStep()]?.id ?? ''),
 					context: () => buildActionContext(values),
 					hasMatching,
 					onAction,

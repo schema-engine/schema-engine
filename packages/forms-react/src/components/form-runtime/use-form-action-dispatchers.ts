@@ -79,11 +79,12 @@ export function useFormActionDispatchers({
 	const buildActionContext = useCallback(
 		(submitted?: FormValues): BuilderActionBaseContext => {
 			const { values, errors, touched, isValid } = container.getSnapshot();
+			const currentStep = getCurrentStep?.() ?? 0;
 			return buildFormActionContext({
 				config,
 				values: submitted ?? values,
 				formState: { isValid, errors, touched, submitCount: submission.getSnapshot().submitCount },
-				currentStep: getCurrentStep?.() ?? 0,
+				step: { id: config.steps[currentStep]?.id ?? '', position: currentStep, total: config.steps.length },
 				mountedAt: formMountTime,
 				form: formAdapter,
 				fetch,
@@ -114,7 +115,7 @@ export function useFormActionDispatchers({
 			trigger: FormActionTrigger,
 			extraMetadata?: Record<string, unknown>,
 		): Promise<ActionDispatchResult[]> => {
-			const actions = collectStepActions(config, getCurrentStep?.() ?? 0);
+			const actions = collectStepActions(config, config.steps[getCurrentStep?.() ?? 0]?.id ?? '');
 			if (!actionExecutor.hasMatching(actions, trigger)) return [];
 			return dispatchActions({ actions, trigger, context: buildActionContext(), metadata: extraMetadata });
 		},

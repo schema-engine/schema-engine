@@ -69,7 +69,10 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 		},
 	});
 
-	const mountActions = useMemo(() => collectStepActions(runtimeConfig, 0), [runtimeConfig]);
+	const mountActions = useMemo(
+		() => collectStepActions(runtimeConfig, runtimeConfig.steps[0]?.id ?? ''),
+		[runtimeConfig],
+	);
 	useFormMountEffect({
 		actions: mountActions,
 		dispatchTrigger: actionDispatchers.dispatchTrigger,

@@ -12,6 +12,7 @@ export {
 	effectiveRulesFor,
 	FormValidationFailure,
 	resolveExcludedPaths,
+	resolveParticipation,
 	validateFieldValue,
 	validateFormValues,
 } from './engine';
@@ -25,7 +26,19 @@ export {
 	collectStepActions,
 	hasConfiguredActions,
 } from './engine';
+export {
+	activeStepIds,
+	deriveStepStates,
+	moveProgress,
+	startProgress,
+	stepAfter,
+	stepBefore,
+	stepsWithErrors,
+} from './engine';
 export type {
+	FormStepState,
+	StepNavigationMode,
+	StepProgress,
 	StepStates,
 	StepMachineState,
 	StepMachineAction,
@@ -42,6 +55,7 @@ export type {
 } from './engine';
 export type {
 	EffectiveRulesInput,
+	Participation,
 	FieldValidationResult,
 	FormValidationOutcome,
 	ValidationIssue,
@@ -59,6 +73,22 @@ export type {
 	SchemaMetadataEntry,
 } from './engine';
 export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
+export { createFormRuntime } from './runtime';
+export type {
+	CreateFormRuntimeOptions,
+	FormRuntime,
+	FormRuntimeConfig,
+	FormRuntimeHost,
+	FormRuntimeOutcome,
+	FormRuntimeSnapshot,
+	FormRuntimeStep,
+	FormSubmissionState,
+	FormSubmitHelpers,
+	FormValues,
+	NavigationOutcome,
+	SubmissionStatus,
+	SubmitOutcome,
+} from './runtime';
 export type { FormFetch } from './lib/form-fetch';
 export type {
 	BuilderActionBaseContext,
