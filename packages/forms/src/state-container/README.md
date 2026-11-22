@@ -91,7 +91,7 @@ index), the native facts, the exclusions, the reset generation and the rows it n
 - `checkValidity()` answers for the values, native facts, server errors and exclusions current when it was
   called, and for no later state. It is never retried, and it never mixes those with errors set after. Its
   answer may be out of date when it resolves.
-- **How it ended.** `submission.outcome` is `'passed'`, `'invalid'` (the scope was current and an error blocks: show the errors and focus) or `'overtaken'` (an edit, a row move, a reset or a superseded check outran it: no verdict, ask again and show nothing the user did not cause). A rejected call leaves it unset.
+- **How it ended.** `submission.outcome` is `'passed'`, `'invalid'` (the scope was current and an error blocks: show the errors and focus) or `'overtaken'` (an edit, a row move, a reset or a superseded check outran it: no verdict, ask again and show nothing the user did not cause). A rejected call leaves it unset. A token a later `beginSubmission` or a reset superseded ends `'overtaken'` whatever it ended before, and validating no paths (`validate([], { submission })`) is `'passed'` and captures the values.
 - **The runtime's contract.** `beginSubmission()` returns a token, and `validate(paths, { submission })` leaves
   it holding exactly the values the validation covered when it resolves `true`, from the run that resolved: an
   edit during the check followed by a retry that passes leaves the edit. The runtime submits `submission.values`,
@@ -117,6 +117,7 @@ one command and one notification.
   reports on its own (after a reset, or when its constraints change) uses `reportNative(path, fact)`: it binds the
   fact to the value held now, is no change (nothing dirty or touched), re-validates the path only when it was
   validated before or is in a failed scope, and ignores a path the container does not hold.
+- **Hosts with controls flush on every check.** A host that has native controls passes `native` to `checkValidity` and to step validation (`validate(stepPaths, { native })`), not only to the submit: a check without it counts the facts stored by the last write or blur, which a control may since have outgrown.
 - **A flush is the whole truth.** The map of `validate` or `checkValidity` replaces the facts for that check:
   a control that is not in it is not mounted, cannot vouch for its value, and its fact is not counted, so
   the engine's rules alone cover that path. `validate` drops the facts that are not in the map; `checkValidity`
@@ -165,7 +166,7 @@ A rule that cannot run is no field error: it says nothing about the value.
   `ValidationRuleError` for the same.
 - A rule that throws while it runs is a `FormValidationFailure` naming the path and the rule, with the
   cause. `validate()` and `checkValidity()` reject with it. An automatic check records it in `snapshot.validationFailures[path]`
-  and keeps the other rules' results. It does not affect `isValid`: nothing says the value is wrong. The
+  and keeps the other rules' results; each failure says why: `reason` is `'unavailable'` (the service the rule asks could not answer) or `'error'` (the rule threw). It does not affect `isValid`: nothing says the value is wrong. The
   submit path is blocked all the same, because `validate()` rejects while the rule fails. The next check of
   the path replaces it.
 

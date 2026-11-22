@@ -16,6 +16,11 @@ const elements = [
 
 const registry = createDefaultValidationRegistry();
 
+/** A rule with options, as the resolver's element type has no place to write them down. */
+function loose(rule: Record<string, unknown> & { type: string }): { type: string } {
+	return rule;
+}
+
 describe('createFormValidationResolver', () => {
 	test('validates every field when names are omitted', async () => {
 		const resolver = createFormValidationResolver(elements, registry);
@@ -134,9 +139,7 @@ describe('createFormValidationResolver', () => {
 				[
 					{
 						name: 'handle',
-						rules: [
-							{ type: 'async', url: '/check', debounce: 100, disableCache: true } as { type: string },
-						],
+						rules: [loose({ type: 'async', url: '/check', debounce: 100, disableCache: true })],
 					},
 				],
 				registry,
@@ -171,7 +174,7 @@ describe('createFormValidationResolver', () => {
 					{ name: 'name', rules: [{ type: 'required' }] },
 					{
 						name: 'email',
-						rules: [{ type: 'async', url: '/check', debounce: 30, disableCache: true } as { type: string }],
+						rules: [loose({ type: 'async', url: '/check', debounce: 30, disableCache: true })],
 					},
 				],
 				registry,
@@ -190,6 +193,36 @@ describe('createFormValidationResolver', () => {
 		} finally {
 			fetchSpy.mockRestore();
 			vi.useRealTimers();
+		}
+	});
+
+	test('a rule that could not run blocks with a reserved type of its own and no message, never the type of the rule', async () => {
+		const fetchSpy = vi
+			.spyOn(globalThis, 'fetch')
+			.mockImplementation(async () => new Response('no', { status: 503 }));
+		try {
+			const resolver = createFormValidationResolver(
+				[
+					{
+						name: 'handle',
+						rules: [loose({ type: 'async', url: '/check', disableCache: true })],
+					},
+					{ name: 'code', rules: [loose({ type: 'pattern', value: '(' })] },
+				],
+				registry,
+			);
+			const resolved = await resolver({ handle: 'a', code: 'b' }, undefined, {
+				fields: {},
+				shouldUseNativeValidation: false,
+				names: undefined,
+			});
+
+			expect(resolved.errors).toEqual({
+				handle: { type: 'validationUnavailable' },
+				code: { type: 'validationError' },
+			});
+		} finally {
+			fetchSpy.mockRestore();
 		}
 	});
 });

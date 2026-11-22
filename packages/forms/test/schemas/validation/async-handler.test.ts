@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createAsyncValidationHandler } from '../../../src/schemas/validation/async/handler';
 import { createValidationContext } from '../../../src/schemas/validation/utils';
 import { createDebounceScope } from '../../../src/lib/debounce';
-import { REPORTED_TEXT, ValidationSuperseded } from '../../../src/schemas/validation/errors';
+import { REPORTED_TEXT, ValidationSuperseded, ValidationUnavailable } from '../../../src/schemas/validation/errors';
 
 describe('createAsyncValidationHandler HTTP method', () => {
 	let fetchSpy: ReturnType<typeof vi.spyOn>;
@@ -232,5 +232,52 @@ describe('AsyncRuleSchema', () => {
 		});
 
 		expect(parsed.expectedResponse).toEqual({ valid: true, message: 'm' });
+	});
+});
+
+describe('createAsyncValidationHandler answers', () => {
+	let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+	afterEach(() => fetchSpy.mockRestore());
+
+	const run = (rule: Partial<Parameters<typeof createAsyncValidationHandler>[0]>, value = 'v') =>
+		createAsyncValidationHandler(
+			{ type: 'async', url: '/answers', ...rule },
+			createValidationContext({ fieldPath: 'f' }),
+		).safeParseAsync(value);
+	const answer = (body: unknown) => {
+		fetchSpy = vi
+			.spyOn(globalThis, 'fetch')
+			.mockImplementation(async () => new Response(JSON.stringify(body), { status: 200 }));
+	};
+
+	test.each([{}, null, 'ok', { message: 'hm' }, { valid: 'yes' }, 1])(
+		'an answer of %j is no answer: it throws ValidationUnavailable and is never cached',
+		async (body) => {
+			answer(body);
+			await expect(run({}, `v-${JSON.stringify(body)}`)).rejects.toBeInstanceOf(ValidationUnavailable);
+			await expect(run({}, `v-${JSON.stringify(body)}`)).rejects.toBeInstanceOf(ValidationUnavailable);
+			expect(fetchSpy).toHaveBeenCalledTimes(2);
+		},
+	);
+
+	test('a boolean, or an object with a boolean valid or success, is an answer', async () => {
+		answer(false);
+		expect((await run({}, 'a')).success).toBe(false);
+		answer({ success: true });
+		expect((await run({}, 'b')).success).toBe(true);
+		answer({ valid: false, success: true });
+		expect((await run({}, 'c')).success).toBe(false);
+	});
+
+	test('an expected response is compared structurally, whatever the key order', async () => {
+		answer({ success: true, valid: true });
+		expect((await run({ expectedResponse: { valid: true, success: true }, disableCache: true })).success).toBe(
+			true,
+		);
+		answer({ valid: true, success: true, extra: 1 });
+		expect((await run({ expectedResponse: { valid: true, success: true }, disableCache: true })).success).toBe(
+			false,
+		);
 	});
 });

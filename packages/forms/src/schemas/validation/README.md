@@ -246,7 +246,7 @@ The assertion table and reference scoping are under
 }
 ```
 
-The issue of an `async` rule has no `params`: its url, headers and dependencies never reach a snapshot. The text the endpoint answers with (`message` or `error`) is the issue's fallback `message`, else the rule's own. A non-ok response or a network failure is not an answer about the value: it throws `ValidationUnavailable`, which `validateFieldValue` reports as a `FormValidationFailure` (so `validate()` rejects and an automatic check records it in `validationFailures`), and it is never cached. `relate` issues carry `params: { assert }`, the kind of assertion, and no field names.
+The issue of an `async` rule has no `params`: its url, headers and dependencies never reach a snapshot. The text the endpoint answers with (`message` or `error`) is the issue's fallback `message`; it beats the rule's own `message`, which is the fallback only when the endpoint says nothing, because the endpoint knows the specific reason ("handle is taken") where the authored text is generic. An answer is a boolean, or an object whose `valid` (else `success`) is a boolean, or equals `expectedResponse` structurally (key order does not matter); anything else (`{}`, `null`, `"ok"`) is no answer and is treated as an outage. A non-ok response or a network failure is not an answer about the value: it throws `ValidationUnavailable`, which `validateFieldValue` reports as a `FormValidationFailure` (so `validate()` rejects and an automatic check records it in `validationFailures`), and it is never cached. `relate` issues carry `params: { assert }`, the kind of assertion, and no field names.
 
 ## Custom Validations
 

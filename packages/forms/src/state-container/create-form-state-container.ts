@@ -22,6 +22,7 @@ import { dirtyTree } from './dirty';
 import type { FieldArrayCommands } from './field-array';
 import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
 import { selectFieldState } from './selectors';
+import { Submission, type SubmissionRecord } from './submission';
 import { createRunTracker } from './stale-results';
 import {
 	clearAround,
@@ -52,8 +53,6 @@ import {
 	type FormStateSnapshot,
 	type NativeOptions,
 	type NativeValidity,
-	type SubmissionOutcome,
-	type SubmissionToken,
 } from './types';
 import {
 	changedPaths,
@@ -135,14 +134,6 @@ interface RowEntry {
 	readonly node: RowNode;
 }
 
-/** What a submission captured, to apply its answer to what it was about. */
-interface SubmissionRecord {
-	outcome: SubmissionOutcome | undefined;
-	values: NullMap;
-	ids: IdTree | undefined;
-	readonly epoch: number;
-}
-
 /** What a rule check found for one path. */
 interface PathFindings {
 	readonly errors: FormStateIssue[];
@@ -198,13 +189,14 @@ const reuseIssues = (previous: Issues | undefined, next: Issues): Issues =>
 	previous && sameIssues(previous, next) ? previous : Object.freeze([...next]);
 
 const sameFailure = (a: FormStateFailure, b: FormStateFailure): boolean =>
-	a.path === b.path && a.ruleType === b.ruleType && a.ruleId === b.ruleId;
+	a.path === b.path && a.ruleType === b.ruleType && a.ruleId === b.ruleId && a.reason === b.reason;
 
 /** What a snapshot keeps of a rule that could not run: plain data, without the error and its cause. */
 const failureData = (failure: FormValidationFailure): FormStateFailure =>
 	Object.freeze({
 		path: failure.path,
 		ruleType: failure.ruleType,
+		reason: failure.reason,
 		...(failure.ruleId === undefined ? {} : { ruleId: failure.ruleId }),
 	});
 
@@ -832,13 +824,13 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 						(isStructural(readAt(start.values, above)) && !isStructural(readAt(state.values, current)))
 					);
 				});
-		const stale = (path: string, current: string | undefined): boolean =>
-			current === undefined ||
+		const outrun = (path: string, current: string): boolean =>
 			lostContainer(path) ||
 			movedSince(path) ||
-			factMoved(path, current) ||
 			tracker.superseded(run, current, (anchor) => resolveAnchor(anchor, state.ids)) ||
 			dependencyChanged(path);
+		const stale = (path: string, current: string | undefined): boolean =>
+			current === undefined || outrun(path, current) || factMoved(path, current);
 		const plannedSet = new Set(planned);
 		const decided = [
 			...new Set([
@@ -886,8 +878,13 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 
 		let validation = state.validation;
 		let validated = state.validated;
+		const askAgain: string[] = [];
 		for (const { path, current } of decided) {
-			if (current === undefined || excludedNow(current) || unchecked.has(path) || stale(path, current)) continue;
+			if (current === undefined || excludedNow(current) || unchecked.has(path)) continue;
+			if (stale(path, current)) {
+				if (!mode.reject && factMoved(path, current) && !outrun(path, current)) askAgain.push(current);
+				continue;
+			}
 			const entry = found[path] as PathFindings | undefined;
 			validation = setSelfAt(
 				validation,
@@ -912,6 +909,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				: setSelfAt(failed, '', true, isArrayNow);
 		}
 		finish({ validation, validated, failed });
+		if (askAgain.length > 0) validateQuietly(askAgain, { record: true, markFailed: false, exact: true });
 		if (overtaken) {
 			if (mode.submission) mode.submission.outcome = 'overtaken';
 			return false;
@@ -1177,8 +1175,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return commands;
 	}
 
-	const submissions = new WeakMap<SubmissionToken, SubmissionRecord>();
-	let latestSubmission: SubmissionToken | undefined;
+	let latestSubmission: Submission | undefined;
 
 	/** Whether the target of a server error, and the values its path's rules read, are as they were when the submission began. */
 	function targetUnchanged(record: SubmissionRecord, was: string, now: string, index: DependencyIndex): boolean {
@@ -1250,8 +1247,15 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 					if (facts !== state.native) commit({ native: facts });
 				}
 				const token = validateOptions?.submission;
-				const submission = token && token === latestSubmission ? submissions.get(token) : undefined;
-				if (submission) submission.outcome = undefined;
+				const record = Submission.recordOf(token);
+				const submission = record && token === latestSubmission ? record : undefined;
+				if (record) record.outcome = submission ? undefined : 'overtaken';
+				if (submission && paths?.length === 0) {
+					submission.values = state.values;
+					submission.ids = state.ids;
+					submission.outcome = 'passed';
+					return Promise.resolve(true);
+				}
 				return runValidation(paths, { record: true, markFailed: true, retry: true, reject: true, submission });
 			});
 		},
@@ -1265,21 +1269,12 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 					: undefined,
 			}),
 		beginSubmission() {
-			const record: SubmissionRecord = {
+			const token = new Submission({
 				outcome: undefined,
 				values: state.values,
 				ids: state.ids,
 				epoch: tracker.epoch(),
-			};
-			const token = Object.freeze({
-				get values() {
-					return toPlain(record.values);
-				},
-				get outcome() {
-					return record.outcome;
-				},
-			}) as unknown as SubmissionToken;
-			submissions.set(token, record);
+			});
 			latestSubmission = token;
 			commit({ server: undefined });
 			return token;
@@ -1289,7 +1284,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				throw new Error(`Unknown error source '${String(source)}': a host sets ${HOST_SOURCES.join(', ')}.`);
 			}
 			const token = setOptions?.submission;
-			const record = token ? submissions.get(token) : undefined;
+			const record = Submission.recordOf(token);
 			const given = Object.entries(errors).map(([path, input]) => {
 				if (path !== FORM_ROOT) assertFieldPath(path, 'setErrors');
 				assertRowsExist(path, record?.values ?? state.values);

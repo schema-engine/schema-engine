@@ -48,7 +48,7 @@ export type FormStateSource = 'server' | 'validation' | 'native';
  * `type` names the problem for a program: the rule's type (`'minLength'`), the `ValidityState` flag of a
  * native control (`'typeMismatch'`) or the server's code. `ruleId` is the author's stable name for the
  * rule, so two `pattern` rules stay distinguishable. `params` are the numbers and names the text is
- * built from, serializable (`{ value: 8 }` for a rule, `{ minLength: 8 }` for a native control).
+ * built from, serializable (`{ minLength: 8 }` for a rule, `{ minLength: 8 }` for a native control).
  * `message` is only the text the author wrote on the rule, or the server or control sent, for a host with no
  * translation of the issue, and may be absent. Text the schema library would make up is never used.
  */
@@ -103,6 +103,8 @@ export type FormIssueFormatter = (issue: FormStateIssue, field: { readonly path:
 export interface FormStateFailure {
 	readonly path: string;
 	readonly ruleType: string;
+	/** `'unavailable'`: the service the rule asks could not answer, and asking again may succeed. `'error'`: the rule threw, which asking again will not mend. */
+	readonly reason: 'unavailable' | 'error';
 	readonly ruleId?: string;
 }
 
@@ -195,8 +197,6 @@ export interface BlurOptions extends NativeOptions {
  */
 export type SubmissionOutcome = 'passed' | 'invalid' | 'overtaken';
 
-declare const submissionBrand: unique symbol;
-
 /**
  * What {@link FormStateContainer.beginSubmission} returns: the values a submission is about, as the container saw them.
  *
@@ -208,7 +208,6 @@ declare const submissionBrand: unique symbol;
  * ({@link FormStateContainer.setErrors}).
  */
 export interface SubmissionToken {
-	readonly [submissionBrand]: true;
 	/** The frozen values of the submission, nested like `snapshot.values`. */
 	readonly values: Readonly<Record<string, unknown>>;
 	/** How the last validation with this token ended; unset until one has, and while the next is running. */

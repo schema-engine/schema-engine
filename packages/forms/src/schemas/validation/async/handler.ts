@@ -71,21 +71,41 @@ function createValidationPayload(
 	return payload;
 }
 
+/** Whether two answers hold the same data, whatever the order of their keys. */
+function sameData(a: unknown, b: unknown): boolean {
+	if (Object.is(a, b)) return true;
+	if (Array.isArray(a) || Array.isArray(b)) {
+		return (
+			Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((item, i) => sameData(item, b[i]))
+		);
+	}
+	if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+	const left = a as Record<string, unknown>;
+	const right = b as Record<string, unknown>;
+	const keys = Object.keys(left);
+	return (
+		keys.length === Object.keys(right).length &&
+		keys.every((key) => Object.hasOwn(right, key) && sameData(left[key], right[key]))
+	);
+}
+
 /**
- * Determines if validation is successful based on response data.
+ * Whether the answer of the endpoint says the value is valid.
+ *
+ * @remarks
+ * With `expectedResponse` the answer must equal it structurally. Without, an answer is a boolean, or an
+ * object whose `valid` (else `success`) is a boolean. Anything else is no answer about the value: it throws
+ * `ValidationUnavailable`, so it is never a field error and never cached.
  */
 function isValidationSuccessful(data: unknown, expectedResponse?: AsyncValidationResponse): boolean {
-	if (expectedResponse) {
-		return JSON.stringify(data) === JSON.stringify(expectedResponse);
-	}
-
+	if (expectedResponse) return sameData(data, expectedResponse);
 	if (typeof data === 'boolean') return data;
 	if (typeof data === 'object' && data !== null) {
-		const obj = data as Record<string, unknown>;
-		return obj.success === true || obj.valid === true;
+		const { valid, success } = data as Record<string, unknown>;
+		if (typeof valid === 'boolean') return valid;
+		if (typeof success === 'boolean') return success;
 	}
-
-	return false;
+	throw new ValidationUnavailable();
 }
 
 /**

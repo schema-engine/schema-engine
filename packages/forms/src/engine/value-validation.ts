@@ -12,7 +12,7 @@ import {
 import type { BaseValidationRule, RequiredRule } from '../schemas/validation/types.js';
 import type { ValidationRegistry } from '../schemas/validation/validation-registry.js';
 import type { DebounceScope } from '../lib/debounce.js';
-import { REPORTED_TEXT, ValidationSuperseded } from '../schemas/validation/errors.js';
+import { REPORTED_TEXT, ValidationSuperseded, ValidationUnavailable } from '../schemas/validation/errors.js';
 import * as z from 'zod/mini';
 
 export interface ValidationElement {
@@ -102,6 +102,8 @@ export class FormValidationFailure extends Error {
 	readonly path: string;
 	readonly ruleType: string;
 	readonly ruleId?: string;
+	/** `'unavailable'` when the service the rule asks could not answer, else `'error'`. */
+	readonly reason: 'unavailable' | 'error';
 
 	constructor(path: string, rule: { readonly type: string; readonly id?: string }, cause: unknown) {
 		const reason = cause instanceof Error ? cause.message : String(cause);
@@ -109,6 +111,7 @@ export class FormValidationFailure extends Error {
 		this.name = 'FormValidationFailure';
 		this.path = path;
 		this.ruleType = rule.type;
+		this.reason = cause instanceof ValidationUnavailable ? 'unavailable' : 'error';
 		if (rule.id !== undefined) this.ruleId = rule.id;
 	}
 }

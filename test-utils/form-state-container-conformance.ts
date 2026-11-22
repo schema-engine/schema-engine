@@ -2139,7 +2139,7 @@ const cases: FormStateContainerCase[] = [
 			automatic.setValue('secret', '');
 			await vi.waitFor(() => expect(automatic.getSnapshot().validationFailures.secret).toHaveLength(1));
 			expect(automatic.getSnapshot().validationFailures.secret).toEqual([
-				{ path: 'secret', ruleType: 'boom', ruleId: 'secret-boom' },
+				{ path: 'secret', ruleType: 'boom', ruleId: 'secret-boom', reason: 'error' },
 			]);
 			expect(Object.isFrozen(automatic.getSnapshot().validationFailures.secret[0])).toBe(true);
 			expect(errorsOf(automatic).secret?.all).toEqual([
@@ -2347,6 +2347,83 @@ const cases: FormStateContainerCase[] = [
 				/'constructor'/,
 			);
 			expect(() => store.setValue('prototype.x', 1)).toThrow(/__.*constructor.*prototype/s);
+		},
+	},
+	{
+		rule: 'native facts',
+		name: 'a fact reported while the check of a write runs is not lost: the rule error and the native one both appear',
+		async run(createStore) {
+			const store = createStore(fixture({ validationMode: 'onChange' }).options);
+			store.setValue('nickname', '');
+			expect(store.getSnapshot().validating.nickname).toBe(true);
+			store.reportNative('nickname', { type: 'valueMissing' });
+			await vi.waitFor(() =>
+				expect(errorsOf(store).nickname?.all.map(({ source }) => source)).toEqual(['validation', 'native']),
+			);
+			expect(store.getSnapshot().isValidating).toBe(false);
+
+			const touched = createStore(fixture({ validationMode: 'onTouched' }).options);
+			touched.blur('name');
+			touched.setValue('name', '');
+			touched.reportNative('name', { type: 'valueMissing' });
+			await vi.waitFor(() =>
+				expect(errorsOf(touched).name?.all.map(({ source }) => source)).toEqual(['validation', 'native']),
+			);
+		},
+	},
+	{
+		rule: 'submission-bound validation',
+		name: 'a superseded token ends overtaken whatever it ended before, and validating no paths passes and captures the values',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			const first = store.beginSubmission();
+			expect(await store.validate(undefined, { submission: first })).toBe(true);
+			expect(first.outcome).toBe('passed');
+			store.beginSubmission();
+			expect(await store.validate(undefined, { submission: first })).toBe(true);
+			expect(first.outcome).toBe('overtaken');
+
+			const empty = store.beginSubmission();
+			store.setValue('name', 'Grace');
+			expect(await store.validate([], { submission: empty })).toBe(true);
+			expect(empty.outcome).toBe('passed');
+			expect(empty.values.name).toBe('Grace');
+		},
+	},
+	{
+		rule: 'validator failures',
+		name: 'a snapshot says why a rule did not run: the service was unavailable, or the rule threw',
+		async run(createStore) {
+			vi.stubGlobal(
+				'fetch',
+				vi.fn(async () => new Response('no', { status: 500 })),
+			);
+			try {
+				const store = createStore(
+					custom(
+						[
+							{
+								$type: 'input',
+								name: 'handle',
+								rules: [{ type: 'async', url: '/check', disableCache: true }],
+							},
+							{ $type: 'input', name: 'secret', rules: [{ type: 'boom' }] },
+						],
+						{ handle: '', secret: '' },
+						{ validationMode: 'onChange' },
+					),
+				);
+				store.setValue('handle', 'a');
+				store.setValue('secret', 'x');
+				await vi.waitFor(() =>
+					expect(store.getSnapshot().validationFailures).toEqual({
+						handle: [{ path: 'handle', ruleType: 'async', reason: 'unavailable' }],
+						secret: [{ path: 'secret', ruleType: 'boom', reason: 'error' }],
+					}),
+				);
+			} finally {
+				vi.unstubAllGlobals();
+			}
 		},
 	},
 	{

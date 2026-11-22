@@ -11,12 +11,16 @@ import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-va
  * A container's error is written first, so an error on `contacts` and one on `contacts.0.email` share
  * one nested node, as React Hook Form's own shape requires.
  */
-export function toFieldErrors(errors: Readonly<Record<string, { type: string; message: string }>>): FieldErrors {
+export function toFieldErrors(errors: Readonly<Record<string, { type: string; message?: string }>>): FieldErrors {
 	const nested: Record<string, unknown> = {};
 	for (const [path, error] of Object.entries(errors).toSorted(
 		([a], [b]) => a.split('.').length - b.split('.').length,
 	)) {
-		setValueAtPath(nested, path, { type: error.type, message: error.message });
+		setValueAtPath(
+			nested,
+			path,
+			error.message === undefined ? { type: error.type } : { type: error.type, message: error.message },
+		);
 	}
 	return nested as FieldErrors<FieldValues>;
 }

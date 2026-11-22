@@ -20,8 +20,9 @@ export interface FormFieldState {
 const isAround = (mark: string, path: string): boolean => path === mark || path.startsWith(`${mark}.`);
 const isBelow = (mark: string, path: string): boolean => mark.startsWith(`${path}.`);
 
-const NO_ERROR = Object.freeze({}) as FormStateError;
-const NO_WARNING = Object.freeze({}) as FormStateWarning;
+/** Stands for "no error" and "no warning" as a key of the intern tables: it is never handed out. */
+const NO_ERROR: object = Object.freeze({});
+const NO_WARNING: object = Object.freeze({});
 const statesByIssues = new WeakMap<object, WeakMap<object, FormFieldState[]>>();
 
 /**

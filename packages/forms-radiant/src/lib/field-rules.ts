@@ -99,7 +99,8 @@ function resolveValidationRegistry(registry?: ValidationRegistry): ValidationReg
  *
  * A rule that could not run (a throwing rule, an unavailable service) cannot be left out, or the field would
  * pass on a value nothing judged, and a validator that rejects is unhandled while the user types: this legacy
- * path shows the rule's type as the error, which the engine itself never does.
+ * path shows a reserved type as the error, `validationUnavailable` or `validationError`, which the engine itself
+ * never does and which is never the rule's own type: that would read as the rule's verdict.
  */
 function toValidator(
 	rules: ReadonlyArray<ValidationRule>,
@@ -126,7 +127,7 @@ function toValidator(
 			registry,
 			debounceScope,
 		}).then(({ issues, failures, superseded }) => {
-			if (failures[0]) return failures[0].ruleType;
+			if (failures[0]) return failures[0].reason === 'unavailable' ? 'validationUnavailable' : 'validationError';
 			if (superseded) throw new ValidationSuperseded();
 			const blocking = issues.find((found) => found.severity === 'error');
 			return blocking ? (blocking.message ?? blocking.type) : true;

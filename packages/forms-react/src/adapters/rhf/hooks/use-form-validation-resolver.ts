@@ -10,7 +10,7 @@ type Outcome = Awaited<ReturnType<typeof validateFormValues>>;
 /**
  * @remarks
  * Converts the engine's flat errors to the nested shape React Hook Form needs to clear individual field errors on revalidation.
- * Only the issue to show crosses, with the rule's type, and warnings do not: React Hook Form has no channel for them. A rule that could not run (a throwing rule, an unavailable service) cannot be left out, or a submit would pass on a value nothing judged: the adapter shows it as an error of its rule type, which the engine itself never does.
+ * Only the issue to show crosses, with the rule's type, and warnings do not: React Hook Form has no channel for them. A rule that could not run (a throwing rule, an unavailable service) cannot be left out, or a submit would pass on a value nothing judged: the adapter shows it as an error of a reserved type, `validationUnavailable` or `validationError`, with no message, which the engine itself never does. The type is never the rule's own, which would read as that rule's verdict.
  *
  * A check replaced by a later one before it ran has no result. The call waits for the later run to finish and
  * then asks again for its own names and values, so it answers for what it was asked and never adopts the
@@ -35,7 +35,11 @@ export function createFormValidationResolver(elements: ValidationElementTree, re
 			found = await attempt;
 		}
 		const failed = Object.entries(found.failures).map(
-			([path, failures]) => [path, { type: failures[0].ruleType, message: failures[0].ruleType }] as const,
+			([path, failures]) =>
+				[
+					path,
+					{ type: failures[0].reason === 'unavailable' ? 'validationUnavailable' : 'validationError' },
+				] as const,
 		);
 		const errors = Object.fromEntries([
 			...Object.entries(found.issues).flatMap(([path, issues]) => {
