@@ -24,6 +24,7 @@ import {
 import type { ValidateFormOptions } from './validate-form/options';
 import { brandElementTree, parseActionList, parseElementList, parseElementNode } from './validate-form/parse-elements';
 import { parseView } from './validate-form/parse-view';
+import { stepStructureIssues } from './validate-form/step-checks';
 import { fromSchemaIssues } from './validate-form/schema-issues';
 import { FormValidationError } from './validate-form/validation-error';
 
@@ -143,6 +144,7 @@ export function safeValidateFormConfig(
 		};
 	});
 
+	issues.push(...stepStructureIssues(steps, options.getElement));
 	issues.push(
 		...payloadIssues(
 			envelope.payload,

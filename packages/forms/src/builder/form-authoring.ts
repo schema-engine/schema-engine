@@ -1,4 +1,5 @@
 import type { AppearanceInput, GridLayoutConfig } from '@schema-engine/layout';
+import type { StepConstraint } from '../schemas/base-field';
 
 /**
  * Discriminated union of `{ $type }` plus the registered config for each key.
@@ -148,8 +149,8 @@ export type FormAuthoringStep<
 	description?: string;
 	icon?: string;
 	elements: Array<AuthoringElement<TElements, TAppearance>>;
-	rules?: unknown;
-	constraints?: unknown[];
+	/** Show or hide constraints on fields of earlier steps; a step they hide is skipped. */
+	constraints?: StepConstraint[];
 	className?: string;
 	style?: Record<string, string | number>;
 	appearance?: AppearanceInput<TAppearance>;
@@ -190,6 +191,13 @@ export interface FormAuthoringInput<
 	 * @remarks Normalization fills it with `'onChange'` when unset.
 	 */
 	reValidateMode?: 'onSubmit' | 'onChange' | 'onBlur';
+	/**
+	 * How freely the stepper moves forward: `'linear'` reaches only visited steps and validates the steps on the way,
+	 * `'free'` reaches any active step without validating.
+	 *
+	 * @remarks Normalization fills it with `'linear'` when unset. Back is always allowed and `next()` validates in both.
+	 */
+	navigation?: 'linear' | 'free';
 	/**
 	 * Serializable data that always travels with a submission, such as ids or context.
 	 *
