@@ -83,7 +83,10 @@ const sameSteps = (a: readonly FormStepState[], b: readonly FormStepState[]): bo
  * trigger, so whichever caller resets resets everything.
  *
  * One lock covers navigation and submission: a command made while another runs ends `'busy'`. A revoked
- * command checks after every await and ends `'cancelled'`, writing nothing. Step actions cannot block a move:
+ * command checks after every await and ends `'cancelled'`, writing nothing. The submission lifecycle is not
+ * cut short by a reset: once validation passed it runs to its end, so a `reset` action on
+ * `form_submit_success` does not keep `form_submit_complete` from running. An action already running for
+ * `form_mount` or `form_change` is not a command and runs to its end. Step actions cannot block a move:
  * the validation of the step is the guard, and a failing step action is reported through `onActionResults`.
  */
 export function createFormRuntime<TAction extends FormActionConfig = FormActionConfig>(
@@ -418,8 +421,8 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		});
 
 	async function submitLastStep(op: Operation): Promise<SubmitOutcome> {
-		setSubmission({ status: 'pending', failures: NO_FAILURES, submitCount: submission.submitCount });
 		host.sync?.();
+		setSubmission({ status: 'pending', failures: NO_FAILURES, submitCount: submission.submitCount });
 		let result: FormSubmitResult;
 		try {
 			result = await container.submit();

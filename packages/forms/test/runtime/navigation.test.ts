@@ -261,3 +261,37 @@ describe('the lock', () => {
 		expect(await submitting).toBe('submitted');
 	});
 });
+
+describe('goTo that a check outran, or a reset revoked', () => {
+	test('ends overtaken when an edit outruns the check of a step on the way, and cancelled when a reset comes first', async () => {
+		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
+		const release = async () => {
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			gate.waiting.splice(0).forEach((resolve) => resolve());
+		};
+		fill(runtime, { email: 'a@b.c', street: 's' });
+		const first = runtime.next();
+		await release();
+		await first;
+		await runtime.next();
+		expect(await runtime.goTo('contact')).toBe('moved');
+
+		const moving = runtime.goTo('payment');
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		runtime.container.setValue('email', 'x@b.c');
+		await release();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		runtime.container.setValue('email', 'y@b.c');
+		await release();
+		await release();
+		expect(await moving).toBe('overtaken');
+		expect(host.focus).not.toHaveBeenCalled();
+		expect(runtime.getSnapshot().steps.current).toBe('contact');
+
+		const revoked = runtime.goTo('payment');
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		runtime.container.reset();
+		await release();
+		expect(await revoked).toBe('cancelled');
+	});
+});

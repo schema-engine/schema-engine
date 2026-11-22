@@ -39,7 +39,7 @@ export interface FormSubmitHelpers {
  * - `submitted` and `failed`: a submission ran and its actions and `onSubmit` succeeded or did not. Why it
  *   failed is in `snapshot.submission.failures`, never in the return value.
  * - `invalid`: validation found errors, which are shown and focused.
- * - `overtaken`: an edit or a reset outran the check, so there is no verdict: nothing is shown or focused.
+ * - `overtaken`: an edit or a row move outran the check, so there is no verdict: nothing is shown or focused.
  * - `refused`: there was nowhere to go, or the step is unknown, skipped or not reachable.
  * - `busy`: another command was running.
  * - `cancelled`: a reset or an unmount revoked the command, which then wrote nothing.
@@ -92,7 +92,7 @@ export interface FormRuntimeHost {
 	/**
 	 * Focuses the first control with an error among `paths`.
 	 *
-	 * @remarks The paths are those of the fields that have an error; the host picks the first in the document.
+	 * @remarks The paths are those of the fields that have an error; the host picks the first in the document. The list may be empty (a rule that could not run records no field error), and the host then focuses nothing.
 	 */
 	focus(paths: readonly string[]): void;
 	/** Writes the controls' values to the container and reports their native validity, as a submit does, before a check. */
@@ -147,7 +147,7 @@ export interface FormRuntime {
 	/**
 	 * Starts the runtime: dispatches `form_mount` the first time, and watches the values for `form_change` and `onChange`.
 	 *
-	 * @remarks The returned function stops the watch and revokes any command in flight, which ends `'cancelled'`. Mounting again is allowed and dispatches `form_mount` no more.
+	 * @remarks The returned function stops the watch and revokes any command in flight (`next`, `back`, `goTo`, `submit`), which ends `'cancelled'`. Mounting again is allowed and dispatches `form_mount` no more.
 	 */
 	mount: () => () => void;
 	getSnapshot: () => FormRuntimeSnapshot;

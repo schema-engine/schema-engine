@@ -184,3 +184,51 @@ describe('what a failed submission reports', () => {
 		expect(reported.filter((entry) => entry.startsWith('form_submit:'))).toEqual(['form_submit:1']);
 	});
 });
+
+describe('a submission a reset or an edit outran', () => {
+	test('an edit that outruns its validation is overtaken: nothing is shown or counted, and the next submit may pass', async () => {
+		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
+		const release = async () => {
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			gate.waiting.splice(0).forEach((resolve) => resolve());
+		};
+		fill(runtime, { email: 'a@b.c', street: 's', card: 'c' });
+		const first = runtime.next();
+		await release();
+		await first;
+		await runtime.next();
+		expect(runtime.getSnapshot().steps.current).toBe('payment');
+
+		const running = runtime.submit();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		runtime.container.setValue('card', 'd');
+		await release();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		runtime.container.setValue('card', 'e');
+		await release();
+		await release();
+
+		expect(await running).toBe('overtaken');
+		expect(host.focus).not.toHaveBeenCalled();
+		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+
+		const again = runtime.submit();
+		await release();
+		await release();
+		expect(await again).toBe('submitted');
+	});
+
+	test('a reset while the submission validates cancels it: nothing is written, nothing is posted and no action runs', async () => {
+		const onSubmit = vi.fn();
+		const { runtime, seen, host } = setup(wizardConfig(), { onSubmit });
+		await toLastStep(runtime);
+		fill(runtime, { card: 'c' });
+		const running = runtime.submit();
+		runtime.container.reset();
+		expect(await running).toBe('cancelled');
+		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(host.submitNatively).not.toHaveBeenCalled();
+		expect(seen.filter(({ trigger }) => trigger.startsWith('form_submit'))).toEqual([]);
+	});
+});

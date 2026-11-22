@@ -113,12 +113,12 @@ so they cannot go stale.
   synchronous: a second command in the same tick is `busy`.
 - **Reset.** The container snapshot's `generation` goes up on every reset. When it changes the runtime revokes
   the command in flight (`cancelled`), returns the submission to `{ idle, [], 0 }` and the steps to the first,
-  and fires no step trigger. So an action's `form.reset`, `useFormContext().reset` and a native reset button all
+  and fires no step trigger. A submission's lifecycle is not cut short: once validation passed it runs to its end, so a `reset` action on `form_submit_success` does not keep `form_submit_complete` from running. So an action's `form.reset`, `useFormContext().reset` and a native reset button all
   reset everything.
 - **Mount.** `mount()` dispatches `form_mount` the first time only, and watches the container's `values`: a new
   values tree is a change (`form_change` and `onChange`), an error, a touch or a validation result never is. The
   baseline is the server snapshot, so a value written before the effect ran is still reported. The cleanup stops
-  the watch and revokes the command in flight. Mounting again is allowed (React's strict effects do).
+  the watch and revokes the command in flight; an action already running for `form_mount` or `form_change` is not a command and runs to its end. Mounting again is allowed (React's strict effects do).
 - **`next()`** syncs the host, validates the current step's fields, and on failure focuses the step's errors
   and returns `invalid`. On success it marks the step complete and moves to the next active step. On the last
   active step it returns `refused`. It never marks the form submitted. An overtaken check stays put without

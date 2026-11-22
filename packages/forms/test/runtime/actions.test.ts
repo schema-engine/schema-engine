@@ -112,17 +112,22 @@ describe('the action context', () => {
 		expect(seen[1]?.form.getValue('status')).toBe('prepared');
 	});
 
-	test('form.reset resets the runtime: the defaults, the submission and the count', async () => {
-		const { runtime, seen } = setup([record('reset', ['form_submit_success'])], {
-			fields: [{ $type: 'input', name: 'email' }],
-			defaults: { email: 'a' },
-			answer: ({ form }) => form.reset(),
-		});
+	test('form.reset resets the runtime (the defaults, the submission and the count) without keeping form_submit_complete from running', async () => {
+		const { runtime, seen } = setup(
+			[record('reset', ['form_submit_success']), record('done', ['form_submit_complete'])],
+			{
+				fields: [{ $type: 'input', name: 'email' }],
+				defaults: { email: 'a' },
+				answer: ({ trigger, form }) => {
+					if (trigger === 'form_submit_success') form.reset();
+				},
+			},
+		);
 		runtime.container.setValue('email', 'b');
 
 		expect(await runtime.submit()).toBe('cancelled');
 
-		expect(seen.map(({ trigger }) => trigger)).toEqual(['form_submit_success']);
+		expect(seen.map(({ trigger }) => trigger)).toEqual(['form_submit_success', 'form_submit_complete']);
 		expect(runtime.container.getValue('email')).toBe('a');
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 	});

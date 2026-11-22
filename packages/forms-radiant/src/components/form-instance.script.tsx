@@ -76,6 +76,14 @@ interface BoundForm {
 	readonly host: RuiFormElement;
 	readonly defaultValues: Record<string, unknown> | undefined;
 	readonly runtime: FormRuntime;
+	/** The `rui-form` submit of this form in flight: a form replaced meanwhile keeps its own, so an old one that hangs holds back nothing. */
+	readonly inFlight: InFlightSubmit;
+}
+
+/** What one form's submission in flight holds: the `rui-form` context whose `submitNatively` the runtime's host reaches, and the results of the submit actions, which `se-action-submit-complete` carries. */
+interface InFlightSubmit {
+	context?: Pick<RuiFormSubmitContext, 'submitNatively'>;
+	results: readonly SubmissionActionResult[];
 }
 
 /**
@@ -116,10 +124,6 @@ export class FormInstanceElement extends RadiantElement {
 	private unwatchValues?: () => void;
 	private unsubscribeRuntime?: () => void;
 	private unmountRuntime?: () => void;
-	/** The `rui-form` submit in flight, whose `submitNatively` the runtime's host reaches. */
-	private submitContext?: Pick<RuiFormSubmitContext, 'submitNatively'>;
-	/** The results of the submit actions of the submission in flight, which `se-action-submit-complete` carries. */
-	private submitResults: readonly SubmissionActionResult[] = [];
 	private rendererEngine?: CoreFormEngine;
 	private reportedMissingEngine = false;
 
@@ -151,8 +155,17 @@ export class FormInstanceElement extends RadiantElement {
 	protected override onConnected(): void {
 		this.engine ??= resolveFormEngine(this);
 		this.connectForm();
+		this.resumeWatches();
 		this.mountRuntime();
 		this.publish();
+	}
+
+	/** Watches the runtime and the values again after a disconnect, which stopped them with the runtime's mount. */
+	private resumeWatches(): void {
+		const { bound } = this;
+		if (!bound || this.unsubscribeRuntime) return;
+		this.watchValues(bound.runtime);
+		this.watchRuntime(bound);
 	}
 
 	/**
@@ -179,6 +192,10 @@ export class FormInstanceElement extends RadiantElement {
 	override disconnectedCallback(): void {
 		this.unmountRuntime?.();
 		this.unmountRuntime = undefined;
+		this.unsubscribeRuntime?.();
+		this.unsubscribeRuntime = undefined;
+		this.unwatchValues?.();
+		this.unwatchValues = undefined;
 		super.disconnectedCallback();
 	}
 
@@ -263,6 +280,7 @@ export class FormInstanceElement extends RadiantElement {
 			this.releaseBound();
 			return;
 		}
+		const inFlight: InFlightSubmit = { results: [] };
 		const runtime = createFormRuntime({
 			engine,
 			config: normalized.data,
@@ -271,14 +289,14 @@ export class FormInstanceElement extends RadiantElement {
 			host: {
 				focus: (paths) => focusFirstField(this, paths),
 				sync: () => ruiForm.sync(),
-				submitNatively: () => this.submitNatively(engine, ruiForm),
+				submitNatively: () => this.submitNatively(engine, ruiForm, inFlight),
 			},
 			onSubmit: (data, helpers) => this.onSubmit?.(data, helpers),
 			onChange: (data) => this.onChange?.(data),
 			onAction: (action, data) => this.onAction?.(action, data),
-			onActionResults: (results, trigger) => this.reportActionResults(ruiForm, results, trigger),
+			onActionResults: (results, trigger) => this.reportActionResults(ruiForm, inFlight, results, trigger),
 		});
-		const bound: BoundForm = { config, engine, host: ruiForm, defaultValues, runtime };
+		const bound: BoundForm = { config, engine, host: ruiForm, defaultValues, runtime, inFlight };
 		this.firstForm = false;
 		this.bound = bound;
 		this.attachForm(bound);
@@ -334,9 +352,9 @@ export class FormInstanceElement extends RadiantElement {
 	private async submitForm(context: RuiFormSubmitContext): Promise<void> {
 		this.warnWithoutEngine();
 		const { bound } = this;
-		if (!bound) return;
-		this.submitContext = context;
-		this.submitResults = [];
+		if (!bound || bound.inFlight.context) return;
+		bound.inFlight.context = context;
+		bound.inFlight.results = [];
 		try {
 			const counted = bound.runtime.getSnapshot().submission.submitCount;
 			const outcome = await bound.runtime.submit();
@@ -347,13 +365,13 @@ export class FormInstanceElement extends RadiantElement {
 				const { failures } = bound.runtime.getSnapshot().submission;
 				const detail: SubmissionCompleteDetail = {
 					succeeded: outcome === 'submitted',
-					results: this.submitResults,
+					results: bound.inFlight.results,
 					failures,
 				};
 				this.announce(bound.host, 'se-action-submit-complete', detail);
 			}
 		} finally {
-			this.submitContext = undefined;
+			if (bound.inFlight.context === context) bound.inFlight.context = undefined;
 		}
 	}
 
@@ -367,16 +385,21 @@ export class FormInstanceElement extends RadiantElement {
 	 * @remarks
 	 * Only a form without an `onSubmit` posts natively. `csrfFieldFor` gives a token only for a same-origin `post`, and a token left by an earlier post is removed when this one must not carry it.
 	 */
-	private submitNatively(engine: CoreFormEngine, host: HTMLElement): void {
+	private submitNatively(engine: CoreFormEngine, host: HTMLElement, inFlight: InFlightSubmit): void {
 		if (this.onSubmit) return;
 		const form = host.querySelector('form');
 		if (form) syncCsrfField(form, csrfFieldFor(engine.getCsrf(), form));
-		this.submitContext?.submitNatively();
+		inFlight.context?.submitNatively();
 	}
 
 	/** Reports the results of a trigger's actions with `se-action-results` on the `rui-form`, and keeps those of the submit actions for `se-action-submit-complete`. */
-	private reportActionResults(host: HTMLElement, results: readonly SubmissionActionResult[], trigger: string): void {
-		if (trigger === 'form_submit') this.submitResults = results;
+	private reportActionResults(
+		host: HTMLElement,
+		inFlight: InFlightSubmit,
+		results: readonly SubmissionActionResult[],
+		trigger: string,
+	): void {
+		if (trigger === 'form_submit') inFlight.results = results;
 		this.announce(host, 'se-action-results', { trigger, results });
 	}
 
