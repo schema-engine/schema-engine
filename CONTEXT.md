@@ -43,9 +43,10 @@ row ids, all with nested values and dotted paths; `rui-form` is only the control
 Radiant UI's own `FormStateStore` interface, which sends each control's value and native validity
 into the container. The instance provides the container on `formInstanceContext`, and scoped
 `FormController` instances read it there; there is no global active form. Decorators are
-optional lifecycle wiring around that controller. A new config or engine is a new container.
-The application gives the renderer a `formatIssue` that turns an issue (`type`, `ruleId`,
-`params`) into text; without one an issue shows its own `message` and otherwise nothing.
+optional lifecycle wiring around that controller. A new config, engine or `defaultValues` is a new container; moving the instance keeps it.
+The application gives the engine a `formatIssue` that turns an issue (`type`, `ruleId`, `params`) into
+text, and a renderer or an instance may override it for its forms (instance over renderer over engine);
+without one an issue shows its own `message` and otherwise nothing.
 `se-form-instance` coordinates one submission per form instance through the container's
 submission token: it owns the submitting state, the attempt count and the submission events, and runs the configured form actions
 through a plain `FormActions` object built for its config and engine, not through
