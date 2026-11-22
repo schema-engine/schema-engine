@@ -27,6 +27,7 @@ import '@ecopages/radiant-ui/form';
 import type { RuiFormElement, RuiFormSubmitContext } from '@ecopages/radiant-ui/form';
 import { createFormMeta, initialSteps, type FormMeta } from '@/lib/instance-view';
 import { logger } from '@/lib/logger';
+import { replaceFormData } from '@/lib/native-form-data';
 import { csrfFieldFor } from '@schema-engine/forms/csrf';
 import { syncCsrfField } from '@/lib/csrf-field';
 import type { FormProviderProps, FormSubmitContext } from '@/adapters/types';
@@ -270,7 +271,7 @@ export class FormInstanceElement extends RadiantElement {
 			host: {
 				focus: (paths) => ruiForm.focusField(paths),
 				sync: () => ruiForm.sync(),
-				submitNatively: () => this.submitNatively(engine, ruiForm, inFlight),
+				submitNatively: (values) => this.submitNatively(engine, ruiForm, inFlight, values),
 			},
 			onSubmit: (data, helpers) => this.onSubmit?.(data, helpers),
 			onChange: (data) => this.onChange?.(data),
@@ -361,13 +362,25 @@ export class FormInstanceElement extends RadiantElement {
 	 * Submits the form natively, with the engine's CSRF token put into the inner `<form>` first.
 	 *
 	 * @remarks
-	 * Only a form without an `onSubmit` posts natively. `csrfFieldFor` gives a token only for a same-origin `post`, and a token left by an earlier post is removed when this one must not carry it.
+	 * Only a form without an `onSubmit` posts natively. What is posted is the submission's `values`, not the DOM: a one-shot `formdata` listener replaces the entries, so the config's `payload` travels and a field that took no part (hidden by a constraint, disabled) does not. `csrfFieldFor` gives a token only for a same-origin `post`, and a token left by an earlier post is removed when this one must not carry it.
 	 */
-	private submitNatively(engine: CoreFormEngine, host: HTMLElement, inFlight: InFlightSubmit): void {
+	private submitNatively(
+		engine: CoreFormEngine,
+		host: HTMLElement,
+		inFlight: InFlightSubmit,
+		values: Readonly<Record<string, unknown>>,
+	): void {
 		if (this.onSubmit) return;
 		const form = host.querySelector('form');
-		if (form) syncCsrfField(form, csrfFieldFor(engine.getCsrf(), form));
-		inFlight.context?.submitNatively();
+		const csrf = form ? csrfFieldFor(engine.getCsrf(), form) : undefined;
+		if (form) syncCsrfField(form, csrf);
+		const send = (event: FormDataEvent) => replaceFormData(event.formData, values, csrf ? [csrf] : []);
+		form?.addEventListener('formdata', send);
+		try {
+			inFlight.context?.submitNatively();
+		} finally {
+			form?.removeEventListener('formdata', send);
+		}
 	}
 
 	/** Reports the results of a trigger's actions with `se-action-results` on the `rui-form`, and keeps those of the submit actions for `se-action-submit-complete`. */

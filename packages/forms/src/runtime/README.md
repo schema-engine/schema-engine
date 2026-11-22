@@ -48,7 +48,7 @@ There is no `runtime.reset()` and no `dispose()`: `container.reset()` is the onl
 - `sync()`: writes the controls' values into the container and reports their native validity, as a submit
   does. The runtime calls it before it validates for `next`, `goTo` and `submit`, and before an action's
   `form.validate()` or `form.checkValidity()`. React has none: its controls write as the user types.
-- `submitNatively()`: called once a submission succeeded, after its actions and `onSubmit` (so the navigation
+- `submitNatively(values)`: called, with the values that passed, once a submission succeeded, after its actions and `onSubmit` (so the navigation
   cannot cut off the success and complete triggers). The host decides whether it posts: Radiant does when the
   application gave no `onSubmit`, with the engine's CSRF field in the form.
 

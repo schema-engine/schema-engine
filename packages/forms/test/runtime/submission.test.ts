@@ -53,6 +53,7 @@ describe('submit on the last active step', () => {
 		failing.clear();
 		expect(await runtime.submit()).toBe('submitted');
 		expect(host.submitNatively).toHaveBeenCalledOnce();
+		expect(host.submitNatively).toHaveBeenCalledWith({ email: 'a@b.c', street: 's', card: 'c' });
 	});
 
 	test('is pending while it runs, and counts a submission that failed validation', async () => {

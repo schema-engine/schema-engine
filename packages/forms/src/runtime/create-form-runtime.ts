@@ -479,7 +479,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		} catch (error) {
 			logger.error('Action results callback failed:', error);
 		}
-		if (succeeded && live(op)) host.submitNatively?.();
+		if (succeeded && live(op)) host.submitNatively?.(values);
 
 		const count = submission.submitCount + 1;
 		if (succeeded) {
