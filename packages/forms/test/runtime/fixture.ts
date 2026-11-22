@@ -17,6 +17,7 @@ export interface Seen {
 export function createFixture() {
 	const seen: Seen[] = [];
 	const failing = new Set<string>();
+	const slow = new Set<string>();
 	const probe = {
 		$type: 'probe',
 		schema: z.looseObject({ $type: z.literal('probe'), id: z.string() }),
@@ -28,6 +29,7 @@ export function createFixture() {
 				currentStep: context.currentStep,
 				totalSteps: context.totalSteps,
 			});
+			if (slow.has(context.trigger)) await new Promise((resolve) => setTimeout(resolve, 40));
 			return failing.has(context.trigger)
 				? { success: false, error: 'probe failed', shouldContinue: false }
 				: { success: true };
@@ -36,6 +38,18 @@ export function createFixture() {
 	const gate = { waiting: [] as Array<() => void> };
 	const engine = createFormEngine({
 		validations: [
+			{
+				$type: 'boom',
+				schema: z.object({ type: z.literal('boom') }),
+				metadata: { name: 'Boom' },
+				category: 'generic',
+				handler: () =>
+					z.any().check(
+						z.refine(() => {
+							throw new Error('exploded');
+						}),
+					),
+			},
 			{
 				$type: 'gate',
 				schema: z.object({ type: z.literal('gate') }),
@@ -69,7 +83,7 @@ export function createFixture() {
 		],
 		actions: [probe],
 	});
-	return { engine, seen, failing, gate };
+	return { engine, seen, failing, slow, gate };
 }
 
 const required = [{ type: 'required' }];

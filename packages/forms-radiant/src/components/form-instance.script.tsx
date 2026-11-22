@@ -344,8 +344,8 @@ export class FormInstanceElement extends RadiantElement {
 			if (this.bound !== bound) return;
 			const submitted = bound.runtime.getSnapshot().submission.submitCount > counted;
 			if (outcome === 'invalid' && submitted) this.announce(bound.host, 'se-action-submit-invalid');
-			if (outcome === 'submitted' || outcome === 'failed') {
-				const { failures } = bound.runtime.getSnapshot().submission;
+			const { failures } = bound.runtime.getSnapshot().submission;
+			if (outcome === 'submitted' || (outcome === 'failed' && failures.length > 0)) {
 				const detail: SubmissionCompleteDetail = {
 					succeeded: outcome === 'submitted',
 					results: bound.inFlight.results,

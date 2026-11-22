@@ -64,20 +64,20 @@ type NavigationOutcome = Extract<
 >;
 type SubmitOutcome = Extract<
 	FormRuntimeOutcome,
-	'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'busy' | 'cancelled'
+	'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
 >;
 ```
 
-| Outcome     | Meaning                                                                                                                                                                                                                                           |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `moved`     | The current step changed.                                                                                                                                                                                                                         |
-| `submitted` | A submission ran and its actions and `onSubmit` succeeded.                                                                                                                                                                                        |
-| `failed`    | A submission ran and failed, or a step check in `next`/`goTo` could not run: an action stopped it, `onSubmit` rejected, a trigger failed or validation could not run. The reason is in `snapshot.submission.failures`, never in the return value. |
-| `invalid`   | Validation found errors, which are shown and focused.                                                                                                                                                                                             |
-| `overtaken` | An edit or a row move outran the check, so there is no verdict: nothing is shown, focused or counted.                                                                                                                                             |
-| `refused`   | There was nowhere to go: the last active step, an unknown or skipped step, the current step, or a step not reachable in `linear` navigation.                                                                                                      |
-| `busy`      | Another command was running.                                                                                                                                                                                                                      |
-| `cancelled` | A reset or an unmount revoked the command before its values were captured, which then wrote nothing.                                                                                                                                              |
+| Outcome     | Meaning                                                                                                                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `moved`     | The current step changed.                                                                                                                                                                                                                                                                               |
+| `submitted` | A submission ran and its actions and `onSubmit` succeeded.                                                                                                                                                                                                                                              |
+| `failed`    | A submission ran and failed, or a step check in `next`/`goTo` could not run (only logged: it records no failure): for a submission an action stopped it, `onSubmit` rejected, a trigger failed or validation could not run. The reason is in `snapshot.submission.failures`, never in the return value. |
+| `invalid`   | Validation found errors, which are shown and focused.                                                                                                                                                                                                                                                   |
+| `overtaken` | An edit or a row move outran the check, so there is no verdict: nothing is shown, focused or counted.                                                                                                                                                                                                   |
+| `refused`   | There was nowhere to go: the last active step, an unknown or skipped step, the current step, or a step not reachable in `linear` navigation.                                                                                                                                                            |
+| `busy`      | Another command was running.                                                                                                                                                                                                                                                                            |
+| `cancelled` | A reset or an unmount revoked the command before its values were captured, which then wrote nothing.                                                                                                                                                                                                    |
 
 ## Snapshot
 

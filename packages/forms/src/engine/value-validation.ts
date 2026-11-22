@@ -408,7 +408,11 @@ export function resolveParticipation(steps: readonly ValidationStep[], values: R
 				const name = getElementName(element);
 				if (!name) continue;
 				fields[name] = { hidden: true, disabled: false, required: false };
+				visibleBefore.set(name, visible);
 				exclude(name);
+			}
+			for (const { fieldPath } of fieldElementPathsFor(step.elements, values, true)) {
+				fields[fieldPath] ??= { hidden: true, disabled: false, required: false };
 			}
 			continue;
 		}

@@ -149,7 +149,7 @@ describe('actions in flight and before mount', () => {
 		expect(results.mock.calls.map((call) => call[1])).not.toContain('form_change');
 	});
 
-	test('report no results of form_change after a reset', async () => {
+	test('report the results of the form_change a reset itself makes, and not those of the change it cancelled', async () => {
 		const results = vi.fn();
 		const { runtime } = setup(wizardConfig(), { onActionResults: results });
 		await tick();
@@ -157,7 +157,7 @@ describe('actions in flight and before mount', () => {
 		runtime.container.setValue('email', 'x');
 		runtime.container.reset();
 		await tick();
-		expect(results.mock.calls.map((call) => call[1])).not.toContain('form_change');
+		expect(results.mock.calls.filter((call) => call[1] === 'form_change')).toHaveLength(1);
 	});
 
 	test('a container change after an unmount moves nothing and fires no trigger', async () => {

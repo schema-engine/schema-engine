@@ -232,3 +232,20 @@ describe('a submission a reset or an edit outran', () => {
 		expect(seen.filter(({ trigger }) => trigger.startsWith('form_submit'))).toEqual([]);
 	});
 });
+
+describe('an unmount during a submission', () => {
+	test('stops the lifecycle before onSubmit and publishes no outcome', async () => {
+		const onSubmit = vi.fn();
+		const { runtime, stop, slow } = setup(wizardConfig(), { onSubmit });
+		slow.add('form_submit');
+		await toLastStep(runtime);
+		fill(runtime, { card: 'c' });
+		const running = runtime.submit();
+		await new Promise((resolve) => setTimeout(resolve, 15));
+		stop();
+		await running;
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(onSubmit).not.toHaveBeenCalled();
+		expect(runtime.getSnapshot().submission.status).not.toBe('success');
+	});
+});

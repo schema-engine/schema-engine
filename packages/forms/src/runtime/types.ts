@@ -53,7 +53,7 @@ export type NavigationOutcome = Extract<
 /** How `submit()` ended: before the last active step it acts as `next()`, so it can end `moved`. */
 export type SubmitOutcome = Extract<
 	FormRuntimeOutcome,
-	'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'busy' | 'cancelled'
+	'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
 >;
 
 /** Where a submission is: `idle` until one starts, `pending` while it runs, then how it ended. */

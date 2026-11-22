@@ -412,6 +412,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	for (const id of hydrated?.taken ?? []) adoptedIds.add(id);
 	const initialDefaults = toInternalRecord(options.defaults ?? {});
 	const initialValues = hydrated?.values ?? initialDefaults;
+	const initialParticipation = participationOf(initialValues);
 	let state: State = {
 		values: initialValues,
 		defaults: initialDefaults,
@@ -424,8 +425,8 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		validating: undefined,
 		dirty: hydrated ? dirtyTree(initialValues, initialDefaults) : undefined,
 		ids: hydrated ? hydrated.ids : syncIds(undefined, initialValues, mintId),
-		participation: participationOf(initialValues),
-		excluded: participationOf(initialValues).excluded,
+		participation: initialParticipation,
+		excluded: initialParticipation.excluded,
 		exclusionVersion: 0,
 		generation: 0,
 	};

@@ -468,9 +468,12 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 				context: () => buildContext(values),
 				hasMatching: (actions, trigger) => dispatcher.hasMatching(actions, trigger),
 				onAction: (action, data) => onAction?.(action, data),
-				onSubmit: onSubmit ? () => onSubmit(values, { setServerErrors, fetch: engine.fetch }) : undefined,
+				onSubmit: onSubmit
+					? () => (signal.aborted ? undefined : onSubmit(values, { setServerErrors, fetch: engine.fetch }))
+					: undefined,
 			},
 		);
+		if (signal.aborted) return 'cancelled';
 		try {
 			if (results.length && !signal.aborted) await onActionResults?.(results, 'form_submit');
 		} catch (error) {
@@ -514,8 +517,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		if (!op) return 'busy';
 		try {
 			if (!before) return await submitLastStep(op);
-			const outcome = await advance(op);
-			return outcome === 'refused' ? 'overtaken' : outcome;
+			return await advance(op);
 		} finally {
 			end(op);
 		}
@@ -558,9 +560,10 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			if (lifecycleAbort.signal.aborted) lifecycleAbort = new AbortController();
 			if (triggerAbort.signal.aborted) triggerAbort = new AbortController();
 			syncGeneration();
-			const stopWatching = watchChanges();
 			const stopObserving = container.subscribe(onContainerChange);
+			const stopWatching = watchChanges();
 			publish();
+			reconcile();
 			if (!mountedOnce) {
 				mountedOnce = true;
 				void dispatchTrigger('form_mount');

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { fill, setup, wizardConfig } from './fixture';
 
 const stepTriggers = (seen: ReturnType<typeof setup>['seen']) =>
@@ -293,5 +293,17 @@ describe('goTo that a check outran, or a reset revoked', () => {
 		runtime.container.reset();
 		await release();
 		expect(await revoked).toBe('cancelled');
+	});
+});
+
+describe('a step check that could not run', () => {
+	test('ends failed in next, goTo and submit-as-Next, and moves nothing', async () => {
+		const { runtime } = setup(wizardConfig({}, [{ type: 'boom' }]));
+		const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		fill(runtime, { email: 'a@b.c', street: 's' });
+		expect(await runtime.next()).toBe('failed');
+		expect(await runtime.submit()).toBe('failed');
+		expect(runtime.getSnapshot().current).toBe('contact');
+		error.mockRestore();
 	});
 });
