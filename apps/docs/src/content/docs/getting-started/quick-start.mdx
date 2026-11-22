@@ -126,13 +126,11 @@ export const contactFormConfig: FormConfig = {
 ## 3. Render the Form
 
 `FormRenderer` validates the config at the form boundary; you do not need to call
-`validateForm` first unless you reuse the normalized result elsewhere. The `rhfAdapter`
-is the React Hook Form adapter, so this step needs the `react-hook-form` package from
-Installation; Radiant renders without it.
+`validateForm` first unless you reuse the normalized result elsewhere. The form state is
+the engine's own container, built into the renderer: there is nothing else to install.
 
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 import { formEngine } from './lib/form-engine';
 import { contactFormConfig } from './config/contact-form';
 
@@ -142,7 +140,7 @@ export function ContactForm() {
 	};
 
 	return (
-		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+		<FormEngineProvider engine={formEngine}>
 			<FormRenderer config={contactFormConfig} onSubmit={handleSubmit} />
 		</FormEngineProvider>
 	);

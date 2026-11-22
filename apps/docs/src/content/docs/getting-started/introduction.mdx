@@ -35,7 +35,7 @@ Schema Engine is a **JSON-driven form system** that adapts to your needs, not th
 
 ### Complete Customization
 
-Bring your existing component library. Register it with the engine and it works with form configs. In React, form state comes from the React Hook Form adapter (`@schema-engine/forms-react/adapters/react-hook-form`), which is the React renderer's adapter and optional; the Radiant renderer has its own form controller and does not need React Hook Form. See [Installation](/docs/getting-started/installation#choose-a-renderer).
+Bring your existing component library. Register it with the engine and it works with form configs. Both renderers keep their form state in the engine's own container, so there is no form library to install. See [Installation](/docs/getting-started/installation#choose-a-renderer).
 
 ```typescript
 import { createFormEngine } from '@schema-engine/forms';

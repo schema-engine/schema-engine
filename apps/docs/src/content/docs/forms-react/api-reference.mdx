@@ -37,9 +37,8 @@ clone child configs to change `name` or `id`.
 
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
-<FormEngineProvider engine={engine} adapter={rhfAdapter}>
+<FormEngineProvider engine={engine}>
 	<FormRenderer config={formConfig} onSubmit={handleSubmit} />
 </FormEngineProvider>;
 ```

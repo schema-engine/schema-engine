@@ -62,7 +62,6 @@ for compile-time checks. See [Authoring modes](/docs/forms/core-concepts#authori
 
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
 function ContactForm() {
 	const handleSubmit = (data) => {
@@ -70,7 +69,7 @@ function ContactForm() {
 	};
 
 	return (
-		<FormEngineProvider engine={formEngine} adapter={rhfAdapter}>
+		<FormEngineProvider engine={formEngine}>
 			<FormRenderer config={formConfig} onSubmit={handleSubmit} />
 		</FormEngineProvider>
 	);
