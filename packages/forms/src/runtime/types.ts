@@ -149,18 +149,18 @@ export interface FormRuntime {
 	 *
 	 * @remarks The returned function stops the watch and revokes any command in flight, which ends `'cancelled'`. Mounting again is allowed and dispatches `form_mount` no more.
 	 */
-	mount(): () => void;
-	getSnapshot(): FormRuntimeSnapshot;
-	getServerSnapshot(): FormRuntimeSnapshot;
-	subscribe(listener: () => void): () => void;
+	mount: () => () => void;
+	getSnapshot: () => FormRuntimeSnapshot;
+	getServerSnapshot: () => FormRuntimeSnapshot;
+	subscribe: (listener: () => void) => () => void;
 	/** Validates the current step and moves to the next active one. */
-	next(): Promise<NavigationOutcome>;
+	next: () => Promise<NavigationOutcome>;
 	/** Moves to the previous active step, without validating. */
-	back(): Promise<NavigationOutcome>;
+	back: () => Promise<NavigationOutcome>;
 	/** Moves to the step `id`: back always, forward as the form's `navigation` allows. */
-	goTo(id: string): Promise<NavigationOutcome>;
+	goTo: (id: string) => Promise<NavigationOutcome>;
 	/** Acts as `next()` before the last active step; on it, validates every active step, runs the actions and `onSubmit`. */
-	submit(): Promise<SubmitOutcome>;
+	submit: () => Promise<SubmitOutcome>;
 	/** Hides the outcome of the last submission: the status goes back to `idle` and the failures are dropped. */
-	clearSubmission(): void;
+	clearSubmission: () => void;
 }

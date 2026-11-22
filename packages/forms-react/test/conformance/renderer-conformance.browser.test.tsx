@@ -9,7 +9,7 @@ import {
 	customArrayType,
 } from '../../../../test-utils/renderer-conformance';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { useFormStateContext } from '@/hooks/form-state/context';
+import { useFormStateContext, type FormStateContextValue } from '@/hooks/form-state/context';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import {
@@ -45,10 +45,10 @@ const CustomArrayRegistration = defineInput({
 });
 
 rendererConformance(async ({ config, onSubmit, ...props }) => {
-	let probed: ReturnType<typeof useFormStateContext> | undefined;
+	const probed: Partial<FormStateContextValue> = {};
 	/** Reaches the form's container and runtime, as a component under the provider does. */
 	function Probe() {
-		probed = useFormStateContext();
+		Object.assign(probed, useFormStateContext());
 		return null;
 	}
 	const engine = createFormEngine({
@@ -75,7 +75,7 @@ rendererConformance(async ({ config, onSubmit, ...props }) => {
 		host: view.container,
 		cleanup: view.unmount,
 		update: async (next) => view.rerender(renderConfig(next)),
-		container: () => probed?.container,
-		submission: () => probed?.runtime.getSnapshot().submission,
+		container: () => probed.container,
+		submission: () => probed.runtime?.getSnapshot().submission,
 	};
 });

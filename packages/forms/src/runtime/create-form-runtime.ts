@@ -482,9 +482,9 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			setSubmission({
 				status: 'error',
 				failures: results
-					.filter((result) => !result.success && result.shouldContinue === false)
-					.map((result) =>
-						submissionIssue('actionFailed', { actionId: result.actionId, message: result.error }),
+					.filter((outcome) => !outcome.success && outcome.shouldContinue === false)
+					.map((outcome) =>
+						submissionIssue('actionFailed', { actionId: outcome.actionId, message: outcome.error }),
 					),
 				submitCount: count,
 			});

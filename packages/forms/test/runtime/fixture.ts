@@ -75,29 +75,30 @@ export function createFixture() {
 const required = [{ type: 'required' }];
 const input = (name: string, extra: Record<string, unknown> = {}) => ({ $type: 'input', name, ...extra });
 
+const probes = (id: string) => [
+	{
+		id: `probe-${id}`,
+		$type: 'probe',
+		triggers: [
+			'step_leave',
+			'step_change',
+			'step_enter',
+			'form_mount',
+			'form_change',
+			'form_submit',
+			'form_submit_start',
+			'form_submit_success',
+			'form_submit_error',
+			'form_submit_complete',
+		],
+	},
+];
+
 /**
  * A four-step form: `contact` (with `hasCompany`), `company` (shown only when `hasCompany` is true),
  * `address` and `payment`. Every step has a required field, and each step has a probe action on every step trigger.
  */
 export function wizardConfig(extra: Record<string, unknown> = {}, emailRules: unknown[] = required) {
-	const probes = (id: string) => [
-		{
-			id: `probe-${id}`,
-			$type: 'probe',
-			triggers: [
-				'step_leave',
-				'step_change',
-				'step_enter',
-				'form_mount',
-				'form_change',
-				'form_submit',
-				'form_submit_start',
-				'form_submit_success',
-				'form_submit_error',
-				'form_submit_complete',
-			],
-		},
-	];
 	return {
 		id: 'wizard',
 		steps: [
