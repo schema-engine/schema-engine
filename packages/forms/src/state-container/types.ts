@@ -1,4 +1,4 @@
-import type { ValidationElementTree } from '@/engine/value-validation';
+import type { ValidationStep } from '@/engine/value-validation';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import type { FieldArrayCommands } from './field-array';
 
@@ -333,8 +333,12 @@ export interface FormStateContainer {
 
 /** What {@link createFormStateContainer} reads from a normalized form config. */
 export interface FormStateContainerConfig {
-	/** The steps whose elements make up the form: fields, rules and constraints. */
-	readonly steps: ReadonlyArray<{ readonly elements: ValidationElementTree }>;
+	/**
+	 * The steps whose elements make up the form: fields, rules and constraints.
+	 *
+	 * @remarks A step's own `constraints` decide whether it is skipped; a skipped step's fields take no part, as hidden fields do not.
+	 */
+	readonly steps: readonly ValidationStep[];
 	/** When a field validates before a check of it has failed; the config schema always fills it. */
 	readonly validationMode: FormValidationMode;
 	/** When a field validates once a check of it has run; the config schema always fills it. */

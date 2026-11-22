@@ -3,7 +3,7 @@ import {
 	hasParticipationRules,
 	isPathExcluded,
 	planFormValidation,
-	resolveExcludedPaths,
+	resolveParticipation,
 	runValidationPlan,
 	type ValidationIssue,
 } from '@/engine/value-validation';
@@ -122,6 +122,8 @@ interface State {
 	readonly dirty: Tree<true>;
 	readonly ids: IdTree | undefined;
 	readonly excluded: readonly string[];
+	/** The values with the excluded paths absent, as constraints read them. */
+	readonly visible: Record<string, unknown>;
 	readonly exclusionVersion: number;
 }
 
@@ -358,7 +360,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	const tracker = createRunTracker();
 	const debounceScope = createDebounceScope();
 	const listeners = new Set<() => void>();
-	const participates = hasParticipationRules(elements);
+	const participates = hasParticipationRules(config.steps);
 	let rowCounter = 0;
 	const adoptedIds = new Set<string>();
 	const mintId = (): string => {
@@ -366,6 +368,14 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		while (adoptedIds.has(id)) id = `row-${++rowCounter}`;
 		return id;
 	};
+
+	/** The `excluded` and `visible` parts of the state for `values`: nothing is excluded when the config has no participation rules. */
+	function participationOf(values: NullMap): Pick<State, 'excluded' | 'visible'> {
+		const plain = toPlain(values) as Record<string, unknown>;
+		if (!participates) return { excluded: Object.freeze([]), visible: plain };
+		const { excluded, visible } = resolveParticipation(config.steps, plain);
+		return { excluded: Object.freeze(excluded), visible };
+	}
 
 	const hydrated = options.snapshot === undefined ? undefined : readHydration(options.snapshot);
 	for (const id of hydrated?.taken ?? []) adoptedIds.add(id);
@@ -383,9 +393,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		validating: undefined,
 		dirty: hydrated ? dirtyTree(initialValues, initialDefaults) : undefined,
 		ids: hydrated ? hydrated.ids : syncIds(undefined, initialValues, mintId),
-		excluded: Object.freeze(
-			participates ? resolveExcludedPaths(elements, toPlain(initialValues) as Record<string, unknown>) : [],
-		),
+		...participationOf(initialValues),
 		exclusionVersion: 0,
 	};
 
@@ -552,7 +560,11 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			if (next.native) next = { ...next, native: pruneNative(next.native, next.values) };
 			if (next.server) next = { ...next, server: pruneServer(next) };
 			if (participates) {
-				const excluded = resolveExcludedPaths(elements, toPlain(next.values) as Record<string, unknown>);
+				const { excluded, visible } = resolveParticipation(
+					config.steps,
+					toPlain(next.values) as Record<string, unknown>,
+				);
+				next = { ...next, visible };
 				if (!sameList(excluded, previous.excluded)) {
 					const dropped = excluded.filter((path) => !isPathExcluded(previous.excluded, path));
 					reeligible = previous.excluded.filter(
@@ -639,15 +651,17 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			native: state.native,
 			server: state.server,
 			excluded: state.excluded,
+			visible: state.visible,
 			exclusionVersion: state.exclusionVersion,
 		};
 		const startIndex = mode.record ? dependencyIndex() : undefined;
+		const startValues = toPlain(start.values) as Record<string, unknown>;
 		const plan = planFormValidation({
 			elements,
-			values: toPlain(start.values) as Record<string, unknown>,
+			values: startValues,
 			names,
 			exactNames: mode.exact,
-			excluded: start.excluded,
+			participation: { excluded: start.excluded, visible: participates ? start.visible : startValues },
 		});
 		const planned = [...new Set(plan.fields.map(({ fieldPath }) => fieldPath))];
 		const run = mode.record

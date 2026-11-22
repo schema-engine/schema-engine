@@ -1,6 +1,11 @@
 import { evaluateConstraints } from '../constraints/constraint-evaluator.js';
-import { expandContainerParentPaths, expandFieldTemplatePaths, getValueAtPath } from '../lib/path-values.js';
-import { scalarItemsIn, walkNamedElements } from '../lib/field-scope.js';
+import {
+	expandContainerParentPaths,
+	expandFieldTemplatePaths,
+	getValueAtPath,
+	withoutValueAt,
+} from '../lib/path-values.js';
+import { getElementName, scalarItemsIn, walkNamedElements } from '../lib/field-scope.js';
 import { frozenCopy } from '../lib/frozen-copy.js';
 import type { ConstraintLogic } from '../schemas/base-field.js';
 import {
@@ -27,7 +32,10 @@ export interface ValidationElement {
 }
 export type ValidationElementTree = ReadonlyArray<ValidationElement>;
 export interface ValidationStep {
+	readonly id?: string;
 	readonly elements: readonly ValidationElement[];
+	/** `show` and `hide` constraints on earlier steps' fields: a step they hide is skipped. */
+	readonly constraints?: readonly ConstraintLogic[];
 }
 
 export interface EffectiveRulesInput {
@@ -37,6 +45,12 @@ export interface EffectiveRulesInput {
 	registry: ValidationRegistry;
 	/** Set when a `require` constraint of a container around the field holds. */
 	inheritedRequired?: boolean;
+	/**
+	 * The values constraints read, when they differ from `values`.
+	 *
+	 * @remarks The values of excluded paths are absent from them, see {@link Participation.visible}. Rules always read `values`.
+	 */
+	constraintValues?: Record<string, unknown>;
 }
 
 export interface ValidateFieldValueInput extends EffectiveRulesInput {
@@ -64,11 +78,11 @@ export interface ValidateFormValuesInput {
 	/** Keyed async validation state for this caller's form lifetime; see `ValidateFieldValueInput`. */
 	debounceScope: DebounceScope;
 	/**
-	 * The paths that take no part, when the caller already has them from {@link resolveExcludedPaths}.
+	 * What takes part, when the caller already has it from {@link resolveParticipation}.
 	 *
-	 * @remarks Computed from `elements` and `values` when omitted: no caller opts out of participation.
+	 * @remarks Computed from `elements` and `values`, as one step, when omitted: no caller opts out of participation.
 	 */
-	excluded?: readonly string[];
+	participation?: Pick<Participation, 'excluded' | 'visible'>;
 }
 
 /** Whether a failed rule blocks the form (`error`) or only advises (`warning`). */
@@ -219,11 +233,12 @@ export function effectiveRulesFor({
 	values,
 	registry,
 	inheritedRequired = false,
+	constraintValues = values,
 }: EffectiveRulesInput): BaseValidationRule[] {
 	const rules = getValidationRulesForElement<BaseValidationRule>(element, registry) ?? [];
 	const isRequired = evaluateConstraints({
 		constraints: element.constraints,
-		values,
+		values: constraintValues,
 		fieldPath,
 		baseRequired: isFieldRequired(rules) || inheritedRequired,
 	}).isRequired;
@@ -257,8 +272,16 @@ export async function validateFieldValue({
 	registry,
 	debounceScope,
 	inheritedRequired,
+	constraintValues,
 }: ValidateFieldValueInput): Promise<FieldValidationResult> {
-	const rules = effectiveRulesFor({ element, values, fieldPath, registry, inheritedRequired }) as AuthoredRule[];
+	const rules = effectiveRulesFor({
+		element,
+		values,
+		fieldPath,
+		registry,
+		inheritedRequired,
+		constraintValues,
+	}) as AuthoredRule[];
 	const context = createValidationContext({ values, fieldPath, debounceScope });
 	const results = await Promise.all(
 		rules.map(async (rule): Promise<ValidationIssue | FormValidationFailure | typeof SUPERSEDED | undefined> => {
@@ -297,40 +320,84 @@ export const isPathExcluded = (excluded: readonly string[], path: string): boole
 	excluded.some((around) => path === around || path.startsWith(`${around}.`));
 
 /**
- * The paths that take no part in validation, from the config and the current values.
+ * What takes part in a form, from its steps and the current values.
  *
  * @remarks
- * One rule for every consumer of "does this field count": a field a `show` or `hide` constraint hides,
- * and a field that is disabled, whether authored (`disabled`) or by a constraint (`disable`, `enable`),
- * is excluded together with everything below it. Constraints are resolved by `evaluateConstraints`,
- * against each row's own path. An inactive wizard step is not excluded: it is only not rendered.
+ * `excluded` lists the paths that take no part, each with everything below it. `skippedSteps` lists the ids of
+ * the steps its constraints hide, which exclude every field they hold. `visible` is `values` with the excluded
+ * paths absent, the values constraints read: an excluded field counts as absent for every constraint that reads it.
  */
-export function resolveExcludedPaths(elements: ValidationElementTree, values: Record<string, unknown>): string[] {
-	const excluded = fieldElementPathsFor(elements, values)
-		.filter(({ element, fieldPath }) => {
-			if (element.disabled === true) return true;
-			if (!element.constraints?.length) return false;
-			const { shouldShow, shouldDisable } = evaluateConstraints({
-				constraints: element.constraints,
-				values,
-				fieldPath,
-			});
-			return !shouldShow || shouldDisable;
-		})
-		.map(({ fieldPath }) => fieldPath);
-	return [...new Set(excluded)].filter(
-		(path) =>
-			!isPathExcluded(
-				excluded.filter((other) => other !== path),
-				path,
-			),
-	);
+export interface Participation {
+	readonly excluded: readonly string[];
+	readonly skippedSteps: readonly string[];
+	readonly visible: Record<string, unknown>;
 }
 
-/** Whether a config has anything that can exclude a path, so a container may skip resolving exclusions. */
-export function hasParticipationRules(elements: ValidationElementTree): boolean {
-	return walkNamedElements(elements).some(
-		({ element }) => element.disabled === true || Boolean(element.constraints?.length),
+/**
+ * Resolves which steps and paths take part, from the config and the current values.
+ *
+ * @remarks
+ * One rule for every consumer of "does this field count". A step a `show` or `hide` constraint hides is
+ * skipped and excludes everything it holds. A field a `show` or `hide` constraint hides, and a field that is
+ * disabled, whether authored (`disabled`) or by a constraint (`disable`, `enable`), is excluded together with
+ * everything below it. Constraints are resolved by `evaluateConstraints`, against each row's own path.
+ *
+ * Steps and elements are resolved in order, and the value of whatever is excluded is absent when the next
+ * constraint reads it, so a field cannot stay shown because of an answer nobody can give. A constraint
+ * that reads a field resolved later sees its value as held. An inactive wizard step is not excluded: it
+ * is only not rendered.
+ */
+export function resolveParticipation(steps: readonly ValidationStep[], values: Record<string, unknown>): Participation {
+	let visible = values;
+	const excluded: string[] = [];
+	const skippedSteps: string[] = [];
+	const exclude = (path: string) => {
+		excluded.push(path);
+		visible = withoutValueAt(visible, path);
+	};
+	for (const step of steps) {
+		if (
+			step.constraints?.length &&
+			!evaluateConstraints({ constraints: step.constraints, values: visible }).shouldShow
+		) {
+			if (step.id !== undefined) skippedSteps.push(step.id);
+			for (const element of step.elements) {
+				const name = getElementName(element);
+				if (name) exclude(name);
+			}
+			continue;
+		}
+		for (const { element, fieldPath } of fieldElementPathsFor(step.elements, values)) {
+			if (isPathExcluded(excluded, fieldPath)) continue;
+			if (element.disabled === true) {
+				exclude(fieldPath);
+				continue;
+			}
+			if (!element.constraints?.length) continue;
+			const { shouldShow, shouldDisable } = evaluateConstraints({
+				constraints: element.constraints,
+				values: visible,
+				fieldPath,
+			});
+			if (!shouldShow || shouldDisable) exclude(fieldPath);
+		}
+	}
+	return { excluded: [...new Set(excluded)], skippedSteps, visible };
+}
+
+/** The paths of one element tree that take no part; see {@link resolveParticipation}, which this is the single-step case of. */
+export function resolveExcludedPaths(elements: ValidationElementTree, values: Record<string, unknown>): string[] {
+	return [...resolveParticipation([{ elements }], values).excluded];
+}
+
+/** Whether a config has anything that can exclude a path, so a container may skip resolving participation. */
+export function hasParticipationRules(steps: readonly ValidationStep[]): boolean {
+	return steps.some(
+		(step) =>
+			Boolean(step.constraints?.length) ||
+			walkNamedElements(step.elements).some(
+				({ element }) => element.disabled === true || Boolean(element.constraints?.length),
+			),
 	);
 }
 
@@ -338,6 +405,8 @@ export function hasParticipationRules(elements: ValidationElementTree): boolean 
 export interface ValidationPlan {
 	readonly fields: readonly PlannedField[];
 	readonly values: Record<string, unknown>;
+	/** The values the constraints of the planned fields read: `values` with the excluded paths absent. */
+	readonly constraintValues: Record<string, unknown>;
 }
 
 /** One field to validate: its element, its rendered path and whether a `require` constraint of a container around it holds. */
@@ -358,13 +427,15 @@ export function planFormValidation({
 	values,
 	names,
 	exactNames = false,
-	excluded = resolveExcludedPaths(elements, values),
-}: Pick<ValidateFormValuesInput, 'elements' | 'values' | 'names' | 'exactNames' | 'excluded'>): ValidationPlan {
+	participation = resolveParticipation([{ elements }], values),
+}: Pick<ValidateFormValuesInput, 'elements' | 'values' | 'names' | 'exactNames' | 'participation'>): ValidationPlan {
+	const { excluded, visible } = participation;
 	const allFields = fieldElementPathsFor(elements, values);
 	const requiredContainers = allFields
 		.filter(
 			({ element, fieldPath, hasChildren }) =>
-				hasChildren && evaluateConstraints({ constraints: element.constraints, values, fieldPath }).isRequired,
+				hasChildren &&
+				evaluateConstraints({ constraints: element.constraints, values: visible, fieldPath }).isRequired,
 		)
 		.map(({ fieldPath }) => `${fieldPath}.`);
 	const fields = allFields
@@ -376,7 +447,7 @@ export function planFormValidation({
 			inheritedRequired:
 				!field.hasChildren && requiredContainers.some((prefix) => field.fieldPath.startsWith(prefix)),
 		}));
-	return { fields, values };
+	return { fields, values, constraintValues: visible };
 }
 
 /** Runs a plan: every planned field against its value and rules, in parallel. */
@@ -391,6 +462,7 @@ export async function runValidationPlan(
 				element,
 				value: getValueAtPath(plan.values, fieldPath),
 				values: plan.values,
+				constraintValues: plan.constraintValues,
 				fieldPath,
 				registry,
 				debounceScope,
@@ -417,7 +489,7 @@ export async function runValidationPlan(
  * `names` limits validation to matching paths and their descendants, which lets callers validate a
  * wizard step without surfacing errors from later steps; `exactNames` limits it to the named paths
  * themselves. The results are flat so that a container and a row inside it can both fail: `contacts` and
- * `contacts.0.email` are separate keys. Paths that do not take part, see {@link resolveExcludedPaths},
+ * `contacts.0.email` are separate keys. Paths that do not take part, see {@link resolveParticipation},
  * are not validated.
  */
 export async function validateFormValues(input: ValidateFormValuesInput): Promise<FormValidationOutcome> {
