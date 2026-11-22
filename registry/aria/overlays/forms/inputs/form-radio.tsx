@@ -16,7 +16,9 @@ export function FormRadio({
 	onFocus: propsOnFocus,
 	...config
 }: RadioFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	return (
 		<FieldGroupRoot style={containerStyles}>

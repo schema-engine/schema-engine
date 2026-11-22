@@ -93,19 +93,12 @@ describe('FormProvider', () => {
 	});
 
 	function RegisteredInput() {
-		const { value, onChange, onBlur } = useFormField({
+		const { defaultValue, fieldProps } = useFormField({
 			$type: 'input',
 			name: 'field1',
 			id: 'field1',
 		});
-		return (
-			<input
-				data-testid="field1"
-				value={fieldText(value)}
-				onChange={(event) => onChange(event.target.value)}
-				onBlur={onBlur}
-			/>
-		);
+		return <input {...fieldProps} data-testid="field1" defaultValue={fieldText(defaultValue)} />;
 	}
 
 	it('should fire form_mount on mount', async () => {

@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import type { ElementGridConfig } from '@schema-engine/layout';
-import { useFormField, useFieldHost } from '@schema-engine/forms-react/hooks';
+import { fieldText, useFormField, useFieldHost } from '@schema-engine/forms-react/hooks';
 
 /**
  * Radiant-styled field chrome for docs demos.
@@ -56,7 +56,7 @@ export function DemoInput({
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const { value, error, onChange: setValue, onBlur, fieldProps, required } = useFormField(config);
+	const { defaultValue, error, fieldProps, required } = useFormField(config);
 	const { inputType = 'text', placeholder } = config as { inputType?: string; placeholder?: string };
 
 	return (
@@ -74,13 +74,13 @@ export function DemoInput({
 				className="rui-input"
 				type={inputType}
 				placeholder={placeholder}
-				value={(value as string) ?? ''}
+				defaultValue={fieldText(defaultValue)}
 				onChange={(event) => {
-					setValue(event.target.value);
-					(propsOnChange as ((value: string) => void) | undefined)?.(event.target.value);
+					fieldProps.onChange(event);
+					propsOnChange?.(event.target.value);
 				}}
 				onBlur={() => {
-					onBlur();
+					fieldProps.onBlur();
 					propsOnBlur?.();
 				}}
 			/>
@@ -96,7 +96,7 @@ export function DemoTextarea({
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const { value, error, onChange: setValue, onBlur, fieldProps } = useFormField(config);
+	const { defaultValue, error, fieldProps } = useFormField(config);
 	const rows = (config.rows as number | undefined) ?? 5;
 
 	return (
@@ -113,13 +113,13 @@ export function DemoTextarea({
 				className="rui-textarea"
 				rows={rows}
 				placeholder={config.placeholder as string}
-				value={(value as string) ?? ''}
+				defaultValue={fieldText(defaultValue)}
 				onChange={(event) => {
-					setValue(event.target.value);
-					(propsOnChange as ((value: string) => void) | undefined)?.(event.target.value);
+					fieldProps.onChange(event);
+					propsOnChange?.(event.target.value);
 				}}
 				onBlur={() => {
-					onBlur();
+					fieldProps.onBlur();
 					propsOnBlur?.();
 				}}
 			/>
@@ -135,7 +135,7 @@ export function DemoSelect({
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const { value, error, onChange: setValue, onBlur, fieldProps } = useFormField(config);
+	const { defaultValue, error, fieldProps } = useFormField(config);
 	const options = ((config.options as Array<{ value: unknown; label: string; disabled?: boolean }>) ?? []).map(
 		(option) => ({ value: String(option.value), label: option.label, disabled: option.disabled }),
 	);
@@ -152,13 +152,13 @@ export function DemoSelect({
 			<select
 				{...fieldProps}
 				className="rui-input"
-				value={(value as string) ?? ''}
+				defaultValue={fieldText(defaultValue)}
 				onChange={(event) => {
-					setValue(event.target.value);
-					(propsOnChange as ((value: string) => void) | undefined)?.(event.target.value);
+					fieldProps.onChange(event);
+					propsOnChange?.(event.target.value);
 				}}
 				onBlur={() => {
-					onBlur();
+					fieldProps.onBlur();
 					propsOnBlur?.();
 				}}
 			>
@@ -181,7 +181,7 @@ export function DemoCheckbox({
 	onChange?: (value: boolean) => void;
 	onBlur?: () => void;
 }) {
-	const { value, error, onChange: setValue, onBlur, fieldProps } = useFormField(config);
+	const { defaultValue, error, fieldProps } = useFormField(config);
 
 	return (
 		<DemoField
@@ -198,13 +198,13 @@ export function DemoCheckbox({
 					type="checkbox"
 					className="rui-checkbox__input"
 					data-rui-control-type="boolean"
-					checked={Boolean(value)}
+					defaultChecked={Boolean(defaultValue)}
 					onChange={(event) => {
-						setValue(event.target.checked);
-						(propsOnChange as ((value: boolean) => void) | undefined)?.(event.target.checked);
+						fieldProps.onChange(event);
+						propsOnChange?.(event.target.checked);
 					}}
 					onBlur={() => {
-						onBlur();
+						fieldProps.onBlur();
 						propsOnBlur?.();
 					}}
 				/>

@@ -11,7 +11,7 @@ import type {
 	FormStateIssue,
 	FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
-import type { CSSProperties, ReactNode, RefCallback } from 'react';
+import type { ChangeEvent, CSSProperties, ReactNode, RefCallback } from 'react';
 import type { SubmissionState } from './submission-store';
 
 /** The nested values of a form, as the container holds them and a submission hands them over. */
@@ -55,16 +55,15 @@ export interface FormContextValue {
 }
 
 /**
- * What `useFormField` binds a widget to, for a path.
+ * The state of the field at a path, as `useFormField` reads it.
  *
  * @remarks
  * `error` and `warning` are texts, from the form's formatter or else the issue's own `message`. A field can be
  * `invalid` with no `error` to show, when nothing says what is wrong in words, so a widget marks itself invalid
  * from `invalid` and not from the text. `issue` is the engine's error, with its `type`, `ruleId`, `params` and
- * every issue in `all`, for a widget that words it itself.
+ * every issue in `all`, for a widget that words it itself. It holds no value: `useWatch` reads values.
  */
-export interface FormFieldValue {
-	value: unknown;
+export interface FormFieldStatus {
 	error?: string;
 	warning?: string;
 	issue: FormStateError | undefined;
@@ -76,10 +75,6 @@ export interface FormFieldValue {
 	isDirty: boolean;
 	/** Whether a check that asked for exactly this field is still running. */
 	isValidating: boolean;
-	onChange: (value: unknown) => void;
-	onBlur: () => void;
-	name: string;
-	ref: RefCallback<HTMLElement | null>;
 }
 
 /**
@@ -100,25 +95,70 @@ export interface FormControlProps {
 	required: boolean;
 	disabled: boolean;
 	readOnly: boolean | undefined;
+	/**
+	 * Registers the control with the form: `setFocus` and a failed submit focus it, and when it is an input, select or textarea the form reports what the browser says about its value.
+	 *
+	 * @remarks A control that is not native can take it too, for focus alone.
+	 */
 	ref: RefCallback<HTMLElement | null>;
 	'aria-invalid': boolean;
 	'aria-describedby': string | undefined;
 }
 
+/** What an uncontrolled field puts on its native control: {@link FormControlProps} and the handlers that carry the user's changes into the form. */
+export interface NativeControlProps extends FormControlProps {
+	onChange: (event: ChangeEvent<HTMLElement>) => void;
+	onBlur: () => void;
+}
+
 /**
- * What `useFormField` binds a widget to, for an element config: the field as {@link FormFieldValue} says, and what the config adds.
+ * What the parts of a field that come from its element config are, in either mode.
  *
  * @remarks `required` is the constraint-evaluated one, so a field that a constraint makes required is.
  */
-export interface FormElementFieldValue extends FormFieldValue {
+interface FormFieldElement extends FormFieldStatus {
 	required: boolean;
 	disabled: boolean;
-	/** Props for the control: its id, name, state attributes and the config's `htmlAttributes`. */
-	fieldProps: FormControlProps;
 	labelProps: { htmlFor: string | undefined };
 	/** Props for the element that shows the error; `null` when there is no text to show. */
 	errorProps: { id: string; role: 'alert' } | null;
 	containerStyles: CSSProperties;
+}
+
+/**
+ * What `useFormField` binds a native control to: the field's status and what its config adds.
+ *
+ * @remarks
+ * The control keeps its own value and the field never re-renders for a keystroke. Spread `fieldProps` on
+ * the control and give it `defaultValue` (`defaultChecked` for a checkbox, `defaultChecked={value === option}`
+ * for a radio). `defaultValue` is frozen when the field mounts, and while the form hydrates it is the
+ * server's value, so the markup matches.
+ */
+export interface FormField extends FormFieldElement {
+	/** The value the control starts with, as the container held it when the field mounted. */
+	defaultValue: unknown;
+	/** Props for the control: its id, name, state attributes and the config's `htmlAttributes`, and the handlers that report its changes. */
+	fieldProps: NativeControlProps;
+}
+
+/**
+ * What `useFormField` binds a component to when it takes only `value` and `onChange` props.
+ *
+ * @remarks
+ * The field re-renders whenever its value changes, since the component shows it. `onChange` writes a value
+ * and `onBlur` marks the field blurred. `fieldProps` has no change handler, and its `ref` still serves focus
+ * and, when it lands on a native control, the facts the browser reports.
+ */
+export interface ControlledFormField extends FormFieldElement {
+	value: unknown;
+	onChange: (value: unknown) => void;
+	onBlur: () => void;
+	fieldProps: FormControlProps;
+}
+
+/** How a field is bound: left out it is uncontrolled, and `controlled: true` is for a component that takes `value` and `onChange`. */
+export interface FormFieldOptions {
+	controlled?: boolean;
 }
 
 /** What `onSubmit` is given besides the values that passed. */

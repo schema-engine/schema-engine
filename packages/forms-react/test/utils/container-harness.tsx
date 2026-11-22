@@ -51,7 +51,7 @@ export function ContainerHarness({
 	children: ReactNode;
 }) {
 	const [{ fields, submission }] = useState(() => ({
-		fields: createFieldRegistry(),
+		fields: createFieldRegistry(container),
 		submission: createSubmissionStore(),
 	}));
 	onSubmission?.(submission);

@@ -21,15 +21,10 @@ const contacts = markNormalizedElementConfig(
 );
 
 function Row({ path }: { path: string }) {
-	const { value, error, onChange, ref } = useFormField(path);
+	const { defaultValue, error, fieldProps } = useFormField({ $type: 'input', name: path, id: path });
 	return (
 		<>
-			<input
-				ref={ref}
-				aria-label={path}
-				value={fieldText(value)}
-				onChange={(event) => onChange(event.target.value)}
-			/>
+			<input {...fieldProps} aria-label={path} defaultValue={fieldText(defaultValue)} />
 			<output data-testid={`${path}-error`}>{error ?? ''}</output>
 		</>
 	);

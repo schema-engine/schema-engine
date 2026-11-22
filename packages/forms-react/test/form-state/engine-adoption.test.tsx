@@ -76,16 +76,11 @@ const config: FormConfig = {
 };
 
 function Field({ name }: { name: string }) {
-	const { value, error, onChange, onBlur } = useFormField({ $type: 'input', name, id: name });
+	const { defaultValue, error, fieldProps } = useFormField({ $type: 'input', name, id: name });
 	return (
 		<label>
 			{name}
-			<input
-				name={name}
-				value={fieldText(value)}
-				onChange={(event) => onChange(event.target.value)}
-				onBlur={onBlur}
-			/>
+			<input {...fieldProps} defaultValue={fieldText(defaultValue)} />
 			<span role="alert">{error ?? ''}</span>
 		</label>
 	);
@@ -176,15 +171,10 @@ const vat: ElementConfig = {
 	constraints: [{ action: 'require', field: 'customerType', operator: 'equals', value: 'company' }],
 };
 function Vat() {
-	const { fieldProps, value, onChange, error } = useFormField(vat);
+	const { fieldProps, defaultValue, error } = useFormField(vat);
 	return (
 		<>
-			<input
-				{...fieldProps}
-				aria-label="VAT"
-				value={fieldText(value)}
-				onChange={(event) => onChange(event.target.value)}
-			/>
+			<input {...fieldProps} aria-label="VAT" defaultValue={fieldText(defaultValue)} />
 			<span aria-label="VAT error" role="alert">
 				{error}
 			</span>

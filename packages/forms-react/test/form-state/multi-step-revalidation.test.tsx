@@ -35,17 +35,12 @@ const config: FormConfig = {
 
 /** @remarks The error is a block above the buttons, so it leaving the page moves Next up, as a real field's error does. */
 function Field() {
-	const { value, error, onChange, onBlur, ref } = useFormField(config.steps[0].elements![0]);
+	const { defaultValue, error, fieldProps } = useFormField(config.steps[0].elements![0]);
 	return (
 		<div>
 			<label>
 				Password
-				<input
-					ref={ref}
-					value={fieldText(value)}
-					onChange={(event) => onChange(event.target.value)}
-					onBlur={onBlur}
-				/>
+				<input {...fieldProps} defaultValue={fieldText(defaultValue)} />
 			</label>
 			<p role="alert">{error ?? ''}</p>
 		</div>

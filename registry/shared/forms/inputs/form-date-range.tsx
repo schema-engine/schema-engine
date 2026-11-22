@@ -20,7 +20,9 @@ export function FormDateRange({
 	onFocus: propsOnFocus,
 	...config
 }: DateRangeFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	return (
 		<FieldGroup

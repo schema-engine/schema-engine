@@ -4,7 +4,9 @@ import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks'
 import type { DropZoneFieldProps } from './form-drop-zone.types';
 
 export function FormDropZone({ onChange: propsOnChange, onDropChange, ...config }: DropZoneFieldProps) {
-	const { value, error, onChange, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	const { accept, maxSize, minSize, maxFiles, disabled } = config;
 

@@ -9,7 +9,9 @@ export function FormSlider({
 	onFocus: propsOnFocus,
 	...config
 }: SliderFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	const sliderValue = typeof value === 'number' ? value : config.min || 0;
 

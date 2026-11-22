@@ -9,7 +9,9 @@ export function FormNumber({
 	onFocus: propsOnFocus,
 	...config
 }: NumberFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	const numericValue = typeof value === 'number' ? value : '';
 

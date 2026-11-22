@@ -57,8 +57,8 @@ function SetValueOnVersionChange({ version }: { version: number }) {
 }
 
 function EmailInput() {
-	const { value, onChange } = useFormField({ $type: 'input', name: 'email', id: 'email' });
-	return <input aria-label="Email" value={fieldText(value)} onChange={(event) => onChange(event.target.value)} />;
+	const { defaultValue, fieldProps } = useFormField({ $type: 'input', name: 'email', id: 'email' });
+	return <input aria-label="Email" {...fieldProps} defaultValue={fieldText(defaultValue)} />;
 }
 
 const defaults = { email: '', contacts: [{ email: '' }] };

@@ -10,7 +10,9 @@ export function FormMaskedInput({
 	...config
 }: MaskedInputFieldProps) {
 	const { formState } = useFormContext();
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	return (
 		<FieldGroup

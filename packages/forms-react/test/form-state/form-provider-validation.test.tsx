@@ -30,20 +30,14 @@ const config: FormConfig = {
 };
 
 function ValidationProbe({ name }: { name: string }) {
-	const { value, error, onChange, onBlur, ref } = useFormField({
+	const { defaultValue, error, fieldProps } = useFormField({
 		$type: 'input',
 		name,
 		id: name,
 	});
 	return (
 		<>
-			<input
-				ref={ref}
-				data-testid={name}
-				value={fieldText(value)}
-				onChange={(event) => onChange(event.target.value)}
-				onBlur={onBlur}
-			/>
+			<input {...fieldProps} data-testid={name} defaultValue={fieldText(defaultValue)} />
 			<span data-testid={`${name}-error`}>{error ?? ''}</span>
 		</>
 	);

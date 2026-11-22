@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useFormField, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
+import { useFormField, fieldText } from '@schema-engine/forms-react/hooks';
 import type { InputFieldProps } from './form-input.types';
 
 export function FormInput({
@@ -9,7 +9,7 @@ export function FormInput({
 	onFocus: propsOnFocus,
 	...config
 }: InputFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { defaultValue, error, fieldProps, required, containerStyles } = useFormField(config);
 
 	const { inputType, autoComplete, autoFocus, inputMode, spellCheck, placeholder } = config;
 
@@ -27,9 +27,15 @@ export function FormInput({
 				data-se-control
 				{...fieldProps}
 				type={inputType}
-				value={fieldText(value)}
-				onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
-				onBlur={combineHandlers(onBlur, propsOnBlur)}
+				defaultValue={fieldText(defaultValue)}
+				onChange={(event) => {
+					fieldProps.onChange(event);
+					propsOnChange?.(event.target.value);
+				}}
+				onBlur={() => {
+					fieldProps.onBlur();
+					propsOnBlur?.();
+				}}
 				onFocus={propsOnFocus}
 				placeholder={placeholder}
 				autoComplete={autoComplete}

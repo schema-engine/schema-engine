@@ -26,7 +26,9 @@ export function FormCombobox({
 	onFocus: propsOnFocus,
 	...config
 }: ComboboxFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 	const isMultiple = Boolean(config.multiple);
 	const values = isMultiple ? (Array.isArray(value) ? value : []) : value == null || value === '' ? [] : [value];
 	const selected = values

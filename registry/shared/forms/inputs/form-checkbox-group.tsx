@@ -17,7 +17,9 @@ export function FormCheckboxGroup({
 	onFocus: propsOnFocus,
 	...config
 }: CheckboxGroupFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	const selectedValues = Array.isArray(value) ? value : [];
 	const isHorizontal = config.orientation === 'horizontal';

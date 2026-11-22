@@ -35,7 +35,7 @@ function createIsolationEngine(message: string, minimum: number) {
 		metadata: { name: 'Isolated input', category: 'input' },
 		validations: [createValidation(message, minimum)],
 		render: (config: IsolatedInputConfig) => {
-			const { value, error, onChange, onBlur, fieldProps } = useFormField(config);
+			const { defaultValue, error, fieldProps } = useFormField(config);
 
 			return (
 				<label>
@@ -43,9 +43,7 @@ function createIsolationEngine(message: string, minimum: number) {
 					<input
 						{...fieldProps}
 						data-testid={`${config.id}-input`}
-						value={String(value ?? '')}
-						onChange={(event) => onChange(event.target.value)}
-						onBlur={onBlur}
+						defaultValue={String(defaultValue ?? '')}
 					/>
 					<output data-testid={`${config.id}-error`}>{error}</output>
 				</label>

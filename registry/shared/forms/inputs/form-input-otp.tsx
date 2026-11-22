@@ -9,7 +9,9 @@ export function FormInputOTP({
 	onFocus: propsOnFocus,
 	...config
 }: InputOTPFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	const otpValue = fieldText(value);
 	const length = config.length || 6;

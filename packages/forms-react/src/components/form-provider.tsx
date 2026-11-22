@@ -36,15 +36,12 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 
 	const [{ container, fields, submission }] = useState(() => {
 		const elements = flattenStepElements(runtimeConfig.steps);
-		return {
-			container: createFormStateContainer({
-				config,
-				registry: engine.getValidationRegistry(),
-				defaults: collectInitialValues(elements, defaultValues),
-			}),
-			fields: createFieldRegistry(),
-			submission: createSubmissionStore(),
-		};
+		const container = createFormStateContainer({
+			config,
+			registry: engine.getValidationRegistry(),
+			defaults: collectInitialValues(elements, defaultValues),
+		});
+		return { container, fields: createFieldRegistry(container), submission: createSubmissionStore() };
 	});
 
 	const resolvedFormatIssue = formatIssue ?? engine.getIssueFormatter();
@@ -161,6 +158,9 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
  * the identities of the config and the engine do: a new normalized config or engine starts a fresh instance
  * with its defaults and step state, whichever component renders the provider. `defaultValues` are read when the
  * instance starts. The hooks under the provider read the container with `useSyncExternalStore`.
+ *
+ * The form is submitted by `onSubmit` and never by a React 19 `<form action>`: React resets the uncontrolled
+ * fields of a form after an action, which would erase text the container still holds.
  *
  * The submission state (`status`, `failures`, `submitCount`) is the provider's own until the form runtime of
  * #336 owns the lifecycle. The one formatter of the form is `formatIssue`, else the engine's.

@@ -15,7 +15,7 @@ export function FormSwitch({
 	onFocus: propsOnFocus,
 	...config
 }: SwitchFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useFormField(config, { controlled: true });
 
 	return (
 		<FieldGroupRoot style={containerStyles}>

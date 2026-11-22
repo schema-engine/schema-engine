@@ -6,7 +6,8 @@ import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { RequiredRuleSchema } from '@schema-engine/forms/schemas/validation';
 import { selectError } from '@schema-engine/forms/state-container';
-import { FORM_ROOT, useFormContext } from '@/hooks/form-state';
+import { FORM_ROOT, useFormContext, useWatch } from '@/hooks/form-state';
+import { fieldText } from '@/hooks/field-text';
 import { useFormField } from '@/hooks/form-state/use-form-field';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
@@ -25,7 +26,7 @@ function BoundInput({
 	onRender?: () => void;
 }) {
 	onRender?.();
-	const { fieldProps, value, onChange, onBlur } = useFormField({
+	const { fieldProps, defaultValue } = useFormField({
 		name,
 		id,
 		$type: 'input',
@@ -33,15 +34,7 @@ function BoundInput({
 		constraints,
 	});
 
-	return (
-		<input
-			data-testid={id}
-			value={(value as string) ?? ''}
-			onChange={(event) => onChange(event.target.value)}
-			onBlur={onBlur}
-			{...fieldProps}
-		/>
-	);
+	return <input data-testid={id} defaultValue={fieldText(defaultValue)} {...fieldProps} />;
 }
 
 const rendersWith = (defaults: Record<string, unknown>, options?: Parameters<typeof createTestContainer>[0]) => {
@@ -245,21 +238,16 @@ describe('useFormField with a path', () => {
 	function PathProbe({ path }: { path: string }) {
 		const field = useFormField(path);
 		return (
-			<>
-				<output data-testid="state">
-					{JSON.stringify({
-						name: field.name,
-						value: field.value,
-						error: field.error,
-						invalid: field.invalid,
-						isTouched: field.isTouched,
-						isDirty: field.isDirty,
-						isValidating: field.isValidating,
-					})}
-				</output>
-				<button onClick={() => field.onChange('edited')}>write</button>
-				<button onClick={field.onBlur}>blur</button>
-			</>
+			<output data-testid="state">
+				{JSON.stringify({
+					value: useWatch(path),
+					error: field.error,
+					invalid: field.invalid,
+					isTouched: field.isTouched,
+					isDirty: field.isDirty,
+					isValidating: field.isValidating,
+				})}
+			</output>
 		);
 	}
 
@@ -282,14 +270,13 @@ describe('useFormField with a path', () => {
 		return { container, state };
 	}
 
-	test('reports the value and the flags of the field, and writes and blurs it', async () => {
+	test('reports the flags of the field as the form changes it', () => {
 		const { container, state } = mount('note');
-		expect(state()).toMatchObject({ name: 'note', value: '', invalid: false, isTouched: false, isDirty: false });
+		expect(state()).toMatchObject({ value: '', invalid: false, isTouched: false, isDirty: false });
 
-		await act(async () => screen.getByRole('button', { name: 'write' }).click());
-		await act(async () => screen.getByRole('button', { name: 'blur' }).click());
+		act(() => container.setValue('note', 'edited'));
+		act(() => container.blur('note'));
 
-		expect(container.getValue('note')).toBe('edited');
 		expect(state()).toMatchObject({ value: 'edited', isTouched: true, isDirty: true });
 	});
 
@@ -305,10 +292,10 @@ describe('useFormField with a path', () => {
 		if (submitted.outcome !== 'passed') return;
 		await act(async () => submitted.setServerErrors({ [FORM_ROOT]: { type: 'down' } }));
 
-		expect(state()).toMatchObject({ name: FORM_ROOT, invalid: true, error: 'said down' });
+		expect(state()).toMatchObject({ invalid: true, error: 'said down' });
 	});
 
-	test('returns the state of the path and none of the parts derived from a config', () => {
+	test('returns the state of the path and no value, handler or part derived from a config', () => {
 		function Keys() {
 			return <output data-testid="keys">{Object.keys(useFormField('note')).sort().join(',')}</output>;
 		}
@@ -319,7 +306,7 @@ describe('useFormField with a path', () => {
 		);
 
 		expect(screen.getByTestId('keys')).toHaveTextContent(
-			'invalid,isDirty,isTouched,isValidating,issue,name,onBlur,onChange,ref,value',
+			'error,invalid,isDirty,isTouched,isValidating,issue,warning',
 		);
 	});
 });
@@ -379,15 +366,8 @@ describe('useFormField with a config', () => {
 describe('useFormField under FormRenderer', () => {
 	function ConfiguredInput({ onRender, ...config }: ElementConfig & { onRender?: (name: string) => void }) {
 		onRender?.(config.name ?? '');
-		const { fieldProps, value, onChange } = useFormField(config);
-		return (
-			<input
-				data-testid={config.id}
-				value={(value as string) ?? ''}
-				onChange={(event) => onChange(event.target.value)}
-				{...fieldProps}
-			/>
-		);
+		const { fieldProps, defaultValue } = useFormField(config);
+		return <input data-testid={config.id} defaultValue={fieldText(defaultValue)} {...fieldProps} />;
 	}
 
 	function renderForm(fields: ElementConfig[], onRender?: (name: string) => void) {

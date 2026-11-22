@@ -1,6 +1,6 @@
 import { Textarea } from '@/components/ui/textarea';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useFormField, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
+import { useFormField, fieldText } from '@schema-engine/forms-react/hooks';
 import type { TextareaFieldProps } from './form-textarea.types';
 
 export function FormTextarea({
@@ -9,7 +9,7 @@ export function FormTextarea({
 	onFocus: propsOnFocus,
 	...config
 }: TextareaFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { defaultValue, error, fieldProps, required, containerStyles } = useFormField(config);
 
 	return (
 		<FieldGroup
@@ -23,9 +23,15 @@ export function FormTextarea({
 		>
 			<Textarea
 				{...fieldProps}
-				value={fieldText(value)}
-				onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
-				onBlur={combineHandlers(onBlur, propsOnBlur)}
+				defaultValue={fieldText(defaultValue)}
+				onChange={(event) => {
+					fieldProps.onChange(event);
+					propsOnChange?.(event.target.value);
+				}}
+				onBlur={() => {
+					fieldProps.onBlur();
+					propsOnBlur?.();
+				}}
 				onFocus={propsOnFocus}
 				placeholder={config.placeholder}
 				rows={config.rows}

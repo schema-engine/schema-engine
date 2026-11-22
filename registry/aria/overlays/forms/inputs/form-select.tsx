@@ -15,7 +15,9 @@ export function FormSelect({
 	onFocus: propsOnFocus,
 	...config
 }: SelectFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 	const isMultiple = Boolean(config.multiple);
 	const [open, setOpen] = React.useState(false);
 	const selectingRef = React.useRef(false);
