@@ -153,6 +153,8 @@ A host sets `server` errors, which describe the response to one submission, with
   superseded, or a reset came between, the call does nothing. The map replaces the whole answer: one call is one
   complete answer, and `{}` clears it. Paths are checked first: a reserved path (except `FORM_ROOT`) or a row
   the submitted values did not have throws.
+- `@schema-engine/forms/server-errors` has `fromProblemDetails` and `fromJsonApiErrors`, which build this input from
+  an RFC 9457 or JSON:API response (see its [README](../server-errors/README.md)).
 - An error is cleared when its path, a path below it, a path around it (the form included) or a
   value its rules read is edited, because what it described changed.
 - A path takes one issue or a list, each `{ type?, params?, message? }`; a missing `type` is `'server'`.
