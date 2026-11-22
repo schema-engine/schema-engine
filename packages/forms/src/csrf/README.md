@@ -24,8 +24,8 @@ await engine.fetch('/api/signup', { method: 'POST', body }); // carries X-CSRF-T
 native post carries it in. The policy is `{ token(): string | undefined; header: string; field?: string }`.
 
 - **Read at request time, never stored.** A rotated token is picked up, and an empty one is none.
-- **Where it goes.** `engine.fetch` adds the header only to a same-origin request (the URL is resolved against
-  `location`) with an unsafe method (`POST`, `PUT`, `PATCH`, `DELETE`). A cross-origin request, a safe method, a
+- **Where it goes.** `engine.fetch` adds the header only to a same-origin request (the URL is resolved against the
+  document's base URL, `<base href>` included, and compared with `location`) with an unsafe method (`POST`, `PUT`, `PATCH`, `DELETE`). A cross-origin request, a safe method, a
   missing token, and a page with no `location` (a server) send no header. A header the caller set under the same
   name is replaced.
 - **SSR-safe.** Nothing touches `document` or `location` at import; on a server a reader's token is `undefined`.

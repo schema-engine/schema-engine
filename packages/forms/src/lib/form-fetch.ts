@@ -24,12 +24,17 @@ export const globalFetch: FormFetch = (input, init) => globalThis.fetch(input, i
 
 const UNSAFE_METHODS: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-/** Whether `input` is a URL of the page's own origin. Without a page location nothing can be shown to be, so nothing is. */
+/**
+ * Whether `input` is a URL of the page's own origin. Without a page location nothing can be shown to be, so nothing is.
+ *
+ * @remarks A relative URL is resolved against the document's base URL (`<base href>` included), as the browser resolves it for the request.
+ */
 function isSameOrigin(input: string | URL): boolean {
 	if (typeof location === 'undefined') return false;
 	try {
 		const own = new URL(location.href).origin;
-		return own !== 'null' && new URL(input, location.href).origin === own;
+		const base = typeof document === 'undefined' || !document.baseURI ? location.href : document.baseURI;
+		return own !== 'null' && new URL(input, base).origin === own;
 	} catch {
 		return false;
 	}

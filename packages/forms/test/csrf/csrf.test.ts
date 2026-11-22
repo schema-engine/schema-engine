@@ -68,6 +68,16 @@ describe('the engine fetch', () => {
 		expect(calls.some(({ headers }) => headers.has(TOKEN_HEADER))).toBe(false);
 	});
 
+	test('resolves a relative URL against the document base, as the browser does, so a <base href> elsewhere gets no token', async () => {
+		vi.stubGlobal('location', { href: `${own}/signup` });
+		vi.stubGlobal('document', { baseURI: 'https://static.example.com/' });
+		const { calls, request } = recording();
+		const engine = createFormEngine({ fetch: request, csrf: policy() });
+		await engine.fetch('/api/save', { method: 'POST' });
+		await engine.fetch(`${own}/api/save`, { method: 'POST' });
+		expect(calls.map(({ headers }) => headers.has(TOKEN_HEADER))).toEqual([false, true]);
+	});
+
 	test('reads the token at request time, so a rotated token is picked up', async () => {
 		vi.stubGlobal('location', { href: `${own}/` });
 		const { calls, request } = recording();
