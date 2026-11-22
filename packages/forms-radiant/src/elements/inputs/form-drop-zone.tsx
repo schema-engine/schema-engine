@@ -69,6 +69,11 @@ export class SeDropZone extends RadiantElement {
 	>;
 
 	@prop({ type: String }) name = '';
+
+	protected override onConnected(): void {
+		announceControlConnect(this);
+	}
+
 	@prop({ type: Number, defaultValue: 1 }) maxFiles = 1;
 	@prop({ type: Number, defaultValue: 0 }) maxSize = 0;
 	@prop({ type: Number, defaultValue: 0 }) minSize = 0;
@@ -79,10 +84,6 @@ export class SeDropZone extends RadiantElement {
 	@state protected files: File[] = [];
 
 	@ref('input') fileInput!: HTMLInputElement | null;
-
-	protected override onConnected(): void {
-		announceControlConnect(this);
-	}
 
 	private readonly onDragOver = (event: Event) => {
 		event.preventDefault();

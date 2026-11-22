@@ -1,3 +1,4 @@
+import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import './form-masked-input.css';
 import { customElement, bindTo, onUpdated, prop, state, ref } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
@@ -5,7 +6,6 @@ import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
-import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -81,12 +81,12 @@ export class SeMaskedInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		announceControlConnect(this);
 		void this.attachMask();
 		this.registerCleanupCallback(() => {
 			this.attachGeneration += 1;
 			this.destroyMask();
 		});
+		announceControlConnect(this);
 	}
 
 	@onUpdated(['mask', 'unmask', 'lazy', 'overwrite', 'placeholderChar', 'definitions'])

@@ -1,3 +1,4 @@
+import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import './form-input-otp.css';
 import { customElement, prop, state, refAll } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
@@ -5,7 +6,6 @@ import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
-import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -46,6 +46,11 @@ export class SeInputOtp extends FormAssociatedElement {
 	/** True while the user has typed since `change` last fired, so leaving the group commits once. */
 	private uncommitted = false;
 
+	protected override onConnected(): void {
+		super.onConnected();
+		announceControlConnect(this);
+	}
+
 	get value(): string {
 		return this.slots.join('');
 	}
@@ -63,10 +68,6 @@ export class SeInputOtp extends FormAssociatedElement {
 
 	protected override restoreFormState(state: FormValue): void {
 		this.value = typeof state === 'string' ? state : '';
-	}
-
-	protected override onConnected(): void {
-		announceControlConnect(this);
 	}
 
 	private padSlots(chars: readonly string[]) {

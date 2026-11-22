@@ -1,3 +1,4 @@
+import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import './form-phone-input.css';
 import { customElement, bindTo, onUpdated, prop, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
@@ -21,7 +22,6 @@ import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
-import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -103,13 +103,13 @@ export class SePhoneInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
-		announceControlConnect(this);
 		void this.boot();
 		this.registerCleanupCallback(() => {
 			this.bootGeneration += 1;
 			this.lib = undefined;
 			this.ready = false;
 		});
+		announceControlConnect(this);
 	}
 
 	@onUpdated(['value'])
