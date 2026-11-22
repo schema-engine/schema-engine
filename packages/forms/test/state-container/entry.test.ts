@@ -5,6 +5,7 @@ describe('the state container entry point', () => {
 	test('exports the factory, the reads and the constants, and not the conformance suite', () => {
 		expect(Object.keys(entry).toSorted()).toEqual([
 			'FORM_ROOT',
+			'FormStateHydrationError',
 			'FormValidationFailure',
 			'createFormStateContainer',
 			'selectError',
@@ -12,6 +13,7 @@ describe('the state container entry point', () => {
 			'selectValue',
 			'selectWarning',
 			'toFieldArrayValue',
+			'toHydration',
 		]);
 		expect(entry.FORM_ROOT).toBe('__root__');
 	});

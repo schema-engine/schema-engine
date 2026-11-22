@@ -18,6 +18,7 @@ import {
 	type DependencyIndex,
 } from '@/schemas/validation/dependencies';
 import { dirtyTree } from './dirty';
+import { readHydration } from './hydration';
 import type { FieldArrayCommands } from './field-array';
 import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
 import { submittedValues, type SubmissionRecord } from './submission';
@@ -373,9 +374,32 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return id;
 	};
 
+	/** The ids tree of `values` with the ids a hydration gave, which `readHydration` checked; later minted ids skip them. */
+	function adoptedIdsOf(values: NullMap, given: Readonly<Record<string, readonly string[]>>): IdTree | undefined {
+		for (const ids of Object.values(given)) for (const id of ids) adoptedIds.add(id);
+		return Object.keys(given)
+			.toSorted((a, b) => a.split('.').length - b.split('.').length)
+			.reduce(
+				(ids, path) => {
+					const rows = idsAt(ids, path) as readonly RowNode[];
+					return replaceIdsAt(
+						ids,
+						path,
+						rows.map((row, index) =>
+							row.below === undefined
+								? { id: given[path][index] }
+								: { id: given[path][index], below: row.below },
+						),
+					);
+				},
+				syncIds(undefined, values, mintId),
+			);
+	}
+
 	const initialDefaults = toInternal(options.defaults ?? {}) as NullMap;
+	const initialValues = options.snapshot ? readHydration(options.snapshot) : initialDefaults;
 	let state: State = {
-		values: initialDefaults,
+		values: initialValues,
 		defaults: initialDefaults,
 		validation: undefined,
 		server: undefined,
@@ -384,51 +408,18 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		failed: undefined,
 		validated: undefined,
 		validating: undefined,
-		dirty: undefined,
-		ids: adoptAll(syncIds(undefined, initialDefaults, mintId), options.rowIds ?? {}),
+		dirty: options.snapshot ? dirtyTree(initialValues, initialDefaults) : undefined,
+		ids: options.snapshot
+			? adoptedIdsOf(initialValues, options.snapshot.rowIds)
+			: syncIds(undefined, initialValues, mintId),
 		excluded: Object.freeze(
-			participates ? resolveExcludedPaths(elements, toPlain(initialDefaults) as Record<string, unknown>) : [],
+			participates ? resolveExcludedPaths(elements, toPlain(initialValues) as Record<string, unknown>) : [],
 		),
 		exclusionVersion: 0,
 	};
 
 	/** Whether the value at a path is an array, which decides how its field state is shaped. */
 	const isArrayNow: IsArrayAt = (path) => Array.isArray(readAt(state.values, path));
-
-	function adoptAt(ids: IdTree | undefined, path: string, adopted: readonly string[]): IdTree | undefined {
-		const rows = idsAt(ids, path);
-		if (!Array.isArray(rows)) {
-			logger.warn(`Row ids were given for '${path}', which is not an array in the defaults; they were ignored.`);
-			return ids;
-		}
-		if (rows.length !== adopted.length) {
-			logger.warn(
-				`Row ids were given for '${path}' for ${adopted.length} rows, but it has ${rows.length}; the ids the container minted stay.`,
-			);
-			return ids;
-		}
-		if (new Set(adopted).size !== adopted.length) {
-			logger.warn(`Row ids given for '${path}' are not unique; the ids the container minted stay.`);
-			return ids;
-		}
-		for (const id of adopted) adoptedIds.add(id);
-		return replaceIdsAt(
-			ids,
-			path,
-			(rows as readonly RowNode[]).map((row, index) =>
-				row.below === undefined ? { id: adopted[index] } : { id: adopted[index], below: row.below },
-			),
-		);
-	}
-
-	function adoptAll(
-		ids: IdTree | undefined,
-		adopted: Readonly<Record<string, readonly string[]>>,
-	): IdTree | undefined {
-		return Object.keys(adopted)
-			.toSorted((a, b) => a.split('.').length - b.split('.').length)
-			.reduce((current, path) => adoptAt(current, path, adopted[path]), ids);
-	}
 
 	interface Derived {
 		readonly validation: Tree<Finding>;

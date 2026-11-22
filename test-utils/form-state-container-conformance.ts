@@ -9,6 +9,7 @@ import {
 } from '../packages/forms/src/schemas/validation/validation-registry';
 import { logger } from '../packages/forms/src/lib/logger';
 import { toFieldArrayValue } from '../packages/forms/src/state-container/field-array';
+import { FormStateHydrationError, toHydration } from '../packages/forms/src/state-container/hydration';
 import {
 	selectError,
 	selectErrorsUnder,
@@ -22,6 +23,7 @@ import {
 	type FormStateContainerFactory,
 	type FormStateContainerOptions,
 	type FormStateErrorsInput,
+	type FormStateHydration,
 	type FormSubmitResult,
 } from '../packages/forms/src/state-container/types';
 
@@ -80,12 +82,12 @@ export interface ContainerSetup {
 	readonly reValidateMode?: FormStateContainerOptions['config']['reValidateMode'];
 	readonly payload?: Readonly<Record<string, unknown>>;
 	readonly defaults?: Record<string, unknown>;
-	readonly rowIds?: Readonly<Record<string, readonly string[]>>;
+	readonly snapshot?: FormStateHydration;
 }
 
 /** The options of a container over `elements`, with the config a normalized form would give it. */
 export function containerOptions(setup: ContainerSetup): FormStateContainerOptions {
-	const { registry, elements, defaults, rowIds, payload } = setup;
+	const { registry, elements, defaults, snapshot, payload } = setup;
 	return {
 		config: {
 			steps: [{ elements }],
@@ -95,7 +97,7 @@ export function containerOptions(setup: ContainerSetup): FormStateContainerOptio
 		},
 		registry,
 		...(defaults === undefined ? {} : { defaults }),
-		...(rowIds === undefined ? {} : { rowIds }),
+		...(snapshot === undefined ? {} : { snapshot }),
 	};
 }
 
@@ -1077,18 +1079,29 @@ const cases: FormStateContainerCase[] = [
 	},
 	{
 		rule: 'array reindexing',
-		name: 'adopts the row ids of a snapshot rendered elsewhere, for the arrays whose row count matches',
-		run(createStore) {
-			const store = createStore(
-				fixture({ rowIds: { contacts: ['a', 'b', 'c'], invites: ['only-one'] } }).options,
-			);
-			expect(ids(store)).toEqual(['a', 'b', 'c']);
-			expect(store.getSnapshot().rowIds.invites).toHaveLength(2);
-			expect(store.getSnapshot().rowIds.invites).not.toContain('only-one');
-			store.fieldArray('contacts').remove(0);
-			expect(ids(store)).toEqual(['b', 'c']);
-			store.fieldArray('contacts').append({ email: 'new@example.com' });
-			expect(new Set(ids(store)).size).toBe(3);
+		name: 'hydrates from the serialized snapshot of another container: its values and ids after row operations, and fresh ids for new rows',
+		async run(createStore) {
+			const server = createStore(fixture().options);
+			server.fieldArray('contacts').remove(0);
+			server.fieldArray('contacts').prepend({ email: 'first@example.com' });
+			server.fieldArray('invites').swap(0, 1);
+			server.setValue('name', 'Typed');
+			const hydration: FormStateHydration = JSON.parse(JSON.stringify(toHydration(server.getSnapshot())));
+
+			const client = createStore(fixture({ snapshot: hydration }).options);
+			const was = server.getSnapshot();
+			expect(client.getSnapshot().values).toEqual(was.values);
+			expect(client.getSnapshot().rowIds).toEqual(was.rowIds);
+			expect(client.getSnapshot().dirty).toEqual(was.dirty);
+			expect(client.getServerSnapshot().rowIds).toEqual(was.rowIds);
+
+			client.fieldArray('contacts').append({ email: 'new@example.com' });
+			client.fieldArray('contacts').remove(0);
+			const adopted = Object.values(was.rowIds).flat();
+			const minted = ids(client).filter((id) => !adopted.includes(id));
+			expect(minted).toHaveLength(1);
+			expect(ids(client).slice(0, 2)).toEqual(was.rowIds.contacts.slice(1));
+			expect(new Set(ids(client)).size).toBe(ids(client).length);
 		},
 	},
 	{
@@ -1337,19 +1350,37 @@ const cases: FormStateContainerCase[] = [
 	},
 	{
 		rule: 'array reindexing',
-		name: 'warns when given row ids that do not match the rows, and keeps the ones it minted',
+		name: 'a hydration whose row ids do not match its own values throws instead of starting from it',
 		run(createStore) {
-			const warn = vi.spyOn(logger, 'warn').mockReturnThis();
-			try {
-				const store = createStore(
-					fixture({ rowIds: { contacts: ['a', 'b'], name: ['x'], invites: ['k', 'k'] } }).options,
-				);
-				expect(warn).toHaveBeenCalledTimes(3);
-				expect(ids(store)).toHaveLength(3);
-				expect(ids(store)).not.toContain('a');
-			} finally {
-				warn.mockRestore();
-			}
+			const good = toHydration(createStore(fixture().options).getSnapshot());
+			const start = (hydration: unknown) => () =>
+				createStore(fixture({ snapshot: hydration as FormStateHydration }).options);
+			expect(start({ ...good, rowIds: { ...good.rowIds, contacts: ['a', 'b'] } })).toThrow(
+				FormStateHydrationError,
+			);
+			expect(start({ ...good, rowIds: { ...good.rowIds, invites: ['k', 'k'] } })).toThrow(
+				FormStateHydrationError,
+			);
+			expect(start({ ...good, rowIds: { ...good.rowIds, name: ['x'] } })).toThrow(FormStateHydrationError);
+			expect(start({ ...good, rowIds: { ...good.rowIds, contacts: ['a', 'b', 7] } })).toThrow(
+				FormStateHydrationError,
+			);
+			expect(start({ ...good, rowIds: { contacts: good.rowIds.contacts } })).toThrow(FormStateHydrationError);
+			expect(start({ ...good, rowIds: { ...good.rowIds, invites: good.rowIds.contacts } })).toThrow(
+				FormStateHydrationError,
+			);
+			expect(start({ values: good.values })).toThrow(FormStateHydrationError);
+			expect(start('nothing')).toThrow(FormStateHydrationError);
+			expect(start(good)).not.toThrow();
+		},
+	},
+	{
+		rule: 'array reindexing',
+		name: 'containers built from the same defaults mint the same row ids',
+		run(createStore) {
+			expect(createStore(fixture().options).getSnapshot().rowIds).toEqual(
+				createStore(fixture().options).getSnapshot().rowIds,
+			);
 		},
 	},
 	{

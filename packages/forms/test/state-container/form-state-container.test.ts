@@ -188,18 +188,37 @@ describe('createFormStateContainer', () => {
 	});
 
 	describe('row ids', () => {
-		test('adopts ids for an array nested in a row, and they move with the row', () => {
+		test('adopts ids for an array nested in a row from a hydration, and they move with the row', () => {
 			const store = createFormStateContainer(
 				containerOptions({
 					registry,
 					elements: [],
 					defaults: { contacts: [{ phones: ['1', '2'] }] },
-					rowIds: { contacts: ['c1'], 'contacts.0.phones': ['p1', 'p2'] },
+					snapshot: {
+						values: { contacts: [{ phones: ['1', '2'] }] },
+						rowIds: { contacts: ['c1'], 'contacts.0.phones': ['p1', 'p2'] },
+					},
 				}),
 			);
 			expect(store.getSnapshot().rowIds).toEqual({ contacts: ['c1'], 'contacts.0.phones': ['p1', 'p2'] });
 			store.fieldArray('contacts').prepend({ phones: [] });
 			expect(store.getSnapshot().rowIds['contacts.1.phones']).toEqual(['p1', 'p2']);
+		});
+
+		test('a hydrated container is dirty where its values differ from the defaults, and reset restores them', () => {
+			const store = createFormStateContainer(
+				containerOptions({
+					registry,
+					elements: [],
+					defaults: { name: 'Ada', tags: ['a'] },
+					snapshot: { values: { name: 'Grace', tags: ['a', 'b'] }, rowIds: { tags: ['t1', 't2'] } },
+				}),
+			);
+			expect(store.getSnapshot().dirty).toEqual({ name: true, tags: true, 'tags.1': true });
+			store.reset();
+			expect(store.getSnapshot().values).toEqual({ name: 'Ada', tags: ['a'] });
+			expect(store.getSnapshot().dirty).toEqual({});
+			expect(store.getSnapshot().rowIds.tags).toHaveLength(1);
 		});
 
 		test('mints ids deterministically, so a server render and its hydration agree', () => {

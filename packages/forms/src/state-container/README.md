@@ -34,7 +34,7 @@ how a path segment is spelled.
 - `setValue` conforms each tree to the written branch: rows past the end of an array and branches that are
   no longer containers lose their state.
 - Row ids (`row-ids.ts`) are a tree of the same shape. They give a row an identity: a field array renders by
-  `snapshot.rowIds[path]`, a server render is adopted with the `rowIds` option, and a late validation
+  `snapshot.rowIds[path]`, a server render is adopted with the `snapshot` option, and a late validation
   result or a late server answer finds its row by id.
 
 Defaults are cloned (the `defaults` option and `reset(values)`): defaults and live values never share objects.
@@ -192,11 +192,28 @@ A rule that cannot run is no field error: it says nothing about the value.
 ## Entry point
 
 `@schema-engine/forms/state-container` (`src/state-container/index.ts`) exports the contract types, the factory,
-`selectFieldState`, `selectValue`, `selectError`, `selectWarning`, `toFieldArrayValue`, `FORM_ROOT`, `FormIssueFormatter`
-and `FormValidationFailure`. The conformance suite is not part of it.
+`selectFieldState`, `selectValue`, `selectError`, `selectWarning`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT`, `FormIssueFormatter`,
+`FormValidationFailure` and `FormStateHydrationError`. The conformance suite is not part of it.
 
-`createFormStateContainer({ config, registry, defaults?, rowIds? })` is the whole option list: the elements, the
+`createFormStateContainer({ config, registry, defaults?, snapshot? })` is the whole option list: the elements, the
 validation timing and the payload come from the normalized form config.
+
+### Hydration
+
+A server builds a container, renders its state, and serializes the part of the snapshot a client needs:
+`toHydration(container.getServerSnapshot())` is `{ values, rowIds }`, both plain and serializable (opaque values
+such as files aside). The client passes it back as `snapshot`, with the same `defaults`:
+
+```ts
+const client = createFormStateContainer({ config, registry, defaults, snapshot: hydration });
+```
+
+The container starts from those values and adopts those row ids, so a row the server rendered keeps its identity,
+and the rows the client adds get ids that cannot collide with them. Values and ids come from one object, so there is
+no count to compare and no warning: a hydration whose ids do not match its own values (an array with no entry, an
+entry for something that is no array, a wrong count, a repeated or non-string id) cannot come from a real snapshot
+and throws a `FormStateHydrationError`. Fields that differ from `defaults` are dirty, and `reset` restores the
+defaults with new row ids. Without `snapshot` the container starts from `defaults`.
 
 ## Contract
 
@@ -242,8 +259,8 @@ every snapshot while it is unchanged. `selectErrorsUnder` and `selectFields` are
   omitting the list validates the form.
 - An async result is applied where its fields are now, only while its scope is current (see freshness).
 - Ids the container mints are deterministic (walk order of the defaults, one counter per container), so a
-  client built from the same defaults matches the server; the `rowIds` option is for a server that rendered
-  other state, and an entry whose count differs from the rows is not adopted and logs a warning.
+  client built from the same defaults matches the server; the `snapshot` option is for a server that rendered
+  other state (see Hydration).
 - A row operation validates the array's own rules, not its rows, and `reset` gives every row a new id.
 - A command notifies subscribers once, including when it starts a validation.
 

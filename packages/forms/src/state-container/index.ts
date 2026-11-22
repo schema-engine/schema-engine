@@ -6,6 +6,7 @@
  */
 export { createFormStateContainer } from './create-form-state-container';
 export { toFieldArrayValue } from './field-array';
+export { FormStateHydrationError, toHydration } from './hydration';
 export type { FieldArrayCommands, FieldArrayValue } from './field-array';
 export { selectError, selectFieldState, selectValue, selectWarning } from './selectors';
 export type { FormFieldState } from './selectors';
@@ -20,6 +21,7 @@ export type {
 	FormStateError,
 	FormStateErrorInput,
 	FormStateErrorsInput,
+	FormStateHydration,
 	FormStateIssue,
 	FormStateSnapshot,
 	FormStateSource,

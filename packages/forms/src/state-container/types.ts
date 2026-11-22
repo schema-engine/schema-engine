@@ -344,6 +344,19 @@ export interface FormStateContainerConfig {
 	readonly payload?: Readonly<Record<string, unknown>>;
 }
 
+/**
+ * The part of a snapshot that a server hands to a client so the client starts from the same state.
+ *
+ * @remarks
+ * The `values` and `rowIds` of a snapshot are plain, frozen and serializable (but for opaque values such as
+ * files), so `JSON.stringify(toHydration(container.getServerSnapshot()))` is the payload, and a snapshot is itself
+ * accepted. The rest of a snapshot is derived from what the server's container did, not state to restore.
+ */
+export interface FormStateHydration {
+	readonly values: Readonly<Record<string, unknown>>;
+	readonly rowIds: Readonly<Record<string, readonly string[]>>;
+}
+
 /** What {@link FormStateContainerFactory} builds a container from. */
 export interface FormStateContainerOptions {
 	/** The normalized form config: the elements, the validation timing and the payload all come from it, so no renderer can differ. */
@@ -351,15 +364,17 @@ export interface FormStateContainerOptions {
 	readonly registry: ValidationRegistry;
 	readonly defaults?: Record<string, unknown>;
 	/**
-	 * The `rowIds` of a snapshot rendered elsewhere, to adopt for the arrays it names.
+	 * The snapshot of a container that rendered the form elsewhere, to start from: its values and its row ids.
 	 *
 	 * @remarks
-	 * Ids the container mints are deterministic: they follow the walk order of the defaults with one counter
-	 * per container, so a client built from the same defaults as the server already matches it. This is for a
-	 * server that rendered state other than the defaults. An entry whose count differs from the rows is not
-	 * adopted, and a warning says so.
+	 * Without it the container starts from `defaults` and mints deterministic row ids (walk order, one counter per
+	 * container). With it the container starts from the values of the snapshot and adopts its row ids, so a client
+	 * keeps the identity a server rendered, whatever rows the user had added there. Values and ids come from the same
+	 * object, so there is nothing to compare; one whose ids do not match its own values cannot come from a real
+	 * snapshot and throws a `FormStateHydrationError`. `defaults` still say what the form started from, and what
+	 * `reset` restores, so pass the same ones the server used: the fields that differ from them are dirty.
 	 */
-	readonly rowIds?: Readonly<Record<string, readonly string[]>>;
+	readonly snapshot?: FormStateHydration;
 }
 
 /** What `formStateContainerConformance` builds the container under test with. */

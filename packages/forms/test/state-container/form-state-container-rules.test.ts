@@ -63,6 +63,13 @@ const valuePaths = (value: unknown, prefix = ''): string[] =>
  */
 const brokenStores: Array<{ name: string; create: FormStateContainerFactory; caught: string[] }> = [
 	{
+		name: 'ignores the snapshot it is given and starts from the defaults',
+		create: (options) => createFormStateContainer({ ...options, snapshot: undefined }),
+		caught: [
+			'hydrates from the serialized snapshot of another container: its values and ids after row operations, and fresh ids for new rows',
+		],
+	},
+	{
 		name: 'returns a new snapshot on every read',
 		create: withOverrides((inner) => ({ getSnapshot: () => ({ ...inner.getSnapshot() }) })),
 		caught: ['returns the same snapshot until something changes, and notifies once per change'],
@@ -376,7 +383,7 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 				containerOptions({
 					registry: options.registry,
 					defaults: options.defaults,
-					rowIds: options.rowIds,
+					snapshot: options.snapshot,
 					...options.config,
 					elements: options.config.steps
 						.flatMap((step) => step.elements)
