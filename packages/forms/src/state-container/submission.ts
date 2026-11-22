@@ -47,7 +47,11 @@ function omitExcluded(value: unknown, excluded: readonly string[], path = ''): u
 /**
  * The values a submission submits: those captured, without the paths that took no part, and the payload.
  *
- * @remarks The same frozen object while the captured values are the same.
+ * @remarks
+ * The same frozen object while the captured values are the same. A row that took no part is left out of its array,
+ * so an index in these values can differ from the row's index in the form. `setServerErrors` addresses rows by
+ * their index in the form when it was submitted, excluded rows counted, not by an index in these values: a server
+ * that answers by the index it saw in the submitted values must map it back when rows were excluded.
  */
 export function submittedValues(record: SubmissionRecord): Readonly<Record<string, unknown>> {
 	const { values, excluded, payload } = record;

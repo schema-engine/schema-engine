@@ -2,7 +2,7 @@
  * The form state container: the contract, the factory and the reads a binding builds on.
  *
  * @remarks
- * The conformance suite is not exported here; it is published on its own.
+ * The conformance suite is not exported here; it is published separately, later (#337).
  */
 export { createFormStateContainer } from './create-form-state-container';
 export { toFieldArrayValue } from './field-array';

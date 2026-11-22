@@ -1,8 +1,14 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createAsyncValidationHandler } from '../../../src/schemas/validation/async/handler';
 import { createValidationContext } from '../../../src/schemas/validation/utils';
+import { globalFetch } from '../../../src/lib/form-fetch';
 import { createDebounceScope } from '../../../src/lib/debounce';
 import { REPORTED_TEXT, ValidationSuperseded, ValidationUnavailable } from '../../../src/schemas/validation/errors';
+
+const contextWithFetch = (...input: Parameters<typeof createValidationContext>) => ({
+	...createValidationContext(...input),
+	fetch: globalFetch,
+});
 
 describe('createAsyncValidationHandler HTTP method', () => {
 	let fetchSpy: ReturnType<typeof vi.spyOn>;
@@ -25,7 +31,7 @@ describe('createAsyncValidationHandler HTTP method', () => {
 				method: 'GET',
 				disableCache: true,
 			},
-			createValidationContext(),
+			contextWithFetch(),
 		);
 
 		await schema.parseAsync('test-value');
@@ -44,7 +50,7 @@ describe('createAsyncValidationHandler HTTP method', () => {
 				url: '/api/check',
 				disableCache: true,
 			},
-			createValidationContext(),
+			contextWithFetch(),
 		);
 
 		await schema.parseAsync('test-value');
@@ -78,7 +84,7 @@ describe('createAsyncValidationHandler dependencies', () => {
 	test('resolves a dotted dependency from the form root', async () => {
 		const schema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', dependencies: ['billing.country'], disableCache: true },
-			createValidationContext({ values: { billing: { country: 'it' } }, fieldPath: 'vat' }),
+			contextWithFetch({ values: { billing: { country: 'it' } }, fieldPath: 'vat' }),
 		);
 
 		await schema.parseAsync('IT01');
@@ -89,7 +95,7 @@ describe('createAsyncValidationHandler dependencies', () => {
 	test('resolves a bare dependency within the declaring array row', async () => {
 		const schema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', dependencies: ['accountType'], disableCache: true },
-			createValidationContext({
+			contextWithFetch({
 				values: { contacts: [{ accountType: 'personal' }, { accountType: 'business' }] },
 				fieldPath: 'contacts.1.email',
 			}),
@@ -103,7 +109,7 @@ describe('createAsyncValidationHandler dependencies', () => {
 	test('skips the request while a dependency is unfilled', async () => {
 		const schema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', dependencies: ['accountType'], disableCache: true },
-			createValidationContext({ values: {}, fieldPath: 'contacts.1.email' }),
+			contextWithFetch({ values: {}, fieldPath: 'contacts.1.email' }),
 		);
 
 		await schema.parseAsync('jane@example.com');
@@ -114,7 +120,7 @@ describe('createAsyncValidationHandler dependencies', () => {
 	test('skips empty arrays but validates false and zero values', async () => {
 		const schema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', disableCache: true },
-			createValidationContext(),
+			contextWithFetch(),
 		);
 
 		await schema.parseAsync([]);
@@ -146,7 +152,7 @@ describe('createAsyncValidationHandler debounce', () => {
 	test('a superseded async validation never passes submission', async () => {
 		const schema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', debounce: 300, disableCache: true },
-			createValidationContext({ fieldPath: 'email' }),
+			contextWithFetch({ fieldPath: 'email' }),
 		);
 
 		const first = schema.safeParseAsync('first@example.com');
@@ -168,7 +174,7 @@ describe('createAsyncValidationHandler debounce', () => {
 		);
 		const schema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', debounce: 300, disableCache: true },
-			createValidationContext({ fieldPath: 'email' }),
+			contextWithFetch({ fieldPath: 'email' }),
 		);
 
 		const first = schema.safeParseAsync('taken@example.com');
@@ -187,7 +193,7 @@ describe('createAsyncValidationHandler debounce', () => {
 	test('a same-value parse replaced again by a different value does not pass', async () => {
 		const schema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', debounce: 300, disableCache: true },
-			createValidationContext({ fieldPath: 'email' }),
+			contextWithFetch({ fieldPath: 'email' }),
 		);
 
 		const first = schema.safeParseAsync('same@example.com');
@@ -207,11 +213,11 @@ describe('createAsyncValidationHandler debounce', () => {
 		const debounceScope = createDebounceScope();
 		const firstSchema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', debounce: 300, disableCache: true },
-			createValidationContext({ fieldPath: 'first', debounceScope }),
+			contextWithFetch({ fieldPath: 'first', debounceScope }),
 		);
 		const secondSchema = createAsyncValidationHandler(
 			{ type: 'async', url: '/api/check', debounce: 300, disableCache: true },
-			createValidationContext({ fieldPath: 'second', debounceScope }),
+			contextWithFetch({ fieldPath: 'second', debounceScope }),
 		);
 		const first = firstSchema.safeParseAsync('one');
 		const second = secondSchema.safeParseAsync('two');
@@ -243,7 +249,7 @@ describe('createAsyncValidationHandler answers', () => {
 	const run = (rule: Partial<Parameters<typeof createAsyncValidationHandler>[0]>, value = 'v') =>
 		createAsyncValidationHandler(
 			{ type: 'async', url: '/answers', ...rule },
-			createValidationContext({ fieldPath: 'f' }),
+			contextWithFetch({ fieldPath: 'f' }),
 		).safeParseAsync(value);
 	const answer = (body: unknown) => {
 		fetchSpy = vi

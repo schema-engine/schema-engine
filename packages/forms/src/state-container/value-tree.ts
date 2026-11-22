@@ -25,17 +25,20 @@ export function isOpaque(value: unknown): boolean {
 	return !isPlainObject(value);
 }
 
+/** Copies the structural part of `record` into a null-prototype map; opaque values are kept as they are. */
+export function toInternalRecord(record: Readonly<Record<string, unknown>>): NullMap {
+	const copy = createMap();
+	for (const [key, child] of Object.entries(record)) {
+		if (!isReservedPathKey(key)) copy[key] = toInternal(child);
+	}
+	return copy;
+}
+
 /** Copies the structural part of `value` into null-prototype maps; opaque values are kept as they are. */
 export function toInternal(value: unknown): unknown {
 	if (isOpaque(value)) return value;
 	if (Array.isArray(value)) return value.map(toInternal);
-	if (isPlainObject(value)) {
-		const copy = createMap();
-		for (const [key, child] of Object.entries(value)) {
-			if (!isReservedPathKey(key)) copy[key] = toInternal(child);
-		}
-		return copy;
-	}
+	if (isPlainObject(value)) return toInternalRecord(value);
 	return value;
 }
 

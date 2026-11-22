@@ -45,7 +45,6 @@ function schemaFor(engine: ReturnType<typeof createFormEngine>, rule: { type: st
 		fieldPath: '',
 		resolve: () => undefined,
 		debounceScope: createDebounceScope(),
-		fetch: engine.fetch,
 	});
 }
 

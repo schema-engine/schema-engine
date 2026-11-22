@@ -120,7 +120,8 @@ path is a record of one. Nothing else carries a fact: not `setValue`, not `blur`
   snapshot. One call is one commit. It re-validates, in one run, only the paths whose fact changed that were
   validated before, are in a failed scope or have a check in flight, never to start validating a pristine path.
   A fact identical to the one held is a no-op.
-- A path the container does not hold (a removed row, an absent object) is ignored. A reserved path throws for
+- A path no field of the config expands to for the values held (a name no field has, a removed row, anything below a
+  scalar) is ignored, so a fact for it can never block a form nothing can fix. A reserved path throws for
   the whole call, before any fact is written.
 - A fact stays held until its control withdraws it with `null`, which a host does when the control disconnects.
   A control that is not reporting is not assumed gone. `reset` clears every fact.
@@ -156,6 +157,10 @@ A host sets `server` errors, which describe the response to one submission, with
   the submitted values did not have throws.
 - `@schema-engine/forms/server-errors` has `fromProblemDetails` and `fromJsonApiErrors`, which build this input from
   an RFC 9457 or JSON:API response (see its [README](../server-errors/README.md)).
+- A path no field declares (for the submitted values) cannot be shown at a field, so its issues move to `FORM_ROOT`,
+  keeping `type`, `params` and `message`, after the form's own; the user still sees them. A row or an object that
+  holds declared fields is declared. Index paths are those of the form's rows when it was submitted, excluded rows
+  counted, not the indexes of the submitted `values`, which leave excluded rows out.
 - An error is cleared when its path, a path below it, a path around it (the form included) or a
   value its rules read is edited, because what it described changed.
 - A path takes one issue or a list, each `{ type?, params?, message? }`; a missing `type` is `'server'`.

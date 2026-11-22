@@ -166,8 +166,9 @@ export type FormSubmitResult =
 			 * @remarks
 			 * Each path takes one issue or a list, and {@link FORM_ROOT} stands for the form. Throws for a path with
 			 * a reserved `__` segment other than `FORM_ROOT`, and for a path that names a row the submitted values
-			 * did not have. Index paths are the ones of `values`: an error for submitted `contacts.0.email` lands
-			 * on that row wherever it is now, and is dropped when the row is gone. An error is applied only when its
+			 * did not have. Index paths are those of the form's rows when it was submitted, rows that took no part counted (so they differ from the indexes of `values` when a row was left out): an error for `contacts.0.email` lands
+			 * on that row wherever it is now, and is dropped when the row is gone. A path no field declares cannot be
+			 * shown at a field, so its issues move to `FORM_ROOT`, keeping their type, params and message. An error is applied only when its
 			 * target, and every value its rules read, are unchanged since the submission, and only while this is the
 			 * latest submission and no reset came between: otherwise the call does nothing. An error is cleared
 			 * when its path, or a path its rules read, is edited.
@@ -271,8 +272,9 @@ export interface FormStateContainer {
 	 * disconnects. A fact is bound to the value held now and is dropped when that value changes, and it moves with
 	 * its row. A fact that is already held is a no-op. Reporting is no change: nothing becomes dirty or touched,
 	 * and one call is one commit that re-validates, in a single run, only the changed paths that were validated
-	 * before, are in a failed scope, or have a check in flight, never to start validating a pristine one. A path the
-	 * container does not hold (a removed row, an absent object) is ignored. A reserved path throws, for the whole
+	 * before, are in a failed scope, or have a check in flight, never to start validating a pristine one. A path no field
+	 * of the config expands to for the values held (a name no field has, a removed row, anything below a scalar) is
+	 * ignored. A reserved path throws, for the whole
 	 * call and before anything is written. A fact is not part of the snapshot, so reporting alone notifies nobody.
 	 */
 	reportNative(facts: Readonly<Record<string, NativeValidity | null>>): void;

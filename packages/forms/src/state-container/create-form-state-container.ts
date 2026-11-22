@@ -1,4 +1,5 @@
 import {
+	collectStepFieldPaths,
 	hasParticipationRules,
 	isPathExcluded,
 	planFormValidation,
@@ -61,6 +62,7 @@ import {
 	setIn,
 	stabilize,
 	toInternal,
+	toInternalRecord,
 	toPlain,
 	toPlainMap,
 	type NullMap,
@@ -233,15 +235,6 @@ function missingRow(
 	return undefined;
 }
 
-/** Whether the values hold `path`: its rows exist and every container above it is there. A leaf with no value is held. */
-function holds(path: string, values: NullMap): boolean {
-	if (missingRow(path, values)) return false;
-	const segments = path.split('.');
-	return segments
-		.slice(0, -1)
-		.every((_, depth) => isStructural(readAt(values, segments.slice(0, depth + 1).join('.'))));
-}
-
 /** The marks that belong to paths taking part. */
 function withoutExcluded(flat: NullMap<true>, excluded: readonly string[]): NullMap<true> {
 	if (excluded.length === 0) return flat;
@@ -374,30 +367,10 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return id;
 	};
 
-	/** The ids tree of `values` with the ids a hydration gave, which `readHydration` checked; later minted ids skip them. */
-	function adoptedIdsOf(values: NullMap, given: Readonly<Record<string, readonly string[]>>): IdTree | undefined {
-		for (const ids of Object.values(given)) for (const id of ids) adoptedIds.add(id);
-		return Object.keys(given)
-			.toSorted((a, b) => a.split('.').length - b.split('.').length)
-			.reduce(
-				(ids, path) => {
-					const rows = idsAt(ids, path) as readonly RowNode[];
-					return replaceIdsAt(
-						ids,
-						path,
-						rows.map((row, index) =>
-							row.below === undefined
-								? { id: given[path][index] }
-								: { id: given[path][index], below: row.below },
-						),
-					);
-				},
-				syncIds(undefined, values, mintId),
-			);
-	}
-
-	const initialDefaults = toInternal(options.defaults ?? {}) as NullMap;
-	const initialValues = options.snapshot ? readHydration(options.snapshot) : initialDefaults;
+	const hydrated = options.snapshot === undefined ? undefined : readHydration(options.snapshot);
+	for (const id of hydrated?.taken ?? []) adoptedIds.add(id);
+	const initialDefaults = toInternalRecord(options.defaults ?? {});
+	const initialValues = hydrated?.values ?? initialDefaults;
 	let state: State = {
 		values: initialValues,
 		defaults: initialDefaults,
@@ -408,15 +381,32 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		failed: undefined,
 		validated: undefined,
 		validating: undefined,
-		dirty: options.snapshot ? dirtyTree(initialValues, initialDefaults) : undefined,
-		ids: options.snapshot
-			? adoptedIdsOf(initialValues, options.snapshot.rowIds)
-			: syncIds(undefined, initialValues, mintId),
+		dirty: hydrated ? dirtyTree(initialValues, initialDefaults) : undefined,
+		ids: hydrated ? hydrated.ids : syncIds(undefined, initialValues, mintId),
 		excluded: Object.freeze(
 			participates ? resolveExcludedPaths(elements, toPlain(initialValues) as Record<string, unknown>) : [],
 		),
 		exclusionVersion: 0,
 	};
+
+	const declaredFor = new WeakMap<NullMap, ReadonlySet<string>>();
+
+	/**
+	 * The paths some field of the config expands to for `values`, with every path above them.
+	 *
+	 * @remarks The rows are the live ones, so a path below a row that is gone is not declared, and neither is a name no field has.
+	 */
+	function declaredPaths(values: NullMap): ReadonlySet<string> {
+		const known = declaredFor.get(values);
+		if (known) return known;
+		const declared = new Set<string>();
+		for (const path of collectStepFieldPaths({ elements }, toPlain(values) as Record<string, unknown>)) {
+			const segments = path.split('.');
+			for (let depth = 1; depth <= segments.length; depth += 1) declared.add(segments.slice(0, depth).join('.'));
+		}
+		declaredFor.set(values, declared);
+		return declared;
+	}
 
 	/** Whether the value at a path is an array, which decides how its field state is shaped. */
 	const isArrayNow: IsArrayAt = (path) => Array.isArray(readAt(state.values, path));
@@ -1101,7 +1091,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		let native = state.native;
 		const changed: string[] = [];
 		for (const [path, validity] of reported) {
-			if (!holds(path, state.values)) continue;
+			if (!declaredPaths(state.values).has(path)) continue;
 			const next = withFact(native, path, validity, state.values);
 			if (next === native) continue;
 			native = next;
@@ -1124,11 +1114,21 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	 * @remarks The paths are checked first, so a bad one throws whether or not the answer would apply.
 	 */
 	function setServerErrors(record: SubmissionRecord, errors: FormStateErrorsInput): void {
-		const given = Object.entries(errors).map(([path, input]) => {
+		const declared = declaredPaths(record.values);
+		const given: Array<readonly [string, Issues]> = [];
+		const undeclared: FormStateIssue[] = [];
+		for (const [path, input] of Object.entries(errors)) {
 			if (path !== FORM_ROOT) assertFieldPath(path, 'setServerErrors');
 			assertRowsExist(path, record.values);
-			return [path, serverIssues(input)] as const;
-		});
+			const issues = serverIssues(input);
+			if (path === FORM_ROOT || declared.has(path)) given.push([path, issues]);
+			else undeclared.push(...issues);
+		}
+		const root = given.findIndex(([path]) => path === FORM_ROOT);
+		if (undeclared.length > 0) {
+			if (root < 0) given.push([FORM_ROOT, undeclared]);
+			else given[root] = [FORM_ROOT, [...given[root][1], ...undeclared]];
+		}
 		if (record !== latestSubmission) return;
 		const index = dependencyIndex();
 		const known = state.server;
@@ -1203,7 +1203,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		blur,
 		reportNative,
 		reset(values) {
-			const defaults = values ? (toInternal(values) as NullMap) : state.defaults;
+			const defaults = values ? toInternalRecord(values) : state.defaults;
 			tracker.reset();
 			latestSubmission = undefined;
 			commit({

@@ -845,7 +845,15 @@ describe('createFormStateContainer', () => {
 			const store = createFormStateContainer(
 				containerOptions({
 					registry,
-					elements: [],
+					elements: [
+						element({ $type: 'input', name: 'toString' }),
+						element({ $type: 'input', name: 'valueOf' }),
+						element({ $type: 'input', name: 'hasOwnProperty' }),
+						element(
+							{ $type: 'arrayElements', name: 'tags', elements: [{ $type: 'input', name: 'tag' }] },
+							'array',
+						),
+					],
 					defaults: { tags: ['a'] },
 				}),
 			);

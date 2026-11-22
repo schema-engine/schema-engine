@@ -184,6 +184,14 @@ function fixture(overrides: Partial<ContainerSetup> = {}): Fixture {
 				element(
 					{
 						$type: 'arrayElements',
+						name: 'tags',
+						elements: [{ $type: 'input', name: 'tag' }],
+					},
+					'array',
+				),
+				element(
+					{
+						$type: 'arrayElements',
 						name: 'invites',
 						rules: [{ type: 'minItems', value: 2, message: 'Add two invites' }],
 						elements: [
@@ -1371,6 +1379,7 @@ const cases: FormStateContainerCase[] = [
 			);
 			expect(start({ values: good.values })).toThrow(FormStateHydrationError);
 			expect(start('nothing')).toThrow(FormStateHydrationError);
+			expect(start(null)).toThrow(FormStateHydrationError);
 			expect(start(good)).not.toThrow();
 		},
 	},
@@ -1409,7 +1418,7 @@ const cases: FormStateContainerCase[] = [
 			expect(() =>
 				answer.setServerErrors({ 'nothing.here': { message: 'fine' }, [FORM_ROOT]: { message: 'form' } }),
 			).not.toThrow();
-			expect(Object.keys(errorsOf(store)).toSorted()).toEqual([FORM_ROOT, 'nothing.here']);
+			expect(Object.keys(errorsOf(store))).toEqual([FORM_ROOT]);
 		},
 	},
 	{
@@ -2706,6 +2715,57 @@ const cases: FormStateContainerCase[] = [
 			expect(errors.count.all.map(({ params }) => params)).toEqual([{ min: 5 }, { max: 1 }]);
 			expect(errors.rows.params).toEqual({ minItems: 2 });
 			expect(JSON.stringify(errors)).not.toMatch(/Too (small|big)|Invalid input/);
+		},
+	},
+	{
+		rule: 'native facts',
+		name: 'a fact for a path no field declares is ignored: it does not block validate, checkValidity or a submission',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			const before = store.getSnapshot();
+			store.reportNative({
+				ghost: { type: 'valueMissing' },
+				'name.x': { type: 'valueMissing' },
+				'address.nowhere': { type: 'valueMissing' },
+				'contacts.0.nothing': { type: 'valueMissing' },
+			});
+			expect(await store.validate()).toBe(true);
+			expect(await store.checkValidity()).toBe(true);
+			expect(errorsOf(store)).toEqual({});
+			expect(store.getSnapshot().isValid).toBe(true);
+			expect((await store.submit()).outcome).toBe('passed');
+			expect(before.errors).toEqual({});
+		},
+	},
+	{
+		rule: 'server errors tied to a submission',
+		name: 'an error for a path no field declares shows at the form, with its type, params and message',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			const answer = await passedSubmission(store);
+			answer.setServerErrors({
+				ghost: { type: 'unknown_field', params: { field: 'ghost' }, message: 'No such field' },
+				'address.nowhere': [{ type: 'also_unknown' }],
+				[FORM_ROOT]: { message: 'Try later' },
+				name: { type: 'taken' },
+				'contacts.1': { type: 'row_error' },
+			});
+			expect(Object.keys(errorsOf(store)).toSorted()).toEqual([FORM_ROOT, 'contacts.1', 'name']);
+			expect(errorsOf(store)[FORM_ROOT].all).toEqual([
+				{ type: 'server', source: 'server', message: 'Try later' },
+				{
+					type: 'unknown_field',
+					source: 'server',
+					params: { field: 'ghost' },
+					message: 'No such field',
+				},
+				{ type: 'also_unknown', source: 'server' },
+			]);
+
+			const alone = await passedSubmission(store);
+			alone.setServerErrors({ ghost: { type: 'unknown_field' } });
+			expect(Object.keys(errorsOf(store))).toEqual([FORM_ROOT]);
+			expect(errorsOf(store)[FORM_ROOT].type).toBe('unknown_field');
 		},
 	},
 ];

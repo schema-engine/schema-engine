@@ -63,6 +63,27 @@ const valuePaths = (value: unknown, prefix = ''): string[] =>
  */
 const brokenStores: Array<{ name: string; create: FormStateContainerFactory; caught: string[] }> = [
 	{
+		name: 'drops an answer for a path no field declares',
+		create: withOverrides((inner) => ({
+			submit: async () => {
+				const result = await inner.submit();
+				if (result.outcome !== 'passed') return result;
+				return {
+					...result,
+					setServerErrors: (errors) =>
+						result.setServerErrors(
+							Object.fromEntries(
+								Object.entries(errors).filter(
+									([path]) => path === FORM_ROOT || path in inner.getSnapshot().values,
+								),
+							),
+						),
+				};
+			},
+		})),
+		caught: ['an error for a path no field declares shows at the form, with its type, params and message'],
+	},
+	{
 		name: 'ignores the snapshot it is given and starts from the defaults',
 		create: (options) => createFormStateContainer({ ...options, snapshot: undefined }),
 		caught: [

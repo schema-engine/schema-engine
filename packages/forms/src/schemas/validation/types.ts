@@ -325,9 +325,12 @@ export interface ValidationContext {
 	readonly resolve: (fieldRef: string) => unknown;
 	/** Debounced work shared by parses that receive this scope. */
 	readonly debounceScope: DebounceScope;
-	/** Makes the requests of a rule: the engine's `fetch`, with its CSRF policy applied. A registry sets it on every context it builds a schema from. */
+	/** Makes the requests of a rule: the engine's `fetch`, with its CSRF policy applied. The registry sets it, and it is the only way to set it. */
 	readonly fetch: FormFetch;
 }
+
+/** What a caller of `createSchema` gives: a {@link ValidationContext} without `fetch`, which the registry supplies. */
+export type ValidationScope = Omit<ValidationContext, 'fetch'>;
 
 /**
  * Validation rule registration: the shared registration shape plus the handler that builds the rule's schema.

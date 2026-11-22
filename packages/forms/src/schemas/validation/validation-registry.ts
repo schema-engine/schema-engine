@@ -3,7 +3,7 @@ import { createRegistry, type ReadOnlyRegistry } from '@schema-engine/registry';
 import type {
 	AnyValidationRegistration,
 	BaseValidationRule,
-	ValidationContext,
+	ValidationScope,
 	ValidationRegistration,
 	ValidationRegistrationConstraint,
 } from './types.js';
@@ -78,7 +78,7 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	 * The rule type is generic, not `{ type: string }`, so a rule literal with extra properties such as
 	 * `{ type: 'min', value: 10 }` is not rejected as an excess-property error.
 	 */
-	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType;
+	createSchema<T extends { type: string }>(rule: T, context: ValidationScope): z.ZodMiniType;
 
 	/**
 	 * Why a rule cannot be used, or `undefined` when it can.
@@ -172,7 +172,7 @@ export function createValidationRegistry(
 			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
 			if (!registration) return `Validation rule '${rule.type}' has no registered handler.`;
 			try {
-				registration.handler(rule, createValidationContext({ fetch }));
+				registration.handler(rule, { ...createValidationContext(), fetch });
 			} catch (error) {
 				const reason = error instanceof Error ? error.message : String(error);
 				return `Validation rule '${rule.type}' could not be built: ${reason}`;

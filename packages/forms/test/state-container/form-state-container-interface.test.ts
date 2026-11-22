@@ -1,5 +1,7 @@
 import { containerOptions } from '../../../../test-utils/form-state-container-conformance';
 import { describe, expect, test } from 'vitest';
+import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
+import type { ElementConfig } from '@/schemas/field-config';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
 import {
@@ -53,6 +55,8 @@ interface NotTheBridge {
 	validate: (paths?: string[]) => Promise<string>;
 }
 
+const element = (config: Record<string, unknown>) => markNormalizedElementConfig(config as unknown as ElementConfig);
+
 const asBridge = (container: Strict<FormStateContainer>): BridgeFormState<FormStateIssue> => container;
 
 /** Text for an issue, as an application's i18n layer writes it. */
@@ -64,7 +68,7 @@ describe('the form state container as a bridge host sees it', () => {
 		const container = createFormStateContainer(
 			containerOptions({
 				registry: createDefaultValidationRegistry(),
-				elements: [],
+				elements: [element({ $type: 'input', name: 'name' })],
 			}),
 		);
 		const bridge = asBridge(container);
@@ -87,7 +91,7 @@ describe('the form state container as a bridge host sees it', () => {
 		const container = createFormStateContainer(
 			containerOptions({
 				registry: createDefaultValidationRegistry(),
-				elements: [],
+				elements: [element({ $type: 'input', name: 'name' })],
 			}),
 		);
 		const submitted = await container.submit();
@@ -105,7 +109,7 @@ describe('the form state container as a bridge host sees it', () => {
 		const container = createFormStateContainer(
 			containerOptions({
 				registry: createDefaultValidationRegistry(),
-				elements: [],
+				elements: [element({ $type: 'input', name: 'name' })],
 			}),
 		);
 		// @ts-expect-error the container resolves a boolean, so it does not fit a validate that resolves a string
