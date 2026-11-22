@@ -60,6 +60,7 @@ export type {
 	SchemaMetadataEntry,
 } from './engine';
 export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
+export type { FormFetch } from './lib/form-fetch';
 export type {
 	BuilderActionBaseContext,
 	ElementMetadata,
