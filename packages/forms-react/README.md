@@ -1,6 +1,6 @@
 # @schema-engine/forms-react
 
-React rendering for `@schema-engine/forms`. Applications supply element registrations and view recipes; an adapter supplies form state and field operations.
+React rendering for `@schema-engine/forms`. Applications supply element registrations and view recipes; the form state is the engine's own container, which the hooks read with `useSyncExternalStore`.
 
 ## Logging
 
@@ -10,12 +10,6 @@ Runtime diagnostics go through `@ecopages/logger` with the `[schema-engine/forms
 
 ```sh
 pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
-```
-
-For the React Hook Form adapter, also install its optional peer:
-
-```sh
-pnpm add react-hook-form
 ```
 
 Install the [Schema Engine registry](../../registry) elements and recipes for your UI library. The imports below refer to the generated registration barrels in your application.
@@ -42,7 +36,6 @@ The path is relative to your global stylesheet: `./components/schema-engine/form
 ```tsx
 import { createFormEngine } from '@schema-engine/forms';
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes';
 
@@ -66,7 +59,7 @@ const config = engine.defineForm({
 
 export function ContactForm() {
 	return (
-		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
+		<FormEngineProvider engine={engine}>
 			<FormRenderer config={config} onSubmit={(values) => console.log(values)} />
 		</FormEngineProvider>
 	);
@@ -75,7 +68,31 @@ export function ContactForm() {
 
 `createFormEngine` comes from `@schema-engine/forms`. Register recipes explicitly to select them through `view.$type`.
 
-The React Hook Form adapter keeps initial values separate from live field values. A reset action restores those initial values, including authored and provider defaults, nested fields, and seeded array rows; an input without a default returns to its initial empty state.
+The form container keeps its defaults apart from the live values, and clones them. A reset action restores the defaults, including authored and provider defaults, nested fields, and seeded array rows; an input without a default returns to its initial empty state.
+
+## Form state
+
+Each form instance has one state container, created with `createFormStateContainer` from `@schema-engine/forms`, made from the normalized config, the engine's validation registry, the defaults and the config's `validationMode` and `reValidateMode`. Its lifetime follows the identity of the normalized config, and it is the only form state. Validation timing, dependent re-validation, field arrays and the fields that take part (hidden and disabled ones do not) are the container's.
+
+Submitting goes through the container: the provider guards a second submit, begins a submission, validates the whole form with it and acts on how that ended. `passed` runs the actions and `onSubmit` with exactly the values that passed, without the fields that took no part (hidden or disabled ones) and with the config's `payload` merged in; `invalid` focuses the first control that has an error; `overtaken`, when an edit outran the check, does nothing. A wizard step is validated with the container too, and a failed step marks nothing submitted. `isSubmitting` and `submitCount` are the provider's own.
+
+### Issue text
+
+The container reports what is wrong (`type`, `ruleId`, `params`) and the application says it. `formatIssue` takes a `FormIssueFormatter`, `(issue, { path }) => string`, and is set on the engine (`createFormEngine({ formatIssue })`) for every form, on `FormEngineProvider` for the forms under it, or on `FormRenderer` or `FormProvider` for one form. The nearest wins: form, then provider, then engine:
+
+```tsx
+const formatIssue: FormIssueFormatter = (issue) => t(`form.errors.${issue.type}`, issue.params);
+
+<FormEngineProvider engine={engine} formatIssue={formatIssue}>
+```
+
+Keep the formatter's identity stable (define it at module level or memoize it): a new function on each render rebuilds the form state context.
+
+Without a formatter, or when it returns an empty text, an issue shows its own `message`: the text the author wrote on the rule, or the one a server or control sent. With none of them it shows nothing, and never its rule type, so a field can be invalid with no text. Widgets mark themselves invalid from `invalid`, which `useFormField` and `useControlledFormElement` return, and not from the text.
+
+### Native validity
+
+A controlled widget calls `onChange(value)` and relies on the engine's rules. A widget that wraps a native input with constraints can report what the control says with the value, `onChange(value, { native: { type: 'tooShort', params: { minLength: 8 } } })`, or `{ native: null }` when it reports itself valid; `useFormContext().setValue` takes the same option. The fact has the timing of a rule, and `type` is the `ValidityState` flag.
 
 ## Public entry points
 
@@ -83,21 +100,35 @@ The React Hook Form adapter keeps initial values separate from live field values
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `@schema-engine/forms-react`                          | Public components, including `FormEngineProvider`, `FormProvider`, and `FormRenderer`                 |
 | `@schema-engine/forms-react/hooks`                    | Engine, field, constraint, submission, and view hooks                                                 |
-| `@schema-engine/forms-react/adapters`                 | Adapter contracts and adapter-neutral form hooks                                                      |
-| `@schema-engine/forms-react/adapters/react-hook-form` | `rhfAdapter`; requires `react-hook-form`                                                              |
+| `@schema-engine/forms-react/adapters`                 | The form state hooks, `FORM_ROOT` and the issue types                                                 |
 | `@schema-engine/forms-react/contexts`                 | View context provider and context types                                                               |
 | `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, `defineRecipe` (binds a spec to components) and React recipe contracts |
 | `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`                                                                                        |
 
-Use `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`, and `useFieldArray` from `/adapters` inside the active form. `useFieldArray` provides `fields`, `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace`, and `remove`; it keeps falsy scalar rows such as `tags: ['', '']`, which React Hook Form's own `useFieldArray` drops. Errors and touched state move with their rows and an added row is focused, falsy rows or not; dirty state stays React Hook Form's comparison with the default values, index by index. An operation naming a row that does not exist does nothing, `remove` removes a repeated index once, and rows get new ids when the array is replaced from outside with different contents, such as by `reset`.
+Use these from `/adapters` inside the active form:
 
-`useFormContext`'s `formState` fields subscribe the caller only when read; reading `isValid` turns on full-form validation after every change, so read only what the component needs.
+| Hook                   | Returns                                                                                                                                |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `useFormField(config)` | `{ value, error, warning, invalid, onChange, onBlur, name, required, disabled, ref }` for the field at `config.name`                   |
+| `useWatchField(name)`  | The value at a path, or the values at a list of paths, in order                                                                        |
+| `useWatchForm()`       | The whole value tree                                                                                                                   |
+| `useFieldArray(name)`  | `{ fields, append, prepend, insert, swap, move, update, replace, remove }`                                                             |
+| `useFormError(path)`   | The engine's error of exactly that path (`FORM_ROOT` is the form itself), with its `type`, `ruleId`, `params` and every issue in `all` |
+| `useFieldState(path)`  | `{ error, warning, invalid, isTouched, isDirty, isValidating }`                                                                        |
+| `useFormatIssue()`     | `(issue, path) => string \| undefined`, the provider's `formatIssue` with the `message` fallback                                       |
+| `useFormContext()`     | `{ getValues, setValue, trigger, setFocus, formState }`                                                                                |
+
+`useFieldArray` keeps falsy scalar rows such as `tags: ['', '']`. Errors and touched state move with their rows, and an operation that adds a row focuses its first control; dirty state is the comparison with the defaults, index by index. An operation naming a row that does not exist does nothing, `remove` removes a repeated index once, and `reset` gives every row a new id, and a `setValue` of the whole array keeps the ids by position.
+
+`useFormContext`'s `formState` (`errors`, `isValid`, `isSubmitting`, `touchedFields`, `submitCount`, `defaultValues`) is read lazily: a component re-renders only for the keys it reads, so a submit button that reads `isSubmitting` does not render while the user types. `errors` and `touchedFields` are flat by dotted path (a touched mark on a container covers the fields below it), and `isValid` reports the errors recorded without validating anything.
+
+The hooks read the container with the engine's pure selectors, so while hydrating, the selector hooks (`useFormField`, `useWatchField`, `useWatchForm`, `useFieldArray`, `useFormError`, `useFieldState`) read the same server snapshot as the server render, which keeps hydration stable for defaults and array rows. `formState` reads the live container and is not part of that.
 
 Use `useFormEngine`, `useFormInstanceActions`, `useControlledFormElement`, `useFieldHost`, `useConstraintLogic`, and `useSubmissionState` from `/hooks`. View hooks (`useViewContext`, `useOptionalViewContext`, `useActiveStep`, `useFormNavigation`, and `useViewConfig(slot, schema)`, which returns the slot schema's output with every default filled) also come from `/hooks`.
 
 ## Consumer-owned fields and styling
 
-`useControlledFormElement(config)` binds a field to the selected adapter and returns its value, error, handlers, control attributes, and field chrome attributes. Spread `fieldProps` onto the control, `labelProps` onto its label, and `errorProps` onto its error message when present. These attributes describe semantics and state; applications choose their styling.
+`useControlledFormElement(config)` binds a field to the form's container and returns its value, error, handlers, control attributes, and field chrome attributes. Spread `fieldProps` onto the control, `labelProps` onto its label, and `errorProps` onto its error message when present. These attributes describe semantics and state; applications choose their styling.
 
 The runtime exposes `se-*` class hooks and grid variables. Consumers do not need to scan the package's built files with Tailwind; applications own their styles, and registry components can bring their own UI library and styling dependencies. The layout stylesheet selects only `.se-grid`, `.se-grid-item` and `[data-se-theme]`; the hooks add `se-grid` and `se-grid-item` beside `se-form-grid` and `se-form-field`. Use `useFieldHost` for the grid host of custom elements (`useLayoutThemeId` gives the `data-se-theme` value for a host built by hand). A custom container whose children use `width` or `offset` spreads `useChildGridProps(elements)` on the wrapper of its `FormElements`, so the children lay out on the container's own grid. Fields, steps and the form element carry their resolved `appearance` as `data-se-<axis>` attributes (`FieldGroupRoot` and `useFieldHost` emit it, and the field's `className`, on the field host; `useFieldAppearanceAttributes` and `useFieldClassName` do it for a host built by hand), and `FormRenderer` emits the engine's layout theme stylesheet (grid and appearance token rules) once, and the form element carries `data-se-theme`. A step renders as `<div class="se-form-step" data-se-step="<id>">` carrying its authored `className` and custom-property `style`. Each step's grid is its own `grid` when it has one, else the form's.
 
@@ -112,8 +143,7 @@ longer augment a global `FormEngine` namespace.
 ## Migration
 
 - Import `createFormEngine` from `@schema-engine/forms`.
-- Import `rhfAdapter` only from `/adapters/react-hook-form`.
-- Move runtime and view hook imports to `/hooks`, and adapter hooks to `/adapters`.
+- Move runtime and view hook imports to `/hooks`, and form state hooks to `/adapters`.
 - Import `FormElement` and `FormElements` from `/primitives`.
 - Replace `useFormInstance` with `useFormContext` from `/adapters`.
 - Replace `useGDPRConsent` and `useGTMTracker` with `GDPRConsent` and `GTMTracker` from `@schema-engine/forms/browser`. `GDPRConsent` is a shared `GDPRConsentTool` backed by `localStorage` (`createGDPRConsent` builds one over other storage) and `GTMTracker` exposes static methods. Neither is a hook, so React state subscriptions belong to the application.
@@ -128,33 +158,31 @@ task in Turbo. Renderer actions import the dispatcher from
 
 ## Validation, navigation and action contexts
 
-The React Hook Form adapter delegates validation to `validateFormValues`, step
+The form container delegates validation to the engine's `validateFormValues`, and the provider delegates step
 state to `createStepMachine`, navigation (the in-flight guard and step triggers) to
 `createStepNavigator`, and submission to `runSubmissionLifecycle` and
 `createSubmissionGuard` from `@schema-engine/forms`: `onSubmit` runs inside the lifecycle, so a rejected `onSubmit` is a failed
 submission, and a submit that arrives while one is validating or running is ignored. Every trigger dispatches the form's actions and then the
 current step's (`collectStepActions`). Unmounting the provider, which a replaced config
 causes, cancels the navigation in flight, so it dispatches no step trigger afterwards. Wizard Next validates nested fieldsets and live
-array rows; the resolver converts the engine's flat errors to the nested shape React Hook Form needs so field revalidation clears them.
+array rows, and the container re-validates a field that failed by `reValidateMode`, so its error clears as soon as the value is valid.
 A `require` constraint supplies both the control's required state and validation.
 A `require` constraint on a fieldset or array makes every field inside it required,
 nested containers included, and a disabled fieldset or array, authored or by a
 constraint, disables every field inside it; a disabled array also disables its add
-and remove buttons. `config.validationMode` and `config.reValidateMode` set React
-Hook Form's `mode` and `reValidateMode`; unset, fields validate on blur and
-re-validate on change. After a submit, or after a step check (Next) that failed,
-a field with an error re-validates on every change, so its error clears as soon
-as the value is valid.
+and remove buttons. `config.validationMode` and `config.reValidateMode` set the container's
+modes; the config's own defaults apply (`onSubmit` and `onChange`), with nothing added by React. After a check
+that failed, any explicit check, a submit or a step check (Next), passed or failed, the fields it covered
+re-validate by `reValidateMode`.
 
 `executeAction(action)` dispatches only that action. Submission callbacks run
-after the engine action lifecycle succeeds, and React Hook Form performs the
-submission validation once. Step action metadata includes elapsed form time.
+after the engine action lifecycle succeeds, and the container validates the
+submission once. Step action metadata includes elapsed form time.
 Action handlers receive a framework-neutral `context.form` with `reset`,
 `setValue`, `getValue`, `validate` and `checkValidity`; `validate()` validates the form,
 showing its errors, and resolves to its validity. `checkValidity()` validates the values
 current at the call without recording or showing errors. `context.isValid` is true while
-no error is recorded; it never reads React Hook Form's `isValid`, which would turn on
-full-form validation after every change. A trigger no action answers builds no context.
+no error is recorded and never validates anything. `context.errors` is flat by dotted path. A trigger no action answers builds no context.
 
 A changed `require` condition revalidates a touched or submitted dependent field.
 Submission errors name the failing action by its configured `id`.

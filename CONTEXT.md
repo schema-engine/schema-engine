@@ -54,16 +54,15 @@ arrives or changes later.
 
 ## React form state
 
-React Hook Form's instance lifetime follows the identity of the normalized form
-config passed to `FormRenderer`. Replacing that config starts a fresh instance
-with its defaults and step state. The change watcher subscribes to field value
-changes, so a parent render by itself does not call `onChange` or dispatch a
-`form_change` action.
+The form's state container is created once per form instance, and its lifetime follows the
+identity of the normalized form config passed to `FormRenderer`. Replacing that config starts a
+fresh container with its defaults and step state. The container is the only form state: the hooks
+read it with `useSyncExternalStore` through the engine's pure selectors, so a field re-renders only
+for its own value, error or flags. The change effect subscribes to the container and compares its
+`values`, so a parent render by itself does not call `onChange` or dispatch a `form_change` action.
 
-The React Hook Form adapter converts the engine's null-prototype value maps to
-ordinary records at its boundary. React Hook Form does not clone null-prototype
-records, so passing them directly aliases its initial and live values and makes
-reset restore edited values. Nested maps and array rows follow the same rule.
+An issue shows as the text of the `formatIssue` formatter set on `FormProvider`/`FormRenderer`, else on `FormEngineProvider`, else on the engine, else as its own `message`, else as nothing: the rule type is never shown, so a field
+can be invalid with no text to show.
 
 Radiant `FormEngineController` subscribes to the nearest ancestor
 `formEngineContext` and resolves the active owning render on initial reads.

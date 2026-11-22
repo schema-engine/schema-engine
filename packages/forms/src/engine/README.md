@@ -69,8 +69,7 @@ adds a hidden input to a native post. `extend` inherits both. See [CSRF](../csrf
 
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass
 `fetch` (the engine's), `isValid`, `touched` and `submitCount`, all required, key `errors` and `touched` by dotted path
-(`{ 'address.street': … }`). A React Hook Form
-caller flattens `touchedFields` to paths first.
+(`{ 'address.street': … }`). The container's snapshot already has them flat.
 
 The form state carries `isValid`, the container's `snapshot.isValid`: true when no error is recorded for a
 path that takes part, in every renderer, and the context passes it on as it is. A renderer without a container
@@ -81,8 +80,8 @@ the fields inside a hidden container; a disabled field is still checked, as in a
 `submitCount` is the number of submit attempts since the form was last reset,
 including attempts that failed validation. An attempt counts once its validation has
 failed, or once its submission lifecycle has run, so the triggers of a submission
-see the attempts before it. React passes React Hook Form's `submitCount`, which counts
-this way. Radiant UI's form store keeps only a submitted flag, so Radiant counts the
+see the attempts before it. React passes the provider's own `submitCount`, which counts
+this way, except that a submission an edit overtook is not counted. Radiant UI's form store keeps only a submitted flag, so Radiant counts the
 `rui-invalid` events of its form and its finished submission lifecycles instead.
 
 ## Schema artifacts and extension

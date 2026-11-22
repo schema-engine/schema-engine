@@ -555,12 +555,12 @@ adapter.
 
 ## Who owns visual chrome
 
-| Layer                                                           | Owns                                                                                                                      |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, adapter types (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
-| `@schema-engine/forms-react`                                    | React renderer components; adapter contracts at `/adapters`, optional RHF adapter at `/adapters/react-hook-form`          |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                               |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter                                     |
+| Layer                                                           | Owns                                                                                                                                                                                             |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form state container (`@schema-engine/forms/state-container`), `FieldArrayValue` (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
+| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/adapters`; the form state is the engine's container                                                                                         |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                                                      |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                                                           |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 
@@ -599,8 +599,8 @@ rejects unknown keys, including `rows`, `autoFit`, `autoFill`, and
 Recipe metadata has no `deprecated` property.
 
 React uses the engine's validation, step state, submission triggers and action
-context builder; see the [React adapter contract](../forms-react/README.md#validation-navigation-and-action-contexts).
-Action context form adapters must implement `reset`, `setValue`, `getValue`, `validate`
+context builder; see the [React renderer contract](../forms-react/README.md#validation-navigation-and-action-contexts).
+Action context `form` objects must implement `reset`, `setValue`, `getValue`, `validate`
 and `checkValidity`, including for custom renderer integrations. `checkFormValidity`
 validates values against every step's fields under a debounce scope of its own, so a
 renderer can answer `checkValidity` without recording errors.
