@@ -103,6 +103,7 @@ export class SePhoneInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
+		super.onConnected();
 		void this.boot();
 		this.registerCleanupCallback(() => {
 			this.bootGeneration += 1;

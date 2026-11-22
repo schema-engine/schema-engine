@@ -71,6 +71,7 @@ export class SeDropZone extends RadiantElement {
 	@prop({ type: String }) name = '';
 
 	protected override onConnected(): void {
+		super.onConnected();
 		announceControlConnect(this);
 	}
 
