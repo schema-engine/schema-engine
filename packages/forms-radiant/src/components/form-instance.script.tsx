@@ -38,6 +38,7 @@ import { observeValues } from '@/lib/observe-values';
 import { formValuesContext, type FormValuesContextValue } from '@/contexts/constraint-context';
 import { logger } from '@/lib/logger';
 import type { FormProviderProps } from '@/adapters/types';
+import { SeFormArray } from '@/elements/inputs/form-array-elements';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
 
 const MISSING_ENGINE_MESSAGE =
@@ -166,7 +167,7 @@ export class FormInstanceElement extends RadiantElement {
 	 */
 	protected override onConnected(): void {
 		this.engine ??= resolveFormEngine(this);
-		this.resetStepState();
+		if (!this.bound) this.resetStepState();
 		this.connectForm();
 	}
 
@@ -186,7 +187,6 @@ export class FormInstanceElement extends RadiantElement {
 
 	override disconnectedCallback(): void {
 		this.navigation.cancel();
-		this.releaseBound();
 		super.disconnectedCallback();
 	}
 
@@ -253,8 +253,9 @@ export class FormInstanceElement extends RadiantElement {
 	 * Creates the form's container for the current config, engine and `rui-form`, and hands it to the form.
 	 *
 	 * @remarks
-	 * The container follows the identity of the normalized config and of the engine, so replacing either starts
-	 * a fresh form with its defaults and step state. An equal config object keeps the form. A `rui-form` that
+	 * The container belongs to the instance, not to its connection: moving the element in the document keeps
+	 * the values, field state and step state, and the form is rebuilt only when the config, the engine or the
+	 * `rui-form` changes. Replacing the config or the engine starts a fresh form with its defaults and step state. A `rui-form` that
 	 * has not upgraded yet has no `connect`, so the form is built when its element is defined. A host that is not
 	 * connected, as while it is rendered on the server, builds nothing.
 	 *
@@ -290,6 +291,7 @@ export class FormInstanceElement extends RadiantElement {
 				elements,
 				registry: engine.getValidationRegistry(),
 				defaults: collectInitialValues(elements, this.defaultValues ?? {}),
+				rowIds: this.serverRowIds(),
 				validationMode: normalized.data.validationMode,
 				reValidateMode: normalized.data.reValidateMode,
 				payload: normalized.data.payload,
@@ -302,6 +304,24 @@ export class FormInstanceElement extends RadiantElement {
 		this.watchValues(bound.container);
 		this.syncActions(bound);
 		this.publish();
+	}
+
+	/**
+	 * The row ids the server rendered for each array that already holds them.
+	 *
+	 * @remarks
+	 * The container mints ids deterministically, so a client built from the same defaults matches the server
+	 * without these. They matter when the server rendered rows other than the defaults, so the container adopts
+	 * the ids the markup carries instead of replacing every row.
+	 */
+	private serverRowIds(): Record<string, readonly string[]> {
+		const ids: Record<string, readonly string[]> = {};
+		for (const array of this.querySelectorAll('se-form-array')) {
+			const name = array instanceof SeFormArray ? array.config?.name : undefined;
+			const rows = array instanceof SeFormArray ? array.config?.ssrRowIds : undefined;
+			if (name && rows?.length) ids[name] = rows;
+		}
+		return ids;
 	}
 
 	/** Injects the container into the `rui-form`, replacing the earlier binding, with the handlers of this instance. */
@@ -357,12 +377,21 @@ export class FormInstanceElement extends RadiantElement {
 			if (submission.outcome === 'invalid') {
 				this.countAttempt();
 				host.dispatchEvent(new CustomEvent('se-action-submit-invalid', { bubbles: true, composed: true }));
-				const [first] = Object.keys(container.getSnapshot().errors).filter((path) => path !== FORM_ROOT);
+				const first = this.firstInvalidPath(container.getSnapshot().errors);
 				if (first !== undefined) context.focus(first);
 				return;
 			}
 			if (submission.outcome === 'passed') await this.completeSubmission(host, submission.values, context);
 		});
+	}
+
+	/** The path of the first field, in document order, that has an error; the form's own error is no field. */
+	private firstInvalidPath(errors: Readonly<Record<string, FormStateError>>): string | undefined {
+		for (const field of this.querySelectorAll('se-field[name], rui-field[name]')) {
+			const name = field.getAttribute('name');
+			if (name && name !== FORM_ROOT && Object.hasOwn(errors, name)) return name;
+		}
+		return undefined;
 	}
 
 	/**
@@ -440,6 +469,7 @@ export class FormInstanceElement extends RadiantElement {
 			host,
 			currentStep: () => this.currentStep,
 			submitCount: () => this.attempts,
+			readNative: () => host.readNativeValidity(),
 			reset: () => this.resetForm(),
 			onAction: (action, data) => this.onAction?.(action, data),
 		});

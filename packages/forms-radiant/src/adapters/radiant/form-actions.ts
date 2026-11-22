@@ -3,7 +3,7 @@ import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engin
 import { buildFormActionContext, collectStepActions, runSubmissionLifecycle } from '@schema-engine/forms/engine';
 import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
-import type { FormStateContainer } from '@schema-engine/forms/state-container';
+import type { FormStateContainer, NativeValidity } from '@schema-engine/forms/state-container';
 import type { FormProviderProps } from '@/adapters/types';
 import { logger } from '@/lib/logger';
 import { observeValues } from '@/lib/observe-values';
@@ -22,6 +22,8 @@ export interface FormActionsOptions {
 	currentStep: () => number;
 	/** Submission attempts so far, which the instance counts. */
 	submitCount: () => number;
+	/** The native validity of the form's controls, which an action's check passes along as a submit does. */
+	readNative: () => Record<string, NativeValidity | null>;
 	/** Resets the whole form instance: values, field state, steps and the attempt count. */
 	reset: () => void;
 	onAction?: FormProviderProps['onAction'];
@@ -54,8 +56,8 @@ export class FormActions {
 			reset: options.reset,
 			setValue: (name, value) => container.setValue(name, value),
 			getValue: (name) => container.getValue(name),
-			validate: () => container.validate(),
-			checkValidity: () => container.checkValidity(),
+			validate: () => container.validate(undefined, { native: options.readNative() }),
+			checkValidity: () => container.checkValidity(undefined, { native: options.readNative() }),
 		};
 	}
 

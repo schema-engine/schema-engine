@@ -74,7 +74,7 @@ test.each(['confirm', 'choice', 'accepted', 'amount'])(
 		root.remove();
 		document.body.append(root);
 		const reconnected = await containerOf(field);
-		expect(reconnected).not.toBe(container);
+		expect(reconnected).toBe(container);
 		reconnected.setValue('password', 'changed');
 		reconnected.setValue(name, mismatch);
 		await reconnected.validate([name]);

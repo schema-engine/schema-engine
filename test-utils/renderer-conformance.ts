@@ -919,9 +919,13 @@ export function rendererConformance(
 				const { host } = await setup({ config: dependentStep });
 				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
 				await expect.poll(() => queryByText(host, 'Password is required') !== null).toBe(true);
-				await userEvent.type(getByRole(host, 'textbox', { name: /^Password/ }), 'secret');
+				const password = getByRole(host, 'textbox', { name: /^Password/ });
+				await userEvent.type(password, 'secret');
+				await userEvent.tab();
+				conformanceAction.execute.mockClear();
+				await userEvent.type(password, 'z');
 				await expect.poll(actionIds).toContain('changed');
-				expect(lastActionContext()?.metadata.userInteractions).toBe(0);
+				expect(lastActionContext()?.metadata.userInteractions).toBe(1);
 			});
 		});
 		test('dispatches step leave, change and enter when the wizard advances', async () => {

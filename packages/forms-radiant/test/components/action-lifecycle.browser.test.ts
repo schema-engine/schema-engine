@@ -40,6 +40,7 @@ function mountActions(
 		host,
 		currentStep: () => 0,
 		submitCount: () => 0,
+		readNative: () => ({}),
 		reset: () => container.reset(),
 		onAction: options.onAction,
 	});
@@ -319,8 +320,9 @@ test('form_change actions keep running after the instance reconnects', async () 
 	await expect.poll(() => changes.at(-1)).toBe('first');
 	instance.remove();
 	document.body.append(instance);
-	await expect.poll(() => changes.length).toBe(3);
-	expect(changes.at(-1)).toBeUndefined();
+	await nextFrame();
+	expect(changes).toEqual([undefined, 'first']);
+	expect(container().getValue('note')).toBe('first');
 	container().setValue('note', 'second');
 	await expect.poll(() => changes.at(-1)).toBe('second');
 });

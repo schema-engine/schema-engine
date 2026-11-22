@@ -26,9 +26,7 @@ import type { FieldArrayValue, FormFieldValue } from '../../types';
  * `disconnect` when a manually managed host disconnects or moves to another form.
  */
 export class FormController {
-	private unsubscribeContext?: () => void;
-	private unsubscribeContainer?: () => void;
-	private subscribed?: FormInstanceContextValue;
+	private stopWatching?: () => void;
 
 	constructor(readonly host: HTMLElement) {}
 
@@ -42,7 +40,6 @@ export class FormController {
 	}
 
 	private context(): FormInstanceContextValue | undefined {
-		if (this.unsubscribeContext) return this.subscribed;
 		return this.resolve()?.context;
 	}
 
@@ -76,38 +73,65 @@ export class FormController {
 	}
 
 	/**
+	 * Follows the instance's context: `onContext` receives what the nearest provider holds now and each time it publishes again.
+	 *
+	 * @returns Stops following.
+	 */
+	private follow(onContext: (context: FormInstanceContextValue | undefined) => void): () => void {
+		let stop: (() => void) | undefined;
+		(this.resolve()?.target ?? this.host).dispatchEvent(
+			new ContextSubscriptionRequestEvent(
+				formInstanceContext,
+				(context, unsubscribe) => {
+					if (unsubscribe) stop = unsubscribe;
+					onContext(context);
+				},
+				undefined,
+				true,
+				(unsubscribe) => {
+					stop = unsubscribe;
+				},
+			),
+		);
+		return () => stop?.();
+	}
+
+	/**
+	 * Calls `listener` when the form's container becomes available or is replaced, and after each change of
+	 * the container's state; returns the function that stops.
+	 */
+	private watchContainer(listener: () => void, notifyInitial: boolean): () => void {
+		let current: FormStateContainer | undefined;
+		let unsubscribeContainer: (() => void) | undefined;
+		let first = true;
+		const stop = this.follow((context) => {
+			const next = context?.container;
+			const initial = first;
+			first = false;
+			if (next === current && !initial) return;
+			unsubscribeContainer?.();
+			current = next;
+			unsubscribeContainer = next?.subscribe(listener);
+			if (next && (notifyInitial || !initial)) listener();
+		});
+		return () => {
+			stop();
+			unsubscribeContainer?.();
+		};
+	}
+
+	/**
 	 * Calls `onChange` when the form's container becomes available or is replaced, and after each change of
 	 * the container's state.
 	 */
 	connect(onChange: () => void = () => {}): void {
 		this.disconnect();
-		(this.resolve()?.target ?? this.host).dispatchEvent(
-			new ContextSubscriptionRequestEvent(
-				formInstanceContext,
-				(context, unsubscribe) => {
-					if (unsubscribe) this.unsubscribeContext = unsubscribe;
-					const previous = this.subscribed?.container;
-					this.subscribed = context;
-					if (context?.container === previous) return;
-					this.unsubscribeContainer?.();
-					this.unsubscribeContainer = context?.container?.subscribe(onChange);
-					if (context?.container) onChange();
-				},
-				undefined,
-				true,
-				(unsubscribe) => {
-					this.unsubscribeContext = unsubscribe;
-				},
-			),
-		);
+		this.stopWatching = this.watchContainer(onChange, true);
 	}
 
 	disconnect(): void {
-		this.unsubscribeContext?.();
-		this.unsubscribeContext = undefined;
-		this.unsubscribeContainer?.();
-		this.unsubscribeContainer = undefined;
-		this.subscribed = undefined;
+		this.stopWatching?.();
+		this.stopWatching = undefined;
 	}
 
 	/** The nested values now; the same object until a value changes. */
@@ -146,27 +170,35 @@ export class FormController {
 	 * Selectors are pure functions of the snapshot, such as `selectFieldState` or
 	 * `(snapshot) => snapshot.rowIds['contacts']?.length ?? 0`. The signal notifies only when the
 	 * selected value changes. Read it once subscribed, in a computed or an effect, because an
-	 * unsubscribed read answers with the container's server snapshot. A new container, after a config change,
-	 * is a new form: select again from `connect`'s callback.
+	 * unsubscribed read answers with the container's server snapshot. It follows the instance's
+	 * container: a new one, after a config change, replaces the old and the signal reads and notifies from it.
 	 */
 	select<Selected>(selector: (snapshot: FormStateSnapshot) => Selected): Signal<Selected> {
-		return fromExternalStore(this.requireContainer(), selector);
+		return fromExternalStore<FormStateSnapshot, Selected>(
+			{
+				subscribe: (listener) => this.watchContainer(listener, false),
+				getSnapshot: () => this.requireContainer().getSnapshot(),
+				getServerSnapshot: () => this.requireContainer().getServerSnapshot(),
+			},
+			selector,
+		);
 	}
 
+	/** A binding of the field at `path`, which reads and writes the container the instance has at the time of each use. */
 	field(path: string): FormFieldValue {
-		const context = this.context();
-		const container = this.requireContainer();
+		const container = () => this.requireContainer();
+		const formatIssue = () => this.context()?.formatIssue;
 		return {
 			name: path,
 			get value() {
-				return container.getValue(path);
+				return container().getValue(path);
 			},
 			get error() {
-				const issue = selectError(container.getSnapshot(), path);
-				return issue && describeIssue(issue, path, context?.formatIssue);
+				const issue = selectError(container().getSnapshot(), path);
+				return issue && describeIssue(issue, path, formatIssue());
 			},
-			onChange: (value) => container.setValue(path, value),
-			onBlur: () => container.blur(path),
+			onChange: (value) => container().setValue(path, value),
+			onBlur: () => container().blur(path),
 		};
 	}
 

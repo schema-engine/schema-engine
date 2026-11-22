@@ -115,6 +115,32 @@ describe('FormController over the form instance container', () => {
 		form.disconnect();
 	});
 
+	test('a field binding and a selection follow the container the instance replaces', () => {
+		const first = createTestForm({ title: 'First' });
+		const second = createTestForm({ title: 'Second' });
+		const element = document.createElement('div');
+		const host = document.createElement('div');
+		element.append(host);
+		const provider = provideTestContainer(element, first.container);
+		const form = new FormController(host);
+		const field = form.field('title');
+		const title = form.select((snapshot) => snapshot.values['title']);
+		const listener = vi.fn();
+		const stop = title.subscribe(listener);
+		expect(field.value).toBe('First');
+		listener.mockClear();
+
+		provider.setContext({ ...provider.getContext(), container: second.container });
+
+		expect(field.value).toBe('Second');
+		field.onChange('Edited');
+		expect(second.container.getValue('title')).toBe('Edited');
+		expect(first.container.getValue('title')).toBe('First');
+		expect(title.get()).toBe('Edited');
+		expect(listener).toHaveBeenCalled();
+		stop();
+	});
+
 	test('moves row values and field state together and keeps row identity through a move', async () => {
 		const { form, container } = createTestForm(
 			{
