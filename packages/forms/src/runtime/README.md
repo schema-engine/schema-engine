@@ -17,7 +17,7 @@ const runtime = createFormRuntime({
 
 const unmount = runtime.mount(); // form_mount once per runtime, and the change watch; the cleanup revokes anything in flight
 runtime.container; // the form state
-runtime.getSnapshot(); // { submission: { status, failures, submitCount }, steps: { current, navigating, list } }
+runtime.getSnapshot(); // { submission: { status, failures, submitCount }, current, navigating, steps }
 runtime.getServerSnapshot();
 runtime.subscribe(listener);
 
@@ -60,7 +60,7 @@ Every command returns one string of `FormRuntimeOutcome`; `NavigationOutcome` an
 type FormRuntimeOutcome = 'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled';
 type NavigationOutcome = Extract<
 	FormRuntimeOutcome,
-	'moved' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
+	'moved' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
 >;
 type SubmitOutcome = Extract<
 	FormRuntimeOutcome,
@@ -68,16 +68,16 @@ type SubmitOutcome = Extract<
 >;
 ```
 
-| Outcome     | Meaning                                                                                                                                                                                           |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `moved`     | The current step changed.                                                                                                                                                                         |
-| `submitted` | A submission ran and its actions and `onSubmit` succeeded.                                                                                                                                        |
-| `failed`    | A submission ran and failed: an action stopped it, `onSubmit` rejected, a trigger failed or validation could not run. The reason is in `snapshot.submission.failures`, never in the return value. |
-| `invalid`   | Validation found errors, which are shown and focused.                                                                                                                                             |
-| `overtaken` | An edit or a row move outran the check, so there is no verdict: nothing is shown, focused or counted.                                                                                             |
-| `refused`   | There was nowhere to go: the last active step, an unknown or skipped step, the current step, or a step not reachable in `linear` navigation.                                                      |
-| `busy`      | Another command was running.                                                                                                                                                                      |
-| `cancelled` | A reset or an unmount revoked the command, which then wrote nothing.                                                                                                                              |
+| Outcome     | Meaning                                                                                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `moved`     | The current step changed.                                                                                                                                                                                                                         |
+| `submitted` | A submission ran and its actions and `onSubmit` succeeded.                                                                                                                                                                                        |
+| `failed`    | A submission ran and failed, or a step check in `next`/`goTo` could not run: an action stopped it, `onSubmit` rejected, a trigger failed or validation could not run. The reason is in `snapshot.submission.failures`, never in the return value. |
+| `invalid`   | Validation found errors, which are shown and focused.                                                                                                                                                                                             |
+| `overtaken` | An edit or a row move outran the check, so there is no verdict: nothing is shown, focused or counted.                                                                                                                                             |
+| `refused`   | There was nowhere to go: the last active step, an unknown or skipped step, the current step, or a step not reachable in `linear` navigation.                                                                                                      |
+| `busy`      | Another command was running.                                                                                                                                                                                                                      |
+| `cancelled` | A reset or an unmount revoked the command before its values were captured, which then wrote nothing.                                                                                                                                              |
 
 ## Snapshot
 
@@ -88,7 +88,9 @@ interface FormRuntimeSnapshot {
 		failures: FormSubmissionIssue[];
 		submitCount: number;
 	};
-	steps: { current: string; navigating: boolean; list: FormStepState[] };
+	current: string;
+	navigating: boolean;
+	steps: FormStepState[]; // every step in config order
 }
 interface FormStepState {
 	id: string;
@@ -103,7 +105,7 @@ interface FormStepState {
 `useSyncExternalStore`. `failures` are issues (`callbackFailed`, `triggerFailed`, `actionFailed`,
 `validationFailed`), so the form's one formatter words them. `submitCount` counts submissions that passed or
 failed validation: a Next is not one, and neither is a validation that could not run or one an edit outran.
-`list` holds every step in config order; only `visited` and `complete` are stored, by step id, and `skipped`
+`steps` holds every step in config order, and `reachable` says whether `goTo` can move there (a step before the current one, or after it when the form is `free` or the step was visited); only `visited` and `complete` are stored, by step id, and `skipped`
 (the step's constraints hide it) and `invalid` (an error at one of its fields) are derived from the container,
 so they cannot go stale.
 
@@ -113,16 +115,16 @@ so they cannot go stale.
   synchronous: a second command in the same tick is `busy`.
 - **Reset.** The container snapshot's `generation` goes up on every reset. When it changes the runtime revokes
   the command in flight (`cancelled`), returns the submission to `{ idle, [], 0 }` and the steps to the first,
-  and fires no step trigger. A submission's lifecycle is not cut short: once validation passed it runs to its end, so a `reset` action on `form_submit_success` does not keep `form_submit_complete` from running. So an action's `form.reset`, `useFormContext().reset` and a native reset button all
+  and fires no step trigger. A submission whose values were already captured is committed: its lifecycle runs to its end and its outcome (`success` or `error`, `submitCount` 1) is published after the reset, so a `reset` action on `form_submit_success` does not keep `form_submit_complete` from running; only the native post and landing on errors are skipped. So an action's `form.reset`, `useFormContext().reset` and a native reset button all
   reset everything.
 - **Mount.** `mount()` dispatches `form_mount` the first time only, and watches the container's `values`: a new
   values tree is a change (`form_change` and `onChange`), an error, a touch or a validation result never is. The
   baseline is the server snapshot, so a value written before the effect ran is still reported. The cleanup stops
-  the watch and revokes the command in flight; an action already running for `form_mount` or `form_change` is not a command and runs to its end. Mounting again is allowed (React's strict effects do).
+  the watch and revokes the command in flight; the actions of `form_mount`, `form_change` and the step triggers get an abort signal that an unmount or a reset aborts (`ActionDispatchInput.signal`), so the sequence stops and no `onActionResults` follows; the submission lifecycle's signal is aborted by an unmount only. `step` triggers and `form_mount` do nothing before `mount()`, and the runtime watches the container only while mounted. Mounting again is allowed (React's strict effects do).
 - **`next()`** syncs the host, validates the current step's fields, and on failure focuses the step's errors
   and returns `invalid`. On success it marks the step complete and moves to the next active step. On the last
   active step it returns `refused`. It never marks the form submitted. An overtaken check stays put without
-  focusing. A rule that could not run is logged and ends `invalid`.
+  focusing. A rule that could not run is logged and ends `failed`, as it does in a submission.
 - **`back()`** never validates.
 - **`goTo(id)`** refuses an unknown, skipped or current step. Going back is always allowed. Going forward follows
   the config's `navigation`: `linear` (default) needs the target to be visited and validates the current step

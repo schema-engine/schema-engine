@@ -23,12 +23,14 @@ The engine exports reusable helpers for paths, effective rules, and validation.
   that take no part (`resolveParticipation`, below). `planFormValidation` and `runValidationPlan` are its two
   halves, for a caller that needs to know the planned paths before it runs.
 - `resolveParticipation(steps, values)` is the one rule for "does this field count": it returns
-  `{ excluded, skippedSteps, visible }`. A step its `show`/`hide` constraints hide is skipped and excludes the
+  `{ excluded, skippedSteps, fields }`. A step its `show`/`hide` constraints hide is skipped and excludes the
   fields it holds; a field hidden by a `show` or `hide` constraint, a disabled field (authored or by a
-  constraint) and everything inside them are excluded. Steps and fields resolve in order and `visible` is the
-  value tree with the excluded paths absent, which is what later constraints (including `require`) read, so a
-  skipped step that still holds `'yes'` cannot keep a later field shown or required.
-  `resolveExcludedPaths(elements, values)` is its single-step case. The container applies the same rule.
+  constraint) and everything inside them are excluded. Steps and fields resolve in order, in one pass that reads
+  show, disable and require against the values with whatever was excluded before absent, so a skipped step that
+  still holds `'yes'` cannot keep a later field shown or required. `fields` has the resulting `hidden`, `disabled` and
+  `required` of each path that has a constraint (`foldFieldParticipation` folds the ancestors in). It is the only
+  place constraints are evaluated for a form; the container keeps the result in its snapshot's `participation`.
+  `validateFormValues` and `planFormValidation` take the form's `steps`.
 
 For `validateFormValues`, omitted `names` validates every named field. A list validates only the
 requested paths and their descendants, or only those paths with `exactNames`; an empty list validates nothing.

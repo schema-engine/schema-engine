@@ -480,11 +480,11 @@ engine's normalized form model.
   `{ issues, failures }`: one issue for each rule the value fails, in rule order, with the rule's `type`,
   `ruleId` (its `id`), `params` (its options as authored), a fallback `message` and its `severity`, and a
   `FormValidationFailure` for each rule that could not run.
-- `validateFormValues({ elements, values, registry, names?, debounceScope })` validates the
+- `validateFormValues({ steps, values, registry, names?, debounceScope })` validates the
   selected paths (`exactNames` limits it to the named paths themselves) and returns
   `{ issues, failures }` by dotted path, such as `issues['address.street']`; a container and a row inside
   it can both fail. An empty `names` validates nothing. Fields hidden by a constraint, disabled fields and
-  everything inside them are skipped (`resolveExcludedPaths`).
+  everything inside them are skipped, and so are the fields of a skipped step (`steps` carry their `constraints`).
 
 Both helpers require a caller-owned `DebounceScope`, which carries async debounce
 state across validation calls for a form. Each rendered field path is keyed

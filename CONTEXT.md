@@ -192,7 +192,7 @@ Steps have no separate enter, leave or validate hooks. The action context carrie
 
 A step takes `constraints` restricted to `show` and `hide`, with the constraint logic of fields. A step its
 constraints hide is a **skipped step**: it is passed over by `next` and `back`, refused by `goTo`, hidden from
-progress and the stepper by default (a recipe may show it disabled from the view model's `allSteps`), and its
+progress and the stepper, and its
 fields take no part, as hidden fields do not: they are not validated, do not block, and are left out of
 `checkValidity` and of the submitted values. Their values are kept and come back when the step is shown
 again. Config validation allows a step constraint to read only non-row fields of earlier steps, so the first
@@ -247,8 +247,11 @@ A fieldset or array passes two states to every field inside it, at any depth.
 While a container's `require` constraint holds, the fields inside it are
 required; the container's own `required` rule does not pass down. A disabled
 container, authored or by a constraint, disables them, and a disabled array
-disables its add and remove buttons too. React validates the inherited
-requirement through `validateFormValues`, Radiant through its `se-constraint` hosts.
+disables its add and remove buttons too. All of this is the container's: `resolveParticipation` evaluates every
+constraint once, in order, and the snapshot's `participation` (`skippedSteps` and the `fields` states) reaches the
+renderers through `selectFieldState(snapshot, path)`, which says `hidden`, `disabled` and `required` with the
+ancestors folded in. React's `FormElement` and `useFormField`, Radiant's `se-constraint` and `se-field`, validation
+and the runtime all read it, so show, disable and require cannot disagree.
 Two Radiant gaps remain: a container that declares any constraint also passes
 its own `required` rule down, and the add and remove buttons take the array's
 disabled state at render only, so a `disable` constraint that starts to hold

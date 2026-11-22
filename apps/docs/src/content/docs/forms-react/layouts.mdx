@@ -116,9 +116,8 @@ steps: [
 The form's `navigation` setting decides how freely the stepper moves forward: `'linear'` (the default) reaches only
 steps already visited and validates every step on the way, landing on the first that fails; `'free'` reaches any step
 without validating. Going back is always allowed and Next validates in both. A block reads this from the view model:
-`steps` lists the steps that are not skipped (`index` and `total` count only those), `allSteps` lists every step with
-`isSkipped` for a recipe that shows skipped steps disabled, and `navigation.canGoToStep(id)` and
-`navigation.goToStep(id)` take step ids.
+`steps` lists the steps that are not skipped (`index` and `total` count only those), and `navigation.canGoToStep(id)`
+and `navigation.goToStep(id)` take step ids.
 
 ## Style a recipe
 
