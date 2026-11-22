@@ -76,7 +76,7 @@ Each form instance has one state container, created with `createFormStateContain
 
 Submitting goes through the container: the provider guards a second submit and calls `container.submit()`, which validates the whole form and says how that ended. `passed` runs the actions and `onSubmit(values, { setServerErrors, fetch })` with exactly the values that passed (every submit trigger's `context.formData` and `onAction` carry them too; a value an action writes during the submission updates the form, not that submission), without the fields that took no part (hidden or disabled ones) and with the config's `payload` merged in; `setServerErrors` shows the server's answer to that submission on the fields it names (`FORM_ROOT` is the form). `fetch` is the engine's (`createFormEngine({ fetch, csrf })`): send the values with it and the engine's CSRF policy is applied to a same-origin unsafe request; actions get the same one as `context.fetch`. `invalid` focuses the first control that has an error, in document order; `overtaken`, when an edit outran the check, does nothing. A wizard step is validated with the container too, and a failed step marks nothing submitted.
 
-The submission has one state, `{ status, failures, submitCount }`, the provider's own: `status` is `idle`, `pending`, `success` or `error`, and `isSubmitting` is `status === 'pending'`. `failures` are issues with `source: 'submission'` (`actionFailed` and `noResult` with `params.actionId`, `callbackFailed`, `triggerFailed`, `validationFailed`), so the form's one formatter words them.
+The submission has one state, `{ status, failures, submitCount }`, the provider's own: `status` is `idle`, `pending` (while one runs), `success` or `error`. A reset returns it to a fresh form: idle, no failures, a count of 0. `failures` are issues with `source: 'submission'` (`actionFailed` and `noResult` with `params.actionId`, `callbackFailed`, `triggerFailed`, `validationFailed`), so the form's one formatter words them.
 
 ### Issue text
 
@@ -116,7 +116,7 @@ Use these from `/hooks` inside the active form:
 
 `useFieldArray` keeps falsy scalar rows such as `tags: ['', '']`. Errors and touched state move with their rows, and an operation that adds a row focuses its first control; dirty state is the comparison with the defaults, index by index. An operation naming a row that does not exist does nothing, `remove` removes a repeated index once, and `reset` gives every row a new id, and a `setValue` of the whole array keeps the ids by position.
 
-`useFormContext`'s `formState` (`errors`, `isValid`, `isSubmitting`, `submitCount`, `submission: { status, failures }`) is read lazily: a component re-renders only for the keys it reads, so a submit button that reads `isSubmitting` does not render while the user types. `errors` is flat by dotted path and holds the texts, and `isValid` reports the errors recorded without validating anything. `formatIssue(issue, { path })` words a field issue or a submission failure; `clearSubmission()` hides the last outcome.
+`useFormContext`'s `formState` (`errors`, `isValid`, `submission: { status, failures, submitCount }`) is read lazily: a component re-renders only for the keys it reads, so a submit button that reads `submission.status` does not render while the user types. `errors` is flat by dotted path and holds the texts, and `isValid` reports the errors recorded without validating anything. `formatIssue(issue, { path })` words a field issue or a submission failure; `clearSubmission()` hides the last outcome.
 
 The hooks read the container with the engine's pure selectors, so while hydrating, the selector hooks (`useFormField`, `useWatch`, `useFieldArray`) read the same server snapshot as the server render, which keeps hydration stable for defaults and array rows. `formState` reads the live container and is not part of that.
 
@@ -171,7 +171,7 @@ modes; the config's own defaults apply (`onSubmit` and `onChange`), with nothing
 that failed, any explicit check, a submit or a step check (Next), passed or failed, the fields it covered
 re-validate by `reValidateMode`.
 
-`executeAction(action)` dispatches only that action. Submission callbacks run
+Submission callbacks run
 after the engine action lifecycle succeeds, and the container validates the
 submission once. Step action metadata includes elapsed form time.
 Action handlers receive a framework-neutral `context.form` with `reset`,

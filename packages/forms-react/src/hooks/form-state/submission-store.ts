@@ -32,8 +32,8 @@ export interface SubmissionStore {
 	): void;
 	/** Back to `idle` with no failures; the count stays. */
 	clear(): void;
-	/** The form was reset: no submission has ended since. */
-	resetCount(): void;
+	/** The form was reset: a fresh form, with no submission started or ended. */
+	reset(): void;
 }
 
 const NO_FAILURES: readonly FormSubmissionIssue[] = Object.freeze([]);
@@ -62,6 +62,6 @@ export function createSubmissionStore(): SubmissionStore {
 		settle: (status, { failures = NO_FAILURES, counted = false } = {}) =>
 			publish({ status, failures, submitCount: counted ? snapshot.submitCount + 1 : snapshot.submitCount }),
 		clear: () => publish({ ...snapshot, status: 'idle', failures: NO_FAILURES }),
-		resetCount: () => publish({ ...snapshot, submitCount: 0 }),
+		reset: () => publish({ status: 'idle', failures: NO_FAILURES, submitCount: 0 }),
 	};
 }

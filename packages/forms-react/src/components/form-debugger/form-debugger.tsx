@@ -128,7 +128,7 @@ function DebuggerFormState({
 	submissionStatus,
 	stepStates,
 }: {
-	formState: { isSubmitting: boolean; isValid: boolean; errors: Record<string, unknown> };
+	formState: { isValid: boolean; errors: Record<string, unknown> };
 	formValues: unknown;
 	submissionStatus: string;
 	stepStates?: { valid: boolean[] } | null;
@@ -137,10 +137,6 @@ function DebuggerFormState({
 		<div>
 			<div className="form-debugger__section-title">Form state</div>
 			<div className="form-debugger__details">
-				<div className="form-debugger__detail-row">
-					<span className="form-debugger__detail-label">Submitting</span>
-					<code className="form-debugger__detail-value">{String(formState.isSubmitting)}</code>
-				</div>
 				<div className="form-debugger__detail-row">
 					<span className="form-debugger__detail-label">Valid</span>
 					<code className="form-debugger__detail-value">{String(formState.isValid)}</code>

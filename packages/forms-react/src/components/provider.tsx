@@ -1,7 +1,6 @@
 import { createContext } from 'react';
 import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { FormActionConfig } from '@schema-engine/forms/schemas';
-import type { ActionExecutionResult, FormActionTrigger } from '@schema-engine/forms';
+import type { FormActionTrigger } from '@schema-engine/forms';
 import type { ActionDispatchResult } from '@schema-engine/forms/actions';
 
 /**
@@ -37,15 +36,9 @@ export function createFormEngineContextValue<
 export const FormEngineContext = createContext<FormEngineContextValue | null>(null);
 
 /**
- * Form Instance context value - includes action execution and form navigation functions
+ * Form Instance context value - includes trigger dispatch and form navigation functions
  */
 export interface FormInstanceContextValue {
-	/**
-	 * Executes a specific form action.
-	 *
-	 * @remarks A method, not a property: the context is stored erased, and a form's own typed action is accepted where this loose one is declared.
-	 */
-	executeAction(this: void, action: FormActionConfig): Promise<ActionExecutionResult>;
 	/** Index of the current step (0-based) */
 	currentStep: number;
 	/** Total number of steps in the form */
@@ -84,6 +77,6 @@ export interface FormInstanceContextValue {
 
 /**
  * Form Instance context
- * Provides access to action execution and form navigation functions
+ * Provides access to trigger dispatch and form navigation functions
  */
 export const FormInstanceContext = createContext<FormInstanceContextValue | null>(null);

@@ -5,7 +5,7 @@ import type { SubmitButtonProps } from './submit-button.types';
 
 export function SubmitButton({ label, disabled, onClick, className, id, name, htmlAttributes }: SubmitButtonProps) {
 	const { formState } = useFormContext();
-	const isSubmitting = formState?.isSubmitting;
+	const isSubmitting = formState.submission.status === 'pending';
 
 	return (
 		<Button

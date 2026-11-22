@@ -11,15 +11,16 @@ import {
 	runSubmissionLifecycle,
 	type BuilderActionBaseContext,
 	type FormActionTrigger,
+	type FormFetch,
 	type SubmissionActionResult,
 } from '@schema-engine/forms';
 import type { ActionSequenceEntry } from '@schema-engine/actions';
-import type { ActionDispatchInput, ActionDispatchResult, ActionExecutionResult } from '@schema-engine/forms/actions';
+import type { ActionDispatchInput, ActionDispatchResult } from '@schema-engine/forms/actions';
 
 interface UseFormSubmitHandlerOptions<TAction extends RuntimeAction> {
 	container: FormStateContainer;
 	submission: SubmissionStore;
-	fetch: FormSubmitHelpers['fetch'];
+	fetch: FormFetch;
 	fields: FieldRegistry;
 	config: {
 		readonly actions?: readonly ActionSequenceEntry<TAction>[];
@@ -36,10 +37,6 @@ interface UseFormSubmitHandlerOptions<TAction extends RuntimeAction> {
 		suppressSubmitReport?: boolean,
 	) => Promise<ActionDispatchResult[]>;
 }
-
-export type SubmissionContextValue<TAction extends RuntimeAction = RuntimeAction> = {
-	executeAction: (action: TAction) => Promise<ActionExecutionResult>;
-};
 
 type PassedSubmission = Extract<FormSubmitResult, { outcome: 'passed' }>;
 
@@ -87,50 +84,8 @@ export function useFormSubmitHandler<TAction extends RuntimeAction>({
 	onAction,
 	onActionResults,
 	dispatchActions,
-}: UseFormSubmitHandlerOptions<TAction>): {
-	submitEvent: (event?: BaseSyntheticEvent) => Promise<void>;
-} & SubmissionContextValue<TAction> {
+}: UseFormSubmitHandlerOptions<TAction>): { submitEvent: (event?: BaseSyntheticEvent) => Promise<void> } {
 	const [guard] = useState(createSubmissionGuard);
-
-	const executeAction = useCallback(
-		async (action: TAction) => {
-			submission.begin();
-			return dispatchActions({ actions: [action], trigger: 'form_submit', context: buildActionContext() })
-				.then(async (results) => {
-					const result = results[0];
-					if (!result) {
-						submission.settle('error', {
-							failures: [submissionIssue('noResult', { actionId: action.id })],
-						});
-						return { success: false };
-					}
-
-					if (result.success) {
-						try {
-							await onAction?.(action, container.getSnapshot().values);
-							submission.settle('success');
-						} catch (actionError) {
-							logger.error('Action callback failed:', actionError);
-							throw actionError;
-						}
-					} else {
-						submission.settle('error', {
-							failures: [submissionIssue('actionFailed', { actionId: action.id, message: result.error })],
-						});
-					}
-					return result;
-				})
-				.catch((error) => {
-					submission.settle('error', {
-						failures: [
-							submissionIssue('actionFailed', { actionId: action.id, message: errorMessage(error) }),
-						],
-					});
-					return { success: false, error: errorMessage(error) };
-				});
-		},
-		[container, onAction, dispatchActions, buildActionContext, submission],
-	);
 
 	const handleSubmit = useCallback(
 		async ({ values, setServerErrors }: PassedSubmission) => {
@@ -219,5 +174,5 @@ export function useFormSubmitHandler<TAction extends RuntimeAction>({
 		[guard, container, submission, fields, handleSubmit],
 	);
 
-	return { submitEvent, executeAction };
+	return { submitEvent };
 }

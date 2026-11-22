@@ -33,7 +33,7 @@ interface RecipeRendererProps {
 export function RecipeRenderer({ config, recipe, children, renderFields }: RecipeRendererProps) {
 	const { formState } = useFormContext();
 	const { stepStates, currentStep, navigation } = useFormInstanceActions();
-	const { isSubmitting } = formState;
+	const isSubmitting = formState.submission.status === 'pending';
 	const viewContext = useMemo(
 		() =>
 			recipe

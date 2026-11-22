@@ -6,7 +6,6 @@ import type {
 	FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
 import { formatIssueText, useFormStateContext, type FormStateContextValue } from './context';
-import type { SubmissionState } from './submission-store';
 import type { FormContextValue } from './types';
 
 type FormStateKey = keyof FormContextValue['formState'];
@@ -31,17 +30,6 @@ function createTexts(formatIssue: FormIssueFormatter | undefined) {
 	};
 }
 
-/** The status and failures of a submission state, as the same object while neither changed, so `submitCount` does not re-render a reader of them. */
-function createSubmissionView() {
-	let view: FormContextValue['formState']['submission'] | undefined;
-	return (state: SubmissionState): FormContextValue['formState']['submission'] => {
-		if (!view || view.status !== state.status || view.failures !== state.failures) {
-			view = { status: state.status, failures: state.failures };
-		}
-		return view;
-	};
-}
-
 /**
  * Reads a form's state lazily: the keys a component reads are the keys
  * that re-render it.
@@ -57,7 +45,6 @@ function createTrackedFormState(
 ) {
 	const seen = new Map<FormStateKey, unknown>();
 	const texts = createTexts(formatIssue);
-	const submissionView = createSubmissionView();
 	let version = 0;
 	const read = (key: FormStateKey): unknown => {
 		switch (key) {
@@ -65,12 +52,8 @@ function createTrackedFormState(
 				return container.getSnapshot().errors;
 			case 'isValid':
 				return container.getSnapshot().isValid;
-			case 'isSubmitting':
-				return submission.getSnapshot().status === 'pending';
-			case 'submitCount':
-				return submission.getSnapshot().submitCount;
 			case 'submission':
-				return submissionView(submission.getSnapshot());
+				return submission.getSnapshot();
 		}
 	};
 	const track = <T>(key: FormStateKey, value: T): T => {
@@ -85,14 +68,8 @@ function createTrackedFormState(
 		get isValid() {
 			return track('isValid', container.getSnapshot().isValid);
 		},
-		get isSubmitting() {
-			return track('isSubmitting', submission.getSnapshot().status === 'pending');
-		},
-		get submitCount() {
-			return track('submitCount', submission.getSnapshot().submitCount);
-		},
 		get submission() {
-			return track('submission', submissionView(submission.getSnapshot()));
+			return track('submission', submission.getSnapshot());
 		},
 	};
 
@@ -131,7 +108,7 @@ function createTrackedFormState(
  * The commands over the form and its state, read lazily.
  *
  * @remarks
- * `formState` re-renders a component only for the keys it reads: one that reads `isSubmitting` does not
+ * `formState` re-renders a component only for the keys it reads: one that reads `submission` does not
  * render while the user types, and reading `isValid` costs nothing, since it reports the errors recorded
  * and never validates. The returned object keeps its identity while the form's formatter does.
  */
@@ -150,7 +127,7 @@ export function useFormContext(): FormContextValue {
 			validate: (name) => container.validate(typeof name === 'string' ? [name] : name),
 			reset: (values) => {
 				container.reset(values);
-				submission.resetCount();
+				submission.reset();
 			},
 			setFocus: (name) => fields.focus(name),
 			formatIssue: (issue: FormStateIssue | FormSubmissionIssue, { path }) =>

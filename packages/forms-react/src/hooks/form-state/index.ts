@@ -3,6 +3,7 @@ export type {
 	FormContextValue,
 	FormControlProps,
 	FormElementFieldValue,
+	FormFieldConfig,
 	FormFieldValue,
 	FormProviderProps,
 	FormSubmitHelpers,

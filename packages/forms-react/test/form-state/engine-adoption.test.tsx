@@ -1,5 +1,4 @@
 import { fieldText } from '@/hooks/field-text';
-import { useState } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
@@ -91,11 +90,10 @@ function Field({ name }: { name: string }) {
 		</label>
 	);
 }
-function Controls({ action }: { action?: FormActionConfig }) {
-	const { currentStep, goToNext, executeAction } = useFormInstanceActions();
+function Controls() {
+	const { currentStep, goToNext } = useFormInstanceActions();
 	const { validate, formState } = useFormContext();
 	const { status, failures } = formState.submission;
-	const [actionResult, setActionResult] = useState<unknown>();
 	return (
 		<>
 			<output aria-label="step">{currentStep}</output>
@@ -109,16 +107,10 @@ function Controls({ action }: { action?: FormActionConfig }) {
 					)
 					.join(', ')}
 			</output>
-			<output aria-label="action result">{JSON.stringify(actionResult)}</output>
 			<button type="button" onClick={goToNext}>
 				Next
 			</button>
 			<button type="submit">Submit</button>
-			{action && (
-				<button type="button" onClick={() => void executeAction(action).then(setActionResult)}>
-					Execute
-				</button>
-			)}
 			<button type="button" onClick={() => void validate()}>
 				Validate
 			</button>
@@ -215,24 +207,6 @@ test('a require constraint makes the field required', async () => {
 	await userEvent.fill(screen.getByRole('textbox', { name: 'customerType' }), 'individual');
 	await waitFor(() => expect(screen.getByRole('textbox', { name: 'VAT' })).toHaveAttribute('aria-invalid', 'false'));
 	expect(screen.getByRole('textbox', { name: 'VAT' })).not.toBeRequired();
-});
-
-test('executeAction runs only the given action and reports its result', async () => {
-	const actions: FormActionConfig[] = ['save-draft', 'publish'].map((id) => ({
-		$type: 'probe',
-		id,
-		triggers: ['form_submit'],
-	}));
-	const callback = vi.fn();
-	mount({ ...config, actions }, <Controls action={actions[1]} />, callback);
-	await userEvent.click(screen.getByRole('button', { name: 'Execute' }));
-	await waitFor(() => expect(screen.getByLabelText('submission')).toHaveTextContent('success'));
-	expect(handled).toEqual(['publish']);
-	expect(JSON.parse(screen.getByLabelText('action result').textContent!)).toMatchObject({
-		success: true,
-		data: { id: 'publish' },
-	});
-	expect(callback).toHaveBeenCalledWith(actions[1], expect.any(Object));
 });
 
 test('step triggers carry the elapsed form time and destination step', async () => {
@@ -351,7 +325,7 @@ test('reports grouped action outcomes through the React renderer', async () => {
 	};
 	render(
 		<FormRenderer config={formConfig} engine={engine} onActionResults={results}>
-			<Controls action={{ id: 'manual', $type: 'probe', triggers: ['form_submit'] }} />
+			<Controls />
 			<ManualSubmitTrigger />
 		</FormRenderer>,
 	);
@@ -359,14 +333,6 @@ test('reports grouped action outcomes through the React renderer', async () => {
 		expect(results).toHaveBeenCalledWith(
 			expect.arrayContaining([expect.objectContaining({ actionId: 'mounted' })]),
 			'form_mount',
-		),
-	);
-	results.mockClear();
-	await userEvent.click(screen.getByRole('button', { name: 'Execute' }));
-	await waitFor(() =>
-		expect(results).toHaveBeenCalledWith(
-			expect.arrayContaining([expect.objectContaining({ actionId: 'manual' })]),
-			'form_submit',
 		),
 	);
 	results.mockClear();

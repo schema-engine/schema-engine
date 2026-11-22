@@ -85,7 +85,7 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
 
-	const { submitEvent, executeAction } = useFormSubmitHandler({
+	const { submitEvent } = useFormSubmitHandler({
 		container,
 		submission,
 		fetch: engine.fetch,
@@ -116,7 +116,6 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 			dispatchActions,
 			dispatchTrigger,
 			dispatchTriggerSync,
-			executeAction,
 		}),
 		[
 			currentStep,
@@ -130,7 +129,6 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 			dispatchActions,
 			dispatchTrigger,
 			dispatchTriggerSync,
-			executeAction,
 		],
 	);
 

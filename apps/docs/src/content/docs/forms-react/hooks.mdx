@@ -37,9 +37,9 @@ default, so blocks need no fallbacks. It is available only inside a `ViewProvide
 Import the form hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormContext` exposes `getValues`, `setValue`, `validate`, `reset`, `setFocus`,
-`formatIssue` and `clearSubmission`, plus a lazy `formState` (`errors`, `isValid`,
-`isSubmitting`, `submitCount` and `submission: { status, failures }`). Its fields
-subscribe the caller only when read, so a component that reads `isSubmitting`
+`formatIssue` and `clearSubmission`, plus a lazy `formState` (`errors`, `isValid`
+and `submission: { status, failures, submitCount }`). Its fields
+subscribe the caller only when read, so a component that reads `submission`
 re-renders when that changes and not while the user types; reading `isValid`
 reports the recorded errors and validates nothing. `useFormField(config)` binds an
 element registration to its field, with the props of its control, label and error;
@@ -53,4 +53,4 @@ observation and array editing. `useFieldArray` provides `fields` plus `append`, 
 Import engine hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormEngine` reads the `FormEngine` supplied by `FormEngineProvider`, while
-`useFormInstanceActions` exposes current-step and submission actions.
+`useFormInstanceActions` exposes step navigation and trigger dispatch.

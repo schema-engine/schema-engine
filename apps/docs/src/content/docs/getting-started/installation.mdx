@@ -16,12 +16,12 @@ Schema Engine is a set of packages. You install the engine and one renderer: **R
 
 ## Choose a renderer
 
-| Renderer    | Package                        | Form state                                               | Styling                                                             |
-| ----------- | ------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------- |
-| **React**   | `@schema-engine/forms-react`   | The engine's own container, built in                     | Source you own, copied from the shadcn registry; Tailwind helps     |
-| **Radiant** | `@schema-engine/forms-radiant` | The engine's own container, through Radiant's controller | Three CSS imports: a Radiant UI theme, its styles and the package's |
+| Renderer    | Package                        | Form state                           | Styling                                                             |
+| ----------- | ------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
+| **React**   | `@schema-engine/forms-react`   | The engine's own container, built in | Source you own, copied from the shadcn registry; Tailwind helps     |
+| **Radiant** | `@schema-engine/forms-radiant` | Radiant's own form controller        | Three CSS imports: a Radiant UI theme, its styles and the package's |
 
-Both render the same `FormConfig` JSON and keep their form state in the engine's container.
+Both render the same `FormConfig` JSON; the React renderer keeps its form state in the engine's container, built in, and the Radiant renderer has its own form controller.
 
 ## The engine
 

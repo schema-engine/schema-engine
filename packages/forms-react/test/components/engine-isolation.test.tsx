@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema, type ElementConfig } from '@schema-engine/forms/schemas';
+import { BaseFieldSchema } from '@schema-engine/forms/schemas';
 import {
 	MinLengthRuleSchema,
 	type MinLengthRule,
@@ -35,7 +35,7 @@ function createIsolationEngine(message: string, minimum: number) {
 		metadata: { name: 'Isolated input', category: 'input' },
 		validations: [createValidation(message, minimum)],
 		render: (config: IsolatedInputConfig) => {
-			const { value, error, onChange, onBlur, fieldProps } = useFormField(config as unknown as ElementConfig);
+			const { value, error, onChange, onBlur, fieldProps } = useFormField(config);
 
 			return (
 				<label>

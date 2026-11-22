@@ -1,7 +1,6 @@
 import * as z from 'zod/mini';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
 import type { ElementGridConfig, LayoutInput } from '@schema-engine/layout';
 import { useFormField } from '@/hooks/form-state';
 import { useLayoutThemeId } from '@/hooks/use-form-context';
@@ -26,7 +25,7 @@ const ssrInputSchema = z.object({
 type SsrInputConfig = z.infer<typeof ssrInputSchema>;
 
 function SsrFixtureInput(config: SsrInputConfig) {
-	const { containerStyles } = useFormField(config as unknown as ElementConfig);
+	const { containerStyles } = useFormField(config);
 	const layoutThemeId = useLayoutThemeId();
 	const label = config.label ?? config.name;
 

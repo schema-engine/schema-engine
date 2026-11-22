@@ -4,7 +4,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/components/form-provider';
 import { FormEngineContext } from '../../src/components/provider';
+import { createFormEngine } from '@schema-engine/forms';
 import type { FormConfig } from '@schema-engine/forms/schemas';
+import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { useFormContext, useFormField } from '../../src/hooks/form-state';
 import { renderProvider, testEngine } from '../utils/form-harness';
 
@@ -51,7 +53,7 @@ function Status() {
 	const { formState } = useFormContext();
 	return (
 		<output data-testid="status">
-			{String(formState.isSubmitting)}:{formState.submitCount}
+			{formState.submission.status}:{formState.submission.submitCount}
 		</output>
 	);
 }
@@ -87,7 +89,7 @@ function LateFirst() {
 }
 
 describe('a submission that ends without a verdict', () => {
-	it('is not counted and does not submit when an edit outruns the check and its retry', async () => {
+	it('settles idle, is not counted and does not submit when an edit outruns the check and its retry', async () => {
 		const onSubmit = vi.fn();
 		const fetchSpy = vi
 			.spyOn(globalThis, 'fetch')
@@ -113,14 +115,14 @@ describe('a submission that ends without a verdict', () => {
 		await new Promise((resolve) => setTimeout(resolve, 110));
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'c@example.com' } });
 
-		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('false:0'));
+		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('idle:0'));
 		await new Promise((resolve) => setTimeout(resolve, 200));
 		expect(onSubmit).not.toHaveBeenCalled();
-		expect(screen.getByTestId('status')).toHaveTextContent('false:0');
+		expect(screen.getByTestId('status')).toHaveTextContent('idle:0');
 		fetchSpy.mockRestore();
 	});
 
-	it('is not counted and is no longer submitting when a rule could not run', async () => {
+	it('is not counted and settles in error when a rule could not run', async () => {
 		const onSubmit = vi.fn();
 		const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
 		vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -138,7 +140,7 @@ describe('a submission that ends without a verdict', () => {
 
 		await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
 		await new Promise((resolve) => setTimeout(resolve, 100));
-		expect(screen.getByTestId('status')).toHaveTextContent('false:0');
+		expect(screen.getByTestId('status')).toHaveTextContent('error:0');
 		expect(onSubmit).not.toHaveBeenCalled();
 		fetchSpy.mockRestore();
 	});
@@ -201,17 +203,17 @@ describe('FormProvider validation', () => {
 			</>,
 			{ onSubmit },
 		);
-		expect(screen.getByTestId('status')).toHaveTextContent('false:0');
+		expect(screen.getByTestId('status')).toHaveTextContent('idle:0');
 
 		fireEvent.click(screen.getByText('Submit'));
-		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('false:1'));
+		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('idle:1'));
 		expect(onSubmit).not.toHaveBeenCalled();
 
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'a@b.co' } });
 		fireEvent.click(screen.getByText('Submit'));
-		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('true:1'));
+		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('pending:1'));
 		release();
-		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('false:2'));
+		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('success:2'));
 	});
 
 	it('rejects an empty required field on submit', async () => {
@@ -351,6 +353,29 @@ describe('the answer of the server', () => {
 		fireEvent.click(screen.getByText('Submit'));
 
 		await waitFor(() => expect(screen.getByTestId('email-error')).toHaveTextContent('Already registered'));
-		expect(screen.getByTestId('status')).toHaveTextContent('false:1');
+		expect(screen.getByTestId('status')).toHaveTextContent('success:1');
+	});
+});
+
+describe('the form instance', () => {
+	it('starts over with the defaults when the engine changes, though the config object is the same', () => {
+		const first = createFormEngine({ elements: [InputElementRegistration] });
+		const second = createFormEngine({ elements: [InputElementRegistration] });
+		const normalized = first.validateForm(config);
+		const view = (engine: typeof first) => (
+			<FormEngineContext.Provider value={{ engine }}>
+				<FormProvider config={normalized} defaultValues={{ email: 'default@example.com' }}>
+					<ValidationProbe name="email" />
+				</FormProvider>
+			</FormEngineContext.Provider>
+		);
+		const { rerender } = render(view(first));
+		fireEvent.change(screen.getByTestId('email'), { target: { value: 'edited@example.com' } });
+
+		rerender(view(first));
+		expect(screen.getByTestId('email')).toHaveValue('edited@example.com');
+
+		rerender(view(second));
+		expect(screen.getByTestId('email')).toHaveValue('default@example.com');
 	});
 });

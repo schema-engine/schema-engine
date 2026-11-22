@@ -1,6 +1,5 @@
 import { useCallback, useContext, useMemo } from 'react';
 import type { CSSProperties } from 'react';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { selectFieldState, selectValue } from '@schema-engine/forms/state-container';
@@ -10,7 +9,7 @@ import { isElementRequired } from '@/hooks/is-element-required';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
 import { useOptionalFormEngine } from '@/hooks/use-form-context';
 import { formatIssueText, useContainerSelector, useFormStateContext } from './context';
-import type { FormElementFieldValue, FormFieldValue } from './types';
+import type { FormElementFieldValue, FormFieldConfig, FormFieldValue } from './types';
 
 let fallbackValidationRegistry: ValidationRegistry | undefined;
 
@@ -65,7 +64,7 @@ function usePathField(path: string): FormFieldValue {
  * field rendered without one watches only the paths its constraints name, so an unconstrained field does not
  * re-render when another field changes. With no config it watches nothing and is not required.
  */
-function useFieldRequired(config: ElementConfig | undefined): boolean {
+function useFieldRequired(config: FormFieldConfig | undefined): boolean {
 	const engineContext = useOptionalFormEngine();
 	const registry = useMemo(
 		() => engineContext?.engine.getValidationRegistry() ?? getFallbackValidationRegistry(),
@@ -97,8 +96,8 @@ function useFieldRequired(config: ElementConfig | undefined): boolean {
  * text.
  */
 export function useFormField(path: string): FormFieldValue;
-export function useFormField(config: ElementConfig): FormElementFieldValue;
-export function useFormField(target: string | ElementConfig): FormFieldValue | FormElementFieldValue {
+export function useFormField(config: FormFieldConfig): FormElementFieldValue;
+export function useFormField(target: string | FormFieldConfig): FormFieldValue | FormElementFieldValue {
 	const config = typeof target === 'string' ? undefined : target;
 	if (config && !config.name) {
 		throw new Error(`Field configuration is missing required "name" property. Config: ${JSON.stringify(config)}`);

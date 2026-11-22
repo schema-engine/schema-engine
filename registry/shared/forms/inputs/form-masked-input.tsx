@@ -23,7 +23,7 @@ export function FormMaskedInput({
 			style={containerStyles}
 		>
 			<MaskedInput
-				key={`${config.name}-${formState.submitCount}`}
+				key={`${config.name}-${formState.submission.submitCount}`}
 				{...fieldProps}
 				mask={config.mask}
 				unmask={config.unmask}

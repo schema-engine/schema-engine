@@ -1,12 +1,8 @@
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
-import type {
-	BuilderActionBaseContext,
-	FormActionTrigger,
-	NormalizedFormConfig,
-	SubmissionActionResult,
-} from '@schema-engine/forms';
+import type { FormActionTrigger, FormFetch, NormalizedFormConfig, SubmissionActionResult } from '@schema-engine/forms';
 import type { DeepReadonly } from '@schema-engine/forms/lib/normalized-form-config';
-import type { FormActionConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig, FormActionConfig } from '@schema-engine/forms/schemas';
+import type { RequiredFlagSource } from '@/hooks/is-element-required';
 import type {
 	FieldArrayValue,
 	FormIssueFormatter,
@@ -16,7 +12,7 @@ import type {
 	FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
 import type { CSSProperties, ReactNode, RefCallback } from 'react';
-import type { SubmissionStatus } from './submission-store';
+import type { SubmissionState } from './submission-store';
 
 /** The nested values of a form, as the container holds them and a submission hands them over. */
 export type FormValues = Readonly<Record<string, unknown>>;
@@ -26,7 +22,7 @@ export type FormValues = Readonly<Record<string, unknown>>;
  *
  * @remarks
  * `formState` is read through getters, and a component re-renders only for the keys it reads: a submit
- * button that reads `isSubmitting` does not re-render while the user types. `errors` is flat by dotted path
+ * button that reads `submission` does not re-render while the user types. `errors` is flat by dotted path
  * (`contacts.0.email`). An error is its text, which the form's formatter makes or else the issue's own
  * `message`, and it is absent when there is neither.
  */
@@ -37,7 +33,7 @@ export interface FormContextValue {
 	setValue: (name: string, value: unknown) => void;
 	/** Validates `name` (a path or several; the whole form when omitted) and resolves whether it passed. */
 	validate: (name?: string | readonly string[]) => Promise<boolean>;
-	/** Restores the defaults, or replaces them with `values` first, and clears the errors, marks and the submission count. */
+	/** Restores the defaults, or replaces them with `values` first, and clears the errors, marks and the submission state: a fresh form. */
 	reset: (values?: Record<string, unknown>) => void;
 	/** Focuses the control a field registered with the `ref` of `useFormField`. */
 	setFocus: (name: string) => void;
@@ -53,11 +49,8 @@ export interface FormContextValue {
 		errors: Record<string, { message?: string }>;
 		/** Whether no error from any source is recorded. Cheap, and no proof that the values are valid. */
 		isValid: boolean;
-		isSubmitting: boolean;
-		/** The submissions that ended, whether they passed or failed validation. */
-		submitCount: number;
-		/** The outcome of the last submission: its failures are issues, worded by `formatIssue`. */
-		submission: { readonly status: SubmissionStatus; readonly failures: readonly FormSubmissionIssue[] };
+		/** The one submission state: the status (`pending` while one runs), the failures as issues worded by `formatIssue`, and the submissions that ended, whether they passed or failed validation. */
+		submission: SubmissionState;
 	};
 }
 
@@ -88,6 +81,17 @@ export interface FormFieldValue {
 	name: string;
 	ref: RefCallback<HTMLElement | null>;
 }
+
+/**
+ * The parts of an element config that `useFormField` reads.
+ *
+ * @remarks A registration passes its own config as it is: the hook asks for no more than this, so the config of any element type fits.
+ */
+export type FormFieldConfig = Pick<
+	ElementConfig,
+	'name' | 'id' | 'disabled' | 'readonly' | 'htmlAttributes' | 'grid' | 'style' | 'constraints'
+> &
+	RequiredFlagSource;
 
 /** The props a field puts on its control, over the config's `htmlAttributes`. */
 export interface FormControlProps {
@@ -126,7 +130,7 @@ export interface FormSubmitHelpers {
 	 *
 	 * @remarks It applies the engine's CSRF policy to a same-origin unsafe request, so a submit callback adds no token itself.
 	 */
-	fetch: BuilderActionBaseContext['fetch'];
+	fetch: FormFetch;
 }
 
 export type { FieldArrayValue };

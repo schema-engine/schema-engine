@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger';
 import type { FormStateContainer } from '@schema-engine/forms/state-container';
 import type { SubmissionStore } from '@/hooks/form-state/submission-store';
 import type { FormValues } from '@/hooks/form-state/types';
-import type { FormActionTrigger, BuilderActionBaseContext, FormConfigView } from '@schema-engine/forms';
+import type { FormActionTrigger, BuilderActionBaseContext, FormConfigView, FormFetch } from '@schema-engine/forms';
 import { buildFormActionContext, collectStepActions } from '@schema-engine/forms';
 import type { ActionSequenceEntry } from '@schema-engine/actions';
 import type { ActionDispatcher, ActionDispatchInput, ActionDispatchResult } from '@schema-engine/forms/actions';
@@ -13,7 +13,7 @@ interface UseFormActionDispatchersOptions {
 	container: FormStateContainer;
 	submission: SubmissionStore;
 	/** The engine's `fetch`, which the context hands to actions. */
-	fetch: BuilderActionBaseContext['fetch'];
+	fetch: FormFetch;
 	config: FormConfigView;
 	actionExecutor: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	getCurrentStep?: () => number;
@@ -66,7 +66,7 @@ export function useFormActionDispatchers({
 		() => ({
 			reset: () => {
 				container.reset();
-				submission.resetCount();
+				submission.reset();
 			},
 			setValue: (name, value) => container.setValue(name, value),
 			getValue: (name) => container.getValue(name),

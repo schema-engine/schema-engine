@@ -31,8 +31,8 @@ function mount(
 }
 
 describe('useFormContext', () => {
-	test('a caller that reads only isSubmitting does not re-render while values and errors change', async () => {
-		const { container, submission, renders } = mount(({ formState }) => formState.isSubmitting);
+	test('a caller that reads only the submission does not re-render while values and errors change', async () => {
+		const { container, submission, renders } = mount(({ formState }) => formState.submission.status);
 		const afterMount = renders();
 
 		await act(async () => container.setValue('name', 'ada'));
@@ -74,68 +74,50 @@ describe('useFormContext', () => {
 	test('keeps the public formState shape', () => {
 		const { context } = mount(() => undefined);
 
-		expect(Object.keys(context().formState).sort()).toEqual([
-			'errors',
-			'isSubmitting',
-			'isValid',
-			'submission',
-			'submitCount',
-		]);
+		expect(Object.keys(context().formState).sort()).toEqual(['errors', 'isValid', 'submission']);
 	});
 
-	test('counts the submissions that ended and no other', () => {
-		let submitCount = 0;
-		const { submission } = mount(({ formState }) => {
-			submitCount = formState.submitCount;
-		});
-
-		act(() => {
-			submission().begin();
-			submission().settle('success', { counted: true });
-			submission().begin();
-			submission().settle('idle');
-		});
-
-		expect(submitCount).toBe(1);
-	});
-
-	test('isSubmitting holds while a submission is pending', () => {
-		let isSubmitting = false;
-		const { submission } = mount(({ formState }) => {
-			isSubmitting = formState.isSubmitting;
-		});
-
-		act(() => submission().begin());
-		expect(isSubmitting).toBe(true);
-
-		act(() => submission().settle('success', { counted: true }));
-		expect(isSubmitting).toBe(false);
-	});
-
-	test('the submission is its status and failures, and a count alone does not re-render a reader of it', () => {
+	test('the submission is the one state: pending while one runs, then how it ended, with the count of those that ended', () => {
 		let seen: FormContextValue['formState']['submission'] | undefined;
-		const { submission, renders } = mount(({ formState }) => {
+		const { submission } = mount(({ formState }) => {
 			seen = formState.submission;
 		});
-		expect(seen).toMatchObject({ status: 'idle', failures: [] });
-		const afterMount = renders();
+		expect(seen).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 
-		act(() => {
-			submission().begin();
-			submission().settle('idle');
-			submission().settle('idle', { counted: true });
+		act(() => submission().begin());
+		expect(seen).toMatchObject({ status: 'pending' });
+
+		act(() => submission().settle('success', { counted: true }));
+		act(() => submission().begin());
+		act(() => submission().settle('idle'));
+		expect(seen).toEqual({ status: 'idle', failures: [], submitCount: 1 });
+	});
+
+	test('a failed submission carries its failures as issues', () => {
+		let seen: FormContextValue['formState']['submission'] | undefined;
+		const { submission } = mount(({ formState }) => {
+			seen = formState.submission;
 		});
 		const failure = { type: 'callbackFailed', source: 'submission', message: 'down' } as const;
+
 		act(() => submission().settle('error', { failures: [failure], counted: true }));
 
-		expect(seen).toEqual({ status: 'error', failures: [failure] });
-		expect(renders()).toBeGreaterThan(afterMount);
+		expect(seen).toEqual({ status: 'error', failures: [failure], submitCount: 1 });
+	});
+
+	test('a count that ends a submission does not re-render a caller that reads only the errors', () => {
+		const { submission, renders } = mount(({ formState }) => formState.errors);
+		const afterMount = renders();
+
+		act(() => submission().settle('idle', { counted: true }));
+
+		expect(renders()).toBe(afterMount);
 	});
 
 	test('clearSubmission hides the outcome and keeps the count', () => {
-		let state: Pick<FormContextValue['formState'], 'submission' | 'submitCount'> | undefined;
+		let seen: FormContextValue['formState']['submission'] | undefined;
 		const { submission, context } = mount(({ formState }) => {
-			state = { submission: formState.submission, submitCount: formState.submitCount };
+			seen = formState.submission;
 		});
 		act(() => {
 			submission().begin();
@@ -147,7 +129,7 @@ describe('useFormContext', () => {
 
 		act(() => context().clearSubmission());
 
-		expect(state).toEqual({ submission: { status: 'idle', failures: [] }, submitCount: 1 });
+		expect(seen).toEqual({ status: 'idle', failures: [], submitCount: 1 });
 	});
 
 	test('formatIssue words a field issue and a submission failure with the same formatter, and falls back to the message', () => {
@@ -170,23 +152,26 @@ describe('useFormContext', () => {
 		).toBeUndefined();
 	});
 
-	test('reset restores the defaults, clears the errors and the submission count', async () => {
-		let submitCount = 0;
+	test('reset returns the form to a fresh one: defaults, no errors, and an idle submission with no failures and no count', async () => {
+		let seen: FormContextValue['formState']['submission'] | undefined;
 		const { container, submission, context } = mount(({ formState }) => {
-			submitCount = formState.submitCount;
+			seen = formState.submission;
 		});
 		container.setValue('name', 'ada');
 		await act(() => container.validate());
 		act(() => {
 			submission().begin();
-			submission().settle('success', { counted: true });
+			submission().settle('error', {
+				failures: [{ type: 'triggerFailed', source: 'submission' }],
+				counted: true,
+			});
 		});
 
 		act(() => context().reset());
 
 		expect(container.getValue('name')).toBe('');
 		expect(container.getSnapshot().errors).toEqual({});
-		expect(submitCount).toBe(0);
+		expect(seen).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 	});
 
 	test('reset with values replaces the defaults', () => {
