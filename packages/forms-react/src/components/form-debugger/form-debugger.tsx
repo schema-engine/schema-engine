@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useFormContext, useWatchForm } from '@/hooks/form-state';
+import { useFormContext, useWatch } from '@/hooks/form-state';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { useOptionalViewContext } from '@/contexts/view-context';
 import './form-debugger.css';
@@ -226,8 +226,8 @@ function FormDebuggerPanel({
 	showFormState,
 }: { onClose: () => void } & Required<Omit<FormDebuggerProps, 'defaultOpen'>>) {
 	const { formState } = useFormContext();
-	const formValues = useWatchForm();
-	const { currentStep, totalSteps, stepStates, navigation, submissionState } = useFormInstanceActions();
+	const formValues = useWatch();
+	const { currentStep, totalSteps, stepStates, navigation } = useFormInstanceActions();
 	const view = useOptionalViewContext();
 
 	const steps = view?.steps ?? [];
@@ -250,7 +250,7 @@ function FormDebuggerPanel({
 					<DebuggerFormState
 						formState={formState}
 						formValues={formValues}
-						submissionStatus={submissionState.status}
+						submissionStatus={formState.submission.status}
 						stepStates={stepStates}
 					/>
 				)}

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useWatchField } from '@/hooks/form-state/use-watch-field';
+import { useWatch } from '@/hooks/form-state/use-watch';
 import {
 	evaluateResolvedConstraints,
 	resolveConstraintPaths,
@@ -16,7 +16,7 @@ const noConstraints: readonly ConstraintLogic[] = [];
  *
  * @remarks
  * Resolution is split from evaluation here because the adapter subscribes to the
- * resolved paths: `useWatchField` must receive the same list, in the same order,
+ * resolved paths: `useWatch` must receive the same list, in the same order,
  * that the returned values are then matched against.
  */
 export function useConstraintLogic(
@@ -26,7 +26,7 @@ export function useConstraintLogic(
 ): UseConstraintLogicResult {
 	const watchedFields = useMemo(() => resolveConstraintPaths(constraints, fieldPath), [constraints, fieldPath]);
 
-	const watchedValues = useWatchField(watchedFields);
+	const watchedValues = useWatch(watchedFields);
 
 	const fieldValues = useMemo(() => {
 		const map: Record<string, unknown> = {};

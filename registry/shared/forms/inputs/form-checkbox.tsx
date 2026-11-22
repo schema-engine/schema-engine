@@ -6,7 +6,7 @@ import {
 	FieldContent,
 	FieldHint,
 } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { CheckboxFieldProps } from './form-checkbox.types';
 
 export function FormCheckbox({
@@ -15,7 +15,7 @@ export function FormCheckbox({
 	onFocus: propsOnFocus,
 	...config
 }: CheckboxFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useFormField(config);
 
 	return (
 		<FieldGroupRoot style={containerStyles}>

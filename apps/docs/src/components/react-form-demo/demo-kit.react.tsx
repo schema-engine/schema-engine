@@ -1,7 +1,8 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
+import type { ElementConfig } from '@schema-engine/forms/schemas';
 import type { ElementGridConfig } from '@schema-engine/layout';
-import { useControlledFormElement, useFieldHost } from '@schema-engine/forms-react/hooks';
+import { useFormField, useFieldHost } from '@schema-engine/forms-react/hooks';
 
 /**
  * Radiant-styled field chrome for docs demos.
@@ -51,18 +52,11 @@ export function DemoInput({
 	onChange: propsOnChange,
 	onBlur: propsOnBlur,
 	...config
-}: Record<string, unknown> & {
+}: ElementConfig & {
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const {
-		value,
-		error,
-		onChange: setValue,
-		onBlur,
-		fieldProps,
-		isRequired,
-	} = useControlledFormElement(config as never);
+	const { value, error, onChange: setValue, onBlur, fieldProps, required } = useFormField(config);
 	const { inputType = 'text', placeholder } = config as { inputType?: string; placeholder?: string };
 
 	return (
@@ -71,7 +65,7 @@ export function DemoInput({
 			htmlFor={config.id as string}
 			description={config.description as string}
 			error={error}
-			required={isRequired}
+			required={required}
 			grid={config.grid as ElementGridConfig | undefined}
 			style={config.style as React.CSSProperties | undefined}
 		>
@@ -98,11 +92,11 @@ export function DemoTextarea({
 	onChange: propsOnChange,
 	onBlur: propsOnBlur,
 	...config
-}: Record<string, unknown> & {
+}: ElementConfig & {
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const { value, error, onChange: setValue, onBlur, fieldProps } = useControlledFormElement(config as never);
+	const { value, error, onChange: setValue, onBlur, fieldProps } = useFormField(config);
 	const rows = (config.rows as number | undefined) ?? 5;
 
 	return (
@@ -137,11 +131,11 @@ export function DemoSelect({
 	onChange: propsOnChange,
 	onBlur: propsOnBlur,
 	...config
-}: Record<string, unknown> & {
+}: ElementConfig & {
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const { value, error, onChange: setValue, onBlur, fieldProps } = useControlledFormElement(config as never);
+	const { value, error, onChange: setValue, onBlur, fieldProps } = useFormField(config);
 	const options = ((config.options as Array<{ value: unknown; label: string; disabled?: boolean }>) ?? []).map(
 		(option) => ({ value: String(option.value), label: option.label, disabled: option.disabled }),
 	);
@@ -183,11 +177,11 @@ export function DemoCheckbox({
 	onChange: propsOnChange,
 	onBlur: propsOnBlur,
 	...config
-}: Record<string, unknown> & {
+}: ElementConfig & {
 	onChange?: (value: boolean) => void;
 	onBlur?: () => void;
 }) {
-	const { value, error, onChange: setValue, onBlur, fieldProps } = useControlledFormElement(config as never);
+	const { value, error, onChange: setValue, onBlur, fieldProps } = useFormField(config);
 
 	return (
 		<DemoField

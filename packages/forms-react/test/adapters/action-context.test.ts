@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useFormActionDispatchers } from '../../src/components/form-runtime/use-form-action-dispatchers';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { ActionDispatcher } from '@schema-engine/actions';
-import { createSubmissionStatusStore } from '../../src/hooks/form-state/submission-status';
+import { createSubmissionStore } from '../../src/hooks/form-state/submission-store';
 import { createTestContainer } from '../utils/container-harness';
 
 const config: FormConfig = {
@@ -25,17 +25,17 @@ function setup(
 ) {
 	const { defaults = {}, ...overrides } = options;
 	const container = createTestContainer({ defaults });
-	const status = createSubmissionStatusStore();
+	const submission = createSubmissionStore();
 	const rendered = renderHook(() =>
 		useFormActionDispatchers({
 			container,
-			status,
+			submission,
 			config,
 			actionExecutor: mockDispatcher,
 			...overrides,
 		}),
 	);
-	return { container, status, ...rendered };
+	return { container, submission, ...rendered };
 }
 
 describe('useFormActionDispatchers', () => {
@@ -62,13 +62,13 @@ describe('useFormActionDispatchers', () => {
 			elements: [{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Required' }] }],
 			defaults: { email: '' },
 		});
-		const status = createSubmissionStatusStore();
+		const submission = createSubmissionStore();
 		const { result } = renderHook(() =>
-			useFormActionDispatchers({ container, status, config, actionExecutor: mockDispatcher }),
+			useFormActionDispatchers({ container, submission, config, actionExecutor: mockDispatcher }),
 		);
 		await container.validate();
-		status.begin();
-		status.end(true);
+		submission.begin();
+		submission.settle('success', { counted: true });
 
 		const context = result.current.buildActionContext();
 
@@ -85,9 +85,9 @@ describe('useFormActionDispatchers', () => {
 			validationMode: 'onSubmit',
 		});
 		const validate = vi.spyOn(container, 'validate');
-		const status = createSubmissionStatusStore();
+		const submission = createSubmissionStore();
 		const { result } = renderHook(() =>
-			useFormActionDispatchers({ container, status, config, actionExecutor: mockDispatcher }),
+			useFormActionDispatchers({ container, submission, config, actionExecutor: mockDispatcher }),
 		);
 
 		const context = result.current.buildActionContext();
@@ -115,9 +115,9 @@ describe('useFormActionDispatchers', () => {
 			elements: [{ name: 'email', $type: 'input', rules: [{ type: 'required' }] }],
 			defaults: { email: '' },
 		});
-		const status = createSubmissionStatusStore();
+		const submission = createSubmissionStore();
 		const { result } = renderHook(() =>
-			useFormActionDispatchers({ container, status, config, actionExecutor: mockDispatcher }),
+			useFormActionDispatchers({ container, submission, config, actionExecutor: mockDispatcher }),
 		);
 
 		const form = result.current.buildActionContext().form;
@@ -127,14 +127,14 @@ describe('useFormActionDispatchers', () => {
 	});
 
 	test('reset restores the defaults and the submission count', () => {
-		const { container, status, result } = setup({ defaults: { email: 'a' } });
+		const { container, submission, result } = setup({ defaults: { email: 'a' } });
 		container.setValue('email', 'b');
-		status.begin();
-		status.end(true);
+		submission.begin();
+		submission.settle('success', { counted: true });
 
 		act(() => result.current.buildActionContext().form.reset());
 
 		expect(container.getValue('email')).toBe('a');
-		expect(status.getSnapshot().submitCount).toBe(0);
+		expect(submission.getSnapshot().submitCount).toBe(0);
 	});
 });

@@ -75,12 +75,12 @@ element; see [View recipes](/docs/forms-react/layouts).
 
 Create a consumer-owned registration with `InputRegistration` (or
 `StaticRegistration` for display-only content). The render component receives
-the registration config and should use `useControlledFormElement` for field
+the registration config and should use `useFormField` for field
 binding:
 
 ```tsx
 import type { InputRegistration } from '@schema-engine/forms';
-import { useControlledFormElement } from '@schema-engine/forms-react/hooks';
+import { useFormField } from '@schema-engine/forms-react/hooks';
 import * as z from 'zod/mini';
 
 const RatingSchema = z.object({
@@ -92,7 +92,7 @@ const RatingSchema = z.object({
 });
 
 function Rating({ ...config }: z.output<typeof RatingSchema>) {
-	const { value, onChange, fieldProps } = useControlledFormElement(config);
+	const { value, onChange, fieldProps } = useFormField(config);
 	return (
 		<input {...fieldProps} type="number" value={value ?? ''} onChange={(event) => onChange(event.target.value)} />
 	);

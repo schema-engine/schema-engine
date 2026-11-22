@@ -2,9 +2,7 @@ import { createContext } from 'react';
 import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { ActionExecutionResult, FormActionTrigger } from '@schema-engine/forms';
-import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import type { ActionDispatchResult } from '@schema-engine/forms/actions';
-import type { SubmissionState } from '@/hooks/use-submission-state';
 
 /**
  * Form Engine context value
@@ -16,8 +14,6 @@ export interface FormEngineContextValue<
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
 > {
 	engine: FormEngine<TElements, TRecipes, TActions, TOutputs>;
-	/** The text of an issue for every form under the provider, unless the form sets its own. */
-	formatIssue?: FormIssueFormatter;
 }
 
 /**
@@ -30,11 +26,8 @@ export function createFormEngineContextValue<
 	TRecipes extends Record<string, unknown>,
 	TActions extends Record<string, unknown>,
 	TOutputs extends EngineOutputMaps,
->(
-	engine: FormEngine<TElements, TRecipes, TActions, TOutputs>,
-	formatIssue?: FormIssueFormatter,
-): FormEngineContextValue {
-	return { engine: engine as unknown as FormEngineContextValue['engine'], formatIssue };
+>(engine: FormEngine<TElements, TRecipes, TActions, TOutputs>): FormEngineContextValue {
+	return { engine: engine as unknown as FormEngineContextValue['engine'] };
 }
 
 /**
@@ -87,10 +80,6 @@ export interface FormInstanceContextValue {
 	) => Promise<ActionDispatchResult[]>;
 	/** Synchronously dispatches an action trigger event */
 	dispatchTriggerSync: (trigger: FormActionTrigger, extraMetadata?: Record<string, unknown>) => void;
-	/** Current lifecycle state of form submission */
-	submissionState: SubmissionState;
-	/** Resets submission state to 'idle' */
-	clearSubmission: () => void;
 }
 
 /**

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { logger } from '@/lib/logger';
 import type { FormStateContainer } from '@schema-engine/forms/state-container';
-import type { SubmissionStatusStore } from '@/hooks/form-state/submission-status';
+import type { SubmissionStore } from '@/hooks/form-state/submission-store';
 import type { FormValues } from '@/hooks/form-state/types';
 import type { FormActionTrigger, BuilderActionBaseContext, FormConfigView } from '@schema-engine/forms';
 import { buildFormActionContext, collectStepActions } from '@schema-engine/forms';
@@ -11,7 +11,7 @@ import type { FormActionConfig } from '@schema-engine/forms/schemas';
 
 interface UseFormActionDispatchersOptions {
 	container: FormStateContainer;
-	status: SubmissionStatusStore;
+	submission: SubmissionStore;
 	/** The engine's `fetch`, which the context hands to actions. */
 	fetch: BuilderActionBaseContext['fetch'];
 	config: FormConfigView;
@@ -52,7 +52,7 @@ interface UseFormActionDispatchersReturn {
  */
 export function useFormActionDispatchers({
 	container,
-	status,
+	submission,
 	fetch,
 	config,
 	actionExecutor,
@@ -66,14 +66,14 @@ export function useFormActionDispatchers({
 		() => ({
 			reset: () => {
 				container.reset();
-				status.clear();
+				submission.resetCount();
 			},
 			setValue: (name, value) => container.setValue(name, value),
 			getValue: (name) => container.getValue(name),
 			validate: () => container.validate(),
 			checkValidity: () => container.checkValidity(),
 		}),
-		[container, status],
+		[container, submission],
 	);
 
 	const buildActionContext = useCallback(
@@ -82,14 +82,14 @@ export function useFormActionDispatchers({
 			return buildFormActionContext({
 				config,
 				values: submitted ?? values,
-				formState: { isValid, errors, touched, submitCount: status.getSnapshot().submitCount },
+				formState: { isValid, errors, touched, submitCount: submission.getSnapshot().submitCount },
 				currentStep: getCurrentStep?.() ?? 0,
 				mountedAt: formMountTime,
 				form: formAdapter,
 				fetch,
 			});
 		},
-		[container, status, config, getCurrentStep, formAdapter, formMountTime, fetch],
+		[container, submission, config, getCurrentStep, formAdapter, formMountTime, fetch],
 	);
 
 	const dispatchActions = useCallback(

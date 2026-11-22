@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { act, render } from '@testing-library/react';
-import { useWatchField, useWatchForm } from '@/hooks/form-state';
+import { useWatch } from '@/hooks/form-state';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
 describe('watching values', () => {
@@ -10,9 +10,9 @@ describe('watching values', () => {
 		};
 		const container = createTestContainer({ defaults: { a: 'x', b: 'y', c: 'z' } });
 		function Reader() {
-			seen.one = useWatchField('a');
-			seen.many = useWatchField(['a', 'b']);
-			seen.form = useWatchForm();
+			seen.one = useWatch('a');
+			seen.many = useWatch(['a', 'b']);
+			seen.form = useWatch();
 			seen.manyRenders += 1;
 			return null;
 		}

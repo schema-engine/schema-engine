@@ -61,7 +61,7 @@ read it with `useSyncExternalStore` through the engine's pure selectors, so a fi
 for its own value, error or flags. The change effect subscribes to the container and compares its
 `values`, so a parent render by itself does not call `onChange` or dispatch a `form_change` action.
 
-An issue shows as the text of the `formatIssue` formatter set on `FormProvider`/`FormRenderer`, else on `FormEngineProvider`, else on the engine, else as its own `message`, else as nothing: the rule type is never shown, so a field
+An issue (a field's, or why a submission failed) shows as the text of the `formatIssue` formatter set on `FormProvider`/`FormRenderer` for one form, else on the engine, else as its own `message`, else as nothing: the rule type is never shown, so a field
 can be invalid with no text to show.
 
 Radiant `FormEngineController` subscribes to the nearest ancestor

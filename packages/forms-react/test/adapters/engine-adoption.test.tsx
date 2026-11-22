@@ -12,7 +12,6 @@ import { FormRenderer } from '../../src/components/internals/form-renderer';
 import { FormEngineContext } from '../../src/components/provider';
 import { useFormContext, useFormField } from '../../src/hooks/form-state';
 import { useFormInstanceActions } from '../../src/hooks/use-form-context';
-import { useControlledFormElement } from '../../src/hooks/use-field';
 import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
 
 const handled: string[] = [];
@@ -93,17 +92,20 @@ function Field({ name }: { name: string }) {
 	);
 }
 function Controls({ action }: { action?: FormActionConfig }) {
-	const { currentStep, goToNext, executeAction, submissionState } = useFormInstanceActions();
-	const { trigger } = useFormContext();
+	const { currentStep, goToNext, executeAction } = useFormInstanceActions();
+	const { validate, formState } = useFormContext();
+	const { status, failures } = formState.submission;
 	const [actionResult, setActionResult] = useState<unknown>();
 	return (
 		<>
 			<output aria-label="step">{currentStep}</output>
-			<output aria-label="submission">{submissionState.status}</output>
+			<output aria-label="submission">{status}</output>
 			<output aria-label="submission errors">
-				{submissionState.errors
-					.map((error) =>
-						'actionId' in error && 'message' in error ? `${error.actionId}: ${error.message}` : error.type,
+				{failures
+					.map((failure) =>
+						typeof failure.params?.actionId === 'string' && failure.message
+							? `${failure.params.actionId}: ${failure.message}`
+							: failure.type,
 					)
 					.join(', ')}
 			</output>
@@ -117,7 +119,7 @@ function Controls({ action }: { action?: FormActionConfig }) {
 					Execute
 				</button>
 			)}
-			<button type="button" onClick={() => void trigger()}>
+			<button type="button" onClick={() => void validate()}>
 				Validate
 			</button>
 		</>
@@ -182,13 +184,13 @@ const vat: ElementConfig = {
 	constraints: [{ action: 'require', field: 'customerType', operator: 'equals', value: 'company' }],
 };
 function Vat() {
-	const { fieldProps, value, onChange, error } = useControlledFormElement(vat);
+	const { fieldProps, value, onChange, error } = useFormField(vat);
 	return (
 		<>
 			<input
 				{...fieldProps}
 				aria-label="VAT"
-				value={String(value ?? '')}
+				value={fieldText(value)}
 				onChange={(event) => onChange(event.target.value)}
 			/>
 			<span aria-label="VAT error" role="alert">
@@ -298,7 +300,9 @@ test('submission validates once before invoking the submit callback', async () =
 		</FormEngineContext.Provider>,
 	);
 	await userEvent.click(screen.getByRole('button', { name: 'Submit once' }));
-	await waitFor(() => expect(submitted).toHaveBeenCalledWith({ email: 'a@example.com' }));
+	await waitFor(() =>
+		expect(submitted).toHaveBeenCalledWith({ email: 'a@example.com' }, { setServerErrors: expect.any(Function) }),
+	);
 	expect(fetch).toHaveBeenCalledTimes(1);
 });
 
@@ -412,6 +416,6 @@ test('every context of a submission carries the submitted values: without exclud
 	await waitFor(() => expect(onAction).toHaveBeenCalled());
 	const expected = { a: 'x', campaign: 'spring' };
 	expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'saved' }), expected);
-	expect(submitted).toHaveBeenCalledWith(expected);
+	expect(submitted).toHaveBeenCalledWith(expected, { setServerErrors: expect.any(Function) });
 	expect(contexts.find((context) => context.trigger === 'form_submit')?.formData).toEqual(expected);
 });

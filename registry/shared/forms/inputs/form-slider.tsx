@@ -1,5 +1,5 @@
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks';
 import { Slider } from '@/components/ui/slider';
 import type { SliderFieldProps } from './form-slider.types';
 
@@ -9,8 +9,7 @@ export function FormSlider({
 	onFocus: propsOnFocus,
 	...config
 }: SliderFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
 
 	const sliderValue = typeof value === 'number' ? [value] : [config.min || 0];
 
@@ -19,7 +18,7 @@ export function FormSlider({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}

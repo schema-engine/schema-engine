@@ -181,7 +181,12 @@ describe('FormProvider validation', () => {
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'a@b.co' } });
 		fireEvent.click(screen.getByText('Submit'));
 
-		await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ email: 'a@b.co', campaign: 'spring' }));
+		await waitFor(() =>
+			expect(onSubmit).toHaveBeenCalledWith(
+				{ email: 'a@b.co', campaign: 'spring' },
+				{ setServerErrors: expect.any(Function) },
+			),
+		);
 	});
 
 	it('counts a submit that failed validation and one that passed, and is submitting only while one runs', async () => {
@@ -273,7 +278,10 @@ describe('FormProvider validation', () => {
 		fireEvent.click(screen.getByText('Submit'));
 
 		await waitFor(() => {
-			expect(onSubmit).toHaveBeenCalledWith({ email: 'reader@example.com' });
+			expect(onSubmit).toHaveBeenCalledWith(
+				{ email: 'reader@example.com' },
+				{ setServerErrors: expect.any(Function) },
+			);
 		});
 		expect(screen.getByTestId('email-error')).toHaveTextContent('');
 	});
@@ -316,7 +324,30 @@ describe('FormProvider validation', () => {
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'b@example.com' } });
 
 		await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-		expect(onSubmit).toHaveBeenCalledWith({ email: 'b@example.com' });
+		expect(onSubmit).toHaveBeenCalledWith({ email: 'b@example.com' }, { setServerErrors: expect.any(Function) });
 		slow.mockRestore();
+	});
+});
+
+describe('the answer of the server', () => {
+	it('is shown on the field it names when onSubmit hands it back with setServerErrors', async () => {
+		renderProvider(
+			config,
+			<>
+				<ValidationProbe name="email" />
+				<Status />
+				<button type="submit">Submit</button>
+			</>,
+			{
+				defaultValues: { email: 'taken@example.com' },
+				onSubmit: (_values, { setServerErrors }) =>
+					setServerErrors({ email: { type: 'taken', message: 'Already registered' } }),
+			},
+		);
+
+		fireEvent.click(screen.getByText('Submit'));
+
+		await waitFor(() => expect(screen.getByTestId('email-error')).toHaveTextContent('Already registered'));
+		expect(screen.getByTestId('status')).toHaveTextContent('false:1');
 	});
 });

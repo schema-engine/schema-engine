@@ -32,7 +32,7 @@ export interface FormElementProps {
  *
  * @remarks
  * Constraints are evaluated once here, with the field type's default rules in the
- * base required flag, and handed to the element's `useControlledFormElement`
+ * base required flag, and handed to the element's `useFormField`
  * through {@link FieldConstraintContext}. The element's disabled state and the
  * `require` constraints around it reach the elements inside it through
  * {@link InheritedFieldStateContext}.

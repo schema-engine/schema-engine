@@ -1,12 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import {
-	useChildGridProps,
-	useControlledFormElement,
-	useFieldArray,
-	useFormContext,
-} from '@schema-engine/forms-react/hooks';
+import { useChildGridProps, useFormField, useFieldArray, useFormContext } from '@schema-engine/forms-react/hooks';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { arrayItemScope, createArrayRowDefault, usesScalarArrayItem } from '@schema-engine/forms';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
@@ -145,7 +140,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 	const { fields, append, remove } = useFieldArray(config.name);
 	const { getValues } = useFormContext();
 
-	const { fieldState, containerStyles } = useControlledFormElement(config as unknown as ElementConfig);
+	const { error, containerStyles } = useFormField(config as unknown as ElementConfig);
 
 	const scalar = usesScalarArrayItem(config, config.name, config.elements, getValues());
 
@@ -172,7 +167,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
 			description={config.description}
-			error={fieldState.error?.message}
+			error={error}
 			style={containerStyles}
 		>
 			<div className="space-y-4">

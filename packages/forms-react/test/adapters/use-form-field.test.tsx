@@ -6,8 +6,7 @@ import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { RequiredRuleSchema } from '@schema-engine/forms/schemas/validation';
 import { selectError } from '@schema-engine/forms/state-container';
-import { useFormContext } from '@/hooks/form-state';
-import { useControlledFormElement } from '@/hooks/use-field';
+import { FORM_ROOT, useFormContext } from '@/hooks/form-state';
 import { useFormField } from '@/hooks/form-state/use-form-field';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
@@ -26,7 +25,7 @@ function BoundInput({
 	onRender?: () => void;
 }) {
 	onRender?.();
-	const { fieldProps, value, onChange, onBlur } = useControlledFormElement({
+	const { fieldProps, value, onChange, onBlur } = useFormField({
 		name,
 		id,
 		$type: 'input',
@@ -218,33 +217,169 @@ describe('the text of an issue', () => {
 		expect(screen.getByTestId('note-error')).toHaveTextContent('Note is required');
 	});
 
-	test('shows what a native input reported with its value', async () => {
-		const container = mount((issue) => `native ${issue.type}`);
+	test('hands the engine error, with its type and params, as the raw issue', async () => {
+		const container = mount();
 
-		function NativeInput() {
-			const { onChange } = useFormField({ $type: 'input', name: 'code', id: 'code' });
-			return (
-				<button onClick={() => onChange('abcdefgh', { native: { type: 'patternMismatch' } })}>report</button>
-			);
+		await act(() => container.validate(['code']));
+
+		function RawIssue() {
+			const { issue } = useFormField('code');
+			return <output data-testid="raw">{`${issue?.type}:${issue?.all.length}`}</output>;
 		}
 		render(
 			<ContainerHarness container={container}>
-				<NativeInput />
+				<RawIssue />
 			</ContainerHarness>,
 		);
-		await act(async () => screen.getByRole('button', { name: 'report' }).click());
 
-		expect(selectError(container.getSnapshot(), 'code')).toMatchObject({
-			type: 'patternMismatch',
-			source: 'native',
-		});
+		expect(screen.getByTestId('raw')).toHaveTextContent('minLength:1');
 	});
 });
 
-describe('useControlledFormElement under FormRenderer', () => {
+describe('useFormField with a path', () => {
+	const elements = [
+		{ $type: 'input', name: 'code', rules: [{ type: 'minLength', value: 8 }] },
+		{ $type: 'input', name: 'note' },
+	];
+
+	function PathProbe({ path }: { path: string }) {
+		const field = useFormField(path);
+		return (
+			<>
+				<output data-testid="state">
+					{JSON.stringify({
+						name: field.name,
+						value: field.value,
+						error: field.error,
+						invalid: field.invalid,
+						isTouched: field.isTouched,
+						isDirty: field.isDirty,
+						isValidating: field.isValidating,
+					})}
+				</output>
+				<button onClick={() => field.onChange('edited')}>write</button>
+				<button onClick={field.onBlur}>blur</button>
+			</>
+		);
+	}
+
+	function mount(
+		path: string,
+		formatIssue?: Parameters<typeof ContainerHarness>[0]['formatIssue'],
+		defaults: Record<string, unknown> = { code: 'abc', note: '' },
+	) {
+		const container = createTestContainer({
+			elements,
+			defaults,
+			validationMode: 'onSubmit',
+		});
+		render(
+			<ContainerHarness container={container} formatIssue={formatIssue}>
+				<PathProbe path={path} />
+			</ContainerHarness>,
+		);
+		const state = () => JSON.parse(screen.getByTestId('state').textContent ?? '{}');
+		return { container, state };
+	}
+
+	test('reports the value and the flags of the field, and writes and blurs it', async () => {
+		const { container, state } = mount('note');
+		expect(state()).toMatchObject({ name: 'note', value: '', invalid: false, isTouched: false, isDirty: false });
+
+		await act(async () => screen.getByRole('button', { name: 'write' }).click());
+		await act(async () => screen.getByRole('button', { name: 'blur' }).click());
+
+		expect(container.getValue('note')).toBe('edited');
+		expect(state()).toMatchObject({ value: 'edited', isTouched: true, isDirty: true });
+	});
+
+	test('formats the error of the form itself at FORM_ROOT', async () => {
+		const { container, state } = mount(FORM_ROOT, (issue) => `said ${issue.type}`, {
+			code: 'abcdefghij',
+			note: '',
+		});
+		expect(state()).toMatchObject({ invalid: false });
+
+		const submitted = await container.submit();
+		expect(submitted.outcome).toBe('passed');
+		if (submitted.outcome !== 'passed') return;
+		await act(async () => submitted.setServerErrors({ [FORM_ROOT]: { type: 'down' } }));
+
+		expect(state()).toMatchObject({ name: FORM_ROOT, invalid: true, error: 'said down' });
+	});
+
+	test('returns the state of the path and none of the parts derived from a config', () => {
+		function Keys() {
+			return <output data-testid="keys">{Object.keys(useFormField('note')).sort().join(',')}</output>;
+		}
+		render(
+			<ContainerHarness container={createTestContainer({ defaults: { note: '' } })}>
+				<Keys />
+			</ContainerHarness>,
+		);
+
+		expect(screen.getByTestId('keys')).toHaveTextContent(
+			'invalid,isDirty,isTouched,isValidating,issue,name,onBlur,onChange,ref,value',
+		);
+	});
+});
+
+describe('useFormField with a config', () => {
+	function Widget() {
+		const field = useFormField({ $type: 'input', name: 'email', id: 'email-id', rules: [{ type: 'required' }] });
+		return (
+			<>
+				<input data-testid="control" {...field.fieldProps} />
+				<label data-testid="label" {...field.labelProps} />
+				{field.errorProps ? <p data-testid="alert" {...field.errorProps} /> : null}
+			</>
+		);
+	}
+
+	test('wires the control, label and error to the id of the element', async () => {
+		const container = createTestContainer({
+			elements: [{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Required' }] }],
+			defaults: { email: '' },
+		});
+		render(
+			<ContainerHarness container={container}>
+				<Widget />
+			</ContainerHarness>,
+		);
+		expect(screen.getByTestId('control')).toHaveAttribute('id', 'email-id');
+		expect(screen.getByTestId('label')).toHaveAttribute('for', 'email-id');
+		expect(screen.queryByTestId('alert')).toBeNull();
+
+		await act(() => container.validate());
+
+		expect(screen.getByTestId('control')).toHaveAttribute('aria-invalid', 'true');
+		expect(screen.getByTestId('control')).toHaveAttribute('aria-describedby', 'email-id-error');
+		expect(screen.getByTestId('alert')).toHaveAttribute('id', 'email-id-error');
+		expect(screen.getByTestId('alert')).toHaveAttribute('role', 'alert');
+	});
+
+	test('throws for a config with no name', () => {
+		const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		function Nameless() {
+			useFormField({ $type: 'input', name: '', id: 'x' });
+			return null;
+		}
+
+		expect(() =>
+			render(
+				<ContainerHarness container={createTestContainer({ defaults: {} })}>
+					<Nameless />
+				</ContainerHarness>,
+			),
+		).toThrow('missing required "name"');
+		errors.mockRestore();
+	});
+});
+
+describe('useFormField under FormRenderer', () => {
 	function ConfiguredInput({ onRender, ...config }: ElementConfig & { onRender?: (name: string) => void }) {
 		onRender?.(config.name ?? '');
-		const { fieldProps, value, onChange } = useControlledFormElement(config);
+		const { fieldProps, value, onChange } = useFormField(config);
 		return (
 			<input
 				data-testid={config.id}

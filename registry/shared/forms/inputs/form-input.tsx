@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
+import { useFormField, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
 import type { InputFieldProps } from './form-input.types';
 
 export function FormInput({
@@ -9,8 +9,7 @@ export function FormInput({
 	onFocus: propsOnFocus,
 	...config
 }: InputFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config);
 
 	const { inputType, autoComplete, autoFocus, inputMode, spellCheck, placeholder } = config;
 
@@ -19,7 +18,7 @@ export function FormInput({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}

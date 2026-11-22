@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { useEffect } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { selectError, type FieldArrayValue, type FormStateContainer } from '@schema-engine/forms/state-container';
-import { useFieldArray, useFormError, useFormField } from '@/hooks/form-state';
+import { useFieldArray, useFormField } from '@/hooks/form-state';
 import { markNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
@@ -21,7 +21,7 @@ const contacts = markNormalizedElementConfig(
 );
 
 function Row({ path }: { path: string }) {
-	const { value, error, onChange, ref } = useFormField({ $type: 'input', name: path, id: path });
+	const { value, error, onChange, ref } = useFormField(path);
 	return (
 		<>
 			<input
@@ -40,7 +40,7 @@ function mount(defaults: Record<string, unknown>, elements: object[] = [], name 
 	const container = createTestContainer({ defaults, elements });
 	function Rows() {
 		const array = useFieldArray(name);
-		const arrayError = useFormError(name);
+		const { error: arrayError } = useFormField(name);
 		useEffect(() => {
 			handle.array = array;
 		});

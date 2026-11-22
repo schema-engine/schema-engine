@@ -5,13 +5,6 @@ export * from '@/hooks/use-form-context';
 export * from '@/hooks/use-debounce';
 export * from '@/hooks/use-mobile';
 export {
-	useSubmissionState,
-	type SubmissionState,
-	type SubmissionStatus,
-	type SubmissionError,
-	type SubmissionErrorType,
-} from '@/hooks/use-submission-state';
-export {
 	useViewContext,
 	useOptionalViewContext,
 	useActiveStep,

@@ -4,20 +4,21 @@ import type {
 	FormStateContainer,
 	FormStateIssue,
 	FormStateSnapshot,
+	FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
 import type { FieldRegistry } from './field-registry';
-import type { SubmissionStatusStore } from './submission-status';
+import type { SubmissionStore } from './submission-store';
 
 /**
  * What a form instance provides to the hooks under it.
  *
- * @remarks The container is the only form state. The rest is what React adds around it: the issue text, the controls to focus and the submission status the container does not own.
+ * @remarks The container is the only form state. The rest is what React adds around it: the issue text, the controls to focus and the submission state the container does not own.
  */
 export interface FormStateContextValue {
 	readonly container: FormStateContainer;
 	readonly formatIssue: FormIssueFormatter | undefined;
 	readonly fields: FieldRegistry;
-	readonly status: SubmissionStatusStore;
+	readonly submission: SubmissionStore;
 }
 
 export const FormStateContext = createContext<FormStateContextValue | null>(null);
@@ -50,12 +51,12 @@ export function useContainerSelector<T>(selector: (snapshot: FormStateSnapshot) 
 }
 
 /**
- * The text of an issue: what the host's formatter says, else the issue's own `message`, else nothing.
+ * The text of an issue: what the form's formatter says, else the issue's own `message`, else nothing.
  *
  * @remarks A formatter that returns an empty text says nothing worth showing. The rule type is never shown.
  */
 export function formatIssueText(
-	issue: FormStateIssue,
+	issue: FormStateIssue | FormSubmissionIssue,
 	path: string,
 	formatIssue: FormIssueFormatter | undefined,
 ): string | undefined {

@@ -11,7 +11,7 @@ export interface FieldConstraints {
  * Constraint result `FormElement` evaluated for the field it renders.
  *
  * @remarks
- * `useControlledFormElement` reads `isRequired` from here instead of watching
+ * `useFormField` reads the constraints' `isRequired` from here instead of watching
  * the same constraint paths again. It is keyed by field path, so a control a
  * component binds to another name still evaluates its own constraints.
  */

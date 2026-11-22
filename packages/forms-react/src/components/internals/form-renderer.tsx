@@ -175,7 +175,7 @@ export function FormRenderer<
 	}
 
 	return (
-		<FormEngineProvider engine={resolvedEngine} formatIssue={inheritedEngine?.formatIssue}>
+		<FormEngineProvider engine={resolvedEngine}>
 			<FormRendererInner {...innerProps} />
 		</FormEngineProvider>
 	);

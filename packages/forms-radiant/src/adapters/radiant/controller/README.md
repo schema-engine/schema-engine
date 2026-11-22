@@ -119,7 +119,7 @@ per-control notification behavior.
 
 ## Migration from the disconnected hooks
 
-The old `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`,
+The old `useFormContext`, `useFormField`, `useWatch`,
 `useFieldArray`, and `getActiveFormStore` exports are removed. Create a scoped
 controller instead. Replace snapshot hook calls with `getValue` / `getValues`,
 and use `watchField` / `watchForm` when an actual subscription is needed. Apply

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
-import { useFieldHost, useSubmissionState, type SubmissionError } from '@schema-engine/forms-react/hooks';
+import { FORM_ROOT, useFieldHost, useFormContext } from '@schema-engine/forms-react/hooks';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { SubmissionAlertProps } from './form-submission-alert.types';
 
@@ -23,12 +23,13 @@ export function FormSubmissionAlert({
 	grid,
 	style,
 }: SubmissionAlertProps) {
-	const { submissionState, clearSubmission } = useSubmissionState();
+	const { formState, formatIssue, clearSubmission } = useFormContext();
+	const { status, failures } = formState.submission;
 	const host = useFieldHost(grid, style);
 	useEffect(() => {
 		let timer: ReturnType<typeof setTimeout>;
 
-		if (autoDismiss > 0 && submissionState.status === 'success') {
+		if (autoDismiss > 0 && status === 'success') {
 			timer = setTimeout(() => {
 				clearSubmission();
 			}, autoDismiss);
@@ -39,13 +40,13 @@ export function FormSubmissionAlert({
 				clearTimeout(timer);
 			}
 		};
-	}, [submissionState.status, autoDismiss, clearSubmission]);
+	}, [status, autoDismiss, clearSubmission]);
 
-	if (!showOn.includes(submissionState.status)) {
+	if (!showOn.includes(status)) {
 		return null;
 	}
 
-	switch (submissionState.status) {
+	switch (status) {
 		case 'pending':
 			return (
 				<Alert {...host} variant="default" className={`${host.className} grid-cols-[1rem_1fr] gap-x-3`}>
@@ -64,7 +65,7 @@ export function FormSubmissionAlert({
 					className={`${host.className} border-emerald-500/50 text-emerald-700`}
 				>
 					<CheckCircle2 className="size-4" />
-					<AlertTitle>{submissionState.successMessage || successMessage}</AlertTitle>
+					<AlertTitle>{successMessage}</AlertTitle>
 				</Alert>
 			);
 
@@ -74,11 +75,11 @@ export function FormSubmissionAlert({
 					<XCircle className="size-4" />
 					<AlertTitle>Submission Error</AlertTitle>
 					<AlertDescription>
-						{submissionState.errors.length > 0 ? (
+						{failures.length > 0 ? (
 							<ul>
-								{submissionState.errors.map((error: SubmissionError, index: number) => (
-									<li key={`${error.type}-${index}`}>
-										{('message' in error ? error.message : undefined) || errorMessage}
+								{failures.map((failure, index) => (
+									<li key={`${failure.type}-${index}`}>
+										{formatIssue(failure, { path: FORM_ROOT }) || errorMessage}
 									</li>
 								))}
 							</ul>

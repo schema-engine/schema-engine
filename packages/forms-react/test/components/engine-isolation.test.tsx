@@ -10,7 +10,7 @@ import {
 	type ValidationRegistration,
 } from '@schema-engine/forms/schemas/validation';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { useControlledFormElement } from '@/hooks/use-field';
+import { useFormField } from '@/hooks/form-state';
 
 const isolatedInputSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('isolated-input'),
@@ -35,9 +35,7 @@ function createIsolationEngine(message: string, minimum: number) {
 		metadata: { name: 'Isolated input', category: 'input' },
 		validations: [createValidation(message, minimum)],
 		render: (config: IsolatedInputConfig) => {
-			const { value, error, onChange, onBlur, fieldProps } = useControlledFormElement(
-				config as unknown as ElementConfig,
-			);
+			const { value, error, onChange, onBlur, fieldProps } = useFormField(config as unknown as ElementConfig);
 
 			return (
 				<label>

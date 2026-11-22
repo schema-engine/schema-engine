@@ -8,10 +8,9 @@ import { collectStepActions, type FormConfigView } from '@schema-engine/forms';
 import { getObjectIdentity } from '@/lib/object-identity';
 import { FormStateContext, type FormStateContextValue } from '@/hooks/form-state/context';
 import { createFieldRegistry } from '@/hooks/form-state/field-registry';
-import { createSubmissionStatusStore } from '@/hooks/form-state/submission-status';
+import { createSubmissionStore } from '@/hooks/form-state/submission-store';
 import type { FormProviderProps } from '@/hooks/form-state/types';
 import { useFormEngine } from '@/hooks/use-form-context';
-import { useSubmissionStateManager } from '@/hooks/use-submission-state';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
 import { FormStepStateContext } from '@/components/form-step-state-context';
 import { useFormActionDispatchers } from './form-runtime/use-form-action-dispatchers';
@@ -31,31 +30,27 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 	onActionResults,
 	formatIssue,
 }: FormProviderProps<TOutputs>) {
-	const { engine, formatIssue: providerFormatIssue } = useFormEngine();
+	const { engine } = useFormEngine();
 	const runtimeConfig: FormConfigView = config;
 	const actionExecutor = useMemo(() => new ActionDispatcher(engine), [engine]);
-	const submission = useSubmissionStateManager();
 
-	const [{ container, fields, status }] = useState(() => {
+	const [{ container, fields, submission }] = useState(() => {
 		const elements = flattenStepElements(runtimeConfig.steps);
 		return {
 			container: createFormStateContainer({
-				elements,
+				config,
 				registry: engine.getValidationRegistry(),
 				defaults: collectInitialValues(elements, defaultValues),
-				validationMode: config.validationMode,
-				reValidateMode: config.reValidateMode,
-				payload: config.payload,
 			}),
 			fields: createFieldRegistry(),
-			status: createSubmissionStatusStore(),
+			submission: createSubmissionStore(),
 		};
 	});
 
-	const resolvedFormatIssue = formatIssue ?? providerFormatIssue ?? engine.getIssueFormatter();
+	const resolvedFormatIssue = formatIssue ?? engine.getIssueFormatter();
 	const formState = useMemo<FormStateContextValue>(
-		() => ({ container, formatIssue: resolvedFormatIssue, fields, status }),
-		[container, resolvedFormatIssue, fields, status],
+		() => ({ container, formatIssue: resolvedFormatIssue, fields, submission }),
+		[container, resolvedFormatIssue, fields, submission],
 	);
 
 	const currentStepRef = useRef(0);
@@ -63,7 +58,7 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 
 	const actionDispatchers = useFormActionDispatchers({
 		container,
-		status,
+		submission,
 		fetch: engine.fetch,
 		config: runtimeConfig,
 		actionExecutor,
@@ -90,12 +85,12 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
 
-	const { submitEvent, ...submissionContext } = useFormSubmitHandler({
+	const { submitEvent, executeAction } = useFormSubmitHandler({
 		container,
-		status,
+		submission,
+		fetch: engine.fetch,
 		fields,
 		config,
-		submission,
 		buildActionContext: actionDispatchers.buildActionContext,
 		hasMatching: actionDispatchers.hasMatching,
 		getCurrentStep,
@@ -106,7 +101,6 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 	});
 
 	const { stepStates, currentStep, totalSteps, goToStep, goToNext, goToPrevious, navigation } = multiStep;
-	const { executeAction, submissionState, clearSubmission } = submissionContext;
 	const { buildActionContext, hasMatching, dispatchActions, dispatchTrigger, dispatchTriggerSync } =
 		actionDispatchers;
 	const formInstanceContextValue: FormInstanceContextValue = useMemo(
@@ -123,8 +117,6 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 			dispatchTrigger,
 			dispatchTriggerSync,
 			executeAction,
-			submissionState,
-			clearSubmission,
 		}),
 		[
 			currentStep,
@@ -139,8 +131,6 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 			dispatchTrigger,
 			dispatchTriggerSync,
 			executeAction,
-			submissionState,
-			clearSubmission,
 		],
 	);
 
@@ -174,8 +164,8 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
  * with its defaults and step state, whichever component renders the provider. `defaultValues` are read when the
  * instance starts. The hooks under the provider read the container with `useSyncExternalStore`.
  *
- * Submission state (`isSubmitting`, `submitCount`) is the provider's own until the form runtime of #336 owns the
- * lifecycle.
+ * The submission state (`status`, `failures`, `submitCount`) is the provider's own until the form runtime of
+ * #336 owns the lifecycle. The one formatter of the form is `formatIssue`, else the engine's.
  */
 export function FormProvider<TOutputs extends EngineOutputMaps = EngineOutputMaps>(props: FormProviderProps<TOutputs>) {
 	const { engine } = useFormEngine();

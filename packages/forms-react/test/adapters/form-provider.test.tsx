@@ -42,6 +42,7 @@ vi.mock('@schema-engine/forms/actions', async () => {
 });
 
 vi.mock('@/hooks/use-form-context', () => ({
+	useOptionalFormEngine: () => null,
 	useFormEngine: () => ({
 		engine: {
 			getValidationRegistry: () => createDefaultValidationRegistry(),
