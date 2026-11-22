@@ -61,12 +61,13 @@ form issues.
 ## Action context form state
 
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass
-`touched` and `submitCount`, both required, key `errors` and `touched` by dotted path
+`isValid`, `touched` and `submitCount`, all required, key `errors` and `touched` by dotted path
 (`{ 'address.street': … }`). A React Hook Form
 caller flattens `touchedFields` to paths first.
 
-The form state has no `isValid`: the context's `isValid` is true when `errors` holds no entry,
-in every renderer, and `form.checkValidity()` validates the current values without
+The form state carries `isValid`, the container's `snapshot.isValid`: true when no error is recorded for a
+path that takes part, in every renderer, and the context passes it on as it is. A renderer without a container
+derives it from the errors it has. `form.checkValidity()` validates the current values without
 recording errors (`checkFormValidity`). It skips fields a `show` or `hide` constraint hides, and
 the fields inside a hidden container; a disabled field is still checked, as in a submission.
 

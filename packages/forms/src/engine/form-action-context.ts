@@ -13,11 +13,13 @@ import { validateFormValues } from './value-validation';
  * can both fail, and `touched` is flat the same way. A renderer that keeps them in another shape
  * converts them before building the context.
  *
- * There is no `isValid` here: the context's `isValid` is true when `errors` records
- * no error, in every renderer. It says nothing about fields no validation has
- * reached; `context.form.checkValidity()` answers for the current values.
+ * `isValid` is the snapshot's: true when no error is recorded, in every renderer. It says
+ * nothing about fields no validation has reached; `context.form.checkValidity()` answers for
+ * the current values.
  */
 export interface FormActionContextFormState {
+	/** Whether no error is recorded for a path that takes part, as `snapshot.isValid` says. */
+	isValid: boolean;
 	/** Errors by dotted field path, as `validateFormValues` returns them. */
 	errors: Readonly<Record<string, FormStateError>>;
 	/** Touched fields by dotted path, `true` at each field the user has touched. */
@@ -82,7 +84,7 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 		formData: values,
 		currentStep,
 		totalSteps: config.steps.length,
-		isValid: Object.keys(formState.errors).length === 0,
+		isValid: formState.isValid,
 		errors: formState.errors,
 		metadata: {
 			stepStartTime: getStepStartTime(form, currentStep, mountedAt, now),

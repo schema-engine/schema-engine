@@ -20,7 +20,7 @@ describe('buildFormActionContext', () => {
 		const input = {
 			config: { id: 'contact', steps: [{}, {}] },
 			values: { email: 'person@example.com' },
-			formState: { errors: {}, touched: { email: true }, submitCount: 2 },
+			formState: { isValid: true, errors: {}, touched: { email: true }, submitCount: 2 },
 			currentStep: 0,
 			mountedAt: 900,
 			form,
@@ -42,6 +42,7 @@ describe('buildFormActionContext', () => {
 			config: { id: 'contact', steps: [{}] },
 			values: {},
 			formState: {
+				isValid: true,
 				errors: {},
 				touched: {
 					'address.street': true,
@@ -59,7 +60,7 @@ describe('buildFormActionContext', () => {
 		expect(context.metadata.userInteractions).toBe(4);
 	});
 
-	test('reports isValid from the recorded errors', () => {
+	test('reports the isValid of the form state it is given, never one recomputed from the errors', () => {
 		const input = {
 			config: { id: 'contact', steps: [{}] },
 			values: {},
@@ -68,10 +69,14 @@ describe('buildFormActionContext', () => {
 			form,
 		};
 
-		const pristine = buildFormActionContext({ ...input, formState: { errors: {}, touched: {}, submitCount: 0 } });
+		const pristine = buildFormActionContext({
+			...input,
+			formState: { isValid: true, errors: {}, touched: {}, submitCount: 0 },
+		});
 		const failed = buildFormActionContext({
 			...input,
 			formState: {
+				isValid: false,
 				errors: {
 					email: {
 						type: 'validation',
@@ -88,6 +93,7 @@ describe('buildFormActionContext', () => {
 		const nested = buildFormActionContext({
 			...input,
 			formState: {
+				isValid: false,
 				errors: {
 					'contacts.1.email': {
 						type: 'validation',
@@ -103,6 +109,7 @@ describe('buildFormActionContext', () => {
 		const formLevel = buildFormActionContext({
 			...input,
 			formState: {
+				isValid: false,
 				errors: {
 					'': {
 						type: 'server',
@@ -126,5 +133,23 @@ describe('buildFormActionContext', () => {
 			message: 'Invalid',
 			all: [{ type: 'validation', source: 'validation', message: 'Invalid' }],
 		});
+	});
+
+	test('takes isValid from the form state even when its errors say otherwise', () => {
+		const error = {
+			type: 'warning-only',
+			source: 'validation' as const,
+			all: [{ type: 'warning-only', source: 'validation' as const }],
+		};
+		const context = buildFormActionContext({
+			config: { id: 'contact', steps: [{}] },
+			values: {},
+			currentStep: 0,
+			mountedAt: 1_900,
+			form,
+			formState: { isValid: true, errors: { email: error }, touched: {}, submitCount: 0 },
+		});
+
+		expect(context.isValid).toBe(true);
 	});
 });

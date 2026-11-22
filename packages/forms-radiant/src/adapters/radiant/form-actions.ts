@@ -184,11 +184,13 @@ export class FormActions {
 	private buildContext(): BuilderActionBaseContext {
 		const { form, currentStep } = this.options;
 		const { errors, touched } = form.formState;
+		const recorded = recordedErrors(errors);
 		return buildFormActionContext({
 			config: this.options.config(),
 			values: form.getValues(),
 			formState: {
-				errors: recordedErrors(errors),
+				isValid: Object.keys(recorded).length === 0,
+				errors: recorded,
 				touched,
 				submitCount: this.submitAttempts,
 			},

@@ -90,11 +90,13 @@ export function useFormActionDispatchers({
 
 	const buildActionContext = useCallback((): BuilderActionBaseContext => {
 		const { errors, touchedFields, submitCount } = liveState.current;
+		const recorded = fromFieldErrors(errors, form.getValues());
 		return buildFormActionContext({
 			config,
 			values: form.getValues(),
 			formState: {
-				errors: fromFieldErrors(errors, form.getValues()),
+				isValid: Object.keys(recorded).length === 0,
+				errors: recorded,
 				touched: fromTouchedFields(touchedFields),
 				submitCount,
 			},
