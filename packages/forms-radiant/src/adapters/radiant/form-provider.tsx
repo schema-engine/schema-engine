@@ -7,6 +7,8 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 	config,
 	defaultValues,
 	onSubmit,
+	action,
+	method,
 	onChange,
 	onAction,
 	children,
@@ -21,6 +23,8 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 			defaultValues={defaultValues}
 			onChange={onChange as FormProviderProps['onChange']}
 			onAction={onAction as FormProviderProps['onAction']}
+			action={action}
+			method={method}
 			onSubmit={onSubmit as FormProviderProps['onSubmit']}
 		>
 			{children}

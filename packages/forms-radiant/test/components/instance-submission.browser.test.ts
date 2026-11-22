@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { userEvent } from 'vitest/browser';
 import { FormController } from '@/adapters/radiant/controller';
@@ -356,36 +356,84 @@ test('onSubmit receives the values that passed, the server-errors setter and the
 	expect(container.getSnapshot().errors[FORM_ROOT]?.message).toBe('Try later');
 });
 
-test('a native post carries the current CSRF token in the hidden field the engine policy names', async () => {
-	let token = 'first';
+describe('a native post and the CSRF field of the engine policy', () => {
+	let token: string | undefined = 'first';
 	const csrfEngine = createRadiantFormEngine({
 		elements: schemaFormRegistrations,
 		csrf: { token: () => token, header: 'x-csrf', field: '_csrf' },
 	});
-	const host = document.createElement('div');
-	document.body.append(host);
-	const config = csrfEngine.validateForm({
-		id: 'post',
-		steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'input', id: 'name', name: 'name' }] }],
+
+	async function mountPost(native: { action?: string; method?: string }) {
+		const host = document.createElement('div');
+		document.body.append(host);
+		const config = csrfEngine.validateForm({
+			id: 'post',
+			steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'input', id: 'name', name: 'name' }] }],
+		});
+		const render = (next: typeof native) =>
+			createRoot(host).render(FormRenderer({ config, engine: csrfEngine, ...next }));
+		render(native);
+		const ruiForm = host.querySelector('rui-form')!;
+		await expect.poll(() => new FormController(ruiForm).container).toBeTruthy();
+		const nativeForm = host.querySelector('form')!;
+		const post = vi.spyOn(nativeForm, 'submit').mockImplementation(() => {});
+		const posted = async () => {
+			const before = post.mock.calls.length;
+			nativeForm.requestSubmit();
+			await expect.poll(() => post.mock.calls.length).toBe(before + 1);
+		};
+		const field = () => nativeForm.querySelectorAll<HTMLInputElement>('input[type="hidden"][name="_csrf"]');
+		return { ruiForm, nativeForm, posted, field };
+	}
+
+	beforeEach(() => {
+		token = 'first';
 	});
-	createRoot(host).render(FormRenderer({ config, engine: csrfEngine }));
-	const ruiForm = host.querySelector('rui-form')!;
-	await expect.poll(() => new FormController(ruiForm).container).toBeTruthy();
-	ruiForm.setAttribute('action', '/save');
-	ruiForm.setAttribute('method', 'post');
-	const nativeForm = host.querySelector('form')!;
-	const post = vi.spyOn(nativeForm, 'submit').mockImplementation(() => {});
-	const field = () => nativeForm.querySelector<HTMLInputElement>('input[type="hidden"][name="_csrf"]');
-	const posted = vi.fn();
-	ruiForm.addEventListener('se-action-submit-complete', posted);
 
-	nativeForm.requestSubmit();
-	await expect.poll(() => post.mock.calls.length).toBe(1);
-	expect(field()?.value).toBe('first');
+	test('a same-origin post gets the current token, once, and the inner form has the real action and method', async () => {
+		const { nativeForm, posted, field } = await mountPost({ action: '/save', method: 'post' });
+		expect(nativeForm.getAttribute('action')).toBe('/save');
+		expect(nativeForm.method).toBe('post');
 
-	token = 'second';
-	nativeForm.requestSubmit();
-	await expect.poll(() => post.mock.calls.length).toBe(2);
-	expect(nativeForm.querySelectorAll('input[name="_csrf"]')).toHaveLength(1);
-	expect(field()?.value).toBe('second');
+		await posted();
+		expect(field()).toHaveLength(1);
+		expect(field()[0]?.value).toBe('first');
+
+		token = 'second';
+		await posted();
+		expect(field()).toHaveLength(1);
+		expect(field()[0]?.value).toBe('second');
+	});
+
+	test('a cross-origin action gets no token', async () => {
+		const { nativeForm, posted, field } = await mountPost({
+			action: 'https://elsewhere.test/save',
+			method: 'post',
+		});
+		expect(nativeForm.getAttribute('action')).toBe('https://elsewhere.test/save');
+
+		await posted();
+		expect(field()).toHaveLength(0);
+	});
+
+	test('a GET form gets no token', async () => {
+		const { nativeForm, posted, field } = await mountPost({ action: '/search', method: 'get' });
+		expect(nativeForm.method).toBe('get');
+
+		await posted();
+		expect(field()).toHaveLength(0);
+	});
+
+	test('a token an earlier post left is removed when the next post must not carry it', async () => {
+		const { ruiForm, posted, field } = await mountPost({ action: '/save', method: 'post' });
+		await posted();
+		expect(field()).toHaveLength(1);
+
+		ruiForm.setAttribute('action', 'https://elsewhere.test/save');
+		await expect
+			.poll(() => ruiForm.querySelector('form')?.getAttribute('action'))
+			.toBe('https://elsewhere.test/save');
+		await posted();
+		expect(field()).toHaveLength(0);
+	});
 });

@@ -21,11 +21,16 @@ export function collectFormInitialValues(
 export function ConfiguredRuiForm({
 	config,
 	layoutThemeId,
+	action,
+	method,
 	children,
 }: {
 	config: FormConfigView;
 	/** The engine's layout theme id, which scopes its token rules to this form. */
 	layoutThemeId?: string;
+	/** Native destination, which Radiant UI copies onto the inner `<form>` and a post without `onSubmit` uses. */
+	action?: string;
+	method?: string;
 	children: JsxRenderable;
 }) {
 	return (
@@ -33,6 +38,8 @@ export function ConfiguredRuiForm({
 			class={config.className}
 			style={config.style}
 			data-se-theme={layoutThemeId}
+			action={action}
+			method={method}
 			{...getAppearanceAttributes(config.appearance)}
 		>
 			{children}

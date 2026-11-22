@@ -50,6 +50,8 @@ export function FormInstance({
 	engine,
 	defaultValues,
 	onSubmit,
+	action,
+	method,
 	onChange,
 	onAction,
 	children,
@@ -58,6 +60,8 @@ export function FormInstance({
 	engine: CoreFormEngine;
 	defaultValues?: Record<string, unknown>;
 	onSubmit?: FormProviderProps['onSubmit'];
+	action?: string;
+	method?: string;
 	onChange?: (data: Record<string, unknown>) => void;
 	onAction?: FormProviderProps['onAction'];
 	children?: JsxRenderable;
@@ -74,7 +78,7 @@ export function FormInstance({
 			onAction={onAction}
 			hydration={hydration}
 		>
-			<ConfiguredRuiForm config={config} layoutThemeId={engine.getLayout().id}>
+			<ConfiguredRuiForm config={config} layoutThemeId={engine.getLayout().id} action={action} method={method}>
 				<RecipeRenderer
 					config={config}
 					engine={engine}

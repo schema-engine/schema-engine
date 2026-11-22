@@ -40,7 +40,8 @@ import { createAuthoredDisabledLookup } from '@/lib/authored-disabled';
 import { observeValues } from '@/lib/observe-values';
 import { formValuesContext, type FormValuesContextValue } from '@/contexts/constraint-context';
 import { logger } from '@/lib/logger';
-import { setHiddenField } from '@/lib/hidden-field';
+import { csrfFieldFor } from '@schema-engine/forms/csrf';
+import { syncCsrfField } from '@/lib/csrf-field';
 import type { FormProviderProps, FormSubmitContext } from '@/adapters/types';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
 
@@ -417,7 +418,8 @@ export class FormInstanceElement extends RadiantElement {
 	 * @remarks
 	 * With no `onSubmit`, a form with `action` or `method` submits natively after its actions have
 	 * completed and succeeded, so the navigation cannot cut off the success and complete actions; the engine's
-	 * CSRF token goes into the form first when its policy names a `field`. A rejected
+	 * CSRF token goes into the inner `<form>` first (`csrfFieldFor`: only a same-origin `post`), and a token left
+	 * by an earlier post is removed when this one must not carry it. A rejected
 	 * `onSubmit` completes the submission as unsuccessful, runs the error and complete actions and is logged,
 	 * not rethrown: the event is how the page learns of it.
 	 */
@@ -429,9 +431,8 @@ export class FormInstanceElement extends RadiantElement {
 		const announce = (type: string, detail?: unknown) =>
 			host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
 		const submitNatively = () => {
-			const csrf = engine.getCsrf();
-			const token = csrf?.token();
-			if (csrf?.field && token !== undefined) setHiddenField(host.querySelector('form'), csrf.field, token);
+			const form = host.querySelector('form');
+			if (form) syncCsrfField(form, csrfFieldFor(engine.getCsrf(), form));
 			context.submitNatively();
 		};
 		this.setSubmitting(true);

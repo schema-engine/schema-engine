@@ -16,6 +16,9 @@ export interface FormProviderProps<TFormData = Record<string, unknown>> {
 	config: FormConfig | NormalizedFormConfig;
 	defaultValues?: Partial<TFormData>;
 	children?: JsxRenderable;
+	/** Native destination of the form: with no `onSubmit` the form posts to `action` with `method` once its actions succeed. */
+	action?: string;
+	method?: string;
 	onSubmit?: (data: TFormData, context: FormSubmitContext) => void | Promise<void>;
 	onChange?: (data: Partial<TFormData>) => void;
 	onAction?: (
