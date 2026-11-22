@@ -50,7 +50,7 @@ export default defineConfig({
 					name: 'unit',
 					environment: 'node',
 					include: ['test/**/*.test.ts'],
-					exclude: ['test/adapters/action-context.test.ts'],
+					exclude: ['test/form-state/action-context.test.ts'],
 				},
 			},
 			{
@@ -62,7 +62,7 @@ export default defineConfig({
 					include: [
 						'test/**/*.test.tsx',
 						'test/**/*.browser.test.tsx',
-						'test/adapters/action-context.test.ts',
+						'test/form-state/action-context.test.ts',
 						'src/stories/**/*.test.{ts,tsx}',
 						'**/*.test-browser.{ts,tsx}',
 					],
