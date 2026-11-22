@@ -1,12 +1,6 @@
 import * as z from 'zod/mini';
 import type { FormConfigView } from '@/lib/normalized-form-config';
-import {
-	stepAfter,
-	stepBefore,
-	type FormStepState,
-	type StepNavigationMode,
-	type StepStates,
-} from '@/engine/step-machine';
+import { stepAfter, stepBefore, type FormStepState, type StepNavigationMode } from '@/engine/step-machine';
 import type { AnyRecipeRegistration } from '@/types/registration';
 import { readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './types';
@@ -188,23 +182,4 @@ export function buildViewModel({
 		navigation,
 		viewConfig,
 	};
-}
-
-export function buildViewSteps(
-	steps: ReadonlyArray<{ id: string; title?: string; description?: string }>,
-	currentStep: number,
-	stepStates: StepStates,
-): ViewStep[] {
-	return steps.map((step, index) => ({
-		id: step.id,
-		title: step.title,
-		description: step.description,
-		index,
-		total: steps.length,
-		isActive: index === currentStep,
-		isCompleted: stepStates.completed[index] ?? false,
-		isInvalid: !(stepStates.valid[index] ?? false),
-		isVisited: stepStates.visited[index] ?? false,
-		isSkipped: false,
-	}));
 }

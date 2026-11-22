@@ -16,16 +16,7 @@ export {
 	validateFieldValue,
 	validateFormValues,
 } from './engine';
-export {
-	createInitialStepStates,
-	createStepMachine,
-	createStepNavigator,
-	runSubmissionLifecycle,
-	createSubmissionGuard,
-	buildFormActionContext,
-	collectStepActions,
-	hasConfiguredActions,
-} from './engine';
+export { buildFormActionContext, collectStepActions, hasConfiguredActions } from './engine';
 export {
 	activeStepIds,
 	deriveStepStates,
@@ -35,24 +26,7 @@ export {
 	stepBefore,
 	stepsWithErrors,
 } from './engine';
-export type {
-	FormStepState,
-	StepNavigationMode,
-	StepProgress,
-	StepStates,
-	StepMachineState,
-	StepMachineAction,
-	StepMachineReducer,
-	StepNavigationAction,
-	StepActionTrigger,
-	StepNavigator,
-	StepNavigatorOptions,
-	SubmissionActionResult,
-	SubmissionLifecycleResult,
-	SubmissionFailure,
-	SubmissionGuard,
-	FormActionContextFormState,
-} from './engine';
+export type { FormStepState, StepNavigationMode, StepProgress, FormActionContextFormState } from './engine';
 export type {
 	EffectiveRulesInput,
 	Participation,
@@ -74,6 +48,7 @@ export type {
 } from './engine';
 export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
 export { createFormRuntime } from './runtime';
+export type { SubmissionActionResult } from './runtime/submission-lifecycle';
 export type {
 	CreateFormRuntimeOptions,
 	FormRuntime,

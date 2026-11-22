@@ -53,44 +53,12 @@ export interface SubmissionLifecycleResult {
 	failure?: SubmissionFailure;
 }
 
-/** Admits one submission at a time. */
-export interface SubmissionGuard {
-	readonly busy: boolean;
-	/**
-	 * Runs `task` unless a submission is running, and releases the guard on every way out.
-	 *
-	 * @remarks
-	 * Resolves `undefined` when the guard was held. The guard is taken synchronously, so a renderer
-	 * wraps validation and the lifecycle in one `run` to ignore a submit that arrives while the
-	 * first is still validating.
-	 */
-	run<T>(task: () => Promise<T>): Promise<T | undefined>;
-}
-
-export function createSubmissionGuard(): SubmissionGuard {
-	let busy = false;
-	return {
-		get busy() {
-			return busy;
-		},
-		async run(task) {
-			if (busy) return undefined;
-			busy = true;
-			try {
-				return await task();
-			} finally {
-				busy = false;
-			}
-		},
-	};
-}
-
 function isGroup<TAction extends FormActionConfig>(entry: ActionSequenceEntry<TAction>): entry is readonly TAction[] {
 	return Array.isArray(entry);
 }
 
 /**
- * Runs the shared form submission sequence and returns the submit action results.
+ * Runs the form submission sequence and returns the submit action results.
  *
  * @remarks
  * The sequence is `form_submit_start`, the submit actions, `onSubmit`, then `form_submit_success` or

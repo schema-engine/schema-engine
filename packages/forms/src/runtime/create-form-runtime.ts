@@ -17,7 +17,7 @@ import {
 	runSubmissionLifecycle,
 	type FormActionConfig,
 	type SubmissionActionResult,
-} from '@/engine/submission-lifecycle';
+} from '@/runtime/submission-lifecycle';
 import { collectStepFieldPaths, resolveParticipation } from '@/engine/value-validation';
 import { collectInitialValues, flattenStepElements } from '@/lib/field-scope';
 import { logger } from '@/lib/logger';

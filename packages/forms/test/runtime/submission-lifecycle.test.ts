@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import type { ActionDispatchInput, ActionExecutionResult } from '@schema-engine/actions';
-import { createSubmissionGuard, runSubmissionLifecycle } from '@/index';
+import { runSubmissionLifecycle } from '@/runtime/submission-lifecycle';
 import type { FormActionTrigger } from '@/actions';
 import type { BuilderActionBaseContext } from '@/types';
 
@@ -339,29 +339,5 @@ describe('runSubmissionLifecycle', () => {
 			expect(result.failure).toEqual({ phase: 'trigger', error: first });
 			expect(triggers.filter((trigger) => trigger === 'form_submit_complete')).toHaveLength(1);
 		});
-	});
-});
-
-describe('createSubmissionGuard', () => {
-	test('ignores a run while one is pending and admits the next after it settles', async () => {
-		const guard = createSubmissionGuard();
-		let finish!: () => void;
-		const first = guard.run(() => new Promise<string>((resolve) => (finish = () => resolve('first'))));
-
-		expect(guard.busy).toBe(true);
-		await expect(guard.run(async () => 'second')).resolves.toBeUndefined();
-		finish();
-		await expect(first).resolves.toBe('first');
-
-		expect(guard.busy).toBe(false);
-		await expect(guard.run(async () => 'third')).resolves.toBe('third');
-	});
-
-	test('releases when the task rejects', async () => {
-		const guard = createSubmissionGuard();
-
-		await expect(guard.run(() => Promise.reject(new Error('boom')))).rejects.toThrow('boom');
-
-		expect(guard.busy).toBe(false);
 	});
 });

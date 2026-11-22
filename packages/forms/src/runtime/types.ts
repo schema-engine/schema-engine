@@ -1,6 +1,6 @@
 import type { ActionSequenceEntry } from '@schema-engine/actions';
 import type { FormEngineRuntime } from '@/engine/form-engine';
-import type { FormActionConfig, SubmissionActionResult } from '@/engine/submission-lifecycle';
+import type { FormActionConfig, SubmissionActionResult } from '@/runtime/submission-lifecycle';
 import type { FormStepState, StepNavigationMode } from '@/engine/step-machine';
 import type { ValidationStep } from '@/engine/value-validation';
 import type { FormFetch } from '@/lib/form-fetch';

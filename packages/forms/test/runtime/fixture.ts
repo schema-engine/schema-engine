@@ -4,7 +4,7 @@ import { createFormEngine } from '@/engine/create-form-engine';
 import { createFormRuntime } from '@/runtime';
 import type { CreateFormRuntimeOptions } from '@/runtime';
 import { defineInput } from '@/types';
-import type { FormActionConfig } from '@/engine/submission-lifecycle';
+import type { FormActionConfig } from '@/runtime/submission-lifecycle';
 
 /** A step trigger or lifecycle trigger the probe action saw, with the step that was current. */
 export interface Seen {
