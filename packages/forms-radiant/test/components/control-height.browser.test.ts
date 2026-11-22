@@ -50,11 +50,10 @@ function mountIn(wrapperTheme?: Record<string, string>): ConformanceMount {
 		const root = createRoot(host);
 		root.render(FormRenderer({ config: engine.validateForm(config), engine }));
 		const form = new FormController(host.querySelector('rui-form')!);
-		await expect.poll(() => form.ready).toBe(true);
+		await expect.poll(() => form.container).toBeTruthy();
 		return {
 			host,
 			cleanup: () => {
-				form.disconnect();
 				root.unmount();
 				host.remove();
 			},
@@ -238,10 +237,9 @@ describe('a size hook set above the form', () => {
 		);
 		const nested = new FormController(wrapper.querySelector('rui-form')!);
 		try {
-			await expect.poll(() => nested.ready).toBe(true);
+			await expect.poll(() => nested.container).toBeTruthy();
 			expect(getByRole(wrapper, 'textbox', { name: 'Other' }).getBoundingClientRect().height).toBe(19);
 		} finally {
-			nested.disconnect();
 			root.unmount();
 			cleanup();
 		}
@@ -296,11 +294,10 @@ describe('a form nested in a grid item of another theme', () => {
 		root.render(FormRenderer({ config: engine.validateForm(compactForm), engine }));
 		const nested = new FormController(wrapper.querySelector('rui-form')!);
 		try {
-			await expect.poll(() => nested.ready).toBe(true);
+			await expect.poll(() => nested.container).toBeTruthy();
 			expect(getByRole(wrapper, 'textbox', { name: 'Other' }).getBoundingClientRect().height).toBe(40);
 			expect(getByRole(wrapper, 'button', { name: 'Go' }).getBoundingClientRect().height).toBe(40);
 		} finally {
-			nested.disconnect();
 			root.unmount();
 			cleanup();
 		}

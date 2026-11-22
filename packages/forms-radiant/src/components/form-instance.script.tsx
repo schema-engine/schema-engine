@@ -20,6 +20,8 @@ import {
 	type FormIssueFormatter,
 	type FormStateContainer,
 	type FormStateError,
+	type FormStateHydration,
+	type FormSubmitResult,
 } from '@schema-engine/forms/state-container';
 import { formInstanceContext, type FormInstanceContextValue, type StepStates } from '@/contexts/form-instance-context';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -38,8 +40,8 @@ import { createAuthoredDisabledLookup } from '@/lib/authored-disabled';
 import { observeValues } from '@/lib/observe-values';
 import { formValuesContext, type FormValuesContextValue } from '@/contexts/constraint-context';
 import { logger } from '@/lib/logger';
-import type { FormProviderProps } from '@/adapters/types';
-import { SeFormArray } from '@/elements/inputs/form-array-elements';
+import { setHiddenField } from '@/lib/hidden-field';
+import type { FormProviderProps, FormSubmitContext } from '@/adapters/types';
 import { FormActions, type SubmissionOutcome } from '@/adapters/radiant/form-actions';
 
 const MISSING_ENGINE_MESSAGE =
@@ -50,10 +52,11 @@ export interface FormInstanceProps {
 	config: NormalizedFormConfig;
 	defaultValues?: Record<string, unknown>;
 	engine?: CoreFormEngine;
-	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	onSubmit?: (data: Record<string, unknown>, context: FormSubmitContext) => void | Promise<void>;
 	onChange?: FormProviderProps['onChange'];
 	onAction?: FormProviderProps['onAction'];
-	formatIssue?: FormIssueFormatter;
+	/** The server's snapshot of the form (`toHydration(container.getServerSnapshot())`), which the first form of a server-rendered instance starts from. */
+	hydration?: FormStateHydration;
 }
 
 /** Detail of `se-action-submit-complete`; `error` is set when `onSubmit` rejected or the action lifecycle failed. */
@@ -102,12 +105,13 @@ export class FormInstanceElement extends RadiantElement {
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 	@state onChange?: FormProviderProps['onChange'];
 	@state onAction?: FormProviderProps['onAction'];
-	@state onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	@state onSubmit?: (data: Record<string, unknown>, context: FormSubmitContext) => void | Promise<void>;
 	/**
-	 * Turns an issue into text for this form, over the engine's `formatIssue`; with neither, an issue shows its own
-	 * `message` and otherwise nothing.
+	 * What the server's container held: its values and row ids.
+	 *
+	 * @remarks Used once, for the first form of an instance the server rendered, so the client keeps the rows the server rendered. A new config, engine or default values start a fresh form.
 	 */
-	@state formatIssue?: FormIssueFormatter;
+	@prop({ type: Object }) hydration?: FormStateHydration;
 	@state private submitting = false;
 	@state private attempts = 0;
 	private rendererFormatIssue?: FormIssueFormatter;
@@ -215,17 +219,12 @@ export class FormInstanceElement extends RadiantElement {
 		this.publish();
 	}
 
-	/** The formatter for this form: the instance's own, else its renderer's, else the engine's default. */
+	/** The formatter for this form: its renderer's override, else the engine's. */
 	private issueFormatter(): FormIssueFormatter | undefined {
-		return this.formatIssue ?? this.rendererFormatIssue ?? this.engine?.getIssueFormatter();
+		return this.rendererFormatIssue ?? this.engine?.getIssueFormatter();
 	}
 
 	/** Shows the text of the new formatter: the form presents issues through it. */
-	@onUpdated(['formatIssue'])
-	onFormatIssueUpdated(): void {
-		this.refreshIssueText();
-	}
-
 	private refreshIssueText(): void {
 		if (this.bound) this.attachForm(this.bound);
 		this.publish();
@@ -316,13 +315,10 @@ export class FormInstanceElement extends RadiantElement {
 			defaultValues,
 			submission: createSubmissionGuard(),
 			container: createFormStateContainer({
-				elements,
+				config: normalized.data,
 				registry: engine.getValidationRegistry(),
 				defaults: collectInitialValues(elements, defaultValues ?? {}),
-				rowIds: this.firstForm && this.isServerRendered ? this.serverRowIds() : undefined,
-				validationMode: normalized.data.validationMode,
-				reValidateMode: normalized.data.reValidateMode,
-				payload: normalized.data.payload,
+				snapshot: this.firstForm && this.isServerRendered ? this.hydration : undefined,
 			}),
 		};
 		this.firstForm = false;
@@ -333,25 +329,6 @@ export class FormInstanceElement extends RadiantElement {
 		this.watchValues(bound.container);
 		this.syncActions(bound);
 		this.publish();
-	}
-
-	/**
-	 * The row ids the server rendered for each array that already holds them.
-	 *
-	 * @remarks
-	 * Read only while hydrating the form the server rendered, because only then do the arrays in the document
-	 * describe the container's defaults. The container mints ids deterministically, so a client built from the same
-	 * defaults matches the server without these; they matter when the server rendered rows other than the defaults,
-	 * so the container adopts the ids the markup carries instead of replacing every row.
-	 */
-	private serverRowIds(): Record<string, readonly string[]> {
-		const ids: Record<string, readonly string[]> = {};
-		for (const array of this.querySelectorAll('se-form-array')) {
-			const name = array instanceof SeFormArray ? array.config?.name : undefined;
-			const rows = array instanceof SeFormArray ? array.config?.ssrRowIds : undefined;
-			if (name && rows?.length) ids[name] = rows;
-		}
-		return ids;
 	}
 
 	/** Injects the container into the `rui-form`, replacing the earlier binding, with the handlers of this instance. */
@@ -383,9 +360,9 @@ export class FormInstanceElement extends RadiantElement {
 	 * Runs one submission through the container, and runs the actions and `onSubmit` for the values that passed.
 	 *
 	 * @remarks
-	 * `rui-form` calls this on a submit with the controls' values already written to the container. The guard
+	 * `rui-form` calls this on a submit, after it has synced the controls into the container. The guard
 	 * holds from here until the lifecycle ends, so a second submit while the first validates or runs is dropped.
-	 * The container validates under a submission token: `passed` submits exactly the values that were
+	 * `container.submit()` validates and says how it ended: `passed` carries exactly the values that were
 	 * validated, `invalid` focuses the first field with an error, and `overtaken` (an edit, a row move or a
 	 * reset outran the check) submits nothing and leaves the user to try again. A validation that could not
 	 * run (a validator threw, a service was down) is not a field error: the submission stops, is logged, counts as an attempt
@@ -396,9 +373,9 @@ export class FormInstanceElement extends RadiantElement {
 		if (!bound) return;
 		await bound.submission.run(async () => {
 			const { container, host } = bound;
-			const submission = container.beginSubmission();
+			let result: FormSubmitResult;
 			try {
-				await container.validate(undefined, { native: context.readNativeValidity(), submission });
+				result = await container.submit();
 			} catch (error) {
 				if (this.bound !== bound) return;
 				this.countAttempt();
@@ -413,14 +390,14 @@ export class FormInstanceElement extends RadiantElement {
 				return;
 			}
 			if (this.bound !== bound) return;
-			if (submission.outcome === 'invalid') {
+			if (result.outcome === 'invalid') {
 				this.countAttempt();
 				host.dispatchEvent(new CustomEvent('se-action-submit-invalid', { bubbles: true, composed: true }));
 				const first = this.firstInvalidPath(container.getSnapshot().errors);
 				if (first !== undefined) context.focus(first);
 				return;
 			}
-			if (submission.outcome === 'passed') await this.completeSubmission(host, submission.values, context);
+			if (result.outcome === 'passed') await this.completeSubmission(bound, result, context);
 		});
 	}
 
@@ -439,30 +416,37 @@ export class FormInstanceElement extends RadiantElement {
 	 *
 	 * @remarks
 	 * With no `onSubmit`, a form with `action` or `method` submits natively after its actions have
-	 * completed and succeeded, so the navigation cannot cut off the success and complete actions. A rejected
+	 * completed and succeeded, so the navigation cannot cut off the success and complete actions; the engine's
+	 * CSRF token goes into the form first when its policy names a `field`. A rejected
 	 * `onSubmit` completes the submission as unsuccessful, runs the error and complete actions and is logged,
 	 * not rethrown: the event is how the page learns of it.
 	 */
 	private async completeSubmission(
-		host: RuiFormElement,
-		values: Readonly<Record<string, unknown>>,
+		{ host, engine }: BoundForm,
+		{ values, setServerErrors }: Extract<FormSubmitResult, { outcome: 'passed' }>,
 		context: Pick<RuiFormSubmitContext, 'submitNatively'>,
 	): Promise<void> {
 		const announce = (type: string, detail?: unknown) =>
 			host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
+		const submitNatively = () => {
+			const csrf = engine.getCsrf();
+			const token = csrf?.token();
+			if (csrf?.field && token !== undefined) setHiddenField(host.querySelector('form'), csrf.field, token);
+			context.submitNatively();
+		};
 		this.setSubmitting(true);
 		announce('se-action-submit-start');
 		const { onSubmit } = this;
-		const callback = onSubmit ? () => onSubmit(values) : undefined;
+		const callback = onSubmit ? () => onSubmit(values, { setServerErrors, fetch: engine.fetch }) : undefined;
 		let detail: SubmissionCompleteDetail;
 		try {
 			if (this.actions) {
 				const { succeeded, results, failure } = await this.actions.submit(callback);
-				if (succeeded && !callback) context.submitNatively();
+				if (succeeded && !callback) submitNatively();
 				detail = { succeeded, results, ...(failure ? { error: failure.error } : {}) };
 			} else {
 				if (callback) await callback();
-				else context.submitNatively();
+				else submitNatively();
 				detail = { succeeded: true, results: [] };
 			}
 		} catch (error) {
@@ -508,7 +492,7 @@ export class FormInstanceElement extends RadiantElement {
 			host,
 			currentStep: () => this.currentStep,
 			submitCount: () => this.attempts,
-			readNative: () => host.readNativeValidity(),
+			sync: () => host.sync(),
 			reset: () => this.resetForm(),
 			onAction: (action, data) => this.onAction?.(action, data),
 		});

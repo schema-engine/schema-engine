@@ -9,7 +9,6 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 	onSubmit,
 	onChange,
 	onAction,
-	formatIssue,
 	children,
 	engine,
 }: FormProviderProps<TFormData> & { engine?: CoreFormEngine }) {
@@ -22,8 +21,7 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 			defaultValues={defaultValues}
 			onChange={onChange as FormProviderProps['onChange']}
 			onAction={onAction as FormProviderProps['onAction']}
-			formatIssue={formatIssue}
-			onSubmit={onSubmit as ((data: Record<string, unknown>) => void | Promise<void>) | undefined}
+			onSubmit={onSubmit as FormProviderProps['onSubmit']}
 		>
 			{children}
 		</FormInstance>

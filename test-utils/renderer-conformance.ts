@@ -774,7 +774,7 @@ export function rendererConformance(
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			const row = { fullName: 'x', role: 'user' };
-			expect(onSubmit).toHaveBeenCalledWith({ members: [row, row] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ members: [row, row] });
 		});
 		test('a single-child array keeps object rows from form defaultValues', async () => {
 			const onSubmit = vi.fn();
@@ -791,7 +791,7 @@ export function rendererConformance(
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Role' }).length).toBe(2);
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith({ members: [{ role: 'admin' }, { role: '' }] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ members: [{ role: 'admin' }, { role: '' }] });
 		});
 		test('both renderers add the same scalar row', async () => {
 			const onSubmit = vi.fn();
@@ -811,7 +811,7 @@ export function rendererConformance(
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith({ tags: ['x', 'x'] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ tags: ['x', 'x'] });
 		});
 		test('keeps empty scalar rows seeded to minItems and added after them', async () => {
 			const onSubmit = vi.fn();
@@ -829,7 +829,7 @@ export function rendererConformance(
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith({ tags: ['', 'c'] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ tags: ['', 'c'] });
 		});
 		test(`seeds a custom array registration (${customArrayType}) to minItems`, async () => {
 			const onSubmit = vi.fn();
@@ -849,7 +849,7 @@ export function rendererConformance(
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			const row = { label: '', color: '' };
-			expect(onSubmit).toHaveBeenCalledWith({ tags: [row, row] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ tags: [row, row] });
 		});
 		const address = {
 			$type: 'fieldSet',
@@ -1100,7 +1100,7 @@ export function rendererConformance(
 			await expect.poll(() => queryByText(host, 'Street is required')).toBeNull();
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith({ address: { street: 'Main Street' } });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ address: { street: 'Main Street' } });
 		});
 		test('handlers receive errors by dotted path', async () => {
 			const { host } = await setup({
@@ -1143,7 +1143,7 @@ export function rendererConformance(
 				.toBe('false');
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ kind: 'personal' }));
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual(expect.objectContaining({ kind: 'personal' }));
 		});
 		test('a fieldset require constraint makes its children required, nested containers included', async () => {
 			const onSubmit = vi.fn();

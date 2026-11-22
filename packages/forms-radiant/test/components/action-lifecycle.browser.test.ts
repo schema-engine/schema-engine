@@ -2,7 +2,6 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
 import type { FormConfigView, NormalizedFormConfig } from '@schema-engine/forms';
-import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { createFormStateContainer } from '@schema-engine/forms/state-container';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -27,10 +26,8 @@ function mountActions(
 	const host = document.createElement('div');
 	document.body.append(host);
 	const container = createFormStateContainer({
-		elements: flattenStepElements(config.steps),
+		config: { steps: config.steps, validationMode: 'onSubmit', reValidateMode: 'onChange' },
 		registry: engine.getValidationRegistry(),
-		validationMode: 'onSubmit',
-		reValidateMode: 'onChange',
 		defaults: options.defaults,
 	});
 	const formActions = new FormActions({
@@ -40,7 +37,7 @@ function mountActions(
 		host,
 		currentStep: () => 0,
 		submitCount: () => 0,
-		readNative: () => ({}),
+		sync: () => {},
 		reset: () => container.reset(),
 		onAction: options.onAction,
 	});

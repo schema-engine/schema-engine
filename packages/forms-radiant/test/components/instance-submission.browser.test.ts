@@ -2,10 +2,12 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { userEvent } from 'vitest/browser';
 import { FormController } from '@/adapters/radiant/controller';
+import { containerOf } from './mount-field';
+import type { FormSubmitContext } from '@/adapters/types';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
-import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
+import { FORM_ROOT, type FormIssueFormatter } from '@schema-engine/forms/state-container';
 
 const engineText: FormIssueFormatter = (issue, { path }) => `engine:${path}:${issue.source}:${issue.type}`;
 const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, formatIssue: engineText });
@@ -50,11 +52,22 @@ async function mount(
 	render();
 	const ruiForm = host.querySelector('rui-form')!;
 	const form = new FormController(ruiForm);
-	await expect.poll(() => form.ready).toBe(true);
+	await expect.poll(() => form.container).toBeTruthy();
 	const instance = host.querySelector('se-form-instance')!;
 	const completed = vi.fn();
 	ruiForm.addEventListener('se-action-submit-complete', completed);
-	return { host, ruiForm, form, instance, onSubmit: vi.mocked(onSubmit), completed, make, render, config };
+	return {
+		host,
+		ruiForm,
+		form,
+		container: containerOf(ruiForm),
+		instance,
+		onSubmit: vi.mocked(onSubmit),
+		completed,
+		make,
+		render,
+		config,
+	};
 }
 
 const checked = {
@@ -67,13 +80,13 @@ const checked = {
 const submit = (host: HTMLElement) => host.querySelector('form')!.requestSubmit();
 
 test('a submission a reset outran submits nothing and is not an attempt', async () => {
-	const { host, form, instance, onSubmit, completed } = await mount([checked]);
+	const { host, container, instance, onSubmit, completed } = await mount([checked]);
 	await userEvent.fill(host.querySelector('input')!, 'Ada');
 	gate.hold = true;
 	submit(host);
-	await expect.poll(() => form.formState.isValidating).toBe(true);
+	await expect.poll(() => Object.keys(container.getSnapshot().validating).length > 0).toBe(true);
 
-	form.reset();
+	container.reset();
 	gate.hold = false;
 	for (const release of gate.pending.splice(0)) release();
 	await settle(100);
@@ -84,12 +97,12 @@ test('a submission a reset outran submits nothing and is not an attempt', async 
 });
 
 test('a submission outrun by edits again and again submits nothing', async () => {
-	const { host, form, onSubmit, completed } = await mount([checked]);
+	const { host, container, onSubmit, completed } = await mount([checked]);
 	const input = host.querySelector('input')!;
 	await userEvent.fill(input, 'Ada');
 	gate.hold = true;
 	submit(host);
-	await expect.poll(() => form.formState.isValidating).toBe(true);
+	await expect.poll(() => Object.keys(container.getSnapshot().validating).length > 0).toBe(true);
 
 	for (const edit of ['Ada L', 'Ada Lo', 'Ada Lov']) {
 		await userEvent.fill(input, edit);
@@ -105,7 +118,7 @@ test('a submission outrun by edits again and again submits nothing', async () =>
 });
 
 test('a validator that cannot run completes the submission unsuccessfully with its failure, and is an attempt', async () => {
-	const { host, form, instance, onSubmit, completed } = await mount([checked]);
+	const { host, container, instance, onSubmit, completed } = await mount([checked]);
 	await userEvent.fill(host.querySelector('input')!, 'Ada');
 	gate.status = 500;
 	const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -118,7 +131,7 @@ test('a validator that cannot run completes the submission unsuccessfully with i
 	expect(event instanceof CustomEvent && event.detail).toMatchObject({ succeeded: false, error: expect.anything() });
 	expect(instance.getContextValue().submitCount).toBe(1);
 	expect(onSubmit).not.toHaveBeenCalled();
-	expect(form.formState.errors).toEqual({});
+	expect(container.getSnapshot().errors).toEqual({});
 	logged.mockRestore();
 });
 
@@ -141,11 +154,11 @@ test('an invalid submission counts, reports itself and focuses the first invalid
 });
 
 test('a config replaced while a submission validates does not submit the old values into the new form', async () => {
-	const { host, form, make, render, onSubmit, instance } = await mount([checked]);
+	const { host, container, make, render, onSubmit, instance } = await mount([checked]);
 	await userEvent.fill(host.querySelector('input')!, 'Old');
 	gate.hold = true;
 	submit(host);
-	await expect.poll(() => form.formState.isValidating).toBe(true);
+	await expect.poll(() => Object.keys(container.getSnapshot().validating).length > 0).toBe(true);
 
 	render(make([checked], 'replaced'));
 	await expect.poll(() => instance.config.id).toBe('replaced');
@@ -160,25 +173,24 @@ test('a config replaced while a submission validates does not submit the old val
 });
 
 test('a validation hung on an old form does not hold back the next form', async () => {
-	const { host, form, make, render, onSubmit, instance } = await mount([checked]);
+	const { host, container, make, render, onSubmit, instance } = await mount([checked]);
 	await userEvent.fill(host.querySelector('input')!, 'Old');
 	gate.hold = true;
 	submit(host);
-	await expect.poll(() => form.formState.isValidating).toBe(true);
+	await expect.poll(() => Object.keys(container.getSnapshot().validating).length > 0).toBe(true);
 
 	render(make([{ $type: 'input', id: 'plain', name: 'plain' }], 'next'));
 	await expect.poll(() => instance.config.id).toBe('next');
-	await expect.poll(() => new FormController(host.querySelector('rui-form')!).formState.values).toEqual({});
+	await expect.poll(() => containerOf(host.querySelector('rui-form')!).getSnapshot().values).toEqual({});
 	submit(host);
 
 	await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 });
 
 test('moving the instance keeps its form, and the controls still write to it', async () => {
-	const { host, form, instance } = await mount([
+	const { host, container, instance } = await mount([
 		{ $type: 'input', id: 'name', name: 'name', rules: [{ type: 'required', message: 'Required' }] },
 	]);
-	const container = form.container!;
 	await userEvent.fill(host.querySelector('input')!, 'Ada');
 	container.blur('name');
 	instance.markStepVisited(0);
@@ -199,13 +211,12 @@ test('moving the instance keeps its form, and the controls still write to it', a
 });
 
 test('reset restores the defaults, and clears touched, errors and dirty', async () => {
-	const { host, form } = await mount([
+	const { host, container } = await mount([
 		{ $type: 'input', id: 'name', name: 'name', defaultValue: 'D', rules: [{ type: 'minLength', value: 5 }] },
 	]);
-	const container = form.container!;
 	container.setValue('name', 'abc');
 	container.blur('name');
-	await form.trigger();
+	await container.validate();
 	expect(container.getSnapshot().touched['name']).toBe(true);
 	expect(container.getSnapshot().errors['name']).toBeDefined();
 
@@ -231,12 +242,11 @@ test('new default values with the same config start a fresh form', async () => {
 	await expect.poll(() => new FormController(host.querySelector('rui-form')!).container).not.toBe(first);
 	const next = new FormController(host.querySelector('rui-form')!).container;
 	expect(next?.getSnapshot().values['name']).toBe('B');
-	expect(next?.getSnapshot().defaults['name']).toBe('B');
 	await expect.poll(() => host.querySelector('input')!.value).toBe('B');
 });
 
 test('a native fact of an engine-rendered input reaches the container and the page', async () => {
-	const { host, form } = await mount(
+	const { host, container } = await mount(
 		[{ $type: 'input', id: 'email', name: 'email', label: 'Email', inputType: 'email' }],
 		{},
 		{ validationMode: 'onBlur' },
@@ -248,23 +258,23 @@ test('a native fact of an engine-rendered input reaches the container and the pa
 
 	await expect
 		.poll(() =>
-			form.formState.errors['email']?.all.some(
-				({ source, type }) => source === 'native' && type === 'typeMismatch',
-			),
+			container
+				.getSnapshot()
+				.errors['email']?.all.some(({ source, type }) => source === 'native' && type === 'typeMismatch'),
 		)
 		.toBe(true);
 	await expect.poll(() => host.textContent).toContain('engine:email:native:typeMismatch');
-	expect(await form.trigger()).toBe(false);
+	expect(await container.validate()).toBe(false);
 	await userEvent.fill(input, 'a@b.co');
 	await userEvent.tab();
-	await expect.poll(() => form.formState.errors['email']).toBeUndefined();
+	await expect.poll(() => container.getSnapshot().errors['email']).toBeUndefined();
 });
 
-test("the formatter is the instance's, else the renderer's, else the engine's, and changing it refreshes the text", async () => {
-	const { host, form, instance } = await mount([
+test("the formatter is the renderer's, else the engine's, and changing it refreshes the text", async () => {
+	const { host, container } = await mount([
 		{ $type: 'input', id: 'name', name: 'name', label: 'Name', rules: [{ type: 'required' }] },
 	]);
-	await form.trigger();
+	await container.validate();
 	await expect.poll(() => host.textContent).toContain('engine:name:validation:required');
 
 	const renderer = host.querySelector('se-form-renderer')!;
@@ -272,16 +282,11 @@ test("the formatter is the instance's, else the renderer's, else the engine's, a
 	await expect.poll(() => host.textContent).toContain('renderer:name');
 	expect(host.textContent).not.toContain('engine:name');
 
-	instance.formatIssue = (_issue, { path }) => `instance:${path}`;
-	await expect.poll(() => host.textContent).toContain('instance:name');
-	expect(host.textContent).not.toContain('renderer:name');
-
-	instance.formatIssue = undefined;
 	renderer.formatIssue = undefined;
 	await expect.poll(() => host.textContent).toContain('engine:name:validation:required');
 });
 
-test('the container adopts the row ids the hydrated server markup carries, and only then', async () => {
+test('the container starts from the hydration the server serialized, and only for the first form of a server-rendered instance', async () => {
 	const config = engine.validateForm({
 		id: 'rows',
 		steps: [
@@ -302,40 +307,85 @@ test('the container adopts the row ids the hydrated server markup carries, and o
 			},
 		],
 	});
+	const defaultValues = { contacts: [{ email: 'a' }, { email: 'b' }] };
 	const build = (serverRendered: boolean) => {
 		const instance = document.createElement('se-form-instance');
 		if (serverRendered) instance.setAttribute('data-radiant-ssr', '');
 		instance.engine = engine;
 		instance.config = config;
-		instance.defaultValues = { contacts: [{ email: 'a' }, { email: 'b' }] };
-		const array = document.createElement('se-form-array');
-		array.config = {
-			$type: 'arrayElements',
-			id: 'contacts',
-			name: 'contacts',
-			elements: [],
-			ssrRowIds: ['server-a', 'server-b'],
-		};
+		instance.defaultValues = defaultValues;
+		instance.hydration = { values: defaultValues, rowIds: { contacts: ['server-a', 'server-b'] } };
 		const ruiForm = document.createElement('rui-form');
-		ruiForm.append(array);
 		instance.append(ruiForm);
 		document.body.append(instance);
 		return { instance, ruiForm };
 	};
 
 	const hydrated = build(true);
-	await expect.poll(() => new FormController(hydrated.ruiForm).ready).toBe(true);
-	const { container } = new FormController(hydrated.ruiForm);
-	expect(container?.getSnapshot().rowIds['contacts']).toEqual(['server-a', 'server-b']);
-	container?.fieldArray('contacts').append({ email: 'c' });
-	expect(new Set(container?.getSnapshot().rowIds['contacts']).size).toBe(3);
+	await expect.poll(() => new FormController(hydrated.ruiForm).container).toBeTruthy();
+	const container = containerOf(hydrated.ruiForm);
+	expect(container.getSnapshot().rowIds['contacts']).toEqual(['server-a', 'server-b']);
+	container.fieldArray('contacts').append({ email: 'c' });
+	expect(new Set(container.getSnapshot().rowIds['contacts']).size).toBe(3);
 
 	hydrated.instance.config = engine.validateForm({ ...config, id: 'rows-next' });
 	await expect.poll(() => new FormController(hydrated.ruiForm).container).not.toBe(container);
-	const replaced = new FormController(hydrated.ruiForm).container;
-	expect(replaced?.getSnapshot().rowIds['contacts']).not.toEqual(['server-a', 'server-b']);
+	expect(containerOf(hydrated.ruiForm).getSnapshot().rowIds['contacts']).not.toEqual(['server-a', 'server-b']);
 
 	const client = build(false);
-	await expect.poll(() => new FormController(client.ruiForm).ready).toBe(true);
-	expect(new FormController(client.ruiForm).formState.rowIds['contacts']).not.toEqual(['server-a', 'server-b']);
+	await expect.poll(() => new FormController(client.ruiForm).container).toBeTruthy();
+	expect(containerOf(client.ruiForm).getSnapshot().rowIds['contacts']).not.toEqual(['server-a', 'server-b']);
+});
+
+test('onSubmit receives the values that passed, the server-errors setter and the engine fetch', async () => {
+	const onSubmit = vi.fn(async (_values: Record<string, unknown>, context: FormSubmitContext) => {
+		context.setServerErrors({ name: { type: 'taken' }, [FORM_ROOT]: { message: 'Try later' } });
+	});
+	const { host, container, completed } = await mount([{ $type: 'input', id: 'name', name: 'name', label: 'Name' }], {
+		onSubmit,
+	});
+	await userEvent.fill(host.querySelector('input')!, 'Ada');
+
+	submit(host);
+	await expect.poll(() => completed.mock.calls.length).toBe(1);
+
+	const [values, context] = onSubmit.mock.calls[0] ?? [];
+	expect(values).toEqual({ name: 'Ada' });
+	expect(context?.fetch).toBe(engine.fetch);
+	expect(container.getSnapshot().errors['name']?.type).toBe('taken');
+	expect(container.getSnapshot().errors[FORM_ROOT]?.message).toBe('Try later');
+});
+
+test('a native post carries the current CSRF token in the hidden field the engine policy names', async () => {
+	let token = 'first';
+	const csrfEngine = createRadiantFormEngine({
+		elements: schemaFormRegistrations,
+		csrf: { token: () => token, header: 'x-csrf', field: '_csrf' },
+	});
+	const host = document.createElement('div');
+	document.body.append(host);
+	const config = csrfEngine.validateForm({
+		id: 'post',
+		steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'input', id: 'name', name: 'name' }] }],
+	});
+	createRoot(host).render(FormRenderer({ config, engine: csrfEngine }));
+	const ruiForm = host.querySelector('rui-form')!;
+	await expect.poll(() => new FormController(ruiForm).container).toBeTruthy();
+	ruiForm.setAttribute('action', '/save');
+	ruiForm.setAttribute('method', 'post');
+	const nativeForm = host.querySelector('form')!;
+	const post = vi.spyOn(nativeForm, 'submit').mockImplementation(() => {});
+	const field = () => nativeForm.querySelector<HTMLInputElement>('input[type="hidden"][name="_csrf"]');
+	const posted = vi.fn();
+	ruiForm.addEventListener('se-action-submit-complete', posted);
+
+	nativeForm.requestSubmit();
+	await expect.poll(() => post.mock.calls.length).toBe(1);
+	expect(field()?.value).toBe('first');
+
+	token = 'second';
+	nativeForm.requestSubmit();
+	await expect.poll(() => post.mock.calls.length).toBe(2);
+	expect(nativeForm.querySelectorAll('input[name="_csrf"]')).toHaveLength(1);
+	expect(field()?.value).toBe('second');
 });

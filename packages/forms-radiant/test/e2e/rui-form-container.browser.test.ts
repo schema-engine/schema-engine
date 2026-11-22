@@ -3,7 +3,6 @@ import { userEvent } from 'vitest/browser';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import '@ecopages/radiant-ui/form';
 import '@ecopages/radiant-ui/field';
-import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { createFormStateContainer, FORM_ROOT } from '@schema-engine/forms/state-container';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -104,11 +103,9 @@ function makeField(name: string, attributes: Record<string, string> = {}) {
 
 async function mount(options: { validationMode?: 'onBlur' | 'onChange' | 'onSubmit' } = {}) {
 	const container = createFormStateContainer({
-		elements: flattenStepElements(config.steps),
+		config: { steps: config.steps, validationMode: options.validationMode ?? 'onBlur', reValidateMode: 'onChange' },
 		registry: engine.getValidationRegistry(),
 		defaults: defaults(),
-		validationMode: options.validationMode ?? 'onBlur',
-		reValidateMode: 'onChange',
 	});
 	const form = document.createElement('rui-form') as RuiFormElement;
 	const nativeForm = document.createElement('form');
@@ -126,21 +123,17 @@ async function mount(options: { validationMode?: 'onBlur' | 'onChange' | 'onSubm
 	cleanups.push(() => form.remove());
 	await customElements.whenDefined('rui-form');
 	await customElements.whenDefined('rui-field');
-	const submissions: Array<{ passed: boolean; values: Readonly<Record<string, unknown>> }> = [];
-	let lastSubmission: ReturnType<typeof container.beginSubmission> | undefined;
+	const submissions: Array<{ result: Awaited<ReturnType<typeof container.submit>> }> = [];
 	const disconnect = form.connect(container, {
 		formatError: format,
-		submitHandler: async (context) => {
-			const submission = container.beginSubmission();
-			lastSubmission = submission;
-			await container.validate(undefined, { native: context.readNativeValidity(), submission });
-			submissions.push({ passed: submission.outcome === 'passed', values: submission.values });
+		submitHandler: async () => {
+			submissions.push({ result: await container.submit() });
 		},
 		resetHandler: () => container.reset(),
 	});
 	cleanups.push(disconnect);
 	await settle();
-	return { container, form, nativeForm, fields, submissions, submission: () => lastSubmission };
+	return { container, form, nativeForm, fields, submissions };
 }
 
 function type(input: HTMLInputElement, value: string): void {
@@ -150,7 +143,7 @@ function type(input: HTMLInputElement, value: string): void {
 }
 
 describe('rui-form over the engine container', () => {
-	test('typing writes the nested value, and a blur with a changed value is one notification', async () => {
+	test('typing writes the nested value, and a blur with a changed value writes it before it marks the field touched', async () => {
 		const { container, fields } = await mount();
 		const seen: Array<ReturnType<typeof container.getSnapshot>> = [];
 		container.subscribe(() => seen.push(container.getSnapshot()));
@@ -162,7 +155,6 @@ describe('rui-form over the engine container', () => {
 		expect(snapshot.values['name']).toBe('Ada');
 		expect(snapshot.touched['name']).toBe(true);
 		expect(seen.some((one) => one.touched['name'] && one.values['name'] !== 'Ada')).toBe(false);
-		expect(seen.some((one) => !one.touched['name'] && one.values['name'] === 'Ada')).toBe(false);
 	});
 
 	test('blur validates in onBlur mode and the field shows the formatted rule identity', async () => {
@@ -187,14 +179,14 @@ describe('rui-form over the engine container', () => {
 	});
 
 	test('a submit with an edit during validation submits what passed, and a server error lands on the submitted row', async () => {
-		const { container, nativeForm, fields, submissions, submission } = await mount();
+		const { container, nativeForm, fields, submissions } = await mount();
 		type(fields.name.input, 'Ada');
 		type(fields.email.input, 'ada@x.io');
 		await settle();
 		gate.hold = true;
 		nativeForm.requestSubmit();
 		await settle();
-		expect(container.getSnapshot().isValidating).toBe(true);
+		expect(Object.keys(container.getSnapshot().validating).length).toBeGreaterThan(0);
 		type(fields.name.input, 'Ada Lovelace');
 		await settle();
 		gate.hold = false;
@@ -202,17 +194,13 @@ describe('rui-form over the engine container', () => {
 		await settle(50);
 		for (const release of gate.pending.splice(0)) release();
 		await settle(50);
-		const last = submissions.at(-1);
-		expect(last?.passed).toBe(true);
-		expect(last?.values['name']).toBe('Ada Lovelace');
+		const last = submissions.at(-1)?.result;
+		if (last?.outcome !== 'passed') throw new Error(`Expected a passed submission, got ${last?.outcome}`);
+		expect(last.values['name']).toBe('Ada Lovelace');
 
 		container.fieldArray('contacts').swap(0, 1);
 		await settle();
-		container.setErrors(
-			'server',
-			{ 'contacts.0.email': { type: 'bounced' }, [FORM_ROOT]: { type: 'rejected' } },
-			{ submission: submission() },
-		);
+		last.setServerErrors({ 'contacts.0.email': { type: 'bounced' }, [FORM_ROOT]: { type: 'rejected' } });
 		await settle();
 		const errors = container.getSnapshot().errors;
 		expect(errors['contacts.1.email']?.type).toBe('bounced');

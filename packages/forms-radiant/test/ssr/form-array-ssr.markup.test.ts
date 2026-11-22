@@ -67,7 +67,7 @@ describe('SSR array markup', () => {
 		expect(html).toContain('value="Alice"');
 	});
 
-	test('renders default rows with the ids the client container mints', () => {
+	test("renders default rows with the ids of the server container's snapshot, which the instance serializes", () => {
 		const html = renderArraySsrAcceptanceHtml();
 
 		expect(html.match(/class="se-form-array__item"/g) ?? []).toHaveLength(2);
@@ -77,5 +77,6 @@ describe('SSR array markup', () => {
 		expect(html).toContain('data-default-value');
 		expect(html).toContain('Alice');
 		expect(html).toContain('Bob');
+		expect(html).toMatch(/hydration="[^"]*row-1[^"]*row-2/);
 	});
 });

@@ -1,4 +1,4 @@
-import { FormController, formController } from '@/adapters/radiant/controller';
+import { FormController } from '@/adapters/radiant/controller';
 import './form-debugger.css';
 import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { contextSelector } from '@ecopages/radiant/context';
@@ -7,6 +7,7 @@ import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import type { FormMeta } from '@/lib/instance-view';
+import type { FormStateSnapshot } from '@schema-engine/forms/state-container';
 
 function BugIcon() {
 	return (
@@ -148,7 +149,7 @@ function DebuggerFormState({
 	isSubmitting,
 	stepStates,
 }: {
-	formState: FormController['formState'] | undefined;
+	formState: FormStateSnapshot | undefined;
 	isSubmitting: boolean;
 	stepStates: FormInstanceContextValue['stepStates'] | undefined;
 }) {
@@ -244,13 +245,22 @@ export class FormDebuggerElement extends RadiantElement {
 
 	@state protected open = false;
 
-	@formController form!: FormController;
+	private readonly form = new FormController(this);
+	private readonly formState = this.form.select((snapshot) => snapshot);
+	private stopWatching?: () => void;
 
 	@contextSelector({ context: formInstanceContext })
 	private instance?: FormInstanceContextValue;
 
 	protected override onConnected(): void {
 		this.open = this.defaultOpen;
+		this.stopWatching = this.formState.subscribe(() => this.requestUpdate());
+	}
+
+	override disconnectedCallback(): void {
+		this.stopWatching?.();
+		this.stopWatching = undefined;
+		super.disconnectedCallback();
 	}
 
 	private readonly openPanel = (): void => {
@@ -278,7 +288,7 @@ export class FormDebuggerElement extends RadiantElement {
 			return <DebuggerToggle onOpen={this.openPanel} />;
 		}
 
-		const formState = this.form.ready ? this.form.formState : undefined;
+		const formState = this.formState.get();
 		const currentStep = this.instance?.currentStep ?? 0;
 		const stepStates = this.instance?.stepStates;
 		const meta = this.instance?.meta;

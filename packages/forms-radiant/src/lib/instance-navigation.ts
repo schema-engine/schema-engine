@@ -8,7 +8,7 @@ import { logger } from './logger';
 /**
  * @remarks
  * Step triggers go to the instance's actions; a form that configures none dispatches nothing. A step is
- * checked with the container, over the step's own fields and with the native validity of the controls, and a
+ * checked with the container, over the step's own fields after `rui-form` synced its controls, and a
  * failed check re-validates those fields as the form's `reValidateMode` says. It marks nothing submitted, so a
  * later step stays clean.
  */
@@ -30,7 +30,8 @@ export function createInstanceNavigation(
 			if (!container || !ruiForm) return false;
 			const paths = collectStepFieldPaths(host.config.steps[index], container.getSnapshot().values);
 			try {
-				return await container.validate(paths, { native: ruiForm.readNativeValidity() });
+				ruiForm.sync();
+				return await container.validate(paths);
 			} catch (error) {
 				logger.error('Step validation could not run', error);
 				return false;

@@ -12,12 +12,7 @@ import { formEngineContext } from '@/components/provider';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import {
-	mintRowIds,
-	selectError,
-	type FormIssueFormatter,
-	type FormStateContainer,
-} from '@schema-engine/forms/state-container';
+import { selectError, type FormIssueFormatter, type FormStateContainer } from '@schema-engine/forms/state-container';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { describeIssue } from '@/lib/describe-issue';
 import { isRenderedRequired, withContainerState } from '@/lib/field-rules';
@@ -417,7 +412,7 @@ export class SeFormArray extends RadiantElement {
  * `this.slotted`, which lets Radiant mark their position instead of serializing a second copy in a slotted template.
  */
 export function FormArrayElements(config: ArrayElementsProps) {
-	const { ssrInitialRows: _ssrInitialRows, ssrRowIds: _ssrRowIds, initialFormValues, ...fieldConfig } = config;
+	const { ssrInitialRows: _ssrInitialRows, ssrRowIds, initialFormValues, ...fieldConfig } = config;
 	const engine = resolveFormEngine();
 	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getLayout().id);
 	const initialValues = structuredClone(initialFormValues ?? {});
@@ -426,7 +421,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 	const arrayConfig = {
 		...fieldConfig,
 		ssrInitialRows: initialRows ?? [],
-		ssrRowIds: mintRowIds(initialValues)[fieldConfig.name] ?? [],
+		ssrRowIds: ssrRowIds ?? [],
 		initialFormValues,
 	};
 	const children = engine

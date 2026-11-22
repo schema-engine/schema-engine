@@ -11,63 +11,11 @@ read and write and nothing is translated. `FormFieldElement` extends
 container validates. `SeFormArray` uses `container.fieldArray(path)` and the
 container's row ids.
 
-## Explicit lifecycle
+## Reads, commands and selectors
 
-This works with plain custom elements, without decorators or a Radiant base class:
+`FormController` has three members.
 
-```ts
-import { FormController } from '@schema-engine/forms-radiant/adapters/radiant';
-
-class FormSummary extends HTMLElement {
-	readonly form = new FormController(this);
-
-	connectedCallback() {
-		this.form.connect(() => {
-			this.textContent = JSON.stringify(this.form.getValues());
-		});
-	}
-
-	disconnectedCallback() {
-		this.form.disconnect();
-	}
-}
-customElements.define('form-summary', FormSummary);
-```
-
-`connect` waits for the instance to have a container, then calls the listener
-once and after each change of the container's state. A new container replaces the
-old one when the instance's config or engine changes; the controller follows it.
-Reads and mutations require a container; use `form.ready` before reading during an
-early render. `disconnect` removes the subscriptions.
-
-## Optional decorator
-
-```tsx
-import { RadiantElement, customElement } from '@ecopages/radiant';
-import { FormController, formController } from '@schema-engine/forms-radiant/adapters/radiant';
-
-@customElement('form-summary')
-class FormSummary extends RadiantElement {
-	@formController form!: FormController;
-
-	render() {
-		return <output>{this.form.ready ? this.form.getValue('title') : ''}</output>;
-	}
-}
-```
-
-The decorator connects on mount, requests an update when the form changes, and
-cleans up on disconnect. It supports TC39 standard field decorators and TypeScript
-`experimentalDecorators`, the same dual dispatch as Radiant. The shipped
-`se-field` host has no controller of its own; construct `new FormController(fieldElement)`
-where you need one.
-
-## Reads, selectors and mutations
-
-- `container` is the engine container itself: `getSnapshot()`, `subscribe()`, `validate()`, `blur()`, `setErrors()` and the other commands of `FormStateContainer`.
-- `getValues()` returns the container's nested values, the same object until a value changes; `getValue(path)` reads a dotted path.
-- `setValue(path, value)` writes a branch, `reset(values?)` restores the defaults or replaces them, `trigger(paths?)` validates with the facts the controls have already reported to the container (typing, blur, a store write), not a fresh read of the controls: a submit and a wizard step read them, and an action's check reads them too.
-- `field(path)` provides live `value` and `error` getters, `onChange`, and `onBlur`. `error` is the issue's text from the application's `formatIssue`, else its `message`.
+- `container` is the engine container itself, `undefined` until the instance has one. Every command and read goes through it: `getSnapshot()`, `getValue(path)`, `setValue(path, value)`, `blur(path)`, `validate(paths?)`, `checkValidity()`, `submit()`, `reset(values?)`, `fieldArray(path)`, `subscribe()`. A new container replaces the old one when the instance's config or engine changes, so read it from the controller on each use rather than keeping it.
 - `select(selector)` returns a signal over a pure selector of the snapshot, built with `fromExternalStore`:
 
 ```ts
@@ -93,19 +41,20 @@ class ContactCount extends HTMLElement {
 }
 ```
 
-Create the signals once, as fields, and read them inside an `effect` or a `computed`, which subscribe them. A signal is total: it reads `undefined` while the form has no container (a `rui-form` or an engine that arrives late) and on the server, and it follows the container the instance has now.
+Create the signals once, as fields, and read them inside an `effect` or a `computed`, or `subscribe` to them. A signal is total: it reads `undefined` while the form has no container (a `rui-form` or an engine that arrives late) and on the server, and it follows the container the instance has now.
 
-- `formState` is the container's snapshot: `values`, `errors` and `warnings` by path, `touched`, `dirty`, `rowIds`, `validating`, `isValid`.
-- `fieldArray(path)` provides `fields`, `append`, `prepend`, `insert`, `swap`,
-  `move`, `update`, `replace`, and `remove`. `append`, `prepend`, and `insert`
-  accept one item or an array of items. `remove()` clears the array;
-  `remove(index)` and `remove(indices)` remove selected rows. Call it again for the
-  current `fields`: each object is a snapshot of the rows.
+- `formatIssue(issue, path)` is the text the form shows for an issue: the renderer's `formatIssue`, else the engine's, else the issue's own `message`, else `undefined`.
+
+```ts
+const form = new FormController(host);
+form.container?.setValue('title', 'Hello');
+form.container?.fieldArray('contacts').append({ email: '' });
+```
 
 Row ids follow rows through insertion, reordering, and removal; `update` gives the
 updated row a new id and `replace` gives every row one. Errors, touched, dirty and
 native facts move with their rows in one update. Ids the container mints are
-deterministic, so server-rendered rows and the client's agree without sending ids.
+deterministic, and the server's snapshot carries them to the client.
 
 ## Engine access
 
@@ -134,18 +83,6 @@ element reads state from the instance's context and never from `rui-form`'s.
 are removed: select from the snapshot, or observe `values` for changes (the
 container keeps the same `values` object until a value changes).
 
-## Migration from the disconnected hooks
+## Migration
 
-The old `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`,
-`useFieldArray`, and `getActiveFormStore` exports are removed. Create a scoped
-controller instead. Replace snapshot hook calls with `getValue` / `getValues`,
-and use `select` when an actual subscription is needed. Apply
-fallbacks at the read site (`form.getValue('title') ?? 'Untitled'`).
-
-`FormProvider` supplies the Radiant form integration; it does not emulate React hooks.
-`combineHandlers` composes a control callback with a caller callback. The unused
-`bindControlledFormElement` export has been removed; use `form.field(name)` for
-scoped programmatic field access.
-
-`FormContextValue` is removed. `formState` is the engine's snapshot (`touched`, `dirty`,
-`errors`, `isValid`); `submitCount` and `isSubmitting` are on `formInstanceContext`.
+The `connect` / `disconnect` lifecycle, the `@formController` decorator, `ready`, `formState`, `getValues`, `getValue`, `setValue`, `reset`, `trigger`, `field` and `fieldArray` are removed. Use `form.container` for commands and reads and `form.select` to follow state. `FormFieldValue` and `FieldArrayValue` are removed with them.

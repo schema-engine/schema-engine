@@ -7,7 +7,8 @@ import { FormRendererElement } from '@/components/internals/form-renderer.script
 import { createHydrationEngine } from './hydration-engine';
 import { testAction } from '../adapters/test-actions';
 
-import { formOf } from '../components/mount-field';
+import { containerOf as readContainer } from '../components/mount-field';
+import { FormController } from '@/adapters/radiant/controller';
 
 await Promise.all([
 	import('@/elements/inputs/form-textarea'),
@@ -52,8 +53,8 @@ afterEach(() => {
 });
 
 const containerOf = async (field: HTMLElement) => {
-	await expect.poll(() => formOf(field).ready).toBe(true);
-	return formOf(field).container!;
+	await expect.poll(() => new FormController(field).container).toBeTruthy();
+	return readContainer(field);
 };
 
 test.each(['confirm', 'choice', 'accepted', 'amount'])(
@@ -146,15 +147,15 @@ test('onChange receives a nested value tree and reconnects without duplicate wat
 	const onChange = vi.fn();
 	instance.onChange = onChange;
 	const field = root.querySelector('se-field[name="address.street"]') as FormFieldElement;
-	await expect.poll(() => formOf(field).ready).toBe(true);
+	await expect.poll(() => new FormController(field).container).toBeTruthy();
 	await userEvent.fill(field.querySelector('input')!, 'changed');
 	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'changed' });
 	onChange.mockClear();
 	root.remove();
 	document.body.append(root);
-	await expect.poll(() => formOf(field).ready).toBe(true);
+	await expect.poll(() => new FormController(field).container).toBeTruthy();
 	onChange.mockClear();
-	formOf(field).setValue('address.street', 'reconnected');
+	readContainer(field).setValue('address.street', 'reconnected');
 	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'reconnected' });
 	const snapshots = onChange.mock.calls.filter(([values]) => values.address?.street === 'reconnected');
 	expect(snapshots).toHaveLength(1);
@@ -177,12 +178,12 @@ test('a hydrated constraint host keeps its server node and follows the form valu
 	const wrapper = root.querySelector<HTMLElement>('se-constraint[data-se-constraint-field="vat"]')!;
 	const field = wrapper.querySelector('se-field[name="vat"]') as FormFieldElement;
 	expect(wrapper.hidden).toBe(true);
-	await expect.poll(() => formOf(field).ready).toBe(true);
+	await expect.poll(() => new FormController(field).container).toBeTruthy();
 	expect(wrapper.hidden).toBe(true);
 	expect(root.querySelector('se-constraint[data-se-constraint-field="vat"]')).toBe(wrapper);
 
-	formOf(field).setValue('contact', 'show');
+	readContainer(field).setValue('contact', 'show');
 	await expect.poll(() => wrapper.hidden).toBe(false);
-	formOf(field).setValue('contact', 'other');
+	readContainer(field).setValue('contact', 'other');
 	await expect.poll(() => wrapper.hidden).toBe(true);
 });

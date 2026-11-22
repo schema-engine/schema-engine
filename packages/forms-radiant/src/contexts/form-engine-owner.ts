@@ -47,3 +47,23 @@ export function renderWithConstraintValues<T>(values: Record<string, unknown> | 
 		owningValues = previous;
 	}
 }
+
+/** @remarks Synchronous container renders inherit the server container's row ids, so a nested array renders the rows the client's container will hold. */
+let owningRowIds: Readonly<Record<string, readonly string[]>> | undefined;
+
+export function peekOwningRowIds(): Readonly<Record<string, readonly string[]>> | undefined {
+	return owningRowIds;
+}
+
+export function renderWithRowIds<T>(
+	rowIds: Readonly<Record<string, readonly string[]>> | undefined,
+	render: () => T,
+): T {
+	const previous = owningRowIds;
+	owningRowIds = rowIds ?? previous;
+	try {
+		return render();
+	} finally {
+		owningRowIds = previous;
+	}
+}

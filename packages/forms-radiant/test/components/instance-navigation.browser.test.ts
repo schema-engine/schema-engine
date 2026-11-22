@@ -10,7 +10,7 @@ afterEach(() => document.body.replaceChildren());
 
 /** The container the instance made for the `rui-form` in its light DOM, once it exists. */
 async function containerOf(host: HTMLElement) {
-	await expect.poll(() => new FormController(host).ready).toBe(true);
+	await expect.poll(() => new FormController(host).container).toBeTruthy();
 	return new FormController(host).container!;
 }
 
@@ -35,9 +35,12 @@ test('Next validates the current step, blocks invalid navigation, and updates wi
 	instance.append(host);
 	document.body.append(instance);
 	const validate = vi.spyOn(await containerOf(host), 'validate').mockResolvedValue(false);
+	const sync = vi.spyOn(host, 'sync');
 	await expect.poll(() => steps[1]?.hidden).toBe(true);
 	await instance.goToNextStep();
-	expect(validate).toHaveBeenCalledWith(['email'], { native: {} });
+	expect(sync).toHaveBeenCalledTimes(1);
+	expect(validate).toHaveBeenCalledWith(['email']);
+	expect(sync.mock.invocationCallOrder[0]).toBeLessThan(validate.mock.invocationCallOrder[0]!);
 	expect(instance.currentStep).toBe(0);
 	expect(instance.stepStates.valid).toEqual([false, false]);
 	validate.mockResolvedValue(true);
@@ -124,7 +127,7 @@ test('Next on the last step validates it and marks it valid', async () => {
 
 	await instance.goToNextStep();
 
-	expect(validate).toHaveBeenCalledWith(['email'], { native: {} });
+	expect(validate).toHaveBeenCalledWith(['email']);
 	expect(instance.currentStep).toBe(0);
 	expect(instance.stepStates.valid).toEqual([true]);
 });

@@ -29,12 +29,15 @@ export function RecipeRenderer({
 	recipe,
 	children,
 	initialValues,
+	rowIds,
 }: {
 	config: NormalizedFormConfig;
 	engine: FormEngine;
 	recipe: RecipeRegistration | undefined;
 	children?: JsxRenderable;
 	initialValues?: Record<string, unknown>;
+	/** The row ids the server's container gave each array, which the arrays render their rows with. */
+	rowIds?: Readonly<Record<string, readonly string[]>>;
 }): JsxRenderable {
 	const values = initialValues ?? collectFormInitialValues(config);
 	const layout = engine.getLayout();
@@ -70,7 +73,7 @@ export function RecipeRenderer({
 								engine={engine}
 								initialValues={initialValues}
 								values={values}
-								constraintContext={{ values, initialValues }}
+								constraintContext={{ values, initialValues, rowIds }}
 							/>
 						</div>
 					) : null}

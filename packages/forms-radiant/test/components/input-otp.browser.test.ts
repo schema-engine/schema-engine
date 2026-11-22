@@ -1,6 +1,7 @@
+import { selectError } from '@schema-engine/forms/state-container';
 import { afterEach, expect, test } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
-import { formOf, mountField } from './mount-field';
+import { containerOf, mountField } from './mount-field';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -20,7 +21,7 @@ test('a character typed into a later slot stays in that slot', async () => {
 
 	await expect.poll(() => values()).toEqual(['', '', '', '5', '', '']);
 	expect(document.activeElement).toBe(slots()[4]);
-	expect(formOf(field).getValue('code')).toBe('5');
+	expect(containerOf(field).getValue('code')).toBe('5');
 });
 
 test('clearing a slot leaves the other slots alone', async () => {
@@ -48,7 +49,7 @@ test('a paste fills the slots from the first one and drops characters the patter
 	slots()[2]!.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
 
 	await expect.poll(() => values()).toEqual(['1', '2', '3', '4', '', '']);
-	expect(formOf(field).getValue('code')).toBe('1234');
+	expect(containerOf(field).getValue('code')).toBe('1234');
 });
 
 test('Backspace in an empty slot moves focus to the previous slot', async () => {
@@ -67,17 +68,17 @@ test('an incomplete code is invalid by default and keeps its slots positional', 
 	await userEvent.type(slots()[2]!, '3456');
 	await expect.poll(() => values()).toEqual(['1', '', '3', '4', '5', '6']);
 
-	await expect(formOf(field).trigger()).resolves.toBe(false);
-	expect(formOf(field).field('code').error).toBe('Enter all 6 characters');
+	await expect(containerOf(field).validate()).resolves.toBe(false);
+	expect(selectError(containerOf(field).getSnapshot(), 'code')?.message).toBe('Enter all 6 characters');
 	expect(values()).toEqual(['1', '', '3', '4', '5', '6']);
 
 	await userEvent.type(slots()[1]!, '2');
-	await expect(formOf(field).trigger()).resolves.toBe(true);
+	await expect(containerOf(field).validate()).resolves.toBe(true);
 });
 
 test('an empty optional code is valid and an authored length rule replaces the default', async () => {
 	const optional = await mountOtp();
-	await expect(formOf(optional.field).trigger()).resolves.toBe(true);
+	await expect(containerOf(optional.field).validate()).resolves.toBe(true);
 	document.body.replaceChildren();
 
 	const { field } = await mountField({
@@ -86,8 +87,8 @@ test('an empty optional code is valid and an authored length rule replaces the d
 	});
 	const inputs = () => Array.from(document.querySelectorAll<HTMLInputElement>('se-input-otp input'));
 	await userEvent.type(inputs()[0]!, '12');
-	await expect(formOf(field).trigger()).resolves.toBe(false);
-	expect(formOf(field).field('code').error).toBe('Four at least');
+	await expect(containerOf(field).validate()).resolves.toBe(false);
+	expect(selectError(containerOf(field).getSnapshot(), 'code')?.message).toBe('Four at least');
 });
 
 test('an incomplete code shows the configured message once the field blurs', async () => {

@@ -1,38 +1,27 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import { fromExternalStore, type Signal } from '@ecopages/signals';
-import {
-	selectError,
-	toFieldArrayValue,
-	type FormStateContainer,
-	type FormStateSnapshot,
+import type {
+	FormStateContainer,
+	FormStateIssue,
+	FormStateSnapshot,
+	FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { describeIssue } from '@/lib/describe-issue';
-import type { FieldArrayValue, FormFieldValue } from '../../types';
 
 /**
- * Form operations scoped to the `se-form-instance` that contains the host.
+ * The form of the `se-form-instance` that contains a host: its container, a signal over its state, and its issue text.
  *
  * @remarks
  * The instance owns one {@link FormStateContainer} and provides it on its own context, so a host reads
  * the form it belongs to and there is no global active form. Place the host inside the instance (or in
- * the form a `FormRenderer` renders). The container is the engine's own, with nested values, so a
- * dotted path (`contacts.0.email`) names a value in every read and write and nothing is translated.
- *
- * Reads are snapshots; follow changes with {@link FormController.select}, which returns a signal
- * over a selector of the snapshot, or with `connect`. A new container replaces the old one when the
- * instance's config or engine changes, so the controller resolves it from the context on each use
- * and keeps no copy. `connect` waits for the container and requests an update on each change; call
- * `disconnect` when a manually managed host disconnects or moves to another form.
+ * the form a `FormRenderer` renders). Commands go through {@link FormController.container}, whose paths
+ * are dotted (`contacts.0.email`); state is followed with {@link FormController.select}. A new
+ * container replaces the old one when the instance's config or engine changes, so the controller
+ * resolves it from the context on each use and keeps no copy.
  */
 export class FormController {
-	private stopWatching?: () => void;
-
 	constructor(readonly host: HTMLElement) {}
-
-	get ready(): boolean {
-		return this.container !== undefined;
-	}
 
 	/** The form's state container, once the instance has one. */
 	get container(): FormStateContainer | undefined {
@@ -66,12 +55,6 @@ export class FormController {
 		return value;
 	}
 
-	private requireContainer(): FormStateContainer {
-		const container = this.container;
-		if (!container) throw new Error('FormController requires a connected se-form-instance.');
-		return container;
-	}
-
 	/**
 	 * Follows the instance's context: `onContext` receives what the nearest provider holds now and each time it publishes again.
 	 *
@@ -96,11 +79,8 @@ export class FormController {
 		return () => stop?.();
 	}
 
-	/**
-	 * Calls `listener` when the form's container becomes available or is replaced, and after each change of
-	 * the container's state; returns the function that stops.
-	 */
-	private watchContainer(listener: () => void, notifyInitial: boolean): () => void {
+	/** Calls `listener` when the form's container is replaced, and after each change of its state; returns the function that stops. */
+	private watchContainer(listener: () => void): () => void {
 		let current: FormStateContainer | undefined;
 		let unsubscribeContainer: (() => void) | undefined;
 		let first = true;
@@ -112,55 +92,12 @@ export class FormController {
 			unsubscribeContainer?.();
 			current = next;
 			unsubscribeContainer = next?.subscribe(listener);
-			if (next && (notifyInitial || !initial)) listener();
+			if (next && !initial) listener();
 		});
 		return () => {
 			stop();
 			unsubscribeContainer?.();
 		};
-	}
-
-	/**
-	 * Calls `onChange` when the form's container becomes available or is replaced, and after each change of
-	 * the container's state.
-	 */
-	connect(onChange: () => void = () => {}): void {
-		this.disconnect();
-		this.stopWatching = this.watchContainer(onChange, true);
-	}
-
-	disconnect(): void {
-		this.stopWatching?.();
-		this.stopWatching = undefined;
-	}
-
-	/** The nested values now; the same object until a value changes. */
-	getValues(): Readonly<Record<string, unknown>> {
-		return this.requireContainer().getSnapshot().values;
-	}
-
-	getValue(path: string): unknown {
-		return this.requireContainer().getValue(path);
-	}
-
-	setValue(path: string, value: unknown): void {
-		this.requireContainer().setValue(path, value);
-	}
-
-	/** Restores the defaults, or replaces them with `values` first, and clears the form's field state. */
-	reset(values?: Record<string, unknown>): void {
-		this.requireContainer().reset(values);
-	}
-
-	/** The container's snapshot now. */
-	get formState(): FormStateSnapshot {
-		return this.requireContainer().getSnapshot();
-	}
-
-	/** Validates `names` (the whole form when omitted) and resolves whether they are valid. */
-	async trigger(names?: string | string[]): Promise<boolean> {
-		const paths = names === undefined ? undefined : Array.isArray(names) ? names : [names];
-		return this.requireContainer().validate(paths);
 	}
 
 	/**
@@ -177,7 +114,7 @@ export class FormController {
 	select<Selected>(selector: (snapshot: FormStateSnapshot) => Selected): Signal<Selected | undefined> {
 		return fromExternalStore<FormStateSnapshot | undefined, Selected | undefined>(
 			{
-				subscribe: (listener) => this.watchContainer(listener, false),
+				subscribe: (listener) => this.watchContainer(listener),
 				getSnapshot: () => this.container?.getSnapshot(),
 				getServerSnapshot: () => this.container?.getServerSnapshot(),
 			},
@@ -185,27 +122,12 @@ export class FormController {
 		);
 	}
 
-	/** A binding of the field at `path`, which reads and writes the container the instance has at the time of each use. */
-	field(path: string): FormFieldValue {
-		const container = () => this.requireContainer();
-		const formatIssue = () => this.context()?.formatIssue;
-		return {
-			name: path,
-			get value() {
-				return container().getValue(path);
-			},
-			get error() {
-				const issue = selectError(container().getSnapshot(), path);
-				return issue && describeIssue(issue, path, formatIssue());
-			},
-			onChange: (value) => container().setValue(path, value),
-			onBlur: () => container().blur(path),
-		};
-	}
-
-	/** The row commands of the array at `path`, with its current rows. */
-	fieldArray(path: string): FieldArrayValue {
-		const container = this.requireContainer();
-		return toFieldArrayValue(container.getSnapshot().rowIds[path], container.fieldArray(path));
+	/**
+	 * The text of an issue at `path` as the form shows it: the form's formatter, else the issue's own `message`.
+	 *
+	 * @remarks `undefined` when neither gives text, never the issue's `type`.
+	 */
+	formatIssue(issue: FormStateIssue | FormSubmissionIssue, path: string): string | undefined {
+		return describeIssue(issue, path, this.context()?.formatIssue);
 	}
 }

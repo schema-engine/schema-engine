@@ -205,7 +205,12 @@ export const ControllerOperations: Story = {
 		const arrayHost = canvasElement.querySelector<HTMLElement>('se-form-array');
 		if (!arrayHost) throw new Error('Expected array component');
 		const form = new FormController(arrayHost);
-		const array = () => form.fieldArray('emergencyContacts');
+		const container = () => {
+			if (!form.container) throw new Error('Expected the form container');
+			return form.container;
+		};
+		const array = () => container().fieldArray('emergencyContacts');
+		const rowIds = () => container().getSnapshot().rowIds['emergencyContacts'];
 		const names = () => canvas.getAllByLabelText<HTMLInputElement>(/full name/i);
 		const listener = fn();
 		const stop = form.select((snapshot) => snapshot.values['emergencyContacts']).subscribe(listener);
@@ -218,21 +223,21 @@ export const ControllerOperations: Story = {
 			await waitFor(async () => expect(names().map((input) => input.value)).toEqual(['Alice', 'Bob']));
 		});
 		await step('A plain controller writes live values', async () => {
-			form.field('emergencyContacts.0.contactName').onChange('Updated Alice');
+			container().setValue('emergencyContacts.0.contactName', 'Updated Alice');
 			await waitFor(async () => expect(names()[0]).toHaveValue('Updated Alice'));
 			await userEvent.clear(names()[1]);
 			await userEvent.type(names()[1], 'Typed Bob');
-			await expect(form.getValue('emergencyContacts.1.contactName')).toBe('Typed Bob');
+			await expect(container().getValue('emergencyContacts.1.contactName')).toBe('Typed Bob');
 		});
 		await step('Move and remove keep row identity, DOM values, and submission aligned', async () => {
-			const originalIds = array().fields;
+			const originalIds = rowIds();
 			array().move(0, 1);
-			await expect(form.getValue('emergencyContacts.0.contactName')).toBe('Typed Bob');
-			await expect(form.getValue('emergencyContacts.1.contactName')).toBe('Updated Alice');
+			await expect(container().getValue('emergencyContacts.0.contactName')).toBe('Typed Bob');
+			await expect(container().getValue('emergencyContacts.1.contactName')).toBe('Updated Alice');
 			await waitFor(async () =>
 				expect(names().map((input) => input.value)).toEqual(['Typed Bob', 'Updated Alice']),
 			);
-			await expect(array().fields).toEqual([originalIds[1], originalIds[0]]);
+			await expect(rowIds()).toEqual([originalIds[1], originalIds[0]]);
 			await userEvent.click(canvas.getAllByRole('button', { name: /remove contact/i })[0]);
 			await waitFor(async () => expect(names().map((input) => input.value)).toEqual(['Updated Alice']));
 			await userEvent.click(canvas.getByRole('button', { name: /save contacts/i }));
@@ -245,23 +250,24 @@ export const ControllerOperations: Story = {
 		await step('Watch cleanup stops notifications', async () => {
 			stop();
 			const count = listener.mock.calls.length;
-			form.setValue('emergencyContacts.0.contactName', 'After cleanup');
+			container().setValue('emergencyContacts.0.contactName', 'After cleanup');
 			await expect(listener).toHaveBeenCalledTimes(count);
 		});
-		form.disconnect();
 	},
 };
 
 class PlainFormConsumer extends HTMLElement {
 	readonly form = new FormController(this);
+	readonly heading = this.form.select((snapshot) => snapshot.values['title']);
 	updates = 0;
+	private stop?: () => void;
 	connectedCallback(): void {
-		this.form.connect(() => {
+		this.stop = this.heading.subscribe(() => {
 			this.updates += 1;
 		});
 	}
 	disconnectedCallback(): void {
-		this.form.disconnect();
+		this.stop?.();
 	}
 }
 if (!customElements.get('se-test-form-consumer')) customElements.define('se-test-form-consumer', PlainFormConsumer);
@@ -274,16 +280,16 @@ export const ControllerLifecycle: Story = {
 		const first = new FormController(host);
 		const consumer = document.createElement('se-test-form-consumer') as PlainFormConsumer;
 		host.append(consumer);
-		await waitFor(async () => expect(consumer.updates).toBeGreaterThan(0));
+		const container = first.container;
+		if (!container) throw new Error('Expected the form container');
 		const updates = consumer.updates;
-		first.setValue('title', 'First form');
-		await expect(consumer.form.getValue('title')).toBe('First form');
+		container.setValue('title', 'First form');
+		await expect(consumer.heading.get()).toBe('First form');
 		await waitFor(async () => expect(consumer.updates).toBeGreaterThan(updates));
 		consumer.remove();
 		const disconnectedUpdates = consumer.updates;
-		first.setValue('title', 'After disconnect');
+		container.setValue('title', 'After disconnect');
 		await expect(consumer.updates).toBe(disconnectedUpdates);
-		first.disconnect();
 	},
 };
 

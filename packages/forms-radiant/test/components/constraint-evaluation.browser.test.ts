@@ -1,6 +1,7 @@
 import { expect, test, vi } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormController } from '@/adapters/radiant/controller';
+import { containerOf } from './mount-field';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -39,22 +40,22 @@ test('a constraint host re-evaluates only when a value its constraints read chan
 	root.render(FormRenderer({ config, engine }));
 	const form = new FormController(host.querySelector('rui-form')!);
 	try {
-		await expect.poll(() => form.ready).toBe(true);
+		await expect.poll(() => form.container).toBeTruthy();
+		const container = containerOf(host.querySelector('rui-form')!);
 		const wrapper = host.querySelector<HTMLElement>('se-constraint')!;
 		await new Promise((resolve) => setTimeout(resolve, 50));
 		vi.mocked(evaluateConstraints).mockClear();
 
-		form.setValue('note', 'unrelated');
-		form.setValue('note', 'still unrelated');
+		container.setValue('note', 'unrelated');
+		container.setValue('note', 'still unrelated');
 		await new Promise((resolve) => setTimeout(resolve, 50));
 		expect(evaluateConstraints).not.toHaveBeenCalled();
 		expect(wrapper.hidden).toBe(true);
 
-		form.setValue('mode', 'show');
+		container.setValue('mode', 'show');
 		await expect.poll(() => wrapper.hidden).toBe(false);
 		expect(evaluateConstraints).toHaveBeenCalledTimes(1);
 	} finally {
-		form.disconnect();
 		root.unmount();
 		host.remove();
 	}

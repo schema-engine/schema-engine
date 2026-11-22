@@ -7,7 +7,6 @@ import {
 import { FormController } from '@/adapters/radiant/controller';
 import { formInstanceContext } from '@/contexts/form-instance-context';
 import { createInitialStepStates } from '@schema-engine/forms/engine';
-import { flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 
@@ -63,10 +62,8 @@ export function createTestForm(
 	const element = document.createElement('div');
 	const host = document.createElement('div');
 	const container = createFormStateContainer({
-		elements: flattenStepElements(steps),
+		config: { steps, validationMode: 'onSubmit', reValidateMode: 'onChange' },
 		registry: engine.getValidationRegistry(),
-		validationMode: 'onSubmit',
-		reValidateMode: 'onChange',
 		defaults,
 	});
 	provideTestContainer(element, container, formatIssue);

@@ -5,7 +5,12 @@ import { getElementContainerKind } from '@schema-engine/forms/lib/normalized-for
 import type { NormalizedElementConfig, FieldOverlay } from '@schema-engine/forms';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { evaluateConstraints } from '@schema-engine/forms/constraints';
-import { renderWithOwningFormEngine, renderWithConstraintValues } from '@/contexts/form-engine-owner';
+import {
+	renderWithOwningFormEngine,
+	renderWithConstraintValues,
+	renderWithRowIds,
+	peekOwningRowIds,
+} from '@/contexts/form-engine-owner';
 import { ElementError } from './element-error';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
@@ -14,6 +19,8 @@ import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
 export interface ConstraintEvaluationContext {
 	values?: Record<string, unknown>;
 	initialValues?: Record<string, unknown>;
+	/** The server container's row ids by array path, for an array to render its rows with. */
+	rowIds?: Readonly<Record<string, readonly string[]>>;
 	fieldPath?: string;
 }
 
@@ -21,8 +28,10 @@ function addArrayInitialValues(
 	config: NormalizedElementConfig,
 	values: Record<string, unknown> | undefined,
 	initialValues: Record<string, unknown> | undefined,
+	rowIds: Readonly<Record<string, readonly string[]>> | undefined,
 ): NormalizedElementConfig & {
 	ssrInitialRows: readonly unknown[];
+	ssrRowIds?: readonly string[];
 	initialFormValues: Record<string, unknown>;
 } {
 	const path = 'name' in config ? config.name : '';
@@ -34,6 +43,7 @@ function addArrayInitialValues(
 	return {
 		...config,
 		ssrInitialRows: seedArrayRows(config, rows, usesScalarArrayItem(config, path, children, formValues)),
+		ssrRowIds: rowIds?.[path],
 		initialFormValues: initialValues ?? {},
 	};
 }
@@ -101,7 +111,12 @@ export function renderRegisteredElement(
 	);
 	const renderConfig =
 		getElementContainerKind(config) === 'array'
-			? addArrayInitialValues(enhancedConfig, constraintContext?.values, constraintContext?.initialValues)
+			? addArrayInitialValues(
+					enhancedConfig,
+					constraintContext?.values,
+					constraintContext?.initialValues,
+					constraintContext?.rowIds ?? peekOwningRowIds(),
+				)
 			: addFieldInitialValue(
 					enhancedConfig,
 					constraintContext?.initialValues,
@@ -109,6 +124,8 @@ export function renderRegisteredElement(
 				);
 
 	return renderWithConstraintValues(constraintContext?.values, () =>
-		renderWithOwningFormEngine(engine, () => elementRegistration.render(renderConfig) as JsxRenderable),
+		renderWithRowIds(constraintContext?.rowIds, () =>
+			renderWithOwningFormEngine(engine, () => elementRegistration.render(renderConfig) as JsxRenderable),
+		),
 	);
 }

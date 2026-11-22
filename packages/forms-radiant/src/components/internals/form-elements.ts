@@ -8,7 +8,7 @@ import {
 } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormElement } from './field-renderer';
-import { peekOwningConstraintValues } from '@/contexts/form-engine-owner';
+import { peekOwningConstraintValues, peekOwningRowIds } from '@/contexts/form-engine-owner';
 import type { ConstraintEvaluationContext } from './render-registered-element';
 
 export interface FormElementsProps {
@@ -42,7 +42,10 @@ export function FormElements({
 		jsx(FormElement, {
 			key: composeElementKey(element, index, scope),
 			config: element,
-			constraintContext: constraintContext ?? { values: peekOwningConstraintValues() },
+			constraintContext: constraintContext ?? {
+				values: peekOwningConstraintValues(),
+				rowIds: peekOwningRowIds(),
+			},
 			engine,
 			name: composeFieldName(element, scope),
 			scopePath: namePrefix,

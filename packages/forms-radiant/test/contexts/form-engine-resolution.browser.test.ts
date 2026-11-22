@@ -296,10 +296,8 @@ describe('Radiant form engine resolution', () => {
 
 	const contactsContainer = (engine: ReturnType<typeof createArrayEngine>) =>
 		createFormStateContainer({
-			elements: [],
+			config: { steps: [{ elements: [] }], validationMode: 'onSubmit', reValidateMode: 'onChange' },
 			registry: engine.getValidationRegistry(),
-			validationMode: 'onSubmit',
-			reValidateMode: 'onChange',
 			defaults: { contacts: [{ email: 'person@example.test' }] },
 		});
 
@@ -334,7 +332,7 @@ describe('Radiant form engine resolution', () => {
 		form.append(array);
 		renderer.append(form);
 		document.body.append(renderer);
-		await vi.waitFor(() => expect(new FormController(array).ready).toBe(true));
+		await vi.waitFor(() => expect(new FormController(array).container).toBeDefined());
 		expect(array.querySelector('input')).toBeNull();
 
 		renderer.engine = engine;

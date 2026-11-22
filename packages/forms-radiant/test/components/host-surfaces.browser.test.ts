@@ -4,6 +4,7 @@ import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { SplitScreenSideElement } from '@/components/shells/shells';
 import type { FormFieldElement } from '@/elements/form-field';
 import { FormController } from '@/adapters/radiant/controller';
+import { containerOf } from './mount-field';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -29,10 +30,10 @@ test('fields do not request an update when another field changes', async () => {
 	await expect.poll(() => host.querySelectorAll('se-field')).toHaveLength(3);
 	const [first, ...others] = [...host.querySelectorAll<FormFieldElement>('se-field')];
 	const form = new FormController(first!);
-	await expect.poll(() => form.ready).toBe(true);
+	await expect.poll(() => form.container).toBeTruthy();
 	const updates = others.map((field) => vi.spyOn(field, 'requestUpdate'));
 
-	form.setValue('a', 'changed');
+	containerOf(first!).setValue('a', 'changed');
 	await new Promise((resolve) => setTimeout(resolve, 50));
 
 	expect(updates.map((spy) => spy.mock.calls.length)).toEqual([0, 0]);

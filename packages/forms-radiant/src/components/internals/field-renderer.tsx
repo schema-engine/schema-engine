@@ -54,6 +54,7 @@ export function FormElement({
 	const fieldConstraintContext: ConstraintEvaluationContext = {
 		values: constraintValues,
 		initialValues: initialValues ?? constraintContext?.initialValues,
+		rowIds: constraintContext?.rowIds,
 		fieldPath: name ?? constraintContext?.fieldPath,
 	};
 	if (!constraints?.length) {
