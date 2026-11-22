@@ -73,17 +73,17 @@ export function setValueAtPath(target: Record<string, unknown>, path: string, va
  *
  * @remarks Returns `values` itself when nothing is at the path. Arrays stay arrays, so the rows around the one cleared keep their indexes.
  */
-export function withoutValueAt<TValues>(values: TValues, path: string): TValues {
+export function withoutValueAt(values: unknown, path: string): unknown {
 	const [head, ...rest] = path.split('.');
 	if (head === undefined || values === null || typeof values !== 'object' || !Object.hasOwn(values, head)) {
 		return values;
 	}
-	const current = (values as Record<string, unknown>)[head];
+	const current: unknown = Reflect.get(values, head);
 	const next = rest.length === 0 ? undefined : withoutValueAt(current, rest.join('.'));
 	if (Object.is(next, current)) return values;
-	const copy = Array.isArray(values) ? [...values] : { ...values };
-	(copy as Record<string, unknown>)[head] = next;
-	return copy as TValues;
+	const copy: unknown = Array.isArray(values) ? [...values] : { ...values };
+	if (typeof copy === 'object' && copy !== null) Reflect.set(copy, head, next);
+	return copy;
 }
 
 /**

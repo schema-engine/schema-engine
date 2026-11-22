@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { createDebounceScope } from '@/lib/debounce';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
+import { selectFieldState } from '@/state-container/selectors';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
@@ -59,8 +60,7 @@ describe('resolveParticipation', () => {
 		const held = { hasCompany: false, wantsInvoice: 'yes', vat: '' };
 		const result = resolveParticipation(wizard(), held);
 		expect(result.excluded).toContain('vat');
-		expect(result.visible).not.toHaveProperty('wantsInvoice', 'yes');
-		expect(held.wantsInvoice).toBe('yes');
+		expect(result.fields.vat).toMatchObject({ hidden: true });
 		expect(resolveParticipation(wizard(), { ...held, hasCompany: true }).excluded).not.toContain('vat');
 	});
 
@@ -114,8 +114,7 @@ describe('resolveParticipation', () => {
 const validate = async (values: Record<string, unknown>) => {
 	const steps = wizard();
 	const { issues } = await validateFormValues({
-		elements: steps.flatMap((step) => step.elements),
-		participation: resolveParticipation(steps, values),
+		steps,
 		values,
 		registry,
 		debounceScope: createDebounceScope(),
@@ -180,5 +179,71 @@ describe('the container with skipped steps', () => {
 		expect(again.outcome).toBe('passed');
 		if (again.outcome !== 'passed') return;
 		expect(again.values).toMatchObject({ company: 'Acme', wantsInvoice: 'yes', vat: 'V1', iban: 'I1' });
+	});
+});
+
+describe('one ordered evaluation of show, disable and require', () => {
+	test('require reads the same progressive values as show: both see a later field as held, and an earlier excluded one as absent', () => {
+		const steps: ValidationStep[] = [
+			{
+				id: 'only',
+				elements: [
+					input('needs', { constraints: [when('late', 'yes', 'require')] }),
+					input('shown', { constraints: [when('late', 'yes', 'show')] }),
+					input('gate'),
+					input('late', { constraints: [when('gate', 'open', 'show')] }),
+					input('afterLate', { constraints: [when('late', 'yes', 'require')] }),
+				],
+			},
+		];
+		const { fields, excluded } = resolveParticipation(steps, { gate: 'closed', late: 'yes' });
+		expect(excluded).toEqual(['late']);
+		expect(fields.needs?.required).toBe(true);
+		expect(fields.shown?.hidden).toBe(false);
+		expect(fields.afterLate?.required).toBe(false);
+	});
+
+	test('a require constraint of a container reaches the fields in it, and a hidden or disabled container takes them with it', async () => {
+		const container = createFormStateContainer({
+			config: {
+				validationMode: 'onSubmit',
+				reValidateMode: 'onChange',
+				steps: [
+					{
+						id: 'a',
+						elements: [
+							input('kind'),
+							element({
+								$type: 'fieldset',
+								name: 'company',
+								constraints: [when('kind', 'business', 'require'), when('kind', 'ghost', 'hide')],
+								elements: [{ $type: 'input', name: 'vat' }],
+							}),
+						],
+					},
+				],
+			},
+			registry,
+			defaults: { kind: 'person', company: { vat: '' } },
+		});
+		expect(selectFieldState(container.getSnapshot(), 'company.vat')).toMatchObject({ required: false });
+		container.setValue('kind', 'business');
+		expect(selectFieldState(container.getSnapshot(), 'company.vat')).toMatchObject({
+			required: true,
+			hidden: false,
+		});
+		container.setValue('kind', 'ghost');
+		expect(selectFieldState(container.getSnapshot(), 'company.vat')).toMatchObject({ hidden: true });
+	});
+
+	test('a field of a skipped step is hidden, and the snapshot lists the skipped step, with the same object while nothing changed', () => {
+		const container = make({ hasCompany: false, note: '', wantsInvoice: 'no', company: '', vat: '', iban: '' });
+		const before = container.getSnapshot().participation;
+		expect(before.skippedSteps).toEqual(['company']);
+		expect(selectFieldState(container.getSnapshot(), 'company')).toMatchObject({ hidden: true });
+		container.setValue('note', 'x');
+		expect(container.getSnapshot().participation).toBe(before);
+		container.setValue('hasCompany', true);
+		expect(container.getSnapshot().participation.skippedSteps).toEqual([]);
 	});
 });

@@ -13,9 +13,6 @@ import type {
 	FormSubmissionIssue,
 } from '@/state-container/types';
 
-/** An action as the runtime reads it: the loose shape every typed action of a normalized config extends. */
-export type FormRuntimeAction = FormActionConfig;
-
 /** The nested values of a form, as the container holds them and a submission hands them over. */
 export type FormValues = Readonly<Record<string, unknown>>;
 
@@ -50,7 +47,7 @@ export type FormRuntimeOutcome =
 /** How `next()`, `back()` and `goTo()` ended. */
 export type NavigationOutcome = Extract<
 	FormRuntimeOutcome,
-	'moved' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
+	'moved' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
 >;
 
 /** How `submit()` ended: before the last active step it acts as `next()`, so it can end `moved`. */
@@ -77,14 +74,12 @@ export interface FormSubmissionState {
 /** What a runtime reports: its submission, and its steps. */
 export interface FormRuntimeSnapshot {
 	readonly submission: FormSubmissionState;
-	readonly steps: {
-		/** The id of the current step. */
-		readonly current: string;
-		/** A `next`, `back`, `goTo` or a submit that acts as `next` is running. */
-		readonly navigating: boolean;
-		/** Every step in config order, skipped ones included. */
-		readonly list: readonly FormStepState[];
-	};
+	/** The id of the current step. */
+	readonly current: string;
+	/** A `next`, `back`, `goTo` or a submit that acts as `next` is running. */
+	readonly navigating: boolean;
+	/** Every step in config order, skipped ones included. */
+	readonly steps: readonly FormStepState[];
 }
 
 /** What only the renderer can do. */
@@ -100,20 +95,22 @@ export interface FormRuntimeHost {
 	/**
 	 * Called once a submission succeeded, after its actions and `onSubmit`, so a host whose form can post natively may do it.
 	 *
-	 * @remarks The host decides whether it posts: Radiant does when the application gave no `onSubmit`. The navigation cannot cut off the success and complete triggers, which ran first.
+	 * @remarks The host decides whether it posts, because a renderer always passes a stable `onSubmit` wrapper and the runtime cannot tell whether the application gave one: Radiant posts when it did not. The navigation cannot cut off the success and complete triggers, which ran first.
 	 */
 	submitNatively?(): void;
 }
 
 /** A step of the config the runtime reads. */
-export interface FormRuntimeStep<TAction extends FormActionConfig> extends ValidationStep {
+export interface FormRuntimeStep<TAction extends FormActionConfig = FormActionConfig> extends ValidationStep {
 	readonly id: string;
 	/** Actions dispatched after the form's on every trigger while this step is current. */
 	readonly actions?: readonly ActionSequenceEntry<TAction>[];
 }
 
 /** The normalized form config, in the shape the runtime reads. */
-export interface FormRuntimeConfig<TAction extends FormActionConfig> extends FormStateContainerConfig {
+export interface FormRuntimeConfig<
+	TAction extends FormActionConfig = FormActionConfig,
+> extends FormStateContainerConfig {
 	readonly id?: string;
 	readonly navigation?: StepNavigationMode;
 	readonly actions?: readonly ActionSequenceEntry<TAction>[];
@@ -121,7 +118,7 @@ export interface FormRuntimeConfig<TAction extends FormActionConfig> extends For
 }
 
 /** What {@link createFormRuntime} builds a runtime from. */
-export interface CreateFormRuntimeOptions<TAction extends FormActionConfig> {
+export interface CreateFormRuntimeOptions<TAction extends FormActionConfig = FormActionConfig> {
 	/** The engine, for its validation registry, its actions and its `fetch`. */
 	engine: FormEngineRuntime;
 	config: FormRuntimeConfig<TAction>;

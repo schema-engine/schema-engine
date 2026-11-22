@@ -9,13 +9,15 @@ import type { JsxCustomElementAttributes } from '@ecopages/jsx';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { bindTo, customElement, onUpdated, prop, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
-import { constraintContext, formValuesContext, type ConstraintState } from '@/contexts/constraint-context';
+import { selectFieldState, type FormStateContainer } from '@schema-engine/forms/state-container';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 
 /** RuiField's registration and presentation, restoring the required state and defaults. */
 @customElement('se-field')
 export class FormFieldElement extends RuiFieldElement {
-	private constraint?: ConstraintState;
-	private isAuthoredDisabled?: (renderedPath: string) => boolean;
+	private container?: FormStateContainer;
+	private stopObserving?: () => void;
+	private constrainedDisabled = false;
 
 	/**
 	 * Whether the config authors the field required. `required` follows it and the constraints around the field,
@@ -45,40 +47,46 @@ export class FormFieldElement extends RuiFieldElement {
 		this.applyConstraint();
 	}
 
-	@onContextUpdate({ context: constraintContext, requestUpdate: false })
-	onConstraint(constraint: ConstraintState | undefined): void {
-		this.constraint = constraint;
+	@onContextUpdate({
+		context: formInstanceContext,
+		select: (instance: FormInstanceContextValue | undefined) => instance?.container,
+		requestUpdate: false,
+	})
+	onContainer(container: FormStateContainer | undefined): void {
+		if (container === this.container) return;
+		this.stopObserving?.();
+		this.stopObserving = undefined;
+		this.container = container;
+		if (container) this.stopObserving = container.subscribe(() => this.applyConstraint());
 		this.applyConstraint();
 	}
 
-	@onContextUpdate({
-		context: formValuesContext,
-		select: (form) => form?.isAuthoredDisabled,
-		requestUpdate: false,
-	})
-	onAuthoredDisabled(isAuthoredDisabled: ((renderedPath: string) => boolean) | undefined): void {
-		this.isAuthoredDisabled = isAuthoredDisabled;
-		this.applyConstraint();
+	override disconnectedCallback(): void {
+		this.stopObserving?.();
+		this.stopObserving = undefined;
+		this.container = undefined;
+		super.disconnectedCallback();
 	}
 
 	/**
-	 * Composes the field's authored state with the constraint wrappers around it.
+	 * Applies what the form's constraints say about this field: the container's state at its path.
 	 *
 	 * @remarks
-	 * A field outside every wrapper never receives a constraint and keeps what render gave it. The live
-	 * `disabled` already holds what a constraint applied at render, so the authored state comes from the
-	 * config lookup. It waits for the constraint context and the authored-disabled lookup, so an authored
-	 * `disabled` is never lifted while the lookup is still on its way; a field inside a wrapper that has not
-	 * evaluated yet keeps its render state too. Validating a field whose requirement changed is the state
-	 * container's, which reads the constraints.
+	 * The state already has the authored `disabled` of the field and of the containers around it, and the
+	 * `require` and `disable` constraints of those containers, folded in by the engine, so the field only follows
+	 * it. A field the state never disabled keeps what render gave it, and one it released goes back to enabled.
+	 * Validating a field whose requirement changed is the state container's.
 	 */
 	private applyConstraint(): void {
-		const { constraint, isAuthoredDisabled } = this;
-		if (!constraint || !isAuthoredDisabled) return;
-		const name = this.getAttribute('name') ?? this.name;
-
-		this.disabled = isAuthoredDisabled(name) || constraint.disabled;
-		this.showRequired(constraint.required || this.authoredRequired);
+		const { container } = this;
+		if (!container) return;
+		const { disabled, required } = selectFieldState(
+			container.getSnapshot(),
+			this.getAttribute('name') ?? this.name,
+		);
+		if (disabled || this.constrainedDisabled) this.disabled = disabled;
+		this.constrainedDisabled = disabled;
+		this.showRequired(required || this.authoredRequired);
 	}
 
 	/** What the field announces (`aria-required`) and the label marker shows; neither validates anything. */

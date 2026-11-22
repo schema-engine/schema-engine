@@ -1,4 +1,4 @@
-import type { ValidationStep } from '@/engine/value-validation';
+import type { FieldParticipation, ValidationStep } from '@/engine/value-validation';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import type { FieldArrayCommands } from './field-array';
 
@@ -231,6 +231,18 @@ export interface FormStateSnapshot {
 	 * that no one told it about, since `reset` is the only way back and any caller may use it.
 	 */
 	readonly generation: number;
+	/**
+	 * What the form's constraints say, resolved in order against the values with whatever took no part absent.
+	 *
+	 * @remarks
+	 * `skippedSteps` lists the ids of the steps its constraints hide. `fields` has an entry for each rendered path that has a constraint,
+	 * is disabled by authoring or is held by a skipped step; `selectFieldState` folds the ancestors in. The same object comes back
+	 * while nothing in it changes, however much else does.
+	 */
+	readonly participation: {
+		readonly skippedSteps: readonly string[];
+		readonly fields: Readonly<Record<string, FieldParticipation>>;
+	};
 }
 
 /**

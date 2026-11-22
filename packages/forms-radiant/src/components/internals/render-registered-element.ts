@@ -10,7 +10,11 @@ import {
 	renderWithConstraintValues,
 	renderWithRowIds,
 	peekOwningRowIds,
+	peekOwningParticipation,
+	renderWithParticipation,
 } from '@/contexts/form-engine-owner';
+import { constraintsFromParticipation, type RenderedConstraints } from '@/lib/participation-snapshot';
+import type { Participation } from '@schema-engine/forms/engine';
 import { ElementError } from './element-error';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
@@ -21,6 +25,8 @@ export interface ConstraintEvaluationContext {
 	initialValues?: Record<string, unknown>;
 	/** The server container's row ids by array path, for an array to render its rows with. */
 	rowIds?: Readonly<Record<string, readonly string[]>>;
+	/** The participation of the values the server rendered: what shows, is disabled and is required. */
+	participation?: Pick<Participation, 'fields'>;
 	fieldPath?: string;
 }
 
@@ -75,16 +81,21 @@ export function renderRegisteredElement(
 	overlays?: FieldOverlay,
 	constraintContext?: ConstraintEvaluationContext,
 	renderWhenHidden = false,
-	snapshot?: ReturnType<typeof evaluateConstraints>,
+	snapshot?: RenderedConstraints,
 ): JsxRenderable {
+	const participation = constraintContext?.participation ?? peekOwningParticipation();
+	const fieldPath = constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined);
+	const baseRequired = isFieldRequired('rules' in config ? config.rules : undefined);
 	const { shouldShow, shouldDisable, isRequired } =
 		snapshot ??
-		evaluateConstraints({
-			constraints: 'constraints' in config ? config.constraints : undefined,
-			baseRequired: isFieldRequired('rules' in config ? config.rules : undefined),
-			fieldPath: constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined),
-			values: constraintContext?.values ?? {},
-		});
+		(participation && fieldPath !== undefined
+			? constraintsFromParticipation(participation, fieldPath, baseRequired)
+			: evaluateConstraints({
+					constraints: 'constraints' in config ? config.constraints : undefined,
+					baseRequired: isFieldRequired('rules' in config ? config.rules : undefined),
+					fieldPath: constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined),
+					values: constraintContext?.values ?? {},
+				}));
 
 	if (!shouldShow && !renderWhenHidden) {
 		return null;
@@ -125,7 +136,9 @@ export function renderRegisteredElement(
 
 	return renderWithConstraintValues(constraintContext?.values, () =>
 		renderWithRowIds(constraintContext?.rowIds, () =>
-			renderWithOwningFormEngine(engine, () => elementRegistration.render(renderConfig) as JsxRenderable),
+			renderWithParticipation(participation, () =>
+				renderWithOwningFormEngine(engine, () => elementRegistration.render(renderConfig) as JsxRenderable),
+			),
 		),
 	);
 }

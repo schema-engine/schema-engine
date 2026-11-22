@@ -127,6 +127,7 @@ const state = (id: string, extra: Partial<FormStepState> = {}): FormStepState =>
 	visited: false,
 	complete: false,
 	invalid: false,
+	reachable: false,
 	...extra,
 });
 
@@ -153,19 +154,6 @@ describe('projectViewSteps', () => {
 				isCompleted: true,
 				isInvalid: false,
 				isVisited: true,
-				isSkipped: false,
-			},
-			{
-				id: 'two',
-				title: undefined,
-				description: undefined,
-				index: -1,
-				total: 2,
-				isActive: false,
-				isCompleted: false,
-				isInvalid: false,
-				isVisited: false,
-				isSkipped: true,
 			},
 			{
 				id: 'three',
@@ -177,7 +165,6 @@ describe('projectViewSteps', () => {
 				isCompleted: false,
 				isInvalid: true,
 				isVisited: true,
-				isSkipped: false,
 			},
 		]);
 	});
@@ -202,15 +189,16 @@ describe('createViewNavigation', () => {
 		});
 	});
 
-	test('says which steps a stepper can go to: back always, forward as the mode allows, never a skipped or the current one', () => {
-		const all = [state('a', { visited: true }), state('b'), state('c', { skipped: true }), state('d')];
-		const linear = createViewNavigation(all, 'b', commands);
-		expect(['a', 'b', 'c', 'd'].map((id) => linear.canGoToStep(id))).toEqual([true, false, false, false]);
-		const free = createViewNavigation(all, 'b', commands, 'free');
-		expect(['a', 'b', 'c', 'd'].map((id) => free.canGoToStep(id))).toEqual([true, false, false, true]);
-		expect(createViewNavigation([state('a'), state('b', { visited: true })], 'a', commands).canGoToStep('b')).toBe(
+	test('says which steps a stepper can go to from the runtime step state', () => {
+		const all = [state('a', { reachable: true }), state('b'), state('c', { skipped: true }), state('d')];
+		const navigation = createViewNavigation(all, 'b', commands);
+		expect(['a', 'b', 'c', 'd', 'nowhere'].map((id) => navigation.canGoToStep(id))).toEqual([
 			true,
-		);
+			false,
+			false,
+			false,
+			false,
+		]);
 	});
 
 	test('forwards its commands to the runtime, with step ids', () => {
@@ -235,7 +223,7 @@ describe('view model', () => {
 		],
 	};
 
-	test('lists the steps that are not skipped with a stable index and total, and every step in allSteps', () => {
+	test('lists the steps that are not skipped, with a stable index and total', () => {
 		const model = buildViewModel({
 			config,
 			kind: 'wizard',
@@ -250,11 +238,6 @@ describe('view model', () => {
 		});
 
 		expect(model.steps.map(({ id }) => id)).toEqual(['one', 'three']);
-		expect(model.allSteps.map(({ id, isSkipped }) => [id, isSkipped])).toEqual([
-			['one', false],
-			['two', true],
-			['three', false],
-		]);
 		expect(model.activeStep).toMatchObject({ id: 'three', index: 1, total: 2 });
 		expect(model.currentStepIndex).toBe(1);
 	});

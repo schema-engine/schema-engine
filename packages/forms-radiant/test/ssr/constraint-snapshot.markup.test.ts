@@ -200,3 +200,38 @@ describe('SSR constraint snapshot', () => {
 		expect(marker('open')).toMatch(/hidden/);
 	});
 });
+
+describe('SSR participation', () => {
+	test('a field whose show condition reads a skipped step is hidden in the server markup, as the client container will say', () => {
+		const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+		const input = (name: string, extra: Record<string, unknown> = {}) => ({
+			$type: 'input',
+			id: name,
+			name,
+			...extra,
+		});
+		const config = engine.validateForm({
+			id: 'ssr-skip',
+			steps: [
+				{ id: 'one', title: 'One', elements: [input('hasCompany', { defaultValue: 'no' })] },
+				{
+					id: 'company',
+					title: 'Company',
+					constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+					elements: [input('wants', { defaultValue: 'yes' })],
+				},
+				{
+					id: 'payment',
+					title: 'Payment',
+					elements: [
+						input('vat', {
+							constraints: [{ field: 'wants', operator: 'equals', value: 'yes', action: 'show' }],
+						}),
+					],
+				},
+			],
+		});
+		const html = renderToString(jsx(RecipeRenderer, { config, engine, recipe: undefined }));
+		expect(html).toMatch(/data-se-constraint-field="vat"[^>]*hidden|hidden[^>]*data-se-constraint-field="vat"/);
+	});
+});

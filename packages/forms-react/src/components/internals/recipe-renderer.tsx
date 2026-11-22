@@ -42,7 +42,7 @@ export function RecipeRenderer({ config, recipe, children, renderFields }: Recip
 						kind: recipe.kind,
 						states: steps,
 						current,
-						navigation: createViewNavigation(steps, current, { next, back, goTo }, config.navigation),
+						navigation: createViewNavigation(steps, current, { next, back, goTo }),
 						isSubmitting,
 						viewConfig: config.view as Record<string, unknown>,
 					})

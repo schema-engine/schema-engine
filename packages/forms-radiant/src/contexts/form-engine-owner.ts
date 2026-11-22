@@ -1,3 +1,4 @@
+import type { Participation } from '@schema-engine/forms/engine';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 
 /**
@@ -65,5 +66,25 @@ export function renderWithRowIds<T>(
 		return render();
 	} finally {
 		owningRowIds = previous;
+	}
+}
+
+/** @remarks Synchronous container renders inherit the participation of the values the server rendered, so a nested field is shown, disabled and required as the client's container will say. */
+let owningParticipation: Pick<Participation, 'fields'> | undefined;
+
+export function peekOwningParticipation(): Pick<Participation, 'fields'> | undefined {
+	return owningParticipation;
+}
+
+export function renderWithParticipation<T>(
+	participation: Pick<Participation, 'fields'> | undefined,
+	render: () => T,
+): T {
+	const previous = owningParticipation;
+	owningParticipation = participation ?? previous;
+	try {
+		return render();
+	} finally {
+		owningParticipation = previous;
 	}
 }

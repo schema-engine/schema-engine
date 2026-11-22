@@ -4,6 +4,7 @@ import {
 	isPathExcluded,
 	planFormValidation,
 	resolveParticipation,
+	type Participation,
 	runValidationPlan,
 	type ValidationIssue,
 } from '@/engine/value-validation';
@@ -122,8 +123,8 @@ interface State {
 	readonly dirty: Tree<true>;
 	readonly ids: IdTree | undefined;
 	readonly excluded: readonly string[];
-	/** The values with the excluded paths absent, as constraints read them. */
-	readonly visible: Record<string, unknown>;
+	/** What the constraints say, in order, as {@link resolveParticipation} resolved it; the same object while it is unchanged. */
+	readonly participation: Participation;
 	readonly exclusionVersion: number;
 	/** Resets so far. */
 	readonly generation: number;
@@ -371,12 +372,40 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return id;
 	};
 
-	/** The `excluded` and `visible` parts of the state for `values`: nothing is excluded when the config has no participation rules. */
-	function participationOf(values: NullMap): Pick<State, 'excluded' | 'visible'> {
-		const plain = toPlain(values) as Record<string, unknown>;
-		if (!participates) return { excluded: Object.freeze([]), visible: plain };
-		const { excluded, visible } = resolveParticipation(config.steps, plain);
-		return { excluded: Object.freeze(excluded), visible };
+	const NO_PARTICIPATION: Participation = Object.freeze({
+		excluded: Object.freeze([]),
+		skippedSteps: Object.freeze([]),
+		fields: Object.freeze({}),
+	});
+
+	/** The participation of `values`, keeping the previous object's parts that are equal so a snapshot's reference holds while nothing changed. */
+	function participationOf(values: NullMap, previous: Participation = NO_PARTICIPATION): Participation {
+		if (!participates) return NO_PARTICIPATION;
+		const next = resolveParticipation(config.steps, toPlain(values) as Record<string, unknown>);
+		const excluded = sameList(next.excluded, previous.excluded) ? previous.excluded : Object.freeze(next.excluded);
+		const skippedSteps = sameList(next.skippedSteps, previous.skippedSteps)
+			? previous.skippedSteps
+			: Object.freeze(next.skippedSteps);
+		const names = Object.keys(next.fields);
+		const same =
+			names.length === Object.keys(previous.fields).length &&
+			names.every((name) => {
+				const before = Object.hasOwn(previous.fields, name) ? previous.fields[name] : undefined;
+				const now = next.fields[name];
+				return (
+					before?.hidden === now.hidden &&
+					before.disabled === now.disabled &&
+					before.required === now.required
+				);
+			});
+		const fields = same
+			? previous.fields
+			: Object.freeze(
+					Object.fromEntries(Object.entries(next.fields).map(([name, one]) => [name, Object.freeze(one)])),
+				);
+		return excluded === previous.excluded && skippedSteps === previous.skippedSteps && fields === previous.fields
+			? previous
+			: Object.freeze({ excluded, skippedSteps, fields });
 	}
 
 	const hydrated = options.snapshot === undefined ? undefined : readHydration(options.snapshot);
@@ -395,7 +424,8 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		validating: undefined,
 		dirty: hydrated ? dirtyTree(initialValues, initialDefaults) : undefined,
 		ids: hydrated ? hydrated.ids : syncIds(undefined, initialValues, mintId),
-		...participationOf(initialValues),
+		participation: participationOf(initialValues),
+		excluded: participationOf(initialValues).excluded,
 		exclusionVersion: 0,
 		generation: 0,
 	};
@@ -491,6 +521,18 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return flat;
 	}
 
+	let publicFor: { readonly from: Participation; readonly view: FormStateSnapshot['participation'] } | undefined;
+	function publicParticipation(from: Participation): FormStateSnapshot['participation'] {
+		if (publicFor?.from === from) return publicFor.view;
+		const view = Object.freeze({ skippedSteps: from.skippedSteps, fields: from.fields });
+		const reused =
+			publicFor && publicFor.view.skippedSteps === view.skippedSteps && publicFor.view.fields === view.fields
+				? publicFor.view
+				: view;
+		publicFor = { from, view: reused };
+		return reused;
+	}
+
 	function toSnapshot(current: State): FormStateSnapshot {
 		const derived = derive(current);
 		return Object.freeze({
@@ -503,6 +545,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			validating: toPlainMap(marks('validating', current.validating, current.excluded)),
 			isValid: Object.keys(derived.errors).length === 0,
 			generation: current.generation,
+			participation: publicParticipation(current.participation),
 		});
 	}
 
@@ -564,12 +607,10 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			if (next.native) next = { ...next, native: pruneNative(next.native, next.values) };
 			if (next.server) next = { ...next, server: pruneServer(next) };
 			if (participates) {
-				const { excluded, visible } = resolveParticipation(
-					config.steps,
-					toPlain(next.values) as Record<string, unknown>,
-				);
-				next = { ...next, visible };
-				if (!sameList(excluded, previous.excluded)) {
+				const participation = participationOf(next.values, previous.participation);
+				const { excluded } = participation;
+				next = { ...next, participation };
+				if (excluded !== previous.excluded) {
 					const dropped = excluded.filter((path) => !isPathExcluded(previous.excluded, path));
 					reeligible = previous.excluded.filter(
 						(path) =>
@@ -578,7 +619,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 					);
 					next = {
 						...next,
-						excluded: Object.freeze(excluded),
+						excluded,
 						exclusionVersion: previous.exclusionVersion + 1,
 						validation: dropped.reduce((tree, path) => clearAt(tree, path), next.validation),
 						validating: dropped.reduce((tree, path) => clearAt(tree, path), next.validating),
@@ -655,17 +696,17 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			native: state.native,
 			server: state.server,
 			excluded: state.excluded,
-			visible: state.visible,
+			participation: state.participation,
 			exclusionVersion: state.exclusionVersion,
 		};
 		const startIndex = mode.record ? dependencyIndex() : undefined;
 		const startValues = toPlain(start.values) as Record<string, unknown>;
 		const plan = planFormValidation({
-			elements,
+			steps: config.steps,
 			values: startValues,
 			names,
 			exactNames: mode.exact,
-			participation: { excluded: start.excluded, visible: participates ? start.visible : startValues },
+			participation: start.participation,
 		});
 		const planned = [...new Set(plan.fields.map(({ fieldPath }) => fieldPath))];
 		const run = mode.record

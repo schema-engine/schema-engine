@@ -13,7 +13,7 @@ import {
 const steps = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
 
 const states = (skipped: string[] = []): FormStepState[] =>
-	deriveStepStates(steps, startProgress('a'), { skipped, invalid: [] });
+	deriveStepStates(steps, startProgress('a'), { skipped, invalid: [] }, 'linear');
 
 describe('startProgress', () => {
 	test('has the first step current and visited, and nothing complete', () => {
@@ -43,12 +43,20 @@ describe('moveProgress', () => {
 describe('deriveStepStates', () => {
 	test('stores only visited and complete, and takes skipped and invalid from what it is given', () => {
 		const progress = moveProgress(startProgress('a'), 'c', ['a']);
-		expect(deriveStepStates(steps, progress, { skipped: ['b'], invalid: ['c'] })).toEqual([
-			{ id: 'a', skipped: false, visited: true, complete: true, invalid: false },
-			{ id: 'b', skipped: true, visited: false, complete: false, invalid: false },
-			{ id: 'c', skipped: false, visited: true, complete: false, invalid: true },
-			{ id: 'd', skipped: false, visited: false, complete: false, invalid: false },
+		expect(deriveStepStates(steps, progress, { skipped: ['b'], invalid: ['c'] }, 'linear')).toEqual([
+			{ id: 'a', skipped: false, visited: true, complete: true, invalid: false, reachable: true },
+			{ id: 'b', skipped: true, visited: false, complete: false, invalid: false, reachable: false },
+			{ id: 'c', skipped: false, visited: true, complete: false, invalid: true, reachable: false },
+			{ id: 'd', skipped: false, visited: false, complete: false, invalid: false, reachable: false },
 		]);
+	});
+
+	test('a step is reachable going back always, and going forward when visited, or when the form is free', () => {
+		const progress = moveProgress(startProgress('a'), 'b', ['a']);
+		const reachable = (mode: 'linear' | 'free') =>
+			deriveStepStates(steps, progress, { skipped: ['c'], invalid: [] }, mode).map((step) => step.reachable);
+		expect(reachable('linear')).toEqual([true, false, false, false]);
+		expect(reachable('free')).toEqual([true, false, false, true]);
 	});
 });
 

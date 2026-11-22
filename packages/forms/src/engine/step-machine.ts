@@ -25,6 +25,8 @@ export interface FormStepState {
 	readonly complete: boolean;
 	/** An error is recorded at one of its fields. */
 	readonly invalid: boolean;
+	/** `goTo` can move there: an active step other than the current one that is before it, or after it when the form's `navigation` is `'free'` or the step was visited. */
+	readonly reachable: boolean;
 }
 
 /** What the runtime stores of the steps: where the user is, and which steps were visited and completed, by id. */
@@ -54,14 +56,21 @@ export function deriveStepStates(
 	steps: readonly { readonly id: string }[],
 	progress: StepProgress,
 	derived: { readonly skipped: readonly string[]; readonly invalid: readonly string[] },
+	mode: StepNavigationMode,
 ): FormStepState[] {
-	return steps.map(({ id }) => ({
-		id,
-		skipped: derived.skipped.includes(id),
-		visited: progress.visited.includes(id),
-		complete: progress.complete.includes(id),
-		invalid: derived.invalid.includes(id),
-	}));
+	const at = steps.findIndex(({ id }) => id === progress.current);
+	return steps.map(({ id }, index) => {
+		const skipped = derived.skipped.includes(id);
+		const visited = progress.visited.includes(id);
+		return {
+			id,
+			skipped,
+			visited,
+			complete: progress.complete.includes(id),
+			invalid: derived.invalid.includes(id),
+			reachable: !skipped && id !== progress.current && (index < at || mode === 'free' || visited),
+		};
+	});
 }
 
 /** The ids of the steps that are not skipped, in order. */

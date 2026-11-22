@@ -30,7 +30,9 @@ export function provideTestContainer(
 			context: formInstanceContext,
 			initialValue: {
 				current: 'main',
-				steps: [{ id: 'main', skipped: false, visited: true, complete: false, invalid: false }],
+				steps: [
+					{ id: 'main', skipped: false, visited: true, complete: false, invalid: false, reachable: false },
+				],
 				navigating: false,
 				isWizard: false,
 				next: async () => 'refused',

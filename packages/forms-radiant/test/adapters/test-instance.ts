@@ -24,6 +24,7 @@ export function instanceAt(
 			visited: visited[index] ?? false,
 			complete: completed[index] ?? false,
 			invalid: false,
+			reachable: false,
 		})),
 	};
 }

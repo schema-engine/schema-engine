@@ -30,11 +30,14 @@ export interface FormInstanceContextValue {
  */
 export function useFormInstanceActions(): FormInstanceContextValue {
 	const { runtime } = useFormStateContext();
-	const { steps } = useSyncExternalStore(runtime.subscribe, runtime.getSnapshot, runtime.getServerSnapshot);
-	const { current, navigating, list } = steps;
+	const { current, navigating, steps } = useSyncExternalStore(
+		runtime.subscribe,
+		runtime.getSnapshot,
+		runtime.getServerSnapshot,
+	);
 	return useMemo(
-		() => ({ current, steps: list, navigating, next: runtime.next, back: runtime.back, goTo: runtime.goTo }),
-		[runtime, current, navigating, list],
+		() => ({ current, steps, navigating, next: runtime.next, back: runtime.back, goTo: runtime.goTo }),
+		[runtime, current, navigating, steps],
 	);
 }
 

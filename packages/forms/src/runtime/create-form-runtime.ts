@@ -18,7 +18,7 @@ import {
 	type FormActionConfig,
 	type SubmissionActionResult,
 } from '@/runtime/submission-lifecycle';
-import { collectStepFieldPaths, resolveParticipation } from '@/engine/value-validation';
+import { collectStepFieldPaths } from '@/engine/value-validation';
 import { collectInitialValues, flattenStepElements } from '@/lib/field-scope';
 import { logger } from '@/lib/logger';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
@@ -52,7 +52,7 @@ function submissionIssue(
 
 const errorMessage = (error: unknown): string | undefined => (error instanceof Error ? error.message : undefined);
 
-type Verdict = 'valid' | 'invalid' | 'overtaken';
+type Verdict = 'valid' | 'invalid' | 'overtaken' | 'failed';
 
 /** A command in flight, which a reset or an unmount revokes by replacing it. */
 interface Operation {
@@ -102,7 +102,6 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 	const dispatcher = new ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>(engine);
 	const mountedAt = Date.now();
 	const mode = config.navigation ?? 'linear';
-	const hasStepConstraints = config.steps.some((step) => Boolean(step.constraints?.length));
 	const firstStep = config.steps[0]?.id ?? '';
 
 	let progress: StepProgress = startProgress(firstStep);
@@ -113,6 +112,9 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 	let version = 0;
 	let previousValues = container.getServerSnapshot().values;
 	let mountedOnce = false;
+	let mounted = false;
+	let lifecycleAbort = new AbortController();
+	let triggerAbort = new AbortController();
 	const listeners = new Set<() => void>();
 
 	const publish = (): void => {
@@ -123,23 +125,31 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 	interface Derived {
 		readonly values: FormStateSnapshot['values'];
 		readonly errors: FormStateSnapshot['errors'];
+		readonly participation: FormStateSnapshot['participation'];
 		readonly skipped: readonly string[];
 		readonly invalid: readonly string[];
 	}
 	let derivedFor: Derived | undefined;
 	function derive(snapshot: FormStateSnapshot): Derived {
-		if (derivedFor?.values === snapshot.values && derivedFor.errors === snapshot.errors) return derivedFor;
-		const { values, errors } = snapshot;
+		if (
+			derivedFor?.values === snapshot.values &&
+			derivedFor.errors === snapshot.errors &&
+			derivedFor.participation === snapshot.participation
+		) {
+			return derivedFor;
+		}
+		const { values, errors, participation } = snapshot;
 		derivedFor = {
 			values,
 			errors,
-			skipped: hasStepConstraints ? resolveParticipation(config.steps, { ...values }).skippedSteps : [],
+			participation,
+			skipped: participation.skippedSteps,
 			invalid: stepsWithErrors(config.steps, { ...values }, errors),
 		};
 		return derivedFor;
 	}
 
-	const statesFor = (derived: Derived): FormStepState[] => deriveStepStates(config.steps, progress, derived);
+	const statesFor = (derived: Derived): FormStepState[] => deriveStepStates(config.steps, progress, derived, mode);
 	const currentStates = (): FormStepState[] => statesFor(derive(container.getSnapshot()));
 
 	let cached:
@@ -152,17 +162,15 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		const snapshot: FormRuntimeSnapshot =
 			before &&
 			before.submission === submission &&
-			before.steps.current === progress.current &&
-			before.steps.navigating === navigating &&
-			sameSteps(before.steps.list, list)
+			before.current === progress.current &&
+			before.navigating === navigating &&
+			sameSteps(before.steps, list)
 				? before
 				: {
 						submission,
-						steps: {
-							current: progress.current,
-							navigating,
-							list: before && sameSteps(before.steps.list, list) ? before.steps.list : list,
-						},
+						current: progress.current,
+						navigating,
+						steps: before && sameSteps(before.steps, list) ? before.steps : list,
 					};
 		cached = { version, derived, snapshot };
 		return snapshot;
@@ -170,16 +178,16 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 
 	const serverSnapshot: FormRuntimeSnapshot = Object.freeze({
 		submission: IDLE,
-		steps: Object.freeze({
-			current: firstStep,
-			navigating: false,
-			list: deriveStepStates(config.steps, startProgress(firstStep), {
-				skipped: hasStepConstraints
-					? resolveParticipation(config.steps, { ...container.getServerSnapshot().values }).skippedSteps
-					: [],
-				invalid: [],
-			}),
-		}),
+		current: firstStep,
+		navigating: false,
+		steps: Object.freeze(
+			deriveStepStates(
+				config.steps,
+				startProgress(firstStep),
+				{ skipped: container.getServerSnapshot().participation.skippedSteps, invalid: [] },
+				mode,
+			),
+		),
 	});
 
 	const live = (op: Operation): boolean => operation === op;
@@ -268,11 +276,12 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 	};
 
 	async function dispatchActions(
-		input: ActionDispatchInput<TAction, BuilderActionBaseContext, FormActionTrigger>,
+		input: Omit<ActionDispatchInput<TAction, BuilderActionBaseContext, FormActionTrigger>, 'signal'>,
+		signal: AbortSignal,
 		reportSubmit = true,
 	): Promise<SubmissionActionResult[]> {
-		const results = await dispatcher.dispatch(input);
-		if (results.length && (reportSubmit || input.trigger !== 'form_submit')) {
+		const results = await dispatcher.dispatch({ ...input, signal });
+		if (results.length && !signal.aborted && (reportSubmit || input.trigger !== 'form_submit')) {
 			try {
 				await onActionResults?.(results, input.trigger);
 			} catch (error) {
@@ -282,12 +291,18 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		return results;
 	}
 
-	/** Dispatches a trigger for the current step's actions, which never rejects: a failing trigger is logged and reported. */
+	/**
+	 * Dispatches a trigger for the current step's actions, which never rejects: a failing trigger is logged and reported.
+	 *
+	 * @remarks It does nothing while the runtime is not mounted, and its actions are cancelled by an unmount or a reset.
+	 */
 	async function dispatchTrigger(trigger: FormActionTrigger): Promise<void> {
+		if (!mounted) return;
+		const { signal } = triggerAbort;
 		try {
 			const actions = collectStepActions(config, progress.current);
 			if (!dispatcher.hasMatching(actions, trigger)) return;
-			await dispatchActions({ actions, trigger, context: buildContext() });
+			await dispatchActions({ actions, trigger, context: buildContext() }, signal);
 		} catch (error) {
 			logger.error(`Form action trigger ${trigger} failed`, error);
 		}
@@ -314,7 +329,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 	 * @remarks It never moves forward: that would skip a validation. A command in flight runs this when it ends.
 	 */
 	function reconcile(): void {
-		if (operation) return;
+		if (operation || !mounted) return;
 		const states = currentStates();
 		const current = states.find(({ id }) => id === progress.current);
 		if (!current?.skipped) return;
@@ -334,13 +349,13 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			if (await container.validate(paths)) return 'valid';
 		} catch (error) {
 			logger.error('Step validation could not run', error);
-			return 'invalid';
+			return 'failed';
 		}
 		return errorPaths(id).length > 0 ? 'invalid' : 'overtaken';
 	}
 
 	/** Validates the current step and moves on to the next active one; the caller has checked there is one. */
-	async function advance(op: Operation): Promise<Exclude<NavigationOutcome, 'refused' | 'busy'>> {
+	async function advance(op: Operation): Promise<Exclude<NavigationOutcome, 'busy'>> {
 		const from = progress.current;
 		host.sync?.();
 		const verdict = await validateStep(from);
@@ -349,11 +364,11 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			host.focus(errorPaths(from));
 			return 'invalid';
 		}
-		if (verdict === 'overtaken') return 'overtaken';
+		if (verdict === 'overtaken' || verdict === 'failed') return verdict;
 		const target = stepAfter(currentStates(), from);
 		if (target === undefined) {
 			setProgress(moveProgress(progress, from, [from]));
-			return 'overtaken';
+			return 'refused';
 		}
 		return (await move(op, target, [from])) ? 'moved' : 'cancelled';
 	}
@@ -397,19 +412,17 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		runNavigation(async (op) => {
 			const states = currentStates();
 			const target = states.find((state) => state.id === id);
-			if (!target || target.skipped || id === progress.current) return 'refused';
+			if (!target?.reachable) return 'refused';
 			const order = activeStepIds(states);
 			const at = order.indexOf(progress.current);
 			const to = order.indexOf(id);
-			if (at !== -1 && to < at) return (await move(op, id)) ? 'moved' : 'cancelled';
-			if (mode === 'linear' && !target.visited) return 'refused';
-			if (mode === 'free') return (await move(op, id)) ? 'moved' : 'cancelled';
+			if ((at !== -1 && to < at) || mode === 'free') return (await move(op, id)) ? 'moved' : 'cancelled';
 			host.sync?.();
 			const passed: string[] = [];
 			for (const step of [progress.current, ...order.slice(at + 1, to)]) {
 				const verdict = await validateStep(step);
 				if (!live(op)) return 'cancelled';
-				if (verdict === 'overtaken') return 'overtaken';
+				if (verdict === 'overtaken' || verdict === 'failed') return verdict;
 				if (verdict === 'invalid') {
 					if (!(await move(op, step, passed))) return 'cancelled';
 					host.focus(errorPaths(step));
@@ -447,8 +460,9 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		}
 
 		const { values, setServerErrors } = result;
+		const { signal } = lifecycleAbort;
 		const { succeeded, results, failure } = await runSubmissionLifecycle<TAction>(
-			(input) => dispatchActions(input, false),
+			(input) => dispatchActions(input, signal, false),
 			{
 				actions: collectStepActions(config, progress.current),
 				context: () => buildContext(values),
@@ -457,14 +471,12 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 				onSubmit: onSubmit ? () => onSubmit(values, { setServerErrors, fetch: engine.fetch }) : undefined,
 			},
 		);
-		if (!live(op)) return 'cancelled';
 		try {
-			if (results.length) await onActionResults?.(results, 'form_submit');
+			if (results.length && !signal.aborted) await onActionResults?.(results, 'form_submit');
 		} catch (error) {
 			logger.error('Action results callback failed:', error);
 		}
-		if (!live(op)) return 'cancelled';
-		if (succeeded) host.submitNatively?.();
+		if (succeeded && live(op)) host.submitNatively?.();
 
 		const count = submission.submitCount + 1;
 		if (succeeded) {
@@ -492,7 +504,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 				submitCount: count,
 			});
 		}
-		if (!(await landOnErrors(op))) return 'cancelled';
+		if (live(op)) await landOnErrors(op);
 		return succeeded ? 'submitted' : 'failed';
 	}
 
@@ -501,24 +513,31 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		const op = begin(before ? 'navigation' : 'submission');
 		if (!op) return 'busy';
 		try {
-			return before ? await advance(op) : await submitLastStep(op);
+			if (!before) return await submitLastStep(op);
+			const outcome = await advance(op);
+			return outcome === 'refused' ? 'overtaken' : outcome;
 		} finally {
 			end(op);
 		}
 	}
 
-	function onContainerChange(): void {
+	/** Returns the submission and the steps to the start, and cancels what a reset leaves behind, when the container was reset. */
+	function syncGeneration(): void {
 		const { generation: current } = container.getSnapshot();
-		if (current !== generation) {
-			generation = current;
-			revoke();
-			submission = IDLE;
-			progress = startProgress(firstStep);
-		}
+		if (current === generation) return;
+		generation = current;
+		revoke();
+		triggerAbort.abort();
+		triggerAbort = new AbortController();
+		submission = IDLE;
+		progress = startProgress(firstStep);
+	}
+
+	function onContainerChange(): void {
+		syncGeneration();
 		publish();
 		reconcile();
 	}
-	container.subscribe(onContainerChange);
 
 	function watchChanges(): () => void {
 		const report = (): void => {
@@ -535,13 +554,23 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 	return {
 		container,
 		mount() {
+			mounted = true;
+			if (lifecycleAbort.signal.aborted) lifecycleAbort = new AbortController();
+			if (triggerAbort.signal.aborted) triggerAbort = new AbortController();
+			syncGeneration();
 			const stopWatching = watchChanges();
+			const stopObserving = container.subscribe(onContainerChange);
+			publish();
 			if (!mountedOnce) {
 				mountedOnce = true;
 				void dispatchTrigger('form_mount');
 			}
 			return () => {
+				mounted = false;
 				stopWatching();
+				stopObserving();
+				lifecycleAbort.abort();
+				triggerAbort.abort();
 				revoke();
 				publish();
 			};

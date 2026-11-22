@@ -28,12 +28,9 @@ import type {
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext } from '@/components/provider';
+import '@ecopages/radiant-ui/form';
 import type { RuiFormElement, RuiFormSubmitContext } from '@ecopages/radiant-ui/form';
 import { createFormMeta, initialSteps, type FormMeta } from '@/lib/instance-view';
-import { createAuthoredDisabledLookup } from '@/lib/authored-disabled';
-import { focusFirstField } from '@/lib/focus-field';
-import { observeValues } from '@/lib/observe-values';
-import { formValuesContext, type FormValuesContextValue } from '@/contexts/constraint-context';
 import { logger } from '@/lib/logger';
 import { csrfFieldFor } from '@schema-engine/forms/csrf';
 import { syncCsrfField } from '@/lib/csrf-field';
@@ -121,7 +118,6 @@ export class FormInstanceElement extends RadiantElement {
 	@query('rui-form') private ruiForm!: RuiFormElement | null;
 	private bound?: BoundForm;
 	private releaseForm?: () => void;
-	private unwatchValues?: () => void;
 	private unsubscribeRuntime?: () => void;
 	private unmountRuntime?: () => void;
 	private rendererEngine?: CoreFormEngine;
@@ -133,13 +129,6 @@ export class FormInstanceElement extends RadiantElement {
 		serialize: () => ({}),
 	})
 	provider!: ContextProvider<typeof formInstanceContext>;
-
-	@provideContext<typeof formValuesContext>({
-		context: formValuesContext,
-		initialValue: undefined,
-		serialize: () => ({}),
-	})
-	protected valuesProvider!: ContextProvider<typeof formValuesContext>;
 
 	constructor() {
 		super();
@@ -164,7 +153,6 @@ export class FormInstanceElement extends RadiantElement {
 	private resumeWatches(): void {
 		const { bound } = this;
 		if (!bound || this.unsubscribeRuntime) return;
-		this.watchValues(bound.runtime);
 		this.watchRuntime(bound);
 	}
 
@@ -194,8 +182,6 @@ export class FormInstanceElement extends RadiantElement {
 		this.unmountRuntime = undefined;
 		this.unsubscribeRuntime?.();
 		this.unsubscribeRuntime = undefined;
-		this.unwatchValues?.();
-		this.unwatchValues = undefined;
 		super.disconnectedCallback();
 	}
 
@@ -287,7 +273,7 @@ export class FormInstanceElement extends RadiantElement {
 			defaults: defaultValues,
 			snapshot: this.firstForm && this.isServerRendered ? this.hydration : undefined,
 			host: {
-				focus: (paths) => focusFirstField(this, paths),
+				focus: (paths) => ruiForm.focusField(paths),
 				sync: () => ruiForm.sync(),
 				submitNatively: () => this.submitNatively(engine, ruiForm, inFlight),
 			},
@@ -300,7 +286,6 @@ export class FormInstanceElement extends RadiantElement {
 		this.firstForm = false;
 		this.bound = bound;
 		this.attachForm(bound);
-		this.watchValues(runtime);
 		this.watchRuntime(bound);
 		this.publish();
 	}
@@ -328,8 +313,6 @@ export class FormInstanceElement extends RadiantElement {
 		this.unmountRuntime = undefined;
 		this.unsubscribeRuntime?.();
 		this.unsubscribeRuntime = undefined;
-		this.unwatchValues?.();
-		this.unwatchValues = undefined;
 		if (!keepForm) {
 			this.releaseForm?.();
 			this.releaseForm = undefined;
@@ -417,13 +400,6 @@ export class FormInstanceElement extends RadiantElement {
 		});
 	}
 
-	/** Hands the live values to the constraint hosts. */
-	private watchValues({ container }: FormRuntime): void {
-		this.unwatchValues?.();
-		this.publishFormValues(container.getSnapshot().values);
-		this.unwatchValues = observeValues(container, (values) => this.publishFormValues(values));
-	}
-
 	readonly next = (): ReturnType<FormRuntime['next']> => this.bound?.runtime.next() ?? Promise.resolve('refused');
 	readonly back = (): ReturnType<FormRuntime['back']> => this.bound?.runtime.back() ?? Promise.resolve('refused');
 	readonly goTo = (id: string): ReturnType<FormRuntime['goTo']> =>
@@ -434,9 +410,9 @@ export class FormInstanceElement extends RadiantElement {
 		const snapshot = this.bound?.runtime.getSnapshot();
 		const idle: FormSubmissionState = { status: 'idle', failures: [], submitCount: 0 };
 		return {
-			current: snapshot?.steps.current ?? meta?.steps[0]?.id ?? '',
-			steps: snapshot?.steps.list ?? (meta ? initialSteps(meta) : []),
-			navigating: snapshot?.steps.navigating ?? false,
+			current: snapshot?.current ?? meta?.steps[0]?.id ?? '',
+			steps: snapshot?.steps ?? (meta ? initialSteps(meta) : []),
+			navigating: snapshot?.navigating ?? false,
 			isWizard: this.config && this.engine ? getViewRecipe(this.engine, this.config)?.kind === 'wizard' : false,
 			meta,
 			next: this.next,
@@ -459,27 +435,6 @@ export class FormInstanceElement extends RadiantElement {
 			this.metaValue = createFormMeta(this.config);
 		}
 		return this.metaValue;
-	}
-
-	private authoredDisabled?: {
-		config: NormalizedFormConfig;
-		lookup: FormValuesContextValue['isAuthoredDisabled'];
-	};
-
-	/**
-	 * Hands the live values to the constraint hosts and fields.
-	 *
-	 * @remarks
-	 * The authored-disabled lookup is rebuilt only when the config changes, so a field that
-	 * selects it is notified by a new config and not by a value change.
-	 */
-	private publishFormValues(values: Readonly<Record<string, unknown>>): void {
-		const { config } = this;
-		if (!config) return;
-		if (this.authoredDisabled?.config !== config) {
-			this.authoredDisabled = { config, lookup: createAuthoredDisabledLookup(config) };
-		}
-		this.valuesProvider.setContext({ values, isAuthoredDisabled: this.authoredDisabled.lookup });
 	}
 
 	private publish(): void {

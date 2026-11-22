@@ -125,11 +125,11 @@ describe('the action context', () => {
 		);
 		runtime.container.setValue('email', 'b');
 
-		expect(await runtime.submit()).toBe('cancelled');
+		expect(await runtime.submit()).toBe('submitted');
 
 		expect(seen.map(({ trigger }) => trigger)).toEqual(['form_submit_success', 'form_submit_complete']);
 		expect(runtime.container.getValue('email')).toBe('a');
-		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+		expect(runtime.getSnapshot().submission).toEqual({ status: 'success', failures: [], submitCount: 1 });
 	});
 });
 

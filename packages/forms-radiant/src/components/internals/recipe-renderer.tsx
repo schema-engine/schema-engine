@@ -7,6 +7,7 @@ import { stepGrid } from '@schema-engine/forms/lib/validate-form';
 import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
 import { createFormMeta } from '@/lib/instance-view';
+import { resolveParticipation } from '@schema-engine/forms/engine';
 import { FormElements } from './form-elements';
 import { collectFormInitialValues } from '@/adapters/radiant/rui-form-shell';
 import { FormStep } from '@/components/form-step';
@@ -40,6 +41,7 @@ export function RecipeRenderer({
 	rowIds?: Readonly<Record<string, readonly string[]>>;
 }): JsxRenderable {
 	const values = initialValues ?? collectFormInitialValues(config);
+	const participation = resolveParticipation(config.steps, values);
 	const layout = engine.getLayout();
 	const viewConfig = (config.view as Record<string, unknown> | undefined) ?? {};
 	const meta = createFormMeta(config);
@@ -72,7 +74,7 @@ export function RecipeRenderer({
 								engine={engine}
 								initialValues={initialValues}
 								values={values}
-								constraintContext={{ values, initialValues, rowIds }}
+								constraintContext={{ values, initialValues, rowIds, participation }}
 							/>
 						</div>
 					) : null}

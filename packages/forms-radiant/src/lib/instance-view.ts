@@ -1,4 +1,4 @@
-import type { FormStepState, NormalizedFormConfig, StepNavigationMode } from '@schema-engine/forms';
+import type { FormStepState, NormalizedFormConfig } from '@schema-engine/forms';
 import {
 	createViewNavigation,
 	projectViewSteps,
@@ -12,7 +12,6 @@ export interface FormMeta {
 	id: string;
 	title?: string;
 	description?: string;
-	navigation?: StepNavigationMode;
 	steps: { id: string; title?: string; description?: string }[];
 }
 
@@ -21,7 +20,6 @@ export function createFormMeta(config: NormalizedFormConfig): FormMeta {
 		id: config.id,
 		title: config.title,
 		description: config.description,
-		navigation: config.navigation,
 		steps: config.steps.map(({ id, title, description }) => ({ id, title, description })),
 	};
 }
@@ -38,7 +36,7 @@ export function deriveFormSteps(
 	config: FormMeta,
 	instance: Pick<FormInstanceContextValue, 'current' | 'steps'>,
 ): ViewStep[] {
-	return projectViewSteps(config.steps, instance.steps, instance.current).filter(({ isSkipped }) => !isSkipped);
+	return projectViewSteps(config.steps, instance.steps, instance.current);
 }
 
 /** The navigation a block reads: what can be reached from the current step, and the commands that move there. */
@@ -46,7 +44,7 @@ export function deriveNavigation(
 	config: FormMeta,
 	instance: Pick<FormInstanceContextValue, 'current' | 'steps' | 'next' | 'back' | 'goTo'>,
 ): ViewNavigation {
-	return createViewNavigation(instance.steps, instance.current, instance, config.navigation);
+	return createViewNavigation(instance.steps, instance.current, instance);
 }
 
 /** The steps before any runtime has them: none skipped, the first visited. */
@@ -57,6 +55,7 @@ export const initialSteps = (config: FormMeta): FormStepState[] =>
 		visited: index === 0,
 		complete: false,
 		invalid: false,
+		reachable: false,
 	}));
 
 /**

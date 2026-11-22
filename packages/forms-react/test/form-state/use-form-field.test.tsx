@@ -118,7 +118,15 @@ describe('useFormField', () => {
 		const requireWhenBusiness: ConstraintLogic[] = [
 			{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' },
 		];
-		const { harness } = rendersWith({ accountType: '', company: '' });
+		const { harness } = rendersWith(
+			{ accountType: '', company: '' },
+			{
+				elements: [
+					{ $type: 'input', name: 'accountType' },
+					{ $type: 'input', name: 'company', constraints: requireWhenBusiness },
+				],
+			},
+		);
 		render(
 			harness(
 				<>

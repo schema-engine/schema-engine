@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import type { FormConfigView } from '@/lib/normalized-form-config';
-import { stepAfter, stepBefore, type FormStepState, type StepNavigationMode } from '@/engine/step-machine';
+import { stepAfter, stepBefore, type FormStepState } from '@/engine/step-machine';
 import type { AnyRecipeRegistration } from '@/types/registration';
 import { readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './types';
@@ -15,7 +15,7 @@ export interface ViewNavigation {
 	canGoPrevious: boolean;
 	isFirstStep: boolean;
 	isLastStep: boolean;
-	/** Whether `goToStep(stepId)` can move there: an active step other than the current one, going back or, going forward, as the form's `navigation` allows. */
+	/** Whether `goToStep(stepId)` can move there, as the runtime's step state says. */
 	canGoToStep: (stepId: string) => boolean;
 	goToStep: (stepId: string) => void;
 	goToNextStep: () => void;
@@ -23,11 +23,9 @@ export interface ViewNavigation {
 }
 
 /**
- * One step as a recipe block reads it.
+ * One step that is not skipped, as a recipe block reads it.
  *
- * @remarks
- * `index` is the position among the steps that are not skipped, and `total` how many there are, so
- * progress reads "step 2 of 3" however many are skipped; a skipped step has `index` -1.
+ * @remarks `index` is the position among the steps that are not skipped and `total` how many there are, so progress reads "step 2 of 3" however many are skipped.
  */
 export interface ViewStep {
 	id: string;
@@ -39,7 +37,6 @@ export interface ViewStep {
 	isCompleted: boolean;
 	isInvalid: boolean;
 	isVisited: boolean;
-	isSkipped: boolean;
 }
 
 export interface ViewModel extends RecipeViewModel<RecipeKind> {
@@ -51,8 +48,6 @@ export interface ViewModel extends RecipeViewModel<RecipeKind> {
 	};
 	/** The steps that are not skipped, in order: what progress and a stepper count. */
 	steps: ViewStep[];
-	/** Every step in order, skipped ones included, for a recipe that shows them disabled. */
-	allSteps: ViewStep[];
 	activeStep: ViewStep;
 	/** The position of the current step among `steps`. */
 	currentStepIndex: number;
@@ -90,30 +85,27 @@ export function getViewRecipe(
 	return recipe;
 }
 
-/** Projects the form's steps and their live state onto the {@link ViewStep} list, every step in order. */
+/** Projects the steps that are not skipped, with their live state, onto the {@link ViewStep} list. */
 export function projectViewSteps(
 	steps: ReadonlyArray<{ id: string; title?: string; description?: string }>,
 	states: readonly FormStepState[],
 	current: string,
 ): ViewStep[] {
-	const total = states.filter(({ skipped }) => !skipped).length;
-	let position = 0;
-	return steps.map((step) => {
+	const active = steps.flatMap((step) => {
 		const state = states.find(({ id }) => id === step.id);
-		const skipped = state?.skipped ?? false;
-		return {
-			id: step.id,
-			title: step.title,
-			description: step.description,
-			index: skipped ? -1 : position++,
-			total,
-			isActive: step.id === current,
-			isCompleted: state?.complete ?? false,
-			isInvalid: state?.invalid ?? false,
-			isVisited: state?.visited ?? false,
-			isSkipped: skipped,
-		};
+		return state?.skipped ? [] : [{ step, state }];
 	});
+	return active.map(({ step, state }, index) => ({
+		id: step.id,
+		title: step.title,
+		description: step.description,
+		index,
+		total: active.length,
+		isActive: step.id === current,
+		isCompleted: state?.complete ?? false,
+		isInvalid: state?.invalid ?? false,
+		isVisited: state?.visited ?? false,
+	}));
 }
 
 /** The navigation a recipe block reads, from the step states and the commands of a runtime. */
@@ -121,22 +113,15 @@ export function createViewNavigation(
 	states: readonly FormStepState[],
 	current: string,
 	commands: { next: () => unknown; back: () => unknown; goTo: (id: string) => unknown },
-	mode: StepNavigationMode = 'linear',
 ): ViewNavigation {
 	const canGoNext = stepAfter(states, current) !== undefined;
 	const canGoPrevious = stepBefore(states, current) !== undefined;
-	const at = states.findIndex(({ id }) => id === current);
 	return {
 		canGoNext,
 		canGoPrevious,
 		isFirstStep: !canGoPrevious,
 		isLastStep: !canGoNext,
-		canGoToStep: (stepId) => {
-			const to = states.findIndex(({ id }) => id === stepId);
-			const target = states[to];
-			if (!target || target.skipped || to === at) return false;
-			return to < at || mode === 'free' || target.visited;
-		},
+		canGoToStep: (stepId) => states.find(({ id }) => id === stepId)?.reachable ?? false,
 		goToStep: (stepId) => void commands.goTo(stepId),
 		goToNextStep: () => void commands.next(),
 		goToPreviousStep: () => void commands.back(),
@@ -160,8 +145,7 @@ export function buildViewModel({
 	isSubmitting?: boolean;
 	viewConfig: Record<string, unknown>;
 }): ViewModel {
-	const allSteps = projectViewSteps(config.steps, states, current);
-	const steps = allSteps.filter(({ isSkipped }) => !isSkipped);
+	const steps = projectViewSteps(config.steps, states, current);
 	const activeStep = steps.find(({ isActive }) => isActive) ?? steps[0];
 	if (!activeStep) {
 		throw new Error(`Form '${config.id}' has no steps.`);
@@ -176,7 +160,6 @@ export function buildViewModel({
 			isSubmitting: isSubmitting ?? false,
 		},
 		steps,
-		allSteps,
 		activeStep,
 		currentStepIndex: activeStep.index,
 		navigation,

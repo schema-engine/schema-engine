@@ -27,7 +27,7 @@ function configWith(element: Record<string, unknown>) {
 async function incompleteCodeError(element: Record<string, unknown>) {
 	const config = configWith(element);
 	const { issues } = await validateFormValues({
-		elements: config.steps[0]!.elements,
+		steps: config.steps,
 		values: { code: '123' },
 		registry: createDefaultValidationRegistry(),
 		debounceScope: createDebounceScope(),
@@ -42,7 +42,7 @@ test('headless validation rejects an incomplete code and accepts an empty or com
 	const check = async (value: string) =>
 		(
 			await validateFormValues({
-				elements: config.steps[0]!.elements,
+				steps: config.steps,
 				values: { code: value },
 				registry: createDefaultValidationRegistry(),
 				debounceScope: createDebounceScope(),

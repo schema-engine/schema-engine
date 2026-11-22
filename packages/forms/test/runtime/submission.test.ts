@@ -16,7 +16,7 @@ describe('submit before the last active step', () => {
 		expect(host.focus).toHaveBeenCalledWith(['email']);
 		fill(runtime, { email: 'a@b.c' });
 		expect(await runtime.submit()).toBe('moved');
-		expect(runtime.getSnapshot().steps.current).toBe('address');
+		expect(runtime.getSnapshot().current).toBe('address');
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
@@ -71,21 +71,21 @@ describe('submit on the last active step', () => {
 		runtime.container.setValue('street', '');
 		seen.length = 0;
 		expect(await runtime.submit()).toBe('invalid');
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 		expect(seen.filter(({ trigger }) => trigger.startsWith('step_')).map(({ trigger }) => trigger)).toEqual([
 			'step_leave',
 			'step_change',
 			'step_enter',
 		]);
 		expect(host.focus).toHaveBeenLastCalledWith(['email']);
-		expect(runtime.getSnapshot().steps.list.map(({ invalid }) => invalid)).toEqual([true, false, true, true]);
+		expect(runtime.getSnapshot().steps.map(({ invalid }) => invalid)).toEqual([true, false, true, true]);
 	});
 
 	test('on invalid stays on a step that is the first with an error and focuses it', async () => {
 		const { runtime, host } = setup();
 		await toLastStep(runtime);
 		expect(await runtime.submit()).toBe('invalid');
-		expect(runtime.getSnapshot().steps.current).toBe('payment');
+		expect(runtime.getSnapshot().current).toBe('payment');
 		expect(host.focus).toHaveBeenLastCalledWith(['card']);
 	});
 
@@ -97,7 +97,7 @@ describe('submit on the last active step', () => {
 		fill(runtime, { card: 'c' });
 		host.focus.mockClear();
 		expect(await runtime.submit()).toBe('submitted');
-		expect(runtime.getSnapshot().steps.current).toBe('payment');
+		expect(runtime.getSnapshot().current).toBe('payment');
 		expect(host.focus).not.toHaveBeenCalled();
 	});
 
@@ -109,7 +109,7 @@ describe('submit on the last active step', () => {
 		fill(runtime, { card: 'c' });
 		seen.length = 0;
 		expect(await runtime.submit()).toBe('submitted');
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 		expect(host.focus).toHaveBeenLastCalledWith(['email']);
 		expect(seen.filter(({ trigger }) => trigger === 'step_enter')).toHaveLength(1);
 	});
@@ -197,7 +197,7 @@ describe('a submission a reset or an edit outran', () => {
 		await release();
 		await first;
 		await runtime.next();
-		expect(runtime.getSnapshot().steps.current).toBe('payment');
+		expect(runtime.getSnapshot().current).toBe('payment');
 
 		const running = runtime.submit();
 		await new Promise((resolve) => setTimeout(resolve, 0));
@@ -227,7 +227,7 @@ describe('a submission a reset or an edit outran', () => {
 		runtime.container.reset();
 		expect(await running).toBe('cancelled');
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 		expect(host.submitNatively).not.toHaveBeenCalled();
 		expect(seen.filter(({ trigger }) => trigger.startsWith('form_submit'))).toEqual([]);
 	});

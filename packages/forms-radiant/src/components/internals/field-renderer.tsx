@@ -5,6 +5,8 @@ import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { renderRegisteredElement } from './render-registered-element';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { evaluateConstraints } from '@schema-engine/forms/constraints';
+import { peekOwningParticipation } from '@/contexts/form-engine-owner';
+import { constraintsFromParticipation } from '@/lib/participation-snapshot';
 import type { ConstraintEvaluationContext } from './render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { ConstraintElement } from './constraint-element';
@@ -55,6 +57,7 @@ export function FormElement({
 		values: constraintValues,
 		initialValues: initialValues ?? constraintContext?.initialValues,
 		rowIds: constraintContext?.rowIds,
+		participation: constraintContext?.participation,
 		fieldPath: name ?? constraintContext?.fieldPath,
 	};
 	if (!constraints?.length) {
@@ -71,19 +74,14 @@ export function FormElement({
 	}
 
 	const baseRequired = isFieldRequired('rules' in config ? config.rules : undefined);
-	const fieldPath =
-		fieldConstraintContext.fieldPath ??
-		('name' in config ? config.name : undefined) ??
-		scopePath ??
-		id ??
-		('id' in config ? config.id : undefined) ??
-		'';
-	const snapshot = evaluateConstraints({
-		constraints,
-		baseRequired,
-		fieldPath,
-		values: constraintValues,
-	});
+	const ownName = 'name' in config && config.name ? config.name : undefined;
+	const ownId = 'id' in config ? config.id : undefined;
+	const enclosing = fieldConstraintContext.fieldPath ?? scopePath;
+	const fieldPath = name ?? ownName ?? (ownId ? (enclosing ? `${enclosing}.${ownId}` : ownId) : (enclosing ?? ''));
+	const participation = constraintContext?.participation ?? peekOwningParticipation();
+	const snapshot = participation
+		? constraintsFromParticipation(participation, fieldPath, baseRequired)
+		: evaluateConstraints({ constraints, baseRequired, fieldPath, values: constraintValues });
 	const { shouldShow } = snapshot;
 	const fieldHost = mergeFieldGridHost(
 		'grid' in config ? config.grid : undefined,
@@ -95,8 +93,6 @@ export function FormElement({
 		<ConstraintElement
 			classes={['se-form-field', GRID_ITEM_CLASS, 'se-form-constraint', className]}
 			data-se-constraint-field={fieldPath}
-			data-se-constraints={JSON.stringify(constraints)}
-			data-se-base-required={baseRequired ? '' : undefined}
 			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			hidden={!shouldShow}

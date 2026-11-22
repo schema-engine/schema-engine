@@ -11,7 +11,7 @@ const code = { $type: 'input-otp', id: 'code', name: 'code', label: 'Code', leng
 async function errorFor(element: Record<string, unknown>, value = '123') {
 	const config = engine.validateForm({ id: 'otp-form', steps: [{ id: 'main', title: 'Main', elements: [element] }] });
 	const { issues } = await validateFormValues({
-		elements: config.steps[0]!.elements,
+		steps: config.steps,
 		values: { code: value },
 		registry: createDefaultValidationRegistry(),
 		debounceScope: createDebounceScope(),

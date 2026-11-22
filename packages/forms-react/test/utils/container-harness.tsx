@@ -1,10 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
 	createFormEngine,
 	createFormRuntime,
 	type CreateFormRuntimeOptions,
 	type FormRuntime,
-	type FormRuntimeAction,
 } from '@schema-engine/forms';
 import type {
 	FormIssueFormatter,
@@ -19,7 +18,7 @@ import { createFieldRegistry } from '@/hooks/form-state/field-registry';
 interface TestContainerOptions
 	extends
 		Pick<FormStateContainerOptions, 'defaults'>,
-		Pick<CreateFormRuntimeOptions<FormRuntimeAction>, 'onSubmit' | 'onChange' | 'onActionResults'> {
+		Pick<CreateFormRuntimeOptions, 'onSubmit' | 'onChange' | 'onActionResults'> {
 	elements?: FormStateContainerConfig['steps'][number]['elements'];
 	validationMode?: FormStateContainerConfig['validationMode'];
 	reValidateMode?: FormStateContainerConfig['reValidateMode'];
@@ -71,6 +70,7 @@ export function ContainerHarness({
 	children: ReactNode;
 }) {
 	const [{ fields }] = useState(() => ({ fields: createFieldRegistry(container) }));
+	useEffect(() => runtimeOf(container).mount(), [container]);
 	return (
 		<FormStateContext.Provider value={{ container, formatIssue, fields, runtime: runtimeOf(container) }}>
 			{children}

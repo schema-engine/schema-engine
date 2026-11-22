@@ -11,25 +11,13 @@ export {
 	collectStepFieldPaths,
 	effectiveRulesFor,
 	FormValidationFailure,
-	resolveExcludedPaths,
-	resolveParticipation,
 	validateFieldValue,
 	validateFormValues,
 } from './engine';
 export { buildFormActionContext, collectStepActions, hasConfiguredActions } from './engine';
-export {
-	activeStepIds,
-	deriveStepStates,
-	moveProgress,
-	startProgress,
-	stepAfter,
-	stepBefore,
-	stepsWithErrors,
-} from './engine';
-export type { FormStepState, StepNavigationMode, StepProgress, FormActionContextFormState } from './engine';
+export type { FormStepState, StepNavigationMode, FormActionContextFormState } from './engine';
 export type {
 	EffectiveRulesInput,
-	Participation,
 	FieldValidationResult,
 	FormValidationOutcome,
 	ValidationIssue,
@@ -54,7 +42,6 @@ export type {
 	FormRuntime,
 	FormRuntimeConfig,
 	FormRuntimeHost,
-	FormRuntimeAction,
 	FormRuntimeOutcome,
 	FormRuntimeSnapshot,
 	FormRuntimeStep,

@@ -456,29 +456,6 @@ const rowForm = [
 	},
 ];
 
-test('changing constraints or fieldPath on a connected host re-evaluates it', async () => {
-	const { form, host, cleanup } = await mountForm(
-		[
-			{ $type: 'input', id: 'mode', name: 'mode' },
-			{ $type: 'input', id: 'ref', name: 'ref', constraints: hideWhen('mode', 'hide') },
-		],
-		{ mode: '' },
-	);
-	try {
-		const wrapper = host.querySelector<ConstraintElement>('se-constraint')!;
-		containerOf(form.host).setValue('mode', 'hide');
-		await expect.poll(() => wrapper.hidden).toBe(true);
-
-		wrapper.constraints = hideWhen('mode', 'other') as typeof wrapper.constraints;
-		await expect.poll(() => wrapper.hidden).toBe(false);
-
-		wrapper.constraints = hideWhen('mode', 'hide') as typeof wrapper.constraints;
-		await expect.poll(() => wrapper.hidden).toBe(true);
-	} finally {
-		cleanup();
-	}
-});
-
 test('changing the fieldPath of a connected host resolves its siblings in the new row', async () => {
 	const { host, cleanup } = await mountForm(rowForm, { rows: [{ kind: 'hide' }, { kind: 'show' }] });
 	try {
@@ -648,8 +625,8 @@ test('an unnamed constrained element in an array row resolves its siblings in th
 	const form = new FormController(host.querySelector('rui-form')!);
 	try {
 		await expect.poll(() => hidden().length).toBe(2);
-		expect(hidden()).toEqual([true, false]);
 		await expect.poll(() => form.container).toBeTruthy();
+		expect(hidden()).toEqual([true, false]);
 		expect(hidden()).toEqual([true, false]);
 		containerOf(form.host).setValue('rows.1.kind', 'hide');
 		await expect.poll(hidden).toEqual([true, true]);

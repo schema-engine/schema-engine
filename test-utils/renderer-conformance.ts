@@ -1052,6 +1052,72 @@ export function rendererConformance(
 					});
 			});
 		});
+		describe('skipped steps and constraints', () => {
+			const input2 = (name: string, label: string, extra: Record<string, unknown> = {}) => ({
+				...input(name, label),
+				...extra,
+			});
+			const label = (host: HTMLElement, name: string) =>
+				queryAllByRole(host, 'textbox', { name: new RegExp(`^${name}`) });
+			test('a field whose show condition reads a skipped step is not rendered', async () => {
+				const { host } = await setup({
+					config: {
+						id: 'conformance',
+						view: { $type: 'wizard', actions: { showStepCounter: true } },
+						steps: [
+							{ id: 'one', title: 'One', elements: [input2('hasCompany', 'Company?')] },
+							{
+								id: 'company',
+								title: 'Company',
+								constraints: [
+									{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' },
+								],
+								elements: [input2('wants', 'Wants')],
+							},
+							{
+								id: 'payment',
+								title: 'Payment',
+								elements: [
+									input2('vat', 'Vat', {
+										constraints: [
+											{ field: 'wants', operator: 'equals', value: 'yes', action: 'show' },
+										],
+									}),
+									input2('card', 'Card'),
+								],
+							},
+						],
+					},
+					defaultValues: { hasCompany: 'no', wants: 'yes' },
+				});
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => label(host, 'Card')).toHaveLength(1);
+				expect(label(host, 'Vat')).toHaveLength(0);
+			});
+			test('require and show read a field that comes later the same way', async () => {
+				const { host } = await setup({
+					config: form([
+						input2('needs', 'Needs', {
+							constraints: [{ field: 'late', operator: 'equals', value: 'yes', action: 'require' }],
+						}),
+						input2('shown', 'Shown', {
+							constraints: [{ field: 'late', operator: 'equals', value: 'yes', action: 'show' }],
+						}),
+						input2('gate', 'Gate'),
+						input2('late', 'Late', {
+							constraints: [{ field: 'gate', operator: 'equals', value: 'open', action: 'show' }],
+						}),
+					]),
+					defaultValues: { gate: 'closed', late: 'yes' },
+				});
+				await expect.poll(() => label(host, 'Shown')).toHaveLength(1);
+				expect(label(host, 'Late')).toHaveLength(0);
+				const needs = getByRole(host, 'textbox', { name: /^Needs/ });
+				await expect
+					.poll(() => (needs as HTMLInputElement).required || needs.getAttribute('aria-required') === 'true')
+					.toBe(true);
+			});
+		});
 		describe('a failed wizard step', () => {
 			const dependentStep: FormConfigView = {
 				...wizard(

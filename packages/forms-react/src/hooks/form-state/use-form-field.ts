@@ -1,12 +1,10 @@
-import { useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ChangeEvent, CSSProperties } from 'react';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { selectFieldState, selectValue } from '@schema-engine/forms/state-container';
 import { getGridItemVariables } from '@schema-engine/layout';
-import { FieldConstraintContext } from '@/contexts/field-constraint-context';
 import { isElementRequired } from '@/hooks/is-element-required';
-import { useConstraintLogic } from '@/hooks/use-constraint-logic';
 import { useOptionalFormEngine } from '@/hooks/use-form-context';
 import { logger } from '@/lib/logger';
 import { formatIssueText, useContainerSelector, useFormStateContext } from './context';
@@ -125,27 +123,20 @@ function useNativeBinding(path: string, controlled: boolean, bound: boolean): vo
 }
 
 /**
- * Whether a field is required.
+ * Whether a field is required: the field's own rules say so, or a `require` constraint of it or of a container around it holds.
  *
- * @remarks
- * Under `FormElement` it comes from the constraints that element already evaluated for this field path. A
- * field rendered without one watches only the paths its constraints name, so an unconstrained field does not
- * re-render when another field changes. With no config it watches nothing and is not required.
+ * @remarks The constraint part is the container's (`selectFieldState`), so it agrees with show and hide. With no config it is not required.
  */
 function useFieldRequired(config: FormFieldConfig | undefined): boolean {
+	const { required: constraintRequired } = useContainerSelector((snapshot) =>
+		selectFieldState(snapshot, config?.name ?? ''),
+	);
 	const engineContext = useOptionalFormEngine();
 	const registry = useMemo(
 		() => engineContext?.engine.getValidationRegistry() ?? getFallbackValidationRegistry(),
 		[engineContext],
 	);
-	const rendered = useContext(FieldConstraintContext);
-	const evaluated = config && rendered?.fieldPath === config.name ? rendered.constraints : undefined;
-	const standalone = useConstraintLogic(
-		config?.name ?? '',
-		evaluated ? undefined : config?.constraints,
-		!evaluated && config !== undefined && isElementRequired(config, registry),
-	);
-	return (evaluated ?? standalone).isRequired;
+	return constraintRequired || (config !== undefined && isElementRequired(config, registry));
 }
 
 /**

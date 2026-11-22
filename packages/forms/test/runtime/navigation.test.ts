@@ -4,7 +4,7 @@ import { fill, setup, wizardConfig } from './fixture';
 const stepTriggers = (seen: ReturnType<typeof setup>['seen']) =>
 	seen.filter(({ trigger }) => trigger.startsWith('step_')).map(({ trigger, stepId }) => `${trigger}:${stepId}`);
 
-const ids = (runtime: ReturnType<typeof setup>['runtime']) => runtime.getSnapshot().steps.list.map(({ id }) => id);
+const ids = (runtime: ReturnType<typeof setup>['runtime']) => runtime.getSnapshot().steps.map(({ id }) => id);
 
 describe('next', () => {
 	test('validates the current step, focuses its errors and stays when they fail', async () => {
@@ -12,8 +12,8 @@ describe('next', () => {
 		expect(await runtime.next()).toBe('invalid');
 		expect(host.sync).toHaveBeenCalled();
 		expect(host.focus).toHaveBeenCalledWith(['email']);
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
-		expect(runtime.getSnapshot().steps.list[0]).toMatchObject({ id: 'contact', invalid: true, complete: false });
+		expect(runtime.getSnapshot().current).toBe('contact');
+		expect(runtime.getSnapshot().steps[0]).toMatchObject({ id: 'contact', invalid: true, complete: false });
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 		expect(stepTriggers(seen)).toEqual([]);
 	});
@@ -22,9 +22,9 @@ describe('next', () => {
 		const { runtime, seen } = setup();
 		fill(runtime, { email: 'a@b.c', hasCompany: true });
 		expect(await runtime.next()).toBe('moved');
-		const { steps } = runtime.getSnapshot();
-		expect(steps.current).toBe('company');
-		expect(steps.list.map(({ id, visited, complete }) => [id, visited, complete])).toEqual([
+		const { steps, current } = runtime.getSnapshot();
+		expect(current).toBe('company');
+		expect(steps.map(({ id, visited, complete }) => [id, visited, complete])).toEqual([
 			['contact', true, true],
 			['company', true, false],
 			['address', false, false],
@@ -45,11 +45,11 @@ describe('next', () => {
 		fill(runtime, { email: 'a@b.c', street: 'x' });
 		await runtime.next();
 		await runtime.next();
-		expect(runtime.getSnapshot().steps.current).toBe('payment');
+		expect(runtime.getSnapshot().current).toBe('payment');
 		host.sync.mockClear();
 		expect(await runtime.next()).toBe('refused');
 		expect(host.sync).not.toHaveBeenCalled();
-		expect(runtime.getSnapshot().steps.current).toBe('payment');
+		expect(runtime.getSnapshot().current).toBe('payment');
 	});
 
 	test('is cancelled by a reset that comes while it validates, and focuses nothing', async () => {
@@ -78,7 +78,7 @@ describe('a check that an edit outran', () => {
 		await release();
 		expect(await moving).toBe('overtaken');
 		expect(host.focus).not.toHaveBeenCalled();
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 		const again = runtime.next();
 		await release();
 		expect(await again).toBe('moved');
@@ -93,7 +93,7 @@ describe('back', () => {
 		await runtime.next();
 		host.sync.mockClear();
 		expect(await runtime.back()).toBe('moved');
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 		expect(host.sync).not.toHaveBeenCalled();
 	});
 
@@ -101,9 +101,9 @@ describe('back', () => {
 		const { runtime } = setup();
 		fill(runtime, { email: 'a@b.c' });
 		await runtime.next();
-		expect(runtime.getSnapshot().steps.current).toBe('address');
+		expect(runtime.getSnapshot().current).toBe('address');
 		await runtime.back();
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 	});
 });
 
@@ -121,10 +121,10 @@ describe('goTo', () => {
 		expect(await runtime.goTo('payment')).toBe('refused');
 		await runtime.next();
 		await runtime.next();
-		expect(runtime.getSnapshot().steps.current).toBe('payment');
+		expect(runtime.getSnapshot().current).toBe('payment');
 		expect(await runtime.goTo('contact')).toBe('moved');
 		expect(await runtime.goTo('payment')).toBe('moved');
-		expect(runtime.getSnapshot().steps.current).toBe('payment');
+		expect(runtime.getSnapshot().current).toBe('payment');
 	});
 
 	test('linear: validates the current step and every active step between, landing on the first that fails', async () => {
@@ -136,25 +136,25 @@ describe('goTo', () => {
 		runtime.container.setValue('street', '');
 		runtime.container.setValue('email', '');
 		expect(await runtime.goTo('payment')).toBe('invalid');
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 		expect(host.focus).toHaveBeenLastCalledWith(['email']);
 
 		runtime.container.setValue('email', 'a@b.c');
 		expect(await runtime.goTo('payment')).toBe('invalid');
-		expect(runtime.getSnapshot().steps.current).toBe('address');
-		expect(runtime.getSnapshot().steps.list.find(({ id }) => id === 'contact')?.complete).toBe(true);
+		expect(runtime.getSnapshot().current).toBe('address');
+		expect(runtime.getSnapshot().steps.find(({ id }) => id === 'contact')?.complete).toBe(true);
 		expect(host.focus).toHaveBeenLastCalledWith(['street']);
 
 		runtime.container.setValue('street', 's');
 		expect(await runtime.goTo('payment')).toBe('moved');
-		expect(runtime.getSnapshot().steps.current).toBe('payment');
+		expect(runtime.getSnapshot().current).toBe('payment');
 	});
 
 	test('free: reaches any active step without validating, and a skipped one is still refused', async () => {
 		const { runtime, host } = setup(wizardConfig({ navigation: 'free' }));
 		expect(await runtime.goTo('payment')).toBe('moved');
 		expect(host.sync).not.toHaveBeenCalled();
-		expect(runtime.getSnapshot().steps.list.find(({ id }) => id === 'contact')?.complete).toBe(false);
+		expect(runtime.getSnapshot().steps.find(({ id }) => id === 'contact')?.complete).toBe(false);
 		expect(await runtime.goTo('company')).toBe('refused');
 		expect(await runtime.next()).toBe('refused');
 	});
@@ -169,9 +169,9 @@ describe('skipped steps', () => {
 	test('the list says which steps are skipped, from the values, and counts them in step order', async () => {
 		const { runtime } = setup();
 		expect(ids(runtime)).toEqual(['contact', 'company', 'address', 'payment']);
-		expect(runtime.getSnapshot().steps.list.map(({ skipped }) => skipped)).toEqual([false, true, false, false]);
+		expect(runtime.getSnapshot().steps.map(({ skipped }) => skipped)).toEqual([false, true, false, false]);
 		runtime.container.setValue('hasCompany', true);
-		expect(runtime.getSnapshot().steps.list.map(({ skipped }) => skipped)).toEqual([false, false, false, false]);
+		expect(runtime.getSnapshot().steps.map(({ skipped }) => skipped)).toEqual([false, false, false, false]);
 	});
 
 	test('the fields of a skipped step take no part in a submission, and its values are kept', async () => {
@@ -189,11 +189,11 @@ describe('skipped steps', () => {
 		const { runtime, seen } = setup();
 		fill(runtime, { email: 'a@b.c', hasCompany: true });
 		await runtime.next();
-		expect(runtime.getSnapshot().steps.current).toBe('company');
+		expect(runtime.getSnapshot().current).toBe('company');
 		seen.length = 0;
 		runtime.container.setValue('hasCompany', false);
 		await new Promise((resolve) => setTimeout(resolve, 0));
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 		expect(stepTriggers(seen)).toEqual(['step_leave:company', 'step_change:contact', 'step_enter:contact']);
 	});
 
@@ -202,7 +202,7 @@ describe('skipped steps', () => {
 		fill(runtime, { email: 'a@b.c', hasCompany: true });
 		runtime.container.setValue('hasCompany', false);
 		await runtime.next();
-		expect(runtime.getSnapshot().steps.current).toBe('address');
+		expect(runtime.getSnapshot().current).toBe('address');
 	});
 
 	test('the position and total of the action context count only active steps', async () => {
@@ -230,7 +230,7 @@ describe('step triggers', () => {
 		failing.add('step_leave');
 		fill(runtime, { email: 'a@b.c' });
 		expect(await runtime.next()).toBe('moved');
-		expect(runtime.getSnapshot().steps.current).toBe('address');
+		expect(runtime.getSnapshot().current).toBe('address');
 		expect(reported).toContain('step_leave:1');
 	});
 });
@@ -240,13 +240,13 @@ describe('the lock', () => {
 		const { runtime } = setup();
 		fill(runtime, { email: 'a@b.c' });
 		const first = runtime.next();
-		expect(runtime.getSnapshot().steps.navigating).toBe(true);
+		expect(runtime.getSnapshot().navigating).toBe(true);
 		expect(await runtime.next()).toBe('busy');
 		expect(await runtime.back()).toBe('busy');
 		expect(await runtime.goTo('address')).toBe('busy');
 		expect(await runtime.submit()).toBe('busy');
 		expect(await first).toBe('moved');
-		expect(runtime.getSnapshot().steps.navigating).toBe(false);
+		expect(runtime.getSnapshot().navigating).toBe(false);
 	});
 
 	test('Next and submit cannot interleave on the last step', async () => {
@@ -286,7 +286,7 @@ describe('goTo that a check outran, or a reset revoked', () => {
 		await release();
 		expect(await moving).toBe('overtaken');
 		expect(host.focus).not.toHaveBeenCalled();
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 
 		const revoked = runtime.goTo('payment');
 		await new Promise((resolve) => setTimeout(resolve, 0));

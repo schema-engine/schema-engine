@@ -4,6 +4,8 @@ import { resolveFieldRef } from '@/lib/field-ref';
 import { issueAt, type FormValidationIssue } from './issues';
 import type { ValidateFormOptions } from './options';
 
+const isObject = (value: unknown): value is object => typeof value === 'object' && value !== null;
+
 interface CheckedStep {
 	readonly id: string;
 	readonly elements: readonly object[];
@@ -25,10 +27,13 @@ function readablePaths(
 		if (!name) return [];
 		const path = base ? `${base}.${name}` : name;
 		const children = getElementChildren(element);
-		const kind = getElement((element as { $type: string }).$type)?.containerKind;
+		const kind =
+			'$type' in element && typeof element.$type === 'string'
+				? getElement(element.$type)?.containerKind
+				: undefined;
 		return kind === 'array' || !children
 			? [path]
-			: [path, ...readablePaths(children as object[], getElement, path)];
+			: [path, ...readablePaths(children.filter(isObject), getElement, path)];
 	});
 }
 

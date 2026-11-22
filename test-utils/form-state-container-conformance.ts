@@ -515,6 +515,7 @@ const cases: FormStateContainerCase[] = [
 				'errors',
 				'generation',
 				'isValid',
+				'participation',
 				'rowIds',
 				'touched',
 				'validating',
@@ -603,6 +604,9 @@ const cases: FormStateContainerCase[] = [
 				isTouched: false,
 				isDirty: false,
 				isValidating: false,
+				hidden: false,
+				disabled: false,
+				required: false,
 			});
 			store.setValue('name', 'Grace');
 			store.blur('name');

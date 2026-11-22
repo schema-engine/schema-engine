@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
-import { fill, setup, wizardConfig } from './fixture';
+import { createFormRuntime } from '@/runtime';
+import { createFixture, createHost, fill, setup, wizardConfig } from './fixture';
 
 describe('a direct container.reset()', () => {
 	test('returns the submission to idle with no count and the steps to the first, firing no step trigger', async () => {
@@ -12,10 +13,10 @@ describe('a direct container.reset()', () => {
 		expect(runtime.getSnapshot().submission.submitCount).toBe(1);
 		seen.length = 0;
 		runtime.container.reset();
-		const { submission, steps } = runtime.getSnapshot();
+		const { submission, steps, current } = runtime.getSnapshot();
 		expect(submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
-		expect(steps.current).toBe('contact');
-		expect(steps.list.map(({ visited, complete }) => [visited, complete])).toEqual([
+		expect(current).toBe('contact');
+		expect(steps.map(({ visited, complete }) => [visited, complete])).toEqual([
 			[true, false],
 			[false, false],
 			[false, false],
@@ -30,8 +31,8 @@ describe('a direct container.reset()', () => {
 		const moving = runtime.next();
 		runtime.container.reset();
 		expect(await moving).toBe('cancelled');
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
-		expect(runtime.getSnapshot().steps.navigating).toBe(false);
+		expect(runtime.getSnapshot().current).toBe('contact');
+		expect(runtime.getSnapshot().navigating).toBe(false);
 		expect(await runtime.next()).toBe('invalid');
 	});
 
@@ -40,7 +41,7 @@ describe('a direct container.reset()', () => {
 		fill(runtime, { email: 'a@b.c' });
 		await runtime.next();
 		runtime.container.reset({ email: 'x@y.z' });
-		expect(runtime.getSnapshot().steps.current).toBe('contact');
+		expect(runtime.getSnapshot().current).toBe('contact');
 		expect(runtime.container.getSnapshot().generation).toBe(1);
 	});
 });
@@ -106,7 +107,7 @@ describe('the snapshot', () => {
 		listener.mockClear();
 		await runtime.next();
 		expect(listener).toHaveBeenCalled();
-		expect(runtime.getSnapshot().steps.current).toBe('address');
+		expect(runtime.getSnapshot().current).toBe('address');
 	});
 
 	test('the server snapshot is the first step with a fresh submission, and never changes', async () => {
@@ -115,7 +116,59 @@ describe('the snapshot', () => {
 		fill(runtime, { email: 'a@b.c' });
 		await runtime.next();
 		expect(runtime.getServerSnapshot()).toBe(server);
-		expect(server.steps.current).toBe('contact');
+		expect(server.current).toBe('contact');
 		expect(server.submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+	});
+});
+
+describe('actions in flight and before mount', () => {
+	const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+	test('fire no step trigger before the runtime mounts', async () => {
+		const fixture = createFixture();
+		const runtime = createFormRuntime({
+			engine: fixture.engine,
+			config: fixture.engine.validateForm(wizardConfig()),
+			host: createHost(),
+		});
+		fill(runtime, { email: 'a@b.c' });
+		expect(await runtime.next()).toBe('moved');
+		await tick();
+		expect(fixture.seen).toEqual([]);
+	});
+
+	test('report no results of form_change after an unmount', async () => {
+		const results = vi.fn();
+		const { runtime, stop, failing } = setup(wizardConfig(), { onActionResults: results });
+		await tick();
+		results.mockClear();
+		failing.clear();
+		runtime.container.setValue('email', 'x');
+		stop();
+		await tick();
+		expect(results.mock.calls.map((call) => call[1])).not.toContain('form_change');
+	});
+
+	test('report no results of form_change after a reset', async () => {
+		const results = vi.fn();
+		const { runtime } = setup(wizardConfig(), { onActionResults: results });
+		await tick();
+		results.mockClear();
+		runtime.container.setValue('email', 'x');
+		runtime.container.reset();
+		await tick();
+		expect(results.mock.calls.map((call) => call[1])).not.toContain('form_change');
+	});
+
+	test('a container change after an unmount moves nothing and fires no trigger', async () => {
+		const { runtime, stop, seen } = setup();
+		fill(runtime, { email: 'a@b.c', hasCompany: true });
+		await runtime.next();
+		stop();
+		seen.length = 0;
+		runtime.container.setValue('hasCompany', false);
+		await tick();
+		expect(seen).toEqual([]);
+		expect(runtime.getSnapshot().current).toBe('company');
 	});
 });
