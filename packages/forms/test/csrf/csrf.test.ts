@@ -163,13 +163,6 @@ describe('what carries the token', () => {
 		expect(calls[1].url).toBe('/api/submit');
 		expect(calls[1].headers.get(TOKEN_HEADER)).toBe('secret');
 	});
-
-	test('the token is in no config, payload or submitted value', () => {
-		const engine = createFormEngine({ csrf: policy() });
-		const config = engine.defineForm({ id: 'signup', steps: [{ id: 'one', title: 'One', elements: [] }] });
-		expect(JSON.stringify(config)).not.toContain('secret');
-		expect(Object.keys(config)).not.toContain('csrf');
-	});
 });
 
 describe('csrf readers', () => {

@@ -27,7 +27,7 @@ const ABOUT_BLANK = 'about:blank';
  * Several errors on one path become a list. A problem with no `errors` is one issue on the form, with the
  * problem's `type` and `detail`. Reads no text of its own: `title` and `status` are not carried.
  *
- * @throws {ServerErrorsInputError} For input that is not an object with a recognisable member, for an `errors` that is not a list of objects, and for a pointer that is not one or names a reserved segment.
+ * @throws {ServerErrorsInputError} For input that is not an object with a recognisable member, for an `errors` that is not a list of objects, for an error with none of `pointer`, `detail` and `code`, for a `pointer` that is not a string, and for a pointer that is not one or names a reserved segment.
  */
 export function fromProblemDetails(problem: unknown): FormStateErrorsInput {
 	if (!isRecord(problem) || !KNOWN.some((key) => Object.hasOwn(problem, key))) {
@@ -42,6 +42,14 @@ export function fromProblemDetails(problem: unknown): FormStateErrorsInput {
 	}
 	return groupByPath(
 		entries.map((entry) => {
+			if (entry.pointer === undefined && entry.detail === undefined && entry.code === undefined) {
+				throw new ServerErrorsInputError(
+					"A Problem Details error has none of 'pointer', 'detail' and 'code': nothing says what it is about.",
+				);
+			}
+			if (entry.pointer !== undefined && typeof entry.pointer !== 'string') {
+				throw new ServerErrorsInputError("A Problem Details error 'pointer' must be a string.");
+			}
 			const pointer = textOf(entry.pointer);
 			return [
 				pointer === undefined ? FORM_ROOT : pointerToPath(pointer),

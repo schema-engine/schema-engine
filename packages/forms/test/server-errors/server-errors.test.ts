@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { containerOptions } from '../../../../test-utils/form-state-container-conformance';
+import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
+import type { ElementConfig } from '@/schemas/field-config';
 import { createDefaultValidationRegistry } from '@/schemas/validation';
 import { fromJsonApiErrors, fromProblemDetails, ServerErrorsInputError } from '@/server-errors';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
@@ -61,6 +63,11 @@ describe('fromProblemDetails', () => {
 		expect(() => fromProblemDetails({ errors: [{ pointer: 'email' }] })).toThrow(/not a JSON Pointer/);
 		expect(() => fromProblemDetails({ errors: [{ pointer: '/a//b' }] })).toThrow(/empty segment/);
 		expect(() => fromProblemDetails({ errors: [{ pointer: '/a.b' }] })).toThrow(/dotted path/);
+		for (const pointer of [7, null, ['a'], {}, true]) {
+			expect(() => fromProblemDetails({ errors: [{ pointer, detail: 'x' }] })).toThrow(/pointer.*string/);
+		}
+		expect(() => fromProblemDetails({ errors: [{ title: 'Bad', limit: 3 }] })).toThrow(/none of/);
+		expect(() => fromProblemDetails({ errors: [{}] })).toThrow(ServerErrorsInputError);
 		for (const input of [null, 'oops', 7, [], {}, { foo: 1 }, { errors: 'x' }, { errors: ['x'] }]) {
 			expect(() => fromProblemDetails(input)).toThrow(ServerErrorsInputError);
 		}
@@ -105,6 +112,13 @@ describe('fromJsonApiErrors', () => {
 		expect(() => fromJsonApiErrors({ errors: [{ source: { pointer: '/data/attributes/__x' } }] })).toThrow(
 			/reserved/,
 		);
+		for (const pointer of [7, null, ['a']]) {
+			expect(() => fromJsonApiErrors({ errors: [{ source: { pointer }, detail: 'x' }] })).toThrow(
+				/pointer.*string/,
+			);
+		}
+		expect(() => fromJsonApiErrors({ errors: [{ title: 'Bad' }] })).toThrow(/none of/);
+		expect(() => fromJsonApiErrors({ errors: [{ source: { parameter: 'q' } }] })).toThrow(/none of/);
 		for (const input of [null, 'x', {}, { errors: {} }, { errors: [1] }, { errors: [{ source: 'x' }] }]) {
 			expect(() => fromJsonApiErrors(input)).toThrow(ServerErrorsInputError);
 		}
@@ -116,7 +130,17 @@ describe('the helpers and setServerErrors', () => {
 		const store = createFormStateContainer(
 			containerOptions({
 				registry: createDefaultValidationRegistry(),
-				elements: [],
+				elements: [
+					markNormalizedElementConfig({ $type: 'input', name: 'email' } as unknown as ElementConfig),
+					markNormalizedElementConfig(
+						{
+							$type: 'arrayElements',
+							name: 'contacts',
+							elements: [{ $type: 'input', name: 'email' }],
+						} as unknown as ElementConfig,
+						'array',
+					),
+				],
 				defaults: { email: 'a@example.com', contacts: [{ email: 'b@example.com' }] },
 			}),
 		);

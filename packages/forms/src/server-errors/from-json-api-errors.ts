@@ -22,7 +22,7 @@ const ATTRIBUTES = ['data', 'attributes'];
  * and the plain serializable members of its `meta` become `params`. Several errors on one path become a list.
  * Reads no text of its own: `title` and `status` are not carried.
  *
- * @throws {ServerErrorsInputError} For input that is not an object with an `errors` list of objects, for a `source` that is not an object, and for a pointer that is not one or names a reserved segment.
+ * @throws {ServerErrorsInputError} For input that is not an object with an `errors` list of objects, for an error with none of `source.pointer`, `detail` and `code`, for a `source` that is not an object, for a `source.pointer` that is not a string, and for a pointer that is not one or names a reserved segment.
  */
 export function fromJsonApiErrors(document: unknown): FormStateErrorsInput {
 	const entries = isRecord(document) ? recordsAt(document, 'errors', 'JSON:API member') : undefined;
@@ -34,7 +34,16 @@ export function fromJsonApiErrors(document: unknown): FormStateErrorsInput {
 			if (source !== undefined && !isRecord(source)) {
 				throw new ServerErrorsInputError("A JSON:API error 'source' must be an object.");
 			}
-			const pointer = isRecord(source) ? textOf(source.pointer) : undefined;
+			const given: unknown = isRecord(source) ? source.pointer : undefined;
+			if (given !== undefined && typeof given !== 'string') {
+				throw new ServerErrorsInputError("A JSON:API error 'source.pointer' must be a string.");
+			}
+			if (given === undefined && entry.detail === undefined && entry.code === undefined) {
+				throw new ServerErrorsInputError(
+					"A JSON:API error has none of 'source.pointer', 'detail' and 'code': nothing says what it is about.",
+				);
+			}
+			const pointer = textOf(given);
 			return [
 				pointer === undefined ? FORM_ROOT : pointerToPath(pointer, ATTRIBUTES),
 				issueOf({

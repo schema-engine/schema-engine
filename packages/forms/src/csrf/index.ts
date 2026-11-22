@@ -58,7 +58,8 @@ export const csrf = {
  * The hidden input a native form post carries the token in, or `undefined` when it must not.
  *
  * @remarks
- * Only for a form whose `method` is `post` (any case; `get` and `dialog` submit no body a server checks, and a
+ * Pass the method and action the submission will use, not only the form's own: when a submit button sets
+ * `formmethod` or `formaction`, those are the effective ones. Only for a form whose `method` is `post` (any case; `get` and `dialog` submit no body a server checks, and a
  * `get` would put the token in the URL) and whose `action` is same-origin, resolved against the document's base URL
  * as {@link CsrfPolicy} resolves a request. An empty action is the page itself. Also `undefined` without a policy,
  * without a `field` on it, and without a token. Read at call time, so a binding calls it when it renders or submits.
