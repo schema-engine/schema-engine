@@ -1,4 +1,4 @@
-import type { CsrfPolicy } from '@/lib/form-fetch';
+import { isSameOrigin, type CsrfPolicy } from '@/lib/form-fetch';
 
 export type { CsrfPolicy, FormFetch } from '@/lib/form-fetch';
 
@@ -53,3 +53,22 @@ export const csrf = {
 	custom: ({ token, ...placement }: CsrfPlacement & { readonly token: () => string | undefined }): CsrfPolicy =>
 		placed(() => textOf(token()), placement),
 };
+
+/**
+ * The hidden input a native form post carries the token in, or `undefined` when it must not.
+ *
+ * @remarks
+ * Only for a form whose `method` is `post` (any case; `get` and `dialog` submit no body a server checks, and a
+ * `get` would put the token in the URL) and whose `action` is same-origin, resolved against the document's base URL
+ * as {@link CsrfPolicy} resolves a request. An empty action is the page itself. Also `undefined` without a policy,
+ * without a `field` on it, and without a token. Read at call time, so a binding calls it when it renders or submits.
+ */
+export function csrfFieldFor(
+	policy: CsrfPolicy | undefined,
+	form: { readonly method: string; readonly action: string },
+): { readonly name: string; readonly value: string } | undefined {
+	const name = policy?.field;
+	const value = policy?.token();
+	if (name === undefined || value === undefined || form.method.toLowerCase() !== 'post') return undefined;
+	return isSameOrigin(form.action) ? { name, value } : undefined;
+}

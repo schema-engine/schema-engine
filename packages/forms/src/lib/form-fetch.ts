@@ -29,7 +29,7 @@ const UNSAFE_METHODS: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH', 'DE
  *
  * @remarks A relative URL is resolved against the document's base URL (`<base href>` included), as the browser resolves it for the request.
  */
-function isSameOrigin(input: string | URL): boolean {
+export function isSameOrigin(input: string | URL): boolean {
 	if (typeof location === 'undefined') return false;
 	try {
 		const own = new URL(location.href).origin;

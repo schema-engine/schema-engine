@@ -32,4 +32,8 @@ native post carries it in. The policy is `{ token(): string | undefined; header:
 - **Who uses it.** Every request the engine makes goes through `engine.fetch` (today the `async` validation rule),
   and actions get it as `context.fetch`, so they never remember a token. A binding reads `engine.getCsrf()` to add a
   hidden input, `{ name: policy.field, value: policy.token() }`, to a native post.
+- **Native posts.** `csrfFieldFor(engine.getCsrf(), { method, action })` returns `{ name, value }` for the hidden
+  input, and `undefined` unless the policy has a `field`, there is a token, the method is `post` (any case) and the
+  action is same-origin (resolved like a request, empty means the page). A cross-origin action, a `get` or `dialog`
+  form, and a server get no field, so the token never reaches a URL or another origin.
 - **Never in the form.** The token is not in the config, the payload or the submitted values.

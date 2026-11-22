@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { csrf } from '@/csrf';
+import { csrf, csrfFieldFor } from '@/csrf';
 import { buildFormActionContext, createFormEngine } from '@/index';
 import { formSubmitPlugin, type FormSubmitAction } from '@/actions/plugins/form-submit.plugin';
 import { createValidationContext } from '@/schemas/validation';
@@ -213,5 +213,47 @@ describe('csrf readers', () => {
 		expect(typeof document).toBe('undefined');
 		expect(csrf.fromMeta('csrf-token', { header: 'X' }).token()).toBeUndefined();
 		expect(csrf.fromCookie('XSRF-TOKEN', { header: 'X' }).token()).toBeUndefined();
+	});
+});
+
+describe('csrfFieldFor', () => {
+	const post = { method: 'post', action: '/api/signup' };
+
+	test('returns the field and the current token for a same-origin post, whatever the case of the method', () => {
+		vi.stubGlobal('location', { href: `${own}/signup` });
+		let token = 'first';
+		const reader = csrf.custom({ token: () => token, header: TOKEN_HEADER, field: '_csrf' });
+		expect(csrfFieldFor(reader, post)).toEqual({ name: '_csrf', value: 'first' });
+		expect(csrfFieldFor(reader, { method: 'POST', action: `${own}/api/signup` })).toEqual({
+			name: '_csrf',
+			value: 'first',
+		});
+		expect(csrfFieldFor(reader, { method: 'post', action: '' })).toEqual({ name: '_csrf', value: 'first' });
+		token = 'second';
+		expect(csrfFieldFor(reader, post)?.value).toBe('second');
+	});
+
+	test('returns nothing for a cross-origin action, a get or dialog form, a missing token, a policy with no field or no policy', () => {
+		vi.stubGlobal('location', { href: `${own}/signup` });
+		expect(csrfFieldFor(policy(), { method: 'post', action: 'https://other.example.com/save' })).toBeUndefined();
+		expect(csrfFieldFor(policy(), { method: 'post', action: '//other.example.com/save' })).toBeUndefined();
+		expect(csrfFieldFor(policy(), { method: 'get', action: '/search' })).toBeUndefined();
+		expect(csrfFieldFor(policy(), { method: 'dialog', action: '' })).toBeUndefined();
+		expect(
+			csrfFieldFor(
+				policy(() => undefined),
+				post,
+			),
+		).toBeUndefined();
+		expect(csrfFieldFor(csrf.custom({ token: () => 'secret', header: TOKEN_HEADER }), post)).toBeUndefined();
+		expect(csrfFieldFor(undefined, post)).toBeUndefined();
+	});
+
+	test('resolves the action against the document base, and returns nothing on a server', () => {
+		vi.stubGlobal('location', { href: `${own}/signup` });
+		vi.stubGlobal('document', { baseURI: 'https://static.example.com/' });
+		expect(csrfFieldFor(policy(), post)).toBeUndefined();
+		vi.unstubAllGlobals();
+		expect(csrfFieldFor(policy(), post)).toBeUndefined();
 	});
 });
