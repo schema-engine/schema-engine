@@ -43,7 +43,6 @@ const CustomArrayRegistration = defineInput({
 	render: FormArrayElements as (props: Omit<ArrayElementsProps, '$type'>) => ReturnType<typeof FormArrayElements>,
 });
 
-/** @remarks The suite states `onSubmit(values)`: the second argument of this renderer, the server-error hand-back, is not part of the shared contract. */
 rendererConformance(async ({ config, onSubmit, ...props }) => {
 	const engine = createFormEngine({
 		elements: [
@@ -60,12 +59,7 @@ rendererConformance(async ({ config, onSubmit, ...props }) => {
 		layout: conformanceLayout,
 	});
 	const renderConfig = (next: typeof config) => (
-		<FormRenderer
-			{...props}
-			onSubmit={onSubmit && ((values) => onSubmit(values))}
-			config={engine.validateForm(next)}
-			engine={engine}
-		/>
+		<FormRenderer {...props} onSubmit={onSubmit} config={engine.validateForm(next)} engine={engine} />
 	);
 	const view = render(renderConfig(config));
 	return {
