@@ -1,6 +1,7 @@
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
-import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { FormActionTrigger, NormalizedFormConfig, SubmissionActionResult } from '@schema-engine/forms';
+import type { DeepReadonly } from '@schema-engine/forms/lib/normalized-form-config';
+import type { FormActionConfig } from '@schema-engine/forms/schemas';
 import type { FieldArrayValue, FormIssueFormatter, NativeOptions } from '@schema-engine/forms/state-container';
 import type { ReactNode, RefCallback } from 'react';
 
@@ -70,6 +71,13 @@ export interface FormFieldValue {
 export type { FieldArrayValue };
 
 /**
+ * An action of a normalized form config, as the registrations of the engine type it: frozen, like the config.
+ */
+export type FormProviderAction<TOutputs extends EngineOutputMaps = EngineOutputMaps> = DeepReadonly<
+	FormActionConfig<TOutputs['actions']>
+>;
+
+/**
  * Props for the FormProvider component
  */
 export interface FormProviderProps<TOutputs extends EngineOutputMaps = EngineOutputMaps> {
@@ -88,7 +96,7 @@ export interface FormProviderProps<TOutputs extends EngineOutputMaps = EngineOut
 	/** Callback function executed whenever form data changes */
 	onChange?: (data: FormValues) => void;
 	/** Callback function executed when a form action is triggered */
-	onAction?: (action: FormActionConfig<TOutputs['actions']>, data: FormValues) => void | Promise<void>;
+	onAction?: (action: FormProviderAction<TOutputs>, data: FormValues) => void | Promise<void>;
 	/** Results of each action trigger, including submission failures. */
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 	/**

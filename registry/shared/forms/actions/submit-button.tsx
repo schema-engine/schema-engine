@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
+import { useFormContext } from '@schema-engine/forms-react/hooks';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import type { SubmitButtonProps } from './submit-button.types';
-import { useFormContext } from '@schema-engine/forms-react/adapters';
 
 export function SubmitButton({ label, disabled, onClick, className, id, name, htmlAttributes }: SubmitButtonProps) {
 	const { formState } = useFormContext();

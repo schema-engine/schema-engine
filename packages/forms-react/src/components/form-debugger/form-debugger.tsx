@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useFormContext, useWatchForm } from '@/adapters';
+import { useFormContext, useWatchForm } from '@/hooks/form-state';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { useOptionalViewContext } from '@/contexts/view-context';
 import './form-debugger.css';
@@ -267,7 +267,7 @@ function FormDebuggerPanel({
  * errors, and multi-step state:
  *
  * ```tsx
- * <FormRenderer config={config} engine={engine} adapter={adapter}>
+ * <FormRenderer config={config} engine={engine}>
  *   <FormDebugger />
  * </FormRenderer>
  * ```

@@ -6,9 +6,9 @@ import {
 	type FormStateContainer,
 	type FormStateContainerOptions,
 } from '@schema-engine/forms/state-container';
-import { FormStateContext } from '@/adapters/context';
-import { createFieldRegistry } from '@/adapters/field-registry';
-import { createSubmissionStatusStore, type SubmissionStatusStore } from '@/adapters/submission-status';
+import { FormStateContext } from '@/hooks/form-state/context';
+import { createFieldRegistry } from '@/hooks/form-state/field-registry';
+import { createSubmissionStatusStore, type SubmissionStatusStore } from '@/hooks/form-state/submission-status';
 
 /** A container over `elements` with the default validation registry. */
 export function createTestContainer(

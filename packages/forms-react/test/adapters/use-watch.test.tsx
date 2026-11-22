@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { act, render } from '@testing-library/react';
-import { useWatchField, useWatchForm } from '@/adapters';
+import { useWatchField, useWatchForm } from '@/hooks/form-state';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
 describe('watching values', () => {

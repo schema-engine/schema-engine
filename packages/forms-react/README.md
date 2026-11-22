@@ -74,7 +74,7 @@ The form container keeps its defaults apart from the live values, and clones the
 
 Each form instance has one state container, created with `createFormStateContainer` from `@schema-engine/forms`, made from the normalized config, the engine's validation registry, the defaults and the config's `validationMode` and `reValidateMode`. Its lifetime follows the identity of the normalized config, and it is the only form state. Validation timing, dependent re-validation, field arrays and the fields that take part (hidden and disabled ones do not) are the container's.
 
-Submitting goes through the container: the provider guards a second submit, begins a submission, validates the whole form with it and acts on how that ended. `passed` runs the actions and `onSubmit` with exactly the values that passed, without the fields that took no part (hidden or disabled ones) and with the config's `payload` merged in; `invalid` focuses the first control that has an error; `overtaken`, when an edit outran the check, does nothing. A wizard step is validated with the container too, and a failed step marks nothing submitted. `isSubmitting` and `submitCount` are the provider's own.
+Submitting goes through the container: the provider guards a second submit, begins a submission, validates the whole form with it and acts on how that ended. `passed` runs the actions and `onSubmit` with exactly the values that passed (every submit trigger's `context.formData` and `onAction` carry them too; a value an action writes during the submission updates the form, not that submission), without the fields that took no part (hidden or disabled ones) and with the config's `payload` merged in; `invalid` focuses the first control that has an error; `overtaken`, when an edit outran the check, does nothing. A wizard step is validated with the container too, and a failed step marks nothing submitted. `isSubmitting` and `submitCount` are the provider's own.
 
 ### Issue text
 
@@ -96,27 +96,26 @@ A controlled widget calls `onChange(value)` and relies on the engine's rules. A 
 
 ## Public entry points
 
-| Import                                                | Purpose                                                                                               |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms-react`                          | Public components, including `FormEngineProvider`, `FormProvider`, and `FormRenderer`                 |
-| `@schema-engine/forms-react/hooks`                    | Engine, field, constraint, submission, and view hooks                                                 |
-| `@schema-engine/forms-react/adapters`                 | The form state hooks, `FORM_ROOT` and the issue types                                                 |
-| `@schema-engine/forms-react/contexts`                 | View context provider and context types                                                               |
-| `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, `defineRecipe` (binds a spec to components) and React recipe contracts |
-| `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`                                                                                        |
+| Import                                                | Purpose                                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-react`                          | Public components, including `FormEngineProvider`, `FormProvider`, and `FormRenderer`                           |
+| `@schema-engine/forms-react/hooks`                    | The form state hooks, `FORM_ROOT` and the issue types; the engine, field, constraint, submission and view hooks |
+| `@schema-engine/forms-react/contexts`                 | View context provider and context types                                                                         |
+| `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, `defineRecipe` (binds a spec to components) and React recipe contracts           |
+| `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`                                                                                                  |
 
-Use these from `/adapters` inside the active form:
+Use these from `/hooks` inside the active form:
 
-| Hook                   | Returns                                                                                                                                |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `useFormField(config)` | `{ value, error, warning, invalid, onChange, onBlur, name, required, disabled, ref }` for the field at `config.name`                   |
-| `useWatchField(name)`  | The value at a path, or the values at a list of paths, in order                                                                        |
-| `useWatchForm()`       | The whole value tree                                                                                                                   |
-| `useFieldArray(name)`  | `{ fields, append, prepend, insert, swap, move, update, replace, remove }`                                                             |
-| `useFormError(path)`   | The engine's error of exactly that path (`FORM_ROOT` is the form itself), with its `type`, `ruleId`, `params` and every issue in `all` |
-| `useFieldState(path)`  | `{ error, warning, invalid, isTouched, isDirty, isValidating }`                                                                        |
-| `useFormatIssue()`     | `(issue, path) => string \| undefined`, the provider's `formatIssue` with the `message` fallback                                       |
-| `useFormContext()`     | `{ getValues, setValue, trigger, setFocus, formState }`                                                                                |
+| Hook                   | Returns                                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `useFormField(config)` | `{ value, error, warning, invalid, onChange, onBlur, name, required, disabled, ref }` for the field at `config.name`                                                     |
+| `useWatchField(name)`  | The value at a path, or the values at a list of paths, in order                                                                                                          |
+| `useWatchForm()`       | The whole value tree                                                                                                                                                     |
+| `useFieldArray(name)`  | `{ fields, append, prepend, insert, swap, move, update, replace, remove }`                                                                                               |
+| `useFormError(path)`   | The text of the error of exactly that path (`FORM_ROOT` is the form itself), by the formatter seam; `undefined` when there is no error or it has no words                |
+| `useFieldState(path)`  | `{ error, warning, invalid, isTouched, isDirty, isValidating }`, where `error` and `warning` are the engine's objects (`type`, `ruleId`, `params`, every issue in `all`) |
+| `useFormatIssue()`     | `(issue, { path }) => string \| undefined`, the formatter with the `message` fallback                                                                                    |
+| `useFormContext()`     | `{ getValues, setValue, trigger, setFocus, formState }`                                                                                                                  |
 
 `useFieldArray` keeps falsy scalar rows such as `tags: ['', '']`. Errors and touched state move with their rows, and an operation that adds a row focuses its first control; dirty state is the comparison with the defaults, index by index. An operation naming a row that does not exist does nothing, `remove` removes a repeated index once, and `reset` gives every row a new id, and a `setValue` of the whole array keeps the ids by position.
 
@@ -143,9 +142,9 @@ longer augment a global `FormEngine` namespace.
 ## Migration
 
 - Import `createFormEngine` from `@schema-engine/forms`.
-- Move runtime and view hook imports to `/hooks`, and form state hooks to `/adapters`.
+- Import the form state, runtime and view hooks from `/hooks`.
 - Import `FormElement` and `FormElements` from `/primitives`.
-- Replace `useFormInstance` with `useFormContext` from `/adapters`.
+- Replace `useFormInstance` with `useFormContext` from `/hooks`.
 - Replace `useGDPRConsent` and `useGTMTracker` with `GDPRConsent` and `GTMTracker` from `@schema-engine/forms/browser`. `GDPRConsent` is a shared `GDPRConsentTool` backed by `localStorage` (`createGDPRConsent` builds one over other storage) and `GTMTracker` exposes static methods. Neither is a hook, so React state subscriptions belong to the application.
 
 Styling and layout guides: [Styling and layout](../../apps/docs/src/content/docs/styling/overview.mdx), [Appearance axes](../../apps/docs/src/content/docs/styling/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/styling/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/styling/recipes.mdx).

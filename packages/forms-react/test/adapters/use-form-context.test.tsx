@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { act, render } from '@testing-library/react';
-import { useFormContext } from '@/adapters';
-import type { FormContextValue } from '@/adapters';
-import type { SubmissionStatusStore } from '@/adapters/submission-status';
+import { selectError } from '@schema-engine/forms/state-container';
+import { useFormContext } from '@/hooks/form-state';
+import type { FormContextValue } from '@/hooks/form-state';
+import type { SubmissionStatusStore } from '@/hooks/form-state/submission-status';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
 const elements = [{ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Required' }] }];
@@ -106,20 +107,25 @@ describe('useFormContext', () => {
 		expect(context()).toBe(first);
 	});
 
-	test('setValue passes the native fact of a control with the value', () => {
+	test('setValue passes the native fact of a control with the value, and the fact is the error once validated', async () => {
 		const { container, context } = mount(() => undefined);
 
 		act(() => {
 			context().setValue('name', 'x', { native: { type: 'typeMismatch' } });
 		});
+		await act(() => context().trigger('name'));
 
 		expect(container.getValue('name')).toBe('x');
+		expect(selectError(container.getSnapshot(), 'name')).toMatchObject({ type: 'typeMismatch', source: 'native' });
 	});
 
-	test('trigger validates the named field and resolves whether it passed', async () => {
-		const { context } = mount(() => undefined);
+	test('trigger resolves whether the named field, or the whole form, passed', async () => {
+		const { container, context } = mount(() => undefined);
 
 		await expect(context().trigger('name')).resolves.toBe(false);
-		await expect(context().trigger(['name'])).resolves.toBe(false);
+		await expect(context().trigger()).resolves.toBe(false);
+		act(() => container.setValue('name', 'ada'));
+		await expect(context().trigger(['name'])).resolves.toBe(true);
+		await expect(context().trigger()).resolves.toBe(true);
 	});
 });

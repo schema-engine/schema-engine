@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useFormActionDispatchers } from '../../src/components/form-runtime/use-form-action-dispatchers';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { ActionDispatcher } from '@schema-engine/actions';
-import { createSubmissionStatusStore } from '../../src/adapters/submission-status';
+import { createSubmissionStatusStore } from '../../src/hooks/form-state/submission-status';
 import { createTestContainer } from '../utils/container-harness';
 
 const config: FormConfig = {

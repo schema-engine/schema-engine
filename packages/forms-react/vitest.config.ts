@@ -27,10 +27,6 @@ const alias = [
 		replacement: `${formsPackageRoot}/lib/normalized-form-config.ts`,
 	},
 	{
-		find: /^@schema-engine\/forms\/adapters(\/.*)?$/,
-		replacement: `${formsPackageRoot}/adapters$1`,
-	},
-	{
 		find: '@/components/ui',
 		replacement: path.resolve(dirname, '../../registry/ui-stubs'),
 	},

@@ -2,7 +2,7 @@ import { fieldText } from '@/hooks/field-text';
 import { describe, it, expect } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { useFormField } from '../../src/adapters';
+import { useFormField } from '../../src/hooks/form-state';
 import { renderProvider } from '../utils/form-harness';
 
 const config: FormConfig = {

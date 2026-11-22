@@ -8,13 +8,7 @@ import { radiant } from '@ecopages/vite-plugin-radiant';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const formsPackageRoot = path.resolve(dirname, '../forms/src');
-
 const alias = [
-	{
-		find: /^@schema-engine\/forms\/adapters(\/.*)?$/,
-		replacement: `${formsPackageRoot}/adapters$1`,
-	},
 	{ find: /^@schema-engine\/forms-radiant$/, replacement: path.resolve(dirname, 'src/index.ts') },
 	{
 		find: /^@schema-engine\/forms-radiant\/(.*)$/,

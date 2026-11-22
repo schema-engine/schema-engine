@@ -9,8 +9,8 @@ import { createFormEngine } from '@schema-engine/forms';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
 import { useFormChangeEffect } from '@/components/form-runtime/use-form-change-effect';
-import { useFormContext, useFormField, type FormValues } from '@/adapters';
-import { useFormStateContext } from '@/adapters/context';
+import { useFormContext, useFormField, type FormValues } from '@/hooks/form-state';
+import { useFormStateContext } from '@/hooks/form-state/context';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
 const actionSchema = z.object({ $type: z.literal('record-change'), id: z.string() });

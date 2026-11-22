@@ -555,12 +555,12 @@ adapter.
 
 ## Who owns visual chrome
 
-| Layer                                                           | Owns                                                                                                                                                                                             |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form state container (`@schema-engine/forms/state-container`), `FieldArrayValue` (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
-| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/adapters`; the form state is the engine's container                                                                                         |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                                                      |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                                                           |
+| Layer                                                           | Owns                                                                                                                                                           |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form state container (`@schema-engine/forms/state-container`), `FieldArrayValue` — no widget `$type` schemas |
+| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/hooks`; the form state is the engine's container                                                          |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                    |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                         |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 

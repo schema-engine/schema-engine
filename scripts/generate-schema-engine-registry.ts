@@ -629,7 +629,6 @@ const TRACKED_NPM_DEPENDENCIES = [
 
 const PUBLIC_FORMS_REACT_IMPORTS = new Set([
 	'@schema-engine/forms-react',
-	'@schema-engine/forms-react/adapters',
 	'@schema-engine/forms-react/contexts',
 	'@schema-engine/forms-react/hooks',
 	'@schema-engine/forms-react/primitives',

@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { logger } from '@/lib/logger';
 import type { FormStateContainer } from '@schema-engine/forms/state-container';
-import type { SubmissionStatusStore } from '@/adapters/submission-status';
+import type { SubmissionStatusStore } from '@/hooks/form-state/submission-status';
+import type { FormValues } from '@/hooks/form-state/types';
 import type { FormActionTrigger, BuilderActionBaseContext, FormConfigView } from '@schema-engine/forms';
 import { buildFormActionContext, collectStepActions } from '@schema-engine/forms';
 import type { ActionSequenceEntry } from '@schema-engine/actions';
@@ -22,7 +23,12 @@ interface UseFormActionDispatchersOptions {
 }
 
 interface UseFormActionDispatchersReturn {
-	buildActionContext: () => BuilderActionBaseContext;
+	/**
+	 * Builds the context of a trigger.
+	 *
+	 * @remarks `values` are the form data it carries: a submission passes the values it validated, and a trigger outside one reads the container's current values.
+	 */
+	buildActionContext: (values?: FormValues) => BuilderActionBaseContext;
 	/** Whether any of the actions answers the trigger. */
 	hasMatching: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
 	dispatchActions: (
@@ -70,18 +76,21 @@ export function useFormActionDispatchers({
 		[container, status],
 	);
 
-	const buildActionContext = useCallback((): BuilderActionBaseContext => {
-		const { values, errors, touched, isValid } = container.getSnapshot();
-		return buildFormActionContext({
-			config,
-			values,
-			formState: { isValid, errors, touched, submitCount: status.getSnapshot().submitCount },
-			currentStep: getCurrentStep?.() ?? 0,
-			mountedAt: formMountTime,
-			form: formAdapter,
-			fetch,
-		});
-	}, [container, status, config, getCurrentStep, formAdapter, formMountTime, fetch]);
+	const buildActionContext = useCallback(
+		(submitted?: FormValues): BuilderActionBaseContext => {
+			const { values, errors, touched, isValid } = container.getSnapshot();
+			return buildFormActionContext({
+				config,
+				values: submitted ?? values,
+				formState: { isValid, errors, touched, submitCount: status.getSnapshot().submitCount },
+				currentStep: getCurrentStep?.() ?? 0,
+				mountedAt: formMountTime,
+				form: formAdapter,
+				fetch,
+			});
+		},
+		[container, status, config, getCurrentStep, formAdapter, formMountTime, fetch],
+	);
 
 	const dispatchActions = useCallback(
 		async (

@@ -1,6 +1,5 @@
 import * as root from '@schema-engine/forms-react';
-import { useFormContext } from '@schema-engine/forms-react/adapters';
-import { useFormInstanceActions } from '@schema-engine/forms-react/hooks';
+import { useFormContext, useFormInstanceActions } from '@schema-engine/forms-react/hooks';
 import { FormElement, FormElements } from '@schema-engine/forms-react/primitives';
 
 void [root.FormEngineProvider, root.FormRenderer, useFormContext, useFormInstanceActions, FormElement, FormElements];

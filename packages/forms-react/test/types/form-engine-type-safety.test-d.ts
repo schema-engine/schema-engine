@@ -49,7 +49,7 @@ void inputConfig;
 import type { FormRendererProps } from '@/components/internals/form-renderer';
 import { FormEngineContext } from '@/components/provider';
 import type { FormEngineContextValue } from '@/components/provider';
-import type { FormProviderProps } from '@/adapters/types';
+import type { FormProviderProps } from '@/hooks/form-state/types';
 import type { ComponentProps } from 'react';
 import { defineInput } from '@schema-engine/forms/types';
 import * as z from 'zod/mini';

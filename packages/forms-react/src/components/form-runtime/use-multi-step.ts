@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FormStateContainer } from '@schema-engine/forms/state-container';
-import type { FieldRegistry } from '@/adapters/field-registry';
+import type { FieldRegistry } from '@/hooks/form-state/field-registry';
 import {
 	collectStepFieldPaths,
 	createInitialStepStates,

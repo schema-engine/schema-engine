@@ -23,7 +23,7 @@ export function FormSubmissionAlert({
 	grid,
 	style,
 }: SubmissionAlertProps) {
-	const { submissionState, clearSubmission, formatError } = useSubmissionState();
+	const { submissionState, clearSubmission } = useSubmissionState();
 	const host = useFieldHost(grid, style);
 	useEffect(() => {
 		let timer: ReturnType<typeof setTimeout>;
@@ -77,7 +77,9 @@ export function FormSubmissionAlert({
 						{submissionState.errors.length > 0 ? (
 							<ul>
 								{submissionState.errors.map((error: SubmissionError, index: number) => (
-									<li key={`${error.actionId}-${index}`}>{formatError(error)}</li>
+									<li key={`${error.type}-${index}`}>
+										{('message' in error ? error.message : undefined) || errorMessage}
+									</li>
 								))}
 							</ul>
 						) : (

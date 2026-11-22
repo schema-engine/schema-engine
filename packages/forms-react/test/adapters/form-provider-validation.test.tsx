@@ -1,9 +1,12 @@
 import { fieldText } from '@/hooks/field-text';
+import { useState } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { FormProvider } from '../../src/components/form-provider';
+import { FormEngineContext } from '../../src/components/provider';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { useFormContext, useFormField } from '../../src/adapters';
-import { renderProvider } from '../utils/form-harness';
+import { useFormContext, useFormField } from '../../src/hooks/form-state';
+import { renderProvider, testEngine } from '../utils/form-harness';
 
 const config: FormConfig = {
 	id: 'validation-form',
@@ -70,6 +73,19 @@ const asyncConfig: FormConfig = {
 	],
 };
 
+/** @remarks Mounts `first`, which sits before `second` in the document, after `second` registered its control. */
+function LateFirst() {
+	const [shown, show] = useState(false);
+	return (
+		<>
+			<button type="button" onClick={() => show(true)}>
+				Show first
+			</button>
+			{shown && <ValidationProbe name="first" />}
+		</>
+	);
+}
+
 describe('a submission that ends without a verdict', () => {
 	it('is not counted and does not submit when an edit outruns the check and its retry', async () => {
 		const onSubmit = vi.fn();
@@ -125,6 +141,28 @@ describe('a submission that ends without a verdict', () => {
 		expect(screen.getByTestId('status')).toHaveTextContent('false:0');
 		expect(onSubmit).not.toHaveBeenCalled();
 		fetchSpy.mockRestore();
+	});
+});
+
+describe('a provider used directly', () => {
+	it('starts a fresh form when it gets a new normalized config', () => {
+		const view = (formConfig: FormConfig) => (
+			<FormEngineContext.Provider value={{ engine: testEngine }}>
+				<FormProvider
+					config={testEngine.validateForm(formConfig)}
+					defaultValues={{ email: 'first@example.com' }}
+				>
+					<ValidationProbe name="email" />
+				</FormProvider>
+			</FormEngineContext.Provider>
+		);
+		const { rerender } = render(view(config));
+		fireEvent.change(screen.getByTestId('email'), { target: { value: 'edited@example.com' } });
+		expect(screen.getByTestId('email')).toHaveValue('edited@example.com');
+
+		rerender(view({ ...config, id: 'other-form' }));
+
+		expect(screen.getByTestId('email')).toHaveValue('first@example.com');
 	});
 });
 
@@ -190,7 +228,7 @@ describe('FormProvider validation', () => {
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
 
-	it('focuses the first control that has an error when a submit fails', async () => {
+	it('focuses the first control in document order that has an error, whatever order the controls mounted in', async () => {
 		renderProvider(
 			{
 				...config,
@@ -207,17 +245,17 @@ describe('FormProvider validation', () => {
 				],
 			},
 			<>
+				<LateFirst />
 				<ValidationProbe name="second" />
-				<ValidationProbe name="first" />
 				<button type="submit">Submit</button>
 			</>,
 		);
-
+		fireEvent.click(screen.getByText('Show first'));
 		fireEvent.click(screen.getByText('Submit'));
 
 		await waitFor(() => expect(screen.getByTestId('second-error')).toHaveTextContent('second is required'));
-		await waitFor(() => expect(screen.getByTestId('second')).toHaveFocus());
-		expect(screen.getByTestId('first')).not.toHaveFocus();
+		await waitFor(() => expect(screen.getByTestId('first')).toHaveFocus());
+		expect(screen.getByTestId('second')).not.toHaveFocus();
 	});
 
 	it('hands onSubmit the values that passed validation once the required field is filled', async () => {

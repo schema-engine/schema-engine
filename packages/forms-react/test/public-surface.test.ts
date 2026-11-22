@@ -1,16 +1,21 @@
 import { globSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, test } from 'vitest';
+
+const packageRoot = path.resolve(import.meta.dirname, '..');
 
 describe('headless package surface', () => {
 	test('no source file imports react-hook-form', () => {
-		const importing = globSync('src/**/*.{ts,tsx}')
-			.filter((file) => /from\s+['"]react-hook-form/.test(readFileSync(file, 'utf8')))
+		const sources = globSync('src/**/*.{ts,tsx}', { cwd: packageRoot });
+		expect(sources.length).toBeGreaterThan(50);
+		const importing = sources
+			.filter((file) => /['"]react-hook-form['"/]/.test(readFileSync(path.join(packageRoot, file), 'utf8')))
 			.toSorted();
 		expect(importing).toEqual([]);
 	});
 
 	test('styling is consumer owned and the form state is native', () => {
-		const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
+		const manifest = JSON.parse(readFileSync(path.join(packageRoot, 'package.json'), 'utf8'));
 		for (const dependency of ['class-variance-authority', 'clsx', 'tailwind-merge']) {
 			expect(manifest.dependencies).not.toHaveProperty(dependency);
 		}
@@ -18,7 +23,7 @@ describe('headless package surface', () => {
 			expect(manifest[group] ?? {}).not.toHaveProperty('react-hook-form');
 		}
 		expect(manifest.exports).not.toHaveProperty('./adapters/react-hook-form');
-		expect(manifest.exports).toHaveProperty('./adapters');
+		expect(manifest.exports).not.toHaveProperty('./adapters');
 		expect(manifest.exports).toHaveProperty('./hooks');
 		expect(manifest.exports).toHaveProperty('./primitives');
 		expect(manifest.exports).not.toHaveProperty('./registries/builder-registry');

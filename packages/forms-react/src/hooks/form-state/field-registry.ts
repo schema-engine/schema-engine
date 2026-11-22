@@ -3,7 +3,7 @@ export interface FieldRegistry {
 	/** Records a control of `path`; returns the function that removes that control. */
 	register(path: string, element: HTMLElement): () => void;
 	focus(path: string): void;
-	/** Focuses the first of `paths`, in document order, that has a control. */
+	/** Focuses the first control, in document order, of the fields at `paths` or below them, so an error on an array reaches its rows. */
 	focusFirst(paths: readonly string[]): void;
 	/** Focuses the first control, in document order, of the field at `path` or below it. */
 	focusWithin(path: string): void;
@@ -28,6 +28,10 @@ function focusFirstInDocument(elements: readonly HTMLElement[]): void {
 export function createFieldRegistry(): FieldRegistry {
 	const controls = new Map<string, HTMLElement[]>();
 	const current = (path: string): HTMLElement | undefined => controls.get(path)?.at(-1);
+	const within = (path: string): HTMLElement[] =>
+		Array.from(controls.keys())
+			.filter((key) => key === path || key.startsWith(`${path}.`))
+			.flatMap((key) => current(key) ?? []);
 	return {
 		register(path, element) {
 			controls.set(path, [...(controls.get(path) ?? []), element]);
@@ -41,14 +45,10 @@ export function createFieldRegistry(): FieldRegistry {
 			current(path)?.focus();
 		},
 		focusFirst(paths) {
-			focusFirstInDocument(paths.flatMap((path) => current(path) ?? []));
+			focusFirstInDocument(paths.flatMap(within));
 		},
 		focusWithin(path) {
-			focusFirstInDocument(
-				Array.from(controls.keys())
-					.filter((key) => key === path || key.startsWith(`${path}.`))
-					.flatMap((key) => current(key) ?? []),
-			);
+			focusFirstInDocument(within(path));
 		},
 	};
 }

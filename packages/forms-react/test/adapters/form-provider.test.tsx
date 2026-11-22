@@ -3,7 +3,7 @@ import { getDefaultLayoutTheme } from '@schema-engine/layout';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/components/form-provider';
-import { useFormField } from '../../src/adapters';
+import { useFormField } from '../../src/hooks/form-state';
 import type { ElementConfig, FormConfig } from '@schema-engine/forms/schemas';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import * as z from 'zod/mini';
@@ -160,7 +160,7 @@ describe('FormProvider', () => {
 		expect(submitStartIndex).toBeLessThan(formSubmitIndex);
 	});
 
-	it('gives form_submit the values written by a form_submit_start action', async () => {
+	it('updates the form with a value an action writes during a submission, not the submission itself', async () => {
 		mockDispatch.mockImplementation((input) => {
 			if (input.trigger === 'form_submit_start') {
 				input.context.form.setValue('field1', 'prepared');
@@ -179,7 +179,8 @@ describe('FormProvider', () => {
 
 		await waitFor(() => {
 			const submitCall = mockDispatch.mock.calls.find((call) => call[0]?.trigger === 'form_submit');
-			expect(submitCall?.[0].context.formData).toMatchObject({ field1: 'prepared' });
+			expect(submitCall?.[0].context.formData).not.toHaveProperty('field1', 'prepared');
+			expect(submitCall?.[0].context.form.getValue('field1')).toBe('prepared');
 		});
 	});
 

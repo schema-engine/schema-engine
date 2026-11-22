@@ -4,11 +4,12 @@ import { ActionDispatcher } from '@schema-engine/forms/actions';
 import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
 import { createFormStateContainer } from '@schema-engine/forms/state-container';
 import { getAppearanceAttributes } from '@schema-engine/layout';
-import { collectStepActions, type FormActionConfig, type FormConfigView } from '@schema-engine/forms';
-import { FormStateContext, type FormStateContextValue } from '@/adapters/context';
-import { createFieldRegistry } from '@/adapters/field-registry';
-import { createSubmissionStatusStore } from '@/adapters/submission-status';
-import type { FormProviderProps, FormValues } from '@/adapters/types';
+import { collectStepActions, type FormConfigView } from '@schema-engine/forms';
+import { getObjectIdentity } from '@/lib/object-identity';
+import { FormStateContext, type FormStateContextValue } from '@/hooks/form-state/context';
+import { createFieldRegistry } from '@/hooks/form-state/field-registry';
+import { createSubmissionStatusStore } from '@/hooks/form-state/submission-status';
+import type { FormProviderProps } from '@/hooks/form-state/types';
 import { useFormEngine } from '@/hooks/use-form-context';
 import { useSubmissionStateManager } from '@/hooks/use-submission-state';
 import { FormInstanceContext, type FormInstanceContextValue } from '@/components/provider';
@@ -16,23 +17,11 @@ import { FormStepStateContext } from '@/components/form-step-state-context';
 import { useFormActionDispatchers } from './form-runtime/use-form-action-dispatchers';
 import { useFormChangeEffect } from './form-runtime/use-form-change-effect';
 import { useFormMountEffect } from './form-runtime/use-form-mount-effect';
-import { useFormSubmitHandler, type NormalizedFormAction } from './form-runtime/use-form-submit-handler';
+import { useFormSubmitHandler } from './form-runtime/use-form-submit-handler';
 import { useMultiStep } from './form-runtime/use-multi-step';
 
-/**
- * Creates the form's state container and renders the `<form>` around its children.
- *
- * @remarks
- * The container is the only form state. It is created once, from the normalized config, the engine's
- * validation registry, the defaults and the config's `validationMode` and `reValidateMode`, and its
- * lifetime is the provider's: a new config needs a new `key`, which `FormRenderer` gives it from the
- * identity of the normalized config. The hooks under the provider read the container with
- * `useSyncExternalStore`.
- *
- * Submission state (`isSubmitting`, `submitCount`) is the provider's own until the form runtime of #336
- * owns the lifecycle.
- */
-export function FormProvider<TOutputs extends EngineOutputMaps = EngineOutputMaps>({
+/** @remarks The form instance of one normalized config and one engine: the container is created once, from both. */
+function FormInstance<TOutputs extends EngineOutputMaps>({
 	config,
 	defaultValues,
 	children,
@@ -94,21 +83,6 @@ export function FormProvider<TOutputs extends EngineOutputMaps = EngineOutputMap
 		dispatchTrigger: actionDispatchers.dispatchTrigger,
 	});
 
-	/**
-	 * @remarks
-	 * The one narrowing left in the provider. The submission lifecycle of `@schema-engine/forms` hands the action
-	 * over as a loosely typed `FormActionConfig`, while the registration maps the consumer's `onAction` is written
-	 * against exist only in the provider generics, so no typing of this boundary connects them without making
-	 * the lifecycle generic in the engine.
-	 */
-	const handleFormAction = useMemo(
-		() =>
-			onAction &&
-			((action: NormalizedFormAction, data: FormValues) =>
-				onAction(action as FormActionConfig<TOutputs['actions']>, data)),
-		[onAction],
-	);
-
 	useFormChangeEffect({
 		container,
 		config: runtimeConfig,
@@ -120,13 +94,13 @@ export function FormProvider<TOutputs extends EngineOutputMaps = EngineOutputMap
 		container,
 		status,
 		fields,
-		config: runtimeConfig,
+		config,
 		submission,
 		buildActionContext: actionDispatchers.buildActionContext,
 		hasMatching: actionDispatchers.hasMatching,
 		getCurrentStep,
 		onSubmit,
-		onAction: handleFormAction,
+		onAction,
 		onActionResults,
 		dispatchActions: actionDispatchers.dispatchActions,
 	});
@@ -188,4 +162,22 @@ export function FormProvider<TOutputs extends EngineOutputMaps = EngineOutputMap
 			</FormInstanceContext.Provider>
 		</FormStateContext.Provider>
 	);
+}
+
+/**
+ * Creates the form's state container and renders the `<form>` around its children.
+ *
+ * @remarks
+ * The container is the only form state. It is created from the normalized config, the engine's validation
+ * registry, the defaults and the config's `validationMode`, `reValidateMode` and `payload`, and lives as long as
+ * the identities of the config and the engine do: a new normalized config or engine starts a fresh instance
+ * with its defaults and step state, whichever component renders the provider. `defaultValues` are read when the
+ * instance starts. The hooks under the provider read the container with `useSyncExternalStore`.
+ *
+ * Submission state (`isSubmitting`, `submitCount`) is the provider's own until the form runtime of #336 owns the
+ * lifecycle.
+ */
+export function FormProvider<TOutputs extends EngineOutputMaps = EngineOutputMaps>(props: FormProviderProps<TOutputs>) {
+	const { engine } = useFormEngine();
+	return <FormInstance key={`${getObjectIdentity(props.config)}:${getObjectIdentity(engine)}`} {...props} />;
 }

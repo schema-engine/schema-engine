@@ -3,8 +3,8 @@ import { afterEach, expect, test } from 'vitest';
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import type { FormConfig } from '@schema-engine/forms/schemas';
-import { useFormField } from '../../src/adapters';
-import { useFormStateContext } from '../../src/adapters/context';
+import { useFormField } from '../../src/hooks/form-state';
+import { useFormStateContext } from '../../src/hooks/form-state/context';
 import { useFormInstanceActions } from '../../src/hooks/use-form-context';
 import { renderProvider } from '../utils/form-harness';
 

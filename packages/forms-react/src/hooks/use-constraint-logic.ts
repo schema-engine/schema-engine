@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useWatchField } from '@/adapters/use-watch-field';
+import { useWatchField } from '@/hooks/form-state/use-watch-field';
 import {
 	evaluateResolvedConstraints,
 	resolveConstraintPaths,

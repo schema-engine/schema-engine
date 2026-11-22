@@ -1,25 +1,21 @@
 import { useState, useCallback, useContext } from 'react';
 import { FormInstanceContext } from '@/components/provider';
-import { useFormatIssue } from '@/adapters/use-form-error';
-import { FORM_ROOT } from '@schema-engine/forms/state-container';
-
-/**
- * Submission error from a failed action
- */
-export type SubmissionErrorType = 'actionFailed' | 'noResult' | 'callbackFailed' | 'triggerFailed' | 'validationFailed';
 
 /**
  * Why a submission failed, as a typed failure the application words.
  *
  * @remarks
- * `message` is only the text the failure itself carried (an action's error, an exception's message) and is
- * absent when it carried none. Use `formatError` of {@link useSubmissionState} for the text to show.
+ * Only a failure of an action names it (`actionId`). `message` is only the text the failure itself carried (an
+ * action's error, an exception's message) and is absent when it carried none.
  */
-export interface SubmissionError {
-	actionId: string;
-	type: SubmissionErrorType;
-	message?: string;
-}
+export type SubmissionError =
+	| { readonly type: 'actionFailed'; readonly actionId: string; readonly message?: string }
+	| { readonly type: 'noResult'; readonly actionId: string }
+	| { readonly type: 'callbackFailed'; readonly message?: string }
+	| { readonly type: 'triggerFailed'; readonly message?: string }
+	| { readonly type: 'validationFailed'; readonly message?: string };
+
+export type SubmissionErrorType = SubmissionError['type'];
 
 /**
  * Submission state machine
@@ -28,7 +24,7 @@ export type SubmissionStatus = 'idle' | 'pending' | 'success' | 'error';
 
 export interface SubmissionState {
 	status: SubmissionStatus;
-	/** Errors from failed actions */
+	/** Why the submission failed */
 	errors: SubmissionError[];
 	/** Success message the submission supplied, if any */
 	successMessage: string | null;
@@ -112,9 +108,6 @@ export function useSubmissionStateManager(): UseSubmissionStateReturn {
  */
 export function useSubmissionState() {
 	const context = useContext(FormInstanceContext);
-	const formatIssue = useFormatIssue();
-	const formatError = (error: SubmissionError): string | undefined =>
-		formatIssue({ type: error.type, source: 'server', message: error.message }, FORM_ROOT);
 
 	if (!context) {
 		throw new Error('useSubmissionState must be used within a FormProvider');
@@ -123,6 +116,5 @@ export function useSubmissionState() {
 	return {
 		submissionState: context.submissionState,
 		clearSubmission: context.clearSubmission,
-		formatError,
 	};
 }

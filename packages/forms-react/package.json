@@ -102,10 +102,6 @@
 			"types": "./dist/primitives.d.ts",
 			"import": "./dist/primitives.js"
 		},
-		"./adapters": {
-			"types": "./dist/adapters/index.d.ts",
-			"import": "./dist/adapters/index.js"
-		},
 		"./hooks": {
 			"types": "./dist/hooks/index.d.ts",
 			"import": "./dist/hooks/index.js"

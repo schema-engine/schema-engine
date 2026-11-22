@@ -10,7 +10,7 @@ import { buildLib } from '@schema-engine/scripts/esbuild-lib';
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const outputDir = path.join(cwd, 'dist');
 
-const entryDirs = ['src/adapters', 'src/components', 'src/contexts', 'src/hooks', 'src/types'];
+const entryDirs = ['src/components', 'src/contexts', 'src/hooks', 'src/types'];
 const excludedCssFiles = ['styles.css'];
 
 const postcssPlugin = {

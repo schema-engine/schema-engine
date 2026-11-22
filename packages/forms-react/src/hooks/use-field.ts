@@ -9,7 +9,7 @@ import {
 	type ElementGridConfig,
 } from '@schema-engine/layout';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
-import { useFormField } from '@/adapters/use-form-field';
+import { useFormField } from '@/hooks/form-state/use-form-field';
 import { useConstraintLogic } from '@/hooks/use-constraint-logic';
 import { FieldHostContext, FieldConstraintContext } from '@/contexts/field-constraint-context';
 import { isElementRequired } from '@/hooks/is-element-required';

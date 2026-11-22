@@ -1,6 +1,6 @@
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import type { NormalizedFormConfig, FormConfigView } from '@schema-engine/forms';
-import type { FieldArrayValue } from '@schema-engine/forms/adapters';
+import type { FieldArrayValue } from '@schema-engine/forms/state-container';
 import type { JsxRenderable } from '@ecopages/jsx';
 
 export interface FormFieldValue<TFieldValue = unknown> {

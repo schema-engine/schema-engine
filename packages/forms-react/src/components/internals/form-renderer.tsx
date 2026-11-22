@@ -10,7 +10,7 @@ import { GRID_CLASS, getAppearanceAttributes, getGridVariables, type LayoutTheme
 import type React from 'react';
 import { useMemo } from 'react';
 import { FormProvider } from '../form-provider';
-import type { FormProviderProps } from '../../adapters/types';
+import type { FormProviderProps } from '../../hooks/form-state/types';
 import { FormElements } from './form-elements';
 import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormEngineProvider } from '../form-engine-provider';
@@ -27,21 +27,6 @@ function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }) {
 			{css}
 		</style>
 	);
-}
-
-const formConfigIdentities = new WeakMap<NormalizedFormConfig, number>();
-let nextFormConfigIdentity = 0;
-
-/**
- * @remarks The normalized config identity marks the lifetime of the adapter's form instance.
- */
-function getFormConfigIdentity(config: NormalizedFormConfig): number {
-	const existingIdentity = formConfigIdentities.get(config);
-	if (existingIdentity !== undefined) return existingIdentity;
-
-	const identity = nextFormConfigIdentity++;
-	formConfigIdentities.set(config, identity);
-	return identity;
 }
 
 function StepFields({
@@ -150,7 +135,6 @@ function FormRendererInner<
 }) {
 	return (
 		<FormProvider
-			key={getFormConfigIdentity(config)}
 			config={config}
 			defaultValues={defaultValues}
 			onSubmit={onSubmit}

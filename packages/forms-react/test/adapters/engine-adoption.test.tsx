@@ -10,7 +10,7 @@ import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/fo
 import { FormProvider } from '../../src/components/form-provider';
 import { FormRenderer } from '../../src/components/internals/form-renderer';
 import { FormEngineContext } from '../../src/components/provider';
-import { useFormContext, useFormField } from '../../src/adapters';
+import { useFormContext, useFormField } from '../../src/hooks/form-state';
 import { useFormInstanceActions } from '../../src/hooks/use-form-context';
 import { useControlledFormElement } from '../../src/hooks/use-field';
 import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
@@ -101,7 +101,11 @@ function Controls({ action }: { action?: FormActionConfig }) {
 			<output aria-label="step">{currentStep}</output>
 			<output aria-label="submission">{submissionState.status}</output>
 			<output aria-label="submission errors">
-				{submissionState.errors.map(({ actionId, message }) => `${actionId}: ${message}`).join(', ')}
+				{submissionState.errors
+					.map((error) =>
+						'actionId' in error && 'message' in error ? `${error.actionId}: ${error.message}` : error.type,
+					)
+					.join(', ')}
 			</output>
 			<output aria-label="action result">{JSON.stringify(actionResult)}</output>
 			<button type="button" onClick={goToNext}>
@@ -123,13 +127,16 @@ function mount(
 	formConfig: FormConfig,
 	children: React.ReactNode,
 	onAction?: (action: FormActionConfig, data: Record<string, unknown>) => void,
+	onSubmit?: (data: Record<string, unknown>) => void,
+	defaultValues: Record<string, unknown> = { address: { street: '' }, customerType: 'company', vatNumber: '' },
 ) {
 	return render(
 		<FormEngineContext.Provider value={{ engine }}>
 			<FormProvider
 				config={engine.validateForm(formConfig)}
-				defaultValues={{ address: { street: '' }, customerType: 'company', vatNumber: '' }}
+				defaultValues={defaultValues}
 				onAction={onAction}
+				onSubmit={onSubmit}
 			>
 				{children}
 			</FormProvider>
@@ -374,4 +381,37 @@ test('reports grouped action outcomes through the React renderer', async () => {
 			'form_submit',
 		),
 	);
+});
+
+test('every context of a submission carries the submitted values: without excluded fields, with the payload', async () => {
+	const onAction = vi.fn();
+	const submitted = vi.fn();
+	mount(
+		{
+			id: 'submitted-values',
+			payload: { campaign: 'spring' },
+			steps: [
+				{
+					id: 'one',
+					title: 'One',
+					elements: [
+						{ $type: 'input', name: 'a' },
+						{ $type: 'input', name: 'b', disabled: true },
+					],
+				},
+			],
+			actions: [{ $type: 'probe', id: 'saved', triggers: ['form_submit'] }],
+		},
+		<Controls />,
+		onAction,
+		submitted,
+		{ a: 'x', b: 'hidden' },
+	);
+	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+	await waitFor(() => expect(onAction).toHaveBeenCalled());
+	const expected = { a: 'x', campaign: 'spring' };
+	expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'saved' }), expected);
+	expect(submitted).toHaveBeenCalledWith(expected);
+	expect(contexts.find((context) => context.trigger === 'form_submit')?.formData).toEqual(expected);
 });

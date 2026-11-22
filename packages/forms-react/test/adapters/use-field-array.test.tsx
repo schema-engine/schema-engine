@@ -3,21 +3,20 @@ import { describe, expect, test } from 'vitest';
 import { useEffect } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { selectError, type FieldArrayValue, type FormStateContainer } from '@schema-engine/forms/state-container';
-import { useFieldArray, useFormError, useFormField } from '@/adapters';
+import { useFieldArray, useFormError, useFormField } from '@/hooks/form-state';
 import { markNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
 const contacts = markNormalizedElementConfig(
 	{
 		$type: 'arrayElements',
 		name: 'contacts',
-		rules: [{ type: 'minItems', value: 3 }],
+		rules: [{ type: 'minItems', value: 3, message: 'Add three' }],
 		elements: [
 			{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Required' }] },
 			{ $type: 'input', name: 'label' },
 		],
-	} as unknown as ElementConfig,
+	},
 	'array',
 );
 
@@ -48,7 +47,7 @@ function mount(defaults: Record<string, unknown>, elements: object[] = [], name 
 		return (
 			<>
 				<output data-testid="count">{array.fields.length}</output>
-				<output data-testid="array-error">{arrayError?.type ?? ''}</output>
+				<output data-testid="array-error">{arrayError ?? ''}</output>
 				{array.fields.map((field, index) => (
 					<Row key={field.id} path={name === 'contacts' ? `${name}.${index}.email` : `${name}.${index}`} />
 				))}
@@ -60,7 +59,13 @@ function mount(defaults: Record<string, unknown>, elements: object[] = [], name 
 			<Rows />
 		</ContainerHarness>,
 	);
-	return { container, array: () => handle.array as FieldArrayValue };
+	return {
+		container,
+		array: () => {
+			if (!handle.array) throw new Error('The rows have not rendered.');
+			return handle.array;
+		},
+	};
 }
 
 const values = (container: FormStateContainer) => container.getSnapshot().values.tags;
@@ -116,7 +121,7 @@ describe('useFieldArray', () => {
 
 		await act(() => container.validate());
 
-		expect(screen.getByTestId('array-error')).toHaveTextContent('minItems');
+		expect(screen.getByTestId('array-error')).toHaveTextContent('Add three');
 		expect(screen.getByTestId('contacts.0.email-error')).toHaveTextContent('Required');
 	});
 

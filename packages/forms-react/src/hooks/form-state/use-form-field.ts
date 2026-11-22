@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { isFieldRequired, type ElementConfig } from '@schema-engine/forms/schemas';
-import { selectFieldState, selectValue, type NativeOptions } from '@schema-engine/forms/state-container';
+import { selectError, selectValue, selectWarning, type NativeOptions } from '@schema-engine/forms/state-container';
 import { formatIssueText, useContainerSelector, useFormStateContext } from './context';
 import type { FormFieldValue } from './types';
 
@@ -18,7 +18,8 @@ export function useFormField(config: ElementConfig): FormFieldValue {
 	const { container, formatIssue, fields } = useFormStateContext();
 	const path = config.name;
 	const value = useContainerSelector((snapshot) => selectValue(snapshot, path));
-	const { error, warning, invalid } = useContainerSelector((snapshot) => selectFieldState(snapshot, path));
+	const error = useContainerSelector((snapshot) => selectError(snapshot, path));
+	const warning = useContainerSelector((snapshot) => selectWarning(snapshot, path));
 
 	const onChange = useCallback(
 		(next: unknown, options?: NativeOptions) => container.setValue(path, next, options),
@@ -34,7 +35,7 @@ export function useFormField(config: ElementConfig): FormFieldValue {
 		value,
 		error: error && formatIssueText(error, path, formatIssue),
 		warning: warning && formatIssueText(warning, path, formatIssue),
-		invalid,
+		invalid: error !== undefined,
 		onChange,
 		onBlur,
 		name: path,

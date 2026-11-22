@@ -6,9 +6,9 @@ import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { RequiredRuleSchema } from '@schema-engine/forms/schemas/validation';
 import { selectError } from '@schema-engine/forms/state-container';
-import { useFormContext } from '@/adapters';
+import { useFormContext } from '@/hooks/form-state';
 import { useControlledFormElement } from '@/hooks/use-field';
-import { useFormField } from '@/adapters/use-form-field';
+import { useFormField } from '@/hooks/form-state/use-form-field';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 

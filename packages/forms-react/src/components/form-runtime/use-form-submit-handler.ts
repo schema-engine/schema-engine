@@ -1,17 +1,16 @@
+import type { RuntimeAction } from './runtime-action';
 import { logger } from '@/lib/logger';
 import { useCallback, useState, type BaseSyntheticEvent } from 'react';
 import type { FormStateContainer } from '@schema-engine/forms/state-container';
-import type { FieldRegistry } from '@/adapters/field-registry';
-import type { SubmissionStatusStore } from '@/adapters/submission-status';
-import type { FormValues } from '@/adapters/types';
-import type { FormActionConfig } from '@schema-engine/forms/schemas';
+import type { FieldRegistry } from '@/hooks/form-state/field-registry';
+import type { SubmissionStatusStore } from '@/hooks/form-state/submission-status';
+import type { FormValues } from '@/hooks/form-state/types';
 import {
 	collectStepActions,
 	createSubmissionGuard,
 	runSubmissionLifecycle,
 	type BuilderActionBaseContext,
 	type FormActionTrigger,
-	type FormConfigView,
 	type SubmissionActionResult,
 } from '@schema-engine/forms';
 import type { ActionSequenceEntry } from '@schema-engine/actions';
@@ -26,28 +25,29 @@ interface SubmissionStateManager {
 	clearSubmission: () => void;
 }
 
-export type NormalizedFormAction = Exclude<NonNullable<FormConfigView['actions']>[number], readonly unknown[]>;
-
-interface UseFormSubmitHandlerOptions {
+interface UseFormSubmitHandlerOptions<TAction extends RuntimeAction> {
 	container: FormStateContainer;
 	status: SubmissionStatusStore;
 	fields: FieldRegistry;
-	config: FormConfigView;
-	buildActionContext: () => BuilderActionBaseContext;
-	hasMatching: (actions: readonly ActionSequenceEntry<FormActionConfig>[], trigger: FormActionTrigger) => boolean;
+	config: {
+		readonly actions?: readonly ActionSequenceEntry<TAction>[];
+		readonly steps: readonly { readonly actions?: readonly ActionSequenceEntry<TAction>[] }[];
+	};
+	buildActionContext: (values?: FormValues) => BuilderActionBaseContext;
+	hasMatching: (actions: readonly ActionSequenceEntry<TAction>[], trigger: FormActionTrigger) => boolean;
 	submission: SubmissionStateManager;
 	getCurrentStep: () => number;
 	onSubmit?: (data: FormValues) => void | Promise<void>;
-	onAction?: (action: NormalizedFormAction, data: FormValues) => void | Promise<void>;
+	onAction?: (action: TAction, data: FormValues) => void | Promise<void>;
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 	dispatchActions: (
-		input: ActionDispatchInput<FormActionConfig, BuilderActionBaseContext, FormActionTrigger>,
+		input: ActionDispatchInput<TAction, BuilderActionBaseContext, FormActionTrigger>,
 		suppressSubmitReport?: boolean,
 	) => Promise<ActionDispatchResult[]>;
 }
 
-export type SubmissionContextValue = {
-	executeAction: (action: FormActionConfig) => Promise<ActionExecutionResult>;
+export type SubmissionContextValue<TAction extends RuntimeAction = RuntimeAction> = {
+	executeAction: (action: TAction) => Promise<ActionExecutionResult>;
 	submissionState: SubmissionState;
 	clearSubmission: () => void;
 };
@@ -67,7 +67,7 @@ export type SubmissionContextValue = {
  * Callbacks receive the frozen normalized action snapshot. React reports no native validity of its own, so
  * the check runs on the container's rules and on the facts widgets reported with their values.
  */
-export function useFormSubmitHandler({
+export function useFormSubmitHandler<TAction extends RuntimeAction>({
 	container,
 	status,
 	fields,
@@ -80,21 +80,21 @@ export function useFormSubmitHandler({
 	onAction,
 	onActionResults,
 	dispatchActions,
-}: UseFormSubmitHandlerOptions): {
+}: UseFormSubmitHandlerOptions<TAction>): {
 	submitEvent: (event?: BaseSyntheticEvent) => Promise<void>;
-} & SubmissionContextValue {
+} & SubmissionContextValue<TAction> {
 	const [guard] = useState(createSubmissionGuard);
 	const { submissionState, setSubmissionPending, setSubmissionSuccess, setSubmissionError, clearSubmission } =
 		submission;
 
 	const executeAction = useCallback(
-		async (action: FormActionConfig) => {
+		async (action: TAction) => {
 			setSubmissionPending();
 			return dispatchActions({ actions: [action], trigger: 'form_submit', context: buildActionContext() })
 				.then(async (results) => {
 					const result = results[0];
 					if (!result) {
-						setSubmissionError({ errors: [{ actionId: action.id, type: 'noResult' }] });
+						setSubmissionError({ errors: [{ type: 'noResult', actionId: action.id }] });
 						return { success: false };
 					}
 
@@ -108,7 +108,7 @@ export function useFormSubmitHandler({
 						}
 					} else {
 						setSubmissionError({
-							errors: [{ actionId: action.id, type: 'actionFailed', message: result.error || undefined }],
+							errors: [{ type: 'actionFailed', actionId: action.id, message: result.error || undefined }],
 						});
 					}
 					return result;
@@ -116,7 +116,7 @@ export function useFormSubmitHandler({
 				.catch((error) => {
 					const errorMessage = error instanceof Error ? error.message : undefined;
 					setSubmissionError({
-						errors: [{ actionId: action.id, type: 'actionFailed', message: errorMessage }],
+						errors: [{ type: 'actionFailed', actionId: action.id, message: errorMessage }],
 					});
 					return { success: false, error: errorMessage };
 				});
@@ -140,7 +140,7 @@ export function useFormSubmitHandler({
 				(input) => dispatchActions(input, true),
 				{
 					actions: collectStepActions(config, getCurrentStep()),
-					context: buildActionContext,
+					context: () => buildActionContext(data),
 					hasMatching,
 					onAction,
 					onSubmit: () => onSubmit?.(data),
@@ -163,7 +163,6 @@ export function useFormSubmitHandler({
 				setSubmissionError({
 					errors: [
 						{
-							actionId: failure.phase === 'callback' ? 'submit' : 'unknown',
 							type: failure.phase === 'callback' ? 'callbackFailed' : 'triggerFailed',
 							message: failure.error instanceof Error ? failure.error.message : undefined,
 						},
@@ -175,8 +174,8 @@ export function useFormSubmitHandler({
 				errors: results
 					.filter((result) => !result.success && result.shouldContinue === false)
 					.map((result) => ({
-						actionId: result.actionId,
 						type: 'actionFailed' as const,
+						actionId: result.actionId,
 						message: result.error || undefined,
 					})),
 			});
@@ -217,7 +216,6 @@ export function useFormSubmitHandler({
 					setSubmissionError({
 						errors: [
 							{
-								actionId: 'validation',
 								type: 'validationFailed',
 								message: error instanceof Error ? error.message : undefined,
 							},

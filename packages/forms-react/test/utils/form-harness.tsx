@@ -7,7 +7,7 @@ import { InputElementRegistration } from '@/components/schema-engine/forms/input
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { FormProvider } from '@/components/form-provider';
 import { FormEngineContext } from '@/components/provider';
-import type { FormProviderProps } from '@/adapters/types';
+import type { FormProviderProps } from '@/hooks/form-state/types';
 
 export const testEngine = createFormEngine({ elements: [InputElementRegistration, FieldSetRegistration] });
 

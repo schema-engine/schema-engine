@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { hasConfiguredActions, type FormActionTrigger, type FormConfigView } from '@schema-engine/forms';
 import type { ActionExecutionResult } from '@schema-engine/forms/actions';
 import type { FormStateContainer } from '@schema-engine/forms/state-container';
-import type { FormValues } from '@/adapters/types';
+import type { FormValues } from '@/hooks/form-state/types';
 import { logger } from '@/lib/logger';
 
 interface UseFormChangeEffectOptions {

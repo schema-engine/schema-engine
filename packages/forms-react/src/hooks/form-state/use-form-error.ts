@@ -3,20 +3,22 @@ import {
 	selectError,
 	selectFieldState,
 	type FormFieldState,
-	type FormStateError,
 	type FormStateIssue,
 } from '@schema-engine/forms/state-container';
 import { formatIssueText, useContainerSelector, useFormStateContext } from './context';
 
 /**
- * The error of exactly `path`: a field, a container such as an array, or `FORM_ROOT` for the form itself.
+ * The text of the error of exactly `path`: a field, a container such as an array, or `FORM_ROOT` for the form itself.
  *
  * @remarks
- * It is the engine's error with its `type`, `ruleId`, `params` and every issue in `all`, for a host that
- * writes the text itself. For the text the provider's formatter makes, use {@link useFormatIssue}.
+ * The text is the provider's `formatIssue` of the error to show, else its own `message`, else `undefined`, so
+ * `undefined` can mean no error or an error with no words. The engine's error, with its `type`, `ruleId`, `params` and
+ * every issue in `all`, is `useFieldState(path).error`.
  */
-export function useFormError(path: string): FormStateError | undefined {
-	return useContainerSelector((snapshot) => selectError(snapshot, path));
+export function useFormError(path: string): string | undefined {
+	const { formatIssue } = useFormStateContext();
+	const error = useContainerSelector((snapshot) => selectError(snapshot, path));
+	return error && formatIssueText(error, path, formatIssue);
 }
 
 /** The state of one field: its error and warning, and whether it is touched, dirty or being validated. */
@@ -32,7 +34,7 @@ export function useFieldState(path: string): FormFieldState {
  * `undefined` when there is neither. The rule type is never shown. The function keeps its identity while
  * the formatter does.
  */
-export function useFormatIssue(): (issue: FormStateIssue, path: string) => string | undefined {
+export function useFormatIssue(): (issue: FormStateIssue, field: { readonly path: string }) => string | undefined {
 	const { formatIssue } = useFormStateContext();
-	return useCallback((issue, path) => formatIssueText(issue, path, formatIssue), [formatIssue]);
+	return useCallback((issue, { path }) => formatIssueText(issue, path, formatIssue), [formatIssue]);
 }

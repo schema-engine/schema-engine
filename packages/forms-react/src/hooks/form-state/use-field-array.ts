@@ -7,10 +7,10 @@ import { useContainerSelector, useFormStateContext } from './context';
  *
  * @remarks
  * Rows are the container's, so a row keeps its id, errors and touched state through every operation (dirty is
- * the comparison with the defaults, index by index), and a falsy row (`''`, `0`, `false`) is a row. An operation that adds rows (`append`,
- * `prepend`, `insert`) focuses the first control of the first row it added, once that row has rendered,
-; an operation that changes no row focuses nothing. The same object comes back
- * until the rows change.
+ * the comparison with the defaults, index by index), and a falsy row (`''`, `0`, `false`) is a row. An operation
+ * that adds rows (`append`, `prepend`, `insert`) focuses the first control of the first row it added, once that
+ * row has rendered; an operation that changes no row focuses nothing. The same object comes back until the rows
+ * change.
  */
 export function useFieldArray(name: string): FieldArrayValue {
 	const { container, fields } = useFormStateContext();

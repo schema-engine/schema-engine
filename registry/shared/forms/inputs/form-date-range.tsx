@@ -9,10 +9,9 @@ function normalizeDateRange(value: unknown): DateRangeValue {
 		return {};
 	}
 
-	const range = value as DateRangeValue;
 	return {
-		from: typeof range.from === 'string' ? range.from : undefined,
-		to: typeof range.to === 'string' ? range.to : undefined,
+		from: 'from' in value && typeof value.from === 'string' ? value.from : undefined,
+		to: 'to' in value && typeof value.to === 'string' ? value.to : undefined,
 	};
 }
 

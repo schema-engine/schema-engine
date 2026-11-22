@@ -47,8 +47,12 @@ export const FormEngineContext = createContext<FormEngineContextValue | null>(nu
  * Form Instance context value - includes action execution and form navigation functions
  */
 export interface FormInstanceContextValue {
-	/** Executes a specific form action */
-	executeAction: (action: FormActionConfig) => Promise<ActionExecutionResult>;
+	/**
+	 * Executes a specific form action.
+	 *
+	 * @remarks A method, not a property: the context is stored erased, and a form's own typed action is accepted where this loose one is declared.
+	 */
+	executeAction(this: void, action: FormActionConfig): Promise<ActionExecutionResult>;
 	/** Index of the current step (0-based) */
 	currentStep: number;
 	/** Total number of steps in the form */
