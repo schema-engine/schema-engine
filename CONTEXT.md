@@ -36,16 +36,18 @@ Debug output stays off unless the host enables Ecopages log levels.
 
 ## Radiant form state
 
-Radiant UI's form store owns control registration, values, validation, and field
-presentation. It publishes that store on `formContext`. `@schema-engine/forms-radiant`
-exposes scoped `FormController` instances that read `formContext` from a host
-inside `rui-form`; there is no global active form store. They read
-`formContext.store` instead of a private host field. Decorators are
-optional lifecycle wiring around that controller.
-Radiant UI registration uses flat dotted field names. Controller reads, action
-context values and errors, constraints, and submission use the engine's nested value tree.
-`se-form-instance` coordinates one submission per form instance: it owns the
-submitting state and the submission events, and runs the configured form actions
+`se-form-instance` creates one engine form state container per form instance from the
+normalized config, the engine's validation registry and the defaults, and hands it to its
+`rui-form` with `connect`. The container owns values, validation, field state and field-array
+row ids, all with nested values and dotted paths; `rui-form` is only the control bridge, typed by
+Radiant UI's own `FormStateStore` interface, which sends each control's value and native validity
+into the container. The instance provides the container on `formInstanceContext`, and scoped
+`FormController` instances read it there; there is no global active form. Decorators are
+optional lifecycle wiring around that controller. A new config or engine is a new container.
+The application gives the renderer a `formatIssue` that turns an issue (`type`, `ruleId`,
+`params`) into text; without one an issue shows its own `message` and otherwise nothing.
+`se-form-instance` coordinates one submission per form instance through the container's
+submission token: it owns the submitting state, the attempt count and the submission events, and runs the configured form actions
 through a plain `FormActions` object built for its config and engine, not through
 elements that find each other in the document. The app binds the client engine by
 assigning `engine` to `se-form-renderer`, before or after it upgrades, and the instance,
