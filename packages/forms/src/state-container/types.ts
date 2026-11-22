@@ -16,8 +16,9 @@ import type { FieldArrayCommands } from './field-array';
  * {@link FormStateContainer.reportNative}, and submits with {@link FormStateContainer.submit}, whose result
  * carries the way to hand back the server's answer.
  *
- * The container is named for what it holds, not `FormStore`, which is a class of Radiant UI. Internal
- * until both renderer bindings run on it. Nothing here is exported from a package entry point.
+ * The container is named for what it holds, not `FormStore`, which is a class of Radiant UI. The contract is
+ * public through `@schema-engine/forms/state-container`, with `@schema-engine/forms/csrf` and
+ * `@schema-engine/forms/server-errors` beside it. The conformance suite is published separately, later (#337).
  */
 
 /**

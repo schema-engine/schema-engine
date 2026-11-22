@@ -1,8 +1,9 @@
-# Form state container (internal)
+# Form state container
 
-The contract for a form's state container, and its reference implementation. Neither is exported from a
-package entry point: the contract stays internal until both renderer bindings run on it, so what is
-published is the smallest contract that works for both.
+The contract for a form's state container, and its reference implementation. Both renderer bindings run on it, so
+the contract is public through the package entries `@schema-engine/forms/state-container`,
+`@schema-engine/forms/csrf` and `@schema-engine/forms/server-errors`. The conformance suite is published
+separately, later (#337).
 
 It is called a container, not a store, because `FormStore` is a class of Radiant UI; the engine's interface
 is `FormStateContainer`, its factory `createFormStateContainer` and its snapshot `FormStateSnapshot`.
