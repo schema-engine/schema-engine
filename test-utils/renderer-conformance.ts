@@ -3,7 +3,8 @@ import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, wi
 import { page, userEvent } from 'vitest/browser';
 import * as v from 'valibot';
 import { builtInAxes, defineAxis } from '@schema-engine/layout';
-import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
+import type { BuilderActionRuntimeContext, FormConfigView, FormSubmissionState } from '@schema-engine/forms';
+import type { FormStateContainer, FormStateErrorsInput } from '@schema-engine/forms/state-container';
 import {
 	builtInRecipeSpecs,
 	MinimalProgressConfigSchema,
@@ -70,16 +71,30 @@ export const customArrayType = 'repeater';
 export interface ConformanceMountOptions {
 	config: FormConfigView;
 	defaultValues?: Record<string, unknown>;
-	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	onSubmit?: (
+		data: Record<string, unknown>,
+		helpers: { setServerErrors: (errors: FormStateErrorsInput) => void },
+	) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
 	onAction?: () => void;
 }
-export type ConformanceMount = (options: ConformanceMountOptions) => Promise<{
+/** What every renderer mounts for a conformance case. */
+export interface ConformanceView {
 	host: HTMLElement;
 	cleanup: () => void;
 	/** Renders the same renderer again with a replaced config and the original callbacks. */
 	update: (config: FormConfigView) => Promise<void>;
-}>;
+}
+export type ConformanceMount = (options: ConformanceMountOptions) => Promise<ConformanceView>;
+
+/** A {@link ConformanceView} that also reaches what the form runtime owns, as the renderer's own host does. */
+export interface ConformanceRuntimeView extends ConformanceView {
+	/** The form's state container. */
+	container: () => FormStateContainer | undefined;
+	/** The submission state the renderer reports: the runtime's, as a host reads it. */
+	submission: () => FormSubmissionState | undefined;
+}
+export type ConformanceRuntimeMount = (options: ConformanceMountOptions) => Promise<ConformanceRuntimeView>;
 
 const lastActionContext = () => conformanceAction.execute.mock.calls.at(-1)?.[0];
 const input = (name: string, label: string) => ({ $type: 'input', id: name, name, label });
@@ -312,7 +327,7 @@ function cardForm(appearance: Record<string, string>): FormConfigView {
 
 /** @remarks Both browser projects execute these assertions against their own FormRenderer. */
 export function rendererConformance(
-	mount: ConformanceMount,
+	mount: ConformanceRuntimeMount,
 	{ knownFailures = [] }: { knownFailures?: readonly string[] } = {},
 ): void {
 	describe('FormRenderer conformance', () => {
@@ -874,6 +889,168 @@ export function rendererConformance(
 			await userEvent.tab();
 			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
+		});
+		describe('the form runtime', () => {
+			afterEach(() => {
+				vi.unstubAllGlobals();
+			});
+			const next = (host: HTMLElement) => getByRole(host, 'button', { name: 'Go to next step' });
+			const textbox = (host: HTMLElement, name: string) =>
+				queryAllByRole(host, 'textbox', { name: new RegExp(`^${name}`) });
+			const required = (name: string, label: string) => ({
+				...input(name, label),
+				rules: [{ type: 'required' as const, message: `${label} is required` }],
+			});
+			test('a direct container.reset() resets the submission and the steps', async () => {
+				const { host, container, submission } = await setup({
+					config: wizard([required('first', 'First')], [required('last', 'Last')]),
+				});
+				await userEvent.fill(getByRole(host, 'textbox', { name: /^First/ }), 'a');
+				await userEvent.click(next(host));
+				await expect.poll(() => textbox(host, 'Last')).toHaveLength(1);
+				const element = host.querySelector('form')!;
+				element.requestSubmit();
+				await expect.poll(() => submission()?.submitCount).toBe(1);
+
+				container()?.reset();
+
+				await expect.poll(() => textbox(host, 'First')).toHaveLength(1);
+				expect(textbox(host, 'Last')).toHaveLength(0);
+				expect(submission()).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+			});
+			test('Next and submit cannot interleave: submit while Next validates does nothing more', async () => {
+				const release: Array<() => void> = [];
+				vi.stubGlobal(
+					'fetch',
+					vi.fn(
+						() =>
+							new Promise<Response>((resolve) =>
+								release.push(() => resolve(new Response('{"valid":true}'))),
+							),
+					),
+				);
+				const onSubmit = vi.fn();
+				const { host } = await setup({
+					config: wizard(
+						[
+							{
+								...input('slow', 'Slow'),
+								rules: [{ type: 'async', url: '/conformance-slow', disableCache: true }],
+							},
+						],
+						[input('second', 'Second')],
+						[input('third', 'Third')],
+					),
+					defaultValues: { slow: 'x' },
+					onSubmit,
+				});
+				next(host).click();
+				await expect.poll(() => release.length).toBeGreaterThan(0);
+				host.querySelector('form')!.requestSubmit();
+				await new Promise((resolve) => setTimeout(resolve, 50));
+				release.splice(0).forEach((resolve) => resolve());
+				await expect.poll(() => textbox(host, 'Second')).toHaveLength(1);
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(textbox(host, 'Third')).toHaveLength(0);
+				expect(onSubmit).not.toHaveBeenCalled();
+			});
+			test('submit before the last step advances, and submits nothing', async () => {
+				const onSubmit = vi.fn();
+				const { host, submission } = await setup({
+					config: wizard([required('first', 'First')], [input('last', 'Last')]),
+					onSubmit,
+				});
+				const element = host.querySelector('form')!;
+				element.requestSubmit();
+				await expect.poll(() => queryByText(host, 'First is required') !== null).toBe(true);
+				expect(textbox(host, 'Last')).toHaveLength(0);
+				await userEvent.fill(getByRole(host, 'textbox', { name: /^First/ }), 'a');
+				element.requestSubmit();
+				await expect.poll(() => textbox(host, 'Last')).toHaveLength(1);
+				expect(onSubmit).not.toHaveBeenCalled();
+				expect(submission()).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+			});
+			const checked = {
+				...input('email', 'Email'),
+				rules: [{ type: 'async' as const, url: '/conformance-email', disableCache: true }],
+			};
+			test('a submit failure moves to the step with the error', async () => {
+				let valid = true;
+				vi.stubGlobal(
+					'fetch',
+					vi.fn(async () => new Response(JSON.stringify({ valid }))),
+				);
+				const onSubmit = vi.fn();
+				const { host, submission } = await setup({
+					config: wizard([checked], [input('last', 'Last')]),
+					defaultValues: { email: 'a@example.com' },
+					onSubmit,
+				});
+				await userEvent.click(next(host));
+				await expect.poll(() => textbox(host, 'Last')).toHaveLength(1);
+
+				valid = false;
+				host.querySelector('form')!.requestSubmit();
+
+				await expect.poll(() => textbox(host, 'Email')).toHaveLength(1);
+				expect(textbox(host, 'Last')).toHaveLength(0);
+				expect(onSubmit).not.toHaveBeenCalled();
+				expect(submission()).toMatchObject({ status: 'idle', submitCount: 1 });
+				await expect.poll(() => document.activeElement?.closest('input')?.getAttribute('name')).toBe('email');
+			});
+			test('a server error on an earlier step moves there', async () => {
+				const { host, submission } = await setup({
+					config: wizard([input('email', 'Email')], [input('last', 'Last')]),
+					defaultValues: { email: 'a@example.com' },
+					onSubmit: (_data, { setServerErrors }) => setServerErrors({ email: { message: 'Email is taken' } }),
+				});
+				await userEvent.click(next(host));
+				await expect.poll(() => textbox(host, 'Last')).toHaveLength(1);
+
+				host.querySelector('form')!.requestSubmit();
+
+				await expect.poll(() => textbox(host, 'Email')).toHaveLength(1);
+				expect(textbox(host, 'Last')).toHaveLength(0);
+				await expect.poll(() => queryByText(host, 'Email is taken') !== null).toBe(true);
+				expect(submission()).toMatchObject({ status: 'success', submitCount: 1 });
+			});
+			test('reports how a submission failed: a rejected onSubmit, and an action that stopped it', async () => {
+				const rejected = await setup({
+					config: form([input('fullName', 'Name')]),
+					onSubmit: () => Promise.reject(new Error('Save failed')),
+				});
+				await userEvent.click(getByRole(rejected.host, 'button', { name: /submit/i }));
+				await expect
+					.poll(() => rejected.submission())
+					.toEqual({
+						status: 'error',
+						failures: [{ type: 'callbackFailed', source: 'submission', message: 'Save failed' }],
+						submitCount: 1,
+					});
+				cleanup?.();
+
+				const stopped = await setup({
+					config: {
+						...form([input('fullName', 'Name')]),
+						actions: [{ $type: 'conformance', id: 'abort', triggers: ['form_submit'] }],
+					},
+				});
+				await userEvent.click(getByRole(stopped.host, 'button', { name: /submit/i }));
+				await expect
+					.poll(() => stopped.submission())
+					.toEqual({
+						status: 'error',
+						failures: [
+							{
+								type: 'actionFailed',
+								source: 'submission',
+								params: { actionId: 'abort' },
+								message: 'Submission stopped',
+							},
+						],
+						submitCount: 1,
+					});
+			});
 		});
 		describe('a failed wizard step', () => {
 			const dependentStep: FormConfigView = {

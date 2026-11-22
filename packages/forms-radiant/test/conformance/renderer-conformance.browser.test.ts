@@ -1,5 +1,6 @@
 import '@ecopages/radiant/client/install-hydrator';
 import { expect } from 'vitest';
+import type { FormInstanceElement } from '@/components/form-instance.script';
 import { FormController } from '@/adapters/radiant/controller';
 import { createRoot } from '@ecopages/jsx/client';
 import * as z from 'zod/mini';
@@ -54,5 +55,7 @@ rendererConformance(async ({ config, ...props }) => {
 			host.remove();
 		},
 		update: async (next) => renderConfig(next),
+		container: () => new FormController(host.querySelector('rui-form')!).container,
+		submission: () => host.querySelector<FormInstanceElement>('se-form-instance')?.getContextValue().submission,
 	};
 });
