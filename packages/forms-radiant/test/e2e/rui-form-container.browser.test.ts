@@ -114,8 +114,8 @@ async function mount(options: { validationMode?: 'onBlur' | 'onChange' | 'onSubm
 	const fields = {
 		name: makeField('name'),
 		email: makeField('email', { type: 'email', required: '' }),
-		first: makeField('contacts.0.email'),
-		second: makeField('contacts.1.email'),
+		first: makeField('contacts.0.email', { required: '' }),
+		second: makeField('contacts.1.email', { required: '' }),
 	};
 	for (const { field } of Object.values(fields)) nativeForm.append(field);
 	form.append(nativeForm);
@@ -231,10 +231,27 @@ describe('rui-form over the engine container', () => {
 		expect(fields.second.input.value).toBe('');
 		expect(container.getSnapshot().errors['contacts.1.email']?.ruleId).toBe('contact-required');
 		expect(container.getSnapshot().errors['contacts.0.email']).toBeUndefined();
-		container.fieldArray('contacts').remove(1);
-		fields.second.field.remove();
+		const sources = (path: string) => container.getSnapshot().errors[path]?.all.map(({ source }) => source);
+		expect(sources('contacts.1.email')).toContain('native');
+
+		container.fieldArray('contacts').remove(0);
+		fields.second.field.setAttribute('name', 'contacts.0.email');
+		fields.first.field.remove();
 		await settle();
-		expect(container.getSnapshot().values['contacts']).toEqual([{ email: 'b@x.io', role: 'b' }]);
+
+		expect(container.getSnapshot().values['contacts']).toEqual([{ email: '', role: 'a' }]);
 		expect(container.getSnapshot().errors['contacts.1.email']).toBeUndefined();
+		expect(sources('contacts.0.email')).toContain('native');
+		expect(await container.validate()).toBe(false);
+
+		await userEvent.fill(fields.second.input, 'a@x.io');
+		await settle();
+		expect(container.getSnapshot().errors['contacts.0.email']).toBeUndefined();
+		fields.name.input.value = 'Ada';
+		fields.name.input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+		fields.email.input.value = 'ada@x.io';
+		fields.email.input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+		await settle();
+		expect(await container.validate()).toBe(true);
 	});
 });

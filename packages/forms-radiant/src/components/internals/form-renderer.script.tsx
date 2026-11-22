@@ -11,6 +11,16 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	class?: string;
 	style?: Record<string, string | number | undefined>;
 	engine?: FormEngine;
+	/**
+	 * Turns an issue into the text to show, for the application's language, for every form of this renderer; it replaces the engine's `formatIssue`.
+	 *
+	 * @remarks
+	 * It receives the issue (`type`, `ruleId`, `params`, `source` and any `message`) and the path of its field, and
+	 * returns the text; `rui-form` falls back to the issue's own `message` when it returns nothing. Without a
+	 * formatter an issue shows its `message` and otherwise nothing, never the rule type. The same function type
+	 * serves the React renderer.
+	 */
+	formatIssue?: FormIssueFormatter;
 	/** Rendered inside the form after its fields, for opt-in tools such as FormDebugger. */
 	children?: JsxRenderable;
 }
@@ -48,7 +58,7 @@ export class FormRendererElement extends RadiantElement {
 	@prop({ type: Object, attribute: false }) engine?: FormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
 	/**
-	 * Turns an issue into text for every form below this renderer, over the engine's `formatIssue` and under an instance's own.
+	 * Turns an issue into text for every form below this renderer, in place of the engine's `formatIssue`; the one override a form has.
 	 *
 	 * @remarks Property-only (`attribute: false`): a function is never serialized into the server markup.
 	 */
