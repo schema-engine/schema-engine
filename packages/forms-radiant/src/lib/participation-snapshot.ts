@@ -1,4 +1,5 @@
-import { foldFieldParticipation, type Participation } from '@schema-engine/forms/engine';
+import type { NormalizedElementConfig } from '@schema-engine/forms';
+import { foldFieldParticipation, resolveParticipation, type Participation } from '@schema-engine/forms/engine';
 
 /** What a server render decides for one field: whether it shows, is disabled and is required. */
 export interface RenderedConstraints {
@@ -22,4 +23,25 @@ export function constraintsFromParticipation(
 ): RenderedConstraints {
 	const { hidden, disabled, required } = foldFieldParticipation(participation.fields, fieldPath);
 	return { shouldShow: !hidden, shouldDisable: disabled, isRequired: required || baseRequired };
+}
+
+/**
+ * What the form's constraints say about an element rendered on its own, outside a form render that holds the steps.
+ *
+ * @remarks
+ * The same function as everywhere else: the element is resolved by `resolveParticipation` as a one-step config over the
+ * values available, then folded at its path. Only the element's own constraints are known here, since no container
+ * around it is.
+ */
+export function standaloneConstraints(
+	config: NormalizedElementConfig,
+	fieldPath: string,
+	values: Record<string, unknown>,
+	baseRequired: boolean,
+): RenderedConstraints {
+	const participation = resolveParticipation(
+		[{ id: 'standalone', elements: [{ ...config, name: fieldPath }] }],
+		values,
+	);
+	return constraintsFromParticipation(participation, fieldPath, baseRequired);
 }

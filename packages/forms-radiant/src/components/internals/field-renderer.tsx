@@ -4,9 +4,8 @@ import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engin
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { renderRegisteredElement } from './render-registered-element';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { evaluateConstraints } from '@schema-engine/forms/constraints';
 import { peekOwningParticipation } from '@/contexts/form-engine-owner';
-import { constraintsFromParticipation } from '@/lib/participation-snapshot';
+import { constraintsFromParticipation, standaloneConstraints } from '@/lib/participation-snapshot';
 import type { ConstraintEvaluationContext } from './render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { ConstraintElement } from './constraint-element';
@@ -81,7 +80,7 @@ export function FormElement({
 	const participation = constraintContext?.participation ?? peekOwningParticipation();
 	const snapshot = participation
 		? constraintsFromParticipation(participation, fieldPath, baseRequired)
-		: evaluateConstraints({ constraints, baseRequired, fieldPath, values: constraintValues });
+		: standaloneConstraints(config, fieldPath, constraintValues, baseRequired);
 	const { shouldShow } = snapshot;
 	const fieldHost = mergeFieldGridHost(
 		'grid' in config ? config.grid : undefined,

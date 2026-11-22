@@ -4,7 +4,6 @@ import { applyFieldOverlay, getElementChildren, seedArrayRows, usesScalarArrayIt
 import { getElementContainerKind } from '@schema-engine/forms/lib/normalized-form-config';
 import type { NormalizedElementConfig, FieldOverlay } from '@schema-engine/forms';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
-import { evaluateConstraints } from '@schema-engine/forms/constraints';
 import {
 	renderWithOwningFormEngine,
 	renderWithConstraintValues,
@@ -13,7 +12,11 @@ import {
 	peekOwningParticipation,
 	renderWithParticipation,
 } from '@/contexts/form-engine-owner';
-import { constraintsFromParticipation, type RenderedConstraints } from '@/lib/participation-snapshot';
+import {
+	constraintsFromParticipation,
+	standaloneConstraints,
+	type RenderedConstraints,
+} from '@/lib/participation-snapshot';
 import type { Participation } from '@schema-engine/forms/engine';
 import { ElementError } from './element-error';
 import { isRenderedRequired } from '@/lib/field-rules';
@@ -90,12 +93,7 @@ export function renderRegisteredElement(
 		snapshot ??
 		(participation && fieldPath !== undefined
 			? constraintsFromParticipation(participation, fieldPath, baseRequired)
-			: evaluateConstraints({
-					constraints: 'constraints' in config ? config.constraints : undefined,
-					baseRequired: isFieldRequired('rules' in config ? config.rules : undefined),
-					fieldPath: constraintContext?.fieldPath ?? ('name' in config ? config.name : undefined),
-					values: constraintContext?.values ?? {},
-				}));
+			: standaloneConstraints(config, fieldPath ?? '', constraintContext?.values ?? {}, baseRequired));
 
 	if (!shouldShow && !renderWhenHidden) {
 		return null;

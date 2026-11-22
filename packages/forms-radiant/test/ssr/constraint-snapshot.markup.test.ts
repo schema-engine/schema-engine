@@ -235,3 +235,22 @@ describe('SSR participation', () => {
 		expect(html).toMatch(/data-se-constraint-field="vat"[^>]*hidden|hidden[^>]*data-se-constraint-field="vat"/);
 	});
 });
+
+describe('standalone element constraints', () => {
+	test('an element rendered outside a form render is hidden by its own hide constraint, through the same participation', async () => {
+		const { FormElement } = await import('@/components/internals/field-renderer');
+		const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+		const element = engine.validateElement({
+			$type: 'input',
+			id: 'ref',
+			name: 'ref',
+			constraints: [{ field: 'mode', operator: 'equals', value: 'hide', action: 'hide' }],
+		});
+		const render = (mode: string) =>
+			renderToString(jsx(FormElement, { config: element, engine, name: 'ref', values: { mode } }));
+		expect(render('hide')).toMatch(
+			/data-se-constraint-field="ref"[^>]*hidden|hidden[^>]*data-se-constraint-field="ref"/,
+		);
+		expect(render('show')).not.toMatch(/<se-constraint[^>]* hidden/);
+	});
+});

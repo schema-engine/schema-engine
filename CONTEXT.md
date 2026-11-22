@@ -73,9 +73,9 @@ engine through a renderer context or an explicit prop.
 Constraint resolution belongs to the engine, not to a renderer. A constraint
 names a sibling (`accountType`), so its value path depends on where the
 declaring field is rendered: inside `contacts.0.email` the sibling is
-`contacts.0.accountType`. `resolveConstraintPath` and `evaluateConstraints` in
-`@schema-engine/forms/constraints` own that rule, and a renderer passes the
-rendered field path plus the value tree rather than resolving paths itself. A
+`contacts.0.accountType`. `resolveConstraintPath` and `evaluateConstraints` own that rule, but only
+`resolveParticipation` calls them: a renderer, including a standalone element, asks the container's participation
+(or a one-step `resolveParticipation` of the element) and never resolves paths or evaluates constraints itself. A
 one-element array compares as its element, so a single-selection control matches
 an authored scalar.
 
