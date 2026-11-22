@@ -46,7 +46,7 @@
 		"@babel/plugin-transform-class-properties": "^7.28.0",
 		"@ecopages/jsx": "0.11.1",
 		"@ecopages/radiant": "0.11.1",
-		"@ecopages/radiant-ui": "0.4.3",
+		"@ecopages/radiant-ui": "link:../../../../radiant-wt-injected-store/packages/radiant-ui",
 		"@ecopages/signals": "0.11.1",
 		"@ecopages/storybook-radiant-vite": "0.2.3",
 		"@ecopages/vite-plugin-radiant": "0.2.3",

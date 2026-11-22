@@ -8,6 +8,9 @@
 	},
 	"devDependencies": {
 		"@changesets/changelog-github": "^0.5.2",
+		"@ecopages/jsx": "link:../../radiant-wt-injected-store/packages/jsx",
+		"@ecopages/radiant": "link:../../radiant-wt-injected-store/packages/radiant",
+		"@ecopages/signals": "link:../../radiant-wt-injected-store/packages/signals",
 		"@changesets/cli": "^2.31.1",
 		"@schema-engine/forms": "workspace:*",
 		"@schema-engine/forms-react": "workspace:*",
@@ -80,6 +83,9 @@
 	},
 	"pnpm": {
 		"overrides": {
+			"@ecopages/jsx": "link:../../radiant-wt-injected-store/packages/jsx",
+			"@ecopages/radiant": "link:../../radiant-wt-injected-store/packages/radiant",
+			"@ecopages/signals": "link:../../radiant-wt-injected-store/packages/signals",
 			"react": "^19.3.0",
 			"react-dom": "^19.3.0"
 		},
