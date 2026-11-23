@@ -1,0 +1,255 @@
+---
+title: 'Form state'
+description: 'The engine form state container: values, field state, validation, submission and the contract every renderer binds to.'
+order: 7
+---
+
+# Form state
+
+Every rendered form has one **form state container**. It holds the nested values, the errors and warnings of each field, the touched, dirty and pending marks, the row ids of field arrays and what the browser reports about each control. React and Radiant both read it, so a form validates, resets and submits the same way in either. Nothing else keeps form state: there is no form library underneath.
+
+The container is not tied to a renderer. A rendered form creates it through its [runtime](/docs/forms/wizard); build one yourself to test a form without a DOM, to render on a server or to write a binding.
+
+It is called a container, not a store, because `FormStore` is a class of Radiant UI. The interface is `FormStateContainer`, the factory `createFormStateContainer` and the snapshot `FormStateSnapshot`, all from `@schema-engine/forms/state-container`.
+
+## An engine to run it
+
+These examples run without a renderer, so they register one placeholder field and a wizard recipe that renders nothing. An app registers its renderer's elements and recipes instead.
+
+```ts
+import * as z from 'zod/mini';
+import { createFormEngine, defineInput } from '@schema-engine/forms';
+
+/**
+ * A field with no rendering, so the examples run without a renderer.
+ *
+ * @remarks
+ * An app registers its renderer's elements and recipes instead: the Radiant ones from `@schema-engine/forms-radiant`,
+ * or the React ones copied from the registry.
+ */
+export const textInput = defineInput({
+	$type: 'input',
+	schema: z.looseObject({ $type: z.literal('input'), name: z.string() }),
+	metadata: { name: 'Input', category: 'input' },
+	render: () => null,
+});
+
+/** The wizard recipe a multi-step form without a `view` falls back to. */
+export const bareControls = {
+	$type: 'bare-controls',
+	kind: 'wizard',
+	slots: ['actions'],
+	schema: z.looseObject({ $type: z.literal('bare-controls') }),
+	metadata: { name: 'Bare controls' },
+	render: () => null,
+} as const;
+
+export const engine = createFormEngine({ elements: [textInput], recipes: [bareControls] });
+```
+
+## Create a container
+
+A container is made from the normalized form config, the engine's validation registry and the defaults. The config carries the validation timing (`validationMode`, `reValidateMode`) and the `payload`, so no renderer can differ.
+
+```ts
+import { createFormStateContainer, selectFieldState } from '@schema-engine/forms/state-container';
+import { engine } from './engine';
+
+const config = engine.defineForm({
+	id: 'signup',
+	steps: [
+		{
+			id: 'account',
+			title: 'Account',
+			elements: [
+				{ $type: 'input', id: 'email', name: 'email', rules: [{ type: 'required', id: 'email-required' }] },
+				{
+					$type: 'input',
+					id: 'password',
+					name: 'password',
+					rules: [{ type: 'minLength', id: 'password-min', value: 8 }],
+				},
+			],
+		},
+	],
+});
+
+export const container = createFormStateContainer({
+	config,
+	registry: engine.getValidationRegistry(),
+	defaults: { email: 'ada@example.com', password: '' },
+});
+
+export async function fillIn() {
+	container.setValue('password', 'short');
+	const recordedBefore = container.getSnapshot().isValid;
+
+	const checked = await container.checkValidity();
+	const recordedAfterCheck = container.getSnapshot().isValid;
+
+	const validated = await container.validate();
+	const snapshot = container.getSnapshot();
+
+	return {
+		recordedBefore,
+		checked,
+		recordedAfterCheck,
+		validated,
+		isValid: snapshot.isValid,
+		error: snapshot.errors['password'],
+		field: selectFieldState(snapshot, 'password'),
+	};
+}
+```
+
+| Option     | Meaning                                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `config`   | A form from `engine.defineForm` or `engine.validateForm`: its elements, `validationMode`, `reValidateMode` and `payload`. |
+| `registry` | The engine's validation registry, `engine.getValidationRegistry()`.                                                       |
+| `defaults` | The values the form starts from and `reset()` restores. They are copied, never shared with the live values.               |
+| `snapshot` | The `values` and `rowIds` of a container that rendered the form on a server. See [Server rendering](#server-rendering).   |
+
+## Read state
+
+`container.getSnapshot()` returns an immutable snapshot. It is the same object until something changes, and a branch that did not change keeps its reference, so it is safe to compare by identity and to hand to `useSyncExternalStore`.
+
+| Member          | Holds                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `values`        | The nested value tree.                                                                                           |
+| `errors`        | The error of each path, flat by dotted path (`contacts.0.email`). The form itself is `FORM_ROOT` (`'__root__'`). |
+| `warnings`      | Advice from rules declared `severity: 'warning'`, shaped and timed like errors. A warning never blocks.          |
+| `touched`       | The paths the user has blurred. A mark on a container covers the fields below it.                                |
+| `dirty`         | The paths whose value differs from the defaults.                                                                 |
+| `validating`    | The paths a check is still running for.                                                                          |
+| `rowIds`        | The ids of each array's rows, by array path. A field array renders by these ids.                                 |
+| `isValid`       | Whether no error is recorded for a path that takes part. See [Validity](#validity).                              |
+| `generation`    | How many times the form was reset.                                                                               |
+| `participation` | The ids of the skipped steps and the state of each field a constraint or authoring hides, disables or requires.  |
+
+An error is never inherited: `errors['contacts']` is the array's own error and `errors['contacts.0.email']` the row's, and both can be present. An error is an issue with every issue of its path in `all`, ordered as what the server said, then each rule the value fails in authored order, then what the browser reported. Its `type`, `ruleId` and `params` say what is wrong; [Issue text](/docs/forms/issue-text) says how to word it.
+
+Read one field with the selectors, which are pure functions of the snapshot and memoized per snapshot and path:
+
+| Selector                              | Returns                                                                                                    |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `selectFieldState(snapshot, path)`    | `error`, `warning`, `invalid`, `isTouched`, `isDirty`, `isValidating`, `hidden`, `disabled` and `required` |
+| `selectValue(snapshot, path)`         | The value at the path                                                                                      |
+| `selectError`, `selectWarning`        | The error or the warning of exactly that path                                                              |
+| `toFieldArrayValue(rowIds, commands)` | `fields` with stable ids and the array operations, as a widget takes them                                  |
+
+A field state is the same object in every snapshot while it is unchanged. The bindings are these selectors over the container:
+
+| Binding | Reads                                                                                                                                                             |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| React   | `useFormField`, `useWatch`, `useFieldArray` and `useFormContext().formState`, through `useSyncExternalStore`. A field renders only for its own state.             |
+| Radiant | `new FormController(host).select(selector)`, a signal over a selector, and `form.container` for commands. See [Form controls](/docs/forms-radiant/form-controls). |
+
+## Write state
+
+| Command                 | Does                                                                                                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setValue(path, value)` | Replaces the whole branch at the path. It is a change: it validates when the mode says so and drops what described the old value.                           |
+| `blur(path)`            | Marks the path touched and validates it when the mode says so.                                                                                              |
+| `reportNative(facts)`   | Reports what the browser says about each control. See [Native validity](/docs/forms/native-validity).                                                       |
+| `fieldArray(path)`      | The array's commands: `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace` and `remove`. Each is one update, and a row's state moves with it. |
+| `reset(values?)`        | Restores the defaults, or replaces them with `values` first, and clears errors, marks and native facts. Every row gets a new id.                            |
+
+Every command is one atomic update and notifies subscribers once. A path with a segment that starts with `__`, or is `constructor` or `prototype`, is rejected, and so is a write to a row the array does not have: make rows with `fieldArray`.
+
+## Validity
+
+Three reads answer "is the form valid", and they differ on purpose.
+
+| Read                               | Answers                                                                                                                                                                                                                                            |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `snapshot.isValid`                 | Whether no error is recorded right now for a path that takes part. It validates nothing, so a pristine form with an empty required field is `true`.                                                                                                |
+| `await container.validate(paths?)` | Validates the paths (the whole form when omitted), records and shows the errors, and resolves `true` only when none remains and the check was still current when it finished. It rejects with a `FormValidationFailure` when a rule could not run. |
+| `await container.checkValidity()`  | Validates the values current at the call and resolves whether the form passes. It records and shows nothing, and its answer may be out of date when it resolves.                                                                                   |
+
+The example above shows all three: after `setValue('password', 'short')` the recorded state is still valid, `checkValidity()` is `false` and leaves it so, and `validate()` is `false` and records the `minLength` error.
+
+Do not disable a submit button with `isValid`. A server error makes it `false`, and only the next attempt clears that, so the user could not retry. Let the user submit and show the errors.
+
+Actions see the same three. In an action, `context.isValid` is `isValid`, `context.form.checkValidity()` is `checkValidity()` and `context.form.validate()` is `validate()`. See [Actions](/docs/actions/advanced#stop-on-failure).
+
+A check is **fresh** only while its scope is current. If an edit, a row move or a reset outruns it, `validate()` runs once more over the same rows, and if it is overtaken again it resolves `false` and writes nothing stale.
+
+## Submit
+
+`container.submit()` clears the server's answer to the last submission, validates the whole form as `validate()` does and says how that ended:
+
+| Outcome       | Meaning                                                                                                                                                                                  |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'passed'`    | Nothing blocks. `values` are exactly the values that passed, frozen, without the paths that took no part, plus the config's `payload`. `setServerErrors` hands back the server's answer. |
+| `'invalid'`   | An error blocks. Show the errors and focus the first control.                                                                                                                            |
+| `'overtaken'` | An edit, a row move, a reset or a later submission outran the check. There is no verdict: ask again and show nothing the user did not cause.                                             |
+
+A rendered form wraps this in its runtime, which adds the submission state, the actions and your `onSubmit`. In order:
+
+1. The runtime takes its one lock, syncs the controls into the container and sets the status to `pending`. A second submit meanwhile is `busy`.
+2. `container.submit()` validates. `invalid` shows and focuses the errors and stops. `overtaken` stops without showing anything.
+3. `form_submit_start` runs.
+4. The submit actions run (`form_submit`). An action that fails and stops the sequence skips `onSubmit`.
+5. `onSubmit(values, { setServerErrors, fetch })` runs with the values that passed. A rejection is a failed submission.
+6. `form_submit_success` runs, or `form_submit_error` after a failure.
+7. `form_submit_complete` runs.
+
+`snapshot.submission` on the runtime, and `useFormContext().formState.submission` in React, reports `{ status, failures, submitCount }`. `status` is `idle`, `pending`, `success` or `error`; `failures` are issues of the form itself (`actionFailed`, `callbackFailed`, `triggerFailed`, `validationFailed`); `submitCount` counts submissions that passed or failed validation, not a Next and not a check an edit outran. A reset returns it to idle with a count of 0.
+
+Send the values with the `fetch` of `onSubmit`'s second argument, which applies the [CSRF policy](/docs/forms/csrf), and show the server's answer with `setServerErrors`. See [Server errors](/docs/forms/server-errors).
+
+## Reset
+
+`container.reset()` is the only reset. An action's `form.reset`, `useFormContext().reset`, a native reset button and `FormController.container.reset()` all call it. It raises `snapshot.generation`, which the runtime watches: it revokes the command in flight, returns the submission to idle and the wizard to its first step, and fires no step trigger.
+
+## Server rendering
+
+A server builds a container, renders its state and sends the part a client needs. The client passes it back as `snapshot`, with the same defaults, so the fields that differ from them are dirty and `reset` restores them:
+
+```ts
+import { createFormStateContainer, toHydration } from '@schema-engine/forms/state-container';
+import { engine } from './engine';
+
+const config = engine.defineForm({
+	id: 'profile',
+	steps: [{ id: 'main', title: 'Profile', elements: [{ $type: 'input', id: 'name', name: 'name' }] }],
+});
+const registry = engine.getValidationRegistry();
+const defaults = { name: 'Ada' };
+
+/** On the server: render the form from its container, and send the part a client needs next to the markup. */
+export function renderOnServer() {
+	const server = createFormStateContainer({ config, registry, defaults });
+	return JSON.stringify(toHydration(server.getServerSnapshot()));
+}
+
+/** In the browser: start from what the server rendered, with the same defaults. */
+export function hydrateOnClient(payload: string) {
+	return createFormStateContainer({ config, registry, defaults, snapshot: JSON.parse(payload) });
+}
+```
+
+`toHydration` returns the `values` and `rowIds`, which are plain and serializable. The client starts from those values and adopts those row ids, so a row the server rendered keeps its identity. A hydration whose ids do not match its own values throws a `FormStateHydrationError`. The row ids a container makes are deterministic, so a client built from the same defaults matches the server without a snapshot.
+
+## Write a binding
+
+The contract is public, so a renderer for another framework, a native client or a test harness binds the same container. A binding:
+
+- reads `getSnapshot()` and `subscribe()`, and renders from the selectors;
+- sends each control's value with `setValue(path, value)`, its blur with `blur(path)` and its browser verdict with `reportNative(facts)`;
+- keeps focus, the native controls and the native submit, which are the host's;
+- submits with `submit()`, or through the [runtime](/docs/forms/wizard), and shows the server's answer through `setServerErrors`.
+
+`formStateContainerConformance` from `@schema-engine/forms/testing` is the suite that proves a container keeps the contract: validation timing, row identity, native facts, freshness, participation and server errors. Run it against any implementation of `FormStateContainerFactory`:
+
+```ts
+import { describe } from 'vitest';
+import { formStateContainerConformance } from '@schema-engine/forms/testing';
+import { createFormStateContainer } from '@schema-engine/forms/state-container';
+
+describe('my container', () => {
+	formStateContainerConformance(createFormStateContainer);
+});
+```
+
+Why the engine owns this contract and offers no form library adapter is in [Form libraries](/docs/forms/form-libraries).

@@ -1,0 +1,127 @@
+---
+title: 'Native validity'
+description: 'What the browser says about a control, how a form receives it and the seven rules it follows.'
+order: 9
+---
+
+# Native validity
+
+A browser validates every `input`, `select` and `textarea` against its own attributes and keeps the verdict in `element.validity`. A **native fact** is that verdict, copied into the form state container. It is evidence, never configuration: nobody writes a fact by hand, nothing switches facts on or off, and a host only reads it and forwards it.
+
+```
+what is rendered                 the browser decides                  the host forwards
+<input type="email"> + "abc"     validity.typeMismatch = true         reportNative({ email: { type: 'typeMismatch', params: { inputType: 'email' } } })
+<input type="number"> + "1e"     validity.badInput = true             reportNative({ age: { type: 'badInput' } })
+<input type="email"> + "a@b.c"   validity.valid = true                reportNative({ email: null })
+```
+
+To turn native validation off, render no constraint the browser can check. A control without constraint attributes always reports valid and contributes nothing.
+
+## Why it exists
+
+Some verdicts only the browser can give. When a user types `1e` into a number input, the browser reports `value === ''`, so no rule ever sees the text. Only `validity.badInput` knows the user typed something that is not a number. Without the fact, the form would treat the field as empty and a `required` rule would say "required" while the user looks at what they typed.
+
+## Which bindings report facts
+
+| Binding              | Reports     | How                                                                                                                                                                |
+| -------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Radiant (`rui-form`) | yes         | Reads `validity` on every control change, before blur, in `sync()`, on reset, and when a control connects or disconnects.                                          |
+| React                | yes         | Reads `validity` through the field's `ref` when it attaches, after each change, on blur and after each render, when the ref is an `input`, `select` or `textarea`. |
+| Your own host        | if you want | Calls `container.reportNative(facts)` with what it read.                                                                                                           |
+
+Radiant's own widgets render only the input's `type` as a constraint: a `required` rule drives the asterisk and `aria-required`, not a native `required` attribute. In Radiant, native validity adds what rules cannot see, `badInput` on number and date inputs and `typeMismatch` on `email` and `url` inputs. React puts the field's resolved `required` on the control, so an empty required control also reports `valueMissing`; the rule's error is the one shown and the fact is listed after it.
+
+## The seven rules
+
+1. **A fact is bound to its value.** When the value changes the old fact is dropped at once, before the host reports again. A stale "not an email" never outlives the text it was about.
+2. **`null` withdraws it.** A control that reports itself valid, or goes away, sends `null` for its path. When rows swap and another control is now bound to that path, the leaving control sends nothing, so the new one's fact stands.
+3. **It moves with its row.** Swapping, moving or removing rows carries each row's fact along with its value and its errors.
+4. **It follows the form's timing.** A fact is recorded straight away and shown only when validation runs for that path, exactly like a rule's error. In `onBlur` mode, typing `abc` shows nothing until the user leaves the field.
+5. **Reporting is not editing.** It never makes a field dirty or touched. It re-validates only the paths that were already validated, are in a failed scope or have a check in flight, so a pristine field is never started.
+6. **Undeclared paths are ignored.** A fact for a path no field declares is dropped, so an error nobody can see never blocks a submission. A reserved path throws.
+7. **Rules win the display, and both are listed.** The shown error is the first rule error if there is one, else the fact. `all` lists every issue, rules first and the fact last.
+
+## A walk-through
+
+A form in `onBlur` mode with one `email` field and a `required` rule. The calls are the ones `rui-form` and the React field make for you; they are written out to show what the container sees.
+
+```ts
+import { createFormStateContainer } from '@schema-engine/forms/state-container';
+import { engine } from './engine';
+
+const config = engine.defineForm({
+	id: 'newsletter',
+	validationMode: 'onBlur',
+	steps: [
+		{
+			id: 'main',
+			title: 'Newsletter',
+			elements: [
+				{ $type: 'input', id: 'email', name: 'email', rules: [{ type: 'required', id: 'email-required' }] },
+			],
+		},
+	],
+});
+
+const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+export async function walkThrough() {
+	const form = createFormStateContainer({
+		config,
+		registry: engine.getValidationRegistry(),
+		defaults: { email: '' },
+	});
+	const error = () => form.getSnapshot().errors['email'];
+
+	form.setValue('email', 'abc');
+	form.reportNative({ email: { type: 'typeMismatch', params: { inputType: 'email' } } });
+	const typing = error();
+
+	form.blur('email');
+	await settled();
+	const leaving = error();
+
+	form.setValue('email', '');
+	form.reportNative({ email: null });
+	form.blur('email');
+	await settled();
+	const clearing = error();
+
+	form.setValue('email', 'ada@example.com');
+	form.reportNative({ email: null });
+	form.blur('email');
+	await settled();
+	const fixed = error();
+
+	return { typing, leaving, clearing, fixed };
+}
+```
+
+| Step                                  | Error at `email`                                                                                                                  |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| The user types `abc`                  | None: `onBlur`, so nothing is validated yet.                                                                                      |
+| The user leaves the field             | `{ type: 'typeMismatch', source: 'native', params: { inputType: 'email' } }`                                                      |
+| The user clears it and leaves         | The old fact went with the old value. The rule now fails: `{ type: 'required', source: 'validation', ruleId: 'email-required' }`. |
+| The user types a real address, leaves | None.                                                                                                                             |
+
+## Flags and params
+
+The failing flag is the issue's `type`, and the constraint behind it is `params`, under the name the platform uses.
+
+| `validity` flag                   | `type`                            | `params`                         |
+| --------------------------------- | --------------------------------- | -------------------------------- |
+| `valueMissing`                    | `valueMissing`                    | none                             |
+| `typeMismatch`                    | `typeMismatch`                    | `{ inputType }`                  |
+| `patternMismatch`                 | `patternMismatch`                 | `{ pattern }`                    |
+| `tooShort`, `tooLong`             | `tooShort`, `tooLong`             | `{ minLength }`, `{ maxLength }` |
+| `rangeUnderflow`, `rangeOverflow` | `rangeUnderflow`, `rangeOverflow` | `{ min }`, `{ max }`             |
+| `stepMismatch`                    | `stepMismatch`                    | `{ step }`                       |
+| `badInput`                        | `badInput`                        | none                             |
+
+Radiant gives `min` and `max` as numbers for `number` and `range` inputs; React gives the attribute's text. Radiant also reports `customError`, the message a host set with `setValidity`. A control reports its first set flag, and the browser's `validationMessage` travels as `message`, a fallback: your [formatter](/docs/forms/issue-text) decides the text.
+
+## Native validity is not a native submit
+
+"Native validation" is the browser's facts. "Native submit" is a real HTML post to the form's `action`. They are separate. Both renderers render the form with `novalidate`, so the browser never shows its own bubbles or blocks a submit: the container decides validity, with the facts included.
+
+A Radiant form with `action` or `method` and no `onSubmit` still posts natively once the container says the submission passed. The post carries the submission's values, not the DOM, and the engine's [CSRF field](/docs/forms/csrf) when the policy allows it. React has no native post: it submits through `onSubmit`.
