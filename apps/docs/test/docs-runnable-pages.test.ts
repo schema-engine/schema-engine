@@ -5,6 +5,7 @@ import * as registryYaml from '@schema-engine/registry/yaml';
 import * as z from 'zod/mini';
 import { codeBlocks, readPage, runTitledFiles, titledRunner } from './snippet-harness';
 import * as formsPackage from '@schema-engine/forms';
+import * as browserPackage from '@schema-engine/forms/browser';
 import * as nodeTimers from 'node:timers/promises';
 
 const packages = {
@@ -12,6 +13,7 @@ const packages = {
 	'@schema-engine/registry': registryPackage,
 	'@schema-engine/registry/yaml': registryYaml,
 	'@schema-engine/forms': formsPackage,
+	'@schema-engine/forms/browser': browserPackage,
 	'zod/mini': z,
 	'node:timers/promises': nodeTimers,
 };
@@ -150,5 +152,41 @@ describe('forms/constraints', () => {
 			globals: { Response, FormData },
 		});
 		expect(lines.join('\n')).toEqual(shownOutput(page, 'Hidden and disabled fields do not submit'));
+	});
+});
+
+describe('forms/actions', () => {
+	const page = 'forms/actions';
+
+	test('the form validates with every registered action, and an unregistered one is a config issue', () => {
+		const { contact } = titledRunner(page, packages).load('contact-actions.ts') as {
+			contact: formsPackage.NormalizedFormConfig;
+		};
+		expect((contact.actions ?? []).flat().map((action) => action.$type)).toEqual([
+			'submit',
+			'show_notification',
+			'auto_save',
+			'gtm_event',
+			'reset',
+		]);
+		const bare = formsPackage.createFormEngine({ elements: [] });
+		const result = bare.safeValidateForm({
+			id: 'f',
+			steps: [{ id: 's', title: 'S', elements: [] }],
+			actions: [{ id: 'send', $type: 'submit', endpoint: '/x' }],
+		});
+		expect(result.success).toBe(false);
+	});
+
+	test('the auto-save example uses only options of its schema', () => {
+		const json = titledRunner(page, packages);
+		const { contact } = json.load('contact-actions.ts') as { contact: formsPackage.NormalizedFormConfig };
+		const draft = (contact.actions ?? []).flat().find((action) => action.$type === 'auto_save') as Record<
+			string,
+			unknown
+		>;
+		const options = Object.keys((browserPackage.AutoSaveActionRegistration.schema as { shape: object }).shape);
+		expect(Object.keys(draft).filter((key) => !options.includes(key))).toEqual([]);
+		expect(readPage(page)).not.toContain('debounceMs');
 	});
 });
