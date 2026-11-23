@@ -5,7 +5,6 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { useViewContext } from '@/contexts/view-context';
 import { defineRecipe } from '@/primitives';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
@@ -40,7 +39,7 @@ describe('recipe view model', () => {
 			],
 		});
 
-		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+		render(<FormRenderer config={config} engine={engine} />);
 		expect(screen.getByText('counting-form')).toBeInTheDocument();
 		const rendersBefore = slotRenders;
 		expect(rendersBefore).toBeGreaterThan(0);
@@ -69,7 +68,7 @@ describe('recipe view model', () => {
 		vi.spyOn(engine, 'getRecipe').mockReturnValue(undefined);
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 
-		expect(() => render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />)).toThrow(
+		expect(() => render(<FormRenderer config={config} engine={engine} />)).toThrow(
 			"Form 'orphan-form' uses view 'orphaned' but the engine has no such recipe.",
 		);
 	});

@@ -13,7 +13,7 @@ implementations in the shadcn registry, Radiant implementations in
 First-party packages:
 
 - `forms` — headless engine: JSON config, validation, constraints, recipe specs
-- `forms-react` — React adapter: renderer, hooks, RHF bridge. Headless factory (no default recipes)
+- `forms-react` — React renderer: components and form state hooks. Headless factory (no default recipes)
 - `forms-radiant` — Radiant adapter: renderer plus in-package recipes
 - `actions` — domain-agnostic sequential action execution
 - `registry` — base registry used by the other packages

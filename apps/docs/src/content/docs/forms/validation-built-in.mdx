@@ -588,9 +588,9 @@ For server-side validation that requires network requests, with built-in caching
 
 With `debounce`, a newer validation of the same field replaces a pending one and only the
 latest request is sent. A replaced validation of the same value shares that request's
-result; one of a different value fails with `Validation pending`, so a submit-time check
-superseded by a later edit never passes. Neither renderer shows that message while the
-user types: each shows the result for the latest value.
+result; one of a different value has no result (it is neither a pass nor an issue), so a submit-time check
+superseded by a later edit never passes. Nothing is shown for it while the user types: each
+renderer shows the result for the latest value.
 
 ### Dependency Resolution
 
@@ -620,7 +620,7 @@ reference as authored:
 ### Caching Behavior
 
 - **Default TTL**: 5 minutes for successful validations
-- **Error TTL**: 1 minute for HTTP errors, 30 seconds for network errors
+- **Outages**: a non-ok response or a network failure is not an answer about the value. The rule throws `ValidationUnavailable`, which is reported as a failure to run (`validate()` rejects), and it is never cached
 - **Cache Keys**: Generated from URL + request payload for uniqueness
 - **Memory Management**: Expired entries are evicted during cache reads and writes
 - **Cache Control**: Use `disableCache: true` for always-fresh validation

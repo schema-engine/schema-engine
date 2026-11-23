@@ -163,8 +163,8 @@ test('onChange receives a nested value tree and reconnects without duplicate wat
 });
 
 test.each([
-	['contact', 'not an email', 'Enter an email'],
-	['phone', '+1555', 'Enter a complete phone number'],
+	['contact', 'not an email', 'email'],
+	['phone', '+1555', 'phone'],
 ])('hydrated %s reports the rule its registration attaches by default', async (name, value, message) => {
 	const { root } = mount();
 	const field = root.querySelector(`se-field[name="${name}"]`) as FormFieldElement;

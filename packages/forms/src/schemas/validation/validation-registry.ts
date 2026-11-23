@@ -3,12 +3,14 @@ import { createRegistry, type ReadOnlyRegistry } from '@schema-engine/registry';
 import type {
 	AnyValidationRegistration,
 	BaseValidationRule,
-	ValidationContext,
+	ValidationScope,
 	ValidationRegistration,
 	ValidationRegistrationConstraint,
 } from './types.js';
 import { defaultValidations } from './defaults.js';
-import { logger } from '@/lib/logger.js';
+import { ValidationRuleError } from './errors.js';
+import { globalFetch, type FormFetch } from '@/lib/form-fetch';
+import { createValidationContext } from './utils.js';
 
 /** @remarks Rule-specific handlers are checked where a registration is defined, then stored together by rule type. */
 type StoredValidationRegistration = ValidationRegistration<any>;
@@ -41,17 +43,34 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	 */
 	getRuleDependencies(rule: { type: string }): readonly string[];
 
+	/** The options of a rule its registration exposes to messages (`{ minLength: 8 }`), or `undefined` when it exposes none. */
+	getRuleParams(rule: { type: string }): Readonly<Record<string, unknown>> | undefined;
+
+	/** The fallback text of an issue of a rule: its author's `message`, or what its registration takes from the schema's `reported` text. */
+	getRuleMessage(rule: { type: string; message?: string }, reported: string | undefined): string | undefined;
+
 	/** Registrations of one category. */
 	getByCategory(category: string): AnyValidationRegistration[];
 
 	/**
-	 * Create a Zod Mini schema from a validation rule, or `null` when the rule type is not registered
-	 * or its handler throws.
+	 * The request function of the rules that make requests: the engine's `fetch`, or the global one for a standalone registry.
+	 *
+	 * @remarks `createSchema` hands it to every handler as `context.fetch`, whatever context the caller built.
+	 */
+	readonly fetch: FormFetch;
+
+	/**
+	 * Create a Zod Mini schema from a validation rule.
 	 *
 	 * @param rule - The validation rule
 	 * @param context - Form context for rules that read other fields
+	 * @throws {ValidationRuleError} When the rule type is not registered or its handler throws
 	 *
 	 * @remarks
+	 * A rule that cannot be built is never skipped: a form that silently skipped it would accept values
+	 * the author meant to reject. A config is checked with {@link ValidationRegistry.check} when it is
+	 * validated, so reaching this error at run time means the registry changed after that.
+	 *
 	 * `context` is required rather than optional so a caller cannot silently omit
 	 * it: a renderer that did exactly that is why cross-field rules were inert on
 	 * one of the two renderers. Build it with `createValidationContext`.
@@ -59,7 +78,23 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	 * The rule type is generic, not `{ type: string }`, so a rule literal with extra properties such as
 	 * `{ type: 'min', value: 10 }` is not rejected as an excess-property error.
 	 */
-	createSchema<T extends { type: string }>(rule: T, context: ValidationContext): z.ZodMiniType | null;
+	createSchema<T extends { type: string }>(rule: T, context: ValidationScope): z.ZodMiniType;
+
+	/**
+	 * Why a rule cannot be used, or `undefined` when it can.
+	 *
+	 * @remarks
+	 * Checks that the type is registered and that the handler builds a schema for the rule, so a bad
+	 * pattern is found when the form config is validated and not when a user first types. The shape of the
+	 * rule is checked by the element's own schema, which reports the key at fault.
+	 */
+	check(rule: { type: string }): string | undefined;
+}
+
+/** What a validation registry is built with besides its registrations. */
+export interface ValidationRegistryOptions {
+	/** The request function of rules that make requests; the global `fetch` by default. */
+	readonly fetch?: FormFetch;
 }
 
 function deriveDefaultRules(
@@ -98,7 +133,9 @@ const NO_DEFAULT_RULES: readonly BaseValidationRule[] = Object.freeze([]);
  */
 export function createValidationRegistry(
 	registrations: readonly ValidationRegistrationConstraint[],
+	options: ValidationRegistryOptions = {},
 ): ValidationRegistry {
+	const { fetch = globalFetch } = options;
 	const registry = createRegistry<AnyValidationRegistration>(
 		'Validation',
 		registrations as readonly AnyValidationRegistration[],
@@ -110,19 +147,37 @@ export function createValidationRegistry(
 		getDefaultRulesForFieldType: (fieldType) => defaultRulesByFieldType.get(fieldType) ?? NO_DEFAULT_RULES,
 		getRuleDependencies: (rule) =>
 			(registry.get(rule.type) as StoredValidationRegistration | undefined)?.dependsOn?.(rule) ?? [],
+		getRuleMessage: (rule, reported) => {
+			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
+			return registration?.message ? registration.message(rule, reported) : rule.message;
+		},
+		getRuleParams: (rule) => (registry.get(rule.type) as StoredValidationRegistration | undefined)?.params?.(rule),
 		getByCategory: (category) => registry.all().filter((registration) => registration.category === category),
+		fetch,
 		createSchema: (rule, context) => {
 			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
 			if (!registration) {
-				return null;
+				throw new ValidationRuleError(rule.type, `Validation rule '${rule.type}' has no registered handler.`);
 			}
 
 			try {
-				return registration.handler(rule, context);
-			} catch (error) {
-				logger.error(`Failed to create schema for validation rule '${rule.type}'`, { error });
-				return null;
+				return registration.handler(rule, { ...context, fetch });
+			} catch (cause) {
+				throw new ValidationRuleError(rule.type, `Validation rule '${rule.type}' could not be built.`, {
+					cause,
+				});
 			}
+		},
+		check: (rule) => {
+			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
+			if (!registration) return `Validation rule '${rule.type}' has no registered handler.`;
+			try {
+				registration.handler(rule, { ...createValidationContext(), fetch });
+			} catch (error) {
+				const reason = error instanceof Error ? error.message : String(error);
+				return `Validation rule '${rule.type}' could not be built: ${reason}`;
+			}
+			return undefined;
 		},
 	};
 	return Object.freeze(api);
@@ -134,6 +189,7 @@ export function createValidationRegistry(
  */
 export function createDefaultValidationRegistry(
 	extra: readonly ValidationRegistrationConstraint[] = [],
+	options: ValidationRegistryOptions = {},
 ): ValidationRegistry {
-	return createValidationRegistry([...defaultValidations, ...extra]);
+	return createValidationRegistry([...defaultValidations, ...extra], options);
 }

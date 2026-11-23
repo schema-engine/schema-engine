@@ -16,12 +16,12 @@ Schema Engine is a set of packages. You install the engine and one renderer: **R
 
 ## Choose a renderer
 
-| Renderer    | Package                        | Form state                                            | Styling                                                             |
-| ----------- | ------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------- |
-| **React**   | `@schema-engine/forms-react`   | React Hook Form, through the React adapter (optional) | Source you own, copied from the shadcn registry; Tailwind helps     |
-| **Radiant** | `@schema-engine/forms-radiant` | Radiant's own form controller; no React Hook Form     | Three CSS imports: a Radiant UI theme, its styles and the package's |
+| Renderer    | Package                        | Form state                           | Styling                                                             |
+| ----------- | ------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
+| **React**   | `@schema-engine/forms-react`   | The engine's own container, built in | Source you own, copied from the shadcn registry; Tailwind helps     |
+| **Radiant** | `@schema-engine/forms-radiant` | Radiant's own form controller        | Three CSS imports: a Radiant UI theme, its styles and the package's |
 
-Both render the same `FormConfig` JSON. React Hook Form is the React adapter's form state, not a requirement of the engine or of the Radiant renderer.
+Both render the same `FormConfig` JSON; the React renderer keeps its form state in the engine's container, built in, and the Radiant renderer has its own form controller.
 
 ## The engine
 
@@ -33,10 +33,10 @@ pnpm add @schema-engine/forms @schema-engine/layout zod
 
 ## React
 
-Add the renderer and its peers. `react-hook-form` is needed for the React Hook Form adapter that the [Quick Start](/docs/getting-started/quick-start) and the [Forms React](/docs/forms-react/getting-started) guides use:
+Add the renderer and its peers, as the [Quick Start](/docs/getting-started/quick-start) and the [Forms React](/docs/forms-react/getting-started) guides use them:
 
 ```bash
-pnpm add @schema-engine/forms-react react react-dom react-hook-form
+pnpm add @schema-engine/forms-react react react-dom
 ```
 
 Then copy the form elements and, when you want a ready-made layout, the default recipes from the Schema Engine shadcn registry:
@@ -123,7 +123,6 @@ The ranges are the ones in the package manifests:
 - `zod` `^4.0.17`
 - `typescript` `^5.4`
 - `react` and `react-dom` `^19` (React renderer)
-- `react-hook-form` `^7.60.0` (optional; needed only for the React Hook Form adapter)
 - `yaml` `^2.8.0` (optional; needed only for `@schema-engine/registry/yaml`)
 - `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.9.0`, and `@ecopages/radiant-ui` `>=0.4.0` (Radiant renderer; [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the rest)
 

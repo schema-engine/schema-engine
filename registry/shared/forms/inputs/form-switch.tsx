@@ -6,7 +6,7 @@ import {
 	FieldContent,
 	FieldHint,
 } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { SwitchFieldProps } from './form-switch.types';
 
 export function FormSwitch({
@@ -15,7 +15,7 @@ export function FormSwitch({
 	onFocus: propsOnFocus,
 	...config
 }: SwitchFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, containerStyles } = useFormField(config, { controlled: true });
 
 	return (
 		<FieldGroupRoot style={containerStyles}>

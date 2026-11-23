@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { ValidationContext, ValidationRule, BaseValidationRule } from './types.js';
+import type { ValidationScope, ValidationRule, BaseValidationRule } from './types.js';
 import type { BaseField } from '../base-field.js';
 import type { ValidationRegistry } from './validation-registry.js';
 import { walkLeafFields } from '@/lib/field-scope.js';
@@ -106,7 +106,7 @@ export function createValidationContext({
 	values = {},
 	fieldPath = '',
 	debounceScope,
-}: ValidationContextInput = {}): ValidationContext {
+}: ValidationContextInput = {}): ValidationScope {
 	return {
 		values,
 		fieldPath,
@@ -156,6 +156,8 @@ function skippingEmpty(schema: z.ZodMiniType): z.ZodMiniType {
  * can be left blank; `required` is what rejects it. Rules of other categories, such as `minItems`, are
  * unchanged.
  *
+ * A rule that cannot be built throws `ValidationRuleError`; it is never skipped.
+ *
  * `context` is required. Callers with no form values to offer pass
  * `createValidationContext()` explicitly, so omitting the form context is a
  * decision in the diff rather than an accident nobody notices until a
@@ -163,7 +165,7 @@ function skippingEmpty(schema: z.ZodMiniType): z.ZodMiniType {
  */
 export function createZodSchemaFromRules(
 	rules: ReadonlyArray<ValidationRuleType> = [],
-	context: ValidationContext,
+	context: ValidationScope,
 	registry: ValidationRegistry,
 ): z.ZodMiniType {
 	if (!rules.length) {
@@ -173,14 +175,8 @@ export function createZodSchemaFromRules(
 	const schemas: z.ZodMiniType[] = [];
 	for (const rule of rules) {
 		const ruleSchema = registry.createSchema(rule as ValidationRule, context);
-		if (ruleSchema) {
-			const category = registry.get(rule.type)?.category;
-			schemas.push(category && FORMAT_CATEGORIES.has(category) ? skippingEmpty(ruleSchema) : ruleSchema);
-		}
-	}
-
-	if (schemas.length === 0) {
-		return z.unknown();
+		const category = registry.get(rule.type)?.category;
+		schemas.push(category && FORMAT_CATEGORIES.has(category) ? skippingEmpty(ruleSchema) : ruleSchema);
 	}
 
 	let combinedSchema = schemas[0];

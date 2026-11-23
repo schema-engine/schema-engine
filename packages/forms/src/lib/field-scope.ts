@@ -1,6 +1,12 @@
 import { getElementContainerKind } from './normalized-form-config.js';
 import { getElementChildren } from './element-children.js';
-import { clonePlainValue, getValueAtPath, mergePathValues, setValueAtPath } from './path-values.js';
+import {
+	clonePlainValue,
+	expandFieldTemplatePaths,
+	getValueAtPath,
+	mergePathValues,
+	setValueAtPath,
+} from './path-values.js';
 import { isPlainObject } from './is-plain-object.js';
 
 /**
@@ -118,6 +124,35 @@ export function applyFieldOverlay<T extends object>(config: T, overlay?: FieldOv
 	} as T;
 }
 
+/**
+ * Decides whether the rows of an array element are scalars (`tags.0`) or objects (`users.0.name`).
+ *
+ * @remarks Only an array with one child can hold scalar rows; what its rows are is a question for its values.
+ */
+export type ScalarItemTest = (element: object, path: string, children: readonly object[]) => boolean;
+
+/** Without values to ask, a single child is taken as the whole of a scalar row. */
+const hasSingleChild: ScalarItemTest = (_element, _path, children) => children.length === 1;
+
+/**
+ * The scalar-row test for a form whose values are `values`.
+ *
+ * @remarks
+ * An array with one child has scalar rows (rows that are arrays of their own are the same boundary) unless something says its rows are records: an `initialValues`
+ * record on the element, a record default on the child, or a row in `values` that is a record. Rows that do
+ * not exist yet say nothing, so an empty array keeps the scalar reading and has no row to validate either way.
+ */
+export function scalarItemsIn(values: Record<string, unknown>): ScalarItemTest {
+	return (element, path, children) => {
+		if (children.length !== 1) return false;
+		if (isRecord('initialValues' in element ? element.initialValues : undefined)) return false;
+		if (isRecord(getDefaultValue(children[0]))) return false;
+		return !expandFieldTemplatePaths(values, path)
+			.map((concrete) => getValueAtPath(values, concrete))
+			.some((rows) => Array.isArray(rows) && rows.some(isRecord));
+	};
+}
+
 export interface NamedElementNode<T extends object = object> {
 	readonly path: string;
 	readonly element: T;
@@ -136,8 +171,9 @@ export function walkNamedElements<T extends object>(
 	elements: readonly T[],
 	basePath = '',
 	fallbackToId = false,
+	scalarItems: ScalarItemTest = hasSingleChild,
 ): NamedElementNode<T>[] {
-	return walkScopedElements(elements, basePath, false, 0, fallbackToId);
+	return walkScopedElements(elements, basePath, false, 0, fallbackToId, scalarItems);
 }
 
 function walkScopedElements<T extends object>(
@@ -146,6 +182,7 @@ function walkScopedElements<T extends object>(
 	replace = false,
 	arrayItemDepth = 0,
 	fallbackToId = false,
+	scalarItems: ScalarItemTest = hasSingleChild,
 ): NamedElementNode<T>[] {
 	const nodes: NamedElementNode<T>[] = [];
 	for (const element of elements) {
@@ -156,7 +193,8 @@ function walkScopedElements<T extends object>(
 		const hasChildren = Boolean(children?.length);
 		nodes.push({ path, element, hasChildren, ...(arrayItemDepth > 0 ? { arrayItemDepth } : {}) });
 		if (children?.length) {
-			const scalarArrayItems = getElementContainerKind(element) === 'array' && children.length === 1;
+			const scalarArrayItems =
+				getElementContainerKind(element) === 'array' && scalarItems(element, path, children);
 			nodes.push(
 				...walkScopedElements(
 					children,
@@ -164,6 +202,7 @@ function walkScopedElements<T extends object>(
 					scalarArrayItems,
 					scalarArrayItems ? arrayItemDepth + 1 : 0,
 					fallbackToId,
+					scalarItems,
 				),
 			);
 		}

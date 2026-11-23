@@ -8,6 +8,8 @@ import {
 	type NormalizedFormConfig,
 } from '@/lib/normalized-form-config';
 import { stepGrid } from '@/lib/form-view';
+import { walkNamedElements } from '@/lib/field-scope';
+import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
 import { getDefaultLayoutTheme } from '@schema-engine/layout';
 import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
 import { fieldPlacementIssues, templateIssues, type PlacedElement } from './validate-form/grid-checks';
@@ -43,9 +45,9 @@ const ACTION_REGISTER_HINT = 'createFormEngine({ actions: [...] })';
  */
 export function validateElementConfig(
 	config: unknown,
-	options: Pick<ValidateFormOptions, 'getElement' | 'hasValidation' | 'axes'>,
+	options: Pick<ValidateFormOptions, 'getElement' | 'checkRule' | 'axes'>,
 ): NormalizedElementConfig {
-	const parsed = parseElementNode(config, options.getElement, options.hasValidation, [], {
+	const parsed = parseElementNode(config, options.getElement, options.checkRule, [], {
 		axes: options.axes ?? getDefaultLayoutTheme().axes,
 		inherited: {},
 	});
@@ -123,7 +125,7 @@ export function safeValidateFormConfig(
 		const elements = parseElementList(
 			step.elements,
 			options.getElement,
-			options.hasValidation,
+			options.checkRule,
 			stepPath,
 			stepAppearance.childScope,
 		);
@@ -140,6 +142,13 @@ export function safeValidateFormConfig(
 			actions: actions.items ?? step.actions,
 		};
 	});
+
+	issues.push(
+		...payloadIssues(
+			envelope.payload,
+			steps.flatMap((step) => step.elements),
+		),
+	);
 
 	const formShape = templateIssues('Form grid', envelope.grid, ['grid']);
 	issues.push(...formShape);
@@ -183,6 +192,39 @@ export function safeValidateFormConfig(
 			options.owner,
 		),
 	};
+}
+
+/**
+ * The payload keys that cannot travel: a reserved segment, or the name of a field.
+ *
+ * @remarks
+ * The payload is data that travels with a submission and is never a value of the form, so a key that is
+ * also a field would make one name mean two things in `submission.values`.
+ */
+function payloadIssues(
+	payload: Readonly<Record<string, unknown>> | undefined,
+	elements: readonly object[],
+): FormValidationIssue[] {
+	if (!payload) return [];
+	const fieldNames = new Set(walkNamedElements(elements).map(({ path }) => path.split('.')[0]));
+	return Object.keys(payload).flatMap((key) => {
+		if (isReservedPathKey(key)) {
+			return [
+				issueAt(
+					['payload', key],
+					`Payload key '${key}' is reserved: a key cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
+				),
+			];
+		}
+		return fieldNames.has(key)
+			? [
+					issueAt(
+						['payload', key],
+						`Payload key '${key}' names a field of the form; a payload key cannot be a field.`,
+					),
+				]
+			: [];
+	});
 }
 
 /**

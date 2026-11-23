@@ -38,7 +38,33 @@ export {
 	SubmissionAlertElementRegistration,
 };
 
-export const schemaFormRegistrations = [
+/**
+ * Every element registration of the package, in registration order.
+ *
+ * @remarks
+ * Annotated as a tuple of the registrations' own types: with the validation rules carrying `id` and
+ * `severity`, the type the compiler infers for the array is too long to write into a declaration file.
+ */
+export const schemaFormRegistrations: readonly [
+	typeof InputElementRegistration,
+	typeof TextareaElementRegistration,
+	typeof NumberElementRegistration,
+	typeof SelectElementRegistration,
+	typeof CheckboxElementRegistration,
+	typeof CheckboxGroupElementRegistration,
+	typeof SwitchElementRegistration,
+	typeof RadioElementRegistration,
+	typeof SliderElementRegistration,
+	typeof ComboboxElementRegistration,
+	typeof DropZoneElementRegistration,
+	typeof FieldSetRegistration,
+	typeof InputOTPElementRegistration,
+	typeof PhoneInputElementRegistration,
+	typeof MaskedInputElementRegistration,
+	typeof ArrayElementRegistration,
+	typeof SubmitButtonElementRegistration,
+	typeof SubmissionAlertElementRegistration,
+] = [
 	InputElementRegistration,
 	TextareaElementRegistration,
 	NumberElementRegistration,

@@ -7,7 +7,7 @@ import { FormActionTriggerSchema } from '../triggers';
  * Form Submit Plugin Configuration
  */
 export interface FormSubmitPluginConfig {
-	/** Custom request adapter (fetch, axios, etc.) */
+	/** Custom request adapter (axios, etc.); the engine's `context.fetch` by default. */
 	request?: (url: string, options: RequestInit) => Promise<Response>;
 	/** Transform data before sending */
 	transformData?: (
@@ -54,7 +54,7 @@ export function formSubmitPlugin(
 
 	const handler = async (context: BuilderActionRuntimeContext<FormSubmitAction>) => {
 		const action = context.config;
-		const request = config.request ?? fetch;
+		const request = config.request ?? context.fetch;
 
 		try {
 			const transformedData = transformData(

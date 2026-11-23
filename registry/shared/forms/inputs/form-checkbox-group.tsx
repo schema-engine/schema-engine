@@ -5,7 +5,7 @@ import {
 	FieldContent,
 	FieldHint,
 } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks';
 import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -17,8 +17,9 @@ export function FormCheckboxGroup({
 	onFocus: propsOnFocus,
 	...config
 }: CheckboxGroupFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	const selectedValues = Array.isArray(value) ? value : [];
 	const isHorizontal = config.orientation === 'horizontal';
@@ -31,7 +32,7 @@ export function FormCheckboxGroup({
 	return (
 		<FieldGroupRoot style={containerStyles}>
 			{config.label && (
-				<FieldLabel htmlFor={config.id} required={isRequired} error={error} className="mb-4">
+				<FieldLabel htmlFor={config.id} required={required} error={error} className="mb-4">
 					{config.label}
 				</FieldLabel>
 			)}

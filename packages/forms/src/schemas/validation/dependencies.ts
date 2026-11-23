@@ -1,11 +1,12 @@
 import type { BaseValidationRule } from './types.js';
 import type { ValidationRegistry } from './validation-registry.js';
 import { getValidationRulesForElement } from './utils.js';
-import { walkNamedElements } from '@/lib/field-scope.js';
+import { scalarItemsIn, walkNamedElements } from '@/lib/field-scope.js';
 import { resolveFieldRef } from '@/lib/field-ref.js';
 import { expandFieldTemplatePaths } from '@/lib/path-values.js';
 
 const NO_DEPENDENTS: readonly string[] = [];
+const NO_REFERENCES: readonly string[] = [];
 
 /**
  * Which fields a renderer must re-validate when a value changes.
@@ -21,23 +22,27 @@ export interface DependencyIndex {
 	expand(changed: readonly string[]): string[];
 	/** Every path something depends on — the set worth diffing. */
 	readonly watched: readonly string[];
+	/**
+	 * What the field at `path` reads, as its rules and constraints wrote it.
+	 *
+	 * @remarks
+	 * References come back as authored, because what they mean depends on where the field is: a bare name
+	 * is a sibling of the field and a dotted one is a position. Resolve them with `resolveFieldRef` against
+	 * the field's path as it is when the question is asked.
+	 */
+	referencesOf(path: string): readonly string[];
 }
 
 /**
- * Absolute paths whose change should re-validate the field at `fieldPath`.
+ * The references a field's rules read, as authored.
  *
  * @remarks
- * A rule declares what it reads through its registration's `dependsOn`; the
- * references come back as authored, so they are resolved against the declaring
- * field exactly as the rule itself resolves them at validation time.
+ * A rule declares what it reads through its registration's `dependsOn`; the references come back as
+ * authored, so they are resolved against the declaring field exactly as the rule itself resolves them at
+ * validation time.
  */
-function collectRuleDependencies(
-	rules: ReadonlyArray<BaseValidationRule> | undefined,
-	fieldPath: string,
-	registry: ValidationRegistry,
-): string[] {
-	const references = (rules ?? []).flatMap((rule) => registry.getRuleDependencies(rule));
-	return [...new Set(references.map((reference) => resolveFieldRef(reference, fieldPath)))];
+function ruleReferences(rules: ReadonlyArray<BaseValidationRule> | undefined, registry: ValidationRegistry): string[] {
+	return (rules ?? []).flatMap((rule) => registry.getRuleDependencies(rule));
 }
 
 /**
@@ -50,10 +55,9 @@ function collectRuleDependencies(
  * another field's validity. A rule that depends on validity would have to
  * revisit this.
  *
- * Rebuilt from the current values rather than cached: the index depends on the
- * config and on how many array rows exist, and a stale one after a row is added
- * or removed is worse than the walk it saves. Both walks are over the config,
- * not over user input.
+ * Not cached here: the index depends on the config and on how many array rows
+ * exist, so a caller that keeps one must rebuild it when a row is added or
+ * removed.
  */
 export function buildDependencyIndex(
 	elements: readonly object[],
@@ -61,8 +65,9 @@ export function buildDependencyIndex(
 	registry: ValidationRegistry,
 ): DependencyIndex {
 	const dependents = new Map<string, string[]>();
+	const authored = new Map<string, readonly string[]>();
 
-	for (const { path: templatePath, element } of walkNamedElements(elements)) {
+	for (const { path: templatePath, element } of walkNamedElements(elements, '', false, scalarItemsIn(values))) {
 		const rules = getValidationRulesForElement(element, registry);
 		const constraints = 'constraints' in element && Array.isArray(element.constraints) ? element.constraints : [];
 		const requiredReferences = constraints.flatMap((constraint: unknown) =>
@@ -76,11 +81,9 @@ export function buildDependencyIndex(
 				: [],
 		);
 		for (const fieldPath of expandFieldTemplatePaths(values, templatePath)) {
-			const dependencies = [
-				...collectRuleDependencies(rules, fieldPath, registry),
-				...requiredReferences.map((reference) => resolveFieldRef(reference, fieldPath)),
-			];
-			for (const dependency of dependencies) {
+			const references = [...new Set([...ruleReferences(rules, registry), ...requiredReferences])];
+			authored.set(fieldPath, references);
+			for (const dependency of new Set(references.map((reference) => resolveFieldRef(reference, fieldPath)))) {
 				const existing = dependents.get(dependency);
 				if (!existing) {
 					dependents.set(dependency, [fieldPath]);
@@ -94,6 +97,7 @@ export function buildDependencyIndex(
 	return {
 		watched: [...dependents.keys()],
 		dependentsOf: (path) => dependents.get(path) ?? NO_DEPENDENTS,
+		referencesOf: (path) => authored.get(path) ?? NO_REFERENCES,
 		expand: (changed) => [...new Set(changed.flatMap((path) => dependents.get(path) ?? NO_DEPENDENTS))],
 	};
 }

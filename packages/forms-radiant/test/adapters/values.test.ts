@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { expandValues, flattenValues } from '@/adapters/radiant/controller/values';
+import { createChangeDetector, expandValues, flattenValues } from '@/adapters/radiant/controller/values';
 
 describe('Radiant form value conversion', () => {
 	test('flattens null-prototype records in nested array defaults', () => {
@@ -16,5 +16,42 @@ describe('Radiant form value conversion', () => {
 		const values = Object.assign(Object.create(null) as Record<string, unknown>, { 'contacts.0': item });
 
 		expect(expandValues(values)).toEqual({ contacts: [{ role: 'Alice' }] });
+	});
+});
+
+describe('createChangeDetector', () => {
+	test('takes the first snapshot as the baseline', () => {
+		const changed = createChangeDetector();
+
+		expect(changed({ name: 'Ada' })).toBe(false);
+	});
+
+	test('reports a changed value, a nested change and an array change once each', () => {
+		const changed = createChangeDetector();
+		changed({ name: 'Ada', tags: ['a'], address: { city: 'Rome' } });
+
+		expect(changed({ name: 'Bob', tags: ['a'], address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ name: 'Bob', tags: ['a'], address: { city: 'Rome' } })).toBe(false);
+		expect(changed({ name: 'Bob', tags: ['a', 'b'], address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ name: 'Bob', tags: ['a', 'b'], address: { city: 'Oslo' } })).toBe(true);
+	});
+
+	test('compares dates by time and arrays by order', () => {
+		const changed = createChangeDetector();
+		changed({ when: new Date(0), tags: ['a', 'b'] });
+
+		expect(changed({ when: new Date(0), tags: ['a', 'b'] })).toBe(false);
+		expect(changed({ when: new Date(1), tags: ['a', 'b'] })).toBe(true);
+		expect(changed({ when: new Date(1), tags: ['b', 'a'] })).toBe(true);
+	});
+
+	test('reports a key added to or removed from a record, and a value that becomes empty', () => {
+		const changed = createChangeDetector();
+		changed({ name: 'Ada', address: { city: 'Rome' } });
+
+		expect(changed({ name: 'Ada', address: { city: 'Rome', zip: '1' } })).toBe(true);
+		expect(changed({ name: 'Ada', address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ name: '', address: { city: 'Rome' } })).toBe(true);
+		expect(changed({ address: { city: 'Rome' } })).toBe(true);
 	});
 });

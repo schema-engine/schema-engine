@@ -37,9 +37,8 @@ clone child configs to change `name` or `id`.
 
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
-<FormEngineProvider engine={engine} adapter={rhfAdapter}>
+<FormEngineProvider engine={engine}>
 	<FormRenderer config={formConfig} onSubmit={handleSubmit} />
 </FormEngineProvider>;
 ```
@@ -71,9 +70,17 @@ as omitting `FormRenderer`, which still lives in this package.
 
 ## Form hooks
 
-`@schema-engine/forms-react/adapters` exports `useFormContext`, `useFormField`, `useWatchField`,
-`useWatchForm`, and `useFieldArray`. They are adapter-neutral and can be used
+`@schema-engine/forms-react/hooks` exports `useFormContext`, `useFormField`, `useWatch`,
+and `useFieldArray`. They can be used
 inside recipe blocks as well as ordinary form elements.
+
+`useFormField(config)` is uncontrolled: it returns `defaultValue` and `fieldProps` (with
+`onChange` and `onBlur`) for a native control, and the field renders for an error, warning or
+flag, never for a keystroke. `useFormField(config, { controlled: true })` returns `value`,
+`onChange(value)` and `onBlur()` for a component that takes `value` and `onChange` props.
+`useFormField(path)` returns the state and texts of a path, with no value. In both modes the form
+reports the browser's validity of a native control as native facts. See
+[Hooks](/docs/forms-react/hooks#useformfield).
 
 `useFieldArray` returns `fields` and the mutation methods `append`, `prepend`,
 `insert`, `swap`, `move`, `update`, `replace`, and `remove`.

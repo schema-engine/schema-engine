@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Check, X } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { combineHandlers, useControlledFormElement } from '@schema-engine/forms-react/hooks';
+import { combineHandlers, fieldText, useFormField } from '@schema-engine/forms-react/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { SelectFieldProps, SelectOption } from '@/components/schema-engine/forms/inputs/form-select.types';
 
@@ -15,15 +15,16 @@ export function FormSelect({
 	onFocus: propsOnFocus,
 	...config
 }: SelectFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 	const isMultiple = Boolean(config.multiple);
 	const [open, setOpen] = React.useState(false);
 	const selectingRef = React.useRef(false);
 
 	const selectedValues = isMultiple ? (Array.isArray(value) ? value : []).map(String) : [];
 	const selectedOptions = config.options.filter((option) => selectedValues.includes(optionKey(option)));
-	const selectValue = value === null || value === undefined ? '' : String(value);
+	const selectValue = fieldText(value);
 
 	const commitMultiple = (next: string[]) => {
 		combineHandlers(onChange, propsOnChange)(next);
@@ -39,7 +40,7 @@ export function FormSelect({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}

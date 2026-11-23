@@ -55,8 +55,19 @@ export function createFormConfigShape<TAppearance extends z.ZodMiniType = typeof
 		steps: z.array(createFormStepSchema(parts)),
 		view: z.optional(parts.view),
 		grid: z.optional(z.lazy(() => GridLayoutConfigSchema)),
-		validationMode: z.optional(z.enum(['onSubmit', 'onChange', 'onBlur', 'all'])),
-		reValidateMode: z.optional(z.enum(['onSubmit', 'onChange', 'onBlur'])),
+		validationMode: z
+			._default(z.enum(['onSubmit', 'onChange', 'onBlur', 'onTouched', 'all']), 'onSubmit')
+			.check(z.describe('When a field validates before a check of it has failed.')),
+		reValidateMode: z
+			._default(z.enum(['onSubmit', 'onChange', 'onBlur']), 'onChange')
+			.check(z.describe('When a field validates again once a check of it has run.')),
+		payload: z
+			.optional(z.record(z.string(), z.unknown()))
+			.check(
+				z.describe(
+					'Serializable data that always travels with a submission, such as ids or context. It is never rendered or validated, and a key cannot name a field.',
+				),
+			),
 		className: z.optional(z.string()),
 		style: z.optional(RendererStyleSchema),
 		appearance: z.optional((parts.appearance ?? AppearanceConfigSchema) as TAppearance),

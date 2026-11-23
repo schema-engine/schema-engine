@@ -30,7 +30,7 @@ export const FormResetActionSchema = z.object({
 export type FormResetAction = z.infer<typeof FormResetActionSchema>;
 
 /**
- * Default form reset implementation using React Hook Form methods
+ * Default form reset implementation using the form container methods
  */
 function defaultResetForm(context: BuilderActionRuntimeContext<FormResetAction>, _resetToDefaults: boolean) {
 	context.form.reset();

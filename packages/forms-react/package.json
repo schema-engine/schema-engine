@@ -68,7 +68,6 @@
 		"react-day-picker": "^10.0.1",
 		"react-dom": "^19",
 		"react-dropzone": "^14.3.8",
-		"react-hook-form": "^7.60.0",
 		"react-phone-number-input": "^3.4.12",
 		"remark-gfm": "^4.0.1",
 		"storybook": "^10.1.8",
@@ -85,7 +84,6 @@
 		"@schema-engine/layout": "workspace:^",
 		"react": "^19",
 		"react-dom": "^19",
-		"react-hook-form": "^7.60.0",
 		"typescript": "^5.4",
 		"zod": "^4.0.17"
 	},
@@ -103,14 +101,6 @@
 		"./primitives": {
 			"types": "./dist/primitives.d.ts",
 			"import": "./dist/primitives.js"
-		},
-		"./adapters": {
-			"types": "./dist/adapters/index.d.ts",
-			"import": "./dist/adapters/index.js"
-		},
-		"./adapters/react-hook-form": {
-			"types": "./dist/adapters/react-hook-form.d.ts",
-			"import": "./dist/adapters/react-hook-form.js"
 		},
 		"./hooks": {
 			"types": "./dist/hooks/index.d.ts",
@@ -131,10 +121,5 @@
 		"workerDirectory": [
 			"public"
 		]
-	},
-	"peerDependenciesMeta": {
-		"react-hook-form": {
-			"optional": true
-		}
 	}
 }

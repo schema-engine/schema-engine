@@ -6,3 +6,4 @@ export * from './relations.js';
 export * from './empty.js';
 export * from './presets.js';
 export * from './utils.js';
+export * from './errors.js';

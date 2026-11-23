@@ -6,16 +6,15 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 Render form configurations from `@schema-engine/forms` with React. Applications
 install consumer-owned element registrations and view recipes, then pass an
-engine and adapter to `FormEngineProvider`.
+engine to `FormEngineProvider`.
 
 Create engines with `createFormEngine` from `@schema-engine/forms`. Import
 `FormEngineProvider` and `FormRenderer` from `@schema-engine/forms-react`.
-The React Hook Form adapter is available only from
-`@schema-engine/forms-react/adapters/react-hook-form`; install `react-hook-form`
-when choosing that adapter.
+The form state is the engine's own container, built in: there is nothing to
+install or choose. `formatIssue` on `FormRenderer` or `createFormEngine` turns an issue into the
+text a field or a submission failure shows.
 
-Use `/hooks` for runtime and view hooks, `/adapters` for adapter contracts and
-form hooks, and `/primitives` for `FormElement`, `FormElements`, and recipe
+Use `/hooks` for the form state, runtime and view hooks, and `/primitives` for `FormElement`, `FormElements`, and recipe
 contracts. `/contexts` supplies the view provider and context types.
 
 The runtime exposes `se-*` class hooks and grid variables. Registry components

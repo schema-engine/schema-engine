@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type React from 'react';
 import { type FormConfigView, type RecipeRegistration } from '@schema-engine/forms';
 import { buildViewModel } from '@schema-engine/forms/recipes';
-import { useFormContext } from '@/adapters/context';
+import { useFormContext } from '@/hooks/form-state';
 import { useFormInstanceActions } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
 import type { ReactRecipeAdapterPayload } from '@/primitives';
@@ -33,7 +33,7 @@ interface RecipeRendererProps {
 export function RecipeRenderer({ config, recipe, children, renderFields }: RecipeRendererProps) {
 	const { formState } = useFormContext();
 	const { stepStates, currentStep, navigation } = useFormInstanceActions();
-	const { isSubmitting } = formState;
+	const isSubmitting = formState.submission.status === 'pending';
 	const viewContext = useMemo(
 		() =>
 			recipe

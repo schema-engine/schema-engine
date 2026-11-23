@@ -11,15 +11,21 @@ The engine exports reusable helpers for paths, effective rules, and validation.
   constraint holds. For example, `accountType` on `contacts.0.taxId` resolves to
   `contacts.0.accountType`, so conditional rules use the current array row.
 - `validateFieldValue` validates one field against the full nested values tree
-  and its rendered path, returning the first issue message or `undefined`.
-- `validateFormValues` validates named fields, filters to `names` when supplied,
-  and writes failures into a nested error object with `setValueAtPath`. A field
-  inside a fieldset or array whose `require` constraint holds is required, at any
+  and its rendered path. It returns `{ issues, failures }`: `issues` has one entry for each rule the value
+  fails, in rule order, with the rule's `type`, its `id` as `ruleId`, its options as `params`, a fallback
+  `message` and its `severity` (`'error'`, or `'warning'` for advice that never blocks); `superseded` is set when a rule's check was replaced by a later one before it ran (no result, not an issue); `failures` lists the
+  rules that could not run (a `FormValidationFailure` naming the path and rule), which say nothing of the value.
+- `validateFormValues` validates named fields, filters to `names` when supplied (an empty
+  list validates nothing), and returns `{ issues, failures }` by dotted path, each path with every rule it
+  fails. A field inside a fieldset or array whose `require` constraint holds is required, at any
   depth; `effectiveRulesFor` and `validateFieldValue` take that as
-  `inheritedRequired`. A container's own `required` rule does not pass down.
+  `inheritedRequired`. A container's own `required` rule does not pass down. It skips the paths
+  `resolveExcludedPaths` lists: fields hidden by a `show` or `hide` constraint, disabled fields (authored or
+  by a constraint) and everything inside them. `planFormValidation` and `runValidationPlan` are its two
+  halves, for a caller that needs to know the planned paths before it runs.
 
-For `validateFormValues`, omitted or empty `names` validates every named field.
-A non-empty list validates only the requested paths and their descendants.
+For `validateFormValues`, omitted `names` validates every named field. A list validates only the
+requested paths and their descendants, or only those paths with `exactNames`; an empty list validates nothing.
 
 React and Radiant delegate to these helpers. `createStepNavigator` owns the wizard's
 in-flight guard, the `step_leave` / `step_change` / `step_enter` order and `cancel`, which a
@@ -28,11 +34,12 @@ dispatches after it; a renderer supplies its step state, step validation and tri
 `collectStepActions` gives the actions a trigger dispatches on the current step: the
 form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigation)). `runSubmissionLifecycle` accepts either a
 fixed context or a factory; use a factory when each submission trigger needs current form
-values and validation state. Its optional `onAction(action, data)` callback runs after each
+values and validation state. Its optional `hasMatching(actions, trigger)` skips a trigger no
+action answers, so no context is built for it; `ActionDispatcher.hasMatching` is the check. Its optional `onSubmit()` runs after the submit actions and before the success or error trigger; the function resolves with a `failure` instead of rejecting, and dispatches `form_submit_complete` once ([`createSubmissionGuard`](./submission-lifecycle.ts) admits one submission at a time). Its optional `onAction(action, data)` callback runs after each
 successful `form_submit` action. If the callback rejects, that action becomes a fatal failure
 and later submit actions stop before error and completion triggers run. Submit sequence entries are dispatched in order; grouped actions run concurrently. Each returned result carries its `actionId`.
-`buildFormActionContext` takes nested `errors` and `touched` trees; a renderer that keys
-them by flat field name expands them first. `validateFieldValue` and `validateFormValues`
+`buildFormActionContext` takes `errors` and `touched` by dotted path; a renderer that keeps them in
+another shape converts them first. `validateFieldValue` and `validateFormValues`
 require a `debounceScope` owned by the form.
 
 The public usage examples are in the [forms package README](../../README.md#engine-validation).
@@ -51,18 +58,30 @@ and indexes (`['steps', 0, 'elements', 2, 'grid', 'width']`, `[]` for the whole 
 checks made at build time (`buildFormEngine`) throw a plain `Error` naming the registration; they are not
 form issues.
 
+## Requests
+
+`createFormEngine({ fetch?, csrf? })`: `fetch` defaults to the global one, and every request the engine makes goes
+through it (today the `async` validation rule, built by the engine's validation registry, `registry.fetch`).
+`engine.fetch` is that function with the CSRF policy applied, and `engine.getCsrf()` the policy, for a binding that
+adds a hidden input to a native post. `extend` inherits both. See [CSRF](../csrf/README.md).
+
 ## Action context form state
 
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass
-`touched` and `submitCount`, both required, and nest `errors` and `touched` like the
-values (`{ address: { street: … } }`, not `{ 'address.street': … }`). A React Hook Form
-caller passes `touchedFields` as `touched`.
+`fetch` (the engine's), `isValid`, `touched` and `submitCount`, all required, key `errors` and `touched` by dotted path
+(`{ 'address.street': … }`). The container's snapshot already has them flat.
+
+The form state carries `isValid`, the container's `snapshot.isValid`: true when no error is recorded for a
+path that takes part, in every renderer, and the context passes it on as it is. A renderer without a container
+derives it from the errors it has. `form.checkValidity()` validates the current values without
+recording errors (`checkFormValidity`). It skips fields a `show` or `hide` constraint hides, and
+the fields inside a hidden container; a disabled field is still checked, as in a submission.
 
 `submitCount` is the number of submit attempts since the form was last reset,
 including attempts that failed validation. An attempt counts once its validation has
 failed, or once its submission lifecycle has run, so the triggers of a submission
-see the attempts before it. React passes React Hook Form's `submitCount`, which counts
-this way. Radiant UI's form store keeps only a submitted flag, so Radiant counts the
+see the attempts before it. React passes the provider's own `submitCount`, which counts
+this way, except that a submission an edit overtook is not counted. Radiant UI's form store keeps only a submitted flag, so Radiant counts the
 `rui-invalid` events of its form and its finished submission lifecycles instead.
 
 ## Schema artifacts and extension
@@ -115,7 +134,7 @@ derived from the stored registrations at build, not kept as mutable state.
 Validation helpers accept structural, read-only element views as well as normalized
 snapshots. Both renderers use these same helpers, the step machine and
 step navigator, the submission lifecycle and the context builder. `BuilderActionBaseContext.form` requires
-`reset`, `setValue`, `getValue` and `validate`; it does not expose renderer methods.
+`reset`, `setValue`, `getValue`, `validate` and `checkValidity`; it does not expose renderer methods.
 
 Conditional `require` references participate in the shared validation dependency
 index, so changing a controlling value revalidates fields with visible errors.

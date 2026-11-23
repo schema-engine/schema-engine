@@ -11,7 +11,7 @@ export function createPhoneValidationRegistration(): ValidationRegistration<Phon
 		handler: (rule) =>
 			z.optional(z.string()).check(
 				z.refine((value) => value === undefined || value === '' || isValidPhoneNumber(value), {
-					message: rule.message || 'Enter a complete phone number',
+					message: rule.message,
 				}),
 			),
 		defaultFor: ['phone-input'],

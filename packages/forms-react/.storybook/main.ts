@@ -40,7 +40,7 @@ const config: StorybookConfig = {
 	async viteFinal(config) {
 		return mergeConfig(config, {
 			resolve: {
-				dedupe: ['react', 'react-dom', 'react-hook-form'],
+				dedupe: ['react', 'react-dom'],
 				alias: [
 					{ find: '@/lib/utils', replacement: resolve(__dirname, '../../../registry/ui-stubs/lib/utils.ts') },
 					{

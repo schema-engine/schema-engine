@@ -7,7 +7,7 @@
 
 import type { ReactNode } from 'react';
 import { FormEngineProvider } from '@/components/form-engine-provider';
-import { getEngine as getDefaultEngine, rhfAdapter } from './form-builder.ui';
+import { getEngine as getDefaultEngine } from './form-builder.ui';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 
 const defaultFormEngine = getDefaultEngine();
@@ -30,9 +30,5 @@ interface StoryWrapperProps {
  * ```
  */
 export function StoryWrapper({ children, engine = defaultFormEngine }: StoryWrapperProps) {
-	return (
-		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
-			{children}
-		</FormEngineProvider>
-	);
+	return <FormEngineProvider engine={engine}>{children}</FormEngineProvider>;
 }

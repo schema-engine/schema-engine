@@ -3,7 +3,6 @@ import { userEvent } from 'vitest/browser';
 import { describe, expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 import '@/components/schema-engine/forms/recipes/recipes.css';
 
@@ -19,7 +18,7 @@ function renderForm(config: Record<string, unknown>) {
 		],
 		...config,
 	} as Parameters<typeof engine.defineForm>[0]);
-	return render(<FormRenderer config={validated} engine={engine} adapter={rhfAdapter} />);
+	return render(<FormRenderer config={validated} engine={engine} />);
 }
 
 describe('recipe blocks honour the slot config the spec accepts', () => {

@@ -1,6 +1,6 @@
 import { NumberField } from '@/components/ui/schema-engine/components/number-field';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { NumberFieldProps } from './form-number.types';
 
 export function FormNumber({
@@ -9,8 +9,9 @@ export function FormNumber({
 	onFocus: propsOnFocus,
 	...config
 }: NumberFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	const numericValue = typeof value === 'number' ? value : '';
 
@@ -19,7 +20,7 @@ export function FormNumber({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}

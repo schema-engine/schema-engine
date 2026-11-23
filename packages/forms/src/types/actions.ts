@@ -1,5 +1,9 @@
+import type { FormFetch } from '@/lib/form-fetch';
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
+import type { FormStateError } from '@/state-container/types';
+
+export type { FormIssueFormatter, FormStateError, FormStateIssue, FormSubmissionIssue } from '@/state-container/types';
 
 /**
  * Base action context for the builder pattern.
@@ -17,10 +21,16 @@ export interface BuilderActionBaseContext {
 	currentStep: number;
 	/** Total number of steps */
 	totalSteps: number;
-	/** Whether the form is currently valid */
+	/**
+	 * Whether no validation error is currently recorded.
+	 *
+	 * @remarks
+	 * It is true on a pristine form even when a required field is empty, until a validation records an error.
+	 * Call `form.checkValidity()` to validate the current values.
+	 */
 	isValid: boolean;
-	/** Validation errors by field name */
-	errors: Record<string, unknown>;
+	/** Validation errors by dotted field path; `'__root__'` is the form itself. Warnings are not included. */
+	errors: Readonly<Record<string, FormStateError>>;
 	/** Form metadata and timing information */
 	metadata: {
 		/** Timestamp when current step started */
@@ -30,6 +40,12 @@ export interface BuilderActionBaseContext {
 		/** Number of user interactions */
 		userInteractions: number;
 	};
+	/**
+	 * The engine's request function, with its CSRF policy applied.
+	 *
+	 * @remarks Use it for every request an action makes: a same-origin unsafe request then carries the token, and nothing else does.
+	 */
+	fetch: FormFetch;
 	/** Form controller methods (framework-agnostic) */
 	form: {
 		/** Reset form to initial values */
@@ -37,8 +53,16 @@ export interface BuilderActionBaseContext {
 		/** Set field value */
 		setValue: (name: string, value: unknown) => void;
 		getValue: (name: string) => unknown;
-		/** Resolves to the validity of the whole form. */
+		/** Validates the whole form, recording and showing its errors, and resolves to its validity. */
 		validate: () => Promise<boolean>;
+		/**
+		 * Resolves to whether the values current at the call are valid, recording and showing no errors.
+		 *
+		 * @remarks
+		 * Covers every field of every step, unlike a step-scoped `validate`. Fields hidden or disabled, by their config or a constraint, take no part and are not checked (`resolveExcludedPaths`). Does not cancel a field validation
+		 * that is pending, and a later edit does not change the answer. A debounced async rule waits out its delay.
+		 */
+		checkValidity: () => Promise<boolean>;
 	};
 }
 

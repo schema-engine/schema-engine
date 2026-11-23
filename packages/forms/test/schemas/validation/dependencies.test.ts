@@ -62,6 +62,28 @@ describe('buildDependencyIndex', () => {
 		expect(index.dependentsOf('contacts.1.customerType')).toEqual(['contacts.1.vatNumber']);
 	});
 
+	test('keeps the references a field authored, so a caller resolves them where the field is', () => {
+		const rows = [
+			{
+				$type: 'arrayElements',
+				name: 'contacts',
+				elements: [
+					{ $type: 'input', name: 'email' },
+					{
+						$type: 'input',
+						name: 'confirm',
+						rules: [{ type: 'relate', fields: ['email', 'contacts.0.email'], assert: 'allEqual' }],
+					},
+				],
+			},
+		];
+		const index = buildDependencyIndex(rows, { contacts: [{}, {}] }, registry);
+		expect(index.referencesOf('contacts.1.confirm')).toEqual(['email', 'contacts.0.email']);
+		expect(index.dependentsOf('contacts.1.email')).toEqual(['contacts.1.confirm']);
+		expect(index.dependentsOf('contacts.0.email')).toEqual(['contacts.0.confirm', 'contacts.1.confirm']);
+		expect(index.referencesOf('contacts.1.email')).toEqual([]);
+	});
+
 	test('reports no dependents for a field nothing reads', () => {
 		const index = buildDependencyIndex(passwordForm, {}, registry);
 

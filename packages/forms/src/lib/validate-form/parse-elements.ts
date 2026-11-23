@@ -9,6 +9,7 @@ import { areaPlacementIssue, namedPlacementIssue } from './grid-checks';
 import { childPath, isTaggedConfig, issueAt, type FormValidationIssue, type ParseResult, type Path } from './issues';
 import type { ValidateFormOptions } from './options';
 import { fromSchemaIssues } from './schema-issues';
+import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
 
 function parseRegistration(schema: StandardSchemaV1, config: object, path: Path): ParseResult<unknown> {
 	const result = safeParseStandardSchema(schema, config);
@@ -89,10 +90,10 @@ export function parseActionList(
 	return { issues, items: next };
 }
 
-/** The first rule of an element with a `type` no validation handler is registered for. */
-function unregisteredValidationRule(
+/** The first rule of an element that cannot be used: no handler for its `type`, invalid options, or a handler that throws. */
+function unusableValidationRule(
 	item: FormTaggedConfig,
-	hasValidation: ValidateFormOptions['hasValidation'],
+	checkRule: ValidateFormOptions['checkRule'],
 ): { index: number; message: string } | undefined {
 	if (!Array.isArray(item.rules)) return undefined;
 
@@ -100,19 +101,25 @@ function unregisteredValidationRule(
 		if (typeof rule !== 'object' || rule === null || !('type' in rule) || typeof rule.type !== 'string') {
 			continue;
 		}
-		if (!hasValidation(rule.type)) {
+		const problem = checkRule(rule as { type: string });
+		if (problem) {
 			const fieldName = typeof item.name === 'string' ? `Field '${item.name}'` : 'Element';
-			return { index, message: `${fieldName} uses validation rule '${rule.type}' with no registered handler.` };
+			return { index, message: `${fieldName}: ${problem}` };
 		}
 	}
 
 	return undefined;
 }
 
+/** The first segment of an element's name that the engine reserves. */
+function reservedNameSegment(item: FormTaggedConfig): string | undefined {
+	return typeof item.name === 'string' ? item.name.split('.').find(isReservedPathKey) : undefined;
+}
+
 export function parseElementNode(
 	item: unknown,
 	getElement: ValidateFormOptions['getElement'],
-	hasValidation: ValidateFormOptions['hasValidation'],
+	checkRule: ValidateFormOptions['checkRule'],
 	path: Path,
 	appearance: AppearanceScope,
 	nested = false,
@@ -122,9 +129,13 @@ export function parseElementNode(
 	if (!isTaggedConfig(item)) {
 		return fail('Invalid element configuration: missing $type.', ['$type']);
 	}
-	const unregisteredRule = unregisteredValidationRule(item, hasValidation);
-	if (unregisteredRule) return fail(unregisteredRule.message, ['rules', unregisteredRule.index, 'type']);
-
+	const reserved = reservedNameSegment(item);
+	if (reserved) {
+		return fail(
+			`Field name '${String(item.name)}' uses the reserved segment '${reserved}': a name cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
+			['name'],
+		);
+	}
 	const { appearance: authoredAppearance, ...authored } = item;
 	const parsed = parseTypedConfig(
 		'element',
@@ -135,6 +146,15 @@ export function parseElementNode(
 	);
 	if (!parsed.ok) {
 		return { issues: parsed.issues };
+	}
+	const unusableRule = unusableValidationRule(parsed.data, checkRule);
+	if (unusableRule) return fail(unusableRule.message, ['rules', unusableRule.index, 'type']);
+	const parsedReserved = reservedNameSegment(parsed.data);
+	if (parsedReserved) {
+		return fail(
+			`Field name '${String(parsed.data.name)}' uses the reserved segment '${parsedReserved}': a name cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
+			['name'],
+		);
 	}
 	const placementIssue = namedPlacementIssue(parsed.data);
 	if (placementIssue) return fail(placementIssue.message, placementIssue.path);
@@ -160,7 +180,7 @@ export function parseElementNode(
 		const parsedChild = parseElementNode(
 			children[index],
 			getElement,
-			hasValidation,
+			checkRule,
 			childPath(path, index),
 			childScope,
 			true,
@@ -183,7 +203,7 @@ export function parseElementNode(
 export function parseElementList(
 	items: unknown[] | undefined,
 	getElement: ValidateFormOptions['getElement'],
-	hasValidation: ValidateFormOptions['hasValidation'],
+	checkRule: ValidateFormOptions['checkRule'],
 	parentPath: Path,
 	appearance: AppearanceScope,
 ): { issues: FormValidationIssue[]; items?: FormTaggedConfig[]; byIndex: Array<FormTaggedConfig | undefined> } {
@@ -193,13 +213,7 @@ export function parseElementList(
 	const byIndex: Array<FormTaggedConfig | undefined> = [];
 	const issues: FormValidationIssue[] = [];
 	for (let index = 0; index < items.length; index += 1) {
-		const parsed = parseElementNode(
-			items[index],
-			getElement,
-			hasValidation,
-			childPath(parentPath, index),
-			appearance,
-		);
+		const parsed = parseElementNode(items[index], getElement, checkRule, childPath(parentPath, index), appearance);
 		issues.push(...parsed.issues);
 		byIndex.push(parsed.item);
 		if (parsed.item) next.push(parsed.item);

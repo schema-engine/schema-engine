@@ -69,7 +69,9 @@ need one.
 - `setValue(name, value)` writes the value and updates registered controls.
 - `field(name)` provides live `value` and `error` getters, `onChange`, and `onBlur`.
 - `watchField(name, listener)` and `watchForm(listener)` call the listener
-  immediately and on store notifications. Both return an unsubscribe function.
+  immediately and on every store notification, including touched, error and submit-state
+  updates that leave the values as they were. Both return an unsubscribe function. A consumer
+  of value changes compares snapshots with `createChangeDetector` (`values.ts`).
 - `formState` exposes Radiant UI state with nested values. `trigger(names?)`
   validates registered fields; `reset(values?)` resets the Radiant UI store.
 - `fieldArray(name)` provides `fields`, `append`, `prepend`, `insert`, `swap`,

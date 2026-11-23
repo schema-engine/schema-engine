@@ -1,5 +1,5 @@
 import './form-masked-input.css';
-import { customElement, bindTo, onUpdated, prop, query, state } from '@ecopages/radiant';
+import { customElement, bindTo, onUpdated, prop, state, ref } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
@@ -65,7 +65,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 	@state
 	protected field?: FieldContextValue = undefined;
 
-	@query({ ref: 'input' }) input!: HTMLInputElement | null;
+	@ref() input!: HTMLInputElement | null;
 
 	private maskInstance: import('imask').InputMask<import('@/lib/mask-options').PatternMaskOptions> | null = null;
 	private attachGeneration = 0;

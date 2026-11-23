@@ -49,7 +49,7 @@ void inputConfig;
 import type { FormRendererProps } from '@/components/internals/form-renderer';
 import { FormEngineContext } from '@/components/provider';
 import type { FormEngineContextValue } from '@/components/provider';
-import type { FormProviderProps } from '@/adapters/types';
+import type { FormProviderProps } from '@/hooks/form-state/types';
 import type { ComponentProps } from 'react';
 import { defineInput } from '@schema-engine/forms/types';
 import * as z from 'zod/mini';
@@ -83,9 +83,7 @@ const transformedForm = transformedEngine.defineForm({
 	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'transformed', name: 'count', count: '1' }] }],
 });
 type TransformedProvider =
-	typeof transformedEngine extends FormEngine<infer E, infer R, infer A, infer O>
-		? FormProviderProps<Record<string, unknown>, E, R, A, O>
-		: never;
+	typeof transformedEngine extends FormEngine<infer _E, infer _R, infer _A, infer O> ? FormProviderProps<O> : never;
 type TransformedRenderer =
 	typeof transformedEngine extends FormEngine<infer E, infer R, infer A, infer O>
 		? FormRendererProps<E, R, A, O>

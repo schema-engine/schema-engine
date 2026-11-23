@@ -1,5 +1,5 @@
 import './form-input-otp.css';
-import { customElement, prop, query, state } from '@ecopages/radiant';
+import { customElement, prop, state, refAll } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
@@ -40,7 +40,7 @@ export class SeInputOtp extends FormAssociatedElement {
 	@state
 	protected field?: FieldContextValue = undefined;
 
-	@query({ ref: 'slot', all: true }) slotInputs!: HTMLInputElement[];
+	@refAll('slot') slotInputs!: HTMLInputElement[];
 
 	get value(): string {
 		return this.slots.join('');

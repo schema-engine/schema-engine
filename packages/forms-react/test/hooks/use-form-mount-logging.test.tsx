@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useFormMountEffect } from '@/adapters/rhf/hooks/use-form-mount-effect';
+import { useFormMountEffect } from '@/components/form-runtime/use-form-mount-effect';
 
 afterEach(() => {
 	vi.restoreAllMocks();

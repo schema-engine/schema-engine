@@ -128,6 +128,18 @@
 			"types": "./dist/schemas/validation/async/*.d.ts",
 			"import": "./dist/schemas/validation/async/*.js"
 		},
+		"./state-container": {
+			"types": "./dist/state-container/index.d.ts",
+			"import": "./dist/state-container/index.js"
+		},
+		"./csrf": {
+			"types": "./dist/csrf/index.d.ts",
+			"import": "./dist/csrf/index.js"
+		},
+		"./server-errors": {
+			"types": "./dist/server-errors/index.d.ts",
+			"import": "./dist/server-errors/index.js"
+		},
 		"./constraints": {
 			"types": "./dist/constraints/index.d.ts",
 			"import": "./dist/constraints/index.js"
@@ -167,14 +179,6 @@
 		"./lib/logger": {
 			"types": "./dist/lib/logger.d.ts",
 			"import": "./dist/lib/logger.js"
-		},
-		"./adapters": {
-			"types": "./dist/adapters/index.d.ts",
-			"import": "./dist/adapters/index.js"
-		},
-		"./adapters/*": {
-			"types": "./dist/adapters/*.d.ts",
-			"import": "./dist/adapters/*.js"
 		}
 	}
 }

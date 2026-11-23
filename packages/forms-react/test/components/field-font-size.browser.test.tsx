@@ -2,7 +2,6 @@ import { render } from '@testing-library/react';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import '@/components/schema-engine/forms/recipes/recipes.css';
 import '@/components/ui/schema-engine/components/controls.css';
@@ -48,7 +47,6 @@ function fieldFontSize(size?: string): string {
 				],
 			})}
 			engine={engine}
-			adapter={rhfAdapter}
 		/>,
 	);
 	try {

@@ -11,10 +11,18 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
+const order: string[] = [];
 const engine = createRadiantFormEngine({
 	elements: schemaFormRegistrations,
 	recipes: [CardRecipe, WizardRecipe],
-	actions: [testAction('submit', ['form_submit'], async () => ({ success: true }))],
+	actions: [
+		testAction('submit', ['form_submit'], async () => ({ success: true })),
+		testAction('track', ['form_submit_success', 'form_submit_complete'], async ({ trigger }) => {
+			await new Promise((resolve) => setTimeout(resolve, 20));
+			order.push(String(trigger));
+			return { success: true };
+		}),
+	],
 });
 
 const alert = {
@@ -157,4 +165,26 @@ test('onSubmit runs once through the instance and the renderer element has no on
 	await expect.poll(() => events).toEqual(['start', 'complete:true']);
 	expect(onSubmit).toHaveBeenCalledOnce();
 	expect('onSubmit' in host.querySelector('se-form-renderer')!).toBe(false);
+});
+
+test('a native submission navigates after the success and complete actions have run', async () => {
+	order.length = 0;
+	const host = document.createElement('div');
+	document.body.append(host);
+	const config = {
+		id: 'native',
+		view: { $type: 'card' },
+		steps: [{ id: 'main', title: 'Main', elements: [] }],
+		actions: [{ id: 'tracked', $type: 'track' }],
+	};
+	createRoot(host).render(FormRenderer({ config: engine.validateForm(config), engine }));
+	const form = await vi.waitFor(() => host.querySelector('rui-form')!);
+	form.setAttribute('method', 'post');
+	await expect.poll(() => form.querySelector('button[type="submit"]')).toBeTruthy();
+	const native = form.querySelector<HTMLFormElement>('form[data-ref="form"]')!;
+	native.submit = () => order.push('native');
+
+	form.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+
+	await expect.poll(() => order).toEqual(['form_submit_success', 'form_submit_complete', 'native']);
 });

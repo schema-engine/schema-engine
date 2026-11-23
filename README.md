@@ -139,7 +139,7 @@ graph TD
     end
 
     subgraph Presentation ["Presentation Layer"]
-        React["@schema-engine/forms-react<br/>(React Adapters)"]
+        React["@schema-engine/forms-react<br/>(React renderer)"]
     end
 
     Registry --> Actions
@@ -157,7 +157,7 @@ graph TD
 | Package                                                      | Version | Description                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Types form configurations from each engine's element, recipe, and action registrations; handles validation, constraint evaluation, and state management.                                                                                                                                                                                                                                               |
-| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React rendering at the root, runtime and view hooks at `/hooks`, adapter contracts and hooks at `/adapters`, and rendering primitives at `/primitives`. The optional React Hook Form adapter lives at `/adapters/react-hook-form`; elements and recipes are consumer-owned. A new normalized config starts a fresh form instance; the React Hook Form adapter resets to initial field values. Default recipes live in the shadcn registry.           |
+| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React rendering at the root, the form state, runtime and view hooks at `/hooks`, and rendering primitives at `/primitives`. The form state is the engine's own container, built in; elements and recipes are consumer-owned. A new normalized config starts a fresh form instance, and reset restores the defaults. Default recipes live in the shadcn registry.                                                                                     |
 | **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter with hydrated registry validation, shared per-engine lifecycle actions, nested submit values, SSR constraints evaluated against defaults, authored disabled preservation, scoped form and engine controllers, optional decorators, array-level validation, initial row values, SSR default rows, and stable field-array row IDs. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes/built-in`. |
 | **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                                                                                                                                                                                                                                                                                                                                                             |
 | **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container, plus an optional `/yaml` subpath that parses YAML documents with line-accurate errors.                                                                                                                                                                                                                                                                     |
@@ -170,7 +170,7 @@ graph TD
 See the full walkthrough in [Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx). Minimal verified setup:
 
 ```bash
-pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom react-hook-form zod
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
@@ -222,11 +222,10 @@ const contactFormSchema = {
 
 ```tsx
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { rhfAdapter } from '@schema-engine/forms-react/adapters/react-hook-form';
 
 export function ContactPage() {
 	return (
-		<FormEngineProvider engine={engine} adapter={rhfAdapter}>
+		<FormEngineProvider engine={engine}>
 			<FormRenderer config={contactFormSchema} onSubmit={(data) => console.log('Payload:', data)} />
 		</FormEngineProvider>
 	);
@@ -260,7 +259,7 @@ mutable opt-in for runtime plugins, and the registration types. Action sequences
 executes through `ActionDispatcher`; form-specific redirect results are described
 in the [forms action guide](./packages/forms/src/actions/README.md).
 
-The [React adapter](./packages/forms-react/README.md#validation-navigation-and-action-contexts)
+The [React renderer](./packages/forms-react/README.md#validation-navigation-and-action-contexts)
 uses the engine's shared validation, navigation, submission and action context
 contracts, including nested errors and conditional required fields.
 

@@ -2,6 +2,7 @@ import * as z from 'zod/mini';
 import { asyncValidationCache } from './cache';
 import type { AsyncRule, ValidationContext } from '../types.js';
 import { isEmpty } from '../empty.js';
+import { REPORTED_TEXT, ValidationSuperseded, ValidationUnavailable } from '../errors.js';
 
 /**
  * HTTP methods supported for async validation requests
@@ -22,12 +23,10 @@ interface CachedValidationResult {
 }
 
 /**
- * Standard cache TTL values for different error scenarios
+ * Cache TTL for an answer of the service; an outage is never cached
  */
 export const CACHE_TTL = {
 	DEFAULT: 5 * 60 * 1000,
-	HTTP_ERROR: 60 * 1000,
-	NETWORK_ERROR: 30 * 1000,
 } as const;
 
 /**
@@ -72,70 +71,63 @@ function createValidationPayload(
 	return payload;
 }
 
+/** Whether two answers hold the same data, whatever the order of their keys. */
+function sameData(a: unknown, b: unknown): boolean {
+	if (Object.is(a, b)) return true;
+	if (Array.isArray(a) || Array.isArray(b)) {
+		return (
+			Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((item, i) => sameData(item, b[i]))
+		);
+	}
+	if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+	const left = a as Record<string, unknown>;
+	const right = b as Record<string, unknown>;
+	const keys = Object.keys(left);
+	return (
+		keys.length === Object.keys(right).length &&
+		keys.every((key) => Object.hasOwn(right, key) && sameData(left[key], right[key]))
+	);
+}
+
 /**
- * Determines if validation is successful based on response data.
+ * Whether the answer of the endpoint says the value is valid.
+ *
+ * @remarks
+ * With `expectedResponse` the answer must equal it structurally. Without, an answer is a boolean, or an
+ * object whose `valid` (else `success`) is a boolean. Anything else is no answer about the value: it throws
+ * `ValidationUnavailable`, so it is never a field error and never cached.
  */
 function isValidationSuccessful(data: unknown, expectedResponse?: AsyncValidationResponse): boolean {
-	if (expectedResponse) {
-		return JSON.stringify(data) === JSON.stringify(expectedResponse);
-	}
-
+	if (expectedResponse) return sameData(data, expectedResponse);
 	if (typeof data === 'boolean') return data;
 	if (typeof data === 'object' && data !== null) {
-		const obj = data as Record<string, unknown>;
-		return obj.success === true || obj.valid === true;
+		const { valid, success } = data as Record<string, unknown>;
+		if (typeof valid === 'boolean') return valid;
+		if (typeof success === 'boolean') return success;
 	}
-
-	return false;
+	throw new ValidationUnavailable();
 }
 
 /**
  * Extracts error message from validation response with proper priority.
  */
-function getErrorMessage(data: unknown, fallbackMessage?: string): string {
+function getErrorMessage(data: unknown, fallbackMessage?: string): string | undefined {
 	if (typeof data === 'object' && data !== null) {
 		const obj = data as Record<string, unknown>;
-		return (obj.message as string) || (obj.error as string) || fallbackMessage || 'Validation failed';
+		return (obj.message as string) || (obj.error as string) || fallbackMessage;
 	}
-	return fallbackMessage || 'Validation failed';
+	return fallbackMessage;
 }
 
 /**
  * Handles validation failure by adding an issue to the Zod Mini context.
  */
-function handleValidationFailure(ctx: z.core.$RefinementCtx, message: string): void {
+function handleValidationFailure(ctx: z.core.$RefinementCtx, text: string | undefined): void {
 	ctx.addIssue({
 		code: 'custom',
-		message,
+		...(text === undefined ? {} : { params: { [REPORTED_TEXT]: text } }),
 	});
 }
-
-/** @remarks Skips the cache when `disableCache` is set. */
-function cacheError(
-	cache: typeof asyncValidationCache,
-	url: string,
-	payload: Record<string, unknown>,
-	message: string,
-	cacheTTL: number,
-	disableCache?: boolean,
-): CachedValidationResult {
-	const errorResult: CachedValidationResult = { valid: false, message };
-
-	if (!disableCache) {
-		cache.set(url, payload, errorResult, cacheTTL);
-	}
-
-	return errorResult;
-}
-
-/**
- * Result of a parse whose debounced request was replaced by one for a different value.
- *
- * @remarks
- * The request for this value never ran, so the parse cannot report it valid; a
- * submit-time validation superseded by a later edit must not pass.
- */
-const SUPERSEDED_RESULT: CachedValidationResult = { valid: false, message: 'Validation pending' };
 
 /**
  * Creates a Zod Mini async validation handler for server-side validation.
@@ -171,7 +163,7 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 			if (!rule.disableCache) {
 				const cachedResult = asyncValidationCache.get(rule.url, payload) as CachedValidationResult | null;
 				if (cachedResult !== null) {
-					if (!cachedResult.valid && cachedResult.message) {
+					if (!cachedResult.valid) {
 						handleValidationFailure(ctx, cachedResult.message);
 					}
 					return;
@@ -186,11 +178,11 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 
 			/** Core validation function that performs the HTTP request and processes the response */
 			const performValidation = async (): Promise<CachedValidationResult> => {
+				const method = rule.method ?? 'POST';
+				const hasBody = method !== 'GET';
+				let data: unknown;
 				try {
-					const method = rule.method ?? 'POST';
-					const hasBody = method !== 'GET';
-
-					const response = await fetch(rule.url, {
+					const response = await context.fetch(rule.url, {
 						method,
 						headers: {
 							...(hasBody ? { 'Content-Type': 'application/json' } : {}),
@@ -198,43 +190,23 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 						},
 						...(hasBody ? { body: JSON.stringify(payload) } : {}),
 					});
-
-					if (!response.ok) {
-						const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-						return cacheError(
-							asyncValidationCache,
-							rule.url,
-							payload,
-							errorMessage,
-							CACHE_TTL.HTTP_ERROR,
-							rule.disableCache,
-						);
-					}
-
-					const data = await response.json();
-					const isValid = isValidationSuccessful(data, rule.expectedResponse);
-
-					const cacheResult: CachedValidationResult = {
-						valid: isValid,
-						message: isValid ? undefined : getErrorMessage(data, rule.message),
-					};
-
-					if (!rule.disableCache) {
-						asyncValidationCache.set(rule.url, payload, cacheResult, rule.cacheTTL);
-					}
-
-					return cacheResult;
-				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : 'Async validation failed';
-					return cacheError(
-						asyncValidationCache,
-						rule.url,
-						payload,
-						errorMessage,
-						CACHE_TTL.NETWORK_ERROR,
-						rule.disableCache,
-					);
+					if (!response.ok) throw new Error(`HTTP ${response.status}`);
+					data = await response.json();
+				} catch (cause) {
+					throw new ValidationUnavailable({ cause });
 				}
+
+				const isValid = isValidationSuccessful(data, rule.expectedResponse);
+				const cacheResult: CachedValidationResult = {
+					valid: isValid,
+					message: isValid ? undefined : getErrorMessage(data, rule.message),
+				};
+
+				if (!rule.disableCache) {
+					asyncValidationCache.set(rule.url, payload, cacheResult, rule.cacheTTL);
+				}
+
+				return cacheResult;
 			};
 
 			/** Execute validation with optional debouncing based on rule configuration */
@@ -246,12 +218,13 @@ export function createAsyncValidationHandler(rule: AsyncRule, context: Validatio
 					debounceKey,
 					JSON.stringify(value),
 				);
-				result = outcome.status === 'completed' ? outcome.value : SUPERSEDED_RESULT;
+				if (outcome.status !== 'completed') throw new ValidationSuperseded();
+				result = outcome.value;
 			} else {
 				result = await performValidation();
 			}
 
-			if (!result.valid && result.message) {
+			if (!result.valid) {
 				handleValidationFailure(ctx, result.message);
 			}
 		}),

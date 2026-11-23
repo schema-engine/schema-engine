@@ -208,7 +208,7 @@ export function FormField({
 			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}
 			{...getAppearanceAttributes(appearance)}
-			rules={withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate)}
+			prop:rules={withCustomValidate(toFieldRules({ rules: validationRules, name: validation?.name }), validate)}
 			data-se-validation-rules={validationRules ? JSON.stringify(validationRules) : undefined}
 			defaultValue={defaultValue}
 			data={{

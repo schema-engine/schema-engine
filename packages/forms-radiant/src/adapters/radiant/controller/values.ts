@@ -55,3 +55,34 @@ function isRemovedArrayField(values: Record<string, unknown>, name: string): boo
 	}
 	return false;
 }
+
+function valuesEqual(previous: unknown, next: unknown): boolean {
+	if (Object.is(previous, next)) return true;
+	if (previous instanceof Date && next instanceof Date) return previous.getTime() === next.getTime();
+	if (Array.isArray(previous) && Array.isArray(next)) {
+		return previous.length === next.length && previous.every((item, index) => valuesEqual(item, next[index]));
+	}
+	if (isPlainRecord(previous) && isPlainRecord(next)) {
+		return [...new Set([...Object.keys(previous), ...Object.keys(next)])].every((key) =>
+			valuesEqual(previous[key], next[key]),
+		);
+	}
+	return false;
+}
+
+/**
+ * Reports whether a store notification changed the values.
+ *
+ * @remarks
+ * The first snapshot is the baseline and reports no change. Touching, blurring, recording an error and
+ * updating submit state notify the store without changing a value, so a consumer of value changes
+ * compares each snapshot with the previous one instead of acting on every notification.
+ */
+export function createChangeDetector(): (values: Record<string, unknown>) => boolean {
+	let previous: Record<string, unknown> | undefined;
+	return (values) => {
+		const changed = previous !== undefined && !valuesEqual(previous, values);
+		previous = values;
+		return changed;
+	};
+}

@@ -9,7 +9,6 @@ import {
 	customArrayType,
 } from '../../../../test-utils/renderer-conformance';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import {
@@ -17,6 +16,8 @@ import {
 	type ArrayElementsProps,
 } from '@/components/schema-engine/forms/inputs/form-array-elements.types';
 import { FormArrayElements } from '@/components/schema-engine/forms/inputs/form-array-elements';
+import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
+import { CheckboxGroupElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox-group.registration';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
@@ -42,11 +43,14 @@ const CustomArrayRegistration = defineInput({
 	render: FormArrayElements as (props: Omit<ArrayElementsProps, '$type'>) => ReturnType<typeof FormArrayElements>,
 });
 
-rendererConformance(async ({ config, ...props }) => {
+/** @remarks The suite states `onSubmit(values)`: the second argument of this renderer, the server-error hand-back, is not part of the shared contract. */
+rendererConformance(async ({ config, onSubmit, ...props }) => {
 	const engine = createFormEngine({
 		elements: [
 			{ ...InputElementRegistration, appearanceAxes: conformanceInputAxes },
 			ArrayElementRegistration,
+			CheckboxElementRegistration,
+			CheckboxGroupElementRegistration,
 			CustomArrayRegistration,
 			FieldSetRegistration,
 			SubmitButtonElementRegistration,
@@ -56,7 +60,12 @@ rendererConformance(async ({ config, ...props }) => {
 		layout: conformanceLayout,
 	});
 	const renderConfig = (next: typeof config) => (
-		<FormRenderer {...props} config={engine.validateForm(next)} engine={engine} adapter={rhfAdapter} />
+		<FormRenderer
+			{...props}
+			onSubmit={onSubmit && ((values) => onSubmit(values))}
+			config={engine.validateForm(next)}
+			engine={engine}
+		/>
 	);
 	const view = render(renderConfig(config));
 	return {

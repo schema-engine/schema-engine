@@ -1,16 +1,9 @@
 import { isPlainObject } from './is-plain-object.js';
+import { assertWritablePathKey, isReservedPathKey } from './reserved-path-keys.js';
 /**
  * Nested value-tree helpers shared by React and Radiant adapters.
  * Field *names* are composed in {@link ./field-scope.ts}; this module reads and writes values.
  */
-
-const RESERVED_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-
-function assertWritablePathKey(key: string): void {
-	if (RESERVED_PATH_KEYS.has(key)) {
-		throw new Error(`Rejected path segment '${key}'`);
-	}
-}
 
 function createValueObject(): Record<string, unknown> {
 	return Object.create(null) as Record<string, unknown>;
@@ -22,7 +15,7 @@ export function getValueAtPath<TValue = unknown>(input: unknown, path: string): 
 	}
 
 	return path.split('.').reduce<unknown>((current, segment) => {
-		if (current === null || current === undefined || RESERVED_PATH_KEYS.has(segment)) {
+		if (current === null || current === undefined || isReservedPathKey(segment)) {
 			return undefined;
 		}
 
@@ -130,7 +123,7 @@ function expandTemplatePaths(
 		}
 
 		const [nextPart, ...rest] = remainingParts;
-		if (RESERVED_PATH_KEYS.has(nextPart)) {
+		if (isReservedPathKey(nextPart)) {
 			return;
 		}
 
@@ -176,7 +169,7 @@ export function clonePlainValue(value: unknown): unknown {
 		if (proto === Object.prototype || proto === null) {
 			const copy = createValueObject();
 			for (const [key, child] of Object.entries(value)) {
-				if (RESERVED_PATH_KEYS.has(key)) {
+				if (isReservedPathKey(key)) {
 					continue;
 				}
 				copy[key] = clonePlainValue(child);
@@ -196,12 +189,12 @@ function deepMerge(base: unknown, override: unknown): unknown {
 	if (isPlainObject(base) && isPlainObject(override)) {
 		const result = createValueObject();
 		for (const [key, value] of Object.entries(base)) {
-			if (!RESERVED_PATH_KEYS.has(key)) {
+			if (!isReservedPathKey(key)) {
 				result[key] = value;
 			}
 		}
 		for (const [key, value] of Object.entries(override)) {
-			if (RESERVED_PATH_KEYS.has(key)) {
+			if (isReservedPathKey(key)) {
 				continue;
 			}
 			result[key] = Object.hasOwn(result, key) ? deepMerge(result[key], value) : value;

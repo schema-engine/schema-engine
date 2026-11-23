@@ -153,6 +153,43 @@ describe('ActionDispatcher', () => {
 		expect(executeCalls).toHaveLength(1);
 		expect(unhandled).toEqual([]);
 	});
+
+	describe('hasMatching', () => {
+		const logRegistration: ActionRegistration<TestActionConfig, TestContext, TestTrigger> = {
+			$type: 'log',
+			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
+			metadata: { name: 'Log', defaultTriggers: ['submit'] },
+			execute: async () => ({ success: true }),
+		};
+
+		test('matches a default trigger and not another', () => {
+			registry.register(logRegistration);
+			const actions = [{ id: 'a1', $type: 'log', name: 'test' }];
+
+			expect(dispatcher.hasMatching(actions, 'submit')).toBe(true);
+			expect(dispatcher.hasMatching(actions, 'change')).toBe(false);
+		});
+
+		test('lets explicit triggers override the defaults, including inside a group', () => {
+			registry.register(logRegistration);
+			const actions = [[{ id: 'a1', $type: 'log', name: 'test', triggers: ['change' as const] }]];
+
+			expect(dispatcher.hasMatching(actions, 'change')).toBe(true);
+			expect(dispatcher.hasMatching(actions, 'submit')).toBe(false);
+		});
+
+		test('ignores a disabled action', () => {
+			registry.register(logRegistration);
+
+			expect(dispatcher.hasMatching([{ id: 'a1', $type: 'log', name: 'test', enabled: false }], 'submit')).toBe(
+				false,
+			);
+		});
+
+		test('matches an unregistered type, which dispatch reports as a missing handler', () => {
+			expect(dispatcher.hasMatching([{ id: 'a1', $type: 'missing' }], 'submit')).toBe(true);
+		});
+	});
 });
 
 test('unregistered action with another trigger produces no result', async () => {

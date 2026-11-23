@@ -1,3 +1,5 @@
+import { globalFetch, withCsrf, type CsrfPolicy, type FormFetch } from '@/lib/form-fetch';
+import type { FormIssueFormatter } from '@/state-container/types';
 import { createRegistry } from '@schema-engine/registry';
 import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '@/types/registration';
 import type {
@@ -190,7 +192,10 @@ export type FormEngineRegistrationLists = {
 	validations?: readonly ValidationRegistrationConstraint[];
 	catalog?: SchemaMetadataCatalog;
 	defaultWizardRecipe?: string;
+	formatIssue?: FormIssueFormatter;
 	layout?: LayoutInput;
+	fetch?: FormFetch;
+	csrf?: CsrfPolicy;
 };
 
 /**
@@ -244,10 +249,14 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	}
 
 	const validations = Object.freeze([...(lists.validations ?? [])]);
-	const validationRegistry = createDefaultValidationRegistry([
-		...collectElementValidations(elementRegistry.all() as readonly ElementRegistrationConstraint[]),
-		...validations,
-	]);
+	const requestFetch = lists.csrf ? withCsrf(lists.fetch ?? globalFetch, lists.csrf) : (lists.fetch ?? globalFetch);
+	const validationRegistry = createDefaultValidationRegistry(
+		[
+			...collectElementValidations(elementRegistry.all() as readonly ElementRegistrationConstraint[]),
+			...validations,
+		],
+		{ fetch: requestFetch },
+	);
 
 	assertDefaultWizardRecipe(recipeRegistry, lists.defaultWizardRecipe);
 
@@ -305,6 +314,10 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		validationRegistry,
 		validations,
 		defaultWizardRecipe: lists.defaultWizardRecipe,
+		formatIssue: lists.formatIssue,
+		fetch: requestFetch,
+		baseFetch: lists.fetch,
+		csrf: lists.csrf,
 	});
 }
 

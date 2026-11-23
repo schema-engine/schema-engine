@@ -9,7 +9,6 @@ import {
 	readControlHeights,
 } from '../../../../test-utils/control-height-acceptance';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { MaskedInputElementRegistration } from '@/components/schema-engine/forms/inputs/form-masked-input.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
@@ -42,7 +41,7 @@ beforeAll(() => document.head.prepend(stylesheet));
 afterAll(() => stylesheet.remove());
 
 const mountReact: ConformanceMount = async ({ config }) => {
-	const view = render(<FormRenderer config={engine.validateForm(config)} engine={engine} adapter={rhfAdapter} />);
+	const view = render(<FormRenderer config={engine.validateForm(config)} engine={engine} />);
 	return { host: view.container, cleanup: view.unmount, update: async () => undefined };
 };
 
@@ -76,7 +75,6 @@ describe('React registry controls follow the size axis', () => {
 					],
 				})}
 				engine={engine}
-				adapter={rhfAdapter}
 			/>,
 		);
 		try {
@@ -95,11 +93,7 @@ describe('React registry controls follow the size axis', () => {
 		author.textContent = '.host-control { height: 50px; }';
 		document.head.append(author);
 		const view = render(
-			<FormRenderer
-				config={engine.validateForm(controlHeightForm('compact'))}
-				engine={engine}
-				adapter={rhfAdapter}
-			/>,
+			<FormRenderer config={engine.validateForm(controlHeightForm('compact'))} engine={engine} />,
 		);
 		try {
 			view.container.querySelector('input')!.classList.add('host-control');

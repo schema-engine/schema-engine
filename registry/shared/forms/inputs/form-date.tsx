@@ -1,7 +1,6 @@
 import { DatePicker } from '@/components/ui/schema-engine/components/date-picker';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
+import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { DateFieldProps } from './form-date.types';
 
 export function FormDate({
@@ -10,16 +9,16 @@ export function FormDate({
 	onFocus: propsOnFocus,
 	...config
 }: DateFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } = useControlledFormElement(
-		config as unknown as ElementConfig,
-	);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	return (
 		<FieldGroup
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}

@@ -1,7 +1,7 @@
 import type { FieldRules } from '@ecopages/radiant-ui/form';
 import { validateFieldValue } from '@schema-engine/forms';
 import type { ValidationRule } from '@schema-engine/forms/schemas';
-import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { ValidationSuperseded, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
 import { getValidationRulesForElement, isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { peekOwningFormEngine } from '@/contexts/form-engine-owner';
@@ -92,10 +92,15 @@ function resolveValidationRegistry(registry?: ValidationRegistry): ValidationReg
  *
  * A call that a later call replaces resolves with the latest call's result.
  * Radiant UI writes whatever a validator returns, so without this a debounced
- * async check superseded by the next keystroke would show its `Validation
- * pending` failure between keystrokes. React Hook Form drops such results the
+ * async check superseded by the next keystroke has no result, and nothing is
+ * shown for it between keystrokes. React Hook Form drops such results the
  * same way. A submit-time check still cannot pass on a value it never checked:
  * it waits for the check of the value the user typed last.
+ *
+ * A rule that could not run (a throwing rule, an unavailable service) cannot be left out, or the field would
+ * pass on a value nothing judged, and a validator that rejects is unhandled while the user types: this legacy
+ * path shows a reserved type as the error, `validationUnavailable` or `validationError`, which the engine itself
+ * never does and which is never the rule's own type: that would read as the rule's verdict.
  */
 function toValidator(
 	rules: ReadonlyArray<ValidationRule>,
@@ -121,7 +126,12 @@ function toValidator(
 			fieldPath: fieldPath ?? '',
 			registry,
 			debounceScope,
-		}).then((message) => message ?? true);
+		}).then(({ issues, failures, superseded }) => {
+			if (failures[0]) return failures[0].reason === 'unavailable' ? 'validationUnavailable' : 'validationError';
+			if (superseded) throw new ValidationSuperseded();
+			const blocking = issues.find((found) => found.severity === 'error');
+			return blocking ? (blocking.message ?? blocking.type) : true;
+		});
 		latest = run;
 		return settle(run);
 	};

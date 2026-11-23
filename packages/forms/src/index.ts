@@ -7,13 +7,22 @@
 
 export { createFormEngine, FormEngine, SchemaMetadataCatalog, ActionDispatcher } from './engine';
 export type { CreateFormEngineOptions } from './engine';
-export { collectStepFieldPaths, effectiveRulesFor, validateFieldValue, validateFormValues } from './engine';
+export {
+	collectStepFieldPaths,
+	effectiveRulesFor,
+	FormValidationFailure,
+	resolveExcludedPaths,
+	validateFieldValue,
+	validateFormValues,
+} from './engine';
 export {
 	createInitialStepStates,
 	createStepMachine,
 	createStepNavigator,
 	runSubmissionLifecycle,
+	createSubmissionGuard,
 	buildFormActionContext,
+	checkFormValidity,
 	collectStepActions,
 	hasConfiguredActions,
 } from './engine';
@@ -28,12 +37,16 @@ export type {
 	StepNavigatorOptions,
 	SubmissionActionResult,
 	SubmissionLifecycleResult,
+	SubmissionFailure,
+	SubmissionGuard,
 	FormActionContextFormState,
 } from './engine';
 export type {
 	EffectiveRulesInput,
-	FieldValidationError,
-	FormValidationErrors,
+	FieldValidationResult,
+	FormValidationOutcome,
+	ValidationIssue,
+	ValidationSeverity,
 	ValidateFieldValueInput,
 	ValidateFormValuesInput,
 	ValidationElement,
@@ -47,6 +60,7 @@ export type {
 	SchemaMetadataEntry,
 } from './engine';
 export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
+export type { FormFetch } from './lib/form-fetch';
 export type {
 	BuilderActionBaseContext,
 	ElementMetadata,

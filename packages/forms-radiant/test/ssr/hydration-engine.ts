@@ -10,10 +10,7 @@ const emailForInputs: ValidationRegistration<EmailRule> = {
 	schema: EmailRuleSchema,
 	metadata: { name: 'Email' },
 	category: 'string',
-	handler: (rule) =>
-		z.optional(
-			z.string().check(z.refine((value) => !value || value.includes('@'), rule.message ?? 'Enter an email')),
-		),
+	handler: (rule) => z.optional(z.string().check(z.refine((value) => !value || value.includes('@'), rule.message))),
 	defaultFor: ['input'],
 };
 

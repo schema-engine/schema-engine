@@ -48,6 +48,13 @@ describe('toFieldRules', () => {
 		expect(await validate('ab1')).toBe('Letters only');
 	});
 
+	test('a rule that could not run blocks with a reserved type of its own, never the type of the rule', async () => {
+		const rules = toFieldRules({ rules: [{ type: 'pattern', value: '(' }] }, registry);
+		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
+
+		expect(await validate('x')).toBe('validationError');
+	});
+
 	test('keeps minLength and pattern native on a required field', () => {
 		const rules = toFieldRules(
 			{
@@ -66,7 +73,7 @@ describe('toFieldRules', () => {
 		expect(typeof rules?.validate).toBe('function');
 
 		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
-		expect(await validate('+44')).toBe('Enter a complete phone number');
+		expect(await validate('+44')).toBe('phone');
 		expect(await validate('+442079460958')).toBe(true);
 	});
 
@@ -114,7 +121,7 @@ describe('toFieldRules', () => {
 		expect(typeof rules?.validate).toBe('function');
 
 		const validate = rules?.validate as (value: unknown) => Promise<boolean | string>;
-		expect(await validate('+44')).toBe('Enter a complete phone number');
+		expect(await validate('+44')).toBe('phone');
 		expect(await validate('+442079460958')).toBe(true);
 	});
 

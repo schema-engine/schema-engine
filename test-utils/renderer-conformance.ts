@@ -11,15 +11,31 @@ import {
 	StepIndicatorsConfigSchema,
 } from '@schema-engine/forms/recipes/built-in';
 
+/**
+ * A result whose `success` throws when the dispatcher reads it.
+ *
+ * @remarks
+ * The dispatcher turns an exception thrown by an action into a failed result, so this is the way an
+ * action makes the dispatch itself reject.
+ */
+function rejectingResult(): { success: boolean } {
+	return {
+		get success(): boolean {
+			throw new Error('Dispatch rejected');
+		},
+	};
+}
+
 export const conformanceAction = {
 	$type: 'conformance',
 	schema: v.object({ $type: v.literal('conformance'), id: v.string(), triggers: v.optional(v.array(v.string())) }),
 	metadata: { name: 'Conformance' },
-	execute: vi.fn(async (context: BuilderActionRuntimeContext<{ id: string }>) =>
-		context.config.id === 'abort'
+	execute: vi.fn(async (context: BuilderActionRuntimeContext<{ id: string }>) => {
+		if (context.config.id === 'reject-dispatch') return rejectingResult();
+		return context.config.id === 'abort'
 			? { success: false, shouldContinue: false, error: 'Submission stopped' }
-			: { success: true },
-	),
+			: { success: true };
+	}),
 };
 
 /**
@@ -54,7 +70,7 @@ export const customArrayType = 'repeater';
 export interface ConformanceMountOptions {
 	config: FormConfigView;
 	defaultValues?: Record<string, unknown>;
-	onSubmit?: (data: Record<string, unknown>) => void;
+	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
 	onAction?: () => void;
 }
@@ -295,7 +311,10 @@ function cardForm(appearance: Record<string, string>): FormConfigView {
 }
 
 /** @remarks Both browser projects execute these assertions against their own FormRenderer. */
-export function rendererConformance(mount: ConformanceMount): void {
+export function rendererConformance(
+	mount: ConformanceMount,
+	{ knownFailures = [] }: { knownFailures?: readonly string[] } = {},
+): void {
 	describe('FormRenderer conformance', () => {
 		let cleanup: (() => void) | undefined;
 		afterEach(() => {
@@ -1030,7 +1049,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			expect(onSubmit).toHaveBeenCalledWith({ address: { street: 'Main Street' } });
 		});
-		test('handlers receive one errors shape', async () => {
+		test('handlers receive errors by dotted path', async () => {
 			const { host } = await setup({
 				config: {
 					...form([address, input('note', 'Note')]),
@@ -1042,7 +1061,7 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await userEvent.fill(getByRole(host, 'textbox', { name: 'Note' }), 'Ring twice');
 			await expect.poll(() => lastActionContext()?.formData.note).toBe('Ring twice');
 			expect(lastActionContext()?.errors).toEqual({
-				address: { street: expect.objectContaining({ message: 'Street is required' }) },
+				'address.street': expect.objectContaining({ message: 'Street is required' }),
 			});
 		});
 		test('a require constraint blocks submission until its condition is removed', async () => {
@@ -1246,6 +1265,190 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(actionIds).toEqual(['submitted']);
 			expect(lastActionContext()?.metadata.userInteractions).toBe(3);
 		});
+		describe('action context validity', () => {
+			afterEach(() => {
+				vi.unstubAllGlobals();
+			});
+			const stubFetch = (reply: (value: unknown) => { valid: boolean; message?: string }) => {
+				const fetchStub = vi.fn(async (_url: unknown, init?: RequestInit) => {
+					const { value } = JSON.parse(typeof init?.body === 'string' ? init.body : '{}') as {
+						value: unknown;
+					};
+					return new Response(JSON.stringify(reply(value)));
+				});
+				vi.stubGlobal('fetch', fetchStub);
+				return fetchStub;
+			};
+			const mountAction = { $type: 'conformance', id: 'mounted', triggers: ['form_mount'] };
+			const changeAction = { $type: 'conformance', id: 'changed', triggers: ['form_change'] };
+			test('actions that do not ask for validity cause no validation', async () => {
+				const fetchStub = stubFetch(() => ({ valid: true }));
+				const { host } = await setup({
+					config: {
+						...form([
+							{
+								...input('counted', 'Counted'),
+								rules: [{ type: 'async', url: '/conformance-count', disableCache: true }],
+							},
+							input('other', 'Other'),
+						]),
+						validationMode: 'onSubmit',
+						actions: [mountAction, changeAction],
+					},
+					defaultValues: { counted: 'x' },
+				});
+				await expect.poll(actionIds).toContain('mounted');
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Other' }), 'abc');
+				await expect.poll(() => lastActionContext()?.formData.other).toBe('abc');
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(fetchStub).not.toHaveBeenCalled();
+			});
+			test('a form without actions runs no validator while the user types', async () => {
+				const fetchStub = stubFetch(() => ({ valid: true }));
+				const { host } = await setup({
+					config: {
+						...form([
+							{
+								...input('counted', 'Counted'),
+								rules: [{ type: 'async', url: '/conformance-count', disableCache: true }],
+							},
+							input('other', 'Other'),
+						]),
+						validationMode: 'onSubmit',
+					},
+					defaultValues: { counted: 'x' },
+				});
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Other' }), 'abc');
+				await expect
+					.poll(() => (getByRole(host, 'textbox', { name: 'Other' }) as HTMLInputElement).value)
+					.toBe('abc');
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(fetchStub).not.toHaveBeenCalled();
+			});
+			test('an action asks for current validity without showing errors', async () => {
+				const { host } = await setup({
+					config: {
+						...form([
+							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							input('note', 'Note'),
+						]),
+						actions: [changeAction],
+					},
+				});
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'hi');
+				await expect.poll(() => lastActionContext()?.formData.note).toBe('hi');
+				await expect(lastActionContext()?.form.checkValidity()).resolves.toBe(false);
+				expect(queryByText(host, 'Name is required')).toBeNull();
+				expect(lastActionContext()?.errors).toEqual({});
+			});
+			test('isValid reports recorded errors, not the validity of the values', async () => {
+				const { host } = await setup({
+					config: {
+						...form([
+							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							input('note', 'Note'),
+						]),
+						actions: [mountAction, changeAction],
+					},
+				});
+				await expect.poll(actionIds).toContain('mounted');
+				const mounted = conformanceAction.execute.mock.calls.find(
+					([context]) => context.config.id === 'mounted',
+				);
+				expect(mounted?.[0].isValid).toBe(true);
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'hi');
+				await expect.poll(() => lastActionContext()?.formData.note).toBe('hi');
+				expect(lastActionContext()?.isValid).toBe(false);
+			});
+			test('isValid and the interaction count follow an error recorded on blur', async () => {
+				const { host } = await setup({
+					config: {
+						...form([
+							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							input('note', 'Note'),
+						]),
+						validationMode: 'onBlur',
+						actions: [changeAction],
+					},
+				});
+				await userEvent.click(getByRole(host, 'textbox', { name: /^Name/ }));
+				await userEvent.click(getByRole(host, 'textbox', { name: 'Note' }));
+				await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+				await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'hi');
+				await expect.poll(() => lastActionContext()?.formData.note).toBe('hi');
+				expect(lastActionContext()?.isValid).toBe(false);
+				expect(lastActionContext()?.metadata.userInteractions).toBeGreaterThan(0);
+			});
+			test('a field hidden by a constraint does not make checkValidity fail', async () => {
+				const { host } = await setup({
+					config: {
+						...form([
+							input('kind', 'Kind'),
+							{
+								...input('company', 'Company'),
+								rules: [{ type: 'required', message: 'Company is required' }],
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+							},
+							{
+								$type: 'fieldSet',
+								id: 'billing',
+								name: 'billing',
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+								elements: [
+									{
+										...input('vat', 'VAT'),
+										rules: [{ type: 'required', message: 'VAT is required' }],
+									},
+								],
+							},
+						]),
+						actions: [changeAction],
+					},
+				});
+				await userEvent.type(getByRole(host, 'textbox', { name: /^Kind/ }), 'x');
+				await expect.poll(() => lastActionContext()?.formData.kind).toBe('x');
+				await expect(lastActionContext()?.form.checkValidity()).resolves.toBe(true);
+				await userEvent.fill(getByRole(host, 'textbox', { name: /^Kind/ }), 'business');
+				await expect.poll(() => lastActionContext()?.formData.kind).toBe('business');
+				await expect(lastActionContext()?.form.checkValidity()).resolves.toBe(false);
+			});
+			test('a validity check answers for its own values while a field check is pending', async () => {
+				const fetchStub = stubFetch((value) =>
+					value === 'ab' ? { valid: false, message: 'Handle is taken' } : { valid: true },
+				);
+				const requested = () =>
+					fetchStub.mock.calls.map(
+						([, init]) =>
+							(JSON.parse(typeof init?.body === 'string' ? init.body : '{}') as { value: unknown }).value,
+					);
+				const { host } = await setup({
+					config: {
+						...form([
+							{
+								...input('handle', 'Handle'),
+								rules: [
+									{ type: 'async', url: '/conformance-check', debounce: 300, disableCache: true },
+								],
+							},
+						]),
+						validationMode: 'onChange',
+						reValidateMode: 'onChange',
+						actions: [changeAction],
+					},
+				});
+				const handle = getByRole(host, 'textbox', { name: 'Handle' });
+				await userEvent.type(handle, 'a');
+				await expect.poll(() => lastActionContext()?.formData.handle).toBe('a');
+				const check = lastActionContext()!.form.checkValidity();
+				await userEvent.type(handle, 'b');
+				await expect(check).resolves.toBe(true);
+				expect(requested()).toContain('a');
+				await expect.poll(() => queryByText(host, 'Handle is taken') !== null).toBe(true);
+				expect(requested()).toContain('ab');
+			});
+		});
 		test('typing over a debounced async check shows only the latest result', async () => {
 			vi.stubGlobal(
 				'fetch',
@@ -1296,6 +1499,157 @@ export function rendererConformance(mount: ConformanceMount): void {
 			await expect.poll(actionIds).toEqual(['abort', 'error', 'complete']);
 			expect(onSubmit).not.toHaveBeenCalled();
 			expect(onAction).not.toHaveBeenCalled();
+		});
+		const changeTest = (name: string, run: () => Promise<void>) =>
+			(knownFailures.includes(name) ? test.fails : test)(name, run);
+		changeTest('only value changes trigger change', async () => {
+			const onChange = vi.fn();
+			const { host } = await setup({
+				config: {
+					...form([
+						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+						input('note', 'Note'),
+					]),
+					validationMode: 'onBlur',
+					actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_change'] }],
+				},
+				onChange,
+			});
+			await userEvent.click(getByRole(host, 'textbox', { name: /^Name/ }));
+			await userEvent.tab();
+			await expect.poll(() => queryByText(host, 'Name is required') !== null).toBe(true);
+			expect(actionIds()).toEqual([]);
+			expect(onChange).not.toHaveBeenCalled();
+			await userEvent.type(getByRole(host, 'textbox', { name: 'Note' }), 'a');
+			await expect.poll(actionIds).toEqual(['changed']);
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			expect(actionIds()).toEqual(['changed']);
+			expect(onChange).toHaveBeenCalledTimes(1);
+		});
+		changeTest('a checkbox and a checkbox group trigger change only when toggled', async () => {
+			const onChange = vi.fn();
+			const { host } = await setup({
+				config: {
+					...form([
+						{
+							$type: 'checkbox',
+							id: 'accepted',
+							name: 'accepted',
+							label: 'Accept',
+							rules: [{ type: 'required', message: 'Must accept' }],
+						},
+						{
+							$type: 'checkbox-group',
+							id: 'tags',
+							name: 'tags',
+							label: 'Tags',
+							options: [
+								{ value: 'a', label: 'Alpha' },
+								{ value: 'b', label: 'Beta' },
+							],
+						},
+					]),
+					actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_change'] }],
+				},
+				onChange,
+			});
+			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+			await expect.poll(() => queryByText(host, 'Must accept') !== null).toBe(true);
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			expect(actionIds()).toEqual([]);
+			expect(onChange).not.toHaveBeenCalled();
+			await userEvent.click(getByRole(host, 'checkbox', { name: 'Alpha' }));
+			await expect.poll(actionIds).toEqual(['changed']);
+			expect(onChange).toHaveBeenCalledTimes(1);
+		});
+		describe('submission', () => {
+			afterEach(() => {
+				vi.unstubAllGlobals();
+			});
+			const lifecycleActions = [
+				{ $type: 'conformance', id: 'success', triggers: ['form_submit_success'] },
+				{ $type: 'conformance', id: 'error', triggers: ['form_submit_error'] },
+				{ $type: 'conformance', id: 'complete', triggers: ['form_submit_complete'] },
+			];
+			test('a second submit while one is pending is ignored', async () => {
+				let finish!: () => void;
+				const onSubmit = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+				const { host } = await setup({
+					config: { ...form([input('fullName', 'Name')]), actions: lifecycleActions },
+					onSubmit,
+				});
+				const element = host.querySelector('form')!;
+				element.requestSubmit();
+				element.requestSubmit();
+				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(onSubmit).toHaveBeenCalledTimes(1);
+				expect(actionIds()).toEqual([]);
+				finish();
+				await expect.poll(actionIds).toEqual(['success', 'complete']);
+			});
+			test('a second submit while the first is validating is ignored', async () => {
+				const release: Array<() => void> = [];
+				vi.stubGlobal(
+					'fetch',
+					vi.fn(
+						() =>
+							new Promise<Response>((resolve) =>
+								release.push(() => resolve(new Response('{"valid":true}'))),
+							),
+					),
+				);
+				const onSubmit = vi.fn();
+				const { host } = await setup({
+					config: {
+						...form([
+							{
+								...input('slow', 'Slow'),
+								rules: [{ type: 'async', url: '/conformance-slow', disableCache: true }],
+							},
+						]),
+						validationMode: 'onSubmit',
+					},
+					defaultValues: { slow: 'x' },
+					onSubmit,
+				});
+				const submit = getByRole(host, 'button', { name: /submit/i });
+				submit.click();
+				await expect.poll(() => release.length).toBeGreaterThan(0);
+				submit.click();
+				await new Promise((resolve) => setTimeout(resolve, 50));
+				release[0]?.();
+				await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+				await new Promise((resolve) => setTimeout(resolve, 50));
+				release.slice(1).forEach((resolve) => resolve());
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(onSubmit).toHaveBeenCalledTimes(1);
+			});
+			test('a rejected onSubmit is a failed submission', async () => {
+				const onSubmit = vi.fn(() => Promise.reject(new Error('Save failed')));
+				const { host } = await setup({
+					config: { ...form([input('fullName', 'Name')]), actions: lifecycleActions },
+					onSubmit,
+				});
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(actionIds).toEqual(['error', 'complete']);
+				expect(onSubmit).toHaveBeenCalledTimes(1);
+			});
+			test('a failing lifecycle completes once', async () => {
+				const { host } = await setup({
+					config: {
+						...form([input('fullName', 'Name')]),
+						actions: [
+							{ $type: 'conformance', id: 'success', triggers: ['form_submit_success'] },
+							{ $type: 'conformance', id: 'reject-dispatch', triggers: ['form_submit_complete'] },
+						],
+					},
+				});
+				await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
+				await expect.poll(actionIds).toEqual(['success', 'reject-dispatch']);
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(actionIds().filter((id) => id === 'reject-dispatch')).toHaveLength(1);
+			});
 		});
 		test('an action callback rejection aborts submission and later submit actions', async () => {
 			const onSubmit = vi.fn();

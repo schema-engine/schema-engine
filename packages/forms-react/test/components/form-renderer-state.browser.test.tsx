@@ -13,7 +13,6 @@ import { formResetPlugin } from '@schema-engine/forms/actions';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
 import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
 
 const actionSchema = z.object({
 	$type: z.literal('record-change'),
@@ -94,7 +93,7 @@ describe('FormRenderer state boundaries', () => {
 			],
 			actions: [{ $type: 'reset', id: 'reset' }],
 		});
-		render(<FormRenderer config={config} engine={engine} adapter={rhfAdapter} />);
+		render(<FormRenderer config={config} engine={engine} />);
 		const email = screen.getByRole('textbox', { name: 'Email' });
 		await userEvent.fill(email, 'reader@example.com');
 		await userEvent.fill(screen.getByRole('textbox', { name: 'Name' }), 'Grace');
@@ -139,12 +138,7 @@ describe('FormRenderer state boundaries', () => {
 		});
 
 		const view = render(
-			<FormRenderer
-				config={firstConfig}
-				defaultValues={{ first: 'old default' }}
-				engine={engine}
-				adapter={rhfAdapter}
-			/>,
+			<FormRenderer config={firstConfig} defaultValues={{ first: 'old default' }} engine={engine} />,
 		);
 
 		await userEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
@@ -152,14 +146,7 @@ describe('FormRenderer state boundaries', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Go to next step' }));
 		await waitFor(() => expect(screen.getByText('Step 3 of 3')).toBeInTheDocument());
 
-		view.rerender(
-			<FormRenderer
-				config={secondConfig}
-				defaultValues={{ first: 'new default' }}
-				engine={engine}
-				adapter={rhfAdapter}
-			/>,
-		);
+		view.rerender(<FormRenderer config={secondConfig} defaultValues={{ first: 'new default' }} engine={engine} />);
 
 		await waitFor(() => {
 			expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
@@ -192,12 +179,7 @@ describe('FormRenderer state boundaries', () => {
 						Render parent
 					</button>
 					<output aria-label="Parent renders">{renderCount}</output>
-					<FormRenderer
-						config={config}
-						engine={engine}
-						adapter={rhfAdapter}
-						onChange={(values) => onChange(values)}
-					/>
+					<FormRenderer config={config} engine={engine} onChange={(values) => onChange(values)} />
 				</>
 			);
 		}

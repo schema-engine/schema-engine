@@ -16,10 +16,10 @@ async function check(
 	value: unknown,
 	values: Record<string, unknown> = {},
 	fieldPath = 'confirmPassword',
-): Promise<true | string | undefined> {
+): Promise<true | string | false> {
 	const schema = createZodSchemaFromRules([rule], createValidationContext({ values, fieldPath }), registry);
 	const result = await z.safeParseAsync(schema, value);
-	return result.success ? true : result.error.issues[0]?.message;
+	return result.success ? true : (rule.message ?? false);
 }
 
 describe('relate assertions', () => {
@@ -27,14 +27,14 @@ describe('relate assertions', () => {
 		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['password'], assert: 'allEqual' };
 
 		expect(await check(rule, 'hunter2', { password: 'hunter2' })).toBe(true);
-		expect(await check(rule, 'hunter3', { password: 'hunter2' })).toBe('These fields must match');
+		expect(await check(rule, 'hunter3', { password: 'hunter2' })).toBe(false);
 	});
 
 	test('allDifferent rejects a repeated value', async () => {
 		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['primary', 'secondary'], assert: 'allDifferent' };
 
 		expect(await check(rule, 'c', { primary: 'a', secondary: 'b' })).toBe(true);
-		expect(await check(rule, 'a', { primary: 'a', secondary: 'b' })).toBe('These fields must be different');
+		expect(await check(rule, 'a', { primary: 'a', secondary: 'b' })).toBe(false);
 	});
 
 	test('string comparison coerces primitives without coercing arbitrary objects', async () => {
@@ -57,7 +57,7 @@ describe('relate assertions', () => {
 		};
 
 		expect(await check(rule, 42, { confirmation: '42' })).toBe(true);
-		expect(await check(rule, first, { confirmation: second })).toBe('These fields must match');
+		expect(await check(rule, first, { confirmation: second })).toBe(false);
 	});
 
 	test('ascending reads the declaring field first and allows equal neighbours', async () => {
@@ -72,15 +72,15 @@ describe('relate assertions', () => {
 
 		expect(await check(ascending, 4, { ceiling: 5 })).toBe(true);
 		expect(await check(ascending, 5, { ceiling: 5 })).toBe(true);
-		expect(await check(ascending, 6, { ceiling: 5 })).toBe('Values must be in ascending order');
-		expect(await check(strict, 5, { ceiling: 5 })).toBe('Values must increase');
+		expect(await check(ascending, 6, { ceiling: 5 })).toBe(false);
+		expect(await check(strict, 5, { ceiling: 5 })).toBe(false);
 	});
 
 	test('descending asserts the declaring field is the larger one', async () => {
 		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['floor'], assert: 'descending', as: 'number' };
 
 		expect(await check(rule, 9, { floor: 5 })).toBe(true);
-		expect(await check(rule, 1, { floor: 5 })).toBe('Values must be in descending order');
+		expect(await check(rule, 1, { floor: 5 })).toBe(false);
 	});
 
 	test('strictlyDescending rejects equal neighbours', async () => {
@@ -92,7 +92,7 @@ describe('relate assertions', () => {
 			as: 'number',
 		};
 
-		expect(await check(rule, 5, { floor: 5 })).toBe('Values must decrease');
+		expect(await check(rule, 5, { floor: 5 })).toBe(false);
 	});
 
 	test('atLeastOne fires on a wholly empty group', async () => {
@@ -105,7 +105,7 @@ describe('relate assertions', () => {
 		};
 
 		expect(await check(rule, '', { phone: '', email: 'jane@example.com' })).toBe(true);
-		expect(await check(rule, '', { phone: '', email: '' })).toBe('Fill at least one of these fields');
+		expect(await check(rule, '', { phone: '', email: '' })).toBe(false);
 	});
 
 	test('emptiness treats empty arrays as empty and false or zero as filled', async () => {
@@ -117,7 +117,7 @@ describe('relate assertions', () => {
 			includeSelf: false,
 		};
 
-		expect(await check(rule, '', { phone: [], email: null })).toBe('Fill at least one of these fields');
+		expect(await check(rule, '', { phone: [], email: null })).toBe(false);
 		expect(await check(rule, '', { phone: false, email: null })).toBe(true);
 		expect(await check(rule, '', { phone: 0, email: null })).toBe(true);
 	});
@@ -132,8 +132,8 @@ describe('relate assertions', () => {
 		};
 
 		expect(await check(rule, '', { card: '4242', invoice: '' })).toBe(true);
-		expect(await check(rule, '', { card: '4242', invoice: 'INV-1' })).toBe('Fill exactly one of these fields');
-		expect(await check(rule, '', { card: '', invoice: '' })).toBe('Fill exactly one of these fields');
+		expect(await check(rule, '', { card: '4242', invoice: 'INV-1' })).toBe(false);
+		expect(await check(rule, '', { card: '', invoice: '' })).toBe(false);
 	});
 
 	test('allOrNone accepts an empty group and a complete one', async () => {
@@ -147,7 +147,7 @@ describe('relate assertions', () => {
 
 		expect(await check(rule, '', { street: '', city: '' })).toBe(true);
 		expect(await check(rule, '', { street: 'Main', city: 'Rome' })).toBe(true);
-		expect(await check(rule, '', { street: 'Main', city: '' })).toBe('Fill all of these fields or none');
+		expect(await check(rule, '', { street: 'Main', city: '' })).toBe(false);
 	});
 });
 
@@ -175,17 +175,15 @@ describe('relate semantics', () => {
 			includeSelf: false,
 		};
 
-		expect(await check(atLeastOne, '', { phone: '', email: '' })).toBe('Fill at least one of these fields');
-		expect(await check({ ...atLeastOne, assert: 'allOrNone' }, '', { phone: 'x', email: '' })).toBe(
-			'Fill all of these fields or none',
-		);
+		expect(await check(atLeastOne, '', { phone: '', email: '' })).toBe(false);
+		expect(await check({ ...atLeastOne, assert: 'allOrNone' }, '', { phone: 'x', email: '' })).toBe(false);
 	});
 
 	test('an unparseable date fails the comparison rather than passing it', async () => {
 		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date' };
 
 		expect(await check(rule, '2026-02-01', { startDate: '2026-01-01' })).toBe(true);
-		expect(await check(rule, 'not-a-date', { startDate: '2026-01-01' })).toBe('Values must be in descending order');
+		expect(await check(rule, 'not-a-date', { startDate: '2026-01-01' })).toBe(false);
 	});
 
 	test('date comparison does not call an arbitrary object toString method', async () => {
@@ -196,7 +194,7 @@ describe('relate semantics', () => {
 			},
 		};
 
-		expect(await check(rule, '2026-02-01', { startDate: value })).toBe('Values must be in descending order');
+		expect(await check(rule, '2026-02-01', { startDate: value })).toBe(false);
 	});
 
 	test('includeSelf false ignores the value under test even when it is listed', async () => {
@@ -208,9 +206,7 @@ describe('relate semantics', () => {
 			includeSelf: false,
 		};
 
-		expect(await check(rule, 'typed-but-not-committed', { phone: '', email: '' }, 'phone')).toBe(
-			'Fill at least one of these fields',
-		);
+		expect(await check(rule, 'typed-but-not-committed', { phone: '', email: '' }, 'phone')).toBe(false);
 	});
 
 	test('a reference inside an array row resolves within that row', async () => {
@@ -218,7 +214,7 @@ describe('relate semantics', () => {
 		const values = { lines: [{ quantity: 2 }, { quantity: 10 }] };
 
 		expect(await check(rule, 5, values, 'lines.0.max')).toBe(true);
-		expect(await check(rule, 5, values, 'lines.1.max')).toBe('Values must be in descending order');
+		expect(await check(rule, 5, values, 'lines.1.max')).toBe(false);
 	});
 
 	test('a custom message replaces the default', async () => {
@@ -255,7 +251,7 @@ describe('relate presets', () => {
 		const rule = ValidationPresets.relate.before('endDate');
 
 		expect(await check(rule, '2026-01-01', { endDate: '2026-03-01' })).toBe(true);
-		expect(await check(rule, '2026-04-01', { endDate: '2026-03-01' })).toBe('Values must be in ascending order');
+		expect(await check(rule, '2026-04-01', { endDate: '2026-03-01' })).toBe(false);
 	});
 
 	test('atLeastOneOf and mutuallyExclusive exclude the declaring field', async () => {

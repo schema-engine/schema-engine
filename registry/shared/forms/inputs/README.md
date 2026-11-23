@@ -23,6 +23,10 @@ Each component follows a consistent 3-file pattern:
 - `form-[name].tsx` - React component implementation
 - `form-[name].registration.ts` - Element registration (`defineInput` / `defineStatic`)
 
+## Native and controlled fields
+
+`Input` and `Textarea` render native controls, so they bind with `useFormField(config)` and are uncontrolled: they spread `fieldProps`, take `defaultValue`, and the form reads, writes back and validates the browser's own `validity`. Every field that wraps a Radix, Base UI or react-aria component takes only `value` and `onChange` props, so it binds with `useFormField(config, { controlled: true })`. The array shell reads no value, so a keystroke in a row does not render it.
+
 ## Quick Start
 
 ### Import Elements

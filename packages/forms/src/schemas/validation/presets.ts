@@ -28,29 +28,29 @@ export const ValidationPresets = {
 		required: (message?: string): RequiredRule => ({ type: 'required', message }),
 		email: (message?: string): EmailRule => ({
 			type: 'email',
-			message: message || 'Please enter a valid email address',
+			message,
 		}),
 		minLength: (value: number, message?: string): MinLengthRule => ({
 			type: 'minLength',
 			value,
-			message: message || `Must be at least ${value} characters`,
+			message,
 		}),
 		maxLength: (value: number, message?: string): MaxLengthRule => ({
 			type: 'maxLength',
 			value,
-			message: message || `Must be no more than ${value} characters`,
+			message,
 		}),
 		pattern: (pattern: string, message?: string): PatternRule => ({
 			type: 'pattern',
 			value: pattern,
-			message: message || 'Invalid format',
+			message,
 		}),
-		url: (message?: string): UrlRule => ({ type: 'url', message: message || 'Please enter a valid URL' }),
-		uuid: (message?: string): UuidRule => ({ type: 'uuid', message: message || 'Please enter a valid UUID' }),
+		url: (message?: string): UrlRule => ({ type: 'url', message }),
+		uuid: (message?: string): UuidRule => ({ type: 'uuid', message }),
 		uuidv4: (message?: string): UuidRule => ({
 			type: 'uuid',
 			version: 'v4',
-			message: message || 'Please enter a valid UUID v4',
+			message,
 		}),
 		cuid: (message?: string): CuidRule => ({ type: 'cuid', message }),
 		cuid2: (message?: string): Cuid2Rule => ({ type: 'cuid2', message }),
@@ -62,12 +62,12 @@ export const ValidationPresets = {
 		min: (value: number, message?: string): MinRule => ({
 			type: 'min',
 			value,
-			message: message || `Must be at least ${value}`,
+			message,
 		}),
 		max: (value: number, message?: string): MaxRule => ({
 			type: 'max',
 			value,
-			message: message || `Must be no more than ${value}`,
+			message,
 		}),
 	},
 	boolean: {
@@ -78,41 +78,41 @@ export const ValidationPresets = {
 		minItems: (value: number, message?: string): MinItemsRule => ({
 			type: 'minItems',
 			value,
-			message: message || `Must have at least ${value} items`,
+			message,
 		}),
 		maxItems: (value: number, message?: string): MaxItemsRule => ({
 			type: 'maxItems',
 			value,
-			message: message || `Must have no more than ${value} items`,
+			message,
 		}),
 		nonEmpty: (message?: string): MinItemsRule => ({
 			type: 'minItems',
 			value: 1,
-			message: message || 'Cannot be empty',
+			message,
 		}),
 	},
 	network: {
 		ipv4: (message?: string): Ipv4Rule => ({
 			type: 'ipv4',
-			message: message || 'Please enter a valid IPv4 address',
+			message,
 		}),
 		ipv6: (message?: string): Ipv6Rule => ({
 			type: 'ipv6',
-			message: message || 'Please enter a valid IPv6 address',
+			message,
 		}),
 	},
 	date: {
 		datetime: (message?: string): DateTimeRule => ({
 			type: 'datetime',
-			message: message || 'Please enter a valid ISO datetime',
+			message,
 		}),
 		date: (message?: string): DateRule => ({
 			type: 'date',
-			message: message || 'Please enter a valid ISO date',
+			message,
 		}),
 		time: (message?: string): TimeRule => ({
 			type: 'time',
-			message: message || 'Please enter a valid ISO time',
+			message,
 		}),
 	},
 	/**
@@ -197,7 +197,7 @@ export const ValidationPresets = {
 			headers: options?.headers,
 			extraPayload: options?.extraPayload,
 			expectedResponse: options?.expectedResponse,
-			message: options?.message || 'Validation failed',
+			message: options?.message,
 			dependencies: options?.dependencies,
 		}),
 	},

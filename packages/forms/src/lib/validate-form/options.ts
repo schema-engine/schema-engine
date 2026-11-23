@@ -11,7 +11,8 @@ export interface ValidateFormOptions {
 	defaultWizardRecipe?: string;
 	getElement: (id: string) => ElementRegistration | undefined;
 	getAction: (id: string) => AnyActionRegistration | undefined;
-	hasValidation: (type: string) => boolean;
+	/** Why a rule cannot be used (no handler, invalid options, a handler that throws), or `undefined` when it can. */
+	checkRule: (rule: { type: string }) => string | undefined;
 	/** Appearance axes the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
 	axes?: LayoutTheme['axes'];
 }

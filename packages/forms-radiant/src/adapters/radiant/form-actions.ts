@@ -1,11 +1,17 @@
 import type { BuilderActionBaseContext, FormActionTrigger, FormConfigView } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { buildFormActionContext, collectStepActions, runSubmissionLifecycle } from '@schema-engine/forms/engine';
+import {
+	buildFormActionContext,
+	checkFormValidity,
+	collectStepActions,
+	runSubmissionLifecycle,
+} from '@schema-engine/forms/engine';
 import { ActionDispatcher, type ActionDispatchInput } from '@schema-engine/forms/actions';
 import type { FormActionConfig } from '@schema-engine/forms/schemas';
+import type { FormStateError } from '@schema-engine/forms/types';
 import type { FormProviderProps } from '@/adapters/types';
 import { logger } from '@/lib/logger';
-import { expandValues } from './controller/values';
+import { createChangeDetector } from './controller/values';
 import type { FormController } from './controller';
 
 /** What a submission's actions produced, in the shape `runSubmissionLifecycle` resolves. */
@@ -30,6 +36,27 @@ export interface FormActionsOptions {
  * through `se-action-results` events on the `rui-form`; the instance reports the
  * submission itself.
  */
+/**
+ * The errors Radiant UI holds, without the keys it types as possibly cleared.
+ *
+ * @remarks Radiant UI types its errors as a partial record, so an entry can be `undefined` in the type; the engine's context records only errors.
+ */
+function recordedErrors(
+	errors: Readonly<Partial<Record<string, { readonly type?: string; readonly message?: string }>>>,
+): Record<string, FormStateError> {
+	return Object.fromEntries(
+		Object.entries(errors).flatMap(([path, error]) => {
+			if (error === undefined) return [];
+			const issue = {
+				type: error.type ?? 'validation',
+				source: 'validation' as const,
+				...(error.message === undefined ? {} : { message: error.message }),
+			};
+			return [[path, { ...issue, all: [issue] }]];
+		}),
+	);
+}
+
 export class FormActions {
 	private readonly dispatcher: ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>;
 	private readonly mountedAt = Date.now();
@@ -52,6 +79,12 @@ export class FormActions {
 			setValue: (name, value) => form.setValue(name, value),
 			getValue: (name) => form.getValue(name),
 			validate: () => form.trigger(),
+			checkValidity: () =>
+				checkFormValidity({
+					steps: options.config().steps,
+					values: form.getValues(),
+					registry: engine.getValidationRegistry(),
+				}),
 		};
 		form.host.addEventListener('rui-invalid', this.countInvalid);
 	}
@@ -60,22 +93,19 @@ export class FormActions {
 	 * Dispatches `form_mount` and starts `form_change` dispatching, once, when the form is ready.
 	 *
 	 * @remarks
-	 * Safe to call on every readiness notification. The change watcher skips its
-	 * initial snapshot, and clears the attempt count when the form is not submitted.
+	 * Safe to call on every readiness notification. The change watcher takes its initial
+	 * snapshot as the baseline and dispatches `form_change` only when the values differ from
+	 * the previous one; it also clears the attempt count when the form is not submitted.
 	 */
 	start(): void {
 		const { form } = this.options;
 		if (this.started || !form.ready) return;
 		this.started = true;
 		this.dispatchQuietly('form_mount');
-		let initial = true;
-		this.unwatchChanges = form.watchForm(() => {
+		const changed = createChangeDetector();
+		this.unwatchChanges = form.watchForm((values) => {
 			if (!form.formState.isSubmitted) this.submitAttempts = 0;
-			if (initial) {
-				initial = false;
-				return;
-			}
-			this.dispatchQuietly('form_change');
+			if (changed(values)) this.dispatchQuietly('form_change');
 		});
 	}
 
@@ -92,19 +122,21 @@ export class FormActions {
 	}
 
 	/**
-	 * Runs the submit actions before the form instance invokes its submission callback.
+	 * Runs the submission lifecycle, with `onSubmit` between the submit actions and the success or error trigger.
 	 *
 	 * @remarks
-	 * Resolves unsuccessful when the form is not ready. The caller reports the
+	 * Resolves unsuccessful, without calling `onSubmit`, when the form is not ready. The caller reports the
 	 * submission's start and completion.
 	 */
-	async submit(): Promise<SubmissionOutcome> {
+	async submit(onSubmit?: () => void | Promise<void>): Promise<SubmissionOutcome> {
 		if (!this.options.form.ready) return { succeeded: false, results: [] };
 		try {
 			const outcome = await runSubmissionLifecycle((input) => this.dispatchActions(input, true), {
 				actions: this.activeActions(),
 				context: () => this.buildContext(),
+				hasMatching: (actions, trigger) => this.dispatcher.hasMatching(actions, trigger),
 				onAction: (action, data) => this.options.onAction?.(action, data),
+				onSubmit,
 			});
 			this.report('form_submit', outcome.results);
 			return outcome;
@@ -116,7 +148,7 @@ export class FormActions {
 	/** Dispatches one trigger's actions for the current step; resolves empty when none are configured or before the form is ready. */
 	async dispatchTrigger(trigger: FormActionTrigger): Promise<Awaited<ReturnType<ActionDispatcher['dispatch']>>> {
 		const actions = this.activeActions();
-		if (!actions.length || !this.options.form.ready) return [];
+		if (!this.options.form.ready || !this.dispatcher.hasMatching(actions, trigger)) return [];
 		return this.dispatchActions({ actions, trigger, context: this.buildContext() });
 	}
 
@@ -142,29 +174,30 @@ export class FormActions {
 
 	/**
 	 * @remarks
-	 * Radiant UI keys errors and touched state by flat field name; both are expanded
-	 * into the engine's nested tree. The store records only whether the form was
+	 * Radiant UI keys errors and touched state by flat field name, as the engine's context does. The store records only whether the form was
 	 * submitted, so `submitCount` counts the attempts Radiant UI reports instead:
 	 * `rui-invalid` for one that failed validation, and a finished submission
-	 * lifecycle, which is when React Hook Form counts it too.
+	 * lifecycle, which is when React counts it too.
 	 * A reset clears the store's submitted flag and notifies the store, and the
 	 * change watcher then clears the count.
 	 */
 	private buildContext(): BuilderActionBaseContext {
 		const { form, currentStep } = this.options;
-		const { isValid, errors, touched } = form.formState;
+		const { errors, touched } = form.formState;
+		const recorded = recordedErrors(errors);
 		return buildFormActionContext({
 			config: this.options.config(),
 			values: form.getValues(),
 			formState: {
-				isValid,
-				errors: expandValues(errors),
-				touched: expandValues(touched),
+				isValid: Object.keys(recorded).length === 0,
+				errors: recorded,
+				touched,
 				submitCount: this.submitAttempts,
 			},
 			currentStep: currentStep(),
 			mountedAt: this.mountedAt,
 			form: this.actionForm,
+			fetch: this.engine.fetch,
 		});
 	}
 }

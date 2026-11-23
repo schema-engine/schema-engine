@@ -6,7 +6,7 @@ import {
 	FieldContent,
 	FieldHint,
 } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useFormField, combineHandlers, fieldText } from '@schema-engine/forms-react/hooks';
 import type { RadioFieldProps } from './form-radio.types';
 import { Label } from '@/components/ui/label';
 
@@ -16,20 +16,21 @@ export function FormRadio({
 	onFocus: propsOnFocus,
 	...config
 }: RadioFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	return (
 		<FieldGroupRoot style={containerStyles}>
 			{config.label && (
-				<FieldLabel htmlFor={config.id} required={isRequired} error={error} className="mb-4">
+				<FieldLabel htmlFor={config.id} required={required} error={error} className="mb-4">
 					{config.label}
 				</FieldLabel>
 			)}
 			<FieldContent className="space-y-3">
 				<RadioGroup
 					{...fieldProps}
-					value={value || ''}
+					value={fieldText(value)}
 					onValueChange={(val: unknown) => combineHandlers(onChange, propsOnChange)(String(val))}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					onFocus={propsOnFocus}

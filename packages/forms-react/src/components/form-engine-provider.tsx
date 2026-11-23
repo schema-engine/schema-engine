@@ -1,7 +1,5 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { EngineOutputMaps, FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
-import { FormAdapterContext } from '../adapters/context';
-import type { FormAdapter } from '../adapters/types';
 import { FormEngineContext, createFormEngineContextValue } from './provider';
 
 export interface FormEngineProviderProps<
@@ -12,11 +10,6 @@ export interface FormEngineProviderProps<
 > {
 	children: ReactNode;
 	engine: CoreFormEngine<TElements, TRecipes, TActions, TOutputs>;
-	/**
-	 * Form library adapter. Import e.g. `rhfAdapter` from
-	 * `@schema-engine/forms-react/adapters/react-hook-form`.
-	 */
-	adapter: FormAdapter;
 }
 
 export function FormEngineProvider<
@@ -24,22 +17,12 @@ export function FormEngineProvider<
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
->({ children, engine, adapter }: FormEngineProviderProps<TElements, TRecipes, TActions, TOutputs>) {
-	if (!adapter) {
-		throw new Error(
-			'FormEngineProvider requires an adapter. Pass one explicitly, e.g. rhfAdapter from @schema-engine/forms-react/adapters/react-hook-form.',
-		);
-	}
+>({ children, engine }: FormEngineProviderProps<TElements, TRecipes, TActions, TOutputs>) {
+	const value = useMemo(() => createFormEngineContextValue(engine), [engine]);
 
 	if (!engine) {
 		throw new Error('FormEngineProvider requires a FormEngine instance. Create one using createFormEngine()');
 	}
 
-	return (
-		<FormAdapterContext.Provider value={adapter}>
-			<FormEngineContext.Provider value={createFormEngineContextValue(engine)}>
-				{children}
-			</FormEngineContext.Provider>
-		</FormAdapterContext.Provider>
-	);
+	return <FormEngineContext.Provider value={value}>{children}</FormEngineContext.Provider>;
 }

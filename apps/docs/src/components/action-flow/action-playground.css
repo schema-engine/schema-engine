@@ -98,7 +98,11 @@ se-action-playground {
 	padding: 0.85rem 0.9rem 0.75rem;
 	border-radius: 1rem;
 	background:
-		radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--color-border, var(--border)) 55%, transparent) 1px, transparent 0)
+		radial-gradient(
+				circle at 1px 1px,
+				color-mix(in oklab, var(--color-border, var(--border)) 55%, transparent) 1px,
+				transparent 0
+			)
 			0 0 / 12px 12px,
 		color-mix(in oklab, var(--background) 70%, transparent);
 }

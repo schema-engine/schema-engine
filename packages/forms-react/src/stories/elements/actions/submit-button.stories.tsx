@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { defineStoryForm, getEngine, ValidationPresets, rhfAdapter } from '@/stories/shared/form-builder.ui';
+import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
 import * as z from 'zod/mini';
 import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@schema-engine/forms/types';
 import { FormActionTriggerSchema, type ActionExecutionResult } from '@schema-engine/forms';
@@ -65,7 +65,6 @@ const meta = {
 	component: FormRenderer,
 	args: {
 		engine: baseUIEngine,
-		adapter: rhfAdapter,
 	},
 	parameters: {
 		layout: 'padded',
@@ -84,7 +83,6 @@ const meta = {
 	],
 	argTypes: {
 		engine: { table: { disable: true } },
-		adapter: { table: { disable: true } },
 		config: {
 			control: 'object',
 			description: 'Form configuration with submit button',

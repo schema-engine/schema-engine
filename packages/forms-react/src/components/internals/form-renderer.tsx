@@ -8,15 +8,15 @@
  */
 import { GRID_CLASS, getAppearanceAttributes, getGridVariables, type LayoutTheme } from '@schema-engine/layout';
 import type React from 'react';
-import { useContext, useMemo } from 'react';
+import { useMemo } from 'react';
 import { FormProvider } from '../form-provider';
-import type { FormAdapter, FormProviderProps } from '../../adapters/types';
+import type { FormProviderProps } from '../../hooks/form-state/types';
 import { FormElements } from './form-elements';
 import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
-import { FormAdapterContext } from '../../adapters/context';
 import { FormEngineProvider } from '../form-engine-provider';
 import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormConfig } from '@schema-engine/forms/schemas';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from './recipe-renderer';
 import { getRenderableSteps, assertFormEngine, stepGrid } from '@schema-engine/forms/lib/validate-form';
@@ -27,21 +27,6 @@ function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }) {
 			{css}
 		</style>
 	);
-}
-
-const formConfigIdentities = new WeakMap<NormalizedFormConfig, number>();
-let nextFormConfigIdentity = 0;
-
-/**
- * @remarks The normalized config identity marks the lifetime of the adapter's form instance.
- */
-function getFormConfigIdentity(config: NormalizedFormConfig): number {
-	const existingIdentity = formConfigIdentities.get(config);
-	if (existingIdentity !== undefined) return existingIdentity;
-
-	const identity = nextFormConfigIdentity++;
-	formConfigIdentities.set(config, identity);
-	return identity;
 }
 
 function StepFields({
@@ -116,11 +101,14 @@ export interface FormRendererProps<
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
-> extends Omit<FormProviderProps<Record<string, unknown>, TElements, TRecipes, TActions, TOutputs>, 'children'> {
+> extends Omit<FormProviderProps<TOutputs>, 'children' | 'config'> {
+	/** The form: authoring config, or the normalized config of `engine.validateForm`. */
+	config:
+		| FormConfig<TElements, TRecipes, TActions>
+		| NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	className?: string;
 	style?: React.CSSProperties;
 	engine?: FormEngine<TElements, TRecipes, TActions, TOutputs>;
-	adapter?: FormAdapter;
 	children?: React.ReactNode;
 }
 
@@ -136,23 +124,24 @@ function FormRendererInner<
 	onChange,
 	onAction,
 	onActionResults,
+	formatIssue,
 	className = '',
 	style,
 	layout,
 	children,
-}: Omit<FormRendererProps<TElements, TRecipes, TActions, TOutputs>, 'engine' | 'adapter' | 'config'> & {
+}: Omit<FormRendererProps<TElements, TRecipes, TActions, TOutputs>, 'engine' | 'config'> & {
 	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
 	layout: LayoutTheme;
 }) {
 	return (
 		<FormProvider
-			key={getFormConfigIdentity(config)}
 			config={config}
 			defaultValues={defaultValues}
 			onSubmit={onSubmit}
 			onChange={onChange}
 			onAction={onAction}
 			onActionResults={onActionResults}
+			formatIssue={formatIssue}
 		>
 			<div className={`se-form ${className}`.trim()} style={style}>
 				<LayoutThemeStyle themeId={layout.id} css={layout.css} />
@@ -169,11 +158,9 @@ export function FormRenderer<
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
->({ engine, adapter, ...props }: FormRendererProps<TElements, TRecipes, TActions, TOutputs>) {
+>({ engine, ...props }: FormRendererProps<TElements, TRecipes, TActions, TOutputs>) {
 	const inheritedEngine = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
-	const inheritedAdapter = useContext(FormAdapterContext);
 	const resolvedEngine = engine ?? inheritedEngine?.engine;
-	const resolvedAdapter = adapter ?? inheritedAdapter ?? undefined;
 	const { config, layout } = useMemo(() => {
 		assertFormEngine(resolvedEngine, props.config);
 		return {
@@ -187,14 +174,8 @@ export function FormRenderer<
 		return <FormRendererInner {...innerProps} />;
 	}
 
-	if (!resolvedAdapter) {
-		throw new Error(
-			'FormRenderer requires an adapter when an engine is supplied. Pass `adapter` or render inside FormEngineProvider.',
-		);
-	}
-
 	return (
-		<FormEngineProvider engine={resolvedEngine} adapter={resolvedAdapter}>
+		<FormEngineProvider engine={resolvedEngine}>
 			<FormRendererInner {...innerProps} />
 		</FormEngineProvider>
 	);

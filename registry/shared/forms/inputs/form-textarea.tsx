@@ -1,6 +1,6 @@
 import { Textarea } from '@/components/ui/textarea';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useFormField, fieldText } from '@schema-engine/forms-react/hooks';
 import type { TextareaFieldProps } from './form-textarea.types';
 
 export function FormTextarea({
@@ -9,24 +9,29 @@ export function FormTextarea({
 	onFocus: propsOnFocus,
 	...config
 }: TextareaFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { defaultValue, error, fieldProps, required, containerStyles } = useFormField(config);
 
 	return (
 		<FieldGroup
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}
 		>
 			<Textarea
 				{...fieldProps}
-				value={(value as string) || ''}
-				onChange={(e) => combineHandlers(onChange, propsOnChange)(e.target.value)}
-				onBlur={combineHandlers(onBlur, propsOnBlur)}
+				defaultValue={fieldText(defaultValue)}
+				onChange={(event) => {
+					fieldProps.onChange(event);
+					propsOnChange?.(event.target.value);
+				}}
+				onBlur={() => {
+					fieldProps.onBlur();
+					propsOnBlur?.();
+				}}
 				onFocus={propsOnFocus}
 				placeholder={config.placeholder}
 				rows={config.rows}

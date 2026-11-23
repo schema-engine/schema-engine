@@ -35,7 +35,7 @@ and cross-adapter previews stay identical.
 | Package                        | Role                                                                                   |
 | ------------------------------ | -------------------------------------------------------------------------------------- |
 | `@schema-engine/forms`         | Headless engine: JSON config, validation, constraints, recipe specs                    |
-| `@schema-engine/forms-react`   | React adapter: renderer, hooks, RHF bridge. No default visual recipes                  |
+| `@schema-engine/forms-react`   | React renderer: components and the form state hooks. No default visual recipes         |
 | `@schema-engine/forms-radiant` | Radiant adapter: renderer plus in-package recipes bound by `createRadiantFormEngine()` |
 | `@schema-engine/actions`       | Domain-agnostic sequential action system                                               |
 | `@schema-engine/registry`      | Base registry used by the other packages                                               |

@@ -16,7 +16,7 @@ function createRadiantPhoneValidationSchema(rule: PhoneRule): z.ZodMiniType {
 			if (!lib.isValidPhoneNumber(value)) {
 				ctx.addIssue({
 					code: 'custom',
-					message: rule.message || 'Enter a complete phone number',
+					message: rule.message,
 				});
 			}
 		}),

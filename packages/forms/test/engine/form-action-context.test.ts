@@ -6,7 +6,9 @@ const form = {
 	setValue: () => undefined,
 	getValue: () => undefined,
 	validate: async () => true,
+	checkValidity: async () => true,
 };
+const fetch = async () => new Response(null);
 
 describe('buildFormActionContext', () => {
 	afterEach(() => {
@@ -23,6 +25,7 @@ describe('buildFormActionContext', () => {
 			currentStep: 0,
 			mountedAt: 900,
 			form,
+			fetch,
 		};
 
 		const first = buildFormActionContext(input);
@@ -36,21 +39,122 @@ describe('buildFormActionContext', () => {
 		expect(nextStep.metadata).toEqual({ stepStartTime: 1_050, totalFormTime: 150, userInteractions: 3 });
 	});
 
-	test('counts each touched nested field and array row field as one interaction', () => {
+	test('counts each touched field by path as one interaction', () => {
 		const context = buildFormActionContext({
 			config: { id: 'contact', steps: [{}] },
 			values: {},
 			formState: {
-				isValid: false,
+				isValid: true,
 				errors: {},
-				touched: { address: { street: true, city: true, zip: false }, contacts: [{ email: true }, undefined] },
+				touched: {
+					'address.street': true,
+					'address.city': true,
+					'address.zip': false,
+					'contacts.0.email': true,
+				},
 				submitCount: 1,
 			},
 			currentStep: 0,
 			mountedAt: 1_800,
 			form,
+			fetch,
 		});
 
 		expect(context.metadata.userInteractions).toBe(4);
+	});
+
+	test('reports the isValid of the form state it is given, never one recomputed from the errors', () => {
+		const input = {
+			config: { id: 'contact', steps: [{}] },
+			values: {},
+			currentStep: 0,
+			mountedAt: 1_900,
+			form,
+			fetch,
+		};
+
+		const pristine = buildFormActionContext({
+			...input,
+			formState: { isValid: true, errors: {}, touched: {}, submitCount: 0 },
+		});
+		const failed = buildFormActionContext({
+			...input,
+			formState: {
+				isValid: false,
+				errors: {
+					email: {
+						type: 'validation',
+						source: 'validation',
+						message: 'Required',
+						all: [{ type: 'validation', source: 'validation', message: 'Required' }],
+					},
+				},
+				touched: {},
+				submitCount: 0,
+			},
+		});
+
+		const nested = buildFormActionContext({
+			...input,
+			formState: {
+				isValid: false,
+				errors: {
+					'contacts.1.email': {
+						type: 'validation',
+						source: 'validation',
+						message: 'Invalid',
+						all: [{ type: 'validation', source: 'validation', message: 'Invalid' }],
+					},
+				},
+				touched: {},
+				submitCount: 0,
+			},
+		});
+		const formLevel = buildFormActionContext({
+			...input,
+			formState: {
+				isValid: false,
+				errors: {
+					'': {
+						type: 'server',
+						source: 'validation',
+						message: 'Try later',
+						all: [{ type: 'server', source: 'validation', message: 'Try later' }],
+					},
+				},
+				touched: {},
+				submitCount: 0,
+			},
+		});
+
+		expect(pristine.isValid).toBe(true);
+		expect(failed.isValid).toBe(false);
+		expect(nested.isValid).toBe(false);
+		expect(formLevel.isValid).toBe(false);
+		expect(nested.errors['contacts.1.email']).toEqual({
+			type: 'validation',
+			source: 'validation',
+			message: 'Invalid',
+			all: [{ type: 'validation', source: 'validation', message: 'Invalid' }],
+		});
+	});
+
+	test('takes isValid from the form state even when its errors say otherwise', () => {
+		const error = {
+			type: 'warning-only',
+			source: 'validation' as const,
+			all: [{ type: 'warning-only', source: 'validation' as const }],
+		};
+		const context = buildFormActionContext({
+			config: { id: 'contact', steps: [{}] },
+			values: {},
+			currentStep: 0,
+			mountedAt: 1_900,
+			form,
+			fetch,
+			formState: { isValid: true, errors: { email: error }, touched: {}, submitCount: 0 },
+		});
+
+		expect(context.isValid).toBe(true);
 	});
 });

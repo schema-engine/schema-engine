@@ -3,6 +3,8 @@ import { createFormEngine } from '@schema-engine/forms';
 import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
 import type { FormConfigView, NormalizedFormConfig } from '@schema-engine/forms';
 import { FormStore, type FieldValues } from '@ecopages/radiant-ui/form';
+import { createRadiantFormEngine } from '@/registries/builder-registry';
+import { schemaFormRegistrations } from '@/registrations';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormActions } from '@/adapters/radiant/form-actions';
 import { FormInstanceElement } from '@/components/form-instance.script';
@@ -73,6 +75,60 @@ test('submission action callback receives the successful action and nested value
 		trigger: 'form_submit',
 		formData: { address: { street: 'Main' } },
 	});
+});
+
+test('a trigger no action answers builds no context and runs no validation', async () => {
+	const execute = vi.fn(async (_context: TestActionContext) => ({ success: true }));
+	const engine = createFormEngine({ elements: [], actions: [testAction('audit', ['form_submit'], execute)] });
+	const { form, formActions } = mountActions(
+		engine,
+		engine.defineForm({ ...oneStep('quiet'), actions: [{ id: 'audit', $type: 'audit' }] }),
+	);
+	const getValues = vi.spyOn(form, 'getValues');
+	const trigger = vi.spyOn(form, 'trigger');
+
+	await expect(formActions.dispatchTrigger('form_change')).resolves.toEqual([]);
+
+	expect(getValues).not.toHaveBeenCalled();
+	expect(trigger).not.toHaveBeenCalled();
+	expect(execute).not.toHaveBeenCalled();
+});
+
+test('an action context reports recorded errors as isValid and checks validity without recording any', async () => {
+	let seen: TestActionContext | undefined;
+	const engine = createRadiantFormEngine({
+		elements: schemaFormRegistrations,
+		actions: [
+			testAction('audit', ['form_change'], async (context) => {
+				seen = context;
+				return { success: true };
+			}),
+		],
+	});
+	const store = new FormStore<FieldValues>();
+	const { formActions } = mountActions(
+		engine,
+		engine.defineForm({
+			id: 'checked',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [
+						{ $type: 'input', id: 'email', name: 'email', label: 'Email', rules: [{ type: 'required' }] },
+					],
+				},
+			],
+			actions: [{ id: 'audit', $type: 'audit' }],
+		}),
+		{ store },
+	);
+
+	await formActions.dispatchTrigger('form_change');
+
+	expect(seen?.isValid).toBe(true);
+	await expect(seen?.form.checkValidity()).resolves.toBe(false);
+	expect(store.errors).toEqual({});
 });
 
 test('refreshes action context between submission triggers and keeps form operations stable', async () => {

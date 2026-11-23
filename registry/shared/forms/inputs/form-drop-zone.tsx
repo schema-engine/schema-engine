@@ -1,12 +1,11 @@
 import { Dropzone, DropzoneContent, DropzoneEmptyState } from '@/components/ui/schema-engine/components/drop-zone';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
+import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { DropZoneFieldProps } from './form-drop-zone.types';
 
 export function FormDropZone({ onChange: propsOnChange, onDropChange, ...config }: DropZoneFieldProps) {
-	const { value, error, onChange, fieldProps, isRequired, containerStyles } = useControlledFormElement({
-		...config,
-		defaultValue: config.defaultValue ?? [],
+	const { value, error, onChange, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
 	});
 
 	const { accept, maxSize, minSize, maxFiles, disabled } = config;
@@ -23,7 +22,7 @@ export function FormDropZone({ onChange: propsOnChange, onDropChange, ...config 
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}

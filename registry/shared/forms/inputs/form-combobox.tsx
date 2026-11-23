@@ -1,5 +1,5 @@
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { combineHandlers, useControlledFormElement } from '@schema-engine/forms-react/hooks';
+import { combineHandlers, useFormField } from '@schema-engine/forms-react/hooks';
 import {
 	Combobox,
 	ComboboxChips,
@@ -26,8 +26,9 @@ export function FormCombobox({
 	onFocus: propsOnFocus,
 	...config
 }: ComboboxFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } =
-		useControlledFormElement(config);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 	const isMultiple = Boolean(config.multiple);
 	const values = isMultiple ? (Array.isArray(value) ? value : []) : value == null || value === '' ? [] : [value];
 	const selected = values
@@ -49,7 +50,7 @@ export function FormCombobox({
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}

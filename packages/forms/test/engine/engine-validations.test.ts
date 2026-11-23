@@ -99,8 +99,10 @@ describe('engine validation registry', () => {
 			debounceScope: createDebounceScope(),
 		});
 
-		expect(invalid).toEqual({ postcode: { type: 'validation', message: 'Enter a postcode' } });
-		expect(valid).toEqual({});
+		expect(invalid.issues).toEqual({
+			postcode: [{ type: 'postcode', message: 'Enter a postcode', severity: 'error' }],
+		});
+		expect(valid.issues).toEqual({});
 	});
 
 	test('lets an engine validation override one an element declares', () => {

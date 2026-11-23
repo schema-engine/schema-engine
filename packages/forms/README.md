@@ -165,17 +165,25 @@ submit, success or error, and complete triggers. Pass a fixed `context` when eve
 uses the same snapshot, or a context factory when each trigger needs a fresh form-state
 snapshot. Pass `onAction(action, data)` to run a callback after each successful submit
 action. If it rejects, that action becomes a fatal failure and later submit actions stop.
+Pass `onSubmit()` to run the consumer's submission callback inside the sequence, after the submit actions and before the
+success or error trigger, and only when the actions succeeded; a rejection fails the submission.
+The function never rejects: a rejected `onSubmit` or trigger dispatch resolves with `succeeded: false` and a
+`failure` (`{ phase: 'callback' | 'trigger', error }`), and one recovery path dispatches `form_submit_error`
+(unless it was already tried) and `form_submit_complete` exactly once, even when that dispatch rejects.
+Once `onSubmit` and `form_submit_success` have resolved, the submission is saved: a later failure of `form_submit_complete` is recorded in
+`failure` and `succeeded` stays true.
+`createSubmissionGuard()` returns a guard whose `run(task)` ignores a call while one is pending and releases on every way out; a renderer
+wraps validation and the lifecycle in one `run`, so a second submit is dropped before it validates.
 The returned `succeeded` flag is false when a submit action fails with
-`shouldContinue: false` or `onAction` rejects; a failed action that allows continuation
+`shouldContinue: false`, `onAction` rejects, `onSubmit` rejects or a trigger dispatch before the submission is saved fails; a failed action that allows continuation
 does not fail the submission. Each returned result carries the `actionId` of the
 configured action that produced it.
 `buildFormActionContext` is an exported utility that constructs a form action
 context with form data and timing metadata, including a stable step start time that resets
-when the active step changes. Its form state takes `errors` and `touched` nested like the
-values, so a handler reads `context.errors.address.street` in every renderer, and
+when the active step changes. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
-The form state no longer accepts `touchedFields` or `isSubmitted`: pass `touched` and
-`submitCount`, both required (see [action context form state](src/engine/README.md#action-context-form-state)).
+The form state no longer accepts `touchedFields` or `isSubmitted`: pass `isValid`, `touched` and
+`submitCount`, all required; the context's `isValid` is the one passed, the container's `snapshot.isValid` (see [action context form state](src/engine/README.md#action-context-form-state)).
 The engine entry point also re-exports `ActionDispatcher` so
 both renderers can use the same action dispatcher class.
 
@@ -490,10 +498,14 @@ engine's normalized form model.
   `accountType` on `contacts.0.taxId` resolves to `contacts.0.accountType`, so
   each array row uses its own value.
 - `validateFieldValue({ element, value, values, fieldPath, registry, debounceScope })` returns
-  the first validation message, or `undefined` when the value passes.
+  `{ issues, failures }`: one issue for each rule the value fails, in rule order, with the rule's `type`,
+  `ruleId` (its `id`), `params` (its options as authored), a fallback `message` and its `severity`, and a
+  `FormValidationFailure` for each rule that could not run.
 - `validateFormValues({ elements, values, registry, names?, debounceScope })` validates the
-  selected paths and returns nested errors, such as
-  `errors.address.street.message`.
+  selected paths (`exactNames` limits it to the named paths themselves) and returns
+  `{ issues, failures }` by dotted path, such as `issues['address.street']`; a container and a row inside
+  it can both fail. An empty `names` validates nothing. Fields hidden by a constraint, disabled fields and
+  everything inside them are skipped (`resolveExcludedPaths`).
 
 Both helpers require a caller-owned `DebounceScope`, which carries async debounce
 state across validation calls for a form. Each rendered field path is keyed
@@ -543,12 +555,12 @@ adapter.
 
 ## Who owns visual chrome
 
-| Layer                                                           | Owns                                                                                                                      |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, adapter types (`@schema-engine/forms/adapters`) — no widget `$type` schemas |
-| `@schema-engine/forms-react`                                    | React renderer components; adapter contracts at `/adapters`, optional RHF adapter at `/adapters/react-hook-form`          |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                               |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React adapter                                     |
+| Layer                                                           | Owns                                                                                                                                                           |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form state container (`@schema-engine/forms/state-container`), `FieldArrayValue` — no widget `$type` schemas |
+| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/hooks`; the form state is the engine's container                                                          |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                    |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                         |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 
@@ -587,9 +599,11 @@ rejects unknown keys, including `rows`, `autoFit`, `autoFill`, and
 Recipe metadata has no `deprecated` property.
 
 React uses the engine's validation, step state, submission triggers and action
-context builder; see the [React adapter contract](../forms-react/README.md#validation-navigation-and-action-contexts).
-Action context form adapters must implement `reset`, `setValue`, `getValue` and
-`validate`, including for custom renderer integrations.
+context builder; see the [React renderer contract](../forms-react/README.md#validation-navigation-and-action-contexts).
+Action context `form` objects must implement `reset`, `setValue`, `getValue`, `validate`
+and `checkValidity`, including for custom renderer integrations. `checkFormValidity`
+validates values against every step's fields under a debounce scope of its own, so a
+renderer can answer `checkValidity` without recording errors.
 
 The validation dependency index also tracks `require` constraints, so renderers
 can clear conditional required errors when a controlling value changes.

@@ -3,15 +3,14 @@ import * as z from 'zod/mini';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema, type ElementConfig } from '@schema-engine/forms/schemas';
+import { BaseFieldSchema } from '@schema-engine/forms/schemas';
 import {
 	MinLengthRuleSchema,
 	type MinLengthRule,
 	type ValidationRegistration,
 } from '@schema-engine/forms/schemas/validation';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { rhfAdapter } from '@/adapters/react-hook-form';
-import { useControlledFormElement } from '@/hooks/use-field';
+import { useFormField } from '@/hooks/form-state';
 
 const isolatedInputSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('isolated-input'),
@@ -36,9 +35,7 @@ function createIsolationEngine(message: string, minimum: number) {
 		metadata: { name: 'Isolated input', category: 'input' },
 		validations: [createValidation(message, minimum)],
 		render: (config: IsolatedInputConfig) => {
-			const { value, error, onChange, onBlur, fieldProps } = useControlledFormElement(
-				config as unknown as ElementConfig,
-			);
+			const { defaultValue, error, fieldProps } = useFormField(config);
 
 			return (
 				<label>
@@ -46,9 +43,7 @@ function createIsolationEngine(message: string, minimum: number) {
 					<input
 						{...fieldProps}
 						data-testid={`${config.id}-input`}
-						value={String(value ?? '')}
-						onChange={(event) => onChange(event.target.value)}
-						onBlur={onBlur}
+						defaultValue={String(defaultValue ?? '')}
 					/>
 					<output data-testid={`${config.id}-error`}>{error}</output>
 				</label>
@@ -89,8 +84,8 @@ describe('FormRenderer engine isolation', () => {
 
 		render(
 			<>
-				<FormRenderer config={createConfig('engine-a')} engine={engineA} adapter={rhfAdapter} />
-				<FormRenderer config={createConfig('engine-b')} engine={engineB} adapter={rhfAdapter} />
+				<FormRenderer config={createConfig('engine-a')} engine={engineA} />
+				<FormRenderer config={createConfig('engine-b')} engine={engineB} />
 			</>,
 		);
 
@@ -102,8 +97,8 @@ describe('FormRenderer engine isolation', () => {
 		fireEvent.blur(inputB);
 
 		await waitFor(() => {
-			expect(screen.getByTestId('engine-a-field-error')).toHaveTextContent('Engine A requires three characters');
+			expect(inputA).toHaveAttribute('aria-invalid', 'true');
 		});
-		expect(screen.getByTestId('engine-b-field-error')).toBeEmptyDOMElement();
+		expect(inputB).toHaveAttribute('aria-invalid', 'false');
 	});
 });

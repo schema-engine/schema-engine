@@ -1,7 +1,6 @@
 import { DateRangePicker } from '@/components/ui/schema-engine/components/date-range-picker';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useControlledFormElement, combineHandlers } from '@schema-engine/forms-react/hooks';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
+import { useFormField, combineHandlers } from '@schema-engine/forms-react/hooks';
 import type { DateRangeFieldProps, DateRangeValue } from './form-date-range.types';
 
 function normalizeDateRange(value: unknown): DateRangeValue {
@@ -9,10 +8,9 @@ function normalizeDateRange(value: unknown): DateRangeValue {
 		return {};
 	}
 
-	const range = value as DateRangeValue;
 	return {
-		from: typeof range.from === 'string' ? range.from : undefined,
-		to: typeof range.to === 'string' ? range.to : undefined,
+		from: 'from' in value && typeof value.from === 'string' ? value.from : undefined,
+		to: 'to' in value && typeof value.to === 'string' ? value.to : undefined,
 	};
 }
 
@@ -22,16 +20,16 @@ export function FormDateRange({
 	onFocus: propsOnFocus,
 	...config
 }: DateRangeFieldProps) {
-	const { value, error, onChange, onBlur, fieldProps, isRequired, containerStyles } = useControlledFormElement(
-		config as unknown as ElementConfig,
-	);
+	const { value, error, onChange, onBlur, fieldProps, required, containerStyles } = useFormField(config, {
+		controlled: true,
+	});
 
 	return (
 		<FieldGroup
 			label={config.label || config.name}
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
-			required={isRequired}
+			required={required}
 			description={config.description}
 			error={error}
 			style={containerStyles}

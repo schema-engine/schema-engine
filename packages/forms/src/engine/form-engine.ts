@@ -1,3 +1,5 @@
+import type { CsrfPolicy, FormFetch } from '@/lib/form-fetch';
+import type { FormIssueFormatter } from '@/state-container/types';
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
 import { ComponentType } from './component-type';
@@ -51,6 +53,12 @@ export interface EngineRegistries {
 	/** The validations passed to `createFormEngine`, kept so {@link FormEngine.extend} can rebuild the registry. */
 	validations: readonly ValidationRegistrationConstraint[];
 	defaultWizardRecipe?: string;
+	formatIssue?: FormIssueFormatter;
+	/** The engine's request function, with the CSRF policy applied. */
+	fetch: FormFetch;
+	/** The `fetch` given to `createFormEngine`, without the policy, so {@link FormEngine.extend} can rebuild. */
+	baseFetch?: FormFetch;
+	csrf?: CsrfPolicy;
 }
 
 export class FormEngine<
@@ -64,6 +72,12 @@ export class FormEngine<
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
 	private readonly layout: LayoutTheme;
 	private readonly validationRegistry: ValidationRegistry;
+
+	/**
+	 * Every request the engine makes goes through this: the `fetch` given to `createFormEngine`, or the global one,
+	 * with the CSRF policy applied. Bindings and actions use it (`context.fetch`) so no one remembers a token.
+	 */
+	readonly fetch: FormFetch;
 
 	/**
 	 * @remarks
@@ -82,7 +96,12 @@ export class FormEngine<
 			validationRegistry: registries.validationRegistry,
 			validations: registries.validations,
 			defaultWizardRecipe: registries.defaultWizardRecipe,
+			formatIssue: registries.formatIssue,
+			fetch: registries.fetch,
+			baseFetch: registries.baseFetch,
+			csrf: registries.csrf,
 		};
+		this.fetch = registries.fetch;
 		this.schemaArtifacts = registries.schemaArtifacts;
 		this.layout = registries.layout;
 		this.validationRegistry = registries.validationRegistry;
@@ -138,6 +157,16 @@ export class FormEngine<
 	 */
 	getLayout(): LayoutTheme {
 		return this.layout;
+	}
+
+	/** The formatter of issues given to `createFormEngine`, which both renderer bindings read; `undefined` when none was. */
+	getIssueFormatter(): FormIssueFormatter | undefined {
+		return this.registries.formatIssue;
+	}
+
+	/** The CSRF policy given to `createFormEngine`, for a binding that adds a hidden input to a native post; `undefined` when there is none. */
+	getCsrf(): CsrfPolicy | undefined {
+		return this.registries.csrf;
 	}
 
 	getValidationRegistry(): ValidationRegistry {
@@ -220,7 +249,7 @@ export class FormEngine<
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 			getElement: (id: string) => this.getElement(id),
 			getAction: (id: string) => this.getAction(id),
-			hasValidation: (type: string) => this.validationRegistry.has(type),
+			checkRule: (rule: { type: string }) => this.validationRegistry.check(rule),
 			axes: this.layout.axes,
 		};
 	}
@@ -229,7 +258,13 @@ export class FormEngine<
 	 * Author a form from this engine's registered elements, recipes, and actions.
 	 * Same runtime pipeline as {@link validateForm}.
 	 */
-	defineForm<const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions, TAppearance>>(
+	defineForm<
+		const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions, TAppearance> & {
+			/** @remarks Rejects the callbacks `FormConfig` no longer has, which an inferred generic would let through. */
+			onSubmit?: never;
+			onChange?: never;
+		},
+	>(
 		config: TConfig & { view?: ExactViewConfig<TConfig['view'], TRecipes, TAppearance> } & ExactFormAppearance<
 				TConfig,
 				TAppearance
@@ -246,7 +281,7 @@ export class FormEngine<
 	validateElement(config: unknown): NormalizedElementConfig<TOutputs['elements']> {
 		return validateElementConfig(config, {
 			getElement: (id) => this.getElement(id),
-			hasValidation: (type) => this.validationRegistry.has(type),
+			checkRule: (rule) => this.validationRegistry.check(rule),
 			axes: this.layout.axes,
 		}) as unknown as NormalizedElementConfig<TOutputs['elements']>;
 	}
@@ -382,6 +417,9 @@ export class FormEngine<
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
 			layout: this.layout,
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
+			formatIssue: this.registries.formatIssue,
+			fetch: this.registries.baseFetch,
+			csrf: this.registries.csrf,
 		}) as unknown as FormEngine<
 			LastWinsMerge<TElements, MergedRegistrationMap<TNewElements>>,
 			LastWinsMerge<TRecipes, MergedRegistrationMap<TNewRecipes>>,
