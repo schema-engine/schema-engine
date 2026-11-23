@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { FORM_ROOT } from '@/state-container';
-import { fill, setup, wizardConfig } from './fixture';
+import { fill, gateReached, releaseGate, setup, wizardConfig } from './fixture';
 
 const toLastStep = async (runtime: ReturnType<typeof setup>['runtime']) => {
 	fill(runtime, { email: 'a@b.c', street: 's' });
@@ -241,26 +241,21 @@ describe('what a failed submission reports', () => {
 describe('a submission a reset or an edit outran', () => {
 	test('an edit that outruns its validation is overtaken: nothing is shown or counted, and the next submit may pass', async () => {
 		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
-		const release = async () => {
-			await new Promise((resolve) => setTimeout(resolve, 0));
-			gate.waiting.splice(0).forEach((resolve) => resolve());
-		};
 		fill(runtime, { email: 'a@b.c', street: 's', card: 'c' });
 		const first = runtime.next();
-		await release();
+		await releaseGate(gate);
 		await first;
 		await runtime.next();
 		expect(runtime.getSnapshot().current).toBe('payment');
 
 		const statuses = statusesOf(runtime);
 		const running = runtime.submit();
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await gateReached(gate);
 		runtime.container.setValue('card', 'd');
-		await release();
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await releaseGate(gate);
+		await gateReached(gate);
 		runtime.container.setValue('card', 'e');
-		await release();
-		await release();
+		await releaseGate(gate);
 
 		expect(await running).toBe('overtaken');
 		expect(statuses).toEqual(['idle', 'validating', 'idle']);
@@ -268,8 +263,7 @@ describe('a submission a reset or an edit outran', () => {
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 
 		const again = runtime.submit();
-		await release();
-		await release();
+		await releaseGate(gate);
 		expect(await again).toBe('submitted');
 	});
 

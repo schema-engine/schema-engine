@@ -355,7 +355,7 @@ test('every context of a submission carries the submitted values: without exclud
 	);
 	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
-	await waitFor(() => expect(onAction).toHaveBeenCalled());
+	await waitFor(() => expect(submitted).toHaveBeenCalled());
 	const expected = { a: 'x', campaign: 'spring' };
 	expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'saved' }), expected);
 	expect(submitted).toHaveBeenCalledWith(expected, {

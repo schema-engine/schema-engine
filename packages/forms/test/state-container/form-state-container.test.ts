@@ -104,8 +104,9 @@ describe('createFormStateContainer', () => {
 		});
 
 		test('a failed check of the whole form surfaces every dependent', async () => {
-			const store = wizard();
+			const store = wizard({ defaults: { password: '', confirmPassword: '' } });
 			expect(await store.validate()).toEqual({ outcome: 'invalid' });
+			expect(store.getSnapshot().errors.confirmPassword).toBeUndefined();
 			store.setValue('password', 'other');
 			await vi.waitFor(() =>
 				expect(store.getSnapshot().errors.confirmPassword?.message).toBe('Passwords differ'),
@@ -401,7 +402,8 @@ describe('createFormStateContainer', () => {
 			await vi.waitFor(() => expect(gate.pending()).toBe(1));
 			gate.stopHolding();
 			store.setValue('password', 'new');
-			await vi.waitFor(() => expect(store.getSnapshot().errors.confirm).toBeUndefined());
+			await vi.waitFor(() => expect(store.getSnapshot().validating.confirm).toBeUndefined());
+			expect(store.getSnapshot().errors.confirm).toBeUndefined();
 			gate.release();
 			expect(await submit).toEqual({ outcome: 'passed' });
 			expect(store.getSnapshot().errors).toEqual({});
@@ -421,13 +423,17 @@ describe('createFormStateContainer', () => {
 								name: 'tags',
 								elements: [
 									{ $type: 'input', name: 'v' },
-									{ $type: 'input', name: 'w' },
+									{
+										$type: 'input',
+										name: 'w',
+										rules: [{ type: 'required', message: 'W is required' }],
+									},
 								],
 							},
 							'array',
 						),
 					],
-					defaults: { password: 'a', confirm: 'b', tags: [] },
+					defaults: { password: 'a', confirm: 'a', tags: [] },
 				}),
 			);
 			const submit = store.validate();
@@ -436,7 +442,8 @@ describe('createFormStateContainer', () => {
 			gate.stopHolding();
 			gate.release();
 			expect(await submit).toEqual({ outcome: 'invalid' });
-			expect(store.getSnapshot().errors.confirm).toBeDefined();
+			expect(store.getSnapshot().errors['tags.0.w']?.message).toBe('W is required');
+			expect(store.getSnapshot().errors.confirm).toBeUndefined();
 			expect(isValidating(store)).toBe(false);
 		});
 	});
@@ -792,10 +799,12 @@ describe('createFormStateContainer', () => {
 			store.blur('contacts.0.email');
 			await vi.waitFor(() => expect(rule.calls).toHaveLength(2));
 			store.fieldArray('contacts').swap(0, 1);
+			expect(isValidating(store)).toBe(true);
 			rule.calls[1].resolve(true);
-			await vi.waitFor(() => expect(isValidating(store)).toBe(true));
-			rule.calls[0].resolve(false);
 			await vi.waitFor(() => expect(isValidating(store)).toBe(false));
+			rule.calls[0].resolve(false);
+			await settle();
+			expect(isValidating(store)).toBe(false);
 			expect(store.getSnapshot().errors).toEqual({});
 		});
 

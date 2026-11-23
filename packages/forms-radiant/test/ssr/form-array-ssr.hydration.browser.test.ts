@@ -52,7 +52,7 @@ describe('SSR array hydration', () => {
 
 		try {
 			document.body.append(isolatedApp);
-			await Promise.resolve();
+			await expect.poll(() => new FormController(isolatedArray).container).toBeTruthy();
 			expect(isolatedApp.querySelector('.se-form-array')).toBe(isolatedRows[0]?.parentElement);
 			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="row-1"]')).toBe(isolatedRows[0]);
 			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="row-2"]')).toBe(isolatedRows[1]);

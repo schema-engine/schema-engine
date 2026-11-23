@@ -145,11 +145,13 @@ describe('Radiant form engine resolution', () => {
 		const instance = document.createElement('se-form-instance') as FormInstanceElement;
 		instance.config = twoStepForm(own);
 		instance.engine = own;
-		renderer.append(instance);
+		const follower = document.createElement('se-form-instance') as FormInstanceElement;
+		follower.config = twoStepForm(bound);
+		renderer.append(instance, follower);
 		document.body.append(renderer);
 
 		renderer.engine = bound;
-		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		await vi.waitFor(() => expect(follower.engine).toBe(bound));
 
 		expect(instance.engine).toBe(own);
 	});
@@ -333,6 +335,7 @@ describe('Radiant form engine resolution', () => {
 		renderer.append(form);
 		document.body.append(renderer);
 		await vi.waitFor(() => expect(new FormController(array).container).toBeDefined());
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 		expect(array.querySelector('input')).toBeNull();
 
 		renderer.engine = engine;

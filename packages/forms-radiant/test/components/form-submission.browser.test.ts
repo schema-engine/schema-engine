@@ -79,11 +79,11 @@ test('the submit button shows the submitting label and is disabled while onSubmi
 	submit().click();
 
 	await expect.poll(() => submit().disabled).toBe(true);
-	expect(submit().textContent?.trim()).toBe('Submitting...');
+	await expect.poll(() => submit().textContent?.trim()).toBe('Submitting...');
 	pending.resolve();
 	await expect.poll(() => submit().disabled).toBe(false);
-	expect(submit().textContent?.trim()).toBe('Submit');
-	expect(events).toEqual(['start', 'complete:true']);
+	await expect.poll(() => submit().textContent?.trim()).toBe('Submit');
+	await expect.poll(() => events).toEqual(['start', 'complete:true']);
 });
 
 test('the last step of a wizard shows the submitting state', async () => {
@@ -96,7 +96,7 @@ test('the last step of a wizard shows the submitting state', async () => {
 	submit().click();
 
 	await expect.poll(() => submit().disabled).toBe(true);
-	expect(submit().textContent?.trim()).toBe('Submitting...');
+	await expect.poll(() => submit().textContent?.trim()).toBe('Submitting...');
 	pending.resolve();
 	await expect.poll(() => submit().disabled).toBe(false);
 });
@@ -129,8 +129,8 @@ test('the alert reports an error for a rejected submission and never reports suc
 	pending.reject(new Error('500'));
 
 	await expect.poll(() => alertElement.textContent).toContain('Failed');
+	await expect.poll(() => events).toEqual(['start', 'complete:false']);
 	expect(seen.some((text) => text.includes('Sent'))).toBe(false);
-	expect(events).toEqual(['start', 'complete:false']);
 });
 
 test('se-action-submit-complete carries the failure of a rejected onSubmit', async () => {

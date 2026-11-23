@@ -1,4 +1,4 @@
-import { vi, type Mock } from 'vitest';
+import { expect, vi, type Mock } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { createFormRuntime } from '@/runtime';
@@ -156,6 +156,16 @@ export function setup(
 	const stop = runtime.mount();
 	return { ...fixture, host, runtime, stop };
 }
+
+/** Resolves once a `gate` rule is holding a check, so a test edits or resets while that check is in flight. */
+export const gateReached = (gate: ReturnType<typeof createFixture>['gate']) =>
+	vi.waitFor(() => expect(gate.waiting).not.toHaveLength(0));
+
+/** Waits for a check held by the `gate` rule, then lets every held check pass. */
+export const releaseGate = async (gate: ReturnType<typeof createFixture>['gate']) => {
+	await gateReached(gate);
+	gate.waiting.splice(0).forEach((resolve) => resolve());
+};
 
 /** Writes the values of a whole wizard that satisfy every required field. */
 export const fill = (runtime: ReturnType<typeof setup>['runtime'], values: Record<string, unknown>) => {

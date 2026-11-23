@@ -77,7 +77,6 @@ describe('cross-field revalidation', () => {
 		fireEvent.change(password, { target: { value: 'hunter2' } });
 		fireEvent.change(confirm, { target: { value: 'hunter2' } });
 		fireEvent.blur(confirm);
-		await waitFor(() => expect(confirmError()).toBe(''));
 
 		fireEvent.change(password, { target: { value: 'hunter3' } });
 

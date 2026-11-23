@@ -104,9 +104,11 @@ describe('a submission that ends without a verdict', () => {
 		);
 
 		fireEvent.click(screen.getByText('Submit'));
-		await new Promise((resolve) => setTimeout(resolve, 30));
+		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('validating:0'));
+		await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'b@example.com' } });
-		await new Promise((resolve) => setTimeout(resolve, 110));
+		await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(2));
+		expect(screen.getByTestId('status')).toHaveTextContent('validating:0');
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'c@example.com' } });
 
 		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('idle:0'));
@@ -132,9 +134,8 @@ describe('a submission that ends without a verdict', () => {
 
 		fireEvent.click(screen.getByText('Submit'));
 
-		await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
-		await new Promise((resolve) => setTimeout(resolve, 100));
-		expect(screen.getByTestId('status')).toHaveTextContent('error:0');
+		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('error:0'));
+		expect(fetchSpy).toHaveBeenCalled();
 		expect(onSubmit).not.toHaveBeenCalled();
 		fetchSpy.mockRestore();
 	});
@@ -346,8 +347,8 @@ describe('the answer of the server', () => {
 
 		fireEvent.click(screen.getByText('Submit'));
 
-		await waitFor(() => expect(screen.getByTestId('email-error')).toHaveTextContent('Already registered'));
-		expect(screen.getByTestId('status')).toHaveTextContent('success:1');
+		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('success:1'));
+		expect(screen.getByTestId('email-error')).toHaveTextContent('Already registered');
 	});
 });
 

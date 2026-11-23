@@ -187,8 +187,8 @@ describe('FormRenderer state boundaries', () => {
 		render(<Parent />);
 		await userEvent.type(screen.getByRole('textbox', { name: 'Name' }), 'Ada');
 		await waitFor(() => {
-			expect(onChange).toHaveBeenCalled();
-			expect(action).toHaveBeenCalled();
+			expect(onChange).toHaveBeenLastCalledWith({ name: 'Ada' });
+			expect(action).toHaveBeenCalledTimes(onChange.mock.calls.length);
 		});
 		const onChangeCalls = onChange.mock.calls.length;
 		const actionCalls = action.mock.calls.length;
