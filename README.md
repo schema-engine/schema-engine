@@ -241,7 +241,7 @@ Detailed architectural documentation is available in the [Documentation App](./a
 - **[Quick Start](./apps/docs/src/content/docs/forms-react/quick-start.mdx)**
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
 - **[Layout](./apps/docs/src/content/docs/layout/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/layout/recipes.mdx)
-- **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Registries and the catalog](./apps/docs/src/content/docs/registry/registries.mdx)
+- **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Read-only and mutable registries](./apps/docs/src/content/docs/registry/registries.mdx)
 - **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
 - **[Forms React — Getting Started](./apps/docs/src/content/docs/forms-react/getting-started.mdx)**

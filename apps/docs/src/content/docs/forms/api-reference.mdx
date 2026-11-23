@@ -64,7 +64,7 @@ request function with the [CSRF policy](/docs/forms/csrf) applied, and `engine.g
 
 `engine.getSchemaCatalog()` returns the metadata the JSON Schema export reads (title, description and category by id, such as
 `element:input`), not a list of what is registered. Read what is registered with `engine.getAllElements()`,
-`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([Registries](/docs/registry/registries)).
+`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([What the forms engine registers](/docs/forms/builder#what-the-forms-engine-registers)).
 
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
 and is not typed per engine: field `rules` keep their `$type` string. See

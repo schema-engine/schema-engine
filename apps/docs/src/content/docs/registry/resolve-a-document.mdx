@@ -1,0 +1,202 @@
+---
+title: 'Resolve a document'
+description: 'Walk a tree of $type nodes through a registry per kind, collect every issue with its path, and render the validated tree to output.'
+order: 3
+---
+
+# Resolve a document
+
+A document is a tree of nodes, and each node names a registration by `$type`. Resolving it is the same pattern in every domain: look each `$type` up in the registry for its kind, validate the node against the registration's schema, collect what is wrong with its path, and, only when nothing is, render. This page builds that pattern with no framework: the output is a string. A renderer for a UI does the same with its own output.
+
+Start from the [Overview and quick start](/docs/registry/overview) if registrations and registries are new.
+
+## A registry per kind
+
+A kind is a group of registrations that play the same role. This document has two: leaves, which draw themselves, and containers, which draw their children. Each kind is its own registry, so a `$type` is looked up where it belongs and a leaf cannot be used where a container is meant.
+
+Both kinds share one registration shape. A node's `render` receives its validated configuration and the already rendered children, which a leaf ignores:
+
+```ts title="kinds.ts"
+import * as z from 'zod/mini';
+import { createRegistry, type BaseRegistration } from '@schema-engine/registry';
+
+z.config(z.locales.en());
+
+export interface Block extends BaseRegistration {
+	render(config: unknown, children: string[]): string;
+}
+
+const textSchema = z.object({ $type: z.literal('text'), value: z.string() });
+const badgeSchema = z.object({
+	$type: z.literal('badge'),
+	label: z.string(),
+	tone: z.optional(z.enum(['info', 'success'])),
+});
+const stackSchema = z.object({
+	$type: z.literal('stack'),
+	gap: z.optional(z.enum(['small', 'large'])),
+	children: z.array(z.unknown()),
+});
+
+const text: Block = {
+	$type: 'text',
+	schema: textSchema,
+	metadata: { name: 'Text' },
+	render({ value }: z.output<typeof textSchema>) {
+		return `<p>${value}</p>`;
+	},
+};
+
+const badge: Block = {
+	$type: 'badge',
+	schema: badgeSchema,
+	metadata: { name: 'Badge' },
+	render({ label, tone = 'info' }: z.output<typeof badgeSchema>) {
+		return `<span class="badge badge-${tone}">${label}</span>`;
+	},
+};
+
+const stack: Block = {
+	$type: 'stack',
+	schema: stackSchema,
+	metadata: { name: 'Stack' },
+	render({ gap = 'small' }: z.output<typeof stackSchema>, children: string[]) {
+		return `<div class="stack stack-${gap}">${children.join('')}</div>`;
+	},
+};
+
+export const leaves = createRegistry('Leaf', [text, badge]);
+export const containers = createRegistry('Container', [stack]);
+```
+
+The `stack` schema accepts `children` as a list of anything. Its children are validated one by one when the walk reaches them, each against its own registration.
+
+## The resolve step
+
+`resolve` walks the tree. At each node it finds the registration, validates the node, and keeps the registration with its validated configuration. It does not stop at the first problem: every issue is collected, with a `path` that starts at the root and runs through `children` and the index of each child.
+
+```ts title="resolve.ts"
+import { safeParseStandardSchema, type StandardSchemaIssue } from '@schema-engine/registry';
+import { containers, leaves, type Block } from './kinds';
+
+export interface ResolvedNode {
+	registration: Block;
+	config: unknown;
+	children: ResolvedNode[];
+}
+
+export type Resolution = { success: true; tree: ResolvedNode } | { success: false; issues: StandardSchemaIssue[] };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function resolveAt(node: unknown, path: PropertyKey[], issues: StandardSchemaIssue[]): ResolvedNode | undefined {
+	if (!isRecord(node) || typeof node.$type !== 'string') {
+		issues.push({ message: 'A node is an object with a string $type.', path });
+		return undefined;
+	}
+	const registration = containers.get(node.$type) ?? leaves.get(node.$type);
+	if (!registration) {
+		issues.push({
+			message: `No registration for $type '${node.$type}'. Register it first.`,
+			path: [...path, '$type'],
+		});
+		return undefined;
+	}
+	const parsed = safeParseStandardSchema(registration.schema, node);
+	if (!parsed.success) {
+		issues.push(...parsed.error.issues.map((issue) => ({ ...issue, path: [...path, ...(issue.path ?? [])] })));
+		return undefined;
+	}
+	const children = Array.isArray(node.children) ? node.children : [];
+	const resolved = children.map((child, index) => resolveAt(child, [...path, 'children', index], issues));
+	return {
+		registration,
+		config: parsed.data,
+		children: resolved.filter((child): child is ResolvedNode => child !== undefined),
+	};
+}
+
+export function resolve(document: unknown): Resolution {
+	const issues: StandardSchemaIssue[] = [];
+	const tree = resolveAt(document, [], issues);
+	return tree && issues.length === 0 ? { success: true, tree } : { success: false, issues };
+}
+```
+
+A node whose own schema fails reports its issues and is not walked further. The result is either a tree that is safe to render or every issue found, never a half-valid tree.
+
+## The render step
+
+Rendering takes a resolved tree and maps each node to output. It does no validation, because resolving has already done it:
+
+```ts title="render.ts"
+import type { ResolvedNode } from './resolve';
+
+export function render({ registration, config, children }: ResolvedNode): string {
+	return registration.render(config, children.map(render));
+}
+```
+
+## Use it
+
+A valid document renders. An invalid one reports an unknown `$type` and a configuration that its schema rejects, each with its path:
+
+```ts title="check.ts"
+import { render } from './render';
+import { resolve } from './resolve';
+
+const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
+	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
+
+const confirmation = {
+	$type: 'stack',
+	gap: 'large',
+	children: [
+		{ $type: 'text', value: 'Order 1042 confirmed' },
+		{
+			$type: 'stack',
+			children: [
+				{ $type: 'badge', label: 'Paid', tone: 'success' },
+				{ $type: 'badge', label: 'Shipping soon' },
+			],
+		},
+	],
+};
+
+const broken = {
+	$type: 'stack',
+	children: [
+		{ $type: 'text', value: 'Order 1042 confirmed' },
+		{
+			$type: 'stack',
+			children: [
+				{ $type: 'badge', label: 5 },
+				{ $type: 'chip', label: 'Shipping soon' },
+			],
+		},
+	],
+};
+
+for (const document of [confirmation, broken]) {
+	const resolution = resolve(document);
+	if (resolution.success) console.log(render(resolution.tree));
+	else for (const issue of resolution.issues) console.log(`${where(issue.path)}: ${issue.message}`);
+}
+```
+
+```text
+<div class="stack stack-large"><p>Order 1042 confirmed</p><div class="stack stack-small"><span class="badge badge-success">Paid</span><span class="badge badge-info">Shipping soon</span></div></div>
+children.1.children.0.label: Invalid input: expected string, received number
+children.1.children.1.$type: No registration for $type 'chip'. Register it first.
+```
+
+Each issue names the node that failed: `children.1.children.0.label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix.
+
+## Take it further
+
+- **A document a server sends.** [Serialized documents](/docs/schema-engine/serialized-documents) validates a document that arrives over the network and shows the issues a caller sees.
+- **Override a default.** Offer `[...defaults, ...extra]` where you build a registry, so replacing a registration is a change to a list: [Read-only and mutable registries](/docs/registry/registries).
+- **Keep the registry out of the global scope.** Pass a registry to the code that needs it, as the forms engine does. There is no module-level registry to fall back to.
+- **A kind of the forms engine.** Elements, recipes, actions and axes are kinds like these: [What the forms engine registers](/docs/forms/builder#what-the-forms-engine-registers).

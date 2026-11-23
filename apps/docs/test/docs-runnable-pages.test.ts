@@ -57,3 +57,15 @@ describe(serialized, () => {
 		});
 	});
 });
+
+describe('registry pages', () => {
+	test('the quick start resolves, rejects and reports as the page shows', async () => {
+		const lines = await runTitledFiles('registry/overview', packages, 'check.ts');
+		expect(lines.join('\n')).toEqual(shownOutput('registry/overview', '3. Run it'));
+	});
+
+	test('a document resolves to HTML, and a broken one reports its paths', async () => {
+		const lines = await runTitledFiles('registry/resolve-a-document', packages, 'check.ts');
+		expect(lines.join('\n')).toEqual(shownOutput('registry/resolve-a-document', 'Use it'));
+	});
+});

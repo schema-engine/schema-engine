@@ -1,61 +1,152 @@
 ---
-title: 'Overview'
-description: 'The base registry system used by every other package.'
+title: 'Overview and quick start'
+description: 'A registry holds the registrations a document can name by $type. Install it, build one and resolve a JSON node through it.'
 order: 1
 ---
 
-# @schema-engine/registry
+# Registry
 
-Base registry system for managing named resources in an extensible architecture.
+A registry is a collection of registrations keyed by `$type`. A registration pairs a `$type` with a schema for its configuration and with metadata, so a node in a [document](/docs/schema-engine/core-concepts#document) that names a `$type` can be looked up, validated and handled. The forms engine, the action system and the layout themes all store their pieces in registries of this kind. See [Core concepts](/docs/schema-engine/core-concepts) for the shared vocabulary.
 
-## Quick Look
-
-```typescript
-import * as z from 'zod/mini';
-import { createRegistry } from '@schema-engine/registry';
-import type { BaseRegistration } from '@schema-engine/registry';
-
-interface Feature extends BaseRegistration {
-	execute: () => void;
-}
-
-const features = createRegistry<Feature>('Feature', [
-	{
-		$type: 'dark-mode',
-		schema: z.object({}),
-		metadata: { name: 'Dark Mode' },
-		execute: () => console.log('Dark mode active'),
-	},
-]);
-
-features.get('dark-mode')?.execute();
-```
-
-The flow is: define a registration shape, build a registry from a list, then look items up by `$type`.
-
-## Overview
-
-`@schema-engine/registry` provides the registry mechanism for Schema Engine registrations. `createRegistry` builds a read-only, frozen registry from a list: later registrations with the same `$type` win without a warning, and each winning schema is checked as a Standard Schema at build. The forms engine stores its elements, recipes, actions and validation rules this way, and the actions package builds `ActionRegistry` on it. `ValidationRegistry` in `@schema-engine/forms` is a read-only registry of this kind with a few validation lookups added. `BaseRegistry` stays as an explicit, mutable opt-in for plugin systems that register at runtime.
-
-**Key Features:**
-
-- **One mechanism for elements, recipes, actions and validation rules**: `createRegistry` for read-only registries, `BaseRegistry` only when you need to register at runtime.
-- **Last wins**: `[...defaults, custom]` overrides a default without logging.
-- **Type Safe**: Full TypeScript support with generic constraints for registrations.
-- **Standard Schema boundary**: Register schemas from Zod Mini, Zod, Valibot, Effect Schema, or another compatible provider. A schema without `~standard.validate` is rejected at build, naming its `$type`.
-
-## Installation
+## Install
 
 ```bash
-pnpm add @schema-engine/registry
-
-# Install zod only when authoring schemas with zod/mini.
-pnpm add zod
+pnpm add @schema-engine/registry zod
 ```
 
-## Next Steps
+`@schema-engine/registry` has no schema-library dependency. Install the [Standard Schema](https://standardschema.dev/) validator you prefer: the examples use `zod/mini`.
 
-- [Core Concepts](/docs/registry/core-concepts) - Understand createRegistry, BaseRegistry and registration types
-- [API Reference](/docs/registry/api-reference) - Complete API documentation
-- [Registries and the catalog](/docs/registry/registries) - Read-only and mutable registries, what the forms engine registers, adding a kind
-- [Examples](/docs/registry/examples) - Build your own registry
+## Quick start
+
+### 1. Define a registration type and build the registry
+
+Extend `BaseRegistration` with what your kind of registration needs. Here a badge renders itself to a string. `createRegistry` builds a read-only registry from a list.
+
+```ts title="registry.ts"
+import * as z from 'zod/mini';
+import { createRegistry, type BaseRegistration } from '@schema-engine/registry';
+
+z.config(z.locales.en());
+
+interface Badge extends BaseRegistration {
+	render(config: unknown): string;
+}
+
+const badgeSchema = z.object({
+	$type: z.literal('badge'),
+	label: z.string(),
+});
+
+const badge: Badge = {
+	$type: 'badge',
+	schema: badgeSchema,
+	metadata: { name: 'Badge', description: 'A short status label.' },
+	render({ label }: z.output<typeof badgeSchema>) {
+		return `<span class="badge">${label}</span>`;
+	},
+};
+
+export const badges = createRegistry('Badge', [badge]);
+```
+
+Zod Mini ships no error messages, so the first lines load the English ones.
+
+### 2. Resolve a node from JSON
+
+A node arrives as JSON, so its content is `unknown` until a schema has checked it. Look the `$type` up, validate the node with the registration's schema, then use the result. A `$type` that is not registered is a case to handle, not an exception:
+
+```ts title="resolve.ts"
+import { safeParseStandardSchema } from '@schema-engine/registry';
+import { badges } from './registry';
+
+export function resolve(json: string): string {
+	const node: { $type: string } = JSON.parse(json);
+	const registration = badges.get(node.$type);
+	if (!registration) return `No registration for $type '${node.$type}'.`;
+
+	const parsed = safeParseStandardSchema(registration.schema, node);
+	if (!parsed.success) return parsed.error.issues.map((issue) => issue.message).join('; ');
+
+	return registration.render(parsed.data);
+}
+```
+
+`safeParseStandardSchema` runs the schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }`. It supports synchronous schemas only.
+
+### 3. Run it
+
+```ts title="check.ts"
+import { resolve } from './resolve';
+
+console.log(resolve('{ "$type": "badge", "label": "New" }'));
+console.log(resolve('{ "$type": "badge", "label": 5 }'));
+console.log(resolve('{ "$type": "chip", "label": "New" }'));
+```
+
+```text
+<span class="badge">New</span>
+Invalid input: expected string, received number
+No registration for $type 'chip'.
+```
+
+The first node resolves and renders. The second names a registered `$type` with a configuration its schema rejects. The third names a `$type` nobody registered. To resolve a whole tree of nodes and collect every issue with its path, see [Resolve a document](/docs/registry/resolve-a-document).
+
+## What `createRegistry` guarantees
+
+```ts
+function createRegistry<TRegistration extends BaseRegistration>(
+	kind: string,
+	registrations: readonly TRegistration[],
+): ReadOnlyRegistry<TRegistration>;
+```
+
+| Behavior         | Description                                                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Last wins        | A later registration with the same `$type` replaces the earlier one, with no warning.                            |
+| Checked at build | A winning schema without `~standard.validate` throws, naming the `kind` and the registration's `$type`.          |
+| Frozen           | No `register` or `clear`. The registry, its arrays and its stored copies are frozen. Your objects are untouched. |
+
+`kind` is the label the registry uses in errors. The registry has `get`, `has`, `all`, `keys`, `size` and `kind`. [Read-only and mutable registries](/docs/registry/registries) compares it with `BaseRegistry`, the mutable form for registrations that arrive at runtime.
+
+## The registration types
+
+The types are exactly the ones in the package:
+
+```ts
+interface RegistrationMetadata {
+	name: string;
+	description?: string;
+}
+
+interface ComponentMetadata extends RegistrationMetadata {
+	icon?: string;
+	tags?: string[];
+	version?: string;
+}
+
+interface BaseRegistration<_TConfig = unknown, TMeta extends RegistrationMetadata = ComponentMetadata> {
+	$type: string;
+	schema: StandardSchemaV1;
+	metadata: TMeta;
+}
+
+interface ComponentRegistration<
+	TType extends string = string,
+	TConfig = unknown,
+	TProps = unknown,
+	TMeta extends ComponentMetadata = ComponentMetadata,
+> extends BaseRegistration<TConfig, TMeta> {
+	render: (props: TProps) => unknown;
+	$type: TType;
+}
+```
+
+- `$type` is the stable key. `schema` is any Standard Schema value, and Zod, Valibot and Effect Schema all qualify. `metadata` carries the human-readable part.
+- `BaseRegistration` takes a config type parameter, `_TConfig`, that the interface does not use today. `schema` is a plain `StandardSchemaV1`, so a registration's config type does not constrain it, and its input and output stay distinct.
+- A `ComponentRegistration` adds a `render` function whose props you type with the third parameter. A registry that mixes several of them holds `render` functions of different props, so a kind of your own, as in the quick start, is often simpler.
+
+## Where to go next
+
+- [Read-only and mutable registries](/docs/registry/registries): `createRegistry` against `BaseRegistry`, and overriding a default.
+- [Resolve a document](/docs/registry/resolve-a-document): a tree of nodes, a registry per kind, issues with paths.
+- [API reference](/docs/registry/api-reference): every export.

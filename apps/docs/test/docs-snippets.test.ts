@@ -20,17 +20,31 @@ vi.setConfig({ testTimeout: 60_000 });
  * section that still holds fences that cannot compile stays off, or lists the pages that are ready, so the list
  * is never left failing.
  */
-const CHECKED_DOCS = ['layout', 'registry/registries', 'schema-engine'];
+const CHECKED_DOCS = ['layout', 'registry', 'schema-engine'];
 
 interface AllowedFence {
 	page: string;
-	/** The heading the fence sits under; every TypeScript fence under it on the page is allowed. */
-	heading: string;
+	/** The heading the fence sits under; every TypeScript fence under it on the page is allowed. Omitted, the whole page. */
+	heading?: string;
 	reason: string;
 }
 
 /** Fences that are fragments on purpose. A fence that is not listed here must compile. */
 const ALLOWED_FENCES: AllowedFence[] = [
+	{
+		page: 'registry/api-reference',
+		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
+	},
+	{
+		page: 'registry/overview',
+		heading: 'The registration types',
+		reason: 'Restates the package declarations, with the Standard Schema import left out.',
+	},
+	{
+		page: 'registry/overview',
+		heading: 'What createRegistry guarantees',
+		reason: 'The package signature, which a snippet cannot declare again.',
+	},
 	{
 		page: 'layout/overview',
 		heading: 'Escape hatches',
@@ -73,7 +87,9 @@ const isChecked = (page: string): boolean =>
 	CHECKED_DOCS.some((entry) => page === entry || page.startsWith(`${entry}/`));
 
 const isAllowed = (page: string, block: CodeBlock): boolean =>
-	ALLOWED_FENCES.some((entry) => entry.page === page && entry.heading === block.heading);
+	ALLOWED_FENCES.some(
+		(entry) => entry.page === page && (entry.heading === undefined || entry.heading === block.heading),
+	);
 
 describe('docs snippets', () => {
 	test('every checked entry is a docs section or a page', () => {
@@ -102,16 +118,21 @@ describe('docs snippets', () => {
 		for (const entry of ALLOWED_FENCES) {
 			expect(entry.reason.trim(), `${entry.page} under "${entry.heading}" needs a reason`).not.toBe('');
 			expect(isChecked(entry.page), `${entry.page} is not a checked page`).toBe(true);
+			const inScope = (heading: string) => entry.heading === undefined || heading === entry.heading;
 			const fences = parseCodeBlocks(readPage(entry.page)).filter(
-				(block) => isTypeScriptFence(block) && block.heading === entry.heading,
+				(block) => isTypeScriptFence(block) && inScope(block.heading),
 			);
 			expect(fences.length, `${entry.page} has no TypeScript fence under "${entry.heading}"`).toBeGreaterThan(0);
-			const failures = checkPageSnippets(entry.page, readPage(entry.page), APP).filter(
-				(failure) => failure.heading === entry.heading,
+			const failures = checkPageSnippets(entry.page, readPage(entry.page), APP).filter((failure) =>
+				inScope(failure.heading),
 			);
-			expect(failures.length, `${entry.page} under "${entry.heading}" compiles; drop it from the list`).toBe(
-				fences.length,
-			);
+			if (entry.heading === undefined) {
+				expect(failures.length, `${entry.page} compiles; drop it from the list`).toBeGreaterThan(0);
+			} else {
+				expect(failures.length, `${entry.page} under "${entry.heading}" compiles; drop it from the list`).toBe(
+					fences.length,
+				);
+			}
 		}
 	});
 

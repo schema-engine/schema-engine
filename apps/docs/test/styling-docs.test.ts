@@ -402,8 +402,6 @@ describe('registries page', () => {
 	test('the snippets run', () => {
 		const { name } = run(tsBlock(page, 'Read-only or mutable'), modules) as { name: string };
 		expect(name).toBe('Tonal card');
-		const { html } = run(tsBlock(page, 'Add a registration kind of your own'), modules) as { html: string };
-		expect(html).toBe('<section class="hero"><h1>Welcome</h1></section>');
 	});
 
 	test('the engine example fills the catalog as documented', () => {

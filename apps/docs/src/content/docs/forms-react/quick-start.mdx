@@ -22,7 +22,7 @@ pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout r
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
-The shadcn registry has one aggregate per component base: `schema-form` for Base UI, `schema-form-radix` for Radix UI and `schema-form-aria` for React Aria, with matching `schema-engine-form-recipes-radix` and `-aria` recipe items. Install one base per app. [Registries](/docs/registry/registries) lists every item.
+The shadcn registry has one aggregate per component base: `schema-form` for Base UI, `schema-form-radix` for Radix UI and `schema-form-aria` for React Aria, with matching `schema-engine-form-recipes-radix` and `-aria` recipe items. Install one base per app. The [shadcn registry README](https://github.com/andeeplus/schema-engine/blob/main/registry/README.md) lists every item.
 
 The command copies source files into your project, and they are yours to read, edit and delete. `components/schema-engine/forms/` holds the form elements, the generated `registrations.ts` barrel, and `recipes/` with the shells, blocks, their CSS files and the generated `recipes/registrations.ts` barrel. `components/ui/schema-engine/components/` holds the primitives the elements share, such as the field wrapper and `controls.css`. A later `shadcn add` overwrites a file only after it asks.
 

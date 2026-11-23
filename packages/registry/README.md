@@ -12,7 +12,7 @@ Use the `ComponentRegistration` type when entries must include a render function
 
 It is used by higher-level packages such as `@schema-engine/forms`, `@schema-engine/actions` and `@schema-engine/layout` (which stores appearance axes in it), but it is also usable on its own for plugin systems and internal extension points.
 
-Docs: [Registries and the catalog](../../apps/docs/src/content/docs/registry/registries.mdx) covers read-only and mutable registries, what the forms engine registers, and adding a registration kind.
+Docs: [Overview and quick start](../../apps/docs/src/content/docs/registry/overview.mdx) builds a first registry, [Read-only and mutable registries](../../apps/docs/src/content/docs/registry/registries.mdx) compares the two, and [Resolve a document](../../apps/docs/src/content/docs/registry/resolve-a-document.mdx) walks a tree of nodes through registries.
 
 ## Installation
 

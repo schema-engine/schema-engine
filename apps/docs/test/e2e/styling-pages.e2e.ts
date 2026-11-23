@@ -10,7 +10,7 @@ const STYLING_PAGES = [
 	['/docs/layout/appearance-axes', 'Appearance axes'],
 	['/docs/layout/theming', 'Theming'],
 	['/docs/layout/recipes', 'Recipes'],
-	['/docs/registry/registries', 'Registries and the catalog'],
+	['/docs/registry/registries', 'Read-only and mutable registries'],
 ] as const;
 
 const RECIPE_IDS = [

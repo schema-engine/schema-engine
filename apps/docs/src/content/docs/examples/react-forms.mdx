@@ -84,4 +84,4 @@ const engine = createFormEngine({
 });
 ```
 
-The provider, the renderer and the copied field's hooks all import `@schema-engine/forms-react` from the one package, so they share one React context. A bundle that ends up with two copies of the package splits the context, and the field then throws a missing-provider error; keep one copy in your app. See [Registries](/docs/registry/registries) and [View recipes](/docs/forms-react/layouts#default-registry-recipes) for installing the source in your own app.
+The provider, the renderer and the copied field's hooks all import `@schema-engine/forms-react` from the one package, so they share one React context. A bundle that ends up with two copies of the package splits the context, and the field then throws a missing-provider error; keep one copy in your app. See the [shadcn registry README](https://github.com/andeeplus/schema-engine/blob/main/registry/README.md) and [View recipes](/docs/forms-react/layouts#default-registry-recipes) for installing the source in your own app.

@@ -213,6 +213,61 @@ declare a progress slot, but they do render a submit-only actions bar. See
 [View recipes](/docs/forms-react/layouts)
 for the available compositions and custom recipe API.
 
+## What the forms engine registers
+
+`createFormEngine` builds one read-only registry per kind, from the lists you pass:
+
+| You pass                        | Registry label | Registration                               | Metadata entry id |
+| ------------------------------- | -------------- | ------------------------------------------ | ----------------- |
+| `elements`                      | `Element`      | `defineInput`, `defineStatic`              | `element:<$type>` |
+| `recipes`                       | `Recipe`       | `defineRecipe` bound to a spec             | `recipe:<$type>`  |
+| `actions`                       | `Action`       | An action registration with an `execute`   | `action:<$type>`  |
+| `layout: { appearance: [...] }` | `Axis`         | `defineAxis`                               | `axis:<$type>`    |
+| `validations`                   | `Validation`   | A validation registration with a `handler` | none              |
+
+Registrations of every kind follow the same rules: a later `$type` wins, and `[...schemaFormRegistrations, mine]` is how you override a default. A recipe is also checked against the forms recipe protocol, and a registration that declares an axis the theme lacks fails the engine build.
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { builtInAxes, defineAxis } from '@schema-engine/layout';
+import { elements } from './registrations';
+import { BrandFrameRecipe } from './brand-frame';
+import { postalCode } from './postal-code';
+
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--primary': '#c2410c' } },
+});
+
+export const engine = createFormEngine({
+	elements,
+	recipes: [BrandFrameRecipe],
+	validations: [postalCode],
+	layout: { appearance: [...builtInAxes, tone] },
+});
+```
+
+`engine.extend({ elements, recipes, actions, validations })` builds a new engine from the old lists plus yours. It inherits the layout theme and the default wizard recipe. Nothing is registered into the engine you extended.
+
+## The catalog
+
+The engine records a metadata entry for every element, recipe, action and axis it builds. An entry is `{ id, title, description, componentType, category }`, and its `id` is `<componentType>:<$type>`. `engine.getSchemaCatalog()` returns these entries: they are the metadata the JSON Schema export and the authoring catalog read, so an editor completes a registration you added. They are not the registrations. To list what the engine has registered, use `engine.getAllElements()`, `getAllRecipes()` and `getAllActions()`, and `engine.getValidationRegistry()` for the rules.
+
+```ts
+import { engine } from './engine';
+
+const catalog = engine.getSchemaCatalog();
+
+export const title = catalog.get('axis:tone')?.title; // 'Tone'
+export const registeredRecipes = engine.getAllRecipes().map((recipe) => recipe.$type);
+
+export const jsonSchema = engine.generateFormConfigSchema({ io: 'input' }); // lists the registered $types
+```
+
+The registration's `metadata.name` is the title, and `metadata.description` and `metadata.category` follow. Validation rules are held in their own registry (`engine.getValidationRegistry()`) and are not catalog entries.
+
 ## Related APIs
 
 - [Core Concepts](/docs/forms/core-concepts) — registration and validation
