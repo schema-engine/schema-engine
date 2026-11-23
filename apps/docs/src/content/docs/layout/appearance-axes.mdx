@@ -156,7 +156,7 @@ The engine build throws when a registration declares an axis the theme lacks, na
 
 `defineAxis` builds an axis. The built-ins are two of them; `tone` and `emphasis` are the usual host additions.
 
-```ts
+```ts title="theme.ts"
 import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
 
 const tone = defineAxis({

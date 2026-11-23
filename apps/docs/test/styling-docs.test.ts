@@ -1,7 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
-import { runInNewContext } from 'node:vm';
-import * as ts from 'typescript';
 import { describe, expect, test, vi } from 'vitest';
 import * as jsxRuntime from '@ecopages/jsx/jsx-runtime';
 import * as layout from '@schema-engine/layout';
@@ -20,117 +18,9 @@ import { docsEngines } from '../src/lib/form-engine-setup';
 import { allRecipes, recipeConfigSource, recipeYamlSources, type Recipe } from '../src/lib/recipes/catalog';
 import { slugifyHeadingText } from '../src/mdx/rehype-heading-ids';
 import { anyValue } from './any-value';
+import { docsRoot, readPage, run, tsBlock, typecheck } from './snippet-harness';
 
 vi.setConfig({ testTimeout: 15_000 });
-
-const docsRoot = join(import.meta.dirname, '../src/content/docs');
-const recipesDir = join(import.meta.dirname, '../src/lib/recipes');
-const snippetDir = join(import.meta.dirname, '__snippets__');
-
-function readPage(page: string): string {
-	return readFileSync(join(docsRoot, `${page}.mdx`), 'utf8');
-}
-
-interface CodeBlock {
-	lang: string;
-	code: string;
-	heading: string;
-}
-
-/** Fenced code blocks of a page, each with the heading it sits under. */
-function codeBlocks(page: string): CodeBlock[] {
-	const blocks: CodeBlock[] = [];
-	let heading = '';
-	let fence: { lang: string; lines: string[] } | undefined;
-	for (const line of readPage(page).split('\n')) {
-		if (fence) {
-			if (line.startsWith('```')) {
-				blocks.push({ lang: fence.lang, code: fence.lines.join('\n'), heading });
-				fence = undefined;
-			} else fence.lines.push(line);
-			continue;
-		}
-		const open = line.match(/^```(\w*)/);
-		if (open) {
-			fence = { lang: open[1] ?? '', lines: [] };
-			continue;
-		}
-		const title = line.match(/^#{2,6} (.+)$/);
-		if (title) heading = title[1]!.replaceAll('`', '');
-	}
-	return blocks;
-}
-
-function tsBlock(page: string, heading: string, index = 0): string {
-	const blocks = codeBlocks(page).filter(
-		(block) => block.heading === heading && /^(ts|typescript|tsx)$/.test(block.lang),
-	);
-	const block = blocks[index];
-	if (!block) throw new Error(`No TypeScript block ${index} under "${heading}" on ${page}`);
-	return block.code;
-}
-
-/** Parsed library and package declaration files, kept across programs: parsing them dominates a type-check. */
-const sourceFileCache = new Map<string, ts.SourceFile | undefined>();
-
-/** Type-checks virtual modules next to each other and returns the diagnostics per file. */
-function typecheck(files: Record<string, string>): Record<string, string[]> {
-	const virtual = new Map(Object.entries(files).map(([name, text]) => [join(snippetDir, name), text]));
-	const options: ts.CompilerOptions = {
-		module: ts.ModuleKind.ESNext,
-		moduleResolution: ts.ModuleResolutionKind.Bundler,
-		target: ts.ScriptTarget.ES2022,
-		jsx: ts.JsxEmit.ReactJSX,
-		jsxImportSource: '@ecopages/jsx',
-		strict: true,
-		skipLibCheck: true,
-		noEmit: true,
-	};
-	const host = ts.createCompilerHost(options);
-	const getSourceFile = host.getSourceFile.bind(host);
-	const fileExists = host.fileExists.bind(host);
-	const readFile = host.readFile.bind(host);
-	const directoryExists = host.directoryExists?.bind(host);
-	host.directoryExists = (name) => name === snippetDir || (directoryExists?.(name) ?? false);
-	host.fileExists = (name) => virtual.has(name) || fileExists(name);
-	host.readFile = (name) => virtual.get(name) ?? readFile(name);
-	host.getSourceFile = (name, languageVersion, onError, shouldCreate) => {
-		if (virtual.has(name)) return ts.createSourceFile(name, virtual.get(name)!, languageVersion);
-		if (!sourceFileCache.has(name))
-			sourceFileCache.set(name, getSourceFile(name, languageVersion, onError, shouldCreate));
-		return sourceFileCache.get(name);
-	};
-	const program = ts.createProgram([...virtual.keys()], options, host);
-	const result: Record<string, string[]> = {};
-	for (const name of Object.keys(files)) {
-		const source = program.getSourceFile(join(snippetDir, name));
-		result[name] = ts
-			.getPreEmitDiagnostics(program, source)
-			.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
-	}
-	return result;
-}
-
-/** Runs a snippet as a CommonJS module with the given modules and returns its exports. */
-function run(code: string, modules: Record<string, unknown>): Record<string, unknown> {
-	const output = ts.transpileModule(code, {
-		compilerOptions: {
-			target: ts.ScriptTarget.ES2022,
-			module: ts.ModuleKind.CommonJS,
-			jsx: ts.JsxEmit.ReactJSX,
-			jsxImportSource: code.includes('@jsxImportSource react') ? 'react' : '@ecopages/jsx',
-		},
-	}).outputText;
-	const exports: Record<string, unknown> = {};
-	runInNewContext(output, {
-		exports,
-		require: (name: string) => {
-			if (!(name in modules)) throw new Error(`Unexpected import ${name}`);
-			return modules[name];
-		},
-	});
-	return exports;
-}
 
 const packages = {
 	'@schema-engine/layout': layout,
@@ -144,18 +34,6 @@ const packages = {
 	'@ecopages/jsx/jsx-runtime': jsxRuntime,
 	'react/jsx-runtime': reactJsxRuntime,
 };
-
-const REGISTRATIONS = "export { schemaFormRegistrations as elements } from '@schema-engine/forms-radiant';";
-const ENGINE = `import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
-export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });`;
-const POSTAL_CODE = `import * as z from 'zod/mini';
-export const postalCode = {
-	$type: 'postalCode',
-	schema: z.object({ type: z.literal('postalCode'), message: z.optional(z.string()) }),
-	metadata: { name: 'Postal code' },
-	category: 'string',
-	handler: () => z.string(),
-} as const;`;
 
 const files = (recipe: Recipe) => Object.fromEntries(recipe.files.map((file) => [file.label, file.source]));
 const byId = (id: string): Recipe => allRecipes.find((recipe) => recipe.id === id)!;
@@ -418,20 +296,8 @@ describe('layout themes page', () => {
 describe('appearance axes page', () => {
 	const page = 'layout/appearance-axes';
 
-	test('the documented snippets type-check and the host axis works', () => {
+	test('the host axis works', () => {
 		const theme = tsBlock(page, 'Add a host axis');
-		const diagnostics = typecheck({
-			'registrations.ts': REGISTRATIONS,
-			'engine.ts': ENGINE,
-			'theme.ts': theme,
-			'pick-a-value.ts': tsBlock(page, 'Pick a value'),
-			'settings.ts': tsBlock(page, ''),
-			'notice.ts': tsBlock(page, 'Declare the axes a registration supports'),
-			'newsletter.ts': tsBlock(page, 'Add a host axis', 1),
-			'override.ts': tsBlock(page, 'Override a built-in axis'),
-		});
-		expect(diagnostics).toEqual(Object.fromEntries(Object.keys(diagnostics).map((name) => [name, []])));
-
 		const { theme: compiled } = run(theme, packages) as { theme: layout.LayoutTheme };
 		expect(compiled.axes.tone).toEqual(['neutral', 'brand', 'forest']);
 		const engine = forms.createFormEngine({ elements: radiant.schemaFormRegistrations, layout: compiled });
@@ -533,19 +399,7 @@ describe('registries page', () => {
 	const page = 'registry/registries';
 	const modules = { ...packages };
 
-	test('the snippets type-check and run', () => {
-		const diagnostics = typecheck({
-			'registrations.ts': REGISTRATIONS,
-			'postal-code.ts': POSTAL_CODE,
-			'brand-frame.ts': `export { BrandFrameRecipe } from '${join(recipesDir, 'brand-frame.radiant')}';`,
-			'widgets.ts': tsBlock(page, 'Read-only or mutable'),
-			'engine.ts': tsBlock(page, 'What the forms engine registers'),
-			'catalog.ts': tsBlock(page, 'The catalog'),
-			'section.ts': tsBlock(page, 'Add a registration kind of your own'),
-			'plugins.ts': tsBlock(page, 'The mutable registry'),
-		});
-		expect(diagnostics).toEqual(Object.fromEntries(Object.keys(diagnostics).map((name) => [name, []])));
-
+	test('the snippets run', () => {
 		const { name } = run(tsBlock(page, 'Read-only or mutable'), modules) as { name: string };
 		expect(name).toBe('Tonal card');
 		const { html } = run(tsBlock(page, 'Add a registration kind of your own'), modules) as { html: string };

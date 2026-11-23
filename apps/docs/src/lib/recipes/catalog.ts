@@ -48,7 +48,7 @@ export function recipeConfigSource(demos: readonly RecipeDemo[]): string {
 	const seen = new Set<FormConfig>();
 	const configs = demos
 		.filter((demo) => !seen.has(demo.config) && seen.add(demo.config))
-		.map((demo) => formConfigToCode(demo.config, demo.configName));
+		.map((demo) => `export ${formConfigToCode(demo.config, demo.configName)}`);
 	return `${IMPORT_FORM_CONFIG}\n\n${configs.join('\n\n')}\n`;
 }
 

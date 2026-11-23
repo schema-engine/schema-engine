@@ -85,14 +85,10 @@ const formConfig: FormConfig = {
 
 ## 4. Render the form
 
-```typescript
+```tsx
 import { FormRenderer } from '@schema-engine/forms-radiant';
 
-<FormRenderer
-	engine={formEngine}
-	config={formConfig}
-	onSubmit={(data) => console.log(data)}
-/>;
+<FormRenderer engine={formEngine} config={formConfig} onSubmit={(data) => console.log(data)} />;
 ```
 
 `data` is `FormValues` for a config loaded from JSON. With `formEngine.defineForm()` of a literal config, `onSubmit`,
