@@ -5,13 +5,10 @@ describe('the state container entry point', () => {
 	test('exports the factory, the reads and the constants, and not the conformance suite', () => {
 		expect(Object.keys(entry).toSorted()).toEqual([
 			'FORM_ROOT',
-			'FormStateHydrationError',
 			'FormValidationFailure',
 			'createFormStateContainer',
-			'selectError',
 			'selectFieldState',
 			'selectValue',
-			'selectWarning',
 			'toFieldArrayValue',
 			'toHydration',
 		]);

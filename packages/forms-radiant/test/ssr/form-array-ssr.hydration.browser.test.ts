@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, inject, test, vi } from 'vitest';
 import { FormController } from '@/adapters/radiant/controller';
-import { selectError } from '@schema-engine/forms/state-container';
+import { selectFieldState } from '@schema-engine/forms/state-container';
 import { containerOf } from '../components/mount-field';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
@@ -80,7 +80,7 @@ describe('SSR array hydration', () => {
 			expect(completedSubmissions).toBe(0);
 
 			await expect(containerOf(arrayHost).validate()).resolves.toEqual({ outcome: 'invalid' });
-			expect(selectError(containerOf(arrayHost).getSnapshot(), 'contacts')?.message).toBe(
+			expect(selectFieldState(containerOf(arrayHost).getSnapshot(), 'contacts').error?.message).toBe(
 				'Add at least three contacts',
 			);
 			containerOf(arrayHost).setValue('contacts.0.role', 'Edited Alice');

@@ -216,7 +216,7 @@ A rule that cannot run is no field error: it says nothing about the value.
 ## Entry point
 
 `@schema-engine/forms/state-container` (`src/state-container/index.ts`) exports the contract types, the factory,
-`selectFieldState`, `selectValue`, `selectError`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT`, `FormIssueFormatter` and
+`selectFieldState`, `selectValue`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT`, `FormIssueFormatter` and
 `FormValidationFailure`. The conformance suite is not part of it: it has its own entry, `@schema-engine/forms/testing`.
 
 `createFormStateContainer({ config, registry, defaults?, snapshot? })` is the whole option list: the elements, the
@@ -236,7 +236,7 @@ The container starts from those values and adopts those row ids, so a row the se
 and the rows the client adds get ids that cannot collide with them. Values and ids come from one object, so there is
 no count to compare and no warning: a hydration whose ids do not match its own values (an array with no entry, an
 entry for something that is no array, a wrong count, a repeated or non-string id) cannot come from a real snapshot
-and throws a `FormStateHydrationError`. Fields that differ from `defaults` are dirty, and `reset` restores the
+and throws an `Error`. Fields that differ from `defaults` are dirty, and `reset` restores the
 defaults with new row ids. Without `snapshot` the container starts from `defaults`.
 
 ## Contract
@@ -246,14 +246,14 @@ defaults with new row ids. Without `snapshot` the container starts from `default
 `validate`, `checkValidity`, `submit` and `fieldArray`. No member depends on how it is called.
 
 Reads are pure selectors over the snapshot, memoized per snapshot and path, so they are safe as selectors
-for `useSyncExternalStore` or an external store source: `selectFieldState`, `selectValue` and `selectError`
+for `useSyncExternalStore` or an external store source: `selectFieldState` and `selectValue`
 in [selectors.ts](./selectors.ts), and `toFieldArrayValue(rowIds, commands)` in
 [field-array.ts](./field-array.ts), which builds the React Hook Form style `FieldArrayValue` both bindings
 hand to their widgets, memoized by the commands and the row ids. `fieldArray(path)` returns the same commands
 object for a path each time, and a path names a position: `contacts.0.phones` is whatever row is at index 0 now.
 A field state (`error`, `warning`, `invalid`, `isTouched`, `isDirty`, `isValidating`) is the same object in
-every snapshot while it is unchanged. `selectFields` is an internal helper of the module. A hydration that does not match its own values throws an error
-named `FormStateHydrationError`.
+every snapshot while it is unchanged. `selectFields` is an internal helper of the module. A hydration that does not match its own values throws an `Error`:
+it is a programming error, nothing to catch and match on.
 
 ### Naming, after React Hook Form
 

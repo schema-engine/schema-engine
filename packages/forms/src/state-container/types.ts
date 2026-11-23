@@ -412,7 +412,7 @@ export interface FormStateContainerOptions {
 	 * container). With it the container starts from the values of the snapshot and adopts its row ids, so a client
 	 * keeps the identity a server rendered, whatever rows the user had added there. Values and ids come from the same
 	 * object, so there is nothing to compare; one whose ids do not match its own values cannot come from a real
-	 * snapshot and throws a `FormStateHydrationError`. `defaults` still say what the form started from, and what
+	 * snapshot and throws. `defaults` still say what the form started from, and what
 	 * `reset` restores, so pass the same ones the server used: the fields that differ from them are dirty.
 	 */
 	readonly snapshot?: FormStateHydration;
