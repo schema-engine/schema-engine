@@ -45,12 +45,13 @@ Each forms recipe has React and Radiant tabs and the same two install lines, one
 - React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`
 - Radiant: `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod`
 
-| Recipe                                                         | Shows                                                                                               |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Contact form](/docs/examples/contact-form)                    | Rules with messages, a field shown only for a support request, a JSON submit and a 422 on its field |
-| [Registration wizard](/docs/examples/registration-wizard)      | Two steps, Next that validates the step it leaves, and a taken email that sends the visitor back    |
-| [Branching survey](/docs/examples/branching-survey)            | A step skipped unless the answer was poor, validated on Next and left out of what is sent           |
-| [Submit, notify and reset](/docs/examples/submit-notify-reset) | Actions in the config: send, tell the visitor, clear the form, and report a failure                 |
+| Recipe                                                         | Shows                                                                                                           |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [Contact form](/docs/examples/contact-form)                    | Rules with messages, a field shown only for a support request, a JSON submit and a 422 on its field             |
+| [Registration wizard](/docs/examples/registration-wizard)      | Two steps, Next that validates the step it leaves, and a taken email that sends the visitor back                |
+| [Branching survey](/docs/examples/branching-survey)            | A step skipped unless the answer was poor, validated on Next and left out of what is sent                       |
+| [Submit, notify and reset](/docs/examples/submit-notify-reset) | Actions in the config: send, tell the visitor, clear the form, and report a failure                             |
+| [A server-driven form](/docs/examples/server-driven-form)      | A form config fetched from an endpoint and checked, the engine fetch with a CSRF header, and a 422 on its field |
 
 ### Layout
 

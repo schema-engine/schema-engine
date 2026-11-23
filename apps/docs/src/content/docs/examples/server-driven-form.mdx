@@ -1,0 +1,388 @@
+---
+title: 'A server-driven form'
+description: 'Fetch a form config from an endpoint, check it with safeValidateForm, render it in React or Radiant, send it with the engine fetch and its CSRF header, and show a 422 on the fields.'
+order: 9
+---
+
+import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { RendererTabs } from '@/components/renderer-tabs';
+import { signupForm } from '@/lib/examples/server-driven-form/server';
+
+# A server-driven form
+
+When the server owns the form, a change to a question is a change to a response. This recipe fetches a sign-up form from an endpoint as JSON and renders it. The client does not trust the answer: `safeValidateForm` checks every element and rule against what this client has registered, and a form it cannot render is a list of issues with their paths. The submit uses the `fetch` the engine hands to `onSubmit`, so a CSRF header is added without code, and a 422 from the server is shown on the fields it names.
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started).
+
+## See it
+
+The demos render the config the server sends, with the docs' styled components. They do not call a server: the files below do, and the recipe's tests run them against the handlers of `server.ts`.
+
+<FormRecipeDemo config={signupForm} />
+
+## The server
+
+`GET` is the route handler of `/forms/signup`: it answers with the form config. `POST` is `/api/signups`: it creates the account, or answers 422 with RFC 9457 Problem Details when the username is taken. Any runtime that speaks `Request` and `Response` runs them. `?next` returns the form of a later release, which asks for a rating with an element this client has not registered, so you see what the client does with a form it cannot render.
+
+```ts title="server.ts"
+export const signupForm = {
+	id: 'signup',
+	title: 'Create your account',
+	steps: [
+		{
+			id: 'account',
+			title: 'Create your account',
+			elements: [
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [
+						{ $type: 'required', message: 'Enter your email' },
+						{ $type: 'email', message: 'Enter a valid email address' },
+					],
+				},
+				{
+					$type: 'input',
+					id: 'username',
+					name: 'username',
+					label: 'Username',
+					rules: [
+						{ $type: 'required', message: 'Choose a username' },
+						{ $type: 'minLength', value: 3, message: 'Use at least 3 characters' },
+					],
+				},
+				{
+					$type: 'select',
+					id: 'plan',
+					name: 'plan',
+					label: 'Plan',
+					placeholder: 'Choose a plan',
+					options: [
+						{ value: 'free', label: 'Free' },
+						{ value: 'team', label: 'Team' },
+					],
+					rules: [{ $type: 'required', message: 'Choose a plan' }],
+				},
+				{ $type: 'submit', id: 'create', name: 'create', label: 'Create account' },
+			],
+		},
+	],
+};
+
+/**
+ * The form of a newer release: it asks for a rating with an element this client has not registered.
+ *
+ * @remarks
+ * It is what a client sees when the server ships ahead of it.
+ */
+const nextForm = {
+	...signupForm,
+	steps: [
+		{
+			...signupForm.steps[0],
+			elements: [...signupForm.steps[0]!.elements, { $type: 'rating', id: 'stars', name: 'stars', max: 5 }],
+		},
+	],
+};
+
+/** The route handler of `/forms/signup`: it answers with the form config as JSON. `?next` asks for the next release's. */
+export function GET(request: Request): Response {
+	return Response.json(new URL(request.url).searchParams.has('next') ? nextForm : signupForm);
+}
+
+/**
+ * The route handler of `/api/signups`: it creates the account, or answers 422 with Problem Details when the
+ * username is taken.
+ */
+export async function POST(request: Request): Promise<Response> {
+	const { username } = (await request.json()) as { username?: string };
+	if (username === 'ada') {
+		return Response.json(
+			{
+				type: 'https://example.com/problems/validation',
+				title: 'Validation failed',
+				status: 422,
+				errors: [{ pointer: '#/username', code: 'taken', detail: 'That username is already taken' }],
+			},
+			{ status: 422 },
+		);
+	}
+	return Response.json({ created: true }, { status: 201 });
+}
+```
+
+## Load and check the form
+
+`loadForm` fetches the config and passes it to the engine that will render it. `safeValidateForm` returns the normalized config, or the issues: an unknown element, a rule a registration refuses, a field the schema does not allow, each with its `path`. A request that fails is an issue too, so the page always has something to show.
+
+```ts title="load-form.ts"
+import type { FormEngineRuntime, NormalizedFormConfig } from '@schema-engine/forms';
+
+export type LoadedForm = { success: true; config: NormalizedFormConfig } | { success: false; issues: string[] };
+
+const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
+	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
+
+/**
+ * Fetches a form config and checks it against the engine that will render it.
+ *
+ * @remarks
+ * `safeValidateForm` checks every element and rule against the registrations of the engine, so a config this
+ * client cannot render is a list of issues with their paths, not an error thrown while rendering. A failed
+ * request is an issue too.
+ */
+export async function loadForm(
+	engine: Pick<FormEngineRuntime, 'safeValidateForm'>,
+	url: string,
+	request: typeof fetch = fetch,
+): Promise<LoadedForm> {
+	let response: Response;
+	try {
+		response = await request(url, { headers: { Accept: 'application/json' } });
+	} catch {
+		return { success: false, issues: ['The server could not be reached.'] };
+	}
+	if (!response.ok) return { success: false, issues: [`The server answered ${response.status}.`] };
+	let body: unknown;
+	try {
+		body = await response.json();
+	} catch {
+		return { success: false, issues: ['The answer is not JSON.'] };
+	}
+	const result = engine.safeValidateForm(body);
+	if (result.success) return { success: true, config: result.data };
+	return { success: false, issues: result.issues.map((issue) => `${where(issue.path)}: ${issue.message}`) };
+}
+```
+
+## Send the values and show the 422
+
+`signUp` posts the values with the `fetch` of `FormSubmitHelpers`, which is the engine's. A 422 becomes errors on the fields it names with `fromProblemDetails` and `setServerErrors` ([Server errors](/docs/forms/server-errors)).
+
+```ts title="submit.ts"
+import type { FormSubmitHelpers, FormValues } from '@schema-engine/forms';
+import { fromProblemDetails } from '@schema-engine/forms/server-errors';
+
+/**
+ * Creates the account and says whether it was created.
+ *
+ * @remarks
+ * `fetch` is the engine's, so the CSRF policy it was built with adds its header to this same-origin request. A 422
+ * with Problem Details is shown on the fields it names. Any other failure throws.
+ */
+export async function signUp(values: FormValues, { fetch, setServerErrors }: FormSubmitHelpers): Promise<boolean> {
+	const response = await fetch('/api/signups', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(values),
+	});
+	if (response.status === 422) {
+		setServerErrors(fromProblemDetails(await response.json()));
+		return false;
+	}
+	if (!response.ok) throw new Error(`The server answered ${response.status}.`);
+	return true;
+}
+```
+
+## Add the CSRF header
+
+The engine takes a CSRF policy and applies it to a same-origin unsafe request made with its `fetch`. This one reads the token the server rendered into a `<meta name="csrf-token">` and sends it in `X-CSRF-Token`. [CSRF](/docs/forms/csrf) has the policies for a cookie and for a value of your own.
+
+```ts title="csrf.ts"
+import { csrf } from '@schema-engine/forms/csrf';
+
+/**
+ * Reads the token the server rendered into `<meta name="csrf-token" content="...">` and sends it in a header
+ * on every same-origin unsafe request the engine makes.
+ */
+export const policy = csrf.fromMeta('csrf-token', { header: 'X-CSRF-Token', field: 'authenticity_token' });
+```
+
+## The renderer
+
+Each tab builds an engine with the policy, loads the form, and renders it with `FormRenderer`, or lists the issues. In React the component loads in an effect and shows what it has. In Radiant a function loads the form and renders into a host element. React ships no elements, so its tab starts with the widgets the config names.
+
+<RendererTabs name="server-driven-form">
+<div data-renderer="react">
+
+```tsx title="widgets.react.tsx"
+import * as z from 'zod/mini';
+import { BaseFieldSchema, defineInput, defineStatic } from '@schema-engine/forms';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+
+const InputSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('input'),
+	inputType: z.optional(z.enum(['text', 'email'])),
+});
+
+function InputField(config: z.output<typeof InputSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<input {...fieldProps} type={config.inputType ?? 'text'} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const SelectSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('select'),
+	options: z.array(z.object({ value: z.string(), label: z.string() })),
+});
+
+function SelectField(config: z.output<typeof SelectSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<select {...fieldProps} defaultValue={fieldText(defaultValue)}>
+				<option value="">{config.placeholder}</option>
+				{config.options.map((option) => (
+					<option key={option.value} value={option.value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const input = defineInput({
+	$type: 'input',
+	schema: InputSchema,
+	render: InputField,
+	value: () => z.string(),
+	metadata: { name: 'Input', category: 'input' },
+});
+
+const select = defineInput({
+	$type: 'select',
+	schema: SelectSchema,
+	render: SelectField,
+	value: ({ options }) => z.enum(options.map((option) => option.value)),
+	metadata: { name: 'Select', category: 'input' },
+});
+
+const SubmitSchema = z.extend(BaseFieldSchema, { $type: z.literal('submit') });
+
+function SubmitButton(config: z.output<typeof SubmitSchema>) {
+	return <button type="submit">{config.label}</button>;
+}
+
+const submit = defineStatic({
+	$type: 'submit',
+	schema: SubmitSchema,
+	render: SubmitButton,
+	metadata: { name: 'Submit', category: 'action' },
+});
+
+export const elements = [input, select, submit];
+```
+
+```tsx title="server-driven-form.react.tsx"
+import { useEffect, useState } from 'react';
+import { createFormEngine } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { policy } from './csrf';
+import { loadForm, type LoadedForm } from './load-form';
+import { signUp } from './submit';
+import { elements } from './widgets.react';
+
+export const engine = createFormEngine({ elements, csrf: policy });
+
+/** Fetches the form from `url`, then renders it, or lists why it cannot. `onSignedUp` runs once the account exists. */
+export function SignupForm({ url, onSignedUp }: { url: string; onSignedUp: () => void }) {
+	const [loaded, setLoaded] = useState<LoadedForm>();
+	useEffect(() => {
+		void loadForm(engine, url).then(setLoaded);
+	}, [url]);
+
+	if (!loaded) return <p>Loading the form</p>;
+	if (!loaded.success) {
+		return (
+			<ul role="alert">
+				{loaded.issues.map((issue) => (
+					<li key={issue}>{issue}</li>
+				))}
+			</ul>
+		);
+	}
+	return (
+		<FormRenderer
+			engine={engine}
+			config={loaded.config}
+			onSubmit={async (values, helpers) => {
+				if (await signUp(values, helpers)) onSignedUp();
+			}}
+		/>
+	);
+}
+```
+
+</div>
+<div data-renderer="radiant">
+
+```tsx title="server-driven-form.radiant.tsx"
+import { createRoot } from '@ecopages/jsx/client';
+import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { policy } from './csrf';
+import { loadForm } from './load-form';
+import { signUp } from './submit';
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, csrf: policy });
+
+/** Fetches the form from `url` and renders it into `host`, or lists why it cannot. `onSignedUp` runs once the account exists. */
+export async function mountSignupForm(host: HTMLElement, url: string, onSignedUp: () => void): Promise<void> {
+	const loaded = await loadForm(engine, url);
+	createRoot(host).render(
+		loaded.success ? (
+			<FormRenderer
+				engine={engine}
+				config={loaded.config}
+				onSubmit={async (values, helpers) => {
+					if (await signUp(values, helpers)) onSignedUp();
+				}}
+			/>
+		) : (
+			<ul role="alert">
+				{loaded.issues.map((issue) => (
+					<li>{issue}</li>
+				))}
+			</ul>
+		),
+	);
+}
+```
+
+</div>
+</RendererTabs>
+
+## What the tests check
+
+The recipe's tests render both files in a browser against the handlers of `server.ts`. The form the server sends renders, and an empty submit shows its messages without a request. A valid submit posts JSON with the `X-CSRF-Token` header and calls `onSignedUp`. A taken username shows the server's message on its field. The form of the next release shows its issues, with their paths, instead of a form. The unit tests cover each way the request can fail: the network, an error status and a body that is not JSON.
+
+## Take it further
+
+- Send the validation rules of the form from the server too: they are part of the config, so the same checks run in the browser and on the server.
+- Cache the config and check it again when it changes: `safeValidateForm` is synchronous.
+- Fill the form from an agent: [Agent tools](/docs/forms/agent-tool).
