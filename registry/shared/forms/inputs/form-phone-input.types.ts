@@ -28,3 +28,6 @@ export const phoneInputFieldExample: PhoneInputFieldConfig = {
 	defaultCountry: 'US',
 	placeholder: 'Enter phone number',
 };
+
+/** The value a phone field writes: the number as text. */
+export const phoneInputFieldValue = () => z.string();

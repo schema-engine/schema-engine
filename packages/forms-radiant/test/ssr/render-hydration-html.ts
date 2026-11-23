@@ -32,6 +32,7 @@ export function renderHydrationHtml(): string {
 					id: 'main',
 					title: 'Main',
 					elements: [
+						{ $type: 'textarea', id: 'street', name: 'address.street' },
 						{ $type: 'textarea', id: 'confirm', name: 'confirm', rules },
 						{ $type: 'select', id: 'choice', name: 'choice', options: [{ value: 'x', label: 'X' }], rules },
 						{ $type: 'checkbox', id: 'accepted', name: 'accepted', rules },

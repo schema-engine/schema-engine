@@ -45,4 +45,4 @@ Use `form.container` for commands and reads (`getValue(path)`, `setValue`, `vali
 the container's snapshot, and `formatIssue(issue, { path })` for an issue's text. Values are nested and
 paths are dotted (`contacts.0.email`), the engine container's own shape. Shipped
 `FormFieldElement` extends Radiant UI's field element; array components use the container's
-row ids. Radiant rendering uses `FormProvider` directly and does not emulate React hooks.
+row ids. Radiant rendering goes through `FormRenderer` and does not emulate React hooks.

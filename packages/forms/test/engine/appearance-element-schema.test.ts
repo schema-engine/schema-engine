@@ -7,6 +7,7 @@ import { elementChildrenSchema } from '@/lib/element-children';
 import { defineInput } from '@/types';
 import { defineFormRecipe } from '@/recipes';
 import { cardSpec, cardWizardSpec } from '@/recipes/built-in-specs';
+import { anyValue } from '../lib/any-value';
 
 const tone = defineAxis({
 	$type: 'tone',
@@ -21,6 +22,7 @@ const field = (
 	schema: z.ZodMiniType = z.extend(BaseFieldSchema, { $type: z.literal($type) }),
 ) =>
 	defineInput({
+		value: anyValue,
 		$type,
 		schema,
 		...(appearanceAxes ? { appearanceAxes } : {}),
@@ -175,6 +177,8 @@ describe('a Standard Schema element', () => {
 		const native = {
 			$type: 'native',
 			appearanceAxes: ['size'],
+			kind: 'input',
+			value: anyValue,
 			schema: {
 				'~standard': {
 					version: 1,

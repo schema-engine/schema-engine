@@ -4,6 +4,7 @@ import { buildFormEngine } from './build-form-engine';
 import type {
 	MergedRegistrationMap,
 	MergedOutputMap,
+	MergedValueMap,
 	MergedActionRegistrationMap,
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
@@ -113,7 +114,12 @@ export type FormEngineFromOptions<
 	MergedRegistrationMap<TElements>,
 	MergedRegistrationMap<TRecipes>,
 	MergedActionRegistrationMap<TActions>,
-	{ elements: MergedOutputMap<TElements>; recipes: MergedOutputMap<TRecipes>; actions: MergedOutputMap<TActions> },
+	{
+		elements: MergedOutputMap<TElements>;
+		recipes: MergedOutputMap<TRecipes>;
+		actions: MergedOutputMap<TActions>;
+		values: MergedValueMap<TElements>;
+	},
 	LayoutAxes<TLayout>
 >;
 

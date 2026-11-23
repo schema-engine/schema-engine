@@ -94,29 +94,26 @@ test('a hydrated form validates with the engine bound before upgrade', async () 
 });
 
 test('hydrated submit delivers the nested value tree', async () => {
-	const { instance, form } = mount();
-	const onSubmit = vi.fn();
-	instance.onSubmit = onSubmit;
+	const { form } = mount();
 	const field = form.querySelector('se-field[name="address.street"]') as FormFieldElement;
-	await containerOf(field);
+	const container = await containerOf(field);
 	await userEvent.fill(field.querySelector('input')!, 'x');
-	form.querySelector('form')!.requestSubmit();
-	await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-	expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ address: { street: 'x' } });
+
+	const result = await container.submit();
+
+	expect(result.outcome).toBe('passed');
+	expect(result.outcome === 'passed' && result.values).toMatchObject({ address: { street: 'x' } });
 });
 
-test('a form without onSubmit keeps native submission until a callback is set', async () => {
-	const { instance, form } = mount();
+test('a hydrated form without onSubmit submits natively', async () => {
+	const { form } = mount();
 	await containerOf(form.querySelector('se-field') as FormFieldElement);
 	form.action = '/native';
 	const nativeSubmit = vi.spyOn(form.querySelector('form')!, 'submit').mockImplementation(() => {});
+
 	form.querySelector('form')!.requestSubmit();
+
 	await expect.poll(() => nativeSubmit.mock.calls.length).toBe(1);
-	const onSubmit = vi.fn();
-	instance.onSubmit = onSubmit;
-	form.querySelector('form')!.requestSubmit();
-	await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-	expect(nativeSubmit).toHaveBeenCalledTimes(1);
 });
 
 test.each([false, true])('native submission waits for successful actions (%s)', async (succeeded) => {
@@ -142,23 +139,30 @@ test.each([false, true])('native submission waits for successful actions (%s)', 
 	expect(nativeSubmit).toHaveBeenCalledTimes(succeeded ? 1 : 0);
 });
 
-test('onChange receives a nested value tree and reconnects without duplicate watchers', async () => {
-	const { instance, root } = mount();
-	const onChange = vi.fn();
-	instance.onChange = onChange;
+test('form_change runs for a nested value tree, and a reconnect adds no duplicate watcher', async () => {
+	const { engine, instance, root } = mount();
+	const seen: Array<Record<string, unknown>> = [];
+	const execute = vi.fn(async (context: { formData: Record<string, unknown> }) => {
+		seen.push(context.formData);
+		return { success: true };
+	});
+	vi.spyOn(engine, 'getAction').mockReturnValue(testAction('submit', ['form_change'], execute));
+	instance.config = engine.defineForm({
+		id: 'changes',
+		steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'textarea', id: 'street', name: 'address.street' }] }],
+		actions: [{ id: 'save', $type: 'submit', endpoint: '/save' }],
+	});
 	const field = root.querySelector('se-field[name="address.street"]') as FormFieldElement;
 	await expect.poll(() => new FormController(field).container).toBeTruthy();
 	await userEvent.fill(field.querySelector('input')!, 'changed');
-	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'changed' });
-	onChange.mockClear();
+	await expect.poll(() => seen.at(-1)?.address).toEqual({ street: 'changed' });
 	root.remove();
 	document.body.append(root);
 	await expect.poll(() => new FormController(field).container).toBeTruthy();
-	onChange.mockClear();
+	seen.length = 0;
 	readContainer(field).setValue('address.street', 'reconnected');
-	await expect.poll(() => onChange.mock.calls.at(-1)?.[0].address).toEqual({ street: 'reconnected' });
-	const snapshots = onChange.mock.calls.filter(([values]) => values.address?.street === 'reconnected');
-	expect(snapshots).toHaveLength(1);
+	await expect.poll(() => seen.at(-1)?.address).toEqual({ street: 'reconnected' });
+	expect(seen.filter((values) => (values.address as { street?: string })?.street === 'reconnected')).toHaveLength(1);
 });
 
 test.each([

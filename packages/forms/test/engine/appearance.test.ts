@@ -6,6 +6,7 @@ import { builtInAxes, createLayoutTheme, defineAxis, getDefaultLayoutTheme } fro
 import { defineInput } from '@/types';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { cardSpec, cardWizardSpec } from '@/recipes/built-in-specs';
+import { anyValue } from '../lib/any-value';
 
 const noteSchema = z.extend(BaseFieldSchema, { $type: z.literal('note') });
 const fieldSetSchema = z.extend(BaseFieldSchema, {
@@ -14,6 +15,7 @@ const fieldSetSchema = z.extend(BaseFieldSchema, {
 });
 
 const note = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: noteSchema,
 	appearanceAxes: ['size'],
@@ -21,6 +23,7 @@ const note = defineInput({
 	render: () => null,
 });
 const plain = defineInput({
+	value: anyValue,
 	$type: 'plain',
 	schema: z.extend(BaseFieldSchema, { $type: z.literal('plain') }),
 	metadata: { name: 'Plain', category: 'input' },
@@ -176,6 +179,7 @@ describe('the layout option', () => {
 describe('registration axis declarations', () => {
 	test('an element declaring an axis the vocabulary lacks fails the engine build, naming both', () => {
 		const typo = defineInput({
+			value: anyValue,
 			$type: 'typo',
 			schema: z.extend(BaseFieldSchema, { $type: z.literal('typo') }),
 			appearanceAxes: ['sise'],
@@ -187,6 +191,7 @@ describe('registration axis declarations', () => {
 
 	test('an overridden element that declares an unknown axis does not fail the build', () => {
 		const typo = defineInput({
+			value: anyValue,
 			$type: 'typo',
 			schema: z.extend(BaseFieldSchema, { $type: z.literal('typo') }),
 			appearanceAxes: ['sise'],
@@ -194,6 +199,7 @@ describe('registration axis declarations', () => {
 			render: () => null,
 		});
 		const fixed = defineInput({
+			value: anyValue,
 			$type: 'typo',
 			schema: z.extend(BaseFieldSchema, { $type: z.literal('typo') }),
 			appearanceAxes: ['size'],
@@ -209,6 +215,7 @@ describe('registration axis declarations', () => {
 
 	test('an element may declare an axis a host adds', () => {
 		const tonedInput = defineInput({
+			value: anyValue,
 			$type: 'toned',
 			schema: z.extend(BaseFieldSchema, { $type: z.literal('toned') }),
 			appearanceAxes: ['tone'],
@@ -237,6 +244,7 @@ describe('registration axis declarations', () => {
 
 	test('extend checks the added registrations against the inherited vocabulary', () => {
 		const typo = defineInput({
+			value: anyValue,
 			$type: 'typo',
 			schema: z.extend(BaseFieldSchema, { $type: z.literal('typo') }),
 			appearanceAxes: ['sise'],
@@ -350,6 +358,7 @@ describe('appearance validation', () => {
 
 	test('a host axis a form sets is only inherited by elements that declare it', () => {
 		const tonedInput = defineInput({
+			value: anyValue,
 			$type: 'toned',
 			schema: z.extend(BaseFieldSchema, { $type: z.literal('toned') }),
 			appearanceAxes: ['tone'],

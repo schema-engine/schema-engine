@@ -3,8 +3,10 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineInput } from '@/types';
 import { ElementGridConfigSchema } from '@schema-engine/layout';
+import { anyValue } from '../lib/any-value';
 
 const field = defineInput({
+	value: anyValue,
 	$type: 'field',
 	schema: z.looseObject({
 		$type: z.literal('field'),

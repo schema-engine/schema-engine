@@ -11,6 +11,7 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import type { FormFieldElement } from '@/elements/form-field';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
+import { anyValue } from '../lib/any-value';
 
 const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
@@ -585,6 +586,7 @@ test('a server-rendered hidden wrapper keeps its snapshot while no instance publ
 
 test('an unnamed constrained element in an array row resolves its siblings in that row, before and after hydration', async () => {
 	const note = defineInput({
+		value: anyValue,
 		$type: 'note',
 		schema: z.looseObject({
 			$type: z.literal('note'),

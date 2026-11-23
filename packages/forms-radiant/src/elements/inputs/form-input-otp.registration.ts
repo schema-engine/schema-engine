@@ -1,5 +1,5 @@
 import { FormInputOTP } from './form-input-otp';
-import { InputOTPFieldConfigSchema } from './form-input-otp.types';
+import { InputOTPFieldConfigSchema, inputOTPFieldValue } from './form-input-otp.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const InputOTPElementRegistration = defineInput({
@@ -7,6 +7,7 @@ export const InputOTPElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormInputOTP,
 	schema: InputOTPFieldConfigSchema,
+	value: inputOTPFieldValue,
 	metadata: {
 		name: 'OTP Input',
 		description: 'One-time password input with configurable length',

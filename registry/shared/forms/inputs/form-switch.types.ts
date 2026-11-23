@@ -19,3 +19,6 @@ export type SwitchFieldProps = SwitchFieldConfig & {
 	onBlur?: () => void;
 	onFocus?: () => void;
 };
+
+/** The value a switch writes: whether it is on. */
+export const switchFieldValue = () => z.boolean();

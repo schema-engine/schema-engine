@@ -25,6 +25,7 @@ import type { FieldArrayCommands } from './field-array';
 import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
 import { submittedTree, submittedValues, toFormPath, type SubmissionRecord } from './submission';
 import { createRunTracker } from './stale-results';
+import { buildSubmissionShape } from '@/lib/submission-shape';
 import {
 	clearAround,
 	clearAt,
@@ -409,6 +410,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			: Object.freeze({ excluded, skippedSteps, fields });
 	}
 
+	const submissionShape = buildSubmissionShape(config.steps);
 	const hydrated = options.snapshot === undefined ? undefined : readHydration(options.snapshot);
 	for (const id of hydrated?.taken ?? []) adoptedIds.add(id);
 	const initialDefaults = toInternalRecord(options.defaults ?? {});
@@ -1222,6 +1224,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			ids: state.ids,
 			excluded: state.excluded,
 			payload: config.payload ?? NO_PAYLOAD,
+			shape: submissionShape,
 			epoch: tracker.epoch(),
 		};
 		latestSubmission = record;

@@ -12,6 +12,7 @@ import {
 	type AnyValidationRegistration,
 	PhoneRuleSchema,
 } from '@/schemas/validation';
+import { anyValue } from '../lib/any-value';
 
 const noteSchema = z.object({
 	$type: z.literal('note'),
@@ -20,6 +21,7 @@ const noteSchema = z.object({
 });
 
 const noteElement = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: noteSchema,
 	metadata: { name: 'Note', category: 'input' },
@@ -95,12 +97,14 @@ describe('createFormEngine', () => {
 
 	test('last registration wins for duplicate $type at runtime', () => {
 		const first = defineInput({
+			value: anyValue,
 			$type: 'note',
 			schema: noteSchema,
 			metadata: { name: 'First note', category: 'input' },
 			render: () => null,
 		});
 		const second = defineInput({
+			value: anyValue,
 			$type: 'note',
 			schema: noteSchema,
 			metadata: { name: 'Second note', category: 'input' },
@@ -114,6 +118,7 @@ describe('createFormEngine', () => {
 
 	test('registers element validations on the engine validation registry', () => {
 		const phoneElement = defineInput({
+			value: anyValue,
 			$type: 'phone-input',
 			schema: z.object({
 				$type: z.literal('phone-input'),
@@ -169,6 +174,7 @@ describe('createFormEngine', () => {
 			handler: () => z.string(),
 		} satisfies AnyValidationRegistration;
 		const leakElement = defineInput({
+			value: anyValue,
 			$type: 'leak-input',
 			schema: z.object({ $type: z.literal('leak-input'), name: z.string() }),
 			metadata: { name: 'Leak', category: 'input' },
@@ -184,6 +190,7 @@ describe('createFormEngine', () => {
 });
 
 const textareaElement = defineInput({
+	value: anyValue,
 	$type: 'textarea',
 	schema: z.object({
 		$type: z.literal('textarea'),
@@ -268,6 +275,7 @@ test('a supplied catalog is copied and gains every registration entry', () => {
 
 test('extend replaces the catalog schema for an overridden registration', () => {
 	const replacement = defineInput({
+		value: anyValue,
 		$type: 'note',
 		schema: z.object({ $type: z.literal('note'), id: z.string(), name: z.string(), revision: z.number() }),
 		metadata: { name: 'Revised note', category: 'input' },
@@ -283,6 +291,7 @@ test('extend replaces the catalog schema for an overridden registration', () => 
 
 test('extend replaces the catalog title and description for an overridden registration', () => {
 	const replacement = defineInput({
+		value: anyValue,
 		$type: 'note',
 		schema: noteSchema,
 		metadata: { name: 'Revised note', description: 'A dated note', category: 'input' },

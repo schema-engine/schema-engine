@@ -6,10 +6,12 @@ import { expect, test } from 'vitest';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
 import { ElementGridConfigSchema } from '@schema-engine/layout';
 import * as registryYaml from '@schema-engine/registry/yaml';
+import { anyValue } from './any-value';
 
 const page = readFileSync(new URL('../src/content/docs/forms/yaml.mdx', import.meta.url), 'utf8');
 
 const input = defineInput({
+	value: anyValue,
 	$type: 'input',
 	schema: z.looseObject({
 		$type: z.literal('input'),

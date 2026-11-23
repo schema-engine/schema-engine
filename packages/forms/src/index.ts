@@ -6,7 +6,7 @@
  */
 
 export { createFormEngine, FormEngine, SchemaMetadataCatalog, ActionDispatcher } from './engine';
-export type { CreateFormEngineOptions } from './engine';
+export type { CreateFormEngineOptions, SubmissionSchema } from './engine';
 export {
 	collectStepFieldPaths,
 	effectiveRulesFor,
@@ -62,6 +62,7 @@ export type {
 	StaticRegistration,
 	RecipeRegistration,
 	ContainerKind,
+	ValueDeclaration,
 } from './types';
 export { defineInput, defineStatic } from './types';
 export type { ElementRenderProps, WithNormalizedChildren } from './types';
@@ -79,6 +80,7 @@ export {
 export type { FormValidationIssue, FormValidationResult } from './lib/validate-form';
 export { isNormalizedElementConfig } from './lib/normalized-form-config';
 export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from './lib/normalized-form-config';
+export type { DefaultValuesOf, ValuesOf } from './builder/form-values';
 export type {
 	FormAuthoringInput,
 	FormAuthoringStep,

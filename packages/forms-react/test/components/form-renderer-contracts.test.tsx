@@ -5,6 +5,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
+import { anyValue } from '../utils/any-value';
 
 const inputSchema = z.object({
 	$type: z.literal('input'),
@@ -25,6 +26,8 @@ function createHeadlessEngine() {
 		elements: [
 			{
 				$type: 'input',
+				kind: 'input',
+				value: anyValue,
 				schema: inputSchema,
 				metadata: { name: 'Input', category: 'input' },
 				render: (props: { id: string; name: string; label?: string }) => (
@@ -36,6 +39,7 @@ function createHeadlessEngine() {
 			},
 			{
 				$type: 'submit',
+				kind: 'static',
 				schema: submitSchema,
 				metadata: { name: 'Submit', category: 'action' },
 				render: (props: { label?: string }) => <button type="submit">{props.label ?? 'Submit'}</button>,
@@ -116,6 +120,8 @@ describe('native Standard Schema through FormRenderer', () => {
 			elements: [
 				{
 					$type: 'minimal-fixture',
+					kind: 'input',
+					value: anyValue,
 					schema: createMinimalStandardSchema(),
 					metadata: { name: 'Minimal fixture', category: 'input' },
 					render: (props: MinimalFixtureConfig) => (
@@ -161,6 +167,8 @@ describe('transformed element configs through FormRenderer', () => {
 			elements: [
 				{
 					$type: 'count',
+					kind: 'input',
+					value: anyValue,
 					schema: countSchema,
 					metadata: { name: 'Count', category: 'input' },
 					render: (props: { id: string; name: string; label?: string; count: number; $type: 'count' }) => (

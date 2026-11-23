@@ -2,10 +2,12 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineInput } from '@/types';
+import { anyValue } from '../lib/any-value';
 
 const engine = createFormEngine({
 	elements: [
 		defineInput({
+			value: anyValue,
 			$type: 'input',
 			schema: z.looseObject({ $type: z.literal('input'), name: z.string() }),
 			metadata: { name: 'Input', category: 'input' },
@@ -14,14 +16,22 @@ const engine = createFormEngine({
 		defineInput({
 			$type: 'rows',
 			containerKind: 'array',
-			schema: z.looseObject({ $type: z.literal('rows'), name: z.string() }),
+			schema: z.looseObject({
+				$type: z.literal('rows'),
+				name: z.string(),
+				elements: z.optional(z.array(z.looseObject({ $type: z.string() }))),
+			}),
 			metadata: { name: 'Rows', category: 'input' },
 			render: (_props: Record<string, unknown>) => null,
 		}),
 		defineInput({
 			$type: 'group',
 			containerKind: 'object',
-			schema: z.looseObject({ $type: z.literal('group'), name: z.string() }),
+			schema: z.looseObject({
+				$type: z.literal('group'),
+				name: z.string(),
+				elements: z.optional(z.array(z.looseObject({ $type: z.string() }))),
+			}),
 			metadata: { name: 'Group', category: 'input' },
 			render: (_props: Record<string, unknown>) => null,
 		}),

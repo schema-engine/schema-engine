@@ -3,8 +3,10 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema, RendererStyleSchema } from '@/schemas/base-field';
 import { defineInput } from '@/types';
+import { anyValue } from '../lib/any-value';
 
 const noteElement = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: z.extend(BaseFieldSchema, { $type: z.literal('note') }),
 	metadata: { name: 'Note', category: 'input' },

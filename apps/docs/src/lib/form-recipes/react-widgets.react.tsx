@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput } from '@schema-engine/forms';
+import { createFormEngine, defineInput, defineStatic } from '@schema-engine/forms';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
 
@@ -51,6 +51,7 @@ const TextRegistration = defineInput({
 	$type: 'text',
 	schema: TextSchema,
 	render: TextField,
+	value: () => z.string(),
 	metadata: { name: 'Text', category: 'input' },
 });
 
@@ -58,14 +59,15 @@ const RatingRegistration = defineInput({
 	$type: 'rating',
 	schema: RatingSchema,
 	render: RatingField,
+	value: ({ max }) => z.number().check(z.int(), z.gte(1), z.lte(max)),
 	metadata: { name: 'Rating', category: 'input' },
 });
 
-const SubmitRegistration = defineInput({
+const SubmitRegistration = defineStatic({
 	$type: 'submit',
 	schema: SubmitSchema,
 	render: SubmitButton,
-	metadata: { name: 'Submit', category: 'input' },
+	metadata: { name: 'Submit', category: 'action' },
 });
 
 export const engine = createFormEngine({ elements: [TextRegistration, RatingRegistration, SubmitRegistration] });

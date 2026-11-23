@@ -21,6 +21,7 @@ const config = engine.validateForm({
 					id: 'contacts',
 					name: 'contacts',
 					label: 'Contacts',
+					initialValues: { email: '' },
 					elements: [{ $type: 'input', id: 'contact-email', name: 'email', label: 'Email' }],
 				},
 			],

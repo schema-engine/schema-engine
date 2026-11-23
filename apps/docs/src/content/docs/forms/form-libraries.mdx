@@ -68,7 +68,9 @@ export function ProfileEditor({ profile, save }: { profile: Profile; save: (prof
 				config={profileForm}
 				defaultValues={{ ...profile }}
 				onChange={(values) => setName(typeof values['name'] === 'string' ? values['name'] : '')}
-				onSubmit={async (values) => save(values as unknown as Profile)}
+				onSubmit={async (values) =>
+					save({ name: values.name, stars: typeof values.stars === 'number' ? values.stars : undefined })
+				}
 			/>
 		</section>
 	);
@@ -77,7 +79,7 @@ export function ProfileEditor({ profile, save }: { profile: Profile; save: (prof
 
 - `defaultValues` sets what the form starts from and is read once, when the form is created. A new config builds a new form with fresh state, so define the config once, outside the component, as above.
 - `onChange` receives the nested values, and only when a value changed. A touch, a blur or an error does not call it.
-- `onSubmit` receives the values that passed validation, without the fields that took no part, and the config's `payload`. Reject its promise to fail the submission; the rejection is reported in `formState.submission`.
+- `onSubmit` receives the values that passed validation, without the fields that took no part, and the config's `payload`. Their type comes from the config, so no cast is needed; an optional leaf field's cleared value (`''` or `null`) is part of it, which is why the example sends `stars` only when it is a number. Reject its promise to fail the submission; the rejection is reported in `formState.submission`.
 - The host reads the values; it does not write them back. To change the form from outside, use `useFormContext().setValue` or `reset` inside it.
 
 The `engine` here is the one built in [Writing a widget](/docs/forms-react/widgets).

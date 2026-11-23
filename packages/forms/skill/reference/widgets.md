@@ -41,6 +41,7 @@ export const textFieldRegistration = defineInput({
 	$type: 'text',
 	schema: TextFieldSchema,
 	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
 	render: TextField,
 });
 ```
@@ -86,6 +87,7 @@ export const ratingFieldRegistration = defineInput({
 	$type: 'rating',
 	schema: RatingFieldSchema,
 	metadata: { name: 'Rating', category: 'input' },
+	value: (config) => z.number().check(z.int(), z.gte(1), z.lte(config.max)),
 	render: RatingField,
 });
 ```
@@ -124,6 +126,7 @@ export const textFieldRegistration = defineInput({
 	$type: 'text',
 	schema: TextFieldSchema,
 	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
 	render: TextField,
 });
 ```
@@ -211,6 +214,7 @@ export const starsFieldRegistration = defineInput({
 	$type: 'stars',
 	schema: StarsFieldSchema,
 	metadata: { name: 'Stars', category: 'input' },
+	value: (config) => z.number().check(z.int(), z.gte(1), z.lte(config.max)),
 	render: StarsField,
 });
 ```

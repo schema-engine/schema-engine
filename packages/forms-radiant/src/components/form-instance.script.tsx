@@ -30,7 +30,7 @@ import { logger } from '@/lib/logger';
 import { replaceFormData } from '@/lib/native-form-data';
 import { csrfFieldFor } from '@schema-engine/forms/csrf';
 import { syncCsrfField } from '@/lib/csrf-field';
-import type { FormProviderProps, FormSubmitContext } from '@/adapters/types';
+import { instanceCallbacks } from '@/lib/instance-callbacks';
 
 const MISSING_ENGINE_MESSAGE =
 	'The form is in use without a FormEngine, so the engine validation rules and actions do not run. Assign `engine` to the enclosing `se-form-renderer`, or pass `engine` to `FormRenderer`.';
@@ -40,9 +40,6 @@ export interface FormInstanceProps {
 	config: NormalizedFormConfig;
 	defaultValues?: Record<string, unknown>;
 	engine?: CoreFormEngine;
-	onSubmit?: (data: Record<string, unknown>, context: FormSubmitContext) => void | Promise<void>;
-	onChange?: FormProviderProps['onChange'];
-	onAction?: FormProviderProps['onAction'];
 	/** The server's snapshot of the form (`toHydration(container.getServerSnapshot())`), which the first form of a server-rendered instance starts from. */
 	hydration?: FormStateHydration;
 }
@@ -61,7 +58,7 @@ export interface SubmissionCompleteDetail {
 /**
  * Detail of `se-action-submit-invalid`.
  *
- * @remarks `failures` are empty when validation found errors in fields, which are in the form's state, and name why validation could not run (a validator threw, a service was down) otherwise.
+ * @remarks `failures` are empty when validation found errors in fields, which are in the form's state, and name why validation could not run (a validator threw, a service was down) or why the values do not match the form (`valueMismatch`, one per path) otherwise.
  */
 export interface SubmissionInvalidDetail {
 	failures: readonly FormSubmissionIssue[];
@@ -131,13 +128,10 @@ interface InFlightSubmit {
 export class FormInstanceElement extends RadiantElement {
 	declare readonly [JSX_PROPS]?: FormInstanceProps;
 
-	/** Frozen config from `engine.defineForm` / `engine.validateForm` via `FormProvider`. */
+	/** Frozen config from `engine.defineForm` / `engine.validateForm` via the `FormRenderer` view. */
 	@prop({ type: Object }) config!: NormalizedFormConfig;
 	@state engine?: CoreFormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
-	@state onChange?: FormProviderProps['onChange'];
-	@state onAction?: FormProviderProps['onAction'];
-	@state onSubmit?: (data: Record<string, unknown>, context: FormSubmitContext) => void | Promise<void>;
 	/**
 	 * What the server's container held: its values and row ids.
 	 *
@@ -309,9 +303,9 @@ export class FormInstanceElement extends RadiantElement {
 				sync: () => ruiForm.sync(),
 				submitNatively: (values) => this.submitNatively(engine, ruiForm, inFlight, values),
 			},
-			onSubmit: (data, helpers) => this.onSubmit?.(data, helpers),
-			onChange: (data) => this.onChange?.(data),
-			onAction: (action, data) => this.onAction?.(action, data),
+			onSubmit: (data, helpers) => instanceCallbacks(this).onSubmit?.(data, helpers),
+			onChange: (data) => instanceCallbacks(this).onChange?.(data),
+			onAction: (action, data) => instanceCallbacks(this).onAction?.(action, data),
 			onActionResults: (results, trigger) => this.reportActionResults(ruiForm, inFlight, results, trigger),
 		});
 		const bound: BoundForm = { config, engine, host: ruiForm, defaultValues, runtime, inFlight };
@@ -328,7 +322,11 @@ export class FormInstanceElement extends RadiantElement {
 		this.unmountRuntime = this.bound.runtime.mount();
 	}
 
-	/** Injects the container into the `rui-form`, replacing the earlier binding, with the handlers of this instance. */
+	/**
+	 * Injects the container into the `rui-form`, replacing the earlier binding, with the handlers of this instance.
+	 *
+	 * @remarks The `rui-form` is connected to the container itself, so connecting again, as a new formatter does, swaps the handlers and leaves the controls registered.
+	 */
 	private attachForm({ host, runtime }: BoundForm): void {
 		this.releaseForm = host.connect(runtime.container, {
 			formatError: (issue, field) => this.issueFormatter()?.(issue, field) ?? '',
@@ -392,7 +390,7 @@ export class FormInstanceElement extends RadiantElement {
 		inFlight: InFlightSubmit,
 		values: Readonly<Record<string, unknown>>,
 	): void {
-		if (this.onSubmit) return;
+		if (instanceCallbacks(this).onSubmit) return;
 		const form = host.querySelector('form');
 		const csrf = form ? csrfFieldFor(engine.getCsrf(), form) : undefined;
 		if (form) syncCsrfField(form, csrf);

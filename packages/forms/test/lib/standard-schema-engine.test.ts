@@ -4,6 +4,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { FormValidationError } from '@/lib/validate-form';
 import { safeParseStandardSchema } from '@/lib/standard-schema';
+import { anyValue } from './any-value';
 
 type MinimalFixtureConfig = {
 	id: string;
@@ -69,6 +70,8 @@ describe('native Standard Schema engine path', () => {
 			elements: [
 				{
 					$type: 'path-fixture',
+					kind: 'input',
+					value: anyValue,
 					schema,
 					metadata: { name: 'Path fixture', category: 'input' },
 					render: () => null,
@@ -91,6 +94,8 @@ describe('native Standard Schema engine path', () => {
 			elements: [
 				{
 					$type: 'minimal-fixture',
+					kind: 'input',
+					value: anyValue,
 					schema: createMinimalStandardSchema(),
 					metadata: { name: 'Minimal fixture', category: 'input' },
 					render: () => null,
@@ -119,6 +124,8 @@ describe('native Standard Schema engine path', () => {
 			elements: [
 				{
 					$type: 'minimal-fixture',
+					kind: 'input',
+					value: anyValue,
 					schema: createMinimalStandardSchema(),
 					metadata: { name: 'Minimal fixture', category: 'input' },
 					render: () => null,
@@ -179,6 +186,8 @@ describe('native Standard Schema engine path', () => {
 			elements: [
 				{
 					$type: 'async-fixture',
+					kind: 'input',
+					value: anyValue,
 					schema: asyncSchema,
 					metadata: { name: 'Async fixture', category: 'input' },
 					render: () => null,
@@ -204,6 +213,8 @@ describe('native Standard Schema engine path', () => {
 			elements: [
 				{
 					$type: 'default-fixture',
+					kind: 'input',
+					value: anyValue,
 					schema,
 					metadata: { name: 'Default fixture', category: 'input' },
 					render: () => null,
@@ -228,6 +239,8 @@ describe('native Standard Schema engine path', () => {
 			elements: [
 				{
 					$type: 'standard-json-fixture',
+					kind: 'input',
+					value: anyValue,
 					schema,
 					metadata: { name: 'Standard JSON fixture', category: 'input' },
 					render: () => null,

@@ -44,7 +44,9 @@ export function ProfileEditor({ profile, save }: { profile: Profile; save: (prof
 				config={profileForm}
 				defaultValues={{ ...profile }}
 				onChange={(values) => setName(typeof values['name'] === 'string' ? values['name'] : '')}
-				onSubmit={async (values) => save(values as unknown as Profile)}
+				onSubmit={async (values) =>
+					save({ name: values.name, stars: typeof values.stars === 'number' ? values.stars : undefined })
+				}
 			/>
 		</section>
 	);

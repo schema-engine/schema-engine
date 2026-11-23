@@ -25,7 +25,15 @@ export type SelectFieldExtension = z.infer<typeof SelectFieldExtensionSchema>;
 export type SelectFieldConfig = z.infer<typeof SelectFieldConfigSchema>;
 
 export type SelectFieldProps = SelectFieldConfig & {
-	onChange?: (value: string | string[]) => void;
+	onChange?: (value: SelectOption['value'] | SelectOption['value'][]) => void;
 	onBlur?: () => void;
 	onFocus?: () => void;
+};
+
+/** The value a select writes: the value of the chosen option, as the option declares it, or a list of them with `multiple`. */
+export const selectFieldValue = (
+	config: Pick<SelectFieldConfig, 'options' | 'multiple'>,
+): z.ZodMiniType<string | number | Array<string | number>> => {
+	const option = z.literal(config.options.map((choice) => choice.value));
+	return config.multiple ? z.array(option) : option;
 };

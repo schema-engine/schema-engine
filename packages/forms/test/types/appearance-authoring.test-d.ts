@@ -6,6 +6,7 @@ import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { cardSpec } from '@/recipes/built-in-specs';
 import { defineInput } from '@/types';
 import { builtInAxes, createLayoutTheme, defineAxis, type ResolvedAppearanceAxes } from '@schema-engine/layout';
+import { anyValue } from '../lib/any-value';
 
 const tone = defineAxis({
 	$type: 'tone',
@@ -21,6 +22,7 @@ const spacing = defineAxis({
 });
 
 const note = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: z.extend(BaseFieldSchema, { $type: z.literal('note') }),
 	appearanceAxes: ['size'],

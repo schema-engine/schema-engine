@@ -5,6 +5,8 @@ import type { FormStepState, StepNavigationMode } from '@/engine/step-machine';
 import type { ValidationStep } from '@/engine/value-validation';
 import type { FormFetch } from '@/lib/form-fetch';
 import type { FormActionTrigger } from '@/actions';
+import type { DefaultValuesOf } from '@/builder/form-values';
+import type { ValuesBrand } from '@/lib/normalized-form-config';
 import type {
 	FormStateContainer,
 	FormStateContainerConfig,
@@ -106,9 +108,9 @@ export interface FormRuntimeHost {
 	/** Writes the controls' values to the container and reports their native validity, as a submit does, before a check. */
 	sync?(): void;
 	/**
-	 * Called once a submission succeeded, after its actions and `onSubmit`, with the values that passed, so a host whose form can post natively may do it with them.
+	 * Called once a submission succeeded, after its actions and `onSubmit`, with the values the form declares, so a host whose form can post natively may do it with them.
 	 *
-	 * @remarks The host decides whether it posts, because a renderer always passes a stable `onSubmit` wrapper and the runtime cannot tell whether the application gave one: Radiant posts when it did not. The navigation cannot cut off the success and complete triggers, which ran first.
+	 * @remarks The values are what the form's elements write, checked by the schema derived from them, and not what the application's schema made of them (a `Date`, a class): a form posts what its fields hold. The host decides whether it posts, because a renderer always passes a stable `onSubmit` wrapper and the runtime cannot tell whether the application gave one: Radiant posts when it did not. The navigation cannot cut off the success and complete triggers, which ran first.
 	 */
 	submitNatively?(values: FormValues): void;
 }
@@ -130,22 +132,26 @@ export interface FormRuntimeConfig<
 	readonly steps: readonly FormRuntimeStep<TAction>[];
 }
 
-/** What {@link createFormRuntime} builds a runtime from. */
-export interface CreateFormRuntimeOptions<TAction extends FormActionConfig = FormActionConfig> {
+/**
+ * What {@link createFormRuntime} builds a runtime from.
+ *
+ * @template TValues - The values a submission holds, which the form's config carries ({@link ValuesBrand}); {@link FormValues} when it is not typed. It is inferred from `config`, which the runtime has parsed every submission against before it reaches a callback.
+ */
+export interface CreateFormRuntimeOptions<TAction extends FormActionConfig = FormActionConfig, TValues = FormValues> {
 	/** The engine, for its validation registry, its actions and its `fetch`. */
 	engine: FormEngineRuntime;
-	config: FormRuntimeConfig<TAction>;
+	config: FormRuntimeConfig<TAction> & ValuesBrand<TValues>;
 	/** Values the form starts from, over the defaults of its fields. */
-	defaults?: Record<string, unknown>;
+	defaults?: DefaultValuesOf<TValues>;
 	/** The snapshot of a container that rendered the form on the server, to start from. */
 	snapshot?: FormStateHydration;
 	host: FormRuntimeHost;
-	/** Called with the values that passed validation, after the submit actions and before the success trigger. */
-	onSubmit?: (data: FormValues, helpers: FormSubmitHelpers) => void | Promise<void>;
+	/** Called with the values that passed validation and matched the form's value schemas, after the submit actions and before the success trigger. */
+	onSubmit?: (data: TValues, helpers: FormSubmitHelpers) => void | Promise<void>;
 	/** Called when the values change, never for an error, a touch or a validation result. */
 	onChange?: (data: FormValues) => void;
-	/** Called with each submit action that succeeded. Typed by the engine's actions. */
-	onAction?: (action: TAction, data: FormValues) => void | Promise<void>;
+	/** Called with each submit action that succeeded, and the values that passed. Typed by the engine's actions. */
+	onAction?: (action: TAction, data: TValues) => void | Promise<void>;
 	/** Called with the results of every trigger that ran actions, and once with those of the submit actions. */
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 }

@@ -14,7 +14,7 @@
  */
 
 import { FormPhoneInput } from './form-phone-input';
-import { PhoneInputFieldSchema } from './form-phone-input.types';
+import { PhoneInputFieldSchema, phoneInputFieldValue } from './form-phone-input.types';
 import { createPhoneValidationRegistration } from './form-phone-input.validation';
 import { defineInput } from '@schema-engine/forms';
 
@@ -25,6 +25,7 @@ export const PhoneInputElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormPhoneInput,
 	schema: PhoneInputFieldSchema,
+	value: phoneInputFieldValue,
 	validations: [createPhoneValidationRegistration()],
 	metadata: {
 		name: 'Phone Number Input Field',

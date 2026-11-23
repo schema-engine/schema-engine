@@ -19,3 +19,6 @@ export type NumberFieldExtension = z.infer<typeof NumberFieldExtensionSchema>;
 export type NumberFieldConfig = z.infer<typeof NumberFieldConfigSchema>;
 
 export type NumberFieldProps = NumberFieldConfig;
+
+/** The value a number field writes: a number. An empty field writes `''`, which only an optional field may hold. */
+export const numberFieldValue = () => z.number();

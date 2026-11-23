@@ -15,7 +15,7 @@
  */
 
 import { FormDropZone } from './form-drop-zone';
-import { DropZoneFieldSchema } from './form-drop-zone.types';
+import { DropZoneFieldSchema, dropZoneFieldValue } from './form-drop-zone.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const DropZoneElementRegistration = defineInput({
@@ -23,6 +23,7 @@ export const DropZoneElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormDropZone,
 	schema: DropZoneFieldSchema,
+	value: dropZoneFieldValue,
 	metadata: {
 		name: 'Drop Zone',
 		description: 'File upload drop-zone with drag-and-drop support and validation rules',

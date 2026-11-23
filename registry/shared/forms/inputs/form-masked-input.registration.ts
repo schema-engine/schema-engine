@@ -15,7 +15,7 @@
  */
 
 import { FormMaskedInput } from './form-masked-input';
-import { MaskedInputFieldSchema } from './form-masked-input.types';
+import { MaskedInputFieldSchema, maskedInputFieldValue } from './form-masked-input.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const MaskedInputElementRegistration = defineInput({
@@ -23,6 +23,7 @@ export const MaskedInputElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormMaskedInput,
 	schema: MaskedInputFieldSchema,
+	value: maskedInputFieldValue,
 	metadata: {
 		name: 'Masked Input Field',
 		description: 'Text input with an iMask pattern for formatted values like IBAN, cards, and dates',

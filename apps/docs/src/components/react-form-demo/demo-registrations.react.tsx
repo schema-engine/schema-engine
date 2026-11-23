@@ -16,6 +16,7 @@ export const DemoInputRegistration = defineInput({
 	$type: 'input',
 	render: DemoInput,
 	schema: DemoInputSchema,
+	value: () => z.string(),
 	metadata: {
 		name: 'Demo Input',
 		description: 'Radiant-styled text input for docs demos',
@@ -34,6 +35,7 @@ export const DemoTextareaRegistration = defineInput({
 	$type: 'textarea',
 	render: DemoTextarea,
 	schema: DemoTextareaSchema,
+	value: () => z.string(),
 	metadata: {
 		name: 'Demo Textarea',
 		description: 'Radiant-styled multi-line input for docs demos',
@@ -53,6 +55,7 @@ export const DemoSelectRegistration = defineInput({
 	$type: 'select',
 	render: DemoSelect,
 	schema: DemoSelectSchema,
+	value: () => z.string(),
 	metadata: {
 		name: 'Demo Select',
 		description: 'Radiant-styled single-select for docs demos',
@@ -71,6 +74,7 @@ export const DemoCheckboxRegistration = defineInput({
 	$type: 'checkbox',
 	render: DemoCheckbox,
 	schema: DemoCheckboxSchema,
+	value: () => z.boolean(),
 	metadata: {
 		name: 'Demo Checkbox',
 		description: 'Radiant-styled checkbox for docs demos',

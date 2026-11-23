@@ -42,3 +42,6 @@ export const dateFieldExample: DateFieldConfig = {
 	description: 'Select a date',
 	placeholder: 'Pick a date',
 };
+
+/** The value a date field writes: an ISO date. */
+export const dateFieldValue = () => z.string();

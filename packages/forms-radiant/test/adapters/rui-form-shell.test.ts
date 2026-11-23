@@ -153,6 +153,7 @@ describe('Radiant form initial values', () => {
 							name: 'members',
 							label: 'Members',
 							minItems: 2,
+							initialValues: { role: '' },
 							elements: [
 								{
 									$type: 'input',

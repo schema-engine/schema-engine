@@ -39,3 +39,6 @@ export const dateRangeFieldExample: DateRangeFieldConfig = {
 	numberOfMonths: 2,
 	presets: true,
 };
+
+/** The value a date range writes: the ISO dates it starts and ends on, each absent until picked. */
+export const dateRangeFieldValue = () => DateRangeValueSchema;

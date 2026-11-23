@@ -78,5 +78,6 @@ export const starsFieldRegistration = defineInput({
 	$type: 'stars',
 	schema: StarsFieldSchema,
 	metadata: { name: 'Stars', category: 'input' },
+	value: (config) => z.number().check(z.int(), z.gte(1), z.lte(config.max)),
 	render: StarsField,
 });

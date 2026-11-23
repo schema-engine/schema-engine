@@ -15,3 +15,6 @@ export type SwitchFieldExtension = z.infer<typeof SwitchFieldExtensionSchema>;
 export type SwitchFieldConfig = z.infer<typeof SwitchFieldConfigSchema>;
 
 export type SwitchFieldProps = SwitchFieldConfig;
+
+/** The value a switch writes: whether it is on. */
+export const switchFieldValue = () => z.boolean();

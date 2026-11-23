@@ -4,8 +4,9 @@ import { createFormEngine } from '@/engine/create-form-engine';
 import { validateFormValues } from '@/engine/value-validation';
 import { createDebounceScope } from '@/lib/debounce';
 import { logger } from '@/lib/logger';
-import { defineInput } from '@/types';
+import { defineInput, type AnyElementRegistration } from '@/types';
 import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
+import { anyValue } from '../lib/any-value';
 
 type PostcodeRule = { type: 'postcode'; message?: string };
 
@@ -19,11 +20,9 @@ const postcode = {
 		z.string().check(z.regex(/^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$/, rule.message ?? 'Invalid postcode')),
 } as const;
 
-function declaring(
-	$type: string,
-	validation: { $type: string; handler: () => z.ZodMiniType },
-): ReturnType<typeof defineInput> {
+function declaring($type: string, validation: { $type: string; handler: () => z.ZodMiniType }): AnyElementRegistration {
 	return defineInput({
+		value: anyValue,
 		$type,
 		schema: z.object({ $type: z.literal($type), name: z.string() }),
 		metadata: { name: $type, category: 'input' },

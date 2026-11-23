@@ -9,8 +9,10 @@ import { cardSpec } from '@/recipes/built-in-specs';
 import { formSubmitPlugin } from '@/actions';
 import { defineInput } from '@/types';
 import { ElementGridConfigSchema } from '@schema-engine/layout';
+import { anyValue } from '../lib/any-value';
 
 const field = defineInput({
+	value: anyValue,
 	$type: 'field',
 	schema: z.looseObject({
 		$type: z.literal('field'),
@@ -36,6 +38,7 @@ const fieldset = defineInput({
 });
 
 const sized = defineInput({
+	value: anyValue,
 	$type: 'sized',
 	schema: z.looseObject({
 		$type: z.literal('sized'),
@@ -53,6 +56,7 @@ const sized = defineInput({
 });
 
 const choice = defineInput({
+	value: anyValue,
 	$type: 'choice',
 	schema: z.looseObject({
 		$type: z.literal('choice'),
@@ -427,6 +431,7 @@ describe('union issues', () => {
 
 describe('union issues in the built-in rules', () => {
 	const withRules = defineInput({
+		value: anyValue,
 		$type: 'ruled',
 		schema: z.extend(BaseFieldSchema, { $type: z.literal('ruled') }),
 		metadata: { name: 'Ruled', category: 'input' },

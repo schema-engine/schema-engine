@@ -9,6 +9,11 @@ function optionKey(option: SelectOption) {
 	return String(option.value);
 }
 
+/** The value of the option a key stands for, as the option declares it: a number stays a number. */
+function optionValueOf(options: readonly SelectOption[], key: string) {
+	return options.find((option) => optionKey(option) === key)?.value ?? key;
+}
+
 export function FormSelect({
 	onChange: propsOnChange,
 	onBlur: propsOnBlur,
@@ -27,7 +32,7 @@ export function FormSelect({
 	const selectValue = fieldText(value);
 
 	const commitMultiple = (next: string[]) => {
-		combineHandlers(onChange, propsOnChange)(next);
+		combineHandlers(onChange, propsOnChange)(next.map((key) => optionValueOf(config.options, key)));
 	};
 
 	const toggleValue = (nextValue: string) => {
@@ -66,7 +71,7 @@ export function FormSelect({
 						});
 						return;
 					}
-					combineHandlers(onChange, propsOnChange)(String(nextValue));
+					combineHandlers(onChange, propsOnChange)(optionValueOf(config.options, String(nextValue)));
 				}}
 				disabled={fieldProps.disabled}
 			>

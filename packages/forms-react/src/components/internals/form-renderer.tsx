@@ -15,7 +15,8 @@ import { FormElements } from './form-elements';
 import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormEngineProvider } from '../form-engine-provider';
 import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormValues, NormalizedFormConfig } from '@schema-engine/forms';
+import { isNormalizedFormConfig } from '@schema-engine/forms/lib/normalized-form-config';
 import type { FormConfig } from '@schema-engine/forms/schemas';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from './recipe-renderer';
@@ -96,16 +97,25 @@ function FormElementsRenderer<
 	);
 }
 
+/**
+ * @template TValues - The values the form submits, which the normalized `config` carries: `onSubmit`, `onAction` and
+ * `defaultValues` are typed by it. A config passed as authoring input has none, so they are {@link FormValues}.
+ */
 export interface FormRendererProps<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
-> extends Omit<FormProviderProps<TOutputs>, 'children' | 'config'> {
-	/** The form: authoring config, or the normalized config of `engine.validateForm`. */
+	TValues extends FormValues = FormValues,
+> extends Omit<FormProviderProps<TOutputs, TValues>, 'children' | 'config'> {
+	/**
+	 * The form: the normalized config of `engine.defineForm` or `engine.validateForm`, or an authoring config.
+	 *
+	 * @remarks An authoring config carries no values type, so it is accepted only where `TValues` is {@link FormValues}: a callback typed by other values needs a normalized config that says so.
+	 */
 	config:
-		| FormConfig<TElements, TRecipes, TActions>
-		| NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
+		| NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions'], TValues>
+		| (FormValues extends TValues ? FormConfig<TElements, TRecipes, TActions> : never);
 	className?: string;
 	style?: React.CSSProperties;
 	engine?: FormEngine<TElements, TRecipes, TActions, TOutputs>;
@@ -117,6 +127,7 @@ function FormRendererInner<
 	TRecipes extends Record<string, unknown>,
 	TActions extends Record<string, unknown>,
 	TOutputs extends EngineOutputMaps,
+	TValues extends FormValues,
 >({
 	config,
 	defaultValues,
@@ -129,8 +140,8 @@ function FormRendererInner<
 	style,
 	layout,
 	children,
-}: Omit<FormRendererProps<TElements, TRecipes, TActions, TOutputs>, 'engine' | 'config'> & {
-	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
+}: Omit<FormRendererProps<TElements, TRecipes, TActions, TOutputs, TValues>, 'engine' | 'config'> & {
+	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions'], TValues>;
 	layout: LayoutTheme;
 }) {
 	return (
@@ -153,20 +164,53 @@ function FormRendererInner<
 	);
 }
 
+/**
+ * The normalized form of a `FormRenderer` config, which keeps the values type of a normalized config.
+ *
+ * @remarks
+ * A normalized config is validated as it is, so it keeps the type it carries. An authoring config carries none, and
+ * `FormRendererProps['config']` accepts one only where `TValues` is `FormValues`, so the form it normalizes to is
+ * a form of `TValues`; the engine has no signature that says so for a generic `TValues`.
+ */
+function normalize<
+	TElements extends Record<string, unknown>,
+	TRecipes extends Record<string, unknown>,
+	TActions extends Record<string, unknown>,
+	TOutputs extends EngineOutputMaps,
+	TValues extends FormValues,
+>(
+	engine: FormEngine<TElements, TRecipes, TActions, TOutputs>,
+	config: FormRendererProps<TElements, TRecipes, TActions, TOutputs, TValues>['config'],
+): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions'], TValues> {
+	if (isNormalizedFormConfig(config)) return engine.validateForm(config);
+	return engine.validateForm(config) as NormalizedFormConfig<
+		TOutputs['elements'],
+		TOutputs['recipes'],
+		TOutputs['actions'],
+		TValues
+	>;
+}
+
+/**
+ * Renders a form: its fields, its recipe and the provider that runs it.
+ *
+ * @remarks
+ * A normalized config (`engine.defineForm`, or `engine.validateForm` with a `values` schema) types `onSubmit`,
+ * `onAction` and `defaultValues` by the values it carries, so a callback needs no annotation and no cast. Validating a
+ * normalized config returns it unchanged, so it keeps that type; an authoring config has none and is {@link FormValues}.
+ */
 export function FormRenderer<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TOutputs extends EngineOutputMaps = EngineOutputMaps,
->({ engine, ...props }: FormRendererProps<TElements, TRecipes, TActions, TOutputs>) {
+	TValues extends FormValues = FormValues,
+>({ engine, ...props }: FormRendererProps<TElements, TRecipes, TActions, TOutputs, TValues>) {
 	const inheritedEngine = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
 	const resolvedEngine = engine ?? inheritedEngine?.engine;
 	const { config, layout } = useMemo(() => {
 		assertFormEngine(resolvedEngine, props.config);
-		return {
-			config: resolvedEngine.validateForm(props.config),
-			layout: resolvedEngine.getLayout(),
-		};
+		return { config: normalize(resolvedEngine, props.config), layout: resolvedEngine.getLayout() };
 	}, [props.config, resolvedEngine]);
 	const innerProps = { ...props, config, layout };
 

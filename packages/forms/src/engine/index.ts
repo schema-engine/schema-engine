@@ -11,3 +11,4 @@ export * from './step-machine';
 export * from './form-action-context';
 export { ActionDispatcher } from '@schema-engine/actions';
 export * from './value-validation';
+export type { SubmissionSchema, SubmissionSchemaConfig } from './submission-schema';

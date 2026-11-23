@@ -21,7 +21,7 @@ Both modes are in this file: a text field that is uncontrolled, a rating that is
 
 ```tsx
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput } from '@schema-engine/forms';
+import { createFormEngine, defineInput, defineStatic } from '@schema-engine/forms';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
 
@@ -72,6 +72,7 @@ const TextRegistration = defineInput({
 	$type: 'text',
 	schema: TextSchema,
 	render: TextField,
+	value: () => z.string(),
 	metadata: { name: 'Text', category: 'input' },
 });
 
@@ -79,18 +80,29 @@ const RatingRegistration = defineInput({
 	$type: 'rating',
 	schema: RatingSchema,
 	render: RatingField,
+	value: ({ max }) => z.number().check(z.int(), z.gte(1), z.lte(max)),
 	metadata: { name: 'Rating', category: 'input' },
 });
 
-const SubmitRegistration = defineInput({
+const SubmitRegistration = defineStatic({
 	$type: 'submit',
 	schema: SubmitSchema,
 	render: SubmitButton,
-	metadata: { name: 'Submit', category: 'input' },
+	metadata: { name: 'Submit', category: 'action' },
 });
 
 export const engine = createFormEngine({ elements: [TextRegistration, RatingRegistration, SubmitRegistration] });
 ```
+
+## Declare the value
+
+Every registration of an input declares the value its control writes, with `value`: a function of the configured element
+that returns a Standard Schema. The rating above writes a whole number from one to its `max`, a text field a string. The
+engine composes these into the schema every submission is checked against and the type of `onSubmit` (see
+[Submitted values](/docs/forms/form-state#submitted-values)), so the control writes exactly what it declares: a select
+with number options writes the number, not its text, and a checkbox writes a boolean. A control that writes something its
+declaration rejects fails the submission with a `valueMismatch` issue at its path. A static element, such as the submit
+button, uses `defineStatic` and declares none.
 
 ## What the form does for an uncontrolled field
 

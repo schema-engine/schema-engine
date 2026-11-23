@@ -44,3 +44,6 @@ export type InputOTPFieldExtension = z.infer<typeof InputOTPFieldExtensionSchema
 export type InputOTPFieldConfig = z.infer<typeof InputOTPFieldConfigSchema>;
 
 export type InputOTPFieldProps = InputOTPFieldConfig;
+
+/** The value an OTP field writes: the code typed so far. */
+export const inputOTPFieldValue = () => z.string();

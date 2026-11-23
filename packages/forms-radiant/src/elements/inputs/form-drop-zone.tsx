@@ -1,6 +1,7 @@
 import './form-drop-zone.css';
 import { customElement, onUpdated, prop, RadiantElement, state, ref } from '@ecopages/radiant';
-import { announceControlConnect, registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
+import { announceControlConnect } from '@ecopages/radiant-ui/form';
+import { registerHostControl } from '@/lib/control-host';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
@@ -201,20 +202,8 @@ export class SeDropZone extends RadiantElement {
 	}
 }
 
-/**
- * @remarks
- * The file input inside the host is the submitted control, so the field names
- * that input and the host only carries the files the store reads and writes.
- */
-const dropZoneControl: FieldControlAdapter = {
-	read: (host) => Reflect.get(host, 'files'),
-	write: (host, value) => {
-		Reflect.set(host, 'files', Array.isArray(value) ? value : []);
-	},
-	submission: 'native',
-};
-
-registerFieldControl('se-drop-zone', dropZoneControl);
+/** @remarks The file input inside the host is the submitted control, so the field names that input and the host only carries the files the store reads and writes. */
+registerHostControl('se-drop-zone', { mode: 'owns', held: 'files' });
 
 export function FormDropZone(config: DropZoneFieldProps) {
 	return (

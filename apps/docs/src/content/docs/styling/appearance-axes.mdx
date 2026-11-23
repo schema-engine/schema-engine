@@ -136,10 +136,10 @@ An element declares the axes it responds to with `appearanceAxes`, and a recipe 
 
 ```ts
 import * as z from 'zod/mini';
-import { defineInput } from '@schema-engine/forms';
+import { defineStatic } from '@schema-engine/forms';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
 
-export const notice = defineInput({
+export const notice = defineStatic({
 	$type: 'notice',
 	appearanceAxes: ['tone'],
 	schema: z.extend(BaseFieldSchema, { $type: z.literal('notice'), text: z.string() }),

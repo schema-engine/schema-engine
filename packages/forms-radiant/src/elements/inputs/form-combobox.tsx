@@ -1,3 +1,7 @@
+import { bindTo, customElement, prop, state } from '@ecopages/radiant';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiAutocomplete, RuiAutocompleteCollection, RuiAutocompleteEmpty } from '@ecopages/radiant-ui/autocomplete';
 import {
 	RuiCombobox,
@@ -12,18 +16,89 @@ import {
 import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import { ChoiceHost, type ChoiceValue } from '@/lib/choice-host';
+import { choiceControlOptions, choiceKeys, serializeChoiceValue } from '@/lib/choice-value';
+import { registerHostControl } from '@/lib/control-host';
 import { FieldGroup } from '../field-group';
-import { serializeChoiceValue } from '@/lib/choice-value';
 import type { ComboboxFieldProps } from './form-combobox.types';
 
-export function FormCombobox(config: ComboboxFieldProps) {
-	const isMultiple = Boolean(config.multiple);
-	const options = config.options.map((option) => ({
-		value: String(option.value),
-		label: option.label,
-		disabled: option.disabled,
-	}));
+/** The selector of the control's own ARIA target: where the field paints its label, description and state. */
+const ARIA_TARGET = '[data-combobox-input]';
 
+/**
+ * @remarks
+ * `value` is the option's own value, or a list of them with `multiple`, while `rui-combobox` holds the text of
+ * the chosen options' values as a list. The text typed to filter the options is not the value and leaves the
+ * host untouched.
+ */
+@customElement('se-combobox', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': ARIA_TARGET },
+})
+export class SeCombobox extends ChoiceHost<string[]> {
+	declare readonly [JSX_PROPS]?: Partial<
+		Pick<SeCombobox, 'name' | 'disabled' | 'value' | 'options' | 'multiple' | 'placeholder'>
+	>;
+
+	/** The field's context, painted onto the `ARIA_TARGET` by `fieldAriaBindings` (see `ControlHost`). */
+	@contextSelector({ context: fieldContext })
+	@state
+	@bindTo(fieldAriaBindings(ARIA_TARGET))
+	protected field?: FieldContextValue = undefined;
+
+	@prop({ type: Boolean, defaultValue: false }) multiple = false;
+	@prop({ type: String }) placeholder = '';
+
+	protected get controlTag(): string {
+		return 'rui-combobox';
+	}
+
+	protected override toControl(value: ChoiceValue): string[] {
+		return choiceKeys(value);
+	}
+
+	protected override fromControl(held: unknown): ChoiceValue {
+		return this.chosen(held, this.multiple);
+	}
+
+	override render(): JsxRenderable {
+		const selectionMode = this.multiple ? 'multiple' : 'single';
+		return (
+			<RuiCombobox
+				placeholder={this.placeholder}
+				disabled={this.disabled}
+				selectionMode={selectionMode}
+				value={this.toControl(this.value)}
+			>
+				<RuiComboboxControl>
+					{this.multiple ? (
+						<RuiComboboxValue>
+							<RuiTagGroup embedded />
+						</RuiComboboxValue>
+					) : null}
+					<RuiComboboxInput placeholder={this.placeholder} disabled={this.disabled} />
+					<RuiComboboxClear disabled={this.disabled} />
+					<RuiComboboxTrigger disabled={this.disabled} />
+				</RuiComboboxControl>
+				<RuiComboboxListbox>
+					<RuiAutocomplete>
+						<RuiAutocompleteCollection>
+							<RuiListbox
+								embedded
+								selectionMode={selectionMode}
+								options={choiceControlOptions(this.options)}
+							/>
+							<RuiAutocompleteEmpty>No results found.</RuiAutocompleteEmpty>
+						</RuiAutocompleteCollection>
+					</RuiAutocomplete>
+				</RuiComboboxListbox>
+			</RuiCombobox>
+		);
+	}
+}
+
+registerHostControl('se-combobox', { mode: 'wraps' });
+
+export function FormCombobox(config: ComboboxFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -40,31 +115,14 @@ export function FormCombobox(config: ComboboxFieldProps) {
 			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>
-			<RuiCombobox
-				placeholder={config.placeholder}
+			<SeCombobox
+				name={config.name}
 				disabled={config.disabled}
-				selectionMode={isMultiple ? 'multiple' : 'single'}
+				options={config.options}
+				multiple={Boolean(config.multiple)}
+				placeholder={config.placeholder}
 				value={config.defaultValue}
-			>
-				<RuiComboboxControl>
-					{isMultiple ? (
-						<RuiComboboxValue>
-							<RuiTagGroup embedded />
-						</RuiComboboxValue>
-					) : null}
-					<RuiComboboxInput placeholder={config.placeholder} disabled={config.disabled} />
-					<RuiComboboxClear disabled={config.disabled} />
-					<RuiComboboxTrigger disabled={config.disabled} />
-				</RuiComboboxControl>
-				<RuiComboboxListbox>
-					<RuiAutocomplete>
-						<RuiAutocompleteCollection>
-							<RuiListbox embedded selectionMode={isMultiple ? 'multiple' : 'single'} options={options} />
-							<RuiAutocompleteEmpty>No results found.</RuiAutocompleteEmpty>
-						</RuiAutocompleteCollection>
-					</RuiAutocomplete>
-				</RuiComboboxListbox>
-			</RuiCombobox>
+			/>
 		</FieldGroup>
 	);
 }

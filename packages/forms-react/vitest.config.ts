@@ -9,7 +9,21 @@ import { browserProjectLimits } from '../../scripts/vitest-browser-limits.ts';
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const formsPackageRoot = path.resolve(dirname, '../forms/src');
 
+/**
+ * Where a primitive the Base UI port overrides is read from, as the registry's own catalog selects it.
+ *
+ * @remarks
+ * `registry/shared/primitives` holds the shared implementations, and `registry/base-ui/primitives` the ones the
+ * default (Base UI) port replaces, so a test that renders the registry's combobox or number field resolves them
+ * from there, as the Storybook project does.
+ */
+const baseUiPrimitives = ['combobox', 'number-field'].map((name) => ({
+	find: `@/components/ui/schema-engine/components/${name}`,
+	replacement: path.resolve(dirname, `../../registry/base-ui/primitives/${name}.tsx`),
+}));
+
 const alias = [
+	...baseUiPrimitives,
 	{
 		find: '@/components/ui/schema-engine/components',
 		replacement: path.resolve(dirname, '../../registry/shared/primitives'),

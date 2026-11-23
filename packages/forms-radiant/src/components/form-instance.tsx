@@ -1,11 +1,12 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { isServer } from '@ecopages/radiant/is-server';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import type { DefaultValuesOf, FormValues, NormalizedFormConfig } from '@schema-engine/forms';
 import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
-import type { FormProviderProps } from '@/adapters/types';
+import type { FormAction, FormSubmitContext } from '@/adapters/types';
+import { feedInstanceCallbacks } from '@/lib/instance-callbacks';
 import { createFormStateContainer, toHydration, type FormStateHydration } from '@schema-engine/forms/state-container';
 
 /** Registers `<se-form-instance>` when this view is imported. */
@@ -40,12 +41,13 @@ function serverHydration(
  * children so SSR expands it. The recipe renderer receives the live `engine`,
  * while the enclosing `se-form-renderer` publishes it to this host through
  * `formEngineContext`, which is how an element hydrated from server markup gets
- * it. The element re-attaches `engine`, `onSubmit`, `onChange` and `onAction`
- * as properties, mirroring `RuiForm`'s `prop:resolver`. The server's snapshot of the form
+ * it. The element re-attaches `engine` as a property, mirroring `RuiForm`'s `prop:resolver`, and the callbacks reach it
+ * through `ref` and {@link feedInstanceCallbacks}, not through properties: it has none for an application to assign, and
+ * a form rendered on the server has no callback until the application renders it with one. The server's snapshot of the form
  * (`hydration`) is serialized with the instance, and the rows it renders carry its row ids,
  * so the client starts from the state the server rendered.
  */
-export function FormInstance({
+export function FormInstance<TValues extends FormValues = FormValues>({
 	config,
 	engine,
 	defaultValues,
@@ -56,14 +58,14 @@ export function FormInstance({
 	onAction,
 	children,
 }: {
-	config: NormalizedFormConfig;
+	config: NormalizedFormConfig<Record<string, unknown>, Record<string, unknown>, Record<string, unknown>, TValues>;
 	engine: CoreFormEngine;
-	defaultValues?: Record<string, unknown>;
-	onSubmit?: FormProviderProps['onSubmit'];
+	defaultValues?: DefaultValuesOf<TValues>;
+	onSubmit?: (data: TValues, context: FormSubmitContext) => void | Promise<void>;
 	action?: string;
 	method?: string;
-	onChange?: (data: Record<string, unknown>) => void;
-	onAction?: FormProviderProps['onAction'];
+	onChange?: (data: FormValues) => void;
+	onAction?: (action: FormAction, data: TValues) => void | Promise<void>;
 	children?: JsxRenderable;
 }): JsxRenderable {
 	const initialValues = collectFormInitialValues(config, defaultValues);
@@ -73,10 +75,10 @@ export function FormInstance({
 			config={config}
 			defaultValues={defaultValues}
 			engine={engine}
-			onSubmit={onSubmit}
-			onChange={onChange}
-			onAction={onAction}
 			hydration={hydration}
+			ref={(instance) => {
+				if (instance) feedInstanceCallbacks(instance, { onSubmit, onChange, onAction });
+			}}
 		>
 			<ConfiguredRuiForm config={config} layoutThemeId={engine.getLayout().id} action={action} method={method}>
 				<RecipeRenderer

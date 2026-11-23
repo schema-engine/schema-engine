@@ -37,3 +37,9 @@ export const maskedInputFieldExample: MaskedInputFieldConfig = {
 	placeholder: 'ES12 4311 2144 214423',
 	inputMode: 'text',
 };
+
+/** The value a masked field writes: the masked or unmasked text, or the typed value of the mask with `unmask: 'typed'`. */
+export const maskedInputFieldValue = (
+	config: Pick<MaskedInputFieldConfig, 'unmask'>,
+): z.ZodMiniType<string | number | Date> =>
+	config.unmask === 'typed' ? z.union([z.string(), z.number(), z.date()]) : z.string();

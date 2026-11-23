@@ -17,7 +17,10 @@ export type CheckboxFieldExtension = z.infer<typeof CheckboxFieldExtensionSchema
 export type CheckboxFieldConfig = z.infer<typeof CheckboxFieldConfigSchema>;
 
 export type CheckboxFieldProps = CheckboxFieldConfig & {
-	onChange?: (checked: boolean | 'indeterminate') => void;
+	onChange?: (checked: boolean) => void;
 	onBlur?: () => void;
 	onFocus?: () => void;
 };
+
+/** The value a checkbox writes: whether it is checked. */
+export const checkboxFieldValue = () => z.boolean();

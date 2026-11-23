@@ -4,6 +4,7 @@ import { createFormEngine } from '@/engine/create-form-engine';
 import { defineInput } from '@/types';
 import { BaseFieldSchema } from '@/schemas/base-field';
 import { mergeControlProps, HtmlAttributesSchema } from '@/schemas/html-attributes';
+import { anyValue } from '../lib/any-value';
 
 describe('HtmlAttributesSchema', () => {
 	test('accepts JSON-safe control attributes', () => {
@@ -53,6 +54,7 @@ describe('BaseFieldSchema htmlAttributes', () => {
 	});
 
 	const probeElement = defineInput({
+		value: anyValue,
 		$type: 'probe',
 		schema: probeSchema,
 		metadata: { name: 'Probe', category: 'input' },

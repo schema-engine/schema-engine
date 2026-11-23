@@ -81,6 +81,16 @@ export const engine = createRadiantFormEngine({ elements: [...schemaFormRegistra
 - `form.select(selector)` is a signal over a pure selector of the snapshot, and it follows a container that arrives late or is replaced. It reads `undefined` while the form has no container and on the server.
 - `form.formatIssue(issue, { path })` is the text the form shows for an issue.
 
+## What a control writes
+
+A registration declares the value its control writes with `value` (see [Submitted values](/docs/forms/form-state#submitted-values)),
+and the container holds exactly that: a select with number options holds the number, a single choice is one value, a
+slider with one thumb is a number. `rui-form` is connected to the container as it is. Radiant UI's own choice controls
+hold text, lists of text or lists of numbers, so each of the `select`, `combobox`, `radio`, `checkbox-group` and `slider`
+elements wraps its control in a host (`se-select`, `se-combobox`, `se-radio-group`, `se-checkbox-group`, `se-slider`)
+whose `value` is the declared one: the host maps it to and from what the control holds, and dispatches `input` and
+`change` on itself. A custom control writes its declared value itself.
+
 ## Write a custom control
 
 A control that is not one of Radiant UI's becomes a form control in three steps:
@@ -148,6 +158,7 @@ const ToneSchema = z.extend(BaseFieldSchema, { $type: z.literal('tone') });
 export const ToneRegistration = defineInput({
 	$type: 'tone',
 	schema: ToneSchema,
+	value: () => z.string(),
 	metadata: { name: 'Tone', category: 'input' },
 	render: (config) => (
 		<FormField name={config.name}>

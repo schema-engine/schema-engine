@@ -1,12 +1,73 @@
 import { describe, expect, test } from 'vitest';
 import { submittedTree, submittedValues, toFormPath, type SubmissionRecord } from '@/state-container/submission';
 import { toInternalRecord } from '@/state-container/value-tree';
+import { buildSubmissionShape } from '@/lib/submission-shape';
+import * as z from 'zod/mini';
+import { createFormEngine } from '@/engine/create-form-engine';
+import { BaseFieldSchema } from '@/schemas/base-field';
+import { defineInput } from '@/types';
+import { anyValue } from '../lib/any-value';
+
+const children = z.optional(z.array(z.looseObject({ $type: z.string() })));
+const text = defineInput({
+	$type: 'text',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
+	metadata: { name: 'Text', category: 'input' },
+	value: anyValue,
+	render: () => null,
+});
+const rows = defineInput({
+	$type: 'rows',
+	containerKind: 'array',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('rows'), elements: children }),
+	metadata: { name: 'Rows', category: 'input' },
+	render: () => null,
+});
+const engine = createFormEngine({ elements: [text, rows] });
+
+const config = engine.validateForm({
+	id: 'paths',
+	steps: [
+		{
+			id: 'main',
+			title: 'Main',
+			elements: [
+				{ $type: 'text', name: 'name' },
+				{
+					$type: 'rows',
+					name: 'rows',
+					elements: [
+						{ $type: 'text', name: 'x' },
+						{ $type: 'text', name: 'y' },
+					],
+				},
+				{
+					$type: 'rows',
+					name: 'groups',
+					elements: [
+						{ $type: 'text', name: 'label' },
+						{
+							$type: 'rows',
+							name: 'members',
+							elements: [
+								{ $type: 'text', name: 'n' },
+								{ $type: 'text', name: 'm' },
+							],
+						},
+					],
+				},
+			],
+		},
+	],
+});
+const shape = buildSubmissionShape(config.steps);
 
 const record = (values: Record<string, unknown>, excluded: string[]): SubmissionRecord => ({
 	values: toInternalRecord(values),
 	ids: undefined,
 	excluded,
 	payload: { tenant: 't1' },
+	shape,
 	epoch: 0,
 });
 

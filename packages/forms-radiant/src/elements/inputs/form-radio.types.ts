@@ -23,3 +23,7 @@ export type RadioFieldExtension = z.infer<typeof RadioFieldExtensionSchema>;
 export type RadioFieldConfig = z.infer<typeof RadioFieldConfigSchema>;
 
 export type RadioFieldProps = RadioFieldConfig;
+
+/** The value a radio group writes: the value of the chosen option, as the option declares it. */
+export const radioFieldValue = (config: Pick<RadioFieldConfig, 'options'>): z.ZodMiniType<string | number> =>
+	z.literal(config.options.map((option) => option.value));

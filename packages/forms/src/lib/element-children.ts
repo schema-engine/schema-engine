@@ -77,3 +77,17 @@ export function withExportedChildren(schema: z.ZodMiniType, child: z.ZodMiniType
 	}
 	return schema;
 }
+
+/**
+ * Whether a registration schema declares an `elements` array of children, or `undefined` when it cannot say.
+ *
+ * @remarks Reads a Zod schema as {@link withExportedChildren} does, through a pipe and a prefault. Any other Standard Schema is opaque, so a container written with one declares a `containerKind`.
+ */
+export function declaresChildren(schema: unknown): boolean | undefined {
+	if (typeof schema !== 'object' || schema === null || !('_zod' in schema)) return undefined;
+	const mini = schema as z.ZodMiniType;
+	if (isObjectSchema(mini)) return ELEMENT_CHILDREN_KEY in mini._zod.def.shape;
+	if (isPipeSchema(mini)) return declaresChildren(mini._zod.def.in);
+	if (isPrefaultSchema(mini)) return declaresChildren(mini._zod.def.innerType);
+	return false;
+}

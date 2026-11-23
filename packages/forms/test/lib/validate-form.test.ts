@@ -10,6 +10,7 @@ import { defineInput } from '@/types';
 import { ElementGridConfigSchema } from '@schema-engine/layout';
 import { elementChildrenSchema } from '@/lib/element-children';
 import { logger } from '@/lib/logger';
+import { anyValue } from '../lib/any-value';
 
 const cardRecipe = defineFormRecipe(
 	defineRecipeSpec({
@@ -128,6 +129,7 @@ describe('validateFormConfig', () => {
 
 	describe('named grid widths', () => {
 		const gridField = defineInput({
+			value: anyValue,
 			$type: 'field',
 			schema: z.looseObject({
 				$type: z.literal('field'),
@@ -494,6 +496,8 @@ describe('validateFormConfig', () => {
 			elements: [
 				{
 					$type: 'note',
+					kind: 'input',
+					value: anyValue,
 					schema: noteSchema,
 					metadata: { name: 'Note', category: 'input' },
 					render: () => null,
@@ -523,6 +527,7 @@ describe('validateFormConfig', () => {
 
 	test('rejects a field rule that has no validation handler', () => {
 		const field = defineInput({
+			value: anyValue,
 			$type: 'field',
 			schema: z.looseObject({
 				$type: z.literal('field'),
@@ -553,6 +558,7 @@ describe('validateFormConfig', () => {
 
 	test('rejects a rule its handler cannot build, rather than skipping it when a user types', () => {
 		const field = defineInput({
+			value: anyValue,
 			$type: 'field',
 			schema: z.looseObject({
 				$type: z.literal('field'),
@@ -590,6 +596,7 @@ describe('validateFormConfig', () => {
 
 	test('rejects a rule whose options its registration refuses, at the key at fault', () => {
 		const field = defineInput({
+			value: anyValue,
 			$type: 'field',
 			schema: z.looseObject({
 				$type: z.literal('field'),
@@ -626,6 +633,7 @@ describe('validateFormConfig', () => {
 		'rejects the reserved field name %s',
 		(name) => {
 			const field = defineInput({
+				value: anyValue,
 				$type: 'field',
 				schema: z.looseObject({ $type: z.literal('field'), id: z.string(), name: z.string() }),
 				metadata: { name: 'Field', category: 'input' },
@@ -644,6 +652,7 @@ describe('validateFormConfig', () => {
 
 	test('rejects a reserved name that a registration produces rather than the author wrote', () => {
 		const field = defineInput({
+			value: anyValue,
 			$type: 'field',
 			schema: z.looseObject({
 				$type: z.literal('field'),
@@ -680,6 +689,8 @@ describe('validateFormConfig', () => {
 			elements: [
 				{
 					$type: 'count',
+					kind: 'input',
+					value: anyValue,
 					schema: countSchema,
 					metadata: { name: 'Count', category: 'input' },
 					render: () => null,
@@ -737,6 +748,8 @@ describe('validateFormConfig', () => {
 			elements: [
 				{
 					$type: 'count',
+					kind: 'input',
+					value: anyValue,
 					schema: countSchema,
 					metadata: { name: 'Count', category: 'input' },
 					render: () => null,
@@ -778,12 +791,15 @@ describe('validateFormConfig', () => {
 			elements: [
 				{
 					$type: 'count',
+					kind: 'input',
+					value: anyValue,
 					schema: countSchema,
 					metadata: { name: 'Count', category: 'input' },
 					render: () => null,
 				},
 				{
 					$type: 'group',
+					kind: 'input',
 					schema: groupSchema,
 					metadata: { name: 'Group', category: 'input' },
 					render: () => null,
@@ -854,6 +870,7 @@ describe('validateFormConfig', () => {
 			meta: z.object({ nested: z.object({ label: z.string() }) }),
 		});
 		const metaElement = defineInput({
+			value: anyValue,
 			$type: 'meta',
 			schema: metaSchema,
 			metadata: { name: 'Meta', category: 'input' },
@@ -909,6 +926,8 @@ describe('validateFormConfig', () => {
 			elements: [
 				{
 					$type: 'tagged',
+					kind: 'input',
+					value: anyValue,
 					schema: taggedSchema,
 					metadata: { name: 'Tagged', category: 'input' },
 					render: () => null,
@@ -941,6 +960,7 @@ describe('validateFormConfig', () => {
 				elements: [
 					{
 						$type: 'broken',
+						kind: 'input',
 						schema: {} as never,
 						metadata: { name: 'Broken', category: 'input' },
 						render: () => null,

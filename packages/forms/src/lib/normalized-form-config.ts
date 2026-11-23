@@ -4,6 +4,8 @@ import type { DeepReadonly } from './deep-readonly.js';
 import type { FormConfig, FormStep, FormValidationModes } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import type { BaseField } from '@/schemas/base-field';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { FormValues } from '@/runtime/types';
 
 const NORMALIZED_FORM_CONFIG = Symbol.for('@schema-engine/forms.normalized-form-config');
 const ELEMENT_CONTAINER_KIND = Symbol.for('@schema-engine/forms.container-kind');
@@ -16,9 +18,29 @@ const NORMALIZED_ELEMENT_CONFIG = Symbol.for('@schema-engine/forms.normalized-el
  */
 export type { DeepReadonly };
 
+/**
+ * What a normalized form remembers of where it came from, and of the values it submits.
+ *
+ * @remarks `values` is the application's schema, bound by `validateForm(json, { values })`; the runtime parses a submission with it after the schema derived from the form.
+ */
 type NormalizedFormProvenance = {
 	readonly owner: object;
+	readonly values?: StandardSchemaV1;
 };
+
+declare const VALUES: unique symbol;
+
+/**
+ * The values type a form carries, as a required property that exists only in types.
+ *
+ * @remarks
+ * `defineForm` infers it from a literal config and `validateForm` takes it from the schema's output, so a renderer and
+ * the runtime type their callbacks by it. It is required so that only a normalized form has it: an object that was not
+ * normalized matches no values type, and nothing can claim one for it. It is covariant: a form typed with its own
+ * values is a form of any wider values type, and a form validated without a schema (`FormValues`) is not a form of a
+ * narrower one.
+ */
+export type ValuesBrand<TValues> = { readonly [VALUES]: TValues };
 
 /** Readable form shape. Accepts authoring config and frozen normalized output. */
 export type FormConfigView<
@@ -75,11 +97,12 @@ export type NormalizedFormConfig<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
+	TValues = FormValues,
 > = Omit<DeepReadonly<FormConfig<TElements, TRecipes, TActions>>, 'steps' | keyof FormValidationModes> &
 	Readonly<FormValidationModes> & {
 		readonly steps: ReadonlyArray<NormalizedStep<TElements, TActions>>;
 		readonly [NORMALIZED_FORM_CONFIG]: NormalizedFormProvenance;
-	};
+	} & ValuesBrand<TValues>;
 
 export function isNormalizedElementConfig(value: unknown): value is NormalizedElementConfig {
 	if (typeof value !== 'object' || value === null || !Object.isFrozen(value)) return false;
@@ -134,9 +157,9 @@ function freezeOwnedTree(value: unknown, seen: WeakSet<object>): void {
 	Object.freeze(value);
 }
 
-function attachFormBrand(config: object, owner: object): void {
+function attachFormBrand(config: object, owner: object, values?: StandardSchemaV1): void {
 	Object.defineProperty(config, NORMALIZED_FORM_CONFIG, {
-		value: { owner },
+		value: values ? { owner, values } : { owner },
 		enumerable: false,
 		configurable: false,
 		writable: false,
@@ -171,13 +194,34 @@ export function isNormalizedFormConfig(value: unknown, owner?: object): value is
 	return owner === undefined || provenanceOwner === owner;
 }
 
-export function markNormalizedFormConfig(config: FormConfig, owner: object): NormalizedFormConfig {
-	if (isNormalizedFormConfig(config, owner)) {
+/**
+ * The application's schema of the submitted values, bound to a form by `validateForm(json, { values })`.
+ *
+ * @remarks `undefined` for a form with none, whose submission is checked against the schema derived from its elements alone.
+ */
+export function getNormalizedFormValues(value: unknown): StandardSchemaV1 | undefined {
+	if (typeof value !== 'object' || value === null || !Object.isFrozen(value)) return undefined;
+	return getFormProvenance(value)?.values;
+}
+
+/**
+ * Freezes a form into a normalized one owned by `owner`.
+ *
+ * @remarks
+ * A form `owner` already normalized comes back as it is, unless `values` says another schema binds it: that is a copy
+ * with the schema, so the one it was given stays as it was.
+ */
+export function markNormalizedFormConfig(
+	config: FormConfig,
+	owner: object,
+	values?: StandardSchemaV1,
+): NormalizedFormConfig {
+	if (isNormalizedFormConfig(config, owner) && (values === undefined || getNormalizedFormValues(config) === values)) {
 		return config;
 	}
 
 	const snapshot = cloneFormValue(config, new WeakMap()) as FormConfig;
-	attachFormBrand(snapshot, owner);
+	attachFormBrand(snapshot, owner, values);
 	freezeOwnedTree(snapshot, new WeakSet());
 	return snapshot as unknown as NormalizedFormConfig;
 }

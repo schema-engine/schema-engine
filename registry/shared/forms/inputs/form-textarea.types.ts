@@ -31,3 +31,6 @@ export const textareaFieldExample: TextareaFieldConfig = {
 	rows: 5,
 	spellCheck: true,
 };
+
+/** The value a textarea writes: its text. */
+export const textareaFieldValue = () => z.string();

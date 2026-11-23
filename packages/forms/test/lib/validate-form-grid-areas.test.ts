@@ -5,6 +5,7 @@ import { FormValidationError } from '@/lib/validate-form';
 import { defineInput } from '@/types';
 import { ElementGridConfigSchema } from '@schema-engine/layout';
 import { elementChildrenSchema } from '@/lib/element-children';
+import { anyValue } from '../lib/any-value';
 
 const formWith = (elements: unknown[], grid?: unknown) => ({
 	id: 'areas',
@@ -15,6 +16,7 @@ const fieldNamed = (name: string, grid?: unknown) => ({ $type: 'field', id: name
 
 describe('named grid areas', () => {
 	const gridField = defineInput({
+		value: anyValue,
 		$type: 'field',
 		schema: z.looseObject({
 			$type: z.literal('field'),

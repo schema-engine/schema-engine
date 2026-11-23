@@ -2,6 +2,7 @@ import * as z from 'zod/mini';
 import { describe, expect, test } from 'vitest';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema } from '@/schemas/base-field';
+import { anyValue } from '../lib/any-value';
 
 const pipedSchema = z.pipe(
 	z.extend(BaseFieldSchema, { $type: z.literal('piped'), length: z._default(z.number(), 6) }),
@@ -12,6 +13,8 @@ const engine = createFormEngine({
 	elements: [
 		{
 			$type: 'piped',
+			kind: 'input',
+			value: anyValue,
 			schema: pipedSchema,
 			metadata: { name: 'Piped', category: 'input' },
 			render: () => null,

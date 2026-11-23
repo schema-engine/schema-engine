@@ -5,6 +5,7 @@ import { BaseFieldSchema } from '@/schemas/base-field';
 import type { ValidationRegistration } from '@/schemas/validation';
 import { createFormStateContainer } from '@/state-container';
 import { defineInput } from '@/types';
+import { anyValue } from '../lib/any-value';
 
 type PostalCodeRule = { type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
 
@@ -20,6 +21,7 @@ const postalCode: ValidationRegistration<PostalCodeRule> = {
 
 /** An element that only extends the base field: the shape every element starts from. */
 const text = defineInput({
+	value: anyValue,
 	$type: 'text',
 	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
 	metadata: { name: 'Text', category: 'input' },
@@ -268,6 +270,7 @@ describe('the JSON Schema export of an element that extends BaseFieldSchema', ()
 	test('defines the rules once, and every element refers to that definition', () => {
 		const elements = Array.from({ length: 6 }, (_, index) =>
 			defineInput({
+				value: anyValue,
 				$type: `text${index}`,
 				schema: z.extend(BaseFieldSchema, { $type: z.literal(`text${index}`) }),
 				metadata: { name: `Text ${index}`, category: 'input' },

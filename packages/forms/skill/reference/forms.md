@@ -15,6 +15,7 @@ export const textRegistration = defineInput({
 	$type: 'text',
 	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
 	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
 	render: () => null,
 });
 
