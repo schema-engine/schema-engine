@@ -53,6 +53,55 @@ const alias = [
 	},
 ];
 
+/**
+ * Dependencies the browser and storybook projects pre-bundle before any test or story runs.
+ *
+ * @remarks
+ * A dependency first reached by a test or a story is otherwise optimized mid-run, and Vite then reloads the page,
+ * which fails whatever was loading ("Vite unexpectedly reloaded a test"). Listing what the registry controls import
+ * keeps the first optimization complete. The browser project has its own `cacheDir`, so it keeps it warm for the next
+ * run; the Storybook plugin sets the storybook project's (`node_modules/.cache/storybook/<id>/sb-vitest`).
+ */
+const optimizedDeps = [
+	'@base-ui/react',
+	'@base-ui/react/button',
+	'@base-ui/react/checkbox',
+	'@base-ui/react/dialog',
+	'@base-ui/react/input',
+	'@base-ui/react/merge-props',
+	'@base-ui/react/number-field',
+	'@base-ui/react/popover',
+	'@base-ui/react/radio',
+	'@base-ui/react/radio-group',
+	'@base-ui/react/scroll-area',
+	'@base-ui/react/select',
+	'@base-ui/react/separator',
+	'@base-ui/react/slider',
+	'@base-ui/react/switch',
+	'@base-ui/react/use-render',
+	'@ecopages/logger',
+	'class-variance-authority',
+	'clsx',
+	'cmdk',
+	'date-fns',
+	'imask',
+	'input-otp',
+	'libphonenumber-js/min',
+	'lucide-react',
+	'react',
+	'react-day-picker',
+	'react-dom',
+	'react-dom/client',
+	'react-dropzone',
+	'react-phone-number-input',
+	'react-phone-number-input/flags',
+	'react/jsx-dev-runtime',
+	'react/jsx-runtime',
+	'storybook/test',
+	'tailwind-merge',
+	'zod/mini',
+];
+
 export default defineConfig({
 	resolve: { alias },
 	test: {
@@ -70,6 +119,8 @@ export default defineConfig({
 			{
 				plugins: [react()],
 				resolve: { alias },
+				cacheDir: path.join(dirname, 'node_modules/.vite-browser'),
+				optimizeDeps: { include: optimizedDeps },
 				test: {
 					name: 'browser',
 					...browserProjectLimits(1),
@@ -92,6 +143,7 @@ export default defineConfig({
 			{
 				plugins: [react(), storybookTest({ configDir: path.join(dirname, '.storybook') })],
 				resolve: { alias },
+				optimizeDeps: { include: optimizedDeps },
 				test: {
 					name: 'storybook',
 					...browserProjectLimits(2),
