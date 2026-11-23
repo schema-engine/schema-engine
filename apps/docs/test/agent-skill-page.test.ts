@@ -1,33 +1,30 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
 import { DOCS_SECTION_ORDER } from '../src/content/docs';
+import { findSkillSources } from '../scripts/skill-sources';
 
-const skillRoot = join(import.meta.dirname, '../../../packages/forms/skill');
+const sources = await findSkillSources();
+const router = readFileSync(sources.router, 'utf8');
 const page = readFileSync(join(import.meta.dirname, '../src/content/docs/schema-engine/agent-skill.mdx'), 'utf8');
 
 const referencesIn = (text: string): string[] =>
 	[...text.matchAll(/`(reference\/[\w-]+\.md)`/g)].map((match) => match[1]!).toSorted();
 
-test('the page lists exactly the references the router routes to', () => {
-	const router = readFileSync(join(skillRoot, 'SKILL.md'), 'utf8');
-	expect(referencesIn(page)).toEqual(referencesIn(router));
-	for (const reference of referencesIn(page)) expect(existsSync(join(skillRoot, reference))).toBe(true);
+test('the page lists exactly the references the packages ship, as the router routes to them', () => {
+	const shipped = sources.references.map(({ name }) => `reference/${name}`).toSorted();
+	expect(referencesIn(page)).toEqual(shipped);
+	expect(referencesIn(router)).toEqual(shipped);
 });
 
-test('the skill folder has no reference the page does not name', () => {
-	const files = readdirSync(join(skillRoot, 'reference')).map((name) => `reference/${name}`);
-	expect(referencesIn(page)).toEqual(files.toSorted());
-});
-
-test('the page names the installed copy and the served copy', () => {
-	expect(page).toContain('node_modules/@schema-engine/forms/skill/SKILL.md');
+test('the page names where the router and a reference are installed and where the site serves them', () => {
+	expect(page).toContain('node_modules/@schema-engine/registry/skill/SKILL.md');
+	expect(page).toContain('node_modules/@schema-engine/<package>/skill/reference/<file>');
 	expect(page).toContain('/skill/SKILL.md');
-	expect(existsSync(join(skillRoot, 'SKILL.md'))).toBe(true);
+	expect(page).toContain('/skill/reference/');
 });
 
 test('the router documentation map lists every docs section in sidebar order, each at an existing page', () => {
-	const router = readFileSync(join(skillRoot, 'SKILL.md'), 'utf8');
 	const paths = [...router.matchAll(/`(\/docs\/[\w-]+\/[\w-]+)`/g)].map((match) => match[1]!);
 	expect(paths.map((path) => path.split('/')[2])).toEqual([...DOCS_SECTION_ORDER]);
 	for (const path of paths) {

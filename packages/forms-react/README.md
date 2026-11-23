@@ -242,3 +242,7 @@ with `pnpm exec vitest run --project browser test/conformance` from this package
 `test/ssr/nested-theme.acceptance.browser.test.tsx` runs the shared nested-theme
 harness: a form on its own layout theme inside a grid item of another takes its own
 appearance tokens, with the host stylesheet before and after the form's. It also pins a form nested in its own theme, a pick reached through plain wrappers, an outer pick inherited by a form that picks nothing, an author class on the element that carries the theme and the pick, and the documented limit of A in B in A without `@scope`.
+
+## Agent skill
+
+The package ships its part of the Schema Engine agent skill as `skill/reference/forms-react.md` and `skill/reference/forms-react-widgets.md`, which an agent reads from `node_modules/@schema-engine/forms-react/skill/reference/`. The router that routes a task to it is `skill/SKILL.md` of `@schema-engine/registry`. See [For AI agents](../../apps/docs/src/content/docs/schema-engine/agent-skill.mdx).

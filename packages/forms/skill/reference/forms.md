@@ -1,10 +1,10 @@
 # @schema-engine/forms
 
-The engine, the config, validation timing, constraints, the container and the runtime. The terms are defined in `SKILL.md`.
+The engine, the config, validation timing, constraints, the container and the runtime. The terms are defined in the router (`SKILL.md`).
 
 ## Engine
 
-`createFormEngine` takes `elements`, `recipes`, `actions`, `validations` (extra rules), `layout`, `formatIssue`, `fetch` and `csrf`. It builds read-only registries (a later `$type` replaces an earlier one) and returns an immutable engine: create it once and reuse it. `engine.extend({ ... })` adds registrations and inherits the layout theme. The package ships no field widgets; an element is registered with `defineInput({ $type, schema, metadata, value, render })` (see `widgets.md`), and renderer packages bring the widgets.
+`createFormEngine` takes `elements`, `recipes`, `actions`, `validations` (extra rules), `layout`, `formatIssue`, `fetch` and `csrf`. It builds read-only registries (a later `$type` replaces an earlier one) and returns an immutable engine: create it once and reuse it. `engine.extend({ ... })` adds registrations and inherits the layout theme. The package ships no field widgets; an element is registered with `defineInput({ $type, schema, metadata, value, render })` (see Registrations below), and renderer packages bring the widgets.
 
 ```ts title="forms/engine.ts"
 import * as z from 'zod/mini';
@@ -20,6 +20,34 @@ export const textRegistration = defineInput({
 
 export const engine = createFormEngine({ elements: [textRegistration] });
 ```
+
+## Registrations
+
+You register with `createFormEngine({ elements, recipes, actions, validations })`: the engine builds one read-only registry of each from the lists, on `@schema-engine/registry`.
+
+```ts title="forms/registry.ts"
+import { createFormEngine } from '@schema-engine/forms';
+import { postalCode } from './custom-rule';
+import { textRegistration } from './engine';
+
+export const appEngine = createFormEngine({ elements: [textRegistration], validations: [postalCode] });
+
+export const elementTypes = appEngine.getAllElements().map(({ $type }) => $type);
+
+export const ruleTypes = appEngine.getValidationRegistry().keys();
+```
+
+Registrations are stored by `$type`, and a later one replaces an earlier one with no warning, so a list ending in your own replaces a built-in. A schema that is not a Standard Schema (no `~standard.validate`) throws at build, naming the kind and the `$type`. The registries are read-only and frozen, and the objects you passed are left untouched, so there is no `register` or `clear` after the build. A registry of your own, outside a form engine, is in `registry.md`.
+
+Every registration is `{ $type, schema, metadata }` (an element also has a `kind`, `'input'` or `'static'`, which `defineInput` and `defineStatic` set and a registration written by hand must state): `$type` is the stable key, `schema` is any Standard Schema (Zod, Zod Mini, Valibot, Effect Schema or a hand-written one) that describes the config, and `metadata` has a `name` and optionally a `description`, `icon`, `tags` and `version`. A renderable one adds `render`; an action adds `execute`; a validation rule adds `category` and `handler`.
+
+The engine builds four registries from `createFormEngine`: `elements` (`defineInput` for a field, `defineStatic` for display-only content), `recipes`, `actions` and `validations`. `elements` and `recipes` are for the renderer, `actions` for the runtime and `validations` for the container. Authors supply the schema's input and renderers receive its output, so register elements with `defineInput` (which also takes the `value` the control writes) and `defineStatic`, which keep the two apart.
+
+The engine lists what it holds with `getAllElements()`, `getAllRecipes()` and `getAllActions()`, looks one up with `getElement($type)`, `getRecipe($type)` and `getAction($type)`, and exposes its rules as `getValidationRegistry()`, itself a read-only registry. `engine.generateFormConfigSchema()` exports a JSON Schema of the form config for editors and other tools. The engine never changes after it is built: `engine.extend({ ... })` returns a new one.
+
+### Registering a widget
+
+A widget is a registration, `defineInput({ $type, schema, metadata, value, render })`, and the schema is the widget's config: `z.extend(BaseFieldSchema, { $type: z.literal('...'), ...yours })`. `defineInput` keeps the schema's input and output apart, so authors write the input and `render` receives the output with defaults applied. `value` declares what the control writes, as a function of the configured element that returns a Standard Schema (a rating's `max` is its bound; a select's options are an enum): `defineInput` requires it, the engine checks every submission against it, and the type of `onSubmit` comes from it. The control writes exactly what it declares (a number option is a number, not its text), and a control that writes something else fails the submission with a `valueMismatch` issue at its path. A container widget declares `elements: elementChildrenSchema`, no `value` (its value is its children's), and renders its children with `FormElements`, which composes the paths at render time. A display-only element uses `defineStatic` and declares none. Writing the `render` function is in `forms-react-widgets.md` and `forms-radiant-widgets.md`.
 
 ## Config
 
@@ -145,3 +173,7 @@ formStateContainerConformance(createFormStateContainer);
 ```
 
 Save your copy as `container-conformance.test.ts`; the `.suite` name only keeps this mirrored example out of this repository's own test runs.
+
+## Agent tool (experimental)
+
+`registerFormAgentTool(runtime, { name, description, engine, config })` from `@schema-engine/forms/agent-tool` offers a rendered form to a browser agent as a WebMCP tool: the tool's input is the engine's `submissionSchema(config)`, and calling it fills the form and, with `autoSubmit: true`, submits it. It returns the function that unregisters the tool. WebMCP is an origin trial and the API may change, so nothing else in the package imports it.

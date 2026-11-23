@@ -1,6 +1,6 @@
 # @schema-engine/forms-react
 
-The React renderer and its hooks. The package renders a normalized form; the field widgets are your code, copied from the shadcn registry or written by you (`widgets.md`).
+The React renderer and its hooks. The package renders a normalized form; the field widgets are your code, copied from the shadcn registry or written by you (`forms-react-widgets.md`).
 
 ## Setup
 
@@ -62,7 +62,7 @@ The form's runtime and container are created once per form instance, and their l
 
 ## The four hooks
 
-- `useFormField(config)` binds a widget to one field. It is uncontrolled by default; `useFormField(config, { controlled: true })` is for a component that takes only `value` and `onChange`; `useFormField(path)` is the state of a path with no value. How to choose, and what each returns, is in `widgets.md`.
+- `useFormField(config)` binds a widget to one field. It is uncontrolled by default; `useFormField(config, { controlled: true })` is for a component that takes only `value` and `onChange`; `useFormField(path)` is the state of a path with no value. How to choose, and what each returns, is in `forms-react-widgets.md`.
 - `useFormContext()` returns the commands over the form: `getValues()`, `setValue(name, value)`, `validate(name?)` (a path or several, resolving `{ outcome }`), `reset(values?)`, `setFocus(name)`, `formatIssue(issue, { path })` and `clearSubmission()`. Its `formState` is lazy: `errors`, `isValid` (the recorded errors, validating nothing) and `submission` (`status`, `failures`, `submitCount`). A component re-renders only for the keys it reads.
 - `useWatch()` reads every value, `useWatch(path)` one and `useWatch([paths])` a list, and re-renders only when what it reads changes.
 - `useFieldArray(name)` returns `fields` (one `{ id }` per row, stable through reordering) and `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace` and `remove`. Rows keep their errors, touched state and ids through every operation, and an operation that adds a row focuses its first control.
@@ -88,3 +88,5 @@ export function ResetButton() {
 ```
 
 For a wizard, `useFormInstanceActions()` exposes `current` (the step id), `steps`, `navigating` and `next()`, `back()` and `goTo(id)`. `useFormEngine()` reads the engine the provider supplied. Recipe blocks read the active view with `useViewContext`, `useActiveStep`, `useFormNavigation` and `useViewConfig`.
+
+`useFormRuntime()` gives the runtime of the form the component sits in, which `registerFormAgentTool` takes (`forms.md`).

@@ -67,4 +67,6 @@ export function containerOf(host: HTMLElement) {
 
 Create a signal once, as a field, and read it inside an `effect`; it reads `undefined` while the form has no container. `FormEngineController` does the same for the nearest renderer's engine (`engine`, `ready`, `connect`, `disconnect`).
 
-Writing a widget or a custom control host is in `widgets.md`.
+`controller.watchRuntime(callback)` calls back with the runtime of the form the element sits in, now and each time the form replaces it, for `registerFormAgentTool` (`forms.md`).
+
+Writing a widget or a custom control host is in `forms-radiant-widgets.md`.

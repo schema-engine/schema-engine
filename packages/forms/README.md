@@ -214,11 +214,12 @@ elements: [
 
 ### Agent skill
 
-The package ships its agent skill as `skill/` (`SKILL.md`, a short router with the core concepts, and `reference/*.md`
-loaded only when a task needs them), so an agent reads the guide of the installed version from
-`node_modules/@schema-engine/forms/skill/`. The skill is the one source: the docs site copies this folder to
-`/skill/` when it builds, as the latest version. Every TypeScript block in it mirrors a tested file under
-`test-utils/skill-examples/`, and `test/skill/skill-sync.test.ts` fails when a block and its file drift apart.
+The package ships its part of the agent skill as `skill/reference/forms.md`, `forms-validation.md`, `forms-submission.md`
+and `forms-actions.md`, so an agent reads the guide of the installed version from
+`node_modules/@schema-engine/forms/skill/reference/`. The router, `SKILL.md`, ships in `@schema-engine/registry`, and
+the docs site assembles both at `/skill/` when it builds, as the latest version. Every TypeScript block in a reference
+mirrors a tested file under `test-utils/skill-examples/`, and `apps/docs/test/skill-sync.test.ts` fails when a block and
+its file drift apart or the router and the shipped references disagree.
 
 ### Class and style
 

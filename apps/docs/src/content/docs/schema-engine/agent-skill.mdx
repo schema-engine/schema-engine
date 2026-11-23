@@ -1,40 +1,45 @@
 ---
 title: 'For AI agents'
-description: 'The skill an AI agent reads to build, validate and extend Schema Engine forms: where it ships, where it is served and how it is laid out.'
+description: 'The skill an AI agent reads to build, validate and extend with Schema Engine: where each package ships its part, where it is served and how it is laid out.'
 order: 6
 ---
 
 # For AI agents
 
-The agent skill is a guide written for an AI coding agent. It teaches the agent the core concepts of Schema Engine once, then routes each task to one reference, so the agent reads what the task needs and nothing more. Every TypeScript block in it mirrors a tested file, so its code runs.
+The agent skill is a guide written for an AI coding agent. It teaches the agent the concepts of Schema Engine once, then routes each task to one reference, so the agent reads what the task needs and nothing more. Every TypeScript block in it mirrors a tested file, so its code runs.
 
 ## Where to read it
 
-| Source                                                    | Version                              |
-| --------------------------------------------------------- | ------------------------------------ |
-| `node_modules/@schema-engine/forms/skill/SKILL.md`        | The one you installed                |
-| [`/skill/SKILL.md`](/skill/SKILL.md) on this site         | The latest version (this repository) |
-| [`/skill.txt`](/skill.txt), an index of the skill's files | The latest version (this repository) |
+| Source                                                              | Version                              |
+| ------------------------------------------------------------------- | ------------------------------------ |
+| `node_modules/@schema-engine/registry/skill/SKILL.md`               | The one you installed                |
+| `node_modules/@schema-engine/<package>/skill/reference/<file>`      | The one you installed                |
+| [`/skill/SKILL.md`](/skill/SKILL.md) on this site                   | The latest version (this repository) |
+| [`/skill/reference/<file>`](/skill/reference/forms.md) on this site | The latest version (this repository) |
+| [`/skill.txt`](/skill.txt), an index of the skill's files           | The latest version (this repository) |
 
-The skill ships inside `@schema-engine/forms`, so it matches the installed version: point your agent at the `node_modules` copy for the API you have. The site copies the same folder when it builds and serves it at `/skill/`, so use that copy when you want the latest guide or your agent cannot read `node_modules`.
+It is one skill, and every package ships its own part of it. The router, `SKILL.md`, ships in `@schema-engine/registry`, the package every other one depends on, and each package ships its references in its own `skill/reference/` folder. Installing a package puts its reference in `node_modules`, and a reference always matches the version of its package: point your agent at the `node_modules` copy for the API you have. The router lists every reference with its package, so an agent reads the rows of the packages the project depends on and skips the rest. If your package manager does not link `@schema-engine/registry` at the top level of `node_modules`, add it with the package you use. The site assembles the router and the references of every package when it builds and serves them at `/skill/`, so use that copy when you want the latest guide or your agent cannot read `node_modules`.
 
 ## How it is laid out
 
-`SKILL.md` is the router. It defines the core concepts (the config, the container, the runtime, issues and the formatter), names the packages and has one table that maps a task to a reference. The references assume the concepts and do not repeat them.
+`SKILL.md` is the router. It defines the concepts (the registration, the registry, the document and the action, then the config, the container, the runtime, and issues and the formatter of forms), names the packages and has one table that maps a task to a reference. The references assume the concepts and do not repeat them.
 
-| To do                                                                        | Reference                            |
-| ---------------------------------------------------------------------------- | ------------------------------------ |
-| Create an engine, author a config, use the container or the runtime directly | `reference/forms.md`                 |
-| Render a form in React, or use its hooks                                     | `reference/forms-react.md`           |
-| Render a form in Radiant, or reach the container from an element             | `reference/forms-radiant.md`         |
-| Write or change a field widget, and test it                                  | `reference/widgets.md`               |
-| Add a rule, explain a validation result, or translate messages               | `reference/validation-and-issues.md` |
-| Handle submit, server errors, CSRF or wizard steps                           | `reference/submission.md`            |
-| Run code on a form event, or define an action                                | `reference/actions.md`               |
-| Register elements, recipes, actions or validation rules                      | `reference/registry.md`              |
+| To do                                                                        | Package                        | Reference                            |
+| ---------------------------------------------------------------------------- | ------------------------------ | ------------------------------------ |
+| Register something, build a registry, or read a YAML document                | `@schema-engine/registry`      | `reference/registry.md`              |
+| Parse, dispatch or cancel actions outside a form                             | `@schema-engine/actions`       | `reference/actions.md`               |
+| Build a grid, an appearance axis or a layout theme                           | `@schema-engine/layout`        | `reference/layout.md`                |
+| Create an engine, author a config, use the container or the runtime directly | `@schema-engine/forms`         | `reference/forms.md`                 |
+| Add a rule, explain a validation result, or translate messages               | `@schema-engine/forms`         | `reference/forms-validation.md`      |
+| Handle submit, server errors, CSRF or wizard steps                           | `@schema-engine/forms`         | `reference/forms-submission.md`      |
+| Run code on a form event, or define a form action                            | `@schema-engine/forms`         | `reference/forms-actions.md`         |
+| Render a form in React, or use its hooks                                     | `@schema-engine/forms-react`   | `reference/forms-react.md`           |
+| Write or change a React field widget, and test it                            | `@schema-engine/forms-react`   | `reference/forms-react-widgets.md`   |
+| Render a form in Radiant, or reach the container from an element             | `@schema-engine/forms-radiant` | `reference/forms-radiant.md`         |
+| Write or change a Radiant field widget, and test it                          | `@schema-engine/forms-radiant` | `reference/forms-radiant-widgets.md` |
 
 ## Use it
 
-Tell your agent where `SKILL.md` is, as an instruction file in your agent's tooling or in a prompt: "Use the Schema Engine skill at `node_modules/@schema-engine/forms/skill/SKILL.md`." The agent reads the router first and opens a reference only for the task at hand. For the full documentation, `SKILL.md` points to [`/llms.txt`](/llms.txt) and the page bodies under `/docs-llm/`.
+Tell your agent where `SKILL.md` is, as an instruction file in your agent's tooling or in a prompt: "Use the Schema Engine skill at `node_modules/@schema-engine/registry/skill/SKILL.md`." The agent reads the router first and opens a reference only for the task at hand. For the full documentation, `SKILL.md` points to [`/llms.txt`](/llms.txt) and the page bodies under `/docs-llm/`.
 
-The skill is part of the package, so a change to a public API changes the skill in the same commit, and a test fails when a code block and its tested file drift apart.
+The skill is part of the packages, so a change to a public API changes the reference of its package in the same commit, and a test fails when a code block and its tested file drift apart, when the router and the shipped references disagree, or when the documentation map leaves the order of the docs sections.

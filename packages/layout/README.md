@@ -212,3 +212,7 @@ Left internal on purpose: `compileAppearance`, `getAppearanceCss`, `resolveGridT
 ## Documentation
 
 Guides with copy-paste recipes: [Layout themes](../../apps/docs/src/content/docs/layout/layout-themes.mdx), [Appearance axes](../../apps/docs/src/content/docs/layout/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/layout/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/layout/recipes.mdx).
+
+## Agent skill
+
+The package ships its part of the Schema Engine agent skill as `skill/reference/layout.md`, which an agent reads from `node_modules/@schema-engine/layout/skill/reference/`. The router that routes a task to it is `skill/SKILL.md` of `@schema-engine/registry`. See [For AI agents](../../apps/docs/src/content/docs/schema-engine/agent-skill.mdx).

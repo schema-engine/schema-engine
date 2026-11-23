@@ -15,7 +15,8 @@
 	"types": "dist/index.d.ts",
 	"style": "dist/index.css",
 	"files": [
-		"/dist/*"
+		"/dist/*",
+		"/skill"
 	],
 	"scripts": {
 		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
