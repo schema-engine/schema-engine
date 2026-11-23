@@ -112,7 +112,7 @@ store, because `FormStore` is a class of Radiant UI. It owns the nested value tr
 (errors, warnings, touched, dirty, pending), the row ids of field arrays, the **native facts**, which paths take
 part in validation and the `generation` of `reset()`. Every command is one atomic update and notifies once. Paths
 are dotted with the row index in them (`contacts.1.email`), and `FORM_ROOT` (`'__root__'`) is the form itself.
-Reads are pure selectors over its snapshot (`selectFieldState`, `selectValue`, `selectError`, `selectWarning`), so
+Reads are pure selectors over its snapshot (`selectFieldState`, `selectValue`), so
 React reads them through `useSyncExternalStore` and Radiant through `FormController.select`.
 
 - **Issue.** What is wrong with a path, as data: `{ type, source, ruleId?, params?, message? }`. `source` is

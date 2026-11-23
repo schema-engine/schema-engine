@@ -35,7 +35,10 @@ test('an element inside the form follows the container of its form', async () =>
 
 	const form = host.querySelector('contact-summary') as HTMLElement & {
 		form: {
-			container?: { fieldArray(path: string): { append(value: unknown): void }; validate(): Promise<boolean> };
+			container?: {
+				fieldArray(path: string): { append(value: unknown): void };
+				validate(): Promise<{ outcome: string }>;
+			};
 		};
 	};
 	form.form.container!.fieldArray('contacts').append({ email: '' });

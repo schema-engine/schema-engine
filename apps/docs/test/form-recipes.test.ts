@@ -16,7 +16,7 @@ describe('the form state page', () => {
 			recordedBefore: true,
 			checked: false,
 			recordedAfterCheck: true,
-			validated: false,
+			validated: { outcome: 'invalid' },
 			isValid: false,
 		});
 		expect(result.error).toMatchObject({ type: 'minLength', ruleId: 'password-min', params: { minLength: 8 } });

@@ -218,7 +218,7 @@ after the engine action lifecycle succeeds, and the container validates the
 submission once. Step action metadata includes elapsed form time.
 Action handlers receive a framework-neutral `context.form` with `reset`,
 `setValue`, `getValue`, `validate` and `checkValidity`; `validate()` validates the form,
-showing its errors, and resolves to its validity. `checkValidity()` validates the values
+showing its errors, and resolves `{ outcome: 'passed' | 'invalid' | 'overtaken' }`. `checkValidity()` validates the values
 current at the call without recording or showing errors. `context.isValid` is true while
 no error is recorded and never validates anything. `context.errors` is flat by dotted path. A trigger no action answers builds no context.
 

@@ -62,8 +62,9 @@ use last-wins typing; open `T[]` values use a union of configs for the same
 request function with the [CSRF policy](/docs/forms/csrf) applied, and `engine.getCsrf()` returns the policy.
 `engine.getValidationRegistry()` is the registry a [state container](/docs/forms/form-state) is made with.
 
-`engine.getSchemaCatalog()` lists the registered elements, recipes, actions and axes
-([Registries](/docs/registry/registries)).
+`engine.getSchemaCatalog()` returns the metadata the JSON Schema export reads (title, description and category by id, such as
+`element:input`), not a list of what is registered. Read what is registered with `engine.getAllElements()`,
+`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([Registries](/docs/registry/registries)).
 
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
 and is not typed per engine: field `rules` keep their `type` string. See
@@ -201,9 +202,10 @@ interface FormStepState {
 ```
 
 - One lock covers navigation and submission: a command made while another runs is `'busy'`, and a reset or an unmount
-  revokes the command in flight, which is `'cancelled'` and writes nothing.
+  revokes a command whose values were not yet captured, which is `'cancelled'` and writes nothing.
 - `container.reset()` is the only reset. The container snapshot's `generation` goes up with it, and the runtime then
-  returns the submission to idle with a count of 0 and the steps to the first, firing no step trigger.
+  returns the submission to idle with a count of 0 and the steps to the first, firing no step trigger. A submission
+  whose values were already captured is committed: it runs to its end and publishes its outcome after the reset.
 - `next()` validates the current step and moves to the next active step (`'refused'` on the last); `back()` never
   validates; `goTo(id)` refuses a skipped or unknown step, always allows going back and, going forward, follows the
   form's `navigation` (`'linear'`: visited steps only, validating every step on the way; `'free'`: any active step).
@@ -215,12 +217,12 @@ interface FormStepState {
 
 ## State container, server errors and CSRF
 
-| Entry                                  | Exports                                                                                                                                                                                                                                                                             | Guide                                                |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `@schema-engine/forms/state-container` | `createFormStateContainer`, the `FormStateContainer`, `FormStateSnapshot` and `FormIssueFormatter` types, `selectFieldState`, `selectValue`, `selectError`, `selectWarning`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT`, `FormValidationFailure` and `FormStateHydrationError` | [Form state](/docs/forms/form-state)                 |
-| `@schema-engine/forms/server-errors`   | `fromProblemDetails`, `fromJsonApiErrors` and `ServerErrorsInputError`                                                                                                                                                                                                              | [Server errors](/docs/forms/server-errors)           |
-| `@schema-engine/forms/csrf`            | `csrf` (`fromMeta`, `fromCookie`, `custom`), `csrfFieldFor` and the `CsrfPolicy` type                                                                                                                                                                                               | [CSRF](/docs/forms/csrf)                             |
-| `@schema-engine/forms/testing`         | `formStateContainerConformance`                                                                                                                                                                                                                                                     | [Form state](/docs/forms/form-state#write-a-binding) |
+| Entry                                  | Exports                                                                                                                                                                                                                                 | Guide                                                |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@schema-engine/forms/state-container` | `createFormStateContainer`, the `FormStateContainer`, `FormStateSnapshot` and `FormIssueFormatter` types, `selectFieldState`, `selectValue`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT` and `FormValidationFailure` | [Form state](/docs/forms/form-state)                 |
+| `@schema-engine/forms/server-errors`   | `fromProblemDetails`, `fromJsonApiErrors` and `ServerErrorsInputError`                                                                                                                                                                  | [Server errors](/docs/forms/server-errors)           |
+| `@schema-engine/forms/csrf`            | `csrf` (`fromMeta`, `fromCookie`, `custom`), `csrfFieldFor` and the `CsrfPolicy` type                                                                                                                                                   | [CSRF](/docs/forms/csrf)                             |
+| `@schema-engine/forms/testing`         | `formStateContainerConformance`                                                                                                                                                                                                         | [Form state](/docs/forms/form-state#write-a-binding) |
 
 ## RecipeRegistration
 

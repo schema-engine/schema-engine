@@ -132,9 +132,8 @@ Read one field with the selectors, which are pure functions of the snapshot and 
 
 | Selector                              | Returns                                                                                                    |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `selectFieldState(snapshot, path)`    | `error`, `warning`, `invalid`, `isTouched`, `isDirty`, `isValidating`, `hidden`, `disabled` and `required` |
+| `selectFieldState(snapshot, path)`    | `error` (exactly that path's, never one inherited), `warning`, `invalid`, `isTouched`, `isDirty`, `isValidating`, `hidden`, `disabled` and `required` |
 | `selectValue(snapshot, path)`         | The value at the path                                                                                      |
-| `selectError`, `selectWarning`        | The error or the warning of exactly that path                                                              |
 | `toFieldArrayValue(rowIds, commands)` | `fields` with stable ids and the array operations, as a widget takes them                                  |
 
 A field state is the same object in every snapshot while it is unchanged. The bindings are these selectors over the container:
@@ -160,19 +159,19 @@ Every command is one atomic update and notifies subscribers once. A path with a 
 
 Three reads answer "is the form valid", and they differ on purpose.
 
-| Read                               | Answers                                                                                                                                                                                                                                            |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `snapshot.isValid`                 | Whether no error is recorded right now for a path that takes part. It validates nothing, so a pristine form with an empty required field is `true`.                                                                                                |
-| `await container.validate(paths?)` | Validates the paths (the whole form when omitted), records and shows the errors, and resolves `true` only when none remains and the check was still current when it finished. It rejects with a `FormValidationFailure` when a rule could not run. |
-| `await container.checkValidity()`  | Validates the values current at the call and resolves whether the form passes. It records and shows nothing, and its answer may be out of date when it resolves.                                                                                   |
+| Read                               | Answers                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `snapshot.isValid`                 | Whether no error is recorded right now for a path that takes part. It validates nothing, so a pristine form with an empty required field is `true`.                                                                                                                                                               |
+| `await container.validate(paths?)` | Validates the paths (the whole form when omitted), records and shows the errors, and resolves `{ outcome }`: `'passed'` only when no error remains and the check was still current when it finished, otherwise `'invalid'` or `'overtaken'`. It rejects with a `FormValidationFailure` when a rule could not run. |
+| `await container.checkValidity()`  | Validates the values current at the call and resolves whether the form passes. It records and shows nothing, and its answer may be out of date when it resolves.                                                                                                                                                  |
 
-The example above shows all three: after `setValue('password', 'short')` the recorded state is still valid, `checkValidity()` is `false` and leaves it so, and `validate()` is `false` and records the `minLength` error.
+The example above shows all three: after `setValue('password', 'short')` the recorded state is still valid, `checkValidity()` is `false` and leaves it so, and `validate()` resolves `{ outcome: 'invalid' }` and records the `minLength` error.
 
 Do not disable a submit button with `isValid`. A server error makes it `false`, and only the next attempt clears that, so the user could not retry. Let the user submit and show the errors.
 
-Actions see the same three. In an action, `context.isValid` is `isValid`, `context.form.checkValidity()` is `checkValidity()` and `context.form.validate()` is `validate()`. See [Actions](/docs/actions/advanced#stop-on-failure).
+Actions see the same three. In an action, `context.isValid` is `isValid`, `context.form.checkValidity()` is `checkValidity()` and `context.form.validate()` is `validate()`, so it resolves `{ outcome }` too. See [Actions](/docs/actions/advanced#stop-on-failure).
 
-A check is **fresh** only while its scope is current. If an edit, a row move or a reset outruns it, `validate()` runs once more over the same rows, and if it is overtaken again it resolves `false` and writes nothing stale.
+A check is **fresh** only while its scope is current. If an edit, a row move or a reset outruns it, `validate()` runs once more over the same rows, and if it is overtaken again it resolves `{ outcome: 'overtaken' }` and writes nothing stale. `'overtaken'` is no verdict: ask again, and do not treat it as `'invalid'`.
 
 ## Submit
 
@@ -186,21 +185,21 @@ A check is **fresh** only while its scope is current. If an edit, a row move or 
 
 A rendered form wraps this in its runtime, which adds the submission state, the actions and your `onSubmit`. In order:
 
-1. The runtime takes its one lock, syncs the controls into the container and sets the status to `pending`. A second submit meanwhile is `busy`.
-2. `container.submit()` validates. `invalid` shows and focuses the errors and stops. `overtaken` stops without showing anything.
-3. `form_submit_start` runs.
+1. The runtime takes its one lock, syncs the controls into the container and sets the status to `validating`. A second submit meanwhile is `busy`.
+2. `container.submit()` validates. `invalid` shows and focuses the errors and stops. `overtaken` stops without showing anything. Both return the status to `idle`, so a submission that did not pass is never `submitting`.
+3. The status becomes `submitting`, and `form_submit_start` runs. It runs only for a submission that passed validation.
 4. The submit actions run (`form_submit`). An action that fails and stops the sequence skips `onSubmit`.
 5. `onSubmit(values, { setServerErrors, fetch })` runs with the values that passed. A rejection is a failed submission.
 6. `form_submit_success` runs, or `form_submit_error` after a failure.
 7. `form_submit_complete` runs.
 
-`snapshot.submission` on the runtime, and `useFormContext().formState.submission` in React, reports `{ status, failures, submitCount }`. `status` is `idle`, `pending`, `success` or `error`; `failures` are issues of the form itself (`actionFailed`, `callbackFailed`, `triggerFailed`, `validationFailed`); `submitCount` counts submissions that passed or failed validation, not a Next and not a check an edit outran. A reset returns it to idle with a count of 0.
+`snapshot.submission` on the runtime, and `useFormContext().formState.submission` in React, reports `{ status, failures, submitCount }`. `status` is `idle`, `validating` (while the check runs), `submitting` (once it passed, while the actions and `onSubmit` run), `success` or `error` (`isSubmissionBusy(status)`, exported by `@schema-engine/forms`, is true for `validating` and `submitting`); `failures` are issues of the form itself (`actionFailed`, `callbackFailed`, `triggerFailed`, `validationFailed`); `submitCount` counts submissions that passed or failed validation, not a Next and not a check an edit outran. A reset returns it to idle with a count of 0, unless the submission's values were already captured: it is then committed and publishes its outcome (`success` or `error`, with a count of 1) after the reset.
 
 Send the values with the `fetch` of `onSubmit`'s second argument, which applies the [CSRF policy](/docs/forms/csrf), and show the server's answer with `setServerErrors`. See [Server errors](/docs/forms/server-errors).
 
 ## Reset
 
-`container.reset()` is the only reset. An action's `form.reset`, `useFormContext().reset`, a native reset button and `FormController.container.reset()` all call it. It raises `snapshot.generation`, which the runtime watches: it revokes the command in flight, returns the submission to idle and the wizard to its first step, and fires no step trigger.
+`container.reset()` is the only reset. An action's `form.reset`, `useFormContext().reset`, a native reset button and `FormController.container.reset()` all call it. It raises `snapshot.generation`, which the runtime watches: it revokes a command whose values were not yet captured, returns the submission to idle and the wizard to its first step, and fires no step trigger. A submission whose values were already captured is committed: its lifecycle runs to its end and its outcome is published after the reset.
 
 ## Server rendering
 
@@ -229,7 +228,7 @@ export function hydrateOnClient(payload: string) {
 }
 ```
 
-`toHydration` returns the `values` and `rowIds`, which are plain and serializable. The client starts from those values and adopts those row ids, so a row the server rendered keeps its identity. A hydration whose ids do not match its own values throws a `FormStateHydrationError`. The row ids a container makes are deterministic, so a client built from the same defaults matches the server without a snapshot.
+`toHydration` returns the `values` and `rowIds`, which are plain and serializable. The client starts from those values and adopts those row ids, so a row the server rendered keeps its identity. A hydration whose ids do not match its own values throws an `Error`: it cannot come from a real snapshot, so there is nothing to catch. The row ids a container makes are deterministic, so a client built from the same defaults matches the server without a snapshot.
 
 ## Write a binding
 

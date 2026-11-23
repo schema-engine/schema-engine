@@ -37,7 +37,8 @@ default, so blocks need no fallbacks. It is available only inside a `ViewProvide
 Import the form hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormContext` exposes `getValues`, `setValue`, `validate`, `reset`, `setFocus`,
-`formatIssue` and `clearSubmission`, plus a lazy `formState` (`errors`, `isValid`
+`formatIssue` and `clearSubmission`. `validate()` validates the whole form, shows its errors and resolves
+`{ outcome: 'passed' | 'invalid' | 'overtaken' }`; `'overtaken'` is no verdict, so ask again. It also has a lazy `formState` (`errors`, `isValid`
 and `submission: { status, failures, submitCount }`, the runtime's: `submitCount` counts the submissions
 that passed or failed validation). Its fields
 subscribe the caller only when read, so a component that reads `submission`
@@ -141,7 +142,7 @@ Import engine hooks from `@schema-engine/forms-react/hooks`.
 `useFormInstanceActions` exposes the form's wizard: `current` (the id of the current step), `steps` (every step in
 order, each with `skipped`, `visited`, `complete`, `invalid` and `reachable`), `navigating`, and the commands `next()`, `back()`
 and `goTo(id)`. Each command resolves to one outcome string: `'moved'`, `'invalid'` (the step has errors, which are
-shown and focused), `'overtaken'` (an edit outran the check), `'refused'` (nowhere to go, or a skipped or
+shown and focused), `'failed'` (a rule could not run, so the step has no verdict and the cause is logged), `'overtaken'` (an edit outran the check), `'refused'` (nowhere to go, or a skipped or
 unreachable step), `'busy'` (another command is running) or `'cancelled'` (a reset or an unmount revoked it).
 Submitting before the last step of a wizard is a Next. Steps are keyed by id, and a step that the answers skip
 is passed over by `next` and `back` and refused by `goTo`.

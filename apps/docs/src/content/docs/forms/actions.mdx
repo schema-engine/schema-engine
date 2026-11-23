@@ -28,7 +28,7 @@ Actions execute in response to form lifecycle triggers.
 
 ### Submit Lifecycle
 
-- `form_submit_start` - Submit process begins, after validation and before the submit actions
+- `form_submit_start` - Submit process begins, as the submission status becomes `submitting`: after validation passed and before the submit actions. An invalid or overtaken submission never starts, so it runs none of the submit triggers
 - `form_submit_success` - Submit completed successfully, after the `onSubmit` callback resolved
 - `form_submit_error` - Submit failed: a submit action aborted, the `onSubmit` callback rejected, or a trigger failed
 - `form_submit_complete` - Submit finished (success or failure)

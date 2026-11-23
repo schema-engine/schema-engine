@@ -139,7 +139,7 @@ A form's state is one container, made by `createFormStateContainer` from `@schem
 (the runtime builds it for a rendered form): the nested values, the errors and warnings of each field, touched,
 dirty and pending marks, field-array row ids and the native validity a control reports. The contract is public
 so a renderer for any framework binds the same way, and the reads are pure selectors over its snapshot
-(`selectFieldState`, `selectValue`, `selectError`, `selectWarning`). `isValid` counts the errors recorded and
+(`selectFieldState`, `selectValue`). `isValid` counts the errors recorded and
 validates nothing; `validate()` records and shows them, and `checkValidity()` answers for the current values
 without recording any. `submit()` says how a submission ended (`passed`, `invalid` or `overtaken`), and a passed
 one hands back `setServerErrors`, which `@schema-engine/forms/server-errors` feeds from an RFC 9457 Problem Details
@@ -153,6 +153,16 @@ full; the docs pages are [Form state](../../apps/docs/src/content/docs/forms/for
 [CSRF](../../apps/docs/src/content/docs/forms/csrf.mdx) and
 [Form libraries](../../apps/docs/src/content/docs/forms/form-libraries.mdx), which says why there are no form
 library adapters.
+
+A container of your own, or a store that must behave like this one, proves it with the conformance suite, which
+registers its cases with vitest (an optional peer dependency) and so is imported only from a test file:
+
+```ts
+import { formStateContainerConformance } from '@schema-engine/forms/testing';
+import { createMyContainer } from './my-container';
+
+formStateContainerConformance(createMyContainer);
+```
 
 ### The form runtime
 
@@ -201,22 +211,6 @@ elements: [
 		htmlAttributes: { 'data-testid': 'email-field', enterKeyHint: 'next' },
 	},
 ];
-```
-
-### The form state container
-
-The container owns a form's values, errors and field state and is the contract a renderer binds to. Its entries
-are `@schema-engine/forms/state-container` (the contract types, `createFormStateContainer`, the selectors and
-hydration), `@schema-engine/forms/csrf` and `@schema-engine/forms/server-errors`; see the
-[container guide](./src/state-container/README.md). A container of your own, or a store that must behave like
-this one, proves it with the conformance suite, which registers its cases with vitest (an optional peer
-dependency):
-
-```ts
-import { formStateContainerConformance } from '@schema-engine/forms/testing';
-import { createMyContainer } from './my-container';
-
-formStateContainerConformance(createMyContainer);
 ```
 
 ### Agent skill
