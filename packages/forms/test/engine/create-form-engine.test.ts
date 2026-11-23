@@ -253,6 +253,7 @@ test('a supplied catalog is copied and gains every registration entry', () => {
 		'element:note',
 		'axis:size',
 		'axis:surface',
+		'validation-rule',
 	]);
 	expect(Object.keys(extended.generateJSONSchemaCollection().schemas)).toEqual([
 		'custom:metadata',
@@ -260,6 +261,7 @@ test('a supplied catalog is copied and gains every registration entry', () => {
 		'element:textarea',
 		'axis:size',
 		'axis:surface',
+		'validation-rule',
 	]);
 	expect(catalog.getRegisteredSchemas()).toHaveLength(1);
 });

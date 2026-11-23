@@ -90,25 +90,39 @@ export function parseActionList(
 	return { issues, items: next };
 }
 
-/** The first rule of an element that cannot be used: no handler for its `type`, invalid options, or a handler that throws. */
-function unusableValidationRule(
+/**
+ * Holds each rule of an element to its registration, and replaces it with the rule as the registration parses it.
+ *
+ * @remarks
+ * The element's own schema accepts a rule of any `type`, so this is where a rule is held to the
+ * registry. Every rule is checked, so a form with two bad rules reports both. An issue keeps the path
+ * the registry gave it, laid under the rule: a refused option is at its key, a type nothing registers or
+ * a handler that throws is at the rule's `type`.
+ */
+function checkElementRules(
 	item: FormTaggedConfig,
 	checkRule: ValidateFormOptions['checkRule'],
-): { index: number; message: string } | undefined {
-	if (!Array.isArray(item.rules)) return undefined;
+	path: Path,
+): { issues: FormValidationIssue[]; item: FormTaggedConfig } {
+	if (!Array.isArray(item.rules)) return { issues: [], item };
 
+	const issues: FormValidationIssue[] = [];
+	const rules: unknown[] = [];
 	for (const [index, rule] of item.rules.entries()) {
 		if (typeof rule !== 'object' || rule === null || !('type' in rule) || typeof rule.type !== 'string') {
+			rules.push(rule);
 			continue;
 		}
-		const problem = checkRule(rule as { type: string });
-		if (problem) {
-			const fieldName = typeof item.name === 'string' ? `Field '${item.name}'` : 'Element';
-			return { index, message: `${fieldName}: ${problem}` };
+		const checked = checkRule(rule as { type: string });
+		if (checked.ok) {
+			rules.push(checked.rule);
+			continue;
+		}
+		for (const issue of checked.issues) {
+			issues.push({ ...issue, path: [...path, 'rules', index, ...issue.path] });
 		}
 	}
-
-	return undefined;
+	return { issues, item: { ...item, rules } };
 }
 
 /** The first segment of an element's name that the engine reserves. */
@@ -147,18 +161,19 @@ export function parseElementNode(
 	if (!parsed.ok) {
 		return { issues: parsed.issues };
 	}
-	const unusableRule = unusableValidationRule(parsed.data, checkRule);
-	if (unusableRule) return fail(unusableRule.message, ['rules', unusableRule.index, 'type']);
-	const parsedReserved = reservedNameSegment(parsed.data);
+	const checkedRules = checkElementRules(parsed.data, checkRule, path);
+	if (checkedRules.issues.length > 0) return { issues: checkedRules.issues };
+	const config = checkedRules.item;
+	const parsedReserved = reservedNameSegment(config);
 	if (parsedReserved) {
 		return fail(
-			`Field name '${String(parsed.data.name)}' uses the reserved segment '${parsedReserved}': a name cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
+			`Field name '${String(config.name)}' uses the reserved segment '${parsedReserved}': a name cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
 			['name'],
 		);
 	}
-	const placementIssue = namedPlacementIssue(parsed.data);
+	const placementIssue = namedPlacementIssue(config);
 	if (placementIssue) return fail(placementIssue.message, placementIssue.path);
-	const areaIssue = areaPlacementIssue(parsed.data, nested);
+	const areaIssue = areaPlacementIssue(config, nested);
 	if (areaIssue) return fail(areaIssue.message, areaIssue.path);
 
 	const elementAppearance = resolveAppearance(authoredAppearance, appearance, {
@@ -167,9 +182,9 @@ export function parseElementNode(
 		supported: getElement(item.$type)?.appearanceAxes ?? [],
 	});
 	const issues = elementAppearance.issues;
-	const resolved = withAppearance(parsed.data, elementAppearance.selection);
+	const resolved = withAppearance(config, elementAppearance.selection);
 
-	const children = getElementChildren(parsed.data);
+	const children = getElementChildren(config);
 	if (!children) {
 		return issues.length > 0 ? { issues } : { issues: [], item: resolved };
 	}

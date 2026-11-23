@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
-import type { ValidationRule } from '@schema-engine/forms/schemas/validation';
+import type { BaseValidationRule } from '@schema-engine/forms/schemas/validation';
 
 export const InputOTPFieldExtensionSchema = z.object({
 	length: z.optional(z._default(z.number().check(z.positive()), 6)),
@@ -19,7 +19,7 @@ export const InputOTPFieldExtensionSchema = z.object({
  * code to exactly `length` characters. Format rules skip an empty value, so an empty optional
  * code stays valid and `required` still rejects it. `incompleteMessage` replaces the default text.
  */
-function withCompleteCodeRule<T extends { length?: number; incompleteMessage?: string; rules?: ValidationRule[] }>(
+function withCompleteCodeRule<T extends { length?: number; incompleteMessage?: string; rules?: BaseValidationRule[] }>(
 	config: T,
 ): T {
 	const length = config.length ?? 6;

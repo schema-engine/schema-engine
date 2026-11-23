@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas';
-import { BaseValidationRuleSchema, type ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
 type PostalCodeRule = { type: 'postalCode'; message?: string };
 
@@ -15,10 +15,7 @@ export const postalCode: ValidationRegistration<PostalCodeRule> = {
 
 const addressTextRegistration = defineInput({
 	$type: 'text',
-	schema: z.extend(BaseFieldSchema, {
-		$type: z.literal('text'),
-		rules: z.optional(z.array(BaseValidationRuleSchema)),
-	}),
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
 	metadata: { name: 'Text', category: 'input' },
 	render: () => null,
 });

@@ -8,13 +8,13 @@ A rule is an object in an element's `rules`. Every rule takes `message` (the fal
 
 The config in `forms.md` has a `required` rule with an `id`, an `email` rule with a `message` and a `warning` rule.
 
-A rule reports one issue however many checks its schema runs. A `warning` goes to `warnings`, has the shape of an error and never changes `isValid`, `validate` or `checkValidity`. A custom rule is a registration passed as `validations` (`$type`, `schema`, `metadata`, `category`, `handler`). The handler returns the Zod Mini schema that checks the value; the issue's `type` is the rule's type and its `message` is the one the author wrote on the rule. The last `$type` wins, so a registration can replace a built-in rule. `BaseFieldSchema` types `rules` as the built-in rules only, so an element that accepts a custom rule widens its `rules` with `BaseValidationRuleSchema`, as below.
+A rule reports one issue however many checks its schema runs. A `warning` goes to `warnings`, has the shape of an error and never changes `isValid`, `validate` or `checkValidity`. A custom rule is a registration passed as `validations` (`$type`, `schema`, `metadata`, `category`, `handler`). The handler returns the Zod Mini schema that checks the value; the issue's `type` is the rule's type and its `message` is the one the author wrote on the rule. The last `$type` wins, so a registration can replace a built-in rule. An element that extends `BaseFieldSchema` accepts a rule of any registered `type` in its `rules`: the engine checks the rule against the registration's `schema` when it validates the form, and rejects a `type` nothing registers, so there is nothing to widen. The registration's `schema` owns the rule's options, so one that replaces a built-in decides that rule's options, and the JSON Schema export lists each registered rule with them when its schema is Zod (by its `type` only otherwise).
 
 ```ts title="forms/custom-rule.ts"
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas';
-import { BaseValidationRuleSchema, type ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
 type PostalCodeRule = { type: 'postalCode'; message?: string };
 
@@ -28,10 +28,7 @@ export const postalCode: ValidationRegistration<PostalCodeRule> = {
 
 const addressTextRegistration = defineInput({
 	$type: 'text',
-	schema: z.extend(BaseFieldSchema, {
-		$type: z.literal('text'),
-		rules: z.optional(z.array(BaseValidationRuleSchema)),
-	}),
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
 	metadata: { name: 'Text', category: 'input' },
 	render: () => null,
 });

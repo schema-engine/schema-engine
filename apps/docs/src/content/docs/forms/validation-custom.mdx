@@ -20,7 +20,7 @@ as the performance and naming examples are fragments.
 A validation registration has the same shape as an element, recipe or action registration:
 
 - `$type`: the `type` authors write in a field's `rules`. The rule objects themselves keep `type`.
-- `schema`: a [Standard Schema](https://standardschema.dev/) for the rule object. The engine build throws if it is not one.
+- `schema`: a [Standard Schema](https://standardschema.dev/) for the rule object. The engine build throws if it is not one, and a form config that uses the rule is checked against it, so the options it declares are validated where the form is validated.
 - `metadata`: a `name` and an optional `description`.
 - `category` and `handler`: the handler returns the Zod Mini schema that checks the value. `dependsOn` and `defaultFor` are optional.
 
@@ -69,6 +69,57 @@ The patterns below define one registration each. Add each constant to the `valid
 ```typescript
 createFormEngine({ validations: [postalCode, creditCard, lengthRange] });
 ```
+
+### Use the Rule in a Form
+
+Every element that extends `BaseFieldSchema` accepts a rule of any registered `type` in its `rules`. When the engine validates a form config (`defineForm`, `validateForm`) it checks each rule against the registry: the `type` must be registered, the rule must satisfy the registration's `schema`, and its handler must build a schema for it. A registration that replaces a built-in rule decides its options, extra ones included. Nothing in the element needs widening, and the JSON Schema export (`generateFormConfigSchema`) lists each registered rule once, as the `validation-rule` definition that every element's `rules` refers to, so an editor offers custom rules too. A rule is listed with its options when its `schema` is Zod; a schema from another Standard Schema library is listed by its `type` only.
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, defineInput } from '@schema-engine/forms';
+import { BaseFieldSchema } from '@schema-engine/forms/schemas';
+import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+
+type PostalCodeRule = { type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
+
+const postalCode: ValidationRegistration<PostalCodeRule> = {
+	$type: 'postalCode',
+	schema: z.looseObject({ type: z.literal('postalCode'), country: z.optional(z.enum(['us', 'ca'])) }),
+	metadata: { name: 'Postal code' },
+	category: 'string',
+	handler: (rule) =>
+		z.string().check(z.regex(rule.country === 'ca' ? /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/ : /^\d{5}(?:-\d{4})?$/)),
+};
+
+const text = defineInput({
+	$type: 'text',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
+	metadata: { name: 'Text', category: 'input' },
+	render: () => null,
+});
+
+export const engine = createFormEngine({ elements: [text], validations: [postalCode] });
+
+export const form = engine.defineForm({
+	id: 'address',
+	steps: [
+		{
+			id: 'main',
+			title: 'Address',
+			elements: [
+				{
+					$type: 'text',
+					id: 'postal-code',
+					name: 'postalCode',
+					rules: [{ type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' }],
+				},
+			],
+		},
+	],
+});
+```
+
+A `type` nothing registers is rejected when the form is validated, with the types that are registered: `Unknown validation rule 'postalcode'. Register it with createFormEngine({ validations: [...] }). Registered rules: required, minLength, ...`. The issue is at `steps[0].elements[0].rules[0].type`. An option the registration's `schema` refuses is reported at its key, such as `steps[0].elements[0].rules[0].country`.
 
 ### Validation with Parameters
 

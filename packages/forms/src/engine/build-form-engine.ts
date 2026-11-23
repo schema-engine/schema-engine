@@ -14,6 +14,7 @@ import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from 
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { withExportedChildren } from '@/lib/element-children';
+import { withExportedRules } from '@/lib/exported-rules';
 import {
 	assertAxesNotReserved,
 	createAppearanceSchema,
@@ -31,7 +32,7 @@ import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
 import { assertStandardSchema } from '@/lib/standard-schema';
-import { createDefaultValidationRegistry } from '@/schemas/validation';
+import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
 	if (schemas.length === 0) {
@@ -88,12 +89,15 @@ function createRegistrationSchema(
  * With `childSchema`, an element that holds an `elements` array has its children typed as that schema,
  * the lazy union of every element's export schema, so a child gets the same closed `appearance` as a
  * top-level element. The union is lazy because it contains the container itself.
+ *
+ * With `ruleSchema`, an element's `rules` are typed as that schema, so the export lists each registered rule.
  */
 function toExportRegistrations(
 	registrations: Iterable<AnyElementRegistration | AnyRecipeRegistration | AnyActionRegistration>,
 	componentType: ComponentType,
 	layout: LayoutTheme,
 	childSchema?: z.ZodMiniType,
+	ruleSchema?: z.ZodMiniType,
 ): ExportRegistration[] {
 	return Array.from(registrations, (registration) => {
 		const exported: ExportRegistration = {
@@ -114,7 +118,8 @@ function toExportRegistrations(
 				layout.appearance,
 				(registration as AnyElementRegistration).appearanceAxes,
 			);
-			exported.exportSchema = childSchema ? withExportedChildren(withAppearance, childSchema) : withAppearance;
+			const withChildren = childSchema ? withExportedChildren(withAppearance, childSchema) : withAppearance;
+			exported.exportSchema = ruleSchema ? withExportedRules(withChildren, ruleSchema) : withChildren;
 		} else if (componentType === ComponentType.Recipe) {
 			exported.exportSchema = withSlotAppearanceAxes(
 				registration.schema,
@@ -124,6 +129,30 @@ function toExportRegistrations(
 		}
 		return exported;
 	});
+}
+
+/** The id the JSON Schema export defines the rule union by, so each element refers to it. */
+const RULE_EXPORT_ID = 'validation-rule';
+
+/**
+ * The schema of a rule as the JSON Schema export lists it: any one of the registered rules, each by
+ * its own schema, so a custom rule and a replaced built-in show the options their registration declares.
+ *
+ * @remarks
+ * Only a Zod schema can be written out as JSON Schema here: a registration whose schema comes from another
+ * Standard Schema library is listed by its `type` alone, with no options. The union is built once and carries
+ * an id in the metadata registry, so the export defines it once and each element refers to it.
+ */
+function createRuleExportSchema(validations: ValidationRegistry): z.ZodMiniType {
+	return createUnionSchema(
+		validations
+			.all()
+			.map((registration) =>
+				isZodType(registration.schema)
+					? registration.schema
+					: z.looseObject({ type: z.literal(registration.$type) }),
+			),
+	);
 }
 
 function createElementsUnion(elements: ExportRegistration[], layout: LayoutTheme): z.ZodMiniType {
@@ -267,7 +296,14 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	});
 
 	const childSchema = z.lazy(() => elementsUnion);
-	const exportedElements = toExportRegistrations(elementRegistry.all(), ComponentType.Element, layout, childSchema);
+	const ruleSchema = createRuleExportSchema(validationRegistry);
+	const exportedElements = toExportRegistrations(
+		elementRegistry.all(),
+		ComponentType.Element,
+		layout,
+		childSchema,
+		ruleSchema,
+	);
 	const exportedRecipes = toExportRegistrations(recipeRegistry.all(), ComponentType.Recipe, layout);
 	const exportedActions = toExportRegistrations(actionRegistry.all(), ComponentType.Action, layout);
 
@@ -303,6 +339,17 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		formConfigSchema,
 		actionConfigValidators,
 		exportSchemas,
+		[
+			{
+				schema: ruleSchema,
+				metadata: {
+					id: RULE_EXPORT_ID,
+					title: 'Validation rule',
+					description: 'Any one of the rules the engine registers, with its options.',
+					componentType: ComponentType.Validation,
+				},
+			},
+		],
 	);
 
 	return new FormEngine({

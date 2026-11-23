@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
-import { ValidationRuleSchema, type ValidationRule } from '@schema-engine/forms/schemas/validation';
+import { BaseValidationRuleSchema, type BaseValidationRule } from '@schema-engine/forms/schemas/validation';
 
 export const DateFieldExtensionSchema = z.object({
 	placeholder: z.optional(z.string()),
@@ -14,7 +14,7 @@ export const DateFieldSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('date'),
 	...DateFieldExtensionSchema.shape,
 	rules: z.pipe(
-		z.optional(z.array(ValidationRuleSchema)),
+		z.optional(z.array(BaseValidationRuleSchema)),
 		z.transform((rules) => {
 			if (rules?.some((rule) => rule.type === 'date')) {
 				return rules;
@@ -26,7 +26,7 @@ export const DateFieldSchema = z.extend(BaseFieldSchema, {
 });
 
 export type DateFieldConfig = Omit<z.infer<typeof DateFieldSchema>, 'rules'> & {
-	rules?: ValidationRule[];
+	rules?: BaseValidationRule[];
 };
 
 export type DateFieldProps = DateFieldConfig & {

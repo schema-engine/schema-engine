@@ -191,7 +191,7 @@ A host sets `server` errors, which describe the response to one submission, with
 A rule that cannot run is no field error: it says nothing about the value.
 
 - An invalid rule is rejected when the form config is validated: `ValidationRegistry.check(rule)` finds a
-  type with no handler or a handler that throws, so nothing is skipped silently. `createSchema` throws a
+  type nothing registers, options its registration refuses, or a handler that throws, so nothing is skipped silently. `createSchema` throws a
   `ValidationRuleError` for the same.
 - A rule that throws while it runs is a `FormValidationFailure` naming the path and the rule, with `reason`
   (`'unavailable'`: the service the rule asks could not answer, or `'error'`: the rule threw) and `cause`.

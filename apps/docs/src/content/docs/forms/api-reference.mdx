@@ -136,6 +136,8 @@ JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
 what authors write. An element whose schema pipes a transform (Radiant's `input-otp`) has no
 JSON Schema for its output side, so `io: 'output'` throws for an engine that registers one.
 
+The collection also holds the `validation-rule` entry: the union of every registered rule, which the form config schema defines once and each element's `rules` refers to.
+
 ```ts
 engine.generateJSONSchemaCollection(); // io: 'input'
 engine.generateFormConfigSchema(); // io: 'input'

@@ -667,10 +667,23 @@ All validation rules extend `BaseValidationRule`:
 interface BaseValidationRule {
 	type: string;
 	message?: string;
+	id?: string;
+	severity?: 'error' | 'warning';
 }
 ```
 
 Specific rule types add their own properties (e.g., `value` for min/max rules, `url` for async rules).
+
+An element that extends `BaseFieldSchema` accepts, in `rules`, an object with a `type`, the fields every rule has and
+whatever else the rule's registration describes (`BaseValidationRuleSchema`, loose): the registration owns the
+rest, so a registration that replaces a built-in decides that rule's options. `ValidationRegistry.check(rule)` holds
+each rule to it when `validateForm` and `validateElement` run: the `type` must be registered (`Unknown validation
+rule 'x'. ... Registered rules: ...`), the rule must satisfy the registration's `schema` (reported at the key at
+fault, with the schema's defaults applied to the rule that is kept, and `type`, `message`, `id` and `severity` kept whatever the schema strips) and the handler must build a schema for it. The
+types of `rules` do not narrow to a registration: a typo in a rule's options type-checks and fails there. The JSON
+Schema export (`generateFormConfigSchema`) lists each registered rule, built-in or custom, once as the
+`validation-rule` definition the elements refer to, with its options when its schema is Zod and by its `type` only
+otherwise.
 
 ## Best Practices
 
