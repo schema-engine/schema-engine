@@ -6,11 +6,7 @@ order: 4
 
 # Form controls
 
-A Radiant form is a `rui-form` from Radiant UI that bridges the form's controls to the engine's [state container](/docs/forms/form-state). `se-form-instance` creates the form runtime, mounts it and hands its container to `rui-form`:
-
-```ts
-ruiForm.connect(container, { formatError, submitHandler, resetHandler });
-```
+A Radiant form is a `rui-form` from Radiant UI that bridges the form's controls to the engine's [state container](/docs/forms/form-state). `se-form-instance` creates the form runtime, mounts it and hands its container to `rui-form` with `ruiForm.connect(container, { formatError, submitHandler, resetHandler })`.
 
 `rui-form` keeps control registration, the control value bridge, native validity, ARIA and presentation. The container owns validation timing, touched and dirty state, defaults and which errors show, so `rui-form` ignores its own `mode`, `defaultValues`, `resolver` and field `rules` while a container is connected. It sends a control's value with `setValue`, its blur with `blur` and its [native validity](/docs/forms/native-validity) with `reportNative`. `formatError` is the form's [issue formatter](/docs/forms/issue-text), `submitHandler` runs the runtime's submission and `resetHandler` is `container.reset()`.
 

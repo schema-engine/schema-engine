@@ -167,70 +167,12 @@ graph TD
 
 ## 🚀 Quick Start
 
-See the full walkthrough in [Quick Start](./apps/docs/src/content/docs/forms-react/quick-start.mdx). Minimal verified setup:
+Each section of the docs starts with its installation and a quick start that runs:
 
-```bash
-pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
-```
-
-Import the recipe styles once in your global stylesheet, after Tailwind. The path is relative to that stylesheet (`./components/...` from a Vite `src/index.css`, `../components/...` from a Next.js `app/globals.css`):
-
-```css
-@import 'tailwindcss';
-@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
-```
-
-```typescript
-import { createFormEngine } from '@schema-engine/forms';
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
-
-const engine = createFormEngine({
-	elements: schemaFormRegistrations,
-	recipes: schemaFormRecipeRegistrations,
-});
-
-const contactFormSchema = {
-	id: 'contact-form',
-	title: 'Contact Sales',
-	view: { $type: 'card', shell: { appearance: { size: 'default' } } },
-	steps: [
-		{
-			id: 'step-1',
-			elements: [
-				{
-					$type: 'input',
-					name: 'company_name',
-					label: 'Company Name',
-					inputType: 'text',
-					rules: [{ $type: 'required' }],
-				},
-				{
-					$type: 'input',
-					name: 'business_email',
-					label: 'Business Email',
-					inputType: 'email',
-					rules: [{ $type: 'required' }, { $type: 'email' }],
-				},
-			],
-		},
-	],
-	actions: [{ $type: 'submit', id: 'submit_lead', endpoint: '/api/v1/leads' }],
-};
-```
-
-```tsx
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-
-export function ContactPage() {
-	return (
-		<FormEngineProvider engine={engine}>
-			<FormRenderer config={contactFormSchema} onSubmit={(data) => console.log('Payload:', data)} />
-		</FormEngineProvider>
-	);
-}
-```
+- [Schema Engine](./apps/docs/src/content/docs/schema-engine/quick-start.mdx): a registry and a JSON workflow, with no UI.
+- [Forms](./apps/docs/src/content/docs/forms/getting-started.mdx): a form checked and submitted with no renderer.
+- [Forms React](./apps/docs/src/content/docs/forms-react/getting-started.mdx): a form with widgets of your own.
+- [Forms Radiant](./apps/docs/src/content/docs/forms-radiant/getting-started.mdx): a form with the Radiant elements.
 
 ---
 
@@ -238,10 +180,10 @@ export function ContactPage() {
 
 Detailed architectural documentation is available in the [Documentation App](./apps/docs), which uses self-hosted IBM Plex fonts.
 
-- **[Quick Start](./apps/docs/src/content/docs/forms-react/quick-start.mdx)**
+- **[Quick Start](./apps/docs/src/content/docs/schema-engine/quick-start.mdx)**
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
 - **[Layout](./apps/docs/src/content/docs/layout/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/layout/recipes.mdx)
-- **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Registries and the catalog](./apps/docs/src/content/docs/registry/registries.mdx)
+- **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Read-only and mutable registries](./apps/docs/src/content/docs/registry/registries.mdx)
 - **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
 - **[Forms React — Getting Started](./apps/docs/src/content/docs/forms-react/getting-started.mdx)**

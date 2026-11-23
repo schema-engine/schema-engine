@@ -1,13 +1,12 @@
 ---
 title: 'Overview'
-description: 'React adapter: components, view recipes and the form state hooks.'
+description: 'The React renderer for forms: FormRenderer, the form state hooks and the primitives for your own widgets.'
 order: 1
 ---
 
 # @schema-engine/forms-react
 
-React adapter for the JSON Form Engine. It supplies rendering, hooks, and view
-recipe composition while applications supply element registrations.
+The React renderer for [Forms](/docs/forms/overview). It supplies rendering, hooks and view recipe composition, and it ships no element registrations: you write your own widgets with `useFormField`, or copy ready-made ones from the optional shadcn registry. See [Installation and quick start](/docs/forms-react/getting-started).
 
 ## Public entry points
 
@@ -16,19 +15,18 @@ recipe composition while applications supply element registrations.
 - `@schema-engine/forms-react/primitives`: `FormElement`, `FormElements`, and recipe contracts.
 - `@schema-engine/forms-react/contexts`: view provider and context types.
 
-Create engines with `createFormEngine` from `@schema-engine/forms`. Install
-consumer-owned registry elements and recipes for your UI library. The rendering
-runtime uses `se-*` styling hooks and does not require Tailwind.
+Create engines with `createFormEngine` from `@schema-engine/forms` and register the elements and recipes you want. The rendering runtime uses `se-*` styling hooks and does not require Tailwind.
 
 Browser consent and analytics helpers live in `@schema-engine/forms/browser`.
 
 ## Next Steps
 
-- [Getting Started](/docs/forms-react/getting-started) - Build your first React form
-- [Components](/docs/forms-react/components) - Pre-built elements with examples
+- [Installation and quick start](/docs/forms-react/getting-started) - Build your first React form
+- [Registry fields](/docs/forms-react/components) - Optional ready-made elements from the shadcn registry
 - [Writing a widget](/docs/forms-react/widgets) - Bind a component to a field, uncontrolled or controlled
 - [React Forms](/docs/examples/react-forms) - Live forms for validation, conditional fields, wizards, actions and copied shadcn source
 - [View recipes](/docs/forms-react/layouts) - Shells, blocks, and wizard recipes
 - [Hooks](/docs/forms-react/hooks) - React hooks for form interactions
-- [Advanced Features](/docs/forms-react/advanced) - Constraints, GDPR, and Analytics
+- [Other React state](/docs/forms-react/other-react-state) - Mount a form in a panel that holds other state
+- [Browser helpers](/docs/forms-react/browser-helpers) - Consent-aware drafts and analytics events
 - [API Reference](/docs/forms-react/api-reference) - Complete API documentation

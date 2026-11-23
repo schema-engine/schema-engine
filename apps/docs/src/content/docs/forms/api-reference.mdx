@@ -64,7 +64,7 @@ request function with the [CSRF policy](/docs/forms/csrf) applied, and `engine.g
 
 `engine.getSchemaCatalog()` returns the metadata the JSON Schema export reads (title, description and category by id, such as
 `element:input`), not a list of what is registered. Read what is registered with `engine.getAllElements()`,
-`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([Registries](/docs/registry/registries)).
+`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([What the forms engine registers](/docs/forms/builder#what-the-forms-engine-registers)).
 
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
 and is not typed per engine: field `rules` keep their `$type` string. See
@@ -139,7 +139,7 @@ type FormValidationResult<T> = { success: true; data: T } | { success: false; is
 ```
 
 `params` holds the details a code reports and only those that are set: `values`, `expected`, `origin`, `minimum`, `maximum`, `inclusive`, `format`, `pattern` and `keys`. `error.issues` on a `FormValidationError` has the same shape. See
-[Form configuration errors](/docs/forms/validation-how-it-works#form-configuration-errors)
+[Form configuration errors](/docs/forms/core-concepts#form-configuration-errors)
 for the paths and a copy-pasteable example.
 
 JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
@@ -259,5 +259,5 @@ The recipe protocol (the slots, the kinds, the rules that check them) is declare
 `defineRecipeProtocol` from `@schema-engine/layout`; forms declares `shell | header | progress | actions` and
 `single-step | wizard`. See [Recipes](/docs/layout/recipes#a-custom-recipe-shell-in-react-and-in-radiant).
 
-See [Form engine setup](/docs/forms/builder) for adapter factories and
+See [Engine and registrations](/docs/forms/builder) for adapter factories and
 composition rules.

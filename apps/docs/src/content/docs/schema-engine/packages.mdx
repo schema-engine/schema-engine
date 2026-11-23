@@ -1,147 +1,79 @@
 ---
 title: 'Packages'
-description: 'Install the packages for your renderer, copy the React registry source or load the Radiant styles, and create your first engine.'
+description: 'Which Schema Engine package does what, what to install for which job, the peer dependencies and the TypeScript settings.'
 order: 4
 ---
 
 # Packages
 
-Schema Engine is a set of packages. You install the engine and one renderer: **React** with a shadcn registry that copies the field and recipe source into your project, or **Radiant**, which ships its elements in the package.
+Schema Engine is a set of packages that build on each other. Install the ones the job needs and no more.
 
 ## Requirements
 
-- **Node.js 24 or newer** for the tooling this project is built and tested with (installs, builds and the docs). The published packages declare no Node engine of their own; their runtime requirements are the peer dependencies below.
-- **pnpm**. The commands here use it; `npm` and `yarn` take the same package names.
-- **React 19** for the React renderer, in a project set up with [shadcn/ui](https://ui.shadcn.com) (a `components.json` and the `@/` import alias).
+- **Node.js** `^24.22.0 || >=26.0.0` for the tooling this repository is built and tested with: installs, builds and the docs. The published packages declare no Node engine of their own. Their runtime requirements are the peer dependencies below.
+- **pnpm**, at the version the repository pins (`pnpm@10.15.1`). The commands here use it, and `npm` and `yarn` take the same package names.
+- **TypeScript** `^5.4`. `@schema-engine/registry`, `@schema-engine/actions` and `@schema-engine/layout` accept `^5`.
+- **A Standard Schema validator**, such as Zod, Valibot or Effect Schema. Registrations take any of them. The examples use `zod/mini`, and `zod` `^4.0.17` is a peer of the forms and layout packages.
 
-## Choose a renderer
+## What each package does
 
-| Renderer    | Package                        | Form state                           | Styling                                                             |
-| ----------- | ------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
-| **React**   | `@schema-engine/forms-react`   | The engine's own container, built in | Source you own, copied from the shadcn registry; Tailwind helps     |
-| **Radiant** | `@schema-engine/forms-radiant` | The engine's own container, built in | Three CSS imports: a Radiant UI theme, its styles and the package's |
+| Package                        | What it is for                                                                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `@schema-engine/registry`      | Registries of registrations keyed by `$type`, and YAML documents with line-accurate errors (`/yaml`) |
+| `@schema-engine/actions`       | Registered actions, and a dispatcher that runs them in sequence and in parallel groups               |
+| `@schema-engine/layout`        | Domain-neutral grid, named appearance, themes and the recipe protocol                                |
+| `@schema-engine/forms`         | The forms domain: the engine, fields, validation, constraints, steps, form state and submission      |
+| `@schema-engine/forms-react`   | The React renderer for forms: `FormRenderer`, hooks and the field primitives                         |
+| `@schema-engine/forms-radiant` | The Radiant renderer for forms: custom elements, form controls and the registrations it ships        |
 
-Both render the same `FormConfig` JSON and keep their form state in the engine's own container, so a form validates, resets and submits the same way in either. See [Form state](/docs/forms/form-state).
+`@schema-engine/actions` depends on the registry. `@schema-engine/forms` depends on the registry, actions and layout, so installing it brings them in.
 
-## The engine
+## Install for the job
 
-Every setup needs the engine, the layout package and Zod:
+| Job                          | Install                                                                                                                                                       | Then read                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| A registry only              | `pnpm add @schema-engine/registry zod`                                                                                                                        | [Registry](/docs/registry/overview)           |
+| Actions only                 | `pnpm add @schema-engine/actions zod`                                                                                                                         | [Actions](/docs/actions/overview)             |
+| A headless form              | `pnpm add @schema-engine/forms zod`                                                                                                                           | [Forms](/docs/forms/overview)                 |
+| A React form                 | `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`                                                          | [Forms React](/docs/forms-react/overview)     |
+| A Radiant form               | `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod` | [Forms Radiant](/docs/forms-radiant/overview) |
+| A layout theme without forms | `pnpm add @schema-engine/layout zod`                                                                                                                          | [Layout](/docs/layout/overview)               |
 
-```bash
-pnpm add @schema-engine/forms @schema-engine/layout zod
-```
-
-## React
-
-Add the renderer and its peers, as the [Quick Start](/docs/forms-react/quick-start) and the [Forms React](/docs/forms-react/getting-started) guides use them:
-
-```bash
-pnpm add @schema-engine/forms-react react react-dom
-```
-
-Then copy the form elements and, when you want a ready-made layout, the default recipes from the Schema Engine shadcn registry:
-
-```bash
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
-```
-
-The registry has one aggregate per component base: `schema-form` for Base UI, `schema-form-radix` for Radix UI and `schema-form-aria` for React Aria, with matching `schema-engine-form-recipes-radix` and `-aria` recipe items. Install one base per app. [Registries](/docs/registry/registries) lists every item.
-
-### What you now own
-
-The command copies source files into your project, and they are yours to read, edit and delete:
-
-- `components/schema-engine/forms/` holds the form elements, the generated `registrations.ts` barrel, and `recipes/` with the shells, blocks, their CSS files and the generated `recipes/registrations.ts` barrel.
-- `components/ui/schema-engine/components/` holds the primitives the elements share, such as the field wrapper and `controls.css`.
-
-The package keeps the engine, the renderer and the hooks; the copied files are plain React that use your own `ui` components (`Button`, `Input`, `Label`). To change how an element or a shell looks, edit its file. To drop one, remove it from the registration barrel. To add your own, register it next to them with `createFormEngine({ elements: [...schemaFormRegistrations, MyElement] })`. A later `shadcn add` overwrites a file only after it asks.
-
-### Import the styles
-
-The recipes copy their CSS with them, and nothing imports it for you. Import it once in your global stylesheet, after Tailwind. The path is relative to that file (`./components/...` from a Vite `src/index.css`, `../components/...` from a Next.js `app/globals.css`):
-
-```css
-@import 'tailwindcss';
-@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
-@import './components/ui/schema-engine/components/controls.css';
-```
-
-`recipes.css` goes into the `components` layer so your Tailwind utilities and classes sit above it; `controls.css` goes unlayered because a shadcn control sets its height with a Tailwind utility that outranks every layered rule. [View recipes](/docs/forms-react/layouts#default-registry-recipes) says more, and [Styling and layout](/docs/layout/overview) covers sizes, surfaces and tokens.
-
-### Create the engine
-
-Import the generated barrels from the copied files and build the engine once:
-
-```typescript
-import { createFormEngine } from '@schema-engine/forms';
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
-
-export const formEngine = createFormEngine({
-	elements: schemaFormRegistrations,
-	recipes: schemaFormRecipeRegistrations,
-});
-```
-
-These imports resolve only after the `shadcn add` above has copied the files. The [Quick Start](/docs/forms-react/quick-start) renders a form from here.
-
-## Radiant
-
-Radiant needs no registry and no React. Install the renderer and its peers:
-
-```bash
-pnpm add @schema-engine/forms-radiant @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals
-```
-
-Load one Radiant UI theme, its stylesheet and the renderer's stylesheet once, then create the engine with `createRadiantFormEngine({ elements: schemaFormRegistrations })` (both come from `@schema-engine/forms-radiant`). [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the stylesheet imports, the peer versions and a full example.
-
-## Optional packages
-
-```bash
-# Standalone action system (the forms packages already use it for submission)
-pnpm add @schema-engine/actions
-
-# YAML documents with line-accurate errors (@schema-engine/registry/yaml)
-pnpm add @schema-engine/registry yaml
-```
-
-## Package overview
-
-| Package                        | Description                              |
-| ------------------------------ | ---------------------------------------- |
-| `@schema-engine/forms`         | Core form engine (framework-agnostic)    |
-| `@schema-engine/forms-react`   | React components and hooks               |
-| `@schema-engine/forms-radiant` | Radiant (Ecopages) renderer              |
-| `@schema-engine/actions`       | Domain-agnostic action system            |
-| `@schema-engine/layout`        | Grid and appearance theme (neutral)      |
-| `@schema-engine/registry`      | Registries, and YAML documents (`/yaml`) |
+Zod is only needed to author schemas with `zod/mini`. A registration written against another Standard Schema validator installs that validator instead.
 
 ## Peer dependencies
 
-The ranges are the ones in the package manifests:
+The ranges are the ones in the package manifests. A peer on another Schema Engine package means the same release of it.
 
-- `zod` `^4.0.17`
-- `typescript` `^5.4`
-- `react` and `react-dom` `^19` (React renderer)
-- `yaml` `^2.8.0` (optional; needed only for `@schema-engine/registry/yaml`)
-- `vitest` `^4.0.13` (optional; needed only for `@schema-engine/forms/testing`, the conformance suite of a form state container)
-- `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.12.0`, and `@ecopages/radiant-ui` `>=0.6.1` (Radiant renderer; [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the rest)
+| Package                        | Peer dependencies                                                                                                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/registry`      | `typescript` `^5`; `yaml` `^2.8.0`, optional, needed only for `@schema-engine/registry/yaml`                                                                                                                        |
+| `@schema-engine/actions`       | `typescript` `^5`                                                                                                                                                                                                   |
+| `@schema-engine/layout`        | `typescript` `^5`, `zod` `^4.0.17`                                                                                                                                                                                  |
+| `@schema-engine/forms`         | `typescript` `^5.4`, `zod` `^4.0.17`; `vitest` `^4.0.13`, optional, needed only for `@schema-engine/forms/testing`, the conformance suite of a form state container                                                 |
+| `@schema-engine/forms-react`   | `@schema-engine/forms`, `@schema-engine/layout`, `react` `^19`, `react-dom` `^19`, `typescript` `^5.4`, `zod` `^4.0.17`                                                                                             |
+| `@schema-engine/forms-radiant` | `@schema-engine/forms`, `@schema-engine/layout`, `@ecopages/jsx` `>=0.12.0`, `@ecopages/radiant` `>=0.12.0`, `@ecopages/signals` `>=0.12.0`, `@ecopages/radiant-ui` `>=0.6.1`, `typescript` `^5.4`, `zod` `^4.0.17` |
 
 ## TypeScript configuration
 
-Schema Engine is built with TypeScript. Recommended `tsconfig.json`:
+Every package needs strict mode and bundler module resolution:
 
 ```json
 {
 	"compilerOptions": {
 		"strict": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
 		"moduleResolution": "bundler",
-		"jsx": "react-jsx"
+		"skipLibCheck": true
 	}
 }
 ```
+
+The registry, actions, layout and headless forms need nothing else. A renderer sets the JSX transform:
+
+| Renderer | Extra `compilerOptions`                                       |
+| -------- | ------------------------------------------------------------- |
+| React    | `"jsx": "react-jsx"`                                          |
+| Radiant  | `"jsx": "react-jsx"` and `"jsxImportSource": "@ecopages/jsx"` |
 
 ## Verify the install
 
@@ -149,12 +81,11 @@ Schema Engine is built with TypeScript. Recommended `tsconfig.json`:
 pnpm list --depth 0 | grep schema-engine
 ```
 
-You should see `@schema-engine/forms` and your renderer listed with their versions. To work on Schema Engine itself rather than use it, see [CONTRIBUTING.md](https://github.com/andeeplus/schema-engine/blob/main/CONTRIBUTING.md).
+The output lists each Schema Engine package you installed, with its version.
 
-## What's Next?
+## Where to go next
 
-- **[Quick Start](/docs/forms-react/quick-start)** - Build your first form
-- **[Forms Package](/docs/forms/overview)** - Core engine documentation
-- **[Forms React](/docs/forms-react/overview)** - React integration
-- **[Forms Radiant](/docs/forms-radiant/overview)** - Radiant integration
-- **[Styling and layout](/docs/layout/overview)** - Grid, appearance axes, theming and recipes
+- [Quick start](/docs/schema-engine/quick-start): a registry and a workflow, with no UI.
+- [Core concepts](/docs/schema-engine/core-concepts): the vocabulary the section pages share.
+- [Registry](/docs/registry/overview) and [Actions](/docs/actions/overview): the foundation, each with its own quick start.
+- [Forms React](/docs/forms-react/overview) and [Forms Radiant](/docs/forms-radiant/overview): installation and a quick start for each renderer.

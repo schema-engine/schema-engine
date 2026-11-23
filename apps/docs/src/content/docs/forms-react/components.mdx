@@ -1,14 +1,14 @@
 ---
-title: 'Components'
-description: 'Register and configure the field elements supplied by the React registry.'
+title: 'Registry fields (optional)'
+description: 'The field elements the shadcn registry installs, how to import and own them, and how to configure one in a form.'
 order: 4
 ---
 
-# Components
+# Registry fields
 
-`@schema-engine/forms-react` renders element registrations, but the field
-implementations are consumer-owned registry code. Install the matching Schema
-Engine registry item and import its generated registration barrel:
+`@schema-engine/forms-react` ships no element registrations: the field implementations are code you own. You can write your own with [Writing a widget](/docs/forms-react/widgets), or, in a project that already uses shadcn, copy the ready-made ones the shadcn registry installs. This page covers the second path. The install, the CSS and the barrel imports are in [Installation and quick start](/docs/forms-react/getting-started#optional-start-from-the-shadcn-registry).
+
+After the install, import the generated registration barrel through your app's own alias and register it:
 
 ```ts
 import { createFormEngine } from '@schema-engine/forms';
@@ -17,9 +17,9 @@ import { schemaFormRegistrations } from '@/components/schema-engine/forms/regist
 const engine = createFormEngine({ elements: schemaFormRegistrations });
 ```
 
-## Registry elements
+## What the registry installs
 
-The aggregate `schema-form` item currently includes:
+The aggregate `schema-form` item installs these elements, and `schemaFormRegistrations` lists each of them:
 
 | `$type`                       | Purpose                                                |
 | ----------------------------- | ------------------------------------------------------ |
@@ -32,6 +32,8 @@ The aggregate `schema-form` item currently includes:
 | `switch`                      | Boolean toggle                                         |
 | `slider`                      | Numeric range                                          |
 | `combobox`                    | Searchable choice input                                |
+| `date`                        | Calendar popover for a single ISO date                 |
+| `date-range`                  | Calendar popover for a range of two dates              |
 | `drop-zone`                   | File drop input                                        |
 | `fieldSet`                    | Grouped content                                        |
 | `input-otp`                   | One-time-password input                                |
@@ -39,9 +41,19 @@ The aggregate `schema-form` item currently includes:
 | `arrayElements`               | Repeated element groups                                |
 | `submit`, `submission-alert`  | Action and submission feedback                         |
 
-The registry item is an installation boundary: applications can select a
-smaller set of registrations or replace one registration before building the
-engine.
+## Own them
+
+The files are yours. Edit one to change how a field looks or behaves, remove its registration from the barrel to drop it, or replace one by listing your own registration of the same `$type` after the barrel. The registry item is an installation boundary: applications can select a smaller set of registrations or replace one before building the engine.
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { myInput } from './my-input';
+
+export const engine = createFormEngine({ elements: [...schemaFormRegistrations, myInput] });
+```
+
+A later registration with the same `$type` replaces the earlier one without a warning. To write `myInput`, see [Writing a widget](/docs/forms-react/widgets).
 
 ## Element configuration
 
@@ -68,50 +80,5 @@ properties (keys that start with `--`) and validation rejects any other key.
 Responsive placement belongs to the element's `grid` property (named `width` and
 `offset`, an `area` of the grid's `areas`, or raw lines) and the form's top-level
 `grid` configuration, which a step can replace with its own `grid`; see
-[Placing fields in the grid](/docs/forms/core-concepts#placing-fields-in-the-grid). View chrome belongs to `view`, not to a step or
+[Placing fields in the grid](/docs/layout/grid-and-placement#placing-fields-in-the-grid). View chrome belongs to `view`, not to a step or
 element; see [View recipes](/docs/forms-react/layouts).
-
-## Custom elements
-
-Create a consumer-owned registration with `InputRegistration` (or
-`StaticRegistration` for display-only content). The render component receives
-the registration config and should use `useFormField` for field
-binding. A native control keeps its own value (`defaultValue` and `fieldProps`); a
-component that takes `value` and `onChange` props uses `useFormField(config, { controlled: true })`,
-see [Hooks](/docs/forms-react/hooks#useformfield):
-
-```tsx
-import type { InputRegistration } from '@schema-engine/forms';
-import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
-import * as z from 'zod/mini';
-
-const RatingSchema = z.object({
-	$type: z.literal('rating'),
-	id: z.string(),
-	name: z.string(),
-	label: z.optional(z.string()),
-	max: z._default(z.number().check(z.int(), z.positive()), 5),
-});
-
-function Rating({ ...config }: z.output<typeof RatingSchema>) {
-	const { defaultValue, fieldProps } = useFormField(config);
-	return <input {...fieldProps} type="number" defaultValue={fieldText(defaultValue)} />;
-}
-
-const ratingRegistration: InputRegistration<'rating', typeof RatingSchema> = {
-	$type: 'rating',
-	schema: RatingSchema,
-	render: Rating,
-	metadata: {
-		name: 'Rating',
-		description: 'Numeric rating input',
-		category: 'input',
-	},
-};
-
-const engine = createFormEngine({ elements: [ratingRegistration] });
-```
-
-In a real registry item, make the render props type explicit. The Mini schema
-already implements Standard Schema, so it can be passed directly as the
-registration schema.

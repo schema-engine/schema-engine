@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import { allRecipes, recipeConfigSource } from '../src/lib/recipes/catalog';
 import {
@@ -6,6 +8,7 @@ import {
 	isTypeScriptFence,
 	parseCodeBlocks,
 	readPage,
+	titledFiles,
 	type CodeBlock,
 } from './snippet-harness';
 
@@ -19,17 +22,76 @@ vi.setConfig({ testTimeout: 60_000 });
  * section that still holds fences that cannot compile stays off, or lists the pages that are ready, so the list
  * is never left failing.
  */
-const CHECKED_DOCS = ['layout', 'registry/registries'];
+const CHECKED_DOCS = [
+	'layout',
+	'registry',
+	'schema-engine',
+	'actions',
+	'forms/overview',
+	'forms/getting-started',
+	'forms/core-concepts',
+	'forms/constraints',
+	'forms/validation',
+	'forms/validation-custom',
+	'forms/actions',
+	'forms/builder',
+	'forms/form-state',
+	'forms/yaml',
+	'forms-react',
+	'forms-radiant',
+];
 
 interface AllowedFence {
 	page: string;
-	/** The heading the fence sits under; every TypeScript fence under it on the page is allowed. */
-	heading: string;
+	/** The heading the fence sits under; every TypeScript fence under it on the page is allowed. Omitted, the whole page. */
+	heading?: string;
 	reason: string;
 }
 
 /** Fences that are fragments on purpose. A fence that is not listed here must compile. */
 const ALLOWED_FENCES: AllowedFence[] = [
+	{
+		page: 'actions/concepts',
+		heading: 'Context',
+		reason: 'Shows the call the dispatcher makes inside itself, which is not a module.',
+	},
+	{
+		page: 'forms-react/api-reference',
+		heading: 'Engine factory',
+		reason: 'Imports the barrels the shadcn command copies into the app and a recipe of the app.',
+	},
+	{
+		page: 'forms-react/layouts',
+		heading: 'Default registry recipes',
+		reason: 'Imports the barrels the shadcn command copies into the app, which do not exist before it runs.',
+	},
+	{
+		page: 'forms-react/components',
+		reason: 'Imports the barrel the shadcn command copies into the app, which does not exist before it runs.',
+	},
+	{
+		page: 'forms-react/getting-started',
+		heading: 'Create the engine',
+		reason: 'Imports the barrels that the shadcn command copies into the app, which do not exist before it runs.',
+	},
+	{
+		page: 'actions/api-reference',
+		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
+	},
+	{
+		page: 'registry/api-reference',
+		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
+	},
+	{
+		page: 'registry/overview',
+		heading: 'The registration types',
+		reason: 'Restates the package declarations, with the Standard Schema import left out.',
+	},
+	{
+		page: 'registry/overview',
+		heading: 'What createRegistry guarantees',
+		reason: 'The package signature, which a snippet cannot declare again.',
+	},
 	{
 		page: 'layout/overview',
 		heading: 'Escape hatches',
@@ -64,14 +126,40 @@ export const postalCode = {
 } as const;`,
 	'contact-card.ts': recipeConfigSource(allRecipes.find((recipe) => recipe.id === 'contact-card')!.demos),
 	'brand-frame.ts': "export { BrandFrameRecipe } from './brand-frame.radiant';",
+	'react-quick-start.react.tsx': readFileSync(
+		join(import.meta.dirname, '../src/lib/form-recipes/react-quick-start.react.tsx'),
+		'utf8',
+	),
+	'react-widgets.react.tsx': readFileSync(
+		join(import.meta.dirname, '../src/lib/form-recipes/react-widgets.react.tsx'),
+		'utf8',
+	),
 	...recipeFiles,
 };
+
+/** The pages whose titled files a page imports without defining them: it continues from them. */
+const CONTINUES: Record<string, string[]> = {
+	'schema-engine/serialized-documents': ['schema-engine/quick-start'],
+	'actions/sequences-and-cancellation': ['actions/overview'],
+	'forms/core-concepts': ['forms/getting-started'],
+	'forms/constraints': ['forms/getting-started'],
+	'forms/validation': ['forms/getting-started'],
+	'forms/builder': ['forms/getting-started'],
+	'forms/validation-custom': [],
+};
+
+const appFor = (page: string): Record<string, string> => ({
+	...APP,
+	...Object.assign({}, ...(CONTINUES[page] ?? []).map(titledFiles)),
+});
 
 const isChecked = (page: string): boolean =>
 	CHECKED_DOCS.some((entry) => page === entry || page.startsWith(`${entry}/`));
 
 const isAllowed = (page: string, block: CodeBlock): boolean =>
-	ALLOWED_FENCES.some((entry) => entry.page === page && entry.heading === block.heading);
+	ALLOWED_FENCES.some(
+		(entry) => entry.page === page && (entry.heading === undefined || entry.heading === block.heading),
+	);
 
 describe('docs snippets', () => {
 	test('every checked entry is a docs section or a page', () => {
@@ -88,7 +176,7 @@ describe('docs snippets', () => {
 		const failures = docsPageIds()
 			.filter(isChecked)
 			.flatMap((page) =>
-				checkPageSnippets(page, readPage(page), APP, (block) => isAllowed(page, block)).map(
+				checkPageSnippets(page, readPage(page), appFor(page), (block) => isAllowed(page, block)).map(
 					(failure) =>
 						`${failure.page}, fence ${failure.fence} under "${failure.heading}": ${failure.messages.join(' ')}`,
 				),
@@ -100,16 +188,21 @@ describe('docs snippets', () => {
 		for (const entry of ALLOWED_FENCES) {
 			expect(entry.reason.trim(), `${entry.page} under "${entry.heading}" needs a reason`).not.toBe('');
 			expect(isChecked(entry.page), `${entry.page} is not a checked page`).toBe(true);
+			const inScope = (heading: string) => entry.heading === undefined || heading === entry.heading;
 			const fences = parseCodeBlocks(readPage(entry.page)).filter(
-				(block) => isTypeScriptFence(block) && block.heading === entry.heading,
+				(block) => isTypeScriptFence(block) && inScope(block.heading),
 			);
 			expect(fences.length, `${entry.page} has no TypeScript fence under "${entry.heading}"`).toBeGreaterThan(0);
-			const failures = checkPageSnippets(entry.page, readPage(entry.page), APP).filter(
-				(failure) => failure.heading === entry.heading,
+			const failures = checkPageSnippets(entry.page, readPage(entry.page), appFor(entry.page)).filter((failure) =>
+				inScope(failure.heading),
 			);
-			expect(failures.length, `${entry.page} under "${entry.heading}" compiles; drop it from the list`).toBe(
-				fences.length,
-			);
+			if (entry.heading === undefined) {
+				expect(failures.length, `${entry.page} compiles; drop it from the list`).toBeGreaterThan(0);
+			} else {
+				expect(failures.length, `${entry.page} under "${entry.heading}" compiles; drop it from the list`).toBe(
+					fences.length,
+				);
+			}
 		}
 	});
 

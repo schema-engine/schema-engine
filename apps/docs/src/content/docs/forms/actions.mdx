@@ -1,22 +1,121 @@
 ---
-title: 'Actions'
-description: 'Wire submit, reset, auto-save, notifications, and custom plugins.'
-order: 6
+title: 'Actions in forms'
+description: 'Register the actions a form can run, wire them to form and step triggers, and know what a handler receives and how it stops a submit.'
+order: 8
 ---
 
 import { RuiAlert, RuiAlertDescription } from '@ecopages/radiant-ui/alert';
 
-# Actions
+# Actions in forms
 
-Actions execute in response to form lifecycle triggers.
+A form runs actions in response to its lifecycle triggers: submit it, tell the user, save a draft, reset. They are the action entries of [Actions](/docs/actions/overview) with a forms context, and a form config lists them as plain data.
 
 <RuiAlert variant="info" layout="banner" class="unstyled">
 	<RuiAlertDescription>
 		<p>
-			Learn how actions are registered and dispatched in the <a href="/docs/actions/overview">Actions guide</a>.
+			How actions are registered, parsed and dispatched is in the{' '}
+			<a href="/docs/actions/overview">Actions guide</a>.
 		</p>
 	</RuiAlertDescription>
 </RuiAlert>
+
+## Register, then reference
+
+An action runs only when the engine has its registration, and the config refers to it by `$type`. `engine.validateForm` and `defineForm` check every action of the form and of its steps with `parseActions`, so an action whose `$type` is not registered, or whose options its schema refuses, is a config issue at its path, not a failure at submit time. The package ships two actions that work anywhere, and three that need the browser:
+
+| `$type`             | Registration                     | Import from                    |
+| ------------------- | -------------------------------- | ------------------------------ |
+| `submit`            | `SubmitActionRegistration`       | `@schema-engine/forms`         |
+| `show_notification` | `NotificationActionRegistration` | `@schema-engine/forms`         |
+| `auto_save`         | `AutoSaveActionRegistration`     | `@schema-engine/forms/browser` |
+| `gtm_event`         | `GTMActionRegistration`          | `@schema-engine/forms/browser` |
+| `reset`             | `ResetActionRegistration`        | `@schema-engine/forms/browser` |
+
+```ts title="actions-engine.ts"
+import * as z from 'zod/mini';
+import {
+	BaseFieldSchema,
+	NotificationActionRegistration,
+	SubmitActionRegistration,
+	createFormEngine,
+	defineInput,
+} from '@schema-engine/forms';
+import {
+	AutoSaveActionRegistration,
+	GTMActionRegistration,
+	ResetActionRegistration,
+} from '@schema-engine/forms/browser';
+
+const text = defineInput({
+	$type: 'text',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
+	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
+	render: () => null,
+});
+
+export const engine = createFormEngine({
+	elements: [text],
+	actions: [
+		SubmitActionRegistration,
+		NotificationActionRegistration,
+		AutoSaveActionRegistration,
+		GTMActionRegistration,
+		ResetActionRegistration,
+	],
+});
+```
+
+Use `createBrowserActionRegistrations({ storage, consent, confirm })` from `@schema-engine/forms/browser` to supply your own storage, consent tool or confirm dialog. Auto-save, GTM and Reset use browser storage, consent, `window.confirm` and the GTM data layer, which is why they are not in the package root.
+
+## Use them in a form
+
+A form's `actions` run on every trigger that matches. The form below submits, tells the user and clears itself when the submission succeeds:
+
+```ts title="contact-actions.ts"
+import { engine } from './actions-engine';
+
+export const contact = engine.defineForm({
+	id: 'contact',
+	steps: [
+		{
+			id: 'message',
+			title: 'Your message',
+			elements: [{ $type: 'text', id: 'subject', name: 'subject', label: 'Subject' }],
+		},
+	],
+	actions: [
+		{
+			id: 'send',
+			$type: 'submit',
+			endpoint: '/api/contact',
+			method: 'POST',
+			successMessage: 'Thanks, we will reply soon.',
+			redirectUrl: '/thank-you',
+		},
+		{
+			id: 'confirm',
+			$type: 'show_notification',
+			message: 'Message sent',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+		{ id: 'draft', $type: 'auto_save', storageKey: 'contact-draft', triggers: ['form_change'] },
+		{ id: 'track', $type: 'gtm_event', eventName: 'contact_sent', triggers: ['form_submit_success'] },
+		{ id: 'clear', $type: 'reset', triggers: ['form_submit_success'] },
+	],
+});
+```
+
+| `$type`             | Options                                                                                                     | Default triggers (when `triggers` is omitted) |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `submit`            | `endpoint` (required), `method` (`POST`, `PUT`, `PATCH`), `successMessage`, `errorMessage`, `redirectUrl`   | `form_submit`                                 |
+| `show_notification` | `message` (required), `variant` (`success`, `error`, `warning`, `info`), `duration` in ms (0 keeps it open) | the registration's `defaultTriggers`          |
+| `auto_save`         | `storageKey`, `includeSensitive`                                                                            | the registration's `defaultTriggers`          |
+| `gtm_event`         | `eventName` (required), `eventData`, `includeFormData`                                                      | the registration's `defaultTriggers`          |
+| `reset`             | `confirmMessage`, `resetToDefaults`                                                                         | the registration's `defaultTriggers`          |
+
+Every entry also takes `id`, `description`, `enabled` and `triggers`. Auto-save writes the form's values to browser storage on each trigger it answers, with `form_change` here. It does not debounce: it runs on every change.
 
 ## Triggers
 
@@ -46,20 +145,14 @@ the first step with an error after a failed or server-rejected submission, and b
 became skipped. A reset fires none. A step action cannot block a move, since the step's validation is the
 guard; if it fails, the failure is reported through `onActionResults`.
 
-## Configuring Triggers
+## Configuring triggers
 
-Actions can specify default triggers in metadata or be configured per-form:
+Actions can specify default triggers in their registration's metadata, or take `triggers` per entry, which replaces the defaults:
 
-```typescript
-metadata: {
-	defaultTriggers: ['form_submit', 'form_submit_success']
-}
+```ts title="trigger-options.ts"
+export const metadata = { name: 'Track', defaultTriggers: ['form_submit', 'form_submit_success'] };
 
-{
-	id: 'custom-action',
-	$type: 'submit',
-	triggers: ['form_change']
-}
+export const perEntry = { id: 'custom-action', $type: 'submit', endpoint: '/api/forms', triggers: ['form_change'] };
 ```
 
 ## Step Actions
@@ -92,118 +185,28 @@ one: every trigger runs the form's `actions` first, then the current step's.
 }
 ```
 
-## Built-in Plugins
-
-### Submit
-
-Submit form data to an endpoint:
-
-```json
-{
-	"id": "submit-form",
-	"$type": "submit",
-	"endpoint": "/api/forms",
-	"method": "POST",
-	"successMessage": "Form submitted successfully!",
-	"redirectUrl": "/thank-you"
-}
-```
-
-### Auto-save
-
-Automatically save form progress with debouncing:
-
-```json
-{
-	"id": "auto-save",
-	"$type": "auto_save",
-	"storageKey": "contact-form-draft",
-	"debounceMs": 1000,
-	"triggers": ["form_change"]
-}
-```
-
-### Notification
-
-Display user notifications for form events:
-
-```json
-{
-	"id": "success-notification",
-	"$type": "show_notification",
-	"message": "Form submitted successfully!",
-	"variant": "success",
-	"triggers": ["form_submit_success"]
-}
-```
-
-### GTM
-
-Track form events in Google Tag Manager:
-
-```json
-{
-	"id": "track-submit",
-	"$type": "gtm_event",
-	"eventName": "form_submit",
-	"eventData": {
-		"formId": "contact-form",
-		"category": "engagement"
-	},
-	"triggers": ["form_submit"]
-}
-```
-
-### Reset
-
-Reset form to initial state:
-
-```json
-{
-	"id": "reset-form",
-	"$type": "reset",
-	"triggers": ["form_submit_success"]
-}
-```
-
-### Registering browser actions
-
-Auto-save, GTM, and Reset use browser storage, consent, `window.confirm`, and
-the GTM data layer, so their registrations import from
-`@schema-engine/forms/browser`, not the package root:
-
-```ts
-import { createFormEngine } from '@schema-engine/forms';
-import {
-	AutoSaveActionRegistration,
-	GTMActionRegistration,
-	ResetActionRegistration,
-} from '@schema-engine/forms/browser';
-
-const engine = createFormEngine({
-	actions: [AutoSaveActionRegistration, GTMActionRegistration, ResetActionRegistration],
-});
-```
-
-Use `createBrowserActionRegistrations({ storage, consent, confirm })` from the
-same subpath to supply your own storage, consent tool, or confirm dialog.
-
-## Creating Custom Actions
+## Creating custom actions
 
 Use `defineAction` from `@schema-engine/actions` and specialize it with the forms runtime types:
 
-```typescript
+```ts title="track-submit.ts"
 import * as z from 'zod/mini';
-import { defineAction } from '@schema-engine/actions';
+import { defineAction, type ActionConfigBase } from '@schema-engine/actions';
 import type { BuilderActionBaseContext, FormActionTrigger } from '@schema-engine/forms';
 
 const defineFormAction = defineAction<BuilderActionBaseContext, FormActionTrigger>();
 
-const trackAction = defineFormAction({
+interface TrackSubmitConfig extends ActionConfigBase<'track_submit'> {
+	eventName: string;
+}
+
+export const trackAction = defineFormAction<TrackSubmitConfig>({
 	$type: 'track_submit',
 	schema: z.object({
 		id: z.string(),
 		$type: z.literal('track_submit'),
+		enabled: z.optional(z.boolean()),
+		triggers: z.optional(z.array(z.string())),
 		eventName: z.string(),
 	}),
 	metadata: {
@@ -217,4 +220,31 @@ const trackAction = defineFormAction({
 });
 ```
 
-The handler receives the forms base context enriched with `config` and `trigger`, so `context.formData`, `context.formId`, `context.config`, and `context.trigger` are all strongly typed.
+The handler receives the forms base context enriched with `config` and `trigger`, so `context.formData`, `context.formId`, `context.config` and `context.trigger` are all strongly typed. Register it like the built-in ones, in `createFormEngine({ actions: [trackAction] })`.
+
+## The forms context
+
+`context.form`, `context.isValid`, `context.formData` and `context.errors` exist only on the forms context. A handler of a different domain does not have them. Form action handlers receive `formData`, `errors`, form state and controller methods in addition to the action `config` and `trigger`. `errors` is keyed by dotted field path in both renderers, so a handler reads `context.errors['address.street']`.
+
+## Stop on failure
+
+Return `shouldContinue: false` to stop the chain. In a form, this is how an action keeps the submit from going on:
+
+```ts title="validity-guard.ts"
+import type { ActionExecutionResult } from '@schema-engine/actions';
+import type { BuilderActionBaseContext } from '@schema-engine/forms';
+
+export async function guard(context: BuilderActionBaseContext): Promise<ActionExecutionResult> {
+	if (!(await context.form.checkValidity())) {
+		return {
+			success: false,
+			error: 'Validation failed',
+			shouldContinue: false,
+		};
+	}
+
+	return { success: true };
+}
+```
+
+`context.isValid` is true while no validation error is recorded, so it is true on a pristine form even with an empty required field. `context.form.checkValidity()` validates the current values and resolves to whether the whole form passes. It records and shows no errors, and only the actions that call it pay for the validation. `context.form.validate()` validates, shows the errors and resolves `{ outcome: 'passed' | 'invalid' | 'overtaken' }`. See [Validity](/docs/forms/form-state#validity) for the three reads.

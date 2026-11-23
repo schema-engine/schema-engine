@@ -359,7 +359,7 @@ const HomeHero = () => (
 				automatic Zod Mini validation and type safety. Use with React today, more adapters coming soon.
 			</p>
 			<div class="home-hero__actions">
-				<RuiButton href="/docs/forms-react/quick-start" size="lg">
+				<RuiButton href="/docs/schema-engine/quick-start" size="lg">
 					Get Started
 				</RuiButton>
 				<RuiButton href="/docs/schema-engine/introduction" variant="outline" size="lg">

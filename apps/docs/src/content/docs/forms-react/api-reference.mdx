@@ -1,7 +1,7 @@
 ---
 title: 'API Reference'
 description: 'Public surface of the React adapter.'
-order: 9
+order: 10
 ---
 
 # API Reference
@@ -10,23 +10,31 @@ order: 9
 
 ```ts
 import { createFormEngine } from '@schema-engine/forms';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+import { brandRecipe } from './brand-recipe';
 
-const engine = createFormEngine({
+export const engine = createFormEngine({
 	elements: schemaFormRegistrations,
-	recipes: [...schemaFormRecipeRegistrations, customRecipe],
+	recipes: [...schemaFormRecipeRegistrations, brandRecipe],
 });
 ```
 
 `createFormEngine()` is headless. Register installed default recipes or
-your own recipes in the `recipes` array. Use `engine.extend({ recipes: [customRecipe] })`
+your own recipes in the `recipes` array. Use `engine.extend({ recipes: [brandRecipe] })`
 to add registrations later.
 
 ## FormElements
 
 ```tsx
+import type { ComponentProps } from 'react';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 
-<FormElements elements={config.elements} namePrefix={config.name} nameStrategy="join" instanceId={itemId} />;
+type Children = ComponentProps<typeof FormElements>['elements'];
+
+export function FieldGroup({ name, elements, itemId }: { name: string; elements: Children; itemId: string }) {
+	return <FormElements elements={elements} namePrefix={name} nameStrategy="join" instanceId={itemId} />;
+}
 ```
 
 Fieldsets pass `namePrefix={config.name}`. Array items pass an
@@ -36,12 +44,15 @@ clone child configs to change `name` or `id`.
 ## Rendering
 
 ```tsx
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { contactForm, engine } from './react-quick-start.react';
 
-<FormEngineProvider engine={engine}>
-	<FormRenderer config={formConfig} onSubmit={handleSubmit} />
-</FormEngineProvider>;
+export function Contact() {
+	return <FormRenderer engine={engine} config={contactForm} onSubmit={(values) => console.log(values)} />;
+}
 ```
+
+`FormRenderer` takes the engine as a prop. To render several forms with one engine, wrap them in `FormEngineProvider engine={engine}` and leave the prop out.
 
 `FormRenderer` and `FormProvider` type `onSubmit`, `onAction` and `defaultValues` from the normalized config they are
 given: the inferred type of `engine.defineForm` with a literal config, the output of the schema in

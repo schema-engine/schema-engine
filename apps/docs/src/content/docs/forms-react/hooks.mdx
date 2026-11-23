@@ -66,7 +66,14 @@ does not render the array around it. Spread `fieldProps` on the control (it carr
 the form hydrates:
 
 ```tsx
-function TextField({ config }: { config: InputFieldConfig }) {
+import * as z from 'zod/mini';
+import { BaseFieldSchema } from '@schema-engine/forms';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+
+const InputSchema = z.extend(BaseFieldSchema, { $type: z.literal('text') });
+type InputFieldConfig = z.output<typeof InputSchema>;
+
+export function TextField({ config }: { config: InputFieldConfig }) {
 	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
 	return (
 		<>
@@ -82,12 +89,25 @@ A checkbox takes `defaultChecked`, and a radio group takes `defaultChecked={defa
 on each radio, all sharing `fieldProps` (give each radio its own `id` after the spread):
 
 ```tsx
-function CheckboxField({ config }: { config: CheckboxFieldConfig }) {
+import * as z from 'zod/mini';
+import { BaseFieldSchema } from '@schema-engine/forms';
+import { useFormField } from '@schema-engine/forms-react/hooks';
+
+const CheckboxSchema = z.extend(BaseFieldSchema, { $type: z.literal('checkbox') });
+type CheckboxFieldConfig = z.output<typeof CheckboxSchema>;
+
+const RadioSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('radio'),
+	options: z.array(z.object({ value: z.string() })),
+});
+type RadioFieldConfig = z.output<typeof RadioSchema>;
+
+export function CheckboxField({ config }: { config: CheckboxFieldConfig }) {
 	const { defaultValue, fieldProps } = useFormField(config);
 	return <input type="checkbox" {...fieldProps} defaultChecked={Boolean(defaultValue)} />;
 }
 
-function RadioField({ config }: { config: RadioFieldConfig }) {
+export function RadioField({ config }: { config: RadioFieldConfig }) {
 	const { defaultValue, fieldProps } = useFormField(config);
 	return config.options.map(({ value }) => (
 		<input
@@ -115,7 +135,35 @@ hydration is kept: when a control attaches showing something other than what Rea
 a Radix or Base UI checkbox, select or slider, or a date picker. Pass `{ controlled: true }`:
 
 ```tsx
-function DateField({ config }: { config: DateFieldConfig }) {
+import * as z from 'zod/mini';
+import { BaseFieldSchema } from '@schema-engine/forms';
+import { useFormField } from '@schema-engine/forms-react/hooks';
+
+const DateSchema = z.extend(BaseFieldSchema, { $type: z.literal('date') });
+type DateFieldConfig = z.output<typeof DateSchema>;
+
+interface DatePickerProps {
+	value: Date | undefined;
+	onChange(value: string): void;
+	onBlur(): void;
+}
+
+function DatePicker({ value, onChange, onBlur }: DatePickerProps) {
+	return (
+		<input
+			type="date"
+			value={value?.toISOString().slice(0, 10) ?? ''}
+			onChange={(event) => onChange(event.target.value)}
+			onBlur={onBlur}
+		/>
+	);
+}
+
+function toDate(value: unknown): Date | undefined {
+	return typeof value === 'string' && value !== '' ? new Date(value) : undefined;
+}
+
+export function DateField({ config }: { config: DateFieldConfig }) {
 	const { value, onChange, onBlur, fieldProps } = useFormField(config, { controlled: true });
 	return <DatePicker {...fieldProps} value={toDate(value)} onChange={onChange} onBlur={onBlur} />;
 }

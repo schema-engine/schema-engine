@@ -243,17 +243,6 @@ describe('layout themes page', () => {
 		expect(forms.createFormEngine({ layout: theme }).extend().getLayout()).toBe(theme);
 	});
 
-	test('the hand-built host writes the hooks, the stylesheet and the item variables', () => {
-		const { renderSection } = run(tsBlock(page, 'A hand-built host'), packages) as { renderSection: () => string };
-		const html = renderSection();
-		expect(html).toContain('<style>');
-		expect(html).toContain('class="se-grid"');
-		expect(html).toContain('class="se-grid-item"');
-		expect(html).toContain('data-se-size="compact"');
-		expect(html).toContain('--se-item-grid-column:span 6');
-		expect(html).toMatch(/data-se-theme="l[0-9a-z]+"/);
-	});
-
 	test('a theme rejects an axis named like a renderer attribute', () => {
 		expect(() => run(tsBlock(page, 'A theme for a new domain'), packages)).toThrow(/step/);
 		const clash = layout.defineAxis({
@@ -402,8 +391,6 @@ describe('registries page', () => {
 	test('the snippets run', () => {
 		const { name } = run(tsBlock(page, 'Read-only or mutable'), modules) as { name: string };
 		expect(name).toBe('Tonal card');
-		const { html } = run(tsBlock(page, 'Add a registration kind of your own'), modules) as { html: string };
-		expect(html).toBe('<section class="hero"><h1>Welcome</h1></section>');
 	});
 
 	test('the engine example fills the catalog as documented', () => {

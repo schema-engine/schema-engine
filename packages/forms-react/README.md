@@ -12,63 +12,7 @@ Runtime diagnostics go through `@ecopages/logger` with the `[schema-engine/forms
 pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
 ```
 
-Install the [Schema Engine registry](../../registry) elements and recipes for your UI library. The imports below refer to the generated registration barrels in your application.
-
-The recipes ship their CSS with them. Import it once in your global stylesheet, after Tailwind and into the `components` layer, so the card shell renders the `appearance` picks (`size`, `surface`) and your own classes override it:
-
-```css
-@import 'tailwindcss';
-@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
-```
-
-The control height of `size` is a separate, unlayered import after it, because a shadcn control's Tailwind height utility outranks every `components` layer rule:
-
-```css
-@import './components/ui/schema-engine/components/controls.css';
-```
-
-Controls that carry `data-se-control` (inputs, selects, number, masked and phone inputs, date triggers, the submit and wizard buttons) take `1.75rem` for `compact` and `2.25rem` for `comfortable`; no pick or `default` keeps your own height. [registry/README.md](../../registry/README.md#recipe-styles) lists them and the cost.
-
-The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`.
-
-## Render a form
-
-```tsx
-import { createFormEngine } from '@schema-engine/forms';
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
-
-const engine = createFormEngine({
-	elements: schemaFormRegistrations,
-	recipes: schemaFormRecipeRegistrations,
-});
-
-const config = engine.defineForm({
-	id: 'contact',
-	steps: [
-		{
-			id: 'details',
-			elements: [
-				{ $type: 'input', id: 'email', name: 'email', label: 'Email', rules: [{ $type: 'email' }] },
-				{ $type: 'submit', id: 'send', label: 'Send' },
-			],
-		},
-	],
-});
-
-export function ContactForm() {
-	return (
-		<FormEngineProvider engine={engine}>
-			<FormRenderer config={config} onSubmit={(values) => console.log(values)} />
-		</FormEngineProvider>
-	);
-}
-```
-
-`createFormEngine` comes from `@schema-engine/forms`. Register recipes explicitly to select them through `view.$type`.
-
-The form container keeps its defaults apart from the live values, and clones them. A reset action restores the defaults, including authored and provider defaults, nested fields, and seeded array rows; an input without a default returns to its initial empty state.
+[Installation and quick start](../../apps/docs/src/content/docs/forms-react/getting-started.mdx) writes a first widget, registers it and renders a form that submits, with no recipe and no CSS. It also covers the optional path of starting from the shadcn registry.
 
 ## Form state
 
@@ -182,7 +126,7 @@ longer augment a global `FormEngine` namespace.
 
 Styling and layout guides: [Styling and layout](../../apps/docs/src/content/docs/layout/overview.mdx), [Appearance axes](../../apps/docs/src/content/docs/layout/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/layout/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/layout/recipes.mdx).
 
-See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx), [Writing a widget](../../apps/docs/src/content/docs/forms-react/widgets.mdx), [Hooks](../../apps/docs/src/content/docs/forms-react/hooks.mdx) and [Advanced usage](../../apps/docs/src/content/docs/forms-react/advanced.mdx). The form state itself is documented in [Form state](../../apps/docs/src/content/docs/forms/form-state.mdx), [Issue text](../../apps/docs/src/content/docs/forms/issue-text.mdx), [Native validity](../../apps/docs/src/content/docs/forms/native-validity.mdx), [Server errors](../../apps/docs/src/content/docs/forms/server-errors.mdx) and [Form libraries](../../apps/docs/src/content/docs/forms/form-libraries.mdx), which says how to embed a form in an existing hand-written one.
+See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx), [Writing a widget](../../apps/docs/src/content/docs/forms-react/widgets.mdx), [Hooks](../../apps/docs/src/content/docs/forms-react/hooks.mdx) and [Browser helpers](../../apps/docs/src/content/docs/forms-react/browser-helpers.mdx). The form state itself is documented in [Form state](../../apps/docs/src/content/docs/forms/form-state.mdx), [Issue text](../../apps/docs/src/content/docs/forms/issue-text.mdx), [Native validity](../../apps/docs/src/content/docs/forms/native-validity.mdx), [Server errors](../../apps/docs/src/content/docs/forms/server-errors.mdx) and [Other React state](../../apps/docs/src/content/docs/forms-react/other-react-state.mdx), which says how to mount a form in a panel that holds other state.
 
 Registry source type checks run through the registry workspace's `check-types`
 task in Turbo. Renderer actions import the dispatcher from

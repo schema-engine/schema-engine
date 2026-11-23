@@ -17,9 +17,11 @@ describe('the pages show the recipes they run', () => {
 		'csrf.ts': ['forms/csrf'],
 		'checkout-wizard.ts': ['forms/wizard'],
 		'react-widgets.react.tsx': ['forms-react/widgets'],
-		'react-embed.react.tsx': ['forms/form-libraries'],
+		'react-quick-start.react.tsx': ['forms-react/getting-started'],
+		'settings-panel.react.tsx': ['forms-react/other-react-state'],
 		'react-typed-values.react.tsx': ['forms/form-state'],
 		'agent-tool.react.tsx': ['forms/agent-tool'],
+		'radiant-quick-start.tsx': ['forms-radiant/getting-started'],
 		'radiant-agent-tool.tsx': ['forms/agent-tool'],
 		'radiant-summary.tsx': ['forms-radiant/form-controls'],
 		'radiant-control.tsx': ['forms-radiant/form-controls'],
@@ -48,7 +50,7 @@ describe('the pages show the recipes they run', () => {
 		const pages = readdirSync(docsRoot, { recursive: true }) as string[];
 		for (const page of pages.filter((name) => name.endsWith('.mdx'))) {
 			const text = readFileSync(join(docsRoot, page), 'utf8');
-			expect(text, page).not.toMatch(/rhfAdapter|react-hook-form/);
+			expect(text, page).not.toMatch(/rhfAdapter|react-hook-form|React Hook Form|Formik|TanStack Form/i);
 		}
 	});
 });

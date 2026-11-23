@@ -1,0 +1,132 @@
+---
+title: 'Constraints'
+description: 'Show, hide, enable, disable or require a field from the value of another, and skip a step. The syntax, the operators, the effects and what a hidden field submits.'
+order: 4
+---
+
+# Constraints
+
+A constraint makes one field depend on another: it names a source field, a comparison and an effect. Constraints are plain data in a form config, so they serialize with the rest of the form, and both renderers read them through the engine, so the same config behaves the same in React and Radiant.
+
+## Syntax
+
+Put `constraints` on an element. Each constraint has four keys:
+
+| Key        | Meaning                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------- |
+| `field`    | The source field, by name. A bare name is resolved next to the declaring field. A dotted name is absolute |
+| `operator` | How to compare the source field's value with `value`                                                      |
+| `value`    | What to compare against. Ignored by `is_empty` and `is_not_empty`                                         |
+| `$type`    | The effect to apply to this field when the comparison holds                                               |
+
+The example is a support request. The order number is shown only for an order question and is required there:
+
+```ts title="support-request.ts"
+import { engine } from './engine';
+
+export const supportRequest = engine.defineForm({
+	id: 'support-request',
+	steps: [
+		{
+			id: 'request',
+			title: 'Your request',
+			elements: [
+				{ $type: 'text', id: 'topic', name: 'topic', label: 'Topic' },
+				{
+					$type: 'text',
+					id: 'order-number',
+					name: 'orderNumber',
+					label: 'Order number',
+					constraints: [
+						{ field: 'topic', operator: 'equals', value: 'order', $type: 'show' },
+						{ field: 'topic', operator: 'equals', value: 'order', $type: 'require' },
+					],
+				},
+			],
+		},
+	],
+	actions: [{ id: 'send', $type: 'submit', endpoint: '/api/support' }],
+});
+```
+
+## Operators
+
+| Operator       | Holds when                                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| `equals`       | The source value is strictly equal to `value`                                                      |
+| `not_equals`   | It is not                                                                                          |
+| `contains`     | `value` is an array and holds the source value, or `value` is text and the source text contains it |
+| `not_contains` | The opposite of `contains`. It does not hold when either side cannot be read as text               |
+| `greater_than` | The source value, as a number, is greater than `value` as a number                                 |
+| `less_than`    | It is less                                                                                         |
+| `is_empty`     | The source value is `null`, `undefined`, an empty string or an empty array                         |
+| `is_not_empty` | It is anything else                                                                                |
+
+A source value that is a one-element array compares as its element, so a single-selection control that holds `['sports']` matches `equals: 'sports'`.
+
+## Effects
+
+| `$type`   | Effect when the comparison holds                                         |
+| --------- | ------------------------------------------------------------------------ |
+| `show`    | The field is shown. While no `show` holds, the field is hidden           |
+| `hide`    | The field is hidden. A `hide` that holds wins over every `show`          |
+| `enable`  | The field is enabled. While the comparison does not hold, it is disabled |
+| `disable` | The field is disabled                                                    |
+| `require` | The field is required, as with a `required` rule                         |
+
+A field with several constraints combines them: its `show` constraints are alternatives (one is enough), any `hide` that holds hides the field, and a field is disabled when any `disable` holds or any `enable` does not. `require` adds to a `required` rule the field already has.
+
+## Hidden and disabled fields do not submit
+
+A field that is hidden or disabled is absent from the submitted values: it is a missing key, not an empty one, and a hidden `required` field does not block the submit. The same holds for every field of a skipped step.
+
+```ts title="submit-support.ts"
+import { createFormRuntime } from '@schema-engine/forms';
+import { engine } from './engine';
+import { supportRequest } from './support-request';
+
+async function main() {
+	const runtime = createFormRuntime({
+		engine,
+		config: supportRequest,
+		host: { focus: () => {} },
+		onSubmit: (values) => console.log('submitted', JSON.stringify(values)),
+	});
+	runtime.mount();
+
+	runtime.container.setValue('topic', 'billing');
+	console.log('billing:', await runtime.submit());
+
+	runtime.container.setValue('topic', 'order');
+	console.log('order, no number:', await runtime.submit());
+
+	runtime.container.setValue('orderNumber', '1042');
+	console.log('order, with number:', await runtime.submit());
+}
+
+main();
+```
+
+```text
+submitted {"topic":"billing"}
+billing: submitted
+order, no number: invalid
+submitted {"topic":"order","orderNumber":"1042"}
+order, with number: submitted
+```
+
+With the topic `billing` the order number is hidden, so the submission holds only `topic`. With `order` the field is shown and required, so an empty submit is `invalid` and nothing is sent. Once it has a value, the submission carries it.
+
+## Constraints on a step
+
+A step takes `constraints` too, restricted to `show` and `hide`: enabling, disabling and requiring apply to a field, not a step. A step that its constraints hide is skipped by the wizard, and its fields are absent from the submission. The first step has no earlier step to depend on, so it takes none, and a step's constraints may name only fields of earlier steps. See [Wizard and runtime](/docs/forms/wizard#skippable-steps).
+
+## Inside containers
+
+A bare `field` is resolved from the declaring field: inside the row `contacts.0.email`, a constraint on `accountType` reads `contacts.0.accountType`, so a rule authored once applies to each row on its own row. A dotted name such as `billing.country` is absolute from the form root and means the same field wherever it is written. Cross-field validation rules resolve names the same way.
+
+## Where to go next
+
+- [Validation](/docs/forms/validation): rules, including cross-field rules with `relate`.
+- [Wizard and runtime](/docs/forms/wizard): steps, skipped steps and submission.
+- [Form state](/docs/forms/form-state): how a hidden field leaves the container.

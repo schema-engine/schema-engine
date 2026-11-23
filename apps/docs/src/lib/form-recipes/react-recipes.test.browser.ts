@@ -4,7 +4,8 @@ import { FormRenderer } from '@schema-engine/forms-react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { FeedbackForm } from './agent-tool.react';
-import { ProfileEditor } from './react-embed.react';
+import { ContactForm } from './react-quick-start.react';
+import { SettingsPanel } from './settings-panel.react';
 import { engine } from './react-widgets.react';
 
 let root: Root | undefined;
@@ -84,21 +85,23 @@ describe('the widgets', () => {
 	});
 });
 
-describe('the embedded form', () => {
-	test('takes values in as defaults and hands them out on change and submit', async () => {
+describe('the settings panel', () => {
+	test('takes settings in as defaults, reads them through onChange and is not a nested form', async () => {
 		const save = vi.fn(async () => {});
-		const host = await mount(createElement(ProfileEditor, { profile: { name: 'Ada', stars: 4 }, save }));
-		const name = host.querySelector<HTMLInputElement>('input[name="name"]')!;
-		expect(name.value).toBe('Ada');
-		expect(host.querySelector('h2')!.textContent).toBe('Ada');
+		const host = await mount(
+			createElement(SettingsPanel, { settings: { digest: true, frequency: 'weekly' }, save }),
+		);
+		const toggle = host.querySelector<HTMLButtonElement>('button[role="switch"]')!;
+		expect(toggle.getAttribute('aria-checked')).toBe('true');
+		expect(host.querySelector<HTMLSelectElement>('select')!.value).toBe('weekly');
+		expect(host.querySelectorAll('form')).toHaveLength(1);
+		expect(host.querySelector('form form')).toBeNull();
 
-		await userEvent.clear(name);
-		await userEvent.type(name, 'Grace');
-		await expect.poll(() => host.querySelector('h2')!.textContent).toBe('Grace');
-
-		await userEvent.click(host.querySelector('button[type="submit"]')!);
+		await userEvent.click(toggle);
+		await userEvent.selectOptions(host.querySelector('select')!, 'daily');
+		await userEvent.click(host.querySelector<HTMLButtonElement>('button:not([role="switch"])')!);
 		await expect.poll(() => save.mock.calls.length).toBe(1);
-		expect(save).toHaveBeenCalledWith({ name: 'Grace', stars: 4 });
+		expect(save).toHaveBeenCalledWith({ digest: false, frequency: 'daily' });
 	});
 });
 
@@ -153,5 +156,21 @@ describe('the agent tool', () => {
 		root!.unmount();
 
 		expect(registered[0]!.signal.aborted).toBe(true);
+	});
+});
+
+describe('the React quick start', () => {
+	test('renders with no recipe, blocks an invalid submit and shows the submitted values', async () => {
+		const host = await mount(createElement(ContactForm));
+		await userEvent.click(host.querySelector<HTMLButtonElement>('button[type="submit"]')!);
+		await expect.poll(() => host.textContent).toContain('Enter your name');
+		expect(host.querySelector('[data-testid="submitted"]')).toBeNull();
+
+		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="name"]')!, 'Ada Lovelace');
+		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="email"]')!, 'ada@example.com');
+		await userEvent.click(host.querySelector<HTMLButtonElement>('button[type="submit"]')!);
+		await expect
+			.poll(() => host.querySelector('[data-testid="submitted"]')?.textContent)
+			.toBe(JSON.stringify({ name: 'Ada Lovelace', email: 'ada@example.com' }));
 	});
 });

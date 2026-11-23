@@ -5,12 +5,12 @@ import { chromium, type Browser, type BrowserContext, type Page } from 'playwrig
 const baseUrl = inject('docsBaseUrl');
 
 const STYLING_PAGES = [
-	['/docs/layout/overview', 'Styling and layout'],
+	['/docs/layout/overview', 'Layout'],
 	['/docs/layout/layout-themes', 'Layout themes'],
 	['/docs/layout/appearance-axes', 'Appearance axes'],
 	['/docs/layout/theming', 'Theming'],
 	['/docs/layout/recipes', 'Recipes'],
-	['/docs/registry/registries', 'Registries and the catalog'],
+	['/docs/registry/registries', 'Read-only and mutable registries'],
 ] as const;
 
 const RECIPE_IDS = [

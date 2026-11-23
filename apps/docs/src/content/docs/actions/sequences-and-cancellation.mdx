@@ -1,0 +1,128 @@
+---
+title: 'Sequences, parallel groups, cancellation'
+description: 'How entries run in order and in parallel groups, how a failed action stops a workflow, and how handlers cooperate with cancellation.'
+order: 3
+---
+
+# Sequences, parallel groups, cancellation
+
+The examples continue from the [quick start](/docs/actions/overview): `registry` and the ticket actions are its `actions.ts`.
+
+## Sequences
+
+A flat list runs in order. An entry does not start until the one before it has finished. `parseActions` returns the list as `parsed.data`, and `dispatch` runs it:
+
+```ts
+import { ActionDispatcher, parseActions } from '@schema-engine/actions';
+import { registry } from './actions';
+
+export async function run() {
+	const parsed = parseActions(registry, [
+		{ id: 'first', $type: 'notify', channel: '#support', text: 'first' },
+		{ id: 'second', $type: 'notify', channel: '#support', text: 'second' },
+	]);
+	if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join('; '));
+
+	return new ActionDispatcher(registry).dispatch({
+		actions: parsed.data,
+		trigger: 'created',
+		context: { tickets: { assign: async () => {}, notify: () => {} } },
+	});
+}
+```
+
+Order is the order of the list, not the order of registration in the registry.
+
+## Parallel groups
+
+An entry that is itself a list is a group. Its members start together, and the group settles before the next entry starts. Results carry `sequenceIndex` for the entry and `groupIndex` for the member.
+
+## Stopping a workflow
+
+A failed action stops the workflow only when its result has `shouldContinue: false`. A thrown error or a `success: false` result without it is recorded, and the workflow continues. Disabled entries (`enabled: false`) and entries that do not match the trigger are skipped, and produce no result.
+
+```ts
+import type { ActionExecutionResult } from '@schema-engine/actions';
+
+export const stop: ActionExecutionResult = {
+	success: false,
+	error: 'The payment was declined',
+	shouldContinue: false,
+};
+```
+
+## Cancellation
+
+When an action fails with `shouldContinue: false` inside a group, the dispatcher aborts the `signal` of the other members and runs no later entry once the started members settle. A caller can also cancel from outside by passing `signal` to `dispatch`: it is chained into the signal each action receives, and the sequence runs no further entry once it is aborted.
+
+Cancellation is cooperative. A handler has to observe `signal`, for example by passing it to the request or timer it waits on. A handler that ignores it keeps `dispatch` pending until it finishes. A member whose handler throws an abort error after cancellation was requested gets the status `cancelled`.
+
+```ts title="cancel.ts"
+import { setTimeout as sleep } from 'node:timers/promises';
+import * as z from 'zod/mini';
+import { ActionDispatcher, ActionRegistry, parseActions, type ActionRegistration } from '@schema-engine/actions';
+
+z.config(z.locales.en());
+
+const entry = { id: z.string(), enabled: z.optional(z.boolean()), triggers: z.optional(z.array(z.string())) };
+
+const charge: ActionRegistration<{ id: string; $type: 'charge' }> = {
+	$type: 'charge',
+	schema: z.object({ ...entry, $type: z.literal('charge') }),
+	metadata: { name: 'Charge the card', defaultTriggers: ['checkout'] },
+	execute: () => ({ success: false, error: 'The card was declined', shouldContinue: false }),
+};
+
+const syncStock: ActionRegistration<{ id: string; $type: 'syncStock' }> = {
+	$type: 'syncStock',
+	schema: z.object({ ...entry, $type: z.literal('syncStock') }),
+	metadata: { name: 'Sync stock', defaultTriggers: ['checkout'] },
+	execute: async ({ signal }) => {
+		await sleep(1000, undefined, { signal });
+		return { success: true };
+	},
+};
+
+const receipt: ActionRegistration<{ id: string; $type: 'receipt' }> = {
+	$type: 'receipt',
+	schema: z.object({ ...entry, $type: z.literal('receipt') }),
+	metadata: { name: 'Send the receipt', defaultTriggers: ['checkout'] },
+	execute: () => ({ success: true }),
+};
+
+const registry = new ActionRegistry([charge, syncStock, receipt]);
+
+async function main() {
+	const parsed = parseActions(registry, [
+		[
+			{ id: 'charge', $type: 'charge' },
+			{ id: 'sync-stock', $type: 'syncStock' },
+		],
+		{ id: 'receipt', $type: 'receipt' },
+	]);
+	if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join('; '));
+
+	const results = await new ActionDispatcher(registry).dispatch({
+		actions: parsed.data,
+		trigger: 'checkout',
+		context: {},
+	});
+	for (const { actionId, status, cancellationRequested } of results) {
+		console.log(`${actionId}: ${status}${cancellationRequested ? ', cancellation requested' : ''}`);
+	}
+}
+
+main();
+```
+
+```text
+charge: failed
+sync-stock: cancelled, cancellation requested
+```
+
+The failed charge cancelled `sync-stock`, which was waiting on its signal, and the receipt did not run. Cancellation does not undo a remote side effect: a request that reached its server before the abort still happened, so a handler that must be reversible needs its own compensation.
+
+## Where to go next
+
+- [Writing actions](/docs/actions/writing-actions): `defineAction`, a service call that honours the signal, and testing.
+- [API reference](/docs/actions/api-reference): `ActionDispatchInput` and `ActionDispatchResult`.

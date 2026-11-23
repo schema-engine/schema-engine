@@ -1,12 +1,12 @@
 ---
-title: 'Registries and the catalog'
-description: 'Read-only and mutable registries, what the forms engine registers with them, and how a new registration kind plugs in.'
-order: 3
+title: 'Read-only and mutable registries'
+description: 'Choose between createRegistry and BaseRegistry, and override a default registration by listing a later one.'
+order: 2
 ---
 
-# Registries and the catalog
+# Read-only and mutable registries
 
-Everything a Schema Engine package lets you extend is a registration in a registry: an element, a recipe, an action, an appearance axis, a validation rule. They all share one shape and one mechanism, so overriding a default works the same way for each.
+Everything a Schema Engine package lets you extend is a registration in a registry: an element, a recipe, an action, an appearance axis, a validation rule. They all share one shape and one mechanism, so overriding a default works the same way for each. A registry is built as read-only from a list, or as mutable when registrations arrive at runtime.
 
 ## Read-only or mutable
 
@@ -40,102 +40,6 @@ export const name = widgets.get('card')?.metadata.name; // 'Tonal card': last wi
 ```
 
 Each winning `schema` must be a Standard Schema, so any provider works. A value without `~standard.validate` throws at build and names the registry and the key: `Widget 'card' schema must implement Standard Schema (~standard.validate).` An overridden registration is not checked.
-
-## What the forms engine registers
-
-`createFormEngine` builds one read-only registry per kind, from the lists you pass:
-
-| You pass                        | Registry label | Registration                               | Metadata entry id |
-| ------------------------------- | -------------- | ------------------------------------------ | ----------------- |
-| `elements`                      | `Element`      | `defineInput`, `defineStatic`              | `element:<$type>` |
-| `recipes`                       | `Recipe`       | `defineRecipe` bound to a spec             | `recipe:<$type>`  |
-| `actions`                       | `Action`       | An action registration with an `execute`   | `action:<$type>`  |
-| `layout: { appearance: [...] }` | `Axis`         | `defineAxis`                               | `axis:<$type>`    |
-| `validations`                   | `Validation`   | A validation registration with a `handler` | none              |
-
-Registrations of every kind follow the same rules: a later `$type` wins, and `[...schemaFormRegistrations, mine]` is how you override a default. A recipe is also checked against the forms recipe protocol, and a registration that declares an axis the theme lacks fails the engine build.
-
-```ts
-import { createFormEngine } from '@schema-engine/forms';
-import { builtInAxes, defineAxis } from '@schema-engine/layout';
-import { elements } from './registrations';
-import { BrandFrameRecipe } from './brand-frame';
-import { postalCode } from './postal-code';
-
-const tone = defineAxis({
-	$type: 'tone',
-	metadata: { name: 'Tone' },
-	default: 'neutral',
-	values: { neutral: {}, brand: { '--primary': '#c2410c' } },
-});
-
-export const engine = createFormEngine({
-	elements,
-	recipes: [BrandFrameRecipe],
-	validations: [postalCode],
-	layout: { appearance: [...builtInAxes, tone] },
-});
-```
-
-`engine.extend({ elements, recipes, actions, validations })` builds a new engine from the old lists plus yours. It inherits the layout theme and the default wizard recipe. Nothing is registered into the engine you extended.
-
-## The catalog
-
-The engine records a metadata entry for every element, recipe, action and axis it builds. An entry is `{ id, title, description, componentType, category }`, and its `id` is `<componentType>:<$type>`. `engine.getSchemaCatalog()` returns these entries: they are the metadata the JSON Schema export and the authoring catalog read, so an editor completes a registration you added. They are not the registrations. To list what the engine has registered, use `engine.getAllElements()`, `getAllRecipes()` and `getAllActions()`, and `engine.getValidationRegistry()` for the rules.
-
-```ts
-import { engine } from './engine';
-
-const catalog = engine.getSchemaCatalog();
-
-export const title = catalog.get('axis:tone')?.title; // 'Tone'
-export const registeredRecipes = engine.getAllRecipes().map((recipe) => recipe.$type);
-
-export const jsonSchema = engine.generateFormConfigSchema({ io: 'input' }); // lists the registered $types
-```
-
-The registration's `metadata.name` is the title, and `metadata.description` and `metadata.category` follow. Validation rules are held in their own registry (`engine.getValidationRegistry()`) and are not catalog entries.
-
-## Add a registration kind of your own
-
-A new kind of registration needs three things: a shape, a registry built from a list, and a place that reads it. This is a `Section` kind for a page builder, with nothing from forms in it:
-
-```ts
-import * as z from 'zod/mini';
-import { createRegistry } from '@schema-engine/registry';
-import type { BaseRegistration } from '@schema-engine/registry';
-
-interface SectionRegistration extends BaseRegistration {
-	$type: string;
-	render: (config: { title: string }) => string;
-}
-
-const hero: SectionRegistration = {
-	$type: 'hero',
-	schema: z.object({ title: z.string() }),
-	metadata: { name: 'Hero', description: 'A title over a background' },
-	render: ({ title }) => `<section class="hero"><h1>${title}</h1></section>`,
-};
-
-export function createSectionRegistry(extra: readonly SectionRegistration[] = []) {
-	return createRegistry<SectionRegistration>('Section', [hero, ...extra]);
-}
-
-const sections = createSectionRegistry();
-
-export const html = sections.get('hero')?.render({ title: 'Welcome' });
-```
-
-Take the pieces in order:
-
-1. **Extend `BaseRegistration`.** It requires `$type`, a Standard Schema `schema` and `metadata` with a `name`. Add what your kind needs (`render`, `execute`). `ComponentRegistration` adds a `render` function already.
-2. **Build the registry with a kind label.** The label names the registry in errors (`Section 'hero' schema must implement Standard Schema`). Offer `[...defaults, ...extra]` to callers, so overriding is a list change.
-3. **Validate documents against the schema.** `sections.get(item.$type)?.schema['~standard'].validate(item)` checks one item with any schema provider.
-4. **Keep the registry out of the global scope.** A registry is a value you pass to the code that needs it, as the forms engine does; there is no module-level registry to fall back to.
-
-### In the forms catalog
-
-The forms catalog has four kinds (`element`, `recipe`, `action` and `axis`), and the engine writes an entry for each of them. It does not take a fifth: `SchemaMetadataCatalog` types `componentType` as that closed set. A kind of your own keeps its own registry and lists itself however your domain's tooling does. If you want a registration to appear in the form catalog and JSON Schema export, register it as one of the four kinds the engine already understands. Extra entries for those kinds can be passed as `createFormEngine({ catalog })`; the engine copies the catalog and writes every registration's entry over it.
 
 ## The mutable registry
 

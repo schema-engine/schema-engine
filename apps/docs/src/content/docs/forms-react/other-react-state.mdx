@@ -1,0 +1,172 @@
+---
+title: 'Other React state'
+description: 'Mount a form inside a panel that holds other state: prefill it with defaultValues and read what it holds through onChange.'
+order: 8
+---
+
+# Other React state
+
+A form is often one part of a screen that has state of its own: a settings panel, an editor, a dialog with a draft. The panel can mount a form for part of it. They share no form state: the engine owns the form's state in its container, and the panel gives it values and reads them back.
+
+- Values go in as `defaultValues`, which prefill the form when it is created.
+- Values come out through `onChange`, called with the form's values whenever they change, and `onSubmit`, called with the values that passed validation.
+
+A form that is mounted is a `<form>` element, and HTML does not allow a form inside a form. Mount it in a panel that is not itself a `<form>`, as the panel below does: a `section` with its own button.
+
+## A settings panel
+
+The panel holds the notification settings. It mounts a form with a `switch` and a `select`, both widgets written with `useFormField`, prefilled from the saved settings. The form reports each change, and the panel keeps the latest values until the user saves:
+
+```tsx
+import { useState } from 'react';
+import * as z from 'zod/mini';
+import { BaseFieldSchema, createFormEngine, defineInput, type FormValues } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+
+const SwitchSchema = z.extend(BaseFieldSchema, { $type: z.literal('switch') });
+
+/** A component with no native value to read: controlled, so it renders with its value. */
+function SwitchField(config: z.output<typeof SwitchSchema>) {
+	const { value, onChange, onBlur, fieldProps } = useFormField(config, { controlled: true });
+	return (
+		<button
+			{...fieldProps}
+			type="button"
+			role="switch"
+			aria-checked={value === true}
+			aria-label={config.label}
+			onClick={() => onChange(value !== true)}
+			onBlur={onBlur}
+		>
+			{config.label}: {value === true ? 'on' : 'off'}
+		</button>
+	);
+}
+
+const SelectSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('select'),
+	options: z.array(z.object({ value: z.string(), label: z.string() })),
+});
+
+function SelectField(config: z.output<typeof SelectSchema>) {
+	const { defaultValue, fieldProps, labelProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<select {...fieldProps} defaultValue={fieldText(defaultValue)}>
+				{config.options.map((option) => (
+					<option key={option.value} value={option.value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+		</div>
+	);
+}
+
+const switchElement = defineInput({
+	$type: 'switch',
+	schema: SwitchSchema,
+	render: SwitchField,
+	value: () => z.boolean(),
+	metadata: { name: 'Switch', category: 'input' },
+});
+
+const selectElement = defineInput({
+	$type: 'select',
+	schema: SelectSchema,
+	render: SelectField,
+	value: () => z.string(),
+	metadata: { name: 'Select', category: 'input' },
+});
+
+const engine = createFormEngine({ elements: [switchElement, selectElement] });
+
+const notificationsForm = engine.defineForm({
+	id: 'notifications',
+	steps: [
+		{
+			id: 'main',
+			title: 'Notifications',
+			elements: [
+				{ $type: 'switch', id: 'digest', name: 'digest', label: 'Email digest' },
+				{
+					$type: 'select',
+					id: 'frequency',
+					name: 'frequency',
+					label: 'How often',
+					options: [
+						{ value: 'daily', label: 'Every day' },
+						{ value: 'weekly', label: 'Every week' },
+					],
+				},
+			],
+		},
+	],
+});
+
+export interface NotificationSettings {
+	digest: boolean;
+	frequency: string;
+}
+
+function toSettings(values: FormValues, fallback: NotificationSettings): NotificationSettings {
+	return {
+		digest: typeof values.digest === 'boolean' ? values.digest : fallback.digest,
+		frequency: typeof values.frequency === 'string' ? values.frequency : fallback.frequency,
+	};
+}
+
+/**
+ * A settings panel that holds state of its own and mounts a form for part of it. The panel is not a form, so
+ * the form's own `<form>` is the only one. Settings go in as `defaultValues` and come out through `onChange`.
+ */
+export function SettingsPanel({
+	settings,
+	save,
+}: {
+	settings: NotificationSettings;
+	save: (settings: NotificationSettings) => Promise<void>;
+}) {
+	const [draft, setDraft] = useState(settings);
+	const [saving, setSaving] = useState(false);
+
+	return (
+		<section aria-label="Settings">
+			<h2>Notifications</h2>
+			<FormRenderer
+				engine={engine}
+				config={notificationsForm}
+				defaultValues={settings}
+				onChange={(values) => setDraft(toSettings(values, settings))}
+			/>
+			<button
+				type="button"
+				disabled={saving}
+				onClick={async () => {
+					setSaving(true);
+					await save(draft);
+					setSaving(false);
+				}}
+			>
+				Save settings
+			</button>
+		</section>
+	);
+}
+```
+
+The switch has no native value to read, so it is controlled: `useFormField(config, { controlled: true })` gives it `value` and `onChange(value)`. The select is a native control, so it is uncontrolled and takes `defaultValue`. [Writing a widget](/docs/forms-react/widgets) covers both modes.
+
+`onChange` receives `FormValues`, so the panel narrows each value before it trusts it. With `engine.defineForm()` of a literal config, `defaultValues` is typed from the config, and [Submitted values](/docs/forms/form-state#submitted-values) shows how to type the output too.
+
+## Why the form keeps its own state
+
+The engine owns the form state because forms are configured, not coded: no other form API reaches the panel, so there is nothing to wire between the panel and the form beyond values in and values out. The form's validation, its touched and dirty marks and its submission all stay in [the container](/docs/forms/form-state), which is why the panel reads only what it needs.
+
+## Where to go next
+
+- [Form state](/docs/forms/form-state): the container, and how to write a binding to it.
+- [Writing a widget](/docs/forms-react/widgets): the two modes of `useFormField`.
+- [Hooks](/docs/forms-react/hooks): `useWatch`, `useFormContext` and the rest.

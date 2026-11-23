@@ -183,7 +183,7 @@ describe('docs dev server source boundary', () => {
 
 		const entries = await page.locator('.rui-toc__link').allTextContents();
 		expect(entries).toContain('Live example');
-		expect(entries).toContain('3. Render the Form');
+		expect(entries).toContain('Your own widgets');
 		expect(entries).not.toContain('Your Information');
 		expect(problems).toEqual([]);
 	}, 120_000);
