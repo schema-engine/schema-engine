@@ -28,12 +28,12 @@ const wizard = (): ValidationStep[] => [
 	{
 		id: 'company',
 		constraints: [when('hasCompany', true, 'show')],
-		elements: [input('wantsInvoice'), input('company', { rules: [{ type: 'required' }] })],
+		elements: [input('wantsInvoice'), input('company', { rules: [{ $type: 'required' }] })],
 	},
 	{
 		id: 'payment',
 		elements: [
-			input('vat', { constraints: [when('wantsInvoice', 'yes', 'show')], rules: [{ type: 'required' }] }),
+			input('vat', { constraints: [when('wantsInvoice', 'yes', 'show')], rules: [{ $type: 'required' }] }),
 			input('iban', { constraints: [when('wantsInvoice', 'yes', 'require')] }),
 		],
 	},

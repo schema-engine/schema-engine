@@ -8,12 +8,12 @@ import { defineInput, type AnyElementRegistration } from '@/types';
 import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import { anyValue } from '../lib/any-value';
 
-type PostcodeRule = { type: 'postcode'; message?: string };
+type PostcodeRule = { $type: 'postcode'; message?: string };
 
 /** A custom rule written the way the docs show it: `$type`, a rule schema, metadata and a handler. */
 const postcode = {
 	$type: 'postcode',
-	schema: z.object({ type: z.literal('postcode'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('postcode'), message: z.optional(z.string()) }),
 	metadata: { name: 'Postcode', description: 'A UK-style postcode.' },
 	category: 'string',
 	handler: (rule: PostcodeRule) =>
@@ -30,7 +30,7 @@ function declaring($type: string, validation: { $type: string; handler: () => z.
 		validations: [
 			{
 				...validation,
-				schema: z.looseObject({ type: z.literal(validation.$type) }),
+				schema: z.looseObject({ $type: z.literal(validation.$type) }),
 				metadata: { name: validation.$type },
 				category: 'generic',
 			},
@@ -38,7 +38,7 @@ function declaring($type: string, validation: { $type: string; handler: () => z.
 	});
 }
 
-function schemaFor(engine: ReturnType<typeof createFormEngine>, rule: { type: string }) {
+function schemaFor(engine: ReturnType<typeof createFormEngine>, rule: { $type: string }) {
 	return engine.getValidationRegistry().createSchema(rule, {
 		values: {},
 		fieldPath: '',
@@ -71,8 +71,8 @@ describe('engine validation registry', () => {
 
 		const engine = createFormEngine({ elements: [first, second] });
 
-		expect(schemaFor(engine, { type: 'shared-rule' })?.safeParse(42).success).toBe(true);
-		expect(schemaFor(engine, { type: 'shared-rule' })?.safeParse('text').success).toBe(false);
+		expect(schemaFor(engine, { $type: 'shared-rule' })?.safeParse(42).success).toBe(true);
+		expect(schemaFor(engine, { $type: 'shared-rule' })?.safeParse('text').success).toBe(false);
 		const logged = spies.flatMap((spy) => spy.mock.calls.map((call) => JSON.stringify(call)));
 		expect(logged.filter((entry) => entry.includes('shared-rule') || entry.includes('already registered'))).toEqual(
 			[],
@@ -82,7 +82,7 @@ describe('engine validation registry', () => {
 	test('reports the message of a custom rule passed to the engine', async () => {
 		const engine = createFormEngine({ validations: [postcode] });
 		const elements = [
-			{ $type: 'input', name: 'postcode', rules: [{ type: 'postcode', message: 'Enter a postcode' }] },
+			{ $type: 'input', name: 'postcode', rules: [{ $type: 'postcode', message: 'Enter a postcode' }] },
 		];
 
 		const invalid = await validateFormValues({
@@ -108,7 +108,7 @@ describe('engine validation registry', () => {
 		const element = declaring('input-a', { $type: 'postcode', handler: () => z.number() });
 		const engine = createFormEngine({ elements: [element], validations: [postcode] });
 
-		expect(schemaFor(engine, { type: 'postcode' })?.safeParse('SW1A 1AA').success).toBe(true);
+		expect(schemaFor(engine, { $type: 'postcode' })?.safeParse('SW1A 1AA').success).toBe(true);
 	});
 
 	test('keeps the same winning element validation when the engine is extended with no options', () => {
@@ -120,7 +120,7 @@ describe('engine validation registry', () => {
 		const extended = built.extend();
 
 		const accepts = (engine: typeof built) =>
-			[true, 'text', 42].map((value) => schemaFor(engine, { type: 'x' })?.safeParse(value).success);
+			[true, 'text', 42].map((value) => schemaFor(engine, { $type: 'x' })?.safeParse(value).success);
 		expect(accepts(extended)).toEqual(accepts(built));
 		expect(accepts(extended)).toEqual([false, true, false]);
 	});
@@ -133,7 +133,7 @@ describe('engine validation registry', () => {
 		}).getValidationRegistry();
 
 		const rules = registry.getDefaultRulesForFieldType('phone-input');
-		expect(rules).toEqual([{ type: 'phone' }]);
+		expect(rules).toEqual([{ $type: 'phone' }]);
 		expect(Object.isFrozen(rules)).toBe(true);
 		expect(Object.isFrozen(rules[0])).toBe(true);
 		expect(registry.getDefaultRulesForFieldType('no-such-type')).toEqual([]);

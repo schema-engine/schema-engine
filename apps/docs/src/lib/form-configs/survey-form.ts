@@ -16,7 +16,7 @@ export const surveyDemoConfig: FormConfig = {
 					name: 'name',
 					label: 'Name',
 					placeholder: 'Enter your name',
-					rules: [{ type: 'required', message: 'Name is required' }],
+					rules: [{ $type: 'required', message: 'Name is required' }],
 				},
 				{
 					$type: 'select',
@@ -28,7 +28,7 @@ export const surveyDemoConfig: FormConfig = {
 						{ value: '3', label: 'Neutral' },
 						{ value: '1', label: 'Very dissatisfied' },
 					],
-					rules: [{ type: 'required', message: 'Satisfaction is required' }],
+					rules: [{ $type: 'required', message: 'Satisfaction is required' }],
 				},
 			],
 		},

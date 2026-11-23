@@ -22,7 +22,7 @@ export const basicContactFormConfig: FormConfig = {
 					name: 'name',
 					label: 'Full Name',
 					inputType: 'text',
-					rules: [{ type: 'required', message: 'Name is required' }],
+					rules: [{ $type: 'required', message: 'Name is required' }],
 				},
 				{
 					$type: 'input',
@@ -31,8 +31,8 @@ export const basicContactFormConfig: FormConfig = {
 					label: 'Email Address',
 					inputType: 'email',
 					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Invalid email format' },
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Invalid email format' },
 					],
 				},
 				{

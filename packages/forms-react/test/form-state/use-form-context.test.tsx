@@ -4,7 +4,7 @@ import { useFormContext, FORM_ROOT } from '../../src/hooks/form-state';
 import type { FormContextValue } from '../../src/hooks/form-state';
 import { ContainerHarness, createTestContainer, runtimeOf } from '../utils/container-harness';
 
-const elements = [{ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Required' }] }];
+const elements = [{ $type: 'input', name: 'name', rules: [{ $type: 'required', message: 'Required' }] }];
 
 function mount(
 	read: (context: FormContextValue) => unknown,

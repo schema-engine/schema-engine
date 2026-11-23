@@ -8,11 +8,11 @@ import {
 const registry = createDefaultValidationRegistry();
 
 const passwordForm = [
-	{ $type: 'input', name: 'password', rules: [{ type: 'required' }] },
+	{ $type: 'input', name: 'password', rules: [{ $type: 'required' }] },
 	{
 		$type: 'input',
 		name: 'confirmPassword',
-		rules: [{ type: 'relate', fields: ['password'], assert: 'allEqual' }],
+		rules: [{ $type: 'relate', fields: ['password'], assert: 'allEqual' }],
 	},
 ];
 
@@ -21,11 +21,11 @@ const lineItemsForm = [
 		$type: 'arrayElements',
 		name: 'lines',
 		elements: [
-			{ $type: 'number', name: 'quantity', rules: [{ type: 'required' }] },
+			{ $type: 'number', name: 'quantity', rules: [{ $type: 'required' }] },
 			{
 				$type: 'number',
 				name: 'max',
-				rules: [{ type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number' }],
+				rules: [{ $type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number' }],
 			},
 		],
 	},
@@ -72,7 +72,7 @@ describe('buildDependencyIndex', () => {
 					{
 						$type: 'input',
 						name: 'confirm',
-						rules: [{ type: 'relate', fields: ['email', 'contacts.0.email'], assert: 'allEqual' }],
+						rules: [{ $type: 'relate', fields: ['email', 'contacts.0.email'], assert: 'allEqual' }],
 					},
 				],
 			},
@@ -127,7 +127,7 @@ describe('buildDependencyIndex', () => {
 			{
 				$type: 'input',
 				name: 'username',
-				rules: [{ type: 'async', url: '/api/check', dependencies: ['email', 'billing.country'] }],
+				rules: [{ $type: 'async', url: '/api/check', dependencies: ['email', 'billing.country'] }],
 			},
 		];
 
@@ -139,7 +139,7 @@ describe('buildDependencyIndex', () => {
 			{
 				$type: 'input',
 				name: 'summary',
-				rules: [{ type: 'relate', fields: ['a', 'b'], assert: 'atLeastOne', includeSelf: false }],
+				rules: [{ $type: 'relate', fields: ['a', 'b'], assert: 'atLeastOne', includeSelf: false }],
 			},
 		];
 		const index = buildDependencyIndex(elements, {}, registry);
@@ -148,7 +148,7 @@ describe('buildDependencyIndex', () => {
 	});
 
 	test('ignores rules that read nothing beyond their own value', () => {
-		const elements = [{ $type: 'input', name: 'email', rules: [{ type: 'required' }, { type: 'email' }] }];
+		const elements = [{ $type: 'input', name: 'email', rules: [{ $type: 'required' }, { $type: 'email' }] }];
 
 		expect(buildDependencyIndex(elements, {}, registry).watched).toEqual([]);
 	});

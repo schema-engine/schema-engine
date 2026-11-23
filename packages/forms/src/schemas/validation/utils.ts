@@ -27,15 +27,15 @@ export type ValidatableField = {
 	rules: ReadonlyArray<BaseValidationRule>;
 };
 
-export function isFieldRequired(rules?: ReadonlyArray<{ readonly type: string }>): boolean {
-	return rules?.some((rule) => rule.type === 'required') ?? false;
+export function isFieldRequired(rules?: ReadonlyArray<{ readonly $type: string }>): boolean {
+	return rules?.some((rule) => rule.$type === 'required') ?? false;
 }
 
 /**
  * Configured rules plus any `defaultFor` rules registered for the field `$type`.
  *
- * @remarks Default rules are stored as `{ type }` and asserted as `TRule` because
- * every validation rule in the union is identified by `type` alone.
+ * @remarks Default rules are stored as `{ $type }` and asserted as `TRule` because
+ * every validation rule in the union is identified by `$type` alone.
  */
 export function getValidationRulesForElement<TRule extends BaseValidationRule>(
 	element: {
@@ -52,7 +52,7 @@ export function getValidationRulesForElement<TRule extends BaseValidationRule>(
 
 	const merged: TRule[] = [...(configured ?? [])];
 	for (const rule of defaults) {
-		if (!merged.some((existing) => existing.type === rule.type)) {
+		if (!merged.some((existing) => existing.$type === rule.$type)) {
 			merged.push(rule as TRule);
 		}
 	}
@@ -175,7 +175,7 @@ export function createZodSchemaFromRules(
 	const schemas: z.ZodMiniType[] = [];
 	for (const rule of rules) {
 		const ruleSchema = registry.createSchema(rule as ValidationRule, context);
-		const category = registry.get(rule.type)?.category;
+		const category = registry.get(rule.$type)?.category;
 		schemas.push(category && FORMAT_CATEGORIES.has(category) ? skippingEmpty(ruleSchema) : ruleSchema);
 	}
 

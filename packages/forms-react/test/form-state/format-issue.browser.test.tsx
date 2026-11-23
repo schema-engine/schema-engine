@@ -20,13 +20,13 @@ const authored = {
 			id: 'main',
 			title: 'Main',
 			elements: [
-				{ $type: 'input', id: 'code', name: 'code', label: 'Code', rules: [{ type: 'minLength', value: 8 }] },
+				{ $type: 'input', id: 'code', name: 'code', label: 'Code', rules: [{ $type: 'minLength', value: 8 }] },
 				{
 					$type: 'input',
 					id: 'note',
 					name: 'note',
 					label: 'Note',
-					rules: [{ type: 'required', message: 'Write a note' }],
+					rules: [{ $type: 'required', message: 'Write a note' }],
 				},
 				{ $type: 'submission-alert', id: 'status', name: 'status', showOn: ['error'] },
 				{ $type: 'submit', id: 'send', name: 'send', label: 'Send' },

@@ -24,14 +24,14 @@ async function check(
 
 describe('relate assertions', () => {
 	test('allEqual passes matching values and reports a mismatch', async () => {
-		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['password'], assert: 'allEqual' };
+		const rule: RelateRule = { ...BASE, $type: 'relate', fields: ['password'], assert: 'allEqual' };
 
 		expect(await check(rule, 'hunter2', { password: 'hunter2' })).toBe(true);
 		expect(await check(rule, 'hunter3', { password: 'hunter2' })).toBe(false);
 	});
 
 	test('allDifferent rejects a repeated value', async () => {
-		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['primary', 'secondary'], assert: 'allDifferent' };
+		const rule: RelateRule = { ...BASE, $type: 'relate', fields: ['primary', 'secondary'], assert: 'allDifferent' };
 
 		expect(await check(rule, 'c', { primary: 'a', secondary: 'b' })).toBe(true);
 		expect(await check(rule, 'a', { primary: 'a', secondary: 'b' })).toBe(false);
@@ -40,7 +40,7 @@ describe('relate assertions', () => {
 	test('string comparison coerces primitives without coercing arbitrary objects', async () => {
 		const rule: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['confirmation'],
 			assert: 'allEqual',
 			as: 'string',
@@ -63,7 +63,7 @@ describe('relate assertions', () => {
 	test('ascending reads the declaring field first and allows equal neighbours', async () => {
 		const ascending: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['ceiling'],
 			assert: 'ascending',
 			as: 'number',
@@ -77,7 +77,7 @@ describe('relate assertions', () => {
 	});
 
 	test('descending asserts the declaring field is the larger one', async () => {
-		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['floor'], assert: 'descending', as: 'number' };
+		const rule: RelateRule = { ...BASE, $type: 'relate', fields: ['floor'], assert: 'descending', as: 'number' };
 
 		expect(await check(rule, 9, { floor: 5 })).toBe(true);
 		expect(await check(rule, 1, { floor: 5 })).toBe(false);
@@ -86,7 +86,7 @@ describe('relate assertions', () => {
 	test('strictlyDescending rejects equal neighbours', async () => {
 		const rule: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['floor'],
 			assert: 'strictlyDescending',
 			as: 'number',
@@ -98,7 +98,7 @@ describe('relate assertions', () => {
 	test('atLeastOne fires on a wholly empty group', async () => {
 		const rule: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['phone', 'email'],
 			assert: 'atLeastOne',
 			includeSelf: false,
@@ -111,7 +111,7 @@ describe('relate assertions', () => {
 	test('emptiness treats empty arrays as empty and false or zero as filled', async () => {
 		const rule: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['phone', 'email'],
 			assert: 'atLeastOne',
 			includeSelf: false,
@@ -125,7 +125,7 @@ describe('relate assertions', () => {
 	test('exactlyOne rejects both filled and neither filled', async () => {
 		const rule: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['card', 'invoice'],
 			assert: 'exactlyOne',
 			includeSelf: false,
@@ -139,7 +139,7 @@ describe('relate assertions', () => {
 	test('allOrNone accepts an empty group and a complete one', async () => {
 		const rule: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['street', 'city'],
 			assert: 'allOrNone',
 			includeSelf: false,
@@ -153,14 +153,14 @@ describe('relate assertions', () => {
 
 describe('relate semantics', () => {
 	test('skipWhenIncomplete keeps a half-filled comparison quiet', async () => {
-		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['password'], assert: 'allEqual' };
+		const rule: RelateRule = { ...BASE, $type: 'relate', fields: ['password'], assert: 'allEqual' };
 
 		expect(await check(rule, 'hunter2', {})).toBe(true);
 		expect(await check(rule, '', { password: 'hunter2' })).toBe(true);
 	});
 
 	test('two empty values do not count as matching while skipWhenIncomplete is on', async () => {
-		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['password'], assert: 'allEqual' };
+		const rule: RelateRule = { ...BASE, $type: 'relate', fields: ['password'], assert: 'allEqual' };
 
 		expect(await check(rule, '', { password: '' })).toBe(true);
 		expect(await check({ ...rule, skipWhenIncomplete: false }, '', { password: '' })).toBe(true);
@@ -169,7 +169,7 @@ describe('relate semantics', () => {
 	test('skipWhenIncomplete does not disarm the emptiness assertions', async () => {
 		const atLeastOne: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['phone', 'email'],
 			assert: 'atLeastOne',
 			includeSelf: false,
@@ -180,14 +180,14 @@ describe('relate semantics', () => {
 	});
 
 	test('an unparseable date fails the comparison rather than passing it', async () => {
-		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date' };
+		const rule: RelateRule = { ...BASE, $type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date' };
 
 		expect(await check(rule, '2026-02-01', { startDate: '2026-01-01' })).toBe(true);
 		expect(await check(rule, 'not-a-date', { startDate: '2026-01-01' })).toBe(false);
 	});
 
 	test('date comparison does not call an arbitrary object toString method', async () => {
-		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date' };
+		const rule: RelateRule = { ...BASE, $type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date' };
 		const value = {
 			toString: () => {
 				throw new Error('unexpected conversion');
@@ -200,7 +200,7 @@ describe('relate semantics', () => {
 	test('includeSelf false ignores the value under test even when it is listed', async () => {
 		const rule: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['phone', 'email'],
 			assert: 'atLeastOne',
 			includeSelf: false,
@@ -210,7 +210,7 @@ describe('relate semantics', () => {
 	});
 
 	test('a reference inside an array row resolves within that row', async () => {
-		const rule: RelateRule = { ...BASE, type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number' };
+		const rule: RelateRule = { ...BASE, $type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number' };
 		const values = { lines: [{ quantity: 2 }, { quantity: 10 }] };
 
 		expect(await check(rule, 5, values, 'lines.0.max')).toBe(true);
@@ -220,7 +220,7 @@ describe('relate semantics', () => {
 	test('a custom message replaces the default', async () => {
 		const rule: RelateRule = {
 			...BASE,
-			type: 'relate',
+			$type: 'relate',
 			fields: ['password'],
 			assert: 'allEqual',
 			message: 'Passwords must match',
@@ -234,7 +234,7 @@ describe('relate presets', () => {
 	test('matches builds an allEqual rule that includes the declaring field', async () => {
 		const rule = ValidationPresets.relate.matches('password', 'Passwords must match');
 
-		expect(rule).toMatchObject({ type: 'relate', fields: ['password'], assert: 'allEqual', includeSelf: true });
+		expect(rule).toMatchObject({ $type: 'relate', fields: ['password'], assert: 'allEqual', includeSelf: true });
 		expect(await check(rule, 'nope', { password: 'hunter2' })).toBe('Passwords must match');
 	});
 

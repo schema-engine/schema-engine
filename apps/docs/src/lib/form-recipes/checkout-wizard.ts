@@ -9,7 +9,7 @@ export const config = engine.defineForm({
 			id: 'contact',
 			title: 'Contact',
 			elements: [
-				{ $type: 'input', id: 'email', name: 'email', rules: [{ type: 'required' }] },
+				{ $type: 'input', id: 'email', name: 'email', rules: [{ $type: 'required' }] },
 				{ $type: 'input', id: 'hasCompany', name: 'hasCompany', defaultValue: 'no' },
 			],
 		},
@@ -17,12 +17,12 @@ export const config = engine.defineForm({
 			id: 'company',
 			title: 'Company',
 			constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
-			elements: [{ $type: 'input', id: 'vat', name: 'vat', rules: [{ type: 'required' }] }],
+			elements: [{ $type: 'input', id: 'vat', name: 'vat', rules: [{ $type: 'required' }] }],
 		},
 		{
 			id: 'payment',
 			title: 'Payment',
-			elements: [{ $type: 'input', id: 'card', name: 'card', rules: [{ type: 'required' }] }],
+			elements: [{ $type: 'input', id: 'card', name: 'card', rules: [{ $type: 'required' }] }],
 		},
 	],
 });

@@ -67,7 +67,7 @@ export const WithValidation: Story = {
 				name: 'phone',
 				label: 'Phone Number',
 				placeholder: '(202) 555-0123',
-				rules: [{ type: 'required', message: 'Phone number is required' }],
+				rules: [{ $type: 'required', message: 'Phone number is required' }],
 			},
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Submit' },
 		]),

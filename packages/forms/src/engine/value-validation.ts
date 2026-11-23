@@ -87,7 +87,7 @@ export type ValidationSeverity = 'error' | 'warning';
  * One rule a value fails, with what a translation needs to say so.
  *
  * @remarks
- * `type` is the rule's type, `ruleId` the author's stable name for that rule and `params` the options its
+ * `type` is the rule's `$type`, `ruleId` the author's stable name for that rule and `params` the options its
  * registration exposes (`{ minLength: 8 }`), so a message is composed from the issue and not parsed out of
  * the text. `message` is only the text the author wrote on the rule: the schema library's generic text is
  * never used. A rule reports one issue however many checks its schema runs.
@@ -114,12 +114,12 @@ export class FormValidationFailure extends Error {
 	/** `'unavailable'` when the service the rule asks could not answer, else `'error'`. */
 	readonly reason: 'unavailable' | 'error';
 
-	constructor(path: string, rule: { readonly type: string; readonly id?: string }, cause: unknown) {
+	constructor(path: string, rule: { readonly $type: string; readonly id?: string }, cause: unknown) {
 		const reason = cause instanceof Error ? cause.message : String(cause);
-		super(`Validation rule '${rule.type}' could not run for '${path}': ${reason}`, { cause });
+		super(`Validation rule '${rule.$type}' could not run for '${path}': ${reason}`, { cause });
 		this.name = 'FormValidationFailure';
 		this.path = path;
-		this.ruleType = rule.type;
+		this.ruleType = rule.$type;
 		this.reason = cause instanceof ValidationUnavailable ? 'unavailable' : 'error';
 		if (rule.id !== undefined) this.ruleId = rule.id;
 	}
@@ -243,7 +243,7 @@ export function effectiveRulesFor({
 		return [...rules];
 	}
 
-	const requiredRule: RequiredRule = { type: 'required' };
+	const requiredRule: RequiredRule = { $type: 'required' };
 	return [requiredRule, ...rules];
 }
 
@@ -289,7 +289,7 @@ export async function validateFieldValue({
 				const reported = first?.code === 'custom' ? first.params?.[REPORTED_TEXT] : undefined;
 				const message = registry.getRuleMessage(rule, typeof reported === 'string' ? reported : undefined);
 				return Object.freeze({
-					type: rule.type,
+					type: rule.$type,
 					...(rule.id === undefined ? {} : { ruleId: rule.id }),
 					...(params === undefined ? {} : { params: frozenCopy(params) }),
 					...(message ? { message } : {}),

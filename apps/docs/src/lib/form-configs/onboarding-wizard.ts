@@ -16,7 +16,7 @@ export const viewRecipesDemoConfig: FormConfig = {
 					name: 'email',
 					label: 'Email Address',
 					inputType: 'email',
-					rules: [{ type: 'required', message: 'Email is required' }],
+					rules: [{ $type: 'required', message: 'Email is required' }],
 				},
 				{
 					$type: 'input',
@@ -25,8 +25,8 @@ export const viewRecipesDemoConfig: FormConfig = {
 					label: 'Password',
 					inputType: 'password',
 					rules: [
-						{ type: 'required', message: 'Password is required' },
-						{ type: 'minLength', value: 8, message: 'Use at least 8 characters' },
+						{ $type: 'required', message: 'Password is required' },
+						{ $type: 'minLength', value: 8, message: 'Use at least 8 characters' },
 					],
 				},
 			],
@@ -41,7 +41,7 @@ export const viewRecipesDemoConfig: FormConfig = {
 					name: 'role',
 					label: 'Role',
 					placeholder: 'Select your role',
-					rules: [{ type: 'required', message: 'Role is required' }],
+					rules: [{ $type: 'required', message: 'Role is required' }],
 					options: [
 						{ value: 'developer', label: 'Developer' },
 						{ value: 'designer', label: 'Designer' },

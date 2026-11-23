@@ -50,7 +50,7 @@ const config = engine.defineForm({
 		{
 			id: 'details',
 			elements: [
-				{ $type: 'input', id: 'email', name: 'email', label: 'Email', rules: [{ type: 'email' }] },
+				{ $type: 'input', id: 'email', name: 'email', label: 'Email', rules: [{ $type: 'email' }] },
 				{ $type: 'submit', id: 'send', label: 'Send' },
 			],
 		},

@@ -3,11 +3,11 @@ import { createFormEngine, defineInput } from '@schema-engine/forms';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type PostalCodeRule = { type: 'postalCode'; message?: string };
+type PostalCodeRule = { $type: 'postalCode'; message?: string };
 
 export const postalCode: ValidationRegistration<PostalCodeRule> = {
 	$type: 'postalCode',
-	schema: z.looseObject({ type: z.literal('postalCode') }),
+	schema: z.looseObject({ $type: z.literal('postalCode') }),
 	metadata: { name: 'Postal code' },
 	category: 'string',
 	handler: () => z.string().check(z.regex(/^\d{5}(?:-\d{4})?$/)),
@@ -30,7 +30,7 @@ export const addressForm = addressEngine.defineForm({
 			id: 'main',
 			title: 'Address',
 			elements: [
-				{ $type: 'text', name: 'postalCode', rules: [{ type: 'postalCode', message: 'Enter a postal code' }] },
+				{ $type: 'text', name: 'postalCode', rules: [{ $type: 'postalCode', message: 'Enter a postal code' }] },
 			],
 		},
 	],

@@ -17,8 +17,8 @@ export const registrationDemoConfig: FormConfig = {
 					label: 'Email',
 					inputType: 'email',
 					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Enter a valid email' },
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Enter a valid email' },
 					],
 				},
 			],

@@ -41,7 +41,7 @@ export function createFixture() {
 		validations: [
 			{
 				$type: 'boom',
-				schema: z.object({ type: z.literal('boom') }),
+				schema: z.object({ $type: z.literal('boom') }),
 				metadata: { name: 'Boom' },
 				category: 'generic',
 				handler: () =>
@@ -53,7 +53,7 @@ export function createFixture() {
 			},
 			{
 				$type: 'gate',
-				schema: z.object({ type: z.literal('gate') }),
+				schema: z.object({ $type: z.literal('gate') }),
 				metadata: { name: 'Gate' },
 				category: 'generic',
 				handler: () =>
@@ -92,7 +92,7 @@ export function createFixture() {
 	return { engine, seen, failing, slow, gate };
 }
 
-const required = [{ type: 'required' }];
+const required = [{ $type: 'required' }];
 const input = (name: string, extra: Record<string, unknown> = {}) => ({ $type: 'input', name, ...extra });
 
 const probes = (id: string) => [

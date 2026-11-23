@@ -14,7 +14,7 @@ export interface ValidateFormOptions {
 	getElement: (id: string) => ElementRegistration | undefined;
 	getAction: (id: string) => AnyActionRegistration | undefined;
 	/** Checks a rule of an element against its registration; the engine passes its validation registry's `check`. */
-	checkRule: (rule: { type: string }) => RuleCheck;
+	checkRule: (rule: { $type: string }) => RuleCheck;
 	/** Appearance axes the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
 	axes?: LayoutTheme['axes'];
 	/** The application's schema of the submitted values, which the normalized form carries for the runtime to parse with. */

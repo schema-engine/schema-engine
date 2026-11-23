@@ -23,8 +23,8 @@ const config: FormConfig = {
 					id: 'password',
 					name: 'password',
 					rules: [
-						{ type: 'required', message: 'Password is required' },
-						{ type: 'minLength', value: 8, message: 'Use at least 8 characters' },
+						{ $type: 'required', message: 'Password is required' },
+						{ $type: 'minLength', value: 8, message: 'Use at least 8 characters' },
 					],
 				},
 			],

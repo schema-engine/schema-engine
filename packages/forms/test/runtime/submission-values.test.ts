@@ -157,7 +157,7 @@ describe('the check of submitted values', () => {
 					{
 						id: 'main',
 						title: 'Main',
-						elements: [{ $type: 'stars', name: 'rating', rules: [{ type: 'required' }] }],
+						elements: [{ $type: 'stars', name: 'rating', rules: [{ $type: 'required' }] }],
 					},
 				],
 			}),

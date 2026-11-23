@@ -19,87 +19,87 @@ describe('Validation', () => {
 	describe('ValidationPresets', () => {
 		test('should generate string validations', () => {
 			const required = ValidationPresets.string.required();
-			expect(required.type).toBe('required');
+			expect(required.$type).toBe('required');
 
 			const email = ValidationPresets.string.email();
-			expect(email.type).toBe('email');
+			expect(email.$type).toBe('email');
 
 			const minLength = ValidationPresets.string.minLength(3);
-			expect(minLength.type).toBe('minLength');
+			expect(minLength.$type).toBe('minLength');
 
 			const maxLength = ValidationPresets.string.maxLength(10);
-			expect(maxLength.type).toBe('maxLength');
+			expect(maxLength.$type).toBe('maxLength');
 
 			const pattern = ValidationPresets.string.pattern('^[a-z]+$');
-			expect(pattern.type).toBe('pattern');
+			expect(pattern.$type).toBe('pattern');
 
 			const url = ValidationPresets.string.url();
-			expect(url.type).toBe('url');
+			expect(url.$type).toBe('url');
 
 			const uuid = ValidationPresets.string.uuid();
-			expect(uuid.type).toBe('uuid');
+			expect(uuid.$type).toBe('uuid');
 
 			const cuid = ValidationPresets.string.cuid();
-			expect(cuid.type).toBe('cuid');
+			expect(cuid.$type).toBe('cuid');
 
 			const cuid2 = ValidationPresets.string.cuid2();
-			expect(cuid2.type).toBe('cuid2');
+			expect(cuid2.$type).toBe('cuid2');
 
 			const ulid = ValidationPresets.string.ulid();
-			expect(ulid.type).toBe('ulid');
+			expect(ulid.$type).toBe('ulid');
 
 			const hex = ValidationPresets.string.hex();
-			expect(hex.type).toBe('hex');
+			expect(hex.$type).toBe('hex');
 		});
 
 		test('should generate number validations', () => {
 			const min = ValidationPresets.number.min(5);
-			expect(min.type).toBe('min');
+			expect(min.$type).toBe('min');
 
 			const max = ValidationPresets.number.max(10);
-			expect(max.type).toBe('max');
+			expect(max.$type).toBe('max');
 		});
 
 		test('should generate array validations', () => {
 			const minItems = ValidationPresets.array.minItems(2);
-			expect(minItems.type).toBe('minItems');
+			expect(minItems.$type).toBe('minItems');
 
 			const maxItems = ValidationPresets.array.maxItems(5);
-			expect(maxItems.type).toBe('maxItems');
+			expect(maxItems.$type).toBe('maxItems');
 
 			const nonEmpty = ValidationPresets.array.nonEmpty();
-			expect(nonEmpty.type).toBe('minItems');
+			expect(nonEmpty.$type).toBe('minItems');
 			expect(nonEmpty.value).toBe(1);
 		});
 
 		test('should generate network validations', () => {
 			const ipv4 = ValidationPresets.network.ipv4();
-			expect(ipv4.type).toBe('ipv4');
+			expect(ipv4.$type).toBe('ipv4');
 
 			const ipv6 = ValidationPresets.network.ipv6();
-			expect(ipv6.type).toBe('ipv6');
+			expect(ipv6.$type).toBe('ipv6');
 		});
 
 		test('should generate date validations', () => {
 			const datetime = ValidationPresets.date.datetime();
-			expect(datetime.type).toBe('datetime');
+			expect(datetime.$type).toBe('datetime');
 
 			const date = ValidationPresets.date.date();
-			expect(date.type).toBe('date');
+			expect(date.$type).toBe('date');
 
 			const time = ValidationPresets.date.time();
-			expect(time.type).toBe('time');
+			expect(time.$type).toBe('time');
 		});
 
 		test('should generate async validations', () => {
 			const async = ValidationPresets.custom.async('/api/validate');
-			expect(async.type).toBe('async');
+			expect(async.$type).toBe('async');
 			expect(async.url).toBe('/api/validate');
 		});
 	});
 
 	describe('built-in rule contracts', () => {
-		function parse(rule: { type: string; [key: string]: unknown }, value: unknown) {
+		function parse(rule: { $type: string; [key: string]: unknown }, value: unknown) {
 			return z.safeParse(createZodSchemaFromRules([rule], createValidationContext(), validationRegistry), value);
 		}
 
@@ -112,29 +112,30 @@ describe('Validation', () => {
 		});
 
 		test('email, URL, UUID, CIDR, phone, and datetime options affect their schemas', () => {
-			expect(parse({ type: 'email', pattern: '^x@y\\.com$' }, 'a@b.co').success).toBe(false);
-			expect(parse({ type: 'email', pattern: '^x@y\\.com$' }, 'x@y.com').success).toBe(true);
+			expect(parse({ $type: 'email', pattern: '^x@y\\.com$' }, 'a@b.co').success).toBe(false);
+			expect(parse({ $type: 'email', pattern: '^x@y\\.com$' }, 'x@y.com').success).toBe(true);
 
 			expect(
-				parse({ type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'http://example.com').success,
+				parse({ $type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'http://example.com').success,
 			).toBe(false);
 			expect(
-				parse({ type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'https://example.com').success,
+				parse({ $type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'https://example.com')
+					.success,
 			).toBe(true);
 			expect(
-				parse({ type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'https://other.com').success,
+				parse({ $type: 'url', protocol: '^https$', hostname: '^example\\.com$' }, 'https://other.com').success,
 			).toBe(false);
 
-			expect(parse({ type: 'uuid', version: 'v4' }, 'f47ac10b-58cc-11cf-a447-001122334455').success).toBe(false);
-			expect(parse({ type: 'uuid', version: 'v4' }, 'f47ac10b-58cc-41cf-a447-001122334455').success).toBe(true);
+			expect(parse({ $type: 'uuid', version: 'v4' }, 'f47ac10b-58cc-11cf-a447-001122334455').success).toBe(false);
+			expect(parse({ $type: 'uuid', version: 'v4' }, 'f47ac10b-58cc-41cf-a447-001122334455').success).toBe(true);
 
-			expect(parse({ type: 'cidr', version: 'v4' }, '2001:db8::/64').success).toBe(false);
-			expect(parse({ type: 'cidr', version: 'v4' }, '192.168.0.0/24').success).toBe(true);
-			expect(parse({ type: 'phone' }, '+15555555555').success).toBe(true);
-			expect(parse({ type: 'phone' }, 'not-a-phone-number').success).toBe(false);
+			expect(parse({ $type: 'cidr', version: 'v4' }, '2001:db8::/64').success).toBe(false);
+			expect(parse({ $type: 'cidr', version: 'v4' }, '192.168.0.0/24').success).toBe(true);
+			expect(parse({ $type: 'phone' }, '+15555555555').success).toBe(true);
+			expect(parse({ $type: 'phone' }, 'not-a-phone-number').success).toBe(false);
 
-			expect(parse({ type: 'datetime', local: false }, '2024-01-01T12:00:00').success).toBe(false);
-			expect(parse({ type: 'datetime', local: true }, '2024-01-01T12:00:00').success).toBe(true);
+			expect(parse({ $type: 'datetime', local: false }, '2024-01-01T12:00:00').success).toBe(false);
+			expect(parse({ $type: 'datetime', local: true }, '2024-01-01T12:00:00').success).toBe(true);
 		});
 	});
 
@@ -155,22 +156,24 @@ describe('Validation', () => {
 				},
 			]);
 
-			expect(getValidationRulesForElement({ $type: 'phone-input' }, customRegistry)).toEqual([{ type: 'phone' }]);
+			expect(getValidationRulesForElement({ $type: 'phone-input' }, customRegistry)).toEqual([
+				{ $type: 'phone' },
+			]);
 			expect(
 				getValidationRulesForElement(
 					{
 						$type: 'phone-input',
-						rules: [{ type: 'required', message: 'Phone number is required' }],
+						rules: [{ $type: 'required', message: 'Phone number is required' }],
 					},
 					customRegistry,
 				),
-			).toEqual([{ type: 'required', message: 'Phone number is required' }, { type: 'phone' }]);
+			).toEqual([{ $type: 'required', message: 'Phone number is required' }, { $type: 'phone' }]);
 			expect(getValidationRulesForElement({ $type: 'input' }, customRegistry)).toBeUndefined();
 		});
 
 		test('uses the native IPv4 validator and preserves its configured message', () => {
 			const schema = createZodSchemaFromRules(
-				[{ type: 'ipv4', message: 'Enter an IPv4 address' }],
+				[{ $type: 'ipv4', message: 'Enter an IPv4 address' }],
 				createValidationContext(),
 				validationRegistry,
 			);
@@ -182,7 +185,7 @@ describe('Validation', () => {
 
 		test('uses the native IPv6 validator and preserves scoped addresses', () => {
 			const schema = createZodSchemaFromRules(
-				[{ type: 'ipv6', message: 'Enter an IPv6 address' }],
+				[{ $type: 'ipv6', message: 'Enter an IPv6 address' }],
 				createValidationContext(),
 				validationRegistry,
 			);
@@ -320,7 +323,7 @@ describe('Validation', () => {
 			expect(fields).toEqual([
 				{
 					path: 'address.street',
-					rules: [{ type: 'required', message: 'Street is required' }],
+					rules: [{ $type: 'required', message: 'Street is required' }],
 				},
 			]);
 		});
@@ -328,14 +331,14 @@ describe('Validation', () => {
 
 	describe('Array Validation', () => {
 		test('should create minItems validation rule', () => {
-			const rule: MinItemsRule = { type: 'minItems', value: 2, message: 'Min 2 items' };
+			const rule: MinItemsRule = { $type: 'minItems', value: 2, message: 'Min 2 items' };
 			const schema = createZodSchemaFromRules([rule], createValidationContext(), validationRegistry);
 			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(() => schema.parse([1])).toThrow('Min 2 items');
 		});
 
 		test('should create maxItems validation rule', () => {
-			const rule: MaxItemsRule = { type: 'maxItems', value: 2, message: 'Max 2 items' };
+			const rule: MaxItemsRule = { $type: 'maxItems', value: 2, message: 'Max 2 items' };
 			const schema = createZodSchemaFromRules([rule], createValidationContext(), validationRegistry);
 			expect(schema.parse([1, 2])).toEqual([1, 2]);
 			expect(() => schema.parse([1, 2, 3])).toThrow('Max 2 items');
@@ -343,8 +346,8 @@ describe('Validation', () => {
 
 		test('should combine array validation rules', () => {
 			const rules: [MinItemsRule, MaxItemsRule] = [
-				{ type: 'minItems', value: 2 },
-				{ type: 'maxItems', value: 4 },
+				{ $type: 'minItems', value: 2 },
+				{ $type: 'maxItems', value: 4 },
 			];
 			const schema = createZodSchemaFromRules(rules, createValidationContext(), validationRegistry);
 			expect(schema.parse([1, 2])).toEqual([1, 2]);

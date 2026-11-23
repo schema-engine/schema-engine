@@ -43,7 +43,7 @@ test('the documented ABN rule delegates to the illustrative validator', () => {
 		exports: {},
 		require: (name: string) => (name === 'zod/mini' ? z : { createFormEngine }),
 	}) as ReturnType<typeof createFormEngine>;
-	const schema = engine.getValidationRegistry().createSchema({ type: 'australianABN' }, createValidationContext());
+	const schema = engine.getValidationRegistry().createSchema({ $type: 'australianABN' }, createValidationContext());
 	expect(schema?.safeParse('example-valid').success).toBe(true);
 	expect(schema?.safeParse('example-invalid').success).toBe(false);
 });
@@ -52,7 +52,7 @@ test('the documented postal code rule reports its message through the engine', (
 	const { engine, postalCodeField } = runInNewContext(`${example('### Simple Custom Validation')}\nexports;`, {
 		exports: {},
 		require: (name: string) => (name === 'zod/mini' ? z : { createFormEngine }),
-	}) as { engine: ReturnType<typeof createFormEngine>; postalCodeField: { rules: Array<{ type: string }> } };
+	}) as { engine: ReturnType<typeof createFormEngine>; postalCodeField: { rules: Array<{ $type: string }> } };
 	const schema = engine.getValidationRegistry().createSchema(postalCodeField.rules[1], createValidationContext());
 	expect(schema?.safeParse('12345-6789').success).toBe(true);
 	expect(schema?.safeParse('nope').error?.issues[0]?.message).toBe('Please enter a valid postal code');
@@ -72,17 +72,17 @@ test('the documented form uses a registered rule in the rules of an element, and
 		form: { steps: Array<{ elements: Array<{ rules: unknown[] }> }> };
 	};
 	expect(form.steps[0]?.elements[0]?.rules).toEqual([
-		{ type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' },
+		{ $type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' },
 	]);
 	const field = (rule: unknown) => ({
 		id: 'address',
 		steps: [{ id: 'main', title: 'Address', elements: [{ $type: 'text', id: 'zip', name: 'zip', rules: [rule] }] }],
 	});
-	expect(engine.safeValidateForm(field({ type: 'postalcode' }))).toMatchObject({
+	expect(engine.safeValidateForm(field({ $type: 'postalcode' }))).toMatchObject({
 		success: false,
 		issues: [{ message: /^Unknown validation rule 'postalcode'\. Register it with/ }],
 	});
-	expect(engine.safeValidateForm(field({ type: 'postalCode', country: 'mx' }))).toMatchObject({
+	expect(engine.safeValidateForm(field({ $type: 'postalCode', country: 'mx' }))).toMatchObject({
 		success: false,
 		issues: [{ path: ['steps', 0, 'elements', 0, 'rules', 0, 'country'] }],
 	});
@@ -125,15 +125,15 @@ function runPattern(heading: string, index = 0): Record<string, any> {
 	return exports;
 }
 
-function parse(engine: ReturnType<typeof createFormEngine>, rule: { type: string }, value: unknown, context = {}) {
+function parse(engine: ReturnType<typeof createFormEngine>, rule: { $type: string }, value: unknown, context = {}) {
 	const schema = engine.getValidationRegistry().createSchema(rule, createValidationContext(context));
-	if (!schema) throw new Error(`${rule.type} is not registered`);
+	if (!schema) throw new Error(`${rule.$type} is not registered`);
 	return schema.safeParse(value);
 }
 
 test('the length range pattern enforces the documented bounds', () => {
 	const { engine } = runPattern('### Validation with Parameters');
-	const rule = { type: 'lengthRange', value: { min: 3, max: 5 } };
+	const rule = { $type: 'lengthRange', value: { min: 3, max: 5 } };
 	expect(parse(engine, rule, 'abcd').success).toBe(true);
 	expect(parse(engine, rule, 'ab').success).toBe(false);
 	expect(parse(engine, rule, 'abcdef').success).toBe(false);
@@ -141,8 +141,8 @@ test('the length range pattern enforces the documented bounds', () => {
 
 test('the credit card pattern accepts a Luhn-valid number and rejects a changed digit', () => {
 	const { engine } = runPattern('### Validation with Parameters', 1);
-	expect(parse(engine, { type: 'creditCard' }, '4242 4242 4242 4242').success).toBe(true);
-	expect(parse(engine, { type: 'creditCard' }, '4242 4242 4242 4241').success).toBe(false);
+	expect(parse(engine, { $type: 'creditCard' }, '4242 4242 4242 4242').success).toBe(true);
+	expect(parse(engine, { $type: 'creditCard' }, '4242 4242 4242 4241').success).toBe(false);
 });
 
 test('the company email pattern accepts only the listed domains', () => {
@@ -162,9 +162,9 @@ test('the password strength pattern applies its documented requirements', () => 
 test('the confirm password pattern reads its sibling through the context', () => {
 	const { engine } = runPattern('## Cross-Field Validations');
 	const context = { values: { password: 'secret' }, fieldPath: 'confirm' };
-	expect(parse(engine, { type: 'confirmPassword' }, 'secret', context).success).toBe(true);
-	expect(parse(engine, { type: 'confirmPassword' }, 'other', context).success).toBe(false);
-	expect(engine.getValidationRegistry().getRuleDependencies({ type: 'confirmPassword' })).toEqual(['password']);
+	expect(parse(engine, { $type: 'confirmPassword' }, 'secret', context).success).toBe(true);
+	expect(parse(engine, { $type: 'confirmPassword' }, 'other', context).success).toBe(false);
+	expect(engine.getValidationRegistry().getRuleDependencies({ $type: 'confirmPassword' })).toEqual(['password']);
 });
 
 test.each([

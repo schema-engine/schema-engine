@@ -236,7 +236,7 @@ describe('the wizard page', () => {
 				{
 					id: 'one',
 					title: 'One',
-					elements: [{ $type: 'input', id: 'a', name: 'a', rules: [{ type: 'required' }] }],
+					elements: [{ $type: 'input', id: 'a', name: 'a', rules: [{ $type: 'required' }] }],
 				},
 				{ id: 'two', title: 'Two', elements: [] },
 			],

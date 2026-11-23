@@ -15,7 +15,7 @@ const meta = {
 				name: 'email',
 				label: 'Email',
 				inputType: 'email',
-				rules: [{ type: 'required', message: 'Email is required' }],
+				rules: [{ $type: 'required', message: 'Email is required' }],
 			},
 			{ $type: 'submission-alert', id: 'alert', name: 'alert', successMessage: 'Saved successfully' },
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Save' },

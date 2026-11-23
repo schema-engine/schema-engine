@@ -41,7 +41,7 @@ export const WithValidation: Story = {
 				name: 'files',
 				label: 'Upload Documents',
 				maxFiles: 1,
-				rules: [{ type: 'required', message: 'Upload at least one document' }],
+				rules: [{ $type: 'required', message: 'Upload at least one document' }],
 			},
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Submit' },
 		]),

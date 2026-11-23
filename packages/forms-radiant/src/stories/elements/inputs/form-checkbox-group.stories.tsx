@@ -64,7 +64,7 @@ export const WithValidation: Story = {
 				name: 'skills',
 				label: 'Skills',
 				options: [{ label: 'React', value: 'react' }],
-				rules: [{ type: 'required', message: 'Select at least one skill' }],
+				rules: [{ $type: 'required', message: 'Select at least one skill' }],
 			},
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Save' },
 		]),

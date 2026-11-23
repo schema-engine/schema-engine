@@ -112,7 +112,7 @@ export const WithValidation: Story = {
 				label: 'Favorite Language',
 				placeholder: 'Select a language',
 				options: languages,
-				rules: [{ type: 'required', message: 'Language is required' }],
+				rules: [{ $type: 'required', message: 'Language is required' }],
 			},
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Submit' },
 		]),

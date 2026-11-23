@@ -533,7 +533,7 @@ describe('validateFormConfig', () => {
 				$type: z.literal('field'),
 				id: z.string(),
 				name: z.string(),
-				rules: z.optional(z.array(z.looseObject({ type: z.string() }))),
+				rules: z.optional(z.array(z.looseObject({ $type: z.string() }))),
 			}),
 			metadata: { name: 'Field', category: 'input' },
 			render: () => null,
@@ -548,12 +548,12 @@ describe('validateFormConfig', () => {
 						id: 'main',
 						title: 'Main',
 						elements: [
-							{ $type: 'field', id: 'quantity', name: 'quantity', rules: [{ type: 'unregistered' }] },
+							{ $type: 'field', id: 'quantity', name: 'quantity', rules: [{ $type: 'unregistered' }] },
 						],
 					},
 				],
 			}),
-		).toThrow(/\(quantity\)\.rules\[0\]\.type: Unknown validation rule 'unregistered'/);
+		).toThrow(/\(quantity\)\.rules\[0\].\$type: Unknown validation rule 'unregistered'/);
 	});
 
 	test('rejects a rule its handler cannot build, rather than skipping it when a user types', () => {
@@ -564,14 +564,14 @@ describe('validateFormConfig', () => {
 				$type: z.literal('field'),
 				id: z.string(),
 				name: z.string(),
-				rules: z.optional(z.array(z.looseObject({ type: z.string() }))),
+				rules: z.optional(z.array(z.looseObject({ $type: z.string() }))),
 			}),
 			metadata: { name: 'Field', category: 'input' },
 			render: () => null,
 		});
 		const fragile = {
 			$type: 'fragile',
-			schema: z.looseObject({ type: z.literal('fragile') }),
+			schema: z.looseObject({ $type: z.literal('fragile') }),
 			metadata: { name: 'Fragile' },
 			category: 'string',
 			handler: () => {
@@ -587,11 +587,11 @@ describe('validateFormConfig', () => {
 					{
 						id: 'main',
 						title: 'Main',
-						elements: [{ $type: 'field', id: 'code', name: 'code', rules: [{ type: 'fragile' }] }],
+						elements: [{ $type: 'field', id: 'code', name: 'code', rules: [{ $type: 'fragile' }] }],
 					},
 				],
 			}),
-		).toThrow(/\(code\)\.rules\[0\]\.type: Validation rule 'fragile' could not be built: no good/);
+		).toThrow(/\(code\)\.rules\[0\].\$type: Validation rule 'fragile' could not be built: no good/);
 	});
 
 	test('rejects a rule whose options its registration refuses, at the key at fault', () => {
@@ -602,7 +602,7 @@ describe('validateFormConfig', () => {
 				$type: z.literal('field'),
 				id: z.string(),
 				name: z.string(),
-				rules: z.optional(z.array(z.looseObject({ type: z.string() }))),
+				rules: z.optional(z.array(z.looseObject({ $type: z.string() }))),
 			}),
 			metadata: { name: 'Field', category: 'input' },
 			render: () => null,
@@ -615,7 +615,7 @@ describe('validateFormConfig', () => {
 				{
 					id: 'main',
 					title: 'Main',
-					elements: [{ $type: 'field', id: 'code', name: 'code', rules: [{ type: 'pattern', value: '(' }] }],
+					elements: [{ $type: 'field', id: 'code', name: 'code', rules: [{ $type: 'pattern', value: '(' }] }],
 				},
 			],
 		});

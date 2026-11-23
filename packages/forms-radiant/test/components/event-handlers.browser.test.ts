@@ -84,7 +84,7 @@ test('Enter on an early wizard step does not submit and shows no errors on later
 			view: { $type: 'wizard' },
 			steps: [
 				{ id: 'one', title: 'One', elements: [text('first')] },
-				{ id: 'two', title: 'Two', elements: [{ ...text('second'), rules: [{ type: 'required' }] }] },
+				{ id: 'two', title: 'Two', elements: [{ ...text('second'), rules: [{ $type: 'required' }] }] },
 				{ id: 'three', title: 'Three', elements: [text('third')] },
 			],
 		},
@@ -134,7 +134,7 @@ test('Enter in the only text input of a wizard goes to the next step instead of 
 	expect(invalid).toBe(0);
 });
 
-const required = [{ type: 'required', message: 'Required' }];
+const required = [{ $type: 'required', message: 'Required' }];
 
 test('a failed Next shows the error and focuses the field, outside a submit', async () => {
 	const host = await mount({

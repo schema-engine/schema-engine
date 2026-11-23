@@ -25,93 +25,93 @@ import type {
 
 export const ValidationPresets = {
 	string: {
-		required: (message?: string): RequiredRule => ({ type: 'required', message }),
+		required: (message?: string): RequiredRule => ({ $type: 'required', message }),
 		email: (message?: string): EmailRule => ({
-			type: 'email',
+			$type: 'email',
 			message,
 		}),
 		minLength: (value: number, message?: string): MinLengthRule => ({
-			type: 'minLength',
+			$type: 'minLength',
 			value,
 			message,
 		}),
 		maxLength: (value: number, message?: string): MaxLengthRule => ({
-			type: 'maxLength',
+			$type: 'maxLength',
 			value,
 			message,
 		}),
 		pattern: (pattern: string, message?: string): PatternRule => ({
-			type: 'pattern',
+			$type: 'pattern',
 			value: pattern,
 			message,
 		}),
-		url: (message?: string): UrlRule => ({ type: 'url', message }),
-		uuid: (message?: string): UuidRule => ({ type: 'uuid', message }),
+		url: (message?: string): UrlRule => ({ $type: 'url', message }),
+		uuid: (message?: string): UuidRule => ({ $type: 'uuid', message }),
 		uuidv4: (message?: string): UuidRule => ({
-			type: 'uuid',
+			$type: 'uuid',
 			version: 'v4',
 			message,
 		}),
-		cuid: (message?: string): CuidRule => ({ type: 'cuid', message }),
-		cuid2: (message?: string): Cuid2Rule => ({ type: 'cuid2', message }),
-		ulid: (message?: string): UlidRule => ({ type: 'ulid', message }),
-		hex: (message?: string): HexRule => ({ type: 'hex', message }),
+		cuid: (message?: string): CuidRule => ({ $type: 'cuid', message }),
+		cuid2: (message?: string): Cuid2Rule => ({ $type: 'cuid2', message }),
+		ulid: (message?: string): UlidRule => ({ $type: 'ulid', message }),
+		hex: (message?: string): HexRule => ({ $type: 'hex', message }),
 	},
 	number: {
-		required: (message?: string): RequiredRule => ({ type: 'required', message }),
+		required: (message?: string): RequiredRule => ({ $type: 'required', message }),
 		min: (value: number, message?: string): MinRule => ({
-			type: 'min',
+			$type: 'min',
 			value,
 			message,
 		}),
 		max: (value: number, message?: string): MaxRule => ({
-			type: 'max',
+			$type: 'max',
 			value,
 			message,
 		}),
 	},
 	boolean: {
-		required: (message?: string): RequiredRule => ({ type: 'required', message }),
+		required: (message?: string): RequiredRule => ({ $type: 'required', message }),
 	},
 	array: {
-		required: (message?: string): RequiredRule => ({ type: 'required', message }),
+		required: (message?: string): RequiredRule => ({ $type: 'required', message }),
 		minItems: (value: number, message?: string): MinItemsRule => ({
-			type: 'minItems',
+			$type: 'minItems',
 			value,
 			message,
 		}),
 		maxItems: (value: number, message?: string): MaxItemsRule => ({
-			type: 'maxItems',
+			$type: 'maxItems',
 			value,
 			message,
 		}),
 		nonEmpty: (message?: string): MinItemsRule => ({
-			type: 'minItems',
+			$type: 'minItems',
 			value: 1,
 			message,
 		}),
 	},
 	network: {
 		ipv4: (message?: string): Ipv4Rule => ({
-			type: 'ipv4',
+			$type: 'ipv4',
 			message,
 		}),
 		ipv6: (message?: string): Ipv6Rule => ({
-			type: 'ipv6',
+			$type: 'ipv6',
 			message,
 		}),
 	},
 	date: {
 		datetime: (message?: string): DateTimeRule => ({
-			type: 'datetime',
+			$type: 'datetime',
 			message,
 		}),
 		date: (message?: string): DateRule => ({
-			type: 'date',
+			$type: 'date',
 			message,
 		}),
 		time: (message?: string): TimeRule => ({
-			type: 'time',
+			$type: 'time',
 			message,
 		}),
 	},
@@ -125,7 +125,7 @@ export const ValidationPresets = {
 	 */
 	relate: {
 		matches: (field: string, message?: string): RelateRule => ({
-			type: 'relate',
+			$type: 'relate',
 			fields: [field],
 			assert: 'allEqual',
 			includeSelf: true,
@@ -134,7 +134,7 @@ export const ValidationPresets = {
 			message,
 		}),
 		after: (field: string, message?: string): RelateRule => ({
-			type: 'relate',
+			$type: 'relate',
 			fields: [field],
 			assert: 'descending',
 			includeSelf: true,
@@ -143,7 +143,7 @@ export const ValidationPresets = {
 			message,
 		}),
 		before: (field: string, message?: string): RelateRule => ({
-			type: 'relate',
+			$type: 'relate',
 			fields: [field],
 			assert: 'ascending',
 			includeSelf: true,
@@ -152,7 +152,7 @@ export const ValidationPresets = {
 			message,
 		}),
 		atLeastOneOf: (fields: string[], message?: string): RelateRule => ({
-			type: 'relate',
+			$type: 'relate',
 			fields,
 			assert: 'atLeastOne',
 			includeSelf: false,
@@ -161,7 +161,7 @@ export const ValidationPresets = {
 			message,
 		}),
 		mutuallyExclusive: (fields: string[], message?: string): RelateRule => ({
-			type: 'relate',
+			$type: 'relate',
 			fields,
 			assert: 'exactlyOne',
 			includeSelf: false,
@@ -170,7 +170,7 @@ export const ValidationPresets = {
 			message,
 		}),
 		allOrNone: (fields: string[], message?: string): RelateRule => ({
-			type: 'relate',
+			$type: 'relate',
 			fields,
 			assert: 'allOrNone',
 			includeSelf: false,
@@ -191,7 +191,7 @@ export const ValidationPresets = {
 				dependencies?: string[];
 			},
 		): AsyncRule => ({
-			type: 'async',
+			$type: 'async',
 			url,
 			method: options?.method || 'POST',
 			headers: options?.headers,

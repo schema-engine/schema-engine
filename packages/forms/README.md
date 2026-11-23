@@ -469,7 +469,7 @@ slot config when `view.$type` is set.
 ## Engine validation
 
 Validation rules are registrations like elements, recipes and actions: `$type`
-(the `type` authors write in a field's `rules`), `schema` (a Standard Schema for the
+(the `$type` authors write in a field's `rules`), `schema` (a Standard Schema for the
 rule object), `metadata`, and the handler fields `category`, `handler`, and optionally
 `dependsOn` and `defaultFor`. The engine builds a read-only registry
 (`engine.getValidationRegistry()`, with `kind` `'Validation'` and no `register` or `clear`) from, in
@@ -486,17 +486,17 @@ import { createFormEngine } from '@schema-engine/forms';
 
 const postcode = {
 	$type: 'postcode',
-	schema: z.object({ type: z.literal('postcode'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('postcode'), message: z.optional(z.string()) }),
 	metadata: { name: 'Postcode' },
 	category: 'string',
-	handler: (rule: { type: 'postcode'; message?: string }) =>
+	handler: (rule: { $type: 'postcode'; message?: string }) =>
 		z.string().check(z.regex(/^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$/, rule.message ?? 'Invalid postcode')),
 } as const;
 
 const engine = createFormEngine({ validations: [postcode] });
 ```
 
-Field rules then use it as `{ type: 'postcode', message: '...' }`. Rule objects keep
+Field rules then use it as `{ $type: 'postcode', message: '...' }`. Rule objects keep
 `type`; only the registration is keyed by `$type`. See the
 [validation guide](./src/schemas/validation/README.md) and the
 [custom validations page](../../apps/docs/src/content/docs/forms/validation-custom.mdx).
@@ -533,7 +533,7 @@ Required rules, `relate`, constraint emptiness operators, and async skip checks
 share the same empty values: `undefined`, `null`, `''`, and `[]`. `false` and
 `0` count as present. `validateForm` and `validateElement` reject rules without
 a registered handler with a `FormValidationError` naming the field and rule, at the path of that
-rule's `type`.
+rule's `$type`.
 The `relate` string and date bases coerce primitive values and `Date` instances;
 arbitrary objects are left unchanged for string comparisons and are invalid dates.
 

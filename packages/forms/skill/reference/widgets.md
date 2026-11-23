@@ -390,7 +390,7 @@ const profile = engine.defineForm({
 					name: 'email',
 					label: 'Email',
 					inputType: 'email',
-					rules: [{ type: 'required', message: 'Email is required' }],
+					rules: [{ $type: 'required', message: 'Email is required' }],
 				},
 				{ $type: 'stars', id: 'stars', name: 'stars', label: 'Stars' },
 			],

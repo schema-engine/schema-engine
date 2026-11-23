@@ -23,7 +23,7 @@ const config = engine.validateForm({
 					label: 'Contacts',
 					minItems: 2,
 					initialValues: { role: 'Viewer' },
-					rules: [{ type: 'minItems', value: 3, message: 'Add at least three contacts' }],
+					rules: [{ $type: 'minItems', value: 3, message: 'Add at least three contacts' }],
 					elements: [
 						{
 							$type: 'input',

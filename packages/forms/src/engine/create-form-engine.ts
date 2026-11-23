@@ -32,7 +32,7 @@ export interface CreateFormEngineOptions<
 	 * `$type` replaces an earlier one without a warning, and each `schema` must be a Standard Schema or
 	 * the build throws. These come after the validations elements declare, so they win over them.
 	 * {@link FormEngine.extend} inherits them. Rule configs are not typed per engine: the rule objects in
-	 * a field's `rules` keep their `type` string.
+	 * a field's `rules` keep their `$type` string.
 	 */
 	validations?: readonly ValidationRegistrationConstraint[];
 	/**

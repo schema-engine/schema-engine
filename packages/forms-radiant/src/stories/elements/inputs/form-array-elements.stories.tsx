@@ -148,7 +148,7 @@ export const WithValidation: Story = {
 							name: 'refName',
 							label: 'Reference name',
 							placeholder: 'Alex Rivera',
-							rules: [{ type: 'required', message: 'Name is required' }],
+							rules: [{ $type: 'required', message: 'Name is required' }],
 						},
 						{
 							$type: 'input',
@@ -157,7 +157,7 @@ export const WithValidation: Story = {
 							name: 'refEmail',
 							label: 'Email',
 							placeholder: 'alex@company.com',
-							rules: [{ type: 'required', message: 'Email is required' }],
+							rules: [{ $type: 'required', message: 'Email is required' }],
 						},
 					],
 				},
@@ -332,7 +332,7 @@ export const MinimumItemsValidation: Story = {
 				id: 'contacts',
 				name: 'contacts',
 				label: 'Contacts',
-				rules: [{ type: 'minItems', value: 2, message: 'Add at least two contacts' }],
+				rules: [{ $type: 'minItems', value: 2, message: 'Add at least two contacts' }],
 				addButtonText: 'Add contact',
 				elements: [
 					{

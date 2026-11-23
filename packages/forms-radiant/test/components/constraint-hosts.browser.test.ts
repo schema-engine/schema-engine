@@ -163,7 +163,7 @@ test('a fieldset require reaches its children and releases them', async () => {
 test('a child keeps its own required marker after live constraints', async () => {
 	const { form, city, wrapper, cleanup } = await mountFieldSet({
 		constraints: [{ field: 'mode', operator: 'equals', value: 'hide', action: 'hide' }],
-		elements: [{ $type: 'input', id: 'city', name: 'city', label: 'City', rules: [{ type: 'required' }] }],
+		elements: [{ $type: 'input', id: 'city', name: 'city', label: 'City', rules: [{ $type: 'required' }] }],
 	});
 	try {
 		containerOf(form.host).setValue('mode', 'hide');

@@ -63,7 +63,7 @@ const formConfig: FormConfig = {
 					id: 'name',
 					name: 'name',
 					label: 'Full Name',
-					rules: [{ type: 'required', message: 'Name is required' }],
+					rules: [{ $type: 'required', message: 'Name is required' }],
 				},
 				{
 					$type: 'input',
@@ -72,8 +72,8 @@ const formConfig: FormConfig = {
 					label: 'Email',
 					inputType: 'email',
 					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Invalid email' },
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Invalid email' },
 					],
 				},
 				{ $type: 'submit', id: 'submit', name: 'submit', label: 'Send' },

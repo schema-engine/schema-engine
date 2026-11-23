@@ -10,7 +10,7 @@ const profile = engine.defineForm({
 			id: 'main',
 			title: 'Profile',
 			elements: [
-				{ $type: 'text', name: 'name', rules: [{ type: 'required' }] },
+				{ $type: 'text', name: 'name', rules: [{ $type: 'required' }] },
 				{ $type: 'rating', name: 'stars' },
 			],
 		},

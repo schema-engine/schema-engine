@@ -63,12 +63,12 @@ const config = engine.defineForm({
 			id: 'account',
 			title: 'Account',
 			elements: [
-				{ $type: 'input', id: 'email', name: 'email', rules: [{ type: 'required', id: 'email-required' }] },
+				{ $type: 'input', id: 'email', name: 'email', rules: [{ $type: 'required', id: 'email-required' }] },
 				{
 					$type: 'input',
 					id: 'password',
 					name: 'password',
-					rules: [{ type: 'minLength', id: 'password-min', value: 8 }],
+					rules: [{ $type: 'minLength', id: 'password-min', value: 8 }],
 				},
 			],
 		},
@@ -228,7 +228,7 @@ const profile = engine.defineForm({
 			id: 'main',
 			title: 'Profile',
 			elements: [
-				{ $type: 'text', name: 'name', rules: [{ type: 'required' }] },
+				{ $type: 'text', name: 'name', rules: [{ $type: 'required' }] },
 				{ $type: 'rating', name: 'stars' },
 			],
 		},

@@ -290,7 +290,7 @@ export class FormEngine<
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
 			getElement: (id: string) => this.getElement(id),
 			getAction: (id: string) => this.getAction(id),
-			checkRule: (rule: { type: string }) => this.validationRegistry.check(rule),
+			checkRule: (rule: { $type: string }) => this.validationRegistry.check(rule),
 			axes: this.layout.axes,
 		};
 	}

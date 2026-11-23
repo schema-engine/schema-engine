@@ -19,7 +19,7 @@ const field = defineInput({
 		id: z.string(),
 		name: z.string(),
 		grid: z.optional(ElementGridConfigSchema),
-		rules: z.optional(z.array(z.looseObject({ type: z.string() }))),
+		rules: z.optional(z.array(z.looseObject({ $type: z.string() }))),
 	}),
 	appearanceAxes: ['size'],
 	metadata: { name: 'Field', category: 'input' },
@@ -147,9 +147,9 @@ describe('validation issue paths', () => {
 						named('first'),
 						named('second', {
 							rules: [
-								{ type: 'required' },
-								{ type: 'unregistered' },
-								{ type: 'minLength', value: 'eight' },
+								{ $type: 'required' },
+								{ $type: 'unregistered' },
+								{ $type: 'minLength', value: 'eight' },
 							],
 						}),
 					],
@@ -159,7 +159,7 @@ describe('validation issue paths', () => {
 
 		expect(issues).toEqual([
 			{
-				path: ['steps', 0, 'elements', 1, 'elements', 1, 'rules', 1, 'type'],
+				path: ['steps', 0, 'elements', 1, 'elements', 1, 'rules', 1, '$type'],
 				message: expect.stringMatching(/^Unknown validation rule 'unregistered'\./),
 			},
 			{
@@ -446,11 +446,11 @@ describe('union issues in the built-in rules', () => {
 	const at = (...path: PropertyKey[]) => ['steps', 0, 'elements', 0, 'rules', 0, ...path];
 
 	test('point at the missing key of the rule the type names', () => {
-		expect(ruleIssues({ type: 'async' })).toEqual([at('url')]);
+		expect(ruleIssues({ $type: 'async' })).toEqual([at('url')]);
 	});
 
 	test('point at the key whose value has the wrong type', () => {
-		expect(ruleIssues({ type: 'minLength', value: 'three' })).toEqual([at('value')]);
+		expect(ruleIssues({ $type: 'minLength', value: 'three' })).toEqual([at('value')]);
 	});
 });
 

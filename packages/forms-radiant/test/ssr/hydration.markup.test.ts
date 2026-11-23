@@ -13,13 +13,13 @@ const renderField = (rules: unknown[]) =>
 	);
 
 test('a field the config requires says so for hydration', () => {
-	const html = renderField([{ type: 'required', message: 'Required' }]);
+	const html = renderField([{ $type: 'required', message: 'Required' }]);
 	expect(html).toMatch(/<se-field[^>]*data-se-required/);
 	expect(html).toContain('aria-required="true"');
 });
 
 test('a field without a required rule carries no required attribute', () => {
-	expect(renderField([{ type: 'email' }])).not.toMatch(/<se-field[^>]*data-se-required/);
+	expect(renderField([{ $type: 'email' }])).not.toMatch(/<se-field[^>]*data-se-required/);
 });
 
 test('no rules are serialized for hydration, because the form container validates', () => {

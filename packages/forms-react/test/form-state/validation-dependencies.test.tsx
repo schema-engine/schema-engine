@@ -20,7 +20,7 @@ const config: FormConfig = {
 					inputType: 'password',
 					rules: [
 						{
-							type: 'relate',
+							$type: 'relate',
 							fields: ['password'],
 							assert: 'allEqual',
 							includeSelf: true,

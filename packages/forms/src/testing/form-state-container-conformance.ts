@@ -102,7 +102,7 @@ function fixture(overrides: Partial<ContainerSetup> = {}): Fixture {
 	const registry = createDefaultValidationRegistry([
 		{
 			$type: 'gate',
-			schema: z.object({ type: z.literal('gate') }),
+			schema: z.object({ $type: z.literal('gate') }),
 			metadata: { name: 'Gate' },
 			category: 'generic',
 			handler: () => z.any().check(z.refine((value: unknown) => gate.check(value), 'Value is taken')),
@@ -113,19 +113,19 @@ function fixture(overrides: Partial<ContainerSetup> = {}): Fixture {
 		options: containerOptions({
 			registry,
 			elements: [
-				element({ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Name is required' }] }),
+				element({ $type: 'input', name: 'name', rules: [{ $type: 'required', message: 'Name is required' }] }),
 				element({
 					$type: 'input',
 					name: 'nickname',
-					rules: [{ type: 'required', message: 'Nickname is required' }],
+					rules: [{ $type: 'required', message: 'Nickname is required' }],
 				}),
-				element({ $type: 'input', name: 'slug', rules: [{ type: 'gate' }] }),
+				element({ $type: 'input', name: 'slug', rules: [{ $type: 'gate' }] }),
 				element({
 					$type: 'input',
 					name: 'code',
 					rules: [
-						{ type: 'minLength', value: 5, message: 'Too short' },
-						{ type: 'pattern', value: '^\\d+$', message: 'Digits only' },
+						{ $type: 'minLength', value: 5, message: 'Too short' },
+						{ $type: 'pattern', value: '^\\d+$', message: 'Digits only' },
 					],
 				}),
 				element(
@@ -147,7 +147,7 @@ function fixture(overrides: Partial<ContainerSetup> = {}): Fixture {
 							{
 								$type: 'input',
 								name: 'email',
-								rules: [{ type: 'required', message: 'Email is required' }],
+								rules: [{ $type: 'required', message: 'Email is required' }],
 							},
 							{ $type: 'input', name: 'label' },
 						],
@@ -164,7 +164,7 @@ function fixture(overrides: Partial<ContainerSetup> = {}): Fixture {
 								$type: 'arrayElements',
 								name: 'members',
 								elements: [
-									{ $type: 'input', name: 'code', rules: [{ type: 'gate' }] },
+									{ $type: 'input', name: 'code', rules: [{ $type: 'gate' }] },
 									{ $type: 'input', name: 'label' },
 								],
 							},
@@ -184,9 +184,9 @@ function fixture(overrides: Partial<ContainerSetup> = {}): Fixture {
 					{
 						$type: 'arrayElements',
 						name: 'invites',
-						rules: [{ type: 'minItems', value: 2, message: 'Add two invites' }],
+						rules: [{ $type: 'minItems', value: 2, message: 'Add two invites' }],
 						elements: [
-							{ $type: 'input', name: 'code', rules: [{ type: 'gate' }] },
+							{ $type: 'input', name: 'code', rules: [{ $type: 'gate' }] },
 							{ $type: 'input', name: 'label' },
 						],
 					},
@@ -218,7 +218,7 @@ function custom(
 	const registry = createDefaultValidationRegistry([
 		{
 			$type: 'boom',
-			schema: z.object({ type: z.literal('boom') }),
+			schema: z.object({ $type: z.literal('boom') }),
 			metadata: { name: 'Boom' },
 			category: 'generic',
 			handler: () =>
@@ -253,13 +253,13 @@ const stepsForm = (defaults: Record<string, unknown>): FormStateContainerOptions
 				{
 					id: 'company',
 					constraints: [{ field: 'hasCompany', operator: 'equals', value: true, action: 'show' }],
-					elements: [input('wantsInvoice'), input('company', { rules: [{ type: 'required' }] })],
+					elements: [input('wantsInvoice'), input('company', { rules: [{ $type: 'required' }] })],
 				},
 				{
 					id: 'payment',
 					elements: [
 						input('vat', {
-							rules: [{ type: 'required' }],
+							rules: [{ $type: 'required' }],
 							constraints: [{ field: 'wantsInvoice', operator: 'equals', value: 'yes', action: 'show' }],
 						}),
 					],
@@ -277,7 +277,7 @@ const businessForm = (defaults: Record<string, unknown> = { kind: 'person', comp
 			{
 				$type: 'input',
 				name: 'company',
-				rules: [{ type: 'required', id: 'company-required', message: 'Company is required' }],
+				rules: [{ $type: 'required', id: 'company-required', message: 'Company is required' }],
 				constraints: [{ field: 'kind', action: 'show', operator: 'equals', value: 'business' }],
 			},
 		],
@@ -289,7 +289,7 @@ const passwordForm = () =>
 	custom(
 		[
 			{ $type: 'input', name: 'password' },
-			{ $type: 'input', name: 'confirm', rules: [{ type: 'relate', fields: ['password'], assert: 'allEqual' }] },
+			{ $type: 'input', name: 'confirm', rules: [{ $type: 'relate', fields: ['password'], assert: 'allEqual' }] },
 		],
 		{ password: 'a', confirm: 'a' },
 	);
@@ -1225,8 +1225,8 @@ const cases: FormStateContainerCase[] = [
 						$type: 'input',
 						name: 'slug',
 						rules: [
-							{ type: 'gate', id: 'first' },
-							{ type: 'gate', id: 'second' },
+							{ $type: 'gate', id: 'first' },
+							{ $type: 'gate', id: 'second' },
 						],
 					}),
 				],
@@ -1827,7 +1827,7 @@ const cases: FormStateContainerCase[] = [
 							{
 								$type: 'input',
 								name: 'handle',
-								rules: [{ type: 'async', url: '/check', debounce: 30, disableCache: true }],
+								rules: [{ $type: 'async', url: '/check', debounce: 30, disableCache: true }],
 							},
 						],
 						{ handle: '' },
@@ -2213,21 +2213,21 @@ const cases: FormStateContainerCase[] = [
 			const store = createStore(
 				custom(
 					[
-						{ $type: 'input', name: 'locked', disabled: true, rules: [{ type: 'required' }] },
+						{ $type: 'input', name: 'locked', disabled: true, rules: [{ $type: 'required' }] },
 						{ $type: 'input', name: 'mode' },
 						{
 							$type: 'input',
 							name: 'frozen',
-							rules: [{ type: 'required' }],
+							rules: [{ $type: 'required' }],
 							constraints: [{ field: 'mode', action: 'enable', operator: 'equals', value: 'edit' }],
 						},
 						{
 							$type: 'fieldset',
 							name: 'extra',
 							constraints: [{ field: 'mode', action: 'show', operator: 'equals', value: 'edit' }],
-							elements: [{ $type: 'input', name: 'note', rules: [{ type: 'required' }] }],
+							elements: [{ $type: 'input', name: 'note', rules: [{ $type: 'required' }] }],
 						},
-						{ $type: 'input', name: 'later', rules: [{ type: 'required' }] },
+						{ $type: 'input', name: 'later', rules: [{ $type: 'required' }] },
 					],
 					{ locked: '', mode: 'view', frozen: '', extra: { note: '' }, later: '' },
 				),
@@ -2252,10 +2252,10 @@ const cases: FormStateContainerCase[] = [
 							$type: 'input',
 							name: 'tag',
 							rules: [
-								{ type: 'required', id: 'tag-required' },
-								{ type: 'pattern', id: 'tag-letters', value: '^[a-z]+$', message: 'Letters only' },
-								{ type: 'pattern', id: 'tag-short', value: '^.{0,3}$', message: 'Three at most' },
-								{ type: 'minLength', value: 8 },
+								{ $type: 'required', id: 'tag-required' },
+								{ $type: 'pattern', id: 'tag-letters', value: '^[a-z]+$', message: 'Letters only' },
+								{ $type: 'pattern', id: 'tag-short', value: '^.{0,3}$', message: 'Three at most' },
+								{ $type: 'minLength', value: 8 },
 							],
 						},
 					],
@@ -2290,7 +2290,7 @@ const cases: FormStateContainerCase[] = [
 					element({
 						$type: 'input',
 						name: 'slug',
-						rules: [{ type: 'gate' }, { type: 'minLength', value: 5, message: 'Too short' }],
+						rules: [{ $type: 'gate' }, { $type: 'minLength', value: 5, message: 'Too short' }],
 					}),
 				],
 				defaults: { slug: 'ab' },
@@ -2317,8 +2317,8 @@ const cases: FormStateContainerCase[] = [
 						$type: 'input',
 						name: 'secret',
 						rules: [
-							{ type: 'required', id: 'secret-required' },
-							{ type: 'boom', id: 'secret-boom' },
+							{ $type: 'required', id: 'secret-required' },
+							{ $type: 'boom', id: 'secret-boom' },
 						],
 					},
 				],
@@ -2373,13 +2373,13 @@ const cases: FormStateContainerCase[] = [
 							name: 'password',
 							rules: [
 								{
-									type: 'minLength',
+									$type: 'minLength',
 									value: 8,
 									severity: 'warning',
 									id: 'password-strength',
 									message: 'Weak',
 								},
-								{ type: 'minLength', value: 3, message: 'Too short' },
+								{ $type: 'minLength', value: 3, message: 'Too short' },
 							],
 						},
 					],
@@ -2431,7 +2431,7 @@ const cases: FormStateContainerCase[] = [
 						{
 							$type: 'input',
 							name: 'company',
-							rules: [{ type: 'required', severity: 'warning' }],
+							rules: [{ $type: 'required', severity: 'warning' }],
 							constraints: [{ field: 'kind', action: 'show', operator: 'equals', value: 'business' }],
 						},
 					],
@@ -2459,7 +2459,7 @@ const cases: FormStateContainerCase[] = [
 							name: 'handle',
 							rules: [
 								{
-									type: 'async',
+									$type: 'async',
 									id: 'handle-free',
 									url: '/check',
 									headers: { Authorization: 'secret' },
@@ -2606,7 +2606,7 @@ const cases: FormStateContainerCase[] = [
 							{
 								$type: 'input',
 								name: 'handle',
-								rules: [{ type: 'async', url: '/check', disableCache: true }],
+								rules: [{ $type: 'async', url: '/check', disableCache: true }],
 							},
 						],
 						{ handle: 'a' },
@@ -2619,7 +2619,7 @@ const cases: FormStateContainerCase[] = [
 				expect(down).toMatchObject({ path: 'handle', ruleType: 'async', reason: 'unavailable' });
 
 				const threw = createStore(
-					custom([{ $type: 'input', name: 'secret', rules: [{ type: 'boom' }] }], { secret: '' }),
+					custom([{ $type: 'input', name: 'secret', rules: [{ $type: 'boom' }] }], { secret: '' }),
 				);
 				const exploded: unknown = await threw.validate().then(
 					() => undefined,
@@ -2641,7 +2641,7 @@ const cases: FormStateContainerCase[] = [
 					{
 						$type: 'input',
 						name: 'company',
-						rules: [{ type: 'required' }],
+						rules: [{ $type: 'required' }],
 						constraints: [{ field: 'kind', action: 'show', operator: 'equals', value: 'business' }],
 					},
 					{ $type: 'input', name: 'locked', disabled: true },
@@ -2758,9 +2758,9 @@ const cases: FormStateContainerCase[] = [
 							$type: 'input',
 							name: 'tag',
 							rules: [
-								{ type: 'maxLength', value: 2 },
+								{ $type: 'maxLength', value: 2 },
 								{
-									type: 'relate',
+									$type: 'relate',
 									fields: ['other'],
 									assert: 'allEqual',
 									includeSelf: true,
@@ -2773,14 +2773,14 @@ const cases: FormStateContainerCase[] = [
 							$type: 'input',
 							name: 'count',
 							rules: [
-								{ type: 'min', value: 5 },
-								{ type: 'max', value: 1 },
+								{ $type: 'min', value: 5 },
+								{ $type: 'max', value: 1 },
 							],
 						},
 						{
 							$type: 'arrayElements',
 							name: 'rows',
-							rules: [{ type: 'minItems', value: 2 }],
+							rules: [{ $type: 'minItems', value: 2 }],
 							elements: [{ $type: 'input', name: 'x' }],
 						},
 					],

@@ -12,7 +12,7 @@ The engine exports reusable helpers for paths, effective rules, and validation.
   `contacts.0.accountType`, so conditional rules use the current array row.
 - `validateFieldValue` validates one field against the full nested values tree
   and its rendered path. It returns `{ issues, failures }`: `issues` has one entry for each rule the value
-  fails, in rule order, with the rule's `type`, its `id` as `ruleId`, its options as `params`, a fallback
+  fails, in rule order, with the rule's `$type` as `type`, its `id` as `ruleId`, its options as `params`, a fallback
   `message` and its `severity` (`'error'`, or `'warning'` for advice that never blocks); `superseded` is set when a rule's check was replaced by a later one before it ran (no result, not an issue); `failures` lists the
   rules that could not run (a `FormValidationFailure` naming the path and rule), which say nothing of the value.
 - `validateFormValues` validates named fields, filters to `names` when supplied (an empty

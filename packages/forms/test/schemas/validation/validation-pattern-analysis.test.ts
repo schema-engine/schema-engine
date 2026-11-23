@@ -15,9 +15,9 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 			const requiredRule = ValidationPresets.string.required('Required');
 			const minRule = ValidationPresets.number.min(18);
 
-			expect(emailRule.type).toBe('email');
-			expect(requiredRule.type).toBe('required');
-			expect(minRule.type).toBe('min');
+			expect(emailRule.$type).toBe('email');
+			expect(requiredRule.$type).toBe('required');
+			expect(minRule.$type).toBe('min');
 		});
 
 		test('should create schemas from preset-generated rules', () => {
@@ -37,14 +37,14 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 				ValidationPresets.string.email('Invalid email'),
 			];
 
-			expect(rules[0].type).toBe('required');
-			expect(rules[1].type).toBe('email');
+			expect(rules[0].$type).toBe('required');
+			expect(rules[1].$type).toBe('email');
 		});
 
 		test('APPROACH B: Direct JSON rules (simplest)', () => {
 			const rules: ValidationRule[] = [
-				{ type: 'required', message: 'Email required' },
-				{ type: 'email', message: 'Invalid email' },
+				{ $type: 'required', message: 'Email required' },
+				{ $type: 'email', message: 'Invalid email' },
 			];
 
 			rules.forEach((rule) => {
@@ -56,8 +56,8 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 		test('APPROACH C: ValidationPresets', () => {
 			const rules = [ValidationPresets.string.required('Required'), ValidationPresets.string.email('Invalid')];
 
-			expect(rules[0].type).toBe('required');
-			expect(rules[1].type).toBe('email');
+			expect(rules[0].$type).toBe('required');
+			expect(rules[1].$type).toBe('email');
 		});
 	});
 
@@ -65,7 +65,7 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 		test('should handle JSON serialization/deserialization', () => {
 			const rules: ValidationRule[] = [
 				ValidationPresets.string.required('Required'),
-				{ type: 'email', message: 'Invalid' },
+				{ $type: 'email', message: 'Invalid' },
 			] as ValidationRule[];
 
 			const serialized = JSON.stringify(rules);
@@ -84,14 +84,14 @@ describe('ValidationRegistry Usage Pattern Analysis', () => {
 					{
 						name: 'email',
 						rules: [
-							{ type: 'required', message: 'Required' },
-							{ type: 'email', message: 'Invalid email' },
+							{ $type: 'required', message: 'Required' },
+							{ $type: 'email', message: 'Invalid email' },
 						] as ValidationRule[],
 					},
 				],
 			};
 
-			expect(JSON.stringify(formConfig)).toContain('"type":"required"');
+			expect(JSON.stringify(formConfig)).toContain('"$type":"required"');
 		});
 	});
 });

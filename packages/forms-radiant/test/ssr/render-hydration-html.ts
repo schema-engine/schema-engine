@@ -24,7 +24,7 @@ await import('@/components/form-instance.script');
 export function renderHydrationHtml(): string {
 	return withRadiantServerCustomElementRenderBridge(() => {
 		const engine = createHydrationEngine();
-		const rules = [{ type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Must match password' }];
+		const rules = [{ $type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Must match password' }];
 		const config = engine.validateForm({
 			id: 'hydration',
 			steps: [

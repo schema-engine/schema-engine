@@ -10,11 +10,11 @@ import {
 } from '@/schemas/validation';
 import { anyValue } from '../lib/any-value';
 
-type PostcodeRule = { type: 'postcode'; country: string; message?: string };
+type PostcodeRule = { $type: 'postcode'; country: string; message?: string };
 
 const postcode: ValidationRegistration<PostcodeRule> = {
 	$type: 'postcode',
-	schema: z.object({ type: z.literal('postcode'), country: z.string(), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('postcode'), country: z.string(), message: z.optional(z.string()) }),
 	metadata: { name: 'Postcode' },
 	category: 'string',
 	handler: (rule) => z.string().check(z.minLength(rule.country.length)),

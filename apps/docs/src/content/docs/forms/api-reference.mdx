@@ -67,7 +67,7 @@ request function with the [CSRF policy](/docs/forms/csrf) applied, and `engine.g
 `getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([Registries](/docs/registry/registries)).
 
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
-and is not typed per engine: field `rules` keep their `type` string. See
+and is not typed per engine: field `rules` keep their `$type` string. See
 [Custom Validations](./validation-custom).
 
 Authors supply schema **input**. After validation, render functions receive

@@ -174,21 +174,21 @@ describe('engine.submissionSchema', () => {
 					id: 'one',
 					title: 'One',
 					elements: [
-						{ $type: 'text', name: 'kind', rules: [{ type: 'required' }] },
+						{ $type: 'text', name: 'kind', rules: [{ $type: 'required' }] },
 						{
 							$type: 'text',
 							name: 'company',
-							rules: [{ type: 'required' }],
+							rules: [{ $type: 'required' }],
 							constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
 						},
-						{ $type: 'text', name: 'locked', disabled: true, rules: [{ type: 'required' }] },
+						{ $type: 'text', name: 'locked', disabled: true, rules: [{ $type: 'required' }] },
 					],
 				},
 				{
 					id: 'two',
 					title: 'Two',
 					constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
-					elements: [{ $type: 'text', name: 'vat', rules: [{ type: 'required' }] }],
+					elements: [{ $type: 'text', name: 'vat', rules: [{ $type: 'required' }] }],
 				},
 			],
 		});
@@ -199,19 +199,19 @@ describe('engine.submissionSchema', () => {
 
 	test('a key is required only when its field has a required rule and nothing can leave it out', () => {
 		const config = form([
-			{ $type: 'text', name: 'must', rules: [{ type: 'required' }] },
+			{ $type: 'text', name: 'must', rules: [{ $type: 'required' }] },
 			{ $type: 'text', name: 'may' },
 			{
 				$type: 'text',
 				name: 'sometimes',
-				rules: [{ type: 'required' }],
+				rules: [{ $type: 'required' }],
 				constraints: [{ field: 'must', operator: 'is_not_empty', value: '', action: 'show' }],
 			},
 			{
 				$type: 'fieldSet',
 				name: 'group',
 				disabled: true,
-				elements: [{ $type: 'text', name: 'inner', rules: [{ type: 'required' }] }],
+				elements: [{ $type: 'text', name: 'inner', rules: [{ $type: 'required' }] }],
 			},
 		]);
 		expect(parse(config, {}).issues?.map(issuePath)).toEqual(['must']);
@@ -251,11 +251,11 @@ describe('engine.submissionSchema', () => {
 
 	test('partial accepts any subset of the keys and any empty value, and still rejects a wrong one', () => {
 		const config = form([
-			{ $type: 'text', name: 'must', rules: [{ type: 'required' }] },
+			{ $type: 'text', name: 'must', rules: [{ $type: 'required' }] },
 			{
 				$type: 'fieldSet',
 				name: 'group',
-				elements: [{ $type: 'text', name: 'inner', rules: [{ type: 'required' }] }],
+				elements: [{ $type: 'text', name: 'inner', rules: [{ $type: 'required' }] }],
 			},
 		]);
 		const { partial } = engine.submissionSchema(config);
@@ -281,7 +281,7 @@ describe('engine.submissionSchema', () => {
 	test('exports JSON Schema for the submission', () => {
 		const config = form(
 			[
-				{ $type: 'text', name: 'email', rules: [{ type: 'required' }] },
+				{ $type: 'text', name: 'email', rules: [{ $type: 'required' }] },
 				{
 					$type: 'select',
 					name: 'size',

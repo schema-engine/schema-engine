@@ -62,7 +62,7 @@ const record = (id: string, triggers: string[]) => ({ $type: 'record', id, trigg
 describe('the action context', () => {
 	test('carries the container values, flat errors by path, isValid of the recorded errors and the submissions that ended', async () => {
 		const { runtime, seen } = setup([record('audit', ['form_change'])], {
-			fields: [{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Required' }] }],
+			fields: [{ $type: 'input', name: 'email', rules: [{ $type: 'required', message: 'Required' }] }],
 			defaults: { email: '' },
 		});
 		await runtime.container.validate();
@@ -86,7 +86,7 @@ describe('the action context', () => {
 
 	test('reports recorded errors as isValid and checks validity without recording any', async () => {
 		const { runtime, seen, host } = setup([record('audit', ['form_change'])], {
-			fields: [{ $type: 'input', name: 'email', rules: [{ type: 'required' }] }],
+			fields: [{ $type: 'input', name: 'email', rules: [{ $type: 'required' }] }],
 			defaults: { email: 'a@b.co' },
 		});
 		runtime.container.setValue('email', '');

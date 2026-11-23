@@ -41,7 +41,7 @@ export const WithValidation: Story = {
 				name: 'otp',
 				label: 'Verification Code',
 				length: 6,
-				rules: [{ type: 'required', message: 'Code is required' }],
+				rules: [{ $type: 'required', message: 'Code is required' }],
 			},
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Verify' },
 		]),
