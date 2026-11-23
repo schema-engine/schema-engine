@@ -5,11 +5,11 @@ import { chromium, type Browser, type BrowserContext, type Page } from 'playwrig
 const baseUrl = inject('docsBaseUrl');
 
 const STYLING_PAGES = [
-	['/docs/styling/overview', 'Styling and layout'],
-	['/docs/styling/layout-themes', 'Layout themes'],
-	['/docs/styling/appearance-axes', 'Appearance axes'],
-	['/docs/styling/theming', 'Theming'],
-	['/docs/styling/recipes', 'Recipes'],
+	['/docs/layout/overview', 'Styling and layout'],
+	['/docs/layout/layout-themes', 'Layout themes'],
+	['/docs/layout/appearance-axes', 'Appearance axes'],
+	['/docs/layout/theming', 'Theming'],
+	['/docs/layout/recipes', 'Recipes'],
 	['/docs/registry/registries', 'Registries and the catalog'],
 ] as const;
 
@@ -51,8 +51,8 @@ describe('styling docs pages', () => {
 	});
 
 	test('the sidebar lists the Styling section after Forms Radiant', async () => {
-		await page.goto(`${baseUrl}/docs/styling/overview`, { waitUntil: 'networkidle' });
-		const section = page.locator('a[href="/docs/styling/overview"]').first();
+		await page.goto(`${baseUrl}/docs/layout/overview`, { waitUntil: 'networkidle' });
+		const section = page.locator('a[href="/docs/layout/overview"]').first();
 		await pwExpect(section).toBeAttached();
 		for (const [path] of STYLING_PAGES.slice(0, 5)) {
 			await pwExpect(page.locator(`a[href="${path}"]`).first()).toBeAttached();
@@ -62,8 +62,8 @@ describe('styling docs pages', () => {
 
 	test('the llms exports carry the new pages', async () => {
 		const index = await (await fetch(`${baseUrl}/llms.txt`)).text();
-		expect(index).toContain('/docs-llm/styling/recipes.md');
-		const markdown = await (await fetch(`${baseUrl}/docs-llm/styling/recipes.md`)).text();
+		expect(index).toContain('/docs-llm/layout/recipes.md');
+		const markdown = await (await fetch(`${baseUrl}/docs-llm/layout/recipes.md`)).text();
 		expect(markdown).toContain('A contact card with two half-width fields');
 	});
 
@@ -123,7 +123,7 @@ describe('styling docs pages', () => {
 		beforeAll(async () => {
 			pageErrors.length = 0;
 			await page.setViewportSize({ width: 1300, height: 900 });
-			await page.goto(`${baseUrl}/docs/styling/recipes`, { waitUntil: 'networkidle' });
+			await page.goto(`${baseUrl}/docs/layout/recipes`, { waitUntil: 'networkidle' });
 			await page.waitForFunction(() => {
 				const form = document.querySelector('[data-recipe="brand-frame"] .docs-react-form-demo form');
 				return form !== null && Object.keys(form).some((key) => key.startsWith('__react'));
@@ -246,7 +246,7 @@ describe('styling docs pages', () => {
 	});
 
 	test('the theming page renders its theme file demo', async () => {
-		await page.goto(`${baseUrl}/docs/styling/theming`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}/docs/layout/theming`, { waitUntil: 'networkidle' });
 		const form = page.locator('[data-recipe="acme-theme"] rui-form.acme');
 		await pwExpect(form).toBeVisible();
 		await pwExpect(page.locator('[data-recipe="acme-theme"] [data-se-size="comfortable"]').first()).toBeAttached();

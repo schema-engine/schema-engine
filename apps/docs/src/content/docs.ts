@@ -3,14 +3,13 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import * as z from 'zod/mini';
 import {
 	actionsIcon,
-	capabilitiesIcon,
 	examplesIcon,
 	formsIcon,
 	formsRadiantIcon,
 	formsReactIcon,
-	gettingStartedIcon,
+	layoutIcon,
 	registryIcon,
-	stylingIcon,
+	schemaEngineIcon,
 } from './section-icons';
 
 /** Public URL prefix for docs pages. */
@@ -18,14 +17,13 @@ export const DOCS_ROOT = '/docs';
 
 /** Sidebar section order. A section is the first folder under `src/content/docs`. */
 export const DOCS_SECTION_ORDER = [
-	'getting-started',
+	'schema-engine',
+	'registry',
+	'actions',
 	'forms',
 	'forms-react',
 	'forms-radiant',
-	'styling',
-	'capabilities',
-	'actions',
-	'registry',
+	'layout',
 	'examples',
 ] as const;
 
@@ -38,14 +36,13 @@ export const DOCS_SECTION_ORDER_INDEX = new Map<string, number>(
 export const LLM_SECTION_ORDER = [...DOCS_SECTION_ORDER] as const;
 
 export const DOCS_SECTION_CONFIG: Record<DocsSectionId, { title: string; icon: JsxRenderable }> = {
-	'getting-started': { title: 'Getting Started', icon: gettingStartedIcon },
+	'schema-engine': { title: 'Schema Engine', icon: schemaEngineIcon },
+	registry: { title: 'Registry', icon: registryIcon },
+	actions: { title: 'Actions', icon: actionsIcon },
 	forms: { title: 'Forms', icon: formsIcon },
 	'forms-react': { title: 'Forms React', icon: formsReactIcon },
 	'forms-radiant': { title: 'Forms Radiant', icon: formsRadiantIcon },
-	styling: { title: 'Layout', icon: stylingIcon },
-	capabilities: { title: 'Capabilities', icon: capabilitiesIcon },
-	actions: { title: 'Actions', icon: actionsIcon },
-	registry: { title: 'Registry', icon: registryIcon },
+	layout: { title: 'Layout', icon: layoutIcon },
 	examples: { title: 'Examples', icon: examplesIcon },
 };
 

@@ -41,7 +41,7 @@ The pipeline is the same in every renderer:
 4. The theme's stylesheet has a rule for that attribute that sets tokens: `--se-space`, `--se-font-size`, `--se-measure`, `--se-control-height`.
 5. Component CSS reads `var(--se-space, 1.5rem)` and keeps the look of an unstyled form as its fallback.
 
-Every token rule sits inside `:where()`, so it adds no specificity and a class of yours on the same element wins. (The grid and item rules are not zero-specificity; see [Layout themes](/docs/styling/layout-themes#custom-properties-of-a-container-and-an-item).)
+Every token rule sits inside `:where()`, so it adds no specificity and a class of yours on the same element wins. (The grid and item rules are not zero-specificity; see [Layout themes](/docs/layout/layout-themes#custom-properties-of-a-container-and-an-item).)
 
 ## What makes a good axis
 
@@ -80,7 +80,7 @@ A token set to `initial` hands the token back to the component's own fallback. S
 
 The shared field layout, held equal by the renderer conformance suite, is three things: a field that carries a `size` pick reads `--se-font-size`, a text input fills its field, and the action bar of a single-step recipe places its button by `actions.align`. In React the first is a `:where()` rule in `controls.css` (unlayered like the control height, falling back with `revert-layer` so a Tailwind text class on the field wins until a size is picked), the second is the `w-full` of the shadcn `Input` your project copies, and the third is `form-actions.css` (in `recipes.css`); in Radiant they are `appearance.css`, the input's own CSS and the block styles. Everything else (a control's padding and border, its type scale, a field's spacing) is the renderer's own styling. A Tailwind `text-sm` on a registry label keeps its own size, because an inherited font size never beats a class on the element.
 
-The compact and comfortable values of `--se-space` and `--se-control-height` read hooks (`--se-space-compact` and the others). An author sets the hooks, on `:root` or any ancestor, to retune a value without redefining the axis; see [Theming](/docs/styling/theming). Each hook falls back to a `--se-renderer-*` twin (`--se-renderer-space-compact` and the others), set by renderers, not by apps, and then to the neutral value.
+The compact and comfortable values of `--se-space` and `--se-control-height` read hooks (`--se-space-compact` and the others). An author sets the hooks, on `:root` or any ancestor, to retune a value without redefining the axis; see [Theming](/docs/layout/theming). Each hook falls back to a `--se-renderer-*` twin (`--se-renderer-space-compact` and the others), set by renderers, not by apps, and then to the neutral value.
 
 ## Pick a value
 
@@ -156,7 +156,7 @@ The engine build throws when a registration declares an axis the theme lacks, na
 
 `defineAxis` builds an axis. The built-ins are two of them; `tone` and `emphasis` are the usual host additions.
 
-```ts
+```ts title="theme.ts"
 import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
 
 const tone = defineAxis({
@@ -206,7 +206,7 @@ export const config = engine.defineForm({
 });
 ```
 
-The renderer writes `data-se-tone="brand"` on the form, and the theme's stylesheet sets the colour roles below it (`--primary`, `--on-primary`, and the container roles). Radiant UI components read those roles, and shadcn components read `--primary` and `--primary-foreground`, so a button inside recolors with no further CSS. The [brand theme recipe](/docs/styling/recipes#a-brand-theme-with-a-host-tone-axis) is this axis, live.
+The renderer writes `data-se-tone="brand"` on the form, and the theme's stylesheet sets the colour roles below it (`--primary`, `--on-primary`, and the container roles). Radiant UI components read those roles, and shadcn components read `--primary` and `--primary-foreground`, so a button inside recolors with no further CSS. The [brand theme recipe](/docs/layout/recipes#a-brand-theme-with-a-host-tone-axis) is this axis, live.
 
 Tokens are custom properties and inherit. Pick tone on the form and it reaches every field, until a nested form picks a value that declares the same tokens. Keep the axis list inline in `createLayoutTheme` or `as const`, so typed `defineForm` narrows the picks.
 
@@ -231,7 +231,7 @@ const size = defineAxis({
 export const theme = createLayoutTheme({ appearance: [...builtInAxes, size] });
 ```
 
-This replaces every token of `size`, so the card width (`--se-measure`) and control height (`--se-control-height`) of the built-in axis are gone. To retune only the numbers, set the hooks and token overrides in CSS instead; see [Overriding size tokens](/docs/styling/recipes#overriding-size-tokens) and [Theming](/docs/styling/theming).
+This replaces every token of `size`, so the card width (`--se-measure`) and control height (`--se-control-height`) of the built-in axis are gone. To retune only the numbers, set the hooks and token overrides in CSS instead; see [Overriding size tokens](/docs/layout/recipes#overriding-size-tokens) and [Theming](/docs/layout/theming).
 
 ## Style the attributes in CSS
 

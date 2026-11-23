@@ -34,7 +34,7 @@ export const BaseLayout = eco.component<BaseLayoutProps, JsxRenderable>({
 							<nav class="site-header__nav" aria-label="Site">
 								<ul>
 									<li class="max-md:hidden">
-										<RuiButton href="/docs/getting-started/introduction" variant="ghost" size="sm">
+										<RuiButton href="/docs/schema-engine/introduction" variant="ghost" size="sm">
 											Docs
 										</RuiButton>
 									</li>

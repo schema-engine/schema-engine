@@ -15,5 +15,5 @@ test('getDocsLlmUrlFromPathname returns null for non-docs paths', () => {
 });
 
 test('getDocsLlmUrl matches the path the generator writes', () => {
-	expect(getDocsLlmUrl('getting-started', 'introduction')).toBe('/docs-llm/getting-started/introduction.md');
+	expect(getDocsLlmUrl('schema-engine', 'introduction')).toBe('/docs-llm/schema-engine/introduction.md');
 });

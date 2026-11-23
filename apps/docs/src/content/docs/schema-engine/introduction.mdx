@@ -35,9 +35,9 @@ Schema Engine is a **JSON-driven form system** that adapts to your needs, not th
 
 ### Complete Customization
 
-Bring your existing component library. Register it with the engine and it works with form configs. Both renderers keep their form state in the engine's own container, so there is no form library to install. See [Installation](/docs/getting-started/installation#choose-a-renderer).
+Bring your existing component library. Register it with the engine and it works with form configs. Both renderers keep their form state in the engine's own container, so there is no form library to install. See [Installation](/docs/schema-engine/packages#choose-a-renderer).
 
-```typescript
+```tsx
 import { createFormEngine } from '@schema-engine/forms';
 import type { InputRegistration } from '@schema-engine/forms';
 import * as z from 'zod/mini';
@@ -101,7 +101,7 @@ Not just components but also actions, view recipes, appearance axes, and validat
 
 ### Named styling
 
-A form picks widths and looks by name (`width: half`, `size: compact`), the engine validates them, and React and Radiant render the same result. See [Styling and layout](/docs/styling/overview).
+A form picks widths and looks by name (`width: half`, `size: compact`), the engine validates them, and React and Radiant render the same result. See [Styling and layout](/docs/layout/overview).
 
 ### Zod Mini and Standard Schema
 
@@ -127,8 +127,8 @@ Schema Engine believes in a few core principles:
 
 Ready to see what Schema Engine can do?
 
-- **[Installation](/docs/getting-started/installation)** - Get up and running
-- **[Quick Start](/docs/getting-started/quick-start)** - Build your first form
+- **[Installation](/docs/schema-engine/packages)** - Get up and running
+- **[Quick Start](/docs/forms-react/quick-start)** - Build your first form
 - **[Forms Package](/docs/forms/overview)** - Core engine documentation
 - **[Forms React](/docs/forms-react/overview)** - React integration
-- **[Styling and layout](/docs/styling/overview)** - Grid, appearance axes, theming and recipes
+- **[Styling and layout](/docs/layout/overview)** - Grid, appearance axes, theming and recipes

@@ -12,7 +12,7 @@ import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo
 import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
 
 /** Sections whose pages embed React live demos. */
-const REACT_DEMO_SECTIONS = ['forms-react/', 'styling/'];
+const REACT_DEMO_SECTIONS = ['forms-react/', 'layout/'];
 
 /**
  * Single pages outside those sections that embed React live demos.

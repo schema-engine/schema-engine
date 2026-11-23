@@ -29,7 +29,7 @@ Load one Radiant UI theme, its aggregate stylesheet and this adapter's styleshee
 
 Published JavaScript does not execute CSS, so the adapter's own styles (host display rules, the card, hero and split-screen shells, the fieldset, array and drop-zone CSS) come from `index.css`. An app with Tailwind imports `tailwindcss` first. An app without it imports `@ecopages/radiant-ui/radiant-ui-core.css` first, so headings, lists and controls are not left on user-agent margins. A bundler that loads CSS from JavaScript takes the same three lines as side-effect imports (`import '@ecopages/radiant-ui/styles.css';`).
 
-Import one theme, never two. Dark mode is a `dark` class on an ancestor, usually `<html class="dark">`; Radiant UI does not follow `prefers-color-scheme` by itself, so set the class from the visitor's preference. Colour, spacing and radius come from Radiant UI's semantic roles (`--primary`, `--space-*`, `--radius-control`), which a host retunes with [Theming](/docs/styling/theming).
+Import one theme, never two. Dark mode is a `dark` class on an ancestor, usually `<html class="dark">`; Radiant UI does not follow `prefers-color-scheme` by itself, so set the class from the visitor's preference. Colour, spacing and radius come from Radiant UI's semantic roles (`--primary`, `--space-*`, `--radius-control`), which a host retunes with [Theming](/docs/layout/theming).
 
 ## 2. Create a form engine
 
@@ -85,14 +85,10 @@ const formConfig: FormConfig = {
 
 ## 4. Render the form
 
-```typescript
+```tsx
 import { FormRenderer } from '@schema-engine/forms-radiant';
 
-<FormRenderer
-	engine={formEngine}
-	config={formConfig}
-	onSubmit={(data) => console.log(data)}
-/>;
+<FormRenderer engine={formEngine} config={formConfig} onSubmit={(data) => console.log(data)} />;
 ```
 
 `data` is `FormValues` for a config loaded from JSON. With `formEngine.defineForm()` of a literal config, `onSubmit`,
@@ -172,7 +168,7 @@ const head = `<style data-se-theme-css="${id}">${css}</style>`;
 
 ## Style it
 
-[Styling and layout](/docs/styling/overview) says which tool fits which job, and [Recipes](/docs/styling/recipes) has copy-paste configs and CSS, each rendered live with this adapter.
+[Styling and layout](/docs/layout/overview) says which tool fits which job, and [Recipes](/docs/layout/recipes) has copy-paste configs and CSS, each rendered live with this adapter.
 
 ## Submit and state
 

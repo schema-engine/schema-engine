@@ -26,16 +26,16 @@ Because the form only picks names, the same config validates and renders the sam
 | Draw a layout where one field spans rows                            | `grid.areas` on the form or step, `grid.area` on each field             | [Drawn layouts](/docs/forms/core-concepts#drawn-layouts-areas)                          |
 | Change the layout at a breakpoint                                   | `grid.responsive`, or an `areas` record                                 | same                                                                                    |
 | Place one field exactly                                             | Raw `column`, `row`, `placeSelf`                                        | [Raw grid lines](/docs/forms/core-concepts#raw-grid-lines)                              |
-| Make a form denser or roomier                                       | `appearance: { size: 'compact' }`                                       | [Appearance axes](/docs/styling/appearance-axes)                                        |
+| Make a form denser or roomier                                       | `appearance: { size: 'compact' }`                                       | [Appearance axes](/docs/layout/appearance-axes)                                         |
 | Change border, shadow or surface                                    | `appearance: { surface: 'outlined' }`                                   | same                                                                                    |
-| Add a brand colour that every form can pick by name                 | A host axis with `defineAxis`                                           | [Appearance axes](/docs/styling/appearance-axes#add-a-host-axis)                        |
-| Change the rhythm between fields everywhere                         | The `--se-grid-gap-*` tokens, or `createLayoutTheme({ grid: { gap } })` | [Theming](/docs/styling/theming)                                                        |
-| Set a size, a width or a gap for one form                           | A class in `className` that sets the token                              | [Theming](/docs/styling/theming#where-to-set-a-token)                                   |
+| Add a brand colour that every form can pick by name                 | A host axis with `defineAxis`                                           | [Appearance axes](/docs/layout/appearance-axes#add-a-host-axis)                         |
+| Change the rhythm between fields everywhere                         | The `--se-grid-gap-*` tokens, or `createLayoutTheme({ grid: { gap } })` | [Theming](/docs/layout/theming)                                                         |
+| Set a size, a width or a gap for one form                           | A class in `className` that sets the token                              | [Theming](/docs/layout/theming#where-to-set-a-token)                                    |
 | Style one form, step or field once                                  | `className`, or `style` with custom properties                          | [Escape hatches](#escape-hatches)                                                       |
 | Show or hide a part of a recipe (descriptions, labels, orientation) | Slot config on `view`, for example `view.header.showDescription`        | [View recipes](/docs/forms-react/layouts)                                               |
-| Use a different frame around the fields                             | A recipe, built in or your own                                          | [Recipes](/docs/styling/recipes#a-custom-recipe-shell-in-react-and-in-radiant)          |
-| Make two engines or two renderers look the same                     | One compiled layout theme passed to both                                | [Layout themes](/docs/styling/layout-themes#share-a-theme-between-engines)              |
-| Copy a working setup                                                | A recipe                                                                | [Recipes](/docs/styling/recipes)                                                        |
+| Use a different frame around the fields                             | A recipe, built in or your own                                          | [Recipes](/docs/layout/recipes#a-custom-recipe-shell-in-react-and-in-radiant)           |
+| Make two engines or two renderers look the same                     | One compiled layout theme passed to both                                | [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines)               |
+| Copy a working setup                                                | A recipe                                                                | [Recipes](/docs/layout/recipes)                                                         |
 
 When two tools fit, prefer them in this order: a named width before a raw line, an axis value before a token override, a token override before a class, a class before inline `style`.
 
@@ -51,7 +51,7 @@ Fieldsets and array rows lay their children out on a grid of their own, so the s
 
 ## Appearance
 
-An **appearance axis** is one independent dimension of appearance with 2 to 5 named values, such as `size` or `surface`. Each value stands for a set of CSS tokens that components read. A form, a step, a field or a recipe slot picks a value by name, and the renderer writes it as `data-se-<axis>="<value>"`. The engine ships `size` and `surface`; a host adds its own, such as `tone`. See [Appearance axes](/docs/styling/appearance-axes).
+An **appearance axis** is one independent dimension of appearance with 2 to 5 named values, such as `size` or `surface`. Each value stands for a set of CSS tokens that components read. A form, a step, a field or a recipe slot picks a value by name, and the renderer writes it as `data-se-<axis>="<value>"`. The engine ships `size` and `surface`; a host adds its own, such as `tone`. See [Appearance axes](/docs/layout/appearance-axes).
 
 ## Escape hatches
 
@@ -72,8 +72,8 @@ Names cover the common cases. Three hatches stay open for the rest, and they wor
 
 ## Where next
 
-- [Layout themes](/docs/styling/layout-themes): compile a theme, share it, the neutral hooks and nested themes.
-- [Appearance axes](/docs/styling/appearance-axes): the definition, the rules, built-in axes and your own.
-- [Theming](/docs/styling/theming): the custom properties a host overrides, with a complete theme file.
-- [Recipes](/docs/styling/recipes): copy-paste configs with their CSS, each rendered live.
+- [Layout themes](/docs/layout/layout-themes): compile a theme, share it, the neutral hooks and nested themes.
+- [Appearance axes](/docs/layout/appearance-axes): the definition, the rules, built-in axes and your own.
+- [Theming](/docs/layout/theming): the custom properties a host overrides, with a complete theme file.
+- [Recipes](/docs/layout/recipes): copy-paste configs with their CSS, each rendered live.
 - [YAML Forms](/docs/forms/yaml): author any of these in a `.form.yaml` file.

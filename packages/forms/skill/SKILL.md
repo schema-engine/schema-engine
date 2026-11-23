@@ -52,14 +52,15 @@ Outcomes use one vocabulary: a check or a submission ends `passed`, `invalid` or
 
 The full documentation is at `/docs` on the deployed site. The LLM-exported corpus is `/llms.txt` (index) and `/docs-llm/<section>/<slug>.md` (page bodies).
 
-| Section                        | Path prefix                          |
-| ------------------------------ | ------------------------------------ |
-| Getting started                | `/docs/getting-started/introduction` |
-| `@schema-engine/forms`         | `/docs/forms/overview`               |
-| `@schema-engine/forms-react`   | `/docs/forms-react/overview`         |
-| `@schema-engine/forms-radiant` | `/docs/forms-radiant/overview`       |
-| `@schema-engine/actions`       | `/docs/actions/overview`             |
-| `@schema-engine/registry`      | `/docs/registry/overview`            |
-| Examples                       | `/docs/examples/basic-form`          |
+| Section                        | Path prefix                        |
+| ------------------------------ | ---------------------------------- |
+| Schema Engine                  | `/docs/schema-engine/introduction` |
+| `@schema-engine/registry`      | `/docs/registry/overview`          |
+| `@schema-engine/actions`       | `/docs/actions/overview`           |
+| `@schema-engine/forms`         | `/docs/forms/overview`             |
+| `@schema-engine/forms-react`   | `/docs/forms-react/overview`       |
+| `@schema-engine/forms-radiant` | `/docs/forms-radiant/overview`     |
+| `@schema-engine/layout`        | `/docs/layout/overview`            |
+| Examples                       | `/docs/examples/basic-form`        |
 
 This skill ships inside `@schema-engine/forms` as `skill/`, so the guide you read matches the installed version. The deployed site serves the latest one at `/skill/`.

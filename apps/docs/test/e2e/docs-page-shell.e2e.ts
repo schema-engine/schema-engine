@@ -65,7 +65,7 @@ test('the built docs shell defines the Radiant UI and docs custom elements it re
 	const browser = await chromium.launch();
 	try {
 		const page = await browser.newPage();
-		await page.goto(`${baseUrl}/docs/styling/recipes`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}/docs/layout/recipes`, { waitUntil: 'networkidle' });
 
 		const undefinedTags = await page.evaluate(() =>
 			[
@@ -128,10 +128,4 @@ test('Copy for LLM renders on the server and copies the page Markdown export', a
 	} finally {
 		await browser.close();
 	}
-});
-
-test('the previous llms-content exports still answer for one release', async () => {
-	const legacy = await fetch(`${baseUrl}/llms-content/forms/builder.txt`);
-	expect(legacy.status).toBe(200);
-	expect(await legacy.text()).toBe(await (await fetch(`${baseUrl}/docs-llm/forms/builder.md`)).text());
 });

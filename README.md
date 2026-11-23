@@ -2,7 +2,7 @@
 
 > **Declarative interfaces, extended with your own components and actions** — build deterministic, type-safe, event-driven interfaces from portable definitions.
 
-> **Important:** This README is an overview, not the API reference. For copy-paste-ready examples and current contracts, use the [Documentation App](./apps/docs) — start with [Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx).
+> **Important:** This README is an overview, not the API reference. For copy-paste-ready examples and current contracts, use the [Documentation App](./apps/docs) — start with [Quick Start](./apps/docs/src/content/docs/forms-react/quick-start.mdx).
 
 ---
 
@@ -167,7 +167,7 @@ graph TD
 
 ## 🚀 Quick Start
 
-See the full walkthrough in [Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx). Minimal verified setup:
+See the full walkthrough in [Quick Start](./apps/docs/src/content/docs/forms-react/quick-start.mdx). Minimal verified setup:
 
 ```bash
 pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
@@ -238,9 +238,9 @@ export function ContactPage() {
 
 Detailed architectural documentation is available in the [Documentation App](./apps/docs), which uses self-hosted IBM Plex fonts.
 
-- **[Quick Start](./apps/docs/src/content/docs/getting-started/quick-start.mdx)**
+- **[Quick Start](./apps/docs/src/content/docs/forms-react/quick-start.mdx)**
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
-- **[Layout](./apps/docs/src/content/docs/styling/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/styling/recipes.mdx)
+- **[Layout](./apps/docs/src/content/docs/layout/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/layout/recipes.mdx)
 - **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Registries and the catalog](./apps/docs/src/content/docs/registry/registries.mdx)
 - **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**

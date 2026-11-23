@@ -14,3 +14,6 @@ registry.json
 registry/*/registry.json
 registry/shared/forms/registrations.ts
 registry/shared/forms/recipes/manifest.json
+apps/docs/src/public/docs-llm
+apps/docs/src/public/skill
+apps/docs/src/generated

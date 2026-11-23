@@ -87,7 +87,7 @@ This pattern works well for non-visual plugins where registrations expose behavi
 
 For visual components that need a render method:
 
-```typescript
+```tsx
 interface WidgetRegistration extends ComponentRegistration<string, unknown, { id: string }> {
 	$type: string;
 	schema: StandardSchemaV1;

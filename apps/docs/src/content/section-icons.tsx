@@ -17,7 +17,7 @@ const SectionIcon = ({ children, size = 16 }: { children: JsxRenderable; size?: 
 	</svg>
 );
 
-export const gettingStartedIcon: JsxRenderable = (
+export const schemaEngineIcon: JsxRenderable = (
 	<SectionIcon size={20}>
 		<path d="M5 12l5 5L20 7" />
 	</SectionIcon>
@@ -44,19 +44,12 @@ export const formsRadiantIcon: JsxRenderable = (
 	</SectionIcon>
 );
 
-export const stylingIcon: JsxRenderable = (
+export const layoutIcon: JsxRenderable = (
 	<SectionIcon>
 		<rect x="3" y="3" width="8" height="8" rx="1" />
 		<rect x="13" y="3" width="8" height="5" rx="1" />
 		<rect x="13" y="10" width="8" height="11" rx="1" />
 		<rect x="3" y="13" width="8" height="8" rx="1" />
-	</SectionIcon>
-);
-
-export const capabilitiesIcon: JsxRenderable = (
-	<SectionIcon>
-		<path d="M8 3h8l4 4v14H4V7l4-4z" />
-		<path d="M8 3v4h8V3M12 11v6M9 14h6" />
 	</SectionIcon>
 );
 

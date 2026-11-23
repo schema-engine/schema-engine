@@ -211,4 +211,4 @@ Left internal on purpose: `compileAppearance`, `getAppearanceCss`, `resolveGridT
 
 ## Documentation
 
-Guides with copy-paste recipes: [Layout themes](../../apps/docs/src/content/docs/styling/layout-themes.mdx), [Appearance axes](../../apps/docs/src/content/docs/styling/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/styling/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/styling/recipes.mdx).
+Guides with copy-paste recipes: [Layout themes](../../apps/docs/src/content/docs/layout/layout-themes.mdx), [Appearance axes](../../apps/docs/src/content/docs/layout/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/layout/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/layout/recipes.mdx).

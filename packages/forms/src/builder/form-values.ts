@@ -30,10 +30,16 @@ export type ValuesOf<TConfig, TEntries extends Record<string, unknown>> = string
 			: FormValues
 		: FormValues;
 
-type Simplify<T> = { [K in keyof T]: T[K] } & unknown;
+type Simplify<T> = { [K in keyof T]: T[K] };
 
-/** What an element that holds no value adds: nothing, which an intersection keeps as it is. */
-type Empty = Record<never, never>;
+/**
+ * What an element that holds no value adds: nothing, which an intersection keeps as it is.
+ *
+ * @remarks
+ * An object type with no keys, written as a mapped type over `never` so it reads as intent. `unknown` would also
+ * be the identity of an intersection, but `Simplify` of it is not the empty object the callers expect.
+ */
+type Empty = { readonly [K in never]: never };
 
 /** The intersection of the members of a union. An empty union is `unknown`, the identity of an intersection. */
 type MergeAll<U> = (U extends unknown ? (value: U) => void : never) extends (value: infer I) => void ? I : unknown;

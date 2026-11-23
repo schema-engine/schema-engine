@@ -15,13 +15,13 @@ const origin = 'http://localhost:3000';
 
 test('absoluteUrl normalizes origin and pathname', () => {
 	expect(absoluteUrl('/', origin)).toBe('http://localhost:3000/');
-	expect(absoluteUrl('/docs/getting-started/introduction', origin)).toBe(
-		'http://localhost:3000/docs/getting-started/introduction',
+	expect(absoluteUrl('/docs/schema-engine/introduction', origin)).toBe(
+		'http://localhost:3000/docs/schema-engine/introduction',
 	);
-	expect(absoluteUrl('docs/getting-started/introduction', `${origin}/`)).toBe(
-		'http://localhost:3000/docs/getting-started/introduction',
+	expect(absoluteUrl('docs/schema-engine/introduction', `${origin}/`)).toBe(
+		'http://localhost:3000/docs/schema-engine/introduction',
 	);
-	expect(absoluteUrl('/docs/getting-started/introduction')).toMatch(/\/docs\/getting-started\/introduction$/);
+	expect(absoluteUrl('/docs/schema-engine/introduction')).toMatch(/\/docs\/schema-engine\/introduction$/);
 	expect(normalizeSiteOrigin(`${origin}/`)).toBe(origin);
 });
 
@@ -42,7 +42,7 @@ test('absoluteImageUrl strips public/ and falls back to the default OG path', ()
 test('ogTypeForPathname uses website on home and article on docs', () => {
 	expect(ogTypeForPathname(undefined)).toBe('website');
 	expect(ogTypeForPathname('/')).toBe('website');
-	expect(ogTypeForPathname('/docs/getting-started/introduction')).toBe('article');
+	expect(ogTypeForPathname('/docs/schema-engine/introduction')).toBe('article');
 });
 
 test('homepageSoftwareApplicationJsonLd names GitHub as sameAs', () => {
@@ -59,8 +59,8 @@ test('docsPageHeadLinks emits canonical and markdown alternate URLs', () => {
 		canonical: 'http://localhost:3000/',
 		markdownAlternate: null,
 	});
-	expect(docsPageHeadLinks('/docs/getting-started/introduction', origin)).toEqual({
-		canonical: 'http://localhost:3000/docs/getting-started/introduction',
-		markdownAlternate: 'http://localhost:3000/docs-llm/getting-started/introduction.md',
+	expect(docsPageHeadLinks('/docs/schema-engine/introduction', origin)).toEqual({
+		canonical: 'http://localhost:3000/docs/schema-engine/introduction',
+		markdownAlternate: 'http://localhost:3000/docs-llm/schema-engine/introduction.md',
 	});
 });

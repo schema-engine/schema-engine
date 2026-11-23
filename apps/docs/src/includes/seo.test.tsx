@@ -4,7 +4,7 @@ import { Seo } from './seo';
 import { docsPageHeadLinks } from '@/lib/docs/site-meta';
 
 test('Seo emits canonical and markdown alternate tags for docs pages', () => {
-	const pathname = '/docs/getting-started/introduction';
+	const pathname = '/docs/schema-engine/introduction';
 	const { canonical, markdownAlternate } = docsPageHeadLinks(pathname);
 	const html = renderToString(
 		Seo({

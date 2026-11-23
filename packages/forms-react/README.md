@@ -180,7 +180,7 @@ normalized outputs, including schema defaults and transforms. The React provider
 and renderer preserve those engine maps through their props; registrations no
 longer augment a global `FormEngine` namespace.
 
-Styling and layout guides: [Styling and layout](../../apps/docs/src/content/docs/styling/overview.mdx), [Appearance axes](../../apps/docs/src/content/docs/styling/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/styling/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/styling/recipes.mdx).
+Styling and layout guides: [Styling and layout](../../apps/docs/src/content/docs/layout/overview.mdx), [Appearance axes](../../apps/docs/src/content/docs/layout/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/layout/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/layout/recipes.mdx).
 
 See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-started.mdx), [Writing a widget](../../apps/docs/src/content/docs/forms-react/widgets.mdx), [Hooks](../../apps/docs/src/content/docs/forms-react/hooks.mdx) and [Advanced usage](../../apps/docs/src/content/docs/forms-react/advanced.mdx). The form state itself is documented in [Form state](../../apps/docs/src/content/docs/forms/form-state.mdx), [Issue text](../../apps/docs/src/content/docs/forms/issue-text.mdx), [Native validity](../../apps/docs/src/content/docs/forms/native-validity.mdx), [Server errors](../../apps/docs/src/content/docs/forms/server-errors.mdx) and [Form libraries](../../apps/docs/src/content/docs/forms/form-libraries.mdx), which says how to embed a form in an existing hand-written one.
 

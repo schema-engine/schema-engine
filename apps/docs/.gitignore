@@ -5,7 +5,6 @@ dist
 
 # generated before dev/build
 src/public/llms.txt
-src/public/llms-content
 src/public/docs-llm
 src/public/skill
 src/public/skill.txt
