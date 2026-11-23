@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /**
  * Every built-in rule family a text form needs, each with its own message.

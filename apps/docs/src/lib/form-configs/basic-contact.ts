@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /**
  * Simple contact form on a card shell — shared by getting-started guides

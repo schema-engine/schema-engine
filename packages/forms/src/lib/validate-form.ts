@@ -1,6 +1,6 @@
 import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
 import { formConfigEnvelopeSchema } from '@/schemas/form-config';
-import { safeParseStandardSchema } from '@/lib/standard-schema';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 import {
 	markNormalizedFormConfig,
 	getNormalizedFormOwner,

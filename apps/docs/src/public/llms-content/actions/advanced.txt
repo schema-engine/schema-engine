@@ -1,0 +1,151 @@
+---
+title: 'Advanced Usage'
+description: 'Custom triggers, context, and dispatcher wiring.'
+order: 4
+---
+
+# Advanced Usage
+
+## Sequential Execution
+
+Flat action arrays execute sequentially. An inner array runs its actions concurrently.
+
+`actions` is what `parseActions` returned for the sequence.
+
+```typescript
+const parsed = parseActions(registry, [action1, action2, action3]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
+const results = await dispatcher.dispatch({
+	actions: parsed.data,
+	trigger: 'submit',
+	context,
+});
+```
+
+`action2` will not start until `action1` finishes.
+
+## Parallel groups
+
+```typescript
+const parsed = parseActions(registry, [action1, [action2, action3], action4]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
+const results = await dispatcher.dispatch({
+	actions: parsed.data,
+	trigger: 'submit',
+	context,
+});
+```
+
+The group settles before `action4` starts. A failure with `shouldContinue: false`
+requests cancellation of the other group members via `context.signal` and stops
+later actions after the started members settle. Handlers must observe the signal;
+an uncooperative handler can keep dispatch pending. Cancellation does not undo a
+remote side effect. Results include each action's ID, status, cancellation request,
+error and data so application code can decide how to recover.
+
+## Stop on Failure
+
+Return `shouldContinue: false` to stop the chain.
+
+```typescript
+execute: async (context) => {
+	if (!(await context.form.checkValidity())) {
+		return {
+			success: false,
+			error: 'Validation failed',
+			shouldContinue: false,
+		};
+	}
+
+	return { success: true };
+};
+```
+
+`context.isValid` is true while no validation error is recorded, so it is true on
+a pristine form even with an empty required field. `context.form.checkValidity()`
+validates the current values and resolves to whether the whole form passes. It
+records and shows no errors, and only the actions that call it pay for the
+validation. `context.form.validate()` validates, shows the errors and resolves
+`{ outcome: 'passed' | 'invalid' | 'overtaken' }`. See
+[Validity](/docs/forms/form-state#validity) for the three reads.
+
+## Disabled Actions
+
+```typescript
+const action = {
+	id: 'my-action',
+	$type: 'log',
+	enabled: false,
+};
+```
+
+Disabled actions are skipped.
+
+## Debug Logging
+
+Action dispatch logs through `@ecopages/logger`. Enable debug output through the host's logger levels; `ActionDispatcher` has no debug constructor option.
+
+## Custom Registry
+
+`ActionRegistry` is built once from a list and cannot change. To register actions at runtime, implement `ActionRegistryProvider` from the package root, for example on a mutable store like this one.
+
+```typescript
+class MyActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider<TBaseContext, TTrigger> {
+	private actions = new Map<string, ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>();
+
+	register(action: ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>) {
+		this.actions.set(action.$type, action);
+	}
+
+	getAction(type: string) {
+		return this.actions.get(type);
+	}
+
+	getActionTypes(): string[] {
+		return Array.from(this.actions.keys());
+	}
+}
+```
+
+## Testing Actions
+
+```typescript
+import { describe, expect, test } from 'vitest';
+
+describe('logAction', () => {
+	test('returns success', async () => {
+		const result = await logAction.execute({
+			id: 'ctx-1',
+			data: {},
+			trigger: 'submit',
+			signal: new AbortController().signal,
+			config: {
+				id: 'log-1',
+				$type: 'log',
+				message: 'hello',
+			},
+		});
+
+		expect(result.success).toBe(true);
+	});
+});
+```
+
+## Using defineAction
+
+For repeated action definitions within one domain, use the `defineAction` factory to avoid repeating base context and trigger generics:
+
+```typescript
+const define = defineAction<AppContext, AppTrigger>();
+
+const myAction = define({
+	$type: 'my-action',
+	schema: mySchema,
+	metadata: { name: 'My Action' },
+	execute: async (context) => {
+		return { success: true };
+	},
+});
+```

@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /** Multi-step onboarding wizard — view recipes and React layouts guide. */
 export const viewRecipesDemoConfig: FormConfig = {

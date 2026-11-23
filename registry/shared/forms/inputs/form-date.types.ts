@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
-import { BaseValidationRuleSchema, type BaseValidationRule } from '@schema-engine/forms/schemas/validation';
+import { BaseFieldSchema, BaseValidationRuleSchema, type BaseValidationRule } from '@schema-engine/forms';
 
 export const DateFieldExtensionSchema = z.object({
 	placeholder: z.optional(z.string()),

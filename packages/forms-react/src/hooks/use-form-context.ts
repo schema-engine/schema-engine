@@ -1,7 +1,6 @@
 import { useContext, useMemo, useSyncExternalStore } from 'react';
-import type { FormRuntime, FormStepState } from '@schema-engine/forms';
+import type { FormRuntime, FormStepState, EngineOutputMaps } from '@schema-engine/forms';
 import { useFormStateContext } from './form-state/context';
-import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import { GRID_CLASS, getDefaultLayoutTheme, getGridVariables, type CssVariables } from '@schema-engine/layout';
 import { FormEngineContext } from '../components/provider';
 import type { FormEngineContextValue } from '../components/provider';

@@ -1,0 +1,987 @@
+---
+title: 'Custom Validations'
+description: 'Author your own validation rules and integrate them with the engine.'
+order: 16
+---
+
+import * as z from 'zod/mini';
+
+# Custom Validations
+
+While Form Engine provides comprehensive built-in validations, you might need custom validation logic for specific business requirements. A custom rule is a registration you pass to the engine when you create it.
+
+**Note:** Runnable field configs require `$type`, `id`, and `name`. The pattern
+snippets are complete TypeScript: each declares its rule type, types its registration
+with `ValidationRegistration<Rule>` and can be copied as it is. Short rule snippets such
+as the performance and naming examples are fragments.
+
+## Registration Basics
+
+A validation registration has the same shape as an element, recipe or action registration:
+
+- `$type`: the `type` authors write in a field's `rules`. The rule objects themselves keep `type`.
+- `schema`: a [Standard Schema](https://standardschema.dev/) for the rule object. The engine build throws if it is not one, and a form config that uses the rule is checked against it, so the options it declares are validated where the form is validated.
+- `metadata`: a `name` and an optional `description`.
+- `category` and `handler`: the handler returns the Zod Mini schema that checks the value. `dependsOn` and `defaultFor` are optional.
+
+Pass registrations to `createFormEngine({ validations: [...] })`. They are stored in a read-only
+registry: a later registration with the same `$type` replaces an earlier one without a warning, and
+nothing can be registered or removed after the engine is built. Registrations come after the built-in
+rules and after the validations that elements declare, so they can also override a built-in rule.
+
+### Simple Custom Validation
+
+Here's a basic custom validation, passed to the engine, and a field that uses it. The snippet is complete, so it can be copied as it is:
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+
+type PostalCodeRule = { type: 'postalCode'; message?: string };
+
+const postalCode = {
+	$type: 'postalCode',
+	schema: z.object({ type: z.literal('postalCode'), message: z.optional(z.string()) }),
+	metadata: { name: 'Postal code', description: 'A US ZIP or ZIP+4 code.' },
+	category: 'string',
+	handler: (rule: PostalCodeRule) => {
+		const postalCodeRegex = /^\d{5}(?:-\d{4})?$/;
+		return z.string().check(z.regex(postalCodeRegex, rule.message || 'Invalid postal code'));
+	},
+} as const;
+
+export const engine = createFormEngine({ validations: [postalCode] });
+
+export const postalCodeField = {
+	$type: 'input',
+	id: 'postal-code',
+	name: 'postalCode',
+	label: 'Postal code',
+	rules: [
+		{ type: 'required', message: 'Postal code is required' },
+		{ type: 'postalCode', message: 'Please enter a valid postal code' },
+	],
+};
+```
+
+The patterns below define one registration each. Add each constant to the `validations` list:
+
+```typescript
+createFormEngine({ validations: [postalCode, creditCard, lengthRange] });
+```
+
+### Use the Rule in a Form
+
+Every element that extends `BaseFieldSchema` accepts a rule of any registered `type` in its `rules`. When the engine validates a form config (`defineForm`, `validateForm`) it checks each rule against the registry: the `type` must be registered, the rule must satisfy the registration's `schema`, and its handler must build a schema for it. A registration that replaces a built-in rule decides its options, extra ones included. Nothing in the element needs widening, and the JSON Schema export (`generateFormConfigSchema`) lists each registered rule once, as the `validation-rule` definition that every element's `rules` refers to, so an editor offers custom rules too. A rule is listed with its options when its `schema` is Zod; a schema from another Standard Schema library is listed by its `type` only.
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, defineInput, BaseFieldSchema, type ValidationRegistration } from '@schema-engine/forms';
+
+type PostalCodeRule = { type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
+
+const postalCode: ValidationRegistration<PostalCodeRule> = {
+	$type: 'postalCode',
+	schema: z.looseObject({ type: z.literal('postalCode'), country: z.optional(z.enum(['us', 'ca'])) }),
+	metadata: { name: 'Postal code' },
+	category: 'string',
+	handler: (rule) =>
+		z.string().check(z.regex(rule.country === 'ca' ? /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/ : /^\d{5}(?:-\d{4})?$/)),
+};
+
+const text = defineInput({
+	$type: 'text',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
+	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
+	render: () => null,
+});
+
+export const engine = createFormEngine({ elements: [text], validations: [postalCode] });
+
+export const form = engine.defineForm({
+	id: 'address',
+	steps: [
+		{
+			id: 'main',
+			title: 'Address',
+			elements: [
+				{
+					$type: 'text',
+					id: 'postal-code',
+					name: 'postalCode',
+					rules: [{ type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' }],
+				},
+			],
+		},
+	],
+});
+```
+
+A `type` nothing registers is rejected when the form is validated, with the types that are registered: `Unknown validation rule 'postalcode'. Register it with createFormEngine({ validations: [...] }). Registered rules: required, minLength, ...`. The issue is at `steps[0].elements[0].rules[0].type`. An option the registration's `schema` refuses is reported at its key, such as `steps[0].elements[0].rules[0].country`.
+
+### Validation with Parameters
+
+A rule is an object with a `type` and any parameters you choose. Describe it with a type, and the handler receives it typed. Each snippet below is complete and can be copied as it is.
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type LengthRangeRule = { type: 'lengthRange'; value?: { min?: number; max?: number }; message?: string };
+
+const lengthRange: ValidationRegistration<LengthRangeRule> = {
+	$type: 'lengthRange',
+	schema: z.looseObject({ type: z.literal('lengthRange') }),
+	metadata: { name: 'Length Range' },
+	category: 'string',
+	handler: (rule) => {
+		const { min, max } = rule.value ?? {};
+		const checks = [
+			...(min !== undefined ? [z.minLength(min, `Must be at least ${min} characters`)] : []),
+			...(max !== undefined ? [z.maxLength(max, `Must be no more than ${max} characters`)] : []),
+		];
+
+		return z.string().check(...checks);
+	},
+};
+
+export const engine = createFormEngine({ validations: [lengthRange] });
+
+export const descriptionField = {
+	$type: 'input',
+	id: 'description',
+	name: 'description',
+	label: 'Description',
+	rules: [
+		{
+			type: 'lengthRange',
+			value: { min: 10, max: 500 },
+			message: 'Description must be between 10 and 500 characters',
+		},
+	],
+};
+```
+
+A credit card rule checks the Luhn sum:
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type CreditCardRule = { type: 'creditCard'; message?: string };
+
+function passesLuhn(value: string): boolean {
+	const cleanValue = value.replace(/[\s-]/g, '');
+
+	if (!/^\d+$/.test(cleanValue) || cleanValue.length < 13 || cleanValue.length > 19) {
+		return false;
+	}
+
+	let sum = 0;
+	let isEven = false;
+
+	for (let i = cleanValue.length - 1; i >= 0; i--) {
+		let digit = Number(cleanValue[i]);
+
+		if (isEven) {
+			digit *= 2;
+			if (digit > 9) {
+				digit -= 9;
+			}
+		}
+
+		sum += digit;
+		isEven = !isEven;
+	}
+
+	return sum % 10 === 0;
+}
+
+const creditCard: ValidationRegistration<CreditCardRule> = {
+	$type: 'creditCard',
+	schema: z.looseObject({ type: z.literal('creditCard') }),
+	metadata: { name: 'Credit Card' },
+	category: 'string',
+	handler: (rule) => z.string().check(z.refine(passesLuhn, rule.message || 'Invalid credit card number')),
+};
+
+export const engine = createFormEngine({ validations: [creditCard] });
+```
+
+## Common Custom Validation Patterns
+
+### Business Rule Validations
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type CompanyEmailRule = { type: 'companyEmail'; value?: { domains?: string[] }; message?: string };
+
+const companyEmail: ValidationRegistration<CompanyEmailRule> = {
+	$type: 'companyEmail',
+	schema: z.looseObject({ type: z.literal('companyEmail') }),
+	metadata: { name: 'Company Email' },
+	category: 'string',
+	handler: (rule) => {
+		const allowedDomains = rule.value?.domains ?? ['company.com'];
+
+		return z
+			.email('Invalid email format')
+			.check(
+				z.refine(
+					(email) => allowedDomains.includes(email.split('@')[1] ?? ''),
+					rule.message || `Email must be from one of: ${allowedDomains.join(', ')}`,
+				),
+			);
+	},
+};
+
+export const engine = createFormEngine({ validations: [companyEmail] });
+
+export const emailField = {
+	$type: 'input',
+	id: 'work-email',
+	name: 'workEmail',
+	label: 'Work email',
+	rules: [
+		{
+			type: 'companyEmail',
+			value: { domains: ['mycompany.com', 'subsidiary.com'] },
+			message: 'Please use your company email address',
+		},
+	],
+};
+```
+
+### Age Validation with Date
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type AgeRule = { type: 'ageFromBirthDate'; value?: { minAge?: number; maxAge?: number }; message?: string };
+
+const ageFromBirthDate: ValidationRegistration<AgeRule> = {
+	$type: 'ageFromBirthDate',
+	schema: z.looseObject({ type: z.literal('ageFromBirthDate') }),
+	metadata: { name: 'Age From Birth Date' },
+	category: 'date',
+	handler: (rule) => {
+		const { minAge, maxAge } = rule.value ?? {};
+
+		return z.string().check(
+			z.refine(
+				(dateString) => {
+					const birthDate = new Date(dateString);
+					const today = new Date();
+					const age = today.getFullYear() - birthDate.getFullYear();
+					const monthDiff = today.getMonth() - birthDate.getMonth();
+					const birthdayPending = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate());
+					const actualAge = birthdayPending ? age - 1 : age;
+
+					if (minAge !== undefined && actualAge < minAge) return false;
+					if (maxAge !== undefined && actualAge > maxAge) return false;
+
+					return true;
+				},
+				rule.message || `Age must be between ${minAge} and ${maxAge}`,
+			),
+		);
+	},
+};
+
+export const engine = createFormEngine({ validations: [ageFromBirthDate] });
+
+export const birthDateField = {
+	$type: 'input',
+	id: 'birth-date',
+	inputType: 'date',
+	name: 'birthDate',
+	rules: [
+		{ type: 'required', message: 'Birth date is required' },
+		{
+			type: 'ageFromBirthDate',
+			value: { minAge: 18, maxAge: 65 },
+			message: 'You must be between 18 and 65 years old',
+		},
+	],
+};
+```
+
+### Social Security Number (US)
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type SsnRule = { type: 'ssn'; message?: string };
+
+const ssn: ValidationRegistration<SsnRule> = {
+	$type: 'ssn',
+	schema: z.looseObject({ type: z.literal('ssn') }),
+	metadata: { name: 'Ssn' },
+	category: 'string',
+	handler: (rule) =>
+		z.string().check(
+			z.regex(/^\d{3}-\d{2}-\d{4}$/, 'SSN must be in format XXX-XX-XXXX'),
+			z.refine((value) => {
+				const [area = '', group = '', serial = ''] = value.split('-');
+
+				if (area === '000' || area === '666' || area.startsWith('9')) return false;
+				if (group === '00') return false;
+				if (serial === '0000') return false;
+
+				return true;
+			}, rule.message || 'Invalid Social Security Number'),
+		),
+};
+
+export const engine = createFormEngine({ validations: [ssn] });
+```
+
+### Password Strength
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type PasswordStrengthRule = {
+	type: 'passwordStrength';
+	value?: {
+		minLength?: number;
+		requireUppercase?: boolean;
+		requireLowercase?: boolean;
+		requireNumbers?: boolean;
+		requireSpecialChars?: boolean;
+	};
+	message?: string;
+};
+
+const passwordStrength: ValidationRegistration<PasswordStrengthRule> = {
+	$type: 'passwordStrength',
+	schema: z.looseObject({ type: z.literal('passwordStrength') }),
+	metadata: { name: 'Password Strength' },
+	category: 'string',
+	handler: (rule) => {
+		const requirements = rule.value ?? {
+			minLength: 8,
+			requireUppercase: true,
+			requireLowercase: true,
+			requireNumbers: true,
+			requireSpecialChars: true,
+		};
+
+		return z.string().check(
+			z.refine((password) => {
+				if (requirements.minLength && password.length < requirements.minLength) return false;
+				if (requirements.requireUppercase && !/[A-Z]/.test(password)) return false;
+				if (requirements.requireLowercase && !/[a-z]/.test(password)) return false;
+				if (requirements.requireNumbers && !/\d/.test(password)) return false;
+				if (requirements.requireSpecialChars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false;
+
+				return true;
+			}, rule.message || 'Password does not meet strength requirements'),
+		);
+	},
+};
+
+export const engine = createFormEngine({ validations: [passwordStrength] });
+
+export const passwordField = {
+	$type: 'input',
+	id: 'password',
+	name: 'password',
+	inputType: 'password',
+	rules: [
+		{
+			type: 'passwordStrength',
+			value: {
+				minLength: 12,
+				requireUppercase: true,
+				requireLowercase: true,
+				requireNumbers: true,
+				requireSpecialChars: false,
+			},
+			message: 'Password must be at least 12 characters with uppercase, lowercase, and numbers',
+		},
+	],
+};
+```
+
+## Cross-Field Validations
+
+Every handler receives a `ValidationContext` as its second argument. Read other
+fields through `context.resolve`, which resolves a reference relative to the
+field being validated: a bare name is a sibling, a dotted name is absolute from
+the form root.
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type ConfirmPasswordRule = { type: 'confirmPassword'; message?: string };
+type ConditionalRequiredRule = {
+	type: 'conditionalRequired';
+	value: { dependsOn: string; when: unknown };
+	message?: string;
+};
+
+const confirmPassword: ValidationRegistration<ConfirmPasswordRule> = {
+	$type: 'confirmPassword',
+	schema: z.looseObject({ type: z.literal('confirmPassword') }),
+	metadata: { name: 'Confirm Password' },
+	category: 'cross-field',
+	dependsOn: () => ['password'],
+	handler: (rule, context) =>
+		z
+			.string()
+			.check(
+				z.refine(
+					(confirmation) => context.resolve('password') === confirmation,
+					rule.message || 'Passwords do not match',
+				),
+			),
+};
+
+const conditionalRequired: ValidationRegistration<ConditionalRequiredRule> = {
+	$type: 'conditionalRequired',
+	schema: z.looseObject({ type: z.literal('conditionalRequired') }),
+	metadata: { name: 'Conditional Required' },
+	category: 'cross-field',
+	dependsOn: (rule) => [rule.value.dependsOn],
+	handler: (rule, context) =>
+		z.optional(z.string()).check(
+			z.refine((value) => {
+				const dependentField = context.resolve(rule.value.dependsOn);
+
+				return !(rule.value.when === dependentField && !value);
+			}, rule.message || 'This field is required'),
+		),
+};
+
+export const engine = createFormEngine({ validations: [confirmPassword, conditionalRequired] });
+```
+
+Because the reference is relative, a rule authored once on a field inside an
+array reads its own row. A `confirmPassword` rule on `accounts.1.confirm`
+resolves `password` to `accounts.1.password`, not `accounts.0.password`.
+`context.values` holds the whole form as a nested tree when a rule genuinely
+needs more than one reference.
+
+`dependsOn` is what tells a renderer when to re-run the rule. Without it the rule
+still validates correctly, but only when its own field is validated — changing a
+field it reads will not re-run it.
+
+A cross-field rule that declares `dependsOn` re-runs when a field it reads
+changes, so correcting a password clears the "passwords must match" error on the
+confirmation. The error surfaces only once the dependent field has been touched,
+or once the form has been submitted, so typing a password does not light up a
+confirmation nobody has reached.
+
+Authoring the field is unchanged:
+
+```typescript
+export const companyNameField = {
+	$type: 'input',
+	id: 'company-name',
+	name: 'companyName',
+	label: 'Company Name',
+	rules: [
+		{
+			type: 'conditionalRequired',
+			value: { dependsOn: 'userType', when: 'business' },
+			message: 'Company name is required for business accounts',
+		},
+	],
+};
+```
+
+## Async Custom Validations
+
+> **Best Practice:**
+> For most server-side validations, use the built-in `type: 'async'` validator. It provides caching, dependency resolution, debouncing, and error handling out of the box.
+
+### Built-in Async Validation (Recommended)
+
+```typescript
+import type { AsyncRule } from '@schema-engine/forms';
+
+export const usernameRule = {
+	type: 'async',
+	url: '/api/check-username',
+	method: 'POST',
+	extraPayload: { validationType: 'premium' },
+	expectedResponse: { valid: true },
+	debounce: 500,
+	cacheTTL: 300000,
+	message: 'Username is already taken',
+} satisfies AsyncRule;
+```
+
+### Custom Async Validator (Advanced)
+
+For complex async validation logic that can't be handled by the built-in async type, create custom async validators:
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type UniqueUsernameRule = { type: 'uniqueUsername'; message?: string };
+type ValidAddressRule = { type: 'validAddress'; message?: string };
+
+const uniqueUsername: ValidationRegistration<UniqueUsernameRule> = {
+	$type: 'uniqueUsername',
+	schema: z.looseObject({ type: z.literal('uniqueUsername') }),
+	metadata: { name: 'Unique Username' },
+	category: 'generic',
+	handler: (rule) =>
+		z.string().check(
+			z.refine(async (username) => {
+				try {
+					const response = await fetch('/api/check-username', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ username }),
+					});
+
+					const result = (await response.json()) as { available: boolean };
+					return result.available;
+				} catch (error) {
+					console.error('Username validation failed:', error);
+					return false;
+				}
+			}, rule.message || 'Username is already taken'),
+		),
+};
+
+const validAddress: ValidationRegistration<ValidAddressRule> = {
+	$type: 'validAddress',
+	schema: z.looseObject({ type: z.literal('validAddress') }),
+	metadata: { name: 'Valid Address' },
+	category: 'generic',
+	handler: (rule) =>
+		z
+			.object({
+				street: z.string(),
+				city: z.string(),
+				state: z.string(),
+				zip: z.string(),
+			})
+			.check(
+				z.refine(async (address) => {
+					const response = await fetch('/api/validate-address', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(address),
+					});
+
+					const result = (await response.json()) as { valid: boolean };
+					return result.valid;
+				}, rule.message || 'Address could not be validated'),
+			),
+};
+
+export const engine = createFormEngine({ validations: [uniqueUsername, validAddress] });
+```
+
+**Note**: The built-in `async` validation type is preferred for most server-side validations as it provides caching, dependency resolution, debouncing, and better error handling out of the box.
+
+## Several Validations at Once
+
+Pass several custom validations at once. A later entry replaces an earlier one with the same `$type`:
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type PostalCodeRule = { type: 'postalCode'; country?: 'US' | 'CA' | 'UK'; message?: string };
+type WorkingHoursRule = { type: 'workingHours'; message?: string };
+type FileSizeRule = { type: 'fileSize'; maxSize?: number; message?: string };
+
+const postalCode: ValidationRegistration<PostalCodeRule> = {
+	$type: 'postalCode',
+	schema: z.looseObject({ type: z.literal('postalCode') }),
+	metadata: { name: 'Postal code' },
+	category: 'string',
+	handler: (rule) => {
+		const country = rule.country ?? 'US';
+		const patterns = {
+			US: /^\d{5}(-\d{4})?$/,
+			CA: /^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/,
+			UK: /^[A-Za-z]{1,2}\d[A-Za-z\d]? \d[A-Za-z]{2}$/,
+		};
+
+		return z.string().check(z.regex(patterns[country], rule.message || `Invalid ${country} postal code`));
+	},
+};
+
+const workingHours: ValidationRegistration<WorkingHoursRule> = {
+	$type: 'workingHours',
+	schema: z.looseObject({ type: z.literal('workingHours') }),
+	metadata: { name: 'Working hours' },
+	category: 'date',
+	handler: (rule) =>
+		z.string().check(
+			z.refine((time) => {
+				const [hours, minutes] = time.split(':').map(Number);
+				const totalMinutes = hours * 60 + minutes;
+
+				return totalMinutes >= 540 && totalMinutes <= 1020;
+			}, rule.message || 'Time must be during working hours (9 AM - 5 PM)'),
+		),
+};
+
+const fileSize: ValidationRegistration<FileSizeRule> = {
+	$type: 'fileSize',
+	schema: z.looseObject({ type: z.literal('fileSize') }),
+	metadata: { name: 'File size' },
+	category: 'generic',
+	handler: (rule) => {
+		const maxSize = rule.maxSize ?? 1024 * 1024;
+
+		return z
+			.instanceof(File)
+			.check(
+				z.refine(
+					(file) => file.size <= maxSize,
+					rule.message || `File size must be less than ${maxSize / 1024 / 1024}MB`,
+				),
+			);
+	},
+};
+
+export const engine = createFormEngine({ validations: [postalCode, workingHours, fileSize] });
+```
+
+## Testing Custom Validations
+
+Always test your custom validations thoroughly. Build an engine with the rule and read the schema from its registry:
+
+```typescript
+import * as z from 'zod/mini';
+import { describe, it, expect } from 'vitest';
+import { createFormEngine, createValidationContext } from '@schema-engine/forms';
+
+const postalCode = {
+	$type: 'postalCode',
+	schema: z.object({ type: z.literal('postalCode'), message: z.optional(z.string()) }),
+	metadata: { name: 'Postal code' },
+	category: 'string',
+	handler: (rule: { type: 'postalCode'; message?: string }) =>
+		z.string().check(z.regex(/^\d{5}(?:-\d{4})?$/, rule.message || 'Invalid postal code')),
+} as const;
+
+const registry = createFormEngine({ validations: [postalCode] }).getValidationRegistry();
+
+function schemaFor(message: string) {
+	const schema = registry.createSchema({ type: 'postalCode', message }, createValidationContext());
+	if (!schema) throw new Error('postalCode is not registered');
+	return schema;
+}
+
+describe('Custom postal code validation', () => {
+	it('should validate correct postal codes', () => {
+		const schema = schemaFor('Invalid postal code');
+
+		expect(schema.safeParse('12345').success).toBe(true);
+		expect(schema.safeParse('12345-6789').success).toBe(true);
+	});
+
+	it('should reject invalid postal codes', () => {
+		const schema = schemaFor('Invalid postal code');
+
+		expect(schema.safeParse('1234').success).toBe(false);
+		expect(schema.safeParse('abcde').success).toBe(false);
+		expect(schema.safeParse('').success).toBe(false);
+	});
+
+	it('should use custom error message', () => {
+		const result = schemaFor('Please enter a valid postal code').safeParse('invalid');
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error.issues[0].message).toBe('Please enter a valid postal code');
+		}
+	});
+});
+```
+
+## Performance Considerations
+
+### Expensive Operations
+
+Place expensive validations last in the rule chain:
+
+```typescript
+{
+	rules: [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'email' }, { type: 'uniqueEmail' }];
+}
+
+{
+	rules: [{ type: 'uniqueEmail' }, { type: 'required' }, { type: 'email' }];
+}
+```
+
+### Debouncing Async Validations
+
+Use the built-in async rule to debounce server-side validation. A pending check
+replaced by a different value has no result (it throws `ValidationSuperseded`, which is no issue); a check replaced
+by the same value shares the latest result. Checks for separate fields do not
+cancel one another. See [Async Validation](/docs/forms/validation-built-in#async-validation)
+for the request and response contract.
+
+```typescript
+import type { AsyncRule } from '@schema-engine/forms';
+
+const usernameRule = {
+	type: 'async',
+	url: '/api/check-username',
+	method: 'POST',
+	expectedResponse: { valid: true },
+	debounce: 500,
+	message: 'Username is unavailable',
+} satisfies AsyncRule;
+```
+
+Debouncing replaces pending timers; it does not cancel a request that has
+already started. If custom validation needs request cancellation or ordering,
+its implementation must handle those separately.
+
+## Best Practices
+
+### 1. Use Clear Type Names
+
+Choose descriptive type names that clearly indicate what the validation does:
+
+```typescript
+{ $type: 'socialSecurityNumber', ... }
+{ $type: 'businessEmailDomain', ... }
+
+{ $type: 'ssn', ... }
+{ $type: 'customVal1', ... }
+```
+
+### 2. Provide Helpful Default Messages
+
+Always include meaningful default error messages:
+
+```typescript
+handler: (rule) => {
+	return z
+		.string()
+		.check(z.regex(pattern, rule.message || 'Please enter a valid phone number in format: +1234567890'));
+};
+
+handler: (rule) => {
+	return z.string().check(z.regex(pattern, rule.message || 'Invalid format'));
+};
+```
+
+### 3. Handle Edge Cases
+
+Consider edge cases and provide graceful error handling:
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+
+type CardNumberRule = { type: 'cardNumber'; message?: string };
+
+const cardNumber: ValidationRegistration<CardNumberRule> = {
+	$type: 'cardNumber',
+	schema: z.looseObject({ type: z.literal('cardNumber') }),
+	metadata: { name: 'Card Number' },
+	category: 'string',
+	handler: (rule) =>
+		z.string().check(
+			z.refine((value) => {
+				if (!value) return false;
+
+				const cleanValue = value.replace(/[\s-]/g, '');
+
+				return /^\d+$/.test(cleanValue);
+			}, rule.message || 'Please enter a valid credit card number'),
+		),
+};
+
+export const engine = createFormEngine({ validations: [cardNumber] });
+```
+
+### 4. Document Your Validations
+
+Keep documentation for custom validations. This illustrative function accepts
+only `example-valid` so the registration demonstrates both outcomes. Replace it
+with your own validation logic; it does not validate real Australian Business
+Numbers or their checksums.
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+
+const validateAbn = (value: string) => value === 'example-valid';
+
+/**
+ * Illustrates delegating a custom rule to an application validator.
+ *
+ * @remarks `validateAbn` is a placeholder, not an ABN checksum or registry check.
+ */
+const australianABN = {
+	$type: 'australianABN',
+	schema: z.object({ type: z.literal('australianABN'), message: z.optional(z.string()) }),
+	metadata: { name: 'Australian ABN', description: 'Delegates to the application ABN validator.' },
+	category: 'string',
+	handler: (rule: { type: 'australianABN'; message?: string }) =>
+		z.string().check(z.refine((abn) => validateAbn(abn), rule.message || 'Please enter a valid ABN')),
+} as const;
+
+const engine = createFormEngine({ validations: [australianABN] });
+```
+
+## Registry Management
+
+The engine's validation registry is read-only. It lists what is registered but has no `register`, `unregister` or `clear`.
+
+### Checking Registration Status
+
+```typescript
+const validationRegistry = engine.getValidationRegistry();
+
+if (validationRegistry.has('postalCode')) {
+	console.log('Postal code validation is available');
+}
+
+const types = validationRegistry.keys();
+console.log('Available validations:', types);
+
+const stringValidations = validationRegistry.getByCategory('string');
+```
+
+### Replacing and Removing Validations
+
+A registration cannot be removed from an engine that is built. To replace one, register another with the same `$type` later in the list, or extend the engine. To drop one, build the engine without it.
+
+```typescript
+const withStrictPostalCodes = engine.extend({ validations: [strictPostalCode] });
+```
+
+Here `strictPostalCode` is another registration with `$type: 'postalCode'`.
+
+`extend` returns a new engine and keeps the validations the source engine was created with.
+
+### Creating Separate Registries
+
+For different contexts or testing, build a registry from a list. `createDefaultValidationRegistry` adds the built-in rules first:
+
+```typescript
+import { createValidationRegistry } from '@schema-engine/forms';
+
+const testOnly = {
+	$type: 'testOnly',
+	schema: z.object({ type: z.literal('testOnly') }),
+	metadata: { name: 'Test only' },
+	category: 'string',
+	handler: () => z.string().check(z.minLength(1)),
+} as const;
+
+const testRegistry = createValidationRegistry([testOnly]);
+
+const schema = testRegistry.createSchema({ type: 'testOnly' }, createValidationContext());
+```
+
+## Async Endpoint Example
+
+Use the built-in async rule when a field depends on a server response. The endpoint receives `value`, optional `dependsOn`, and any fields from `extraPayload`:
+
+### Rule Configuration
+
+```typescript
+{
+  type: 'async',
+  url: '/api/async-validate',
+  method: 'POST',
+  expectedResponse: { valid: true },
+  debounce: 500,
+  message: 'This username is not available'
+}
+
+{
+  type: 'async',
+  url: '/api/async-validate',
+  method: 'POST',
+  extraPayload: { field: 'username', validationType: 'complex' },
+  expectedResponse: { valid: true },
+  dependencies: ['username'],
+  debounce: 600,
+  cacheTTL: 300000,
+  message: 'This value conflicts with the selected username'
+}
+```
+
+### Server-Side Implementation
+
+The endpoint can use the automatic `value` and `dependsOn` fields together with values supplied through `extraPayload`:
+
+```typescript
+app.post('/api/async-validate', async (ctx) => {
+	const { field, value, dependsOn } = await ctx.request.json();
+
+	console.log('Validating field:', field);
+	console.log('Field value:', value);
+	console.log('Dependencies:', dependsOn);
+
+	await new Promise((resolve) => setTimeout(resolve, 200 + Math.random() * 300));
+
+	switch (field) {
+		case 'username':
+			const unavailable = ['admin', 'root', 'invalid'];
+			if (unavailable.includes(value?.toLowerCase())) {
+				return ctx.response.json({
+					valid: false,
+					message: `Username "${value}" is not available`,
+				});
+			}
+			break;
+
+		case 'email':
+			const blockedDomains = ['tempmail.com', '10minutemail.com'];
+			const domain = value?.split('@')[1]?.toLowerCase();
+			if (blockedDomains.includes(domain)) {
+				return ctx.response.json({
+					valid: false,
+					message: `Email domain "${domain}" is not supported`,
+				});
+			}
+			break;
+
+		case 'dependentField':
+			const usernameValue = dependsOn?.username;
+			if (usernameValue === 'admin' && value?.toLowerCase() === 'user') {
+				return ctx.response.json({
+					valid: false,
+					message: 'Cannot use "user" value when username is "admin"',
+				});
+			}
+			break;
+	}
+
+	return ctx.response.json({ valid: true });
+});
+```
+
+### Key Benefits
+
+- **Real-time Feedback**: Users get immediate validation feedback
+- **Network Optimization**: Debouncing reduces unnecessary API calls
+- **Dependency Tracking**: Fields can re-validate when related fields change
+- **Graceful Error Handling**: Network errors don't break the user experience
+- **Flexible Response Format**: Server can return detailed error messages
+
+## Next Steps
+
+- **[How It Works](./validation-how-it-works)** - Understanding the validation system architecture
+- **[Built-in Validations](./validation-built-in)** - Complete reference of available validators
+- **[Examples](../examples/basic-form)** - See custom validations in complete forms
+
+Custom validations give you the power to implement any business logic while maintaining the consistency and ease of use of the Form Engine validation system. Validations are registrations like every other part of the engine, so they are easy to share across your application and keep your form configurations clean and declarative.

@@ -1,7 +1,7 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { unsafeHtml } from '@ecopages/jsx/jsx-runtime';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 import { formConfigToCode } from '@/lib/form-config-code';
 import { highlightToHtml } from '@/lib/pierre-highlight';
 

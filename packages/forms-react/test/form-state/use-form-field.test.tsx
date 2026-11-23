@@ -1,10 +1,13 @@
 import { describe, expect, test, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput } from '@schema-engine/forms';
-import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
-import { RequiredRuleSchema } from '@schema-engine/forms/schemas/validation';
+import {
+	createFormEngine,
+	defineInput,
+	type ConstraintLogic,
+	type ElementConfig,
+	RequiredRuleSchema,
+} from '@schema-engine/forms';
 import { selectFieldState } from '@schema-engine/forms/state-container';
 import { FORM_ROOT, useFormContext, useWatch } from '@/hooks/form-state';
 import { fieldText } from '@/hooks/field-text';

@@ -1,5 +1,4 @@
-import type { FormConfigView } from '@schema-engine/forms';
-import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
+import type { FormConfigView, FormEngineRuntime } from '@schema-engine/forms';
 import type { FormStateErrorsInput } from '@schema-engine/forms/state-container';
 
 /** What `onSubmit` receives beside the values that passed. */

@@ -3,7 +3,7 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiSlider } from '@ecopages/radiant-ui/slider';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired } from '@schema-engine/forms';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { ControlHost, registerHostControl } from '@/lib/control-host';
 import { FieldGroup } from '../field-group';

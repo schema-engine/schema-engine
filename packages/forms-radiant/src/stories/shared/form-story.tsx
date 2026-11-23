@@ -1,7 +1,7 @@
 import { FormRenderer, type FormRendererProps } from '@/components/internals/form-renderer';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';
 import { getEngine } from './form-builder';
-import type { FormConfig, ElementConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig, ElementConfig } from '@schema-engine/forms';
 import type { Meta } from '@ecopages/storybook-radiant-vite';
 
 export const storyEngine = getEngine();

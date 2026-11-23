@@ -3,9 +3,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FormProvider } from '../../src/components/form-provider';
 import { useFormField } from '../../src/hooks/form-state';
-import type { ElementConfig, FormConfig } from '@schema-engine/forms/schemas';
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput, type BuilderActionBaseContext } from '@schema-engine/forms';
+import {
+	type ElementConfig,
+	type FormConfig,
+	createFormEngine,
+	defineInput,
+	type BuilderActionBaseContext,
+} from '@schema-engine/forms';
 import { anyValue } from '../utils/any-value';
 
 type Executed = { trigger: string; context: BuilderActionBaseContext };

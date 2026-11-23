@@ -1,5 +1,4 @@
-import type { ValidationRegistry } from '@schema-engine/forms/schemas/validation';
-import { getValidationRulesForElement, isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import { type ValidationRegistry, getValidationRulesForElement, isFieldRequired } from '@schema-engine/forms';
 
 /** The parts of an element its required flag is derived from. */
 export type RequiredFlagSource = Parameters<typeof getValidationRulesForElement>[0];

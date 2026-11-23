@@ -2,13 +2,14 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
 import {
+	createFormEngine,
+	defineInput,
+	BaseFieldSchema,
 	MinLengthRuleSchema,
 	type MinLengthRule,
 	type ValidationRegistration,
-} from '@schema-engine/forms/schemas/validation';
+} from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { useFormField } from '@/hooks/form-state';
 import { anyValue } from '../utils/any-value';

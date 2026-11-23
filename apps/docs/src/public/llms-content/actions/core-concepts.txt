@@ -1,0 +1,104 @@
+---
+title: 'Core Concepts'
+description: 'How the dispatcher and the context object compose.'
+order: 3
+---
+
+# Core Concepts
+
+## ActionRegistration
+
+An action registration defines one action type.
+
+```typescript
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+
+interface ActionRegistration<
+	TConfig extends ActionConfigBase = ActionConfigBase,
+	TBaseContext = unknown,
+	TTrigger = string,
+	TData = unknown,
+> extends BaseRegistration<TConfig, ActionMetadata<TTrigger>> {
+	$type: TConfig['$type'];
+	schema: StandardSchemaV1<TConfig>;
+	metadata: ActionMetadata<TTrigger>;
+	execute: (
+		context: ActionRuntimeContext<TConfig, TBaseContext, TTrigger>,
+	) => Promise<ActionExecutionResult<TData>> | ActionExecutionResult<TData>;
+}
+```
+
+Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
+
+`execute` receives the `ActionRuntimeContext` — the caller-provided base context enriched with `config`, `trigger`, and `signal`.
+
+## ActionConfigBase
+
+An action config is a specific action instance inside your config array.
+
+```typescript
+interface ActionConfigBase<TType extends string = string> {
+	id: string;
+	$type: TType;
+	enabled?: boolean;
+	triggers?: readonly string[];
+}
+```
+
+## ActionExecutionResult
+
+Every action returns a normalized result.
+
+```typescript
+interface ActionExecutionResult<TData = unknown> {
+	success: boolean;
+	message?: string;
+	error?: string;
+	cause?: unknown;
+	data?: TData;
+	shouldContinue?: boolean;
+}
+```
+
+## Execution Model
+
+The dispatcher separates what callers provide from what handlers receive. Callers pass a `TBaseContext`. The dispatcher internally enriches it before invoking `execute()`:
+
+```typescript
+execute({
+	...context,
+	config: action,
+	trigger,
+	signal,
+});
+```
+
+The resulting `ActionRuntimeContext` is what the handler sees:
+
+```typescript
+type ActionRuntimeContext<TConfig, TBaseContext, TTrigger> = TBaseContext & {
+	config: TConfig;
+	trigger: TTrigger;
+	signal: AbortSignal;
+};
+```
+
+Actions read values directly:
+
+```typescript
+execute: async (context) => {
+	console.log(context.trigger);
+	console.log(context.config);
+	console.log(context.userId);
+	return { success: true };
+};
+```
+
+## Trigger Matching
+
+An action executes when either:
+
+1. The action instance defines `triggers` and the current trigger is included.
+2. Otherwise, the registration `metadata.defaultTriggers` includes the current trigger.
+
+Custom triggers on the action instance override the defaults on the registration.

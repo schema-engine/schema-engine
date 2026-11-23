@@ -1,5 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
-import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import { type FormConfig, ValidationPresets } from '@schema-engine/forms';
 
 /**
  * Interactive demo form configuration

@@ -3,7 +3,7 @@ import './form-input-otp.css';
 import { customElement, prop, state, refAll } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired } from '@schema-engine/forms';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { emitControlChange, emitControlCommit } from '@/lib/field-control';
 import { registerHostControl } from '@/lib/control-host';

@@ -1,8 +1,7 @@
 import { expect, test } from 'vitest';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import * as z from 'zod/mini';
-import { defineInput } from '@schema-engine/forms';
-import type { ConstraintLogic } from '@schema-engine/forms/schemas';
+import { defineInput, type ConstraintLogic } from '@schema-engine/forms';
 import type { ConstraintElement } from '@/components/internals/constraint-element';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormController } from '@/adapters/radiant/controller';

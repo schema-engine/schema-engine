@@ -1,7 +1,6 @@
 /** @jsxImportSource react */
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput, defineStatic } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+import { createFormEngine, defineInput, defineStatic, BaseFieldSchema } from '@schema-engine/forms';
 import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
 
 const TextSchema = z.extend(BaseFieldSchema, { $type: z.literal('text') });

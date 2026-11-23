@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 import {
 	acmeThemeConfig,
 	addressFormConfig,
@@ -41,7 +41,7 @@ export interface Recipe {
 	files: RecipeFile[];
 }
 
-const IMPORT_FORM_CONFIG = "import type { FormConfig } from '@schema-engine/forms/schemas';";
+const IMPORT_FORM_CONFIG = "import type { FormConfig } from '@schema-engine/forms';";
 
 /** The config tab of a recipe: every demo's config as one pasteable TypeScript module. */
 export function recipeConfigSource(demos: readonly RecipeDemo[]): string {

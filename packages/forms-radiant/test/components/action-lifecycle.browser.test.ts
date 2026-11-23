@@ -1,7 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest';
-import { createFormEngine } from '@schema-engine/forms';
-import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
-import type { NormalizedFormConfig } from '@schema-engine/forms';
+import { createFormEngine, type FormEngineRuntime, type NormalizedFormConfig } from '@schema-engine/forms';
 import { FormController } from '@/adapters/radiant/controller';
 import { FormInstanceElement } from '@/components/form-instance.script';
 import { FormRendererElement } from '@/components/internals/form-renderer.script';

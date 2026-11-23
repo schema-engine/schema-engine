@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /** Homepage and intro previews — includes demo submit action and submission alert. */
 export const contactFormConfig = {

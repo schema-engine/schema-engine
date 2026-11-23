@@ -1,0 +1,228 @@
+---
+title: 'Quick Start'
+description: 'Build your first form with Schema Engine in just a few steps.'
+order: 3
+---
+
+# Quick Start
+
+Build your first form with Schema Engine in just a few steps.
+
+This guide uses a portable **`FormConfig`** object (ideal for JSON and shared files).
+When the form lives in TypeScript next to your engine, prefer
+[`engine.defineForm()`](/docs/forms/builder#author-form-configuration) instead.
+See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+
+## Before you start
+
+This guide uses the React renderer. Follow [Installation](/docs/getting-started/installation#react) first: it installs the packages, copies the form elements and the default recipes into your project with the shadcn registry (`pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes`), and imports their styles. The `@/components/schema-engine/forms/...` imports below resolve only after that step. Using Radiant instead? Start from [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started).
+
+## 1. Create Your Form Engine
+
+Use `createFormEngine` to register the copied elements and recipes. The returned engine is immutable:
+
+```typescript
+// lib/form-engine.ts
+import { createFormEngine } from '@schema-engine/forms';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+
+export const formEngine = createFormEngine({
+	elements: schemaFormRegistrations,
+	recipes: schemaFormRecipeRegistrations,
+});
+```
+
+> **Note:** Create the form engine once and reuse it across your application.
+
+## 2. Create the Form Configuration
+
+Define your form structure using a configuration object:
+
+```typescript
+// config/contact-form.ts
+import type { FormConfig } from '@schema-engine/forms';
+
+export const contactFormConfig: FormConfig = {
+	id: 'contact-form',
+	title: 'Get In Touch',
+	description: 'We would love to hear from you',
+	steps: [
+		{
+			id: 'contact-details',
+			title: 'Contact Information',
+			elements: [
+				{
+					$type: 'input',
+					id: 'firstName',
+					name: 'firstName',
+					label: 'First Name',
+					inputType: 'text',
+					rules: [{ type: 'required', message: 'First name is required' }],
+				},
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email Address',
+					inputType: 'email',
+					rules: [
+						{ type: 'required', message: 'Email is required' },
+						{ type: 'email', message: 'Please enter a valid email address' },
+					],
+				},
+				{
+					$type: 'select',
+					id: 'subject',
+					name: 'subject',
+					label: 'Subject',
+					options: [
+						{ value: 'general', label: 'General Inquiry' },
+						{ value: 'support', label: 'Technical Support' },
+						{ value: 'billing', label: 'Billing Question' },
+					],
+					rules: [{ type: 'required', message: 'Please select a subject' }],
+				},
+				{
+					$type: 'select',
+					id: 'priority',
+					name: 'priority',
+					label: 'Priority Level',
+					options: [
+						{ value: 'low', label: 'Low' },
+						{ value: 'medium', label: 'Medium' },
+						{ value: 'high', label: 'High' },
+					],
+					constraints: [
+						{
+							field: 'subject',
+							operator: 'equals',
+							value: 'support',
+							action: 'show',
+						},
+					],
+				},
+				{
+					$type: 'textarea',
+					id: 'message',
+					name: 'message',
+					label: 'Message',
+					rows: 4,
+					rules: [
+						{ type: 'required', message: 'Message is required' },
+						{ type: 'minLength', value: 10, message: 'Message must be at least 10 characters' },
+					],
+				},
+			],
+		},
+	],
+	view: {
+		$type: 'card',
+		shell: { appearance: { size: 'default', surface: 'elevated' } },
+	},
+};
+```
+
+## 3. Render the Form
+
+`FormRenderer` validates the config at the form boundary; you do not need to call
+`validateForm` first unless you reuse the normalized result elsewhere. The form state is
+the engine's own container, built into the renderer: there is nothing else to install.
+
+```tsx
+import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
+import { formEngine } from './lib/form-engine';
+import { contactFormConfig } from './config/contact-form';
+
+export function ContactForm() {
+	const handleSubmit = (data: Record<string, unknown>) => {
+		console.log('Form submitted:', data);
+	};
+
+	return (
+		<FormEngineProvider engine={formEngine}>
+			<FormRenderer config={contactFormConfig} onSubmit={handleSubmit} />
+		</FormEngineProvider>
+	);
+}
+```
+
+## Understanding Constraint Logic
+
+Notice the `priority` field includes a `constraints` array:
+
+```json
+{
+	"$type": "select",
+	"id": "priority",
+	"name": "priority",
+	"label": "Priority Level",
+	"constraints": [
+		{
+			"field": "subject",
+			"operator": "equals",
+			"value": "support",
+			"action": "show"
+		}
+	]
+}
+```
+
+This creates **conditional logic** where:
+
+- The priority field is only **shown** when the subject field equals "support"
+- The field automatically hides/shows as users change the subject
+
+**Available operators:** `equals`, `not_equals`, `contains`, `not_contains`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`
+
+**Available actions:** `show`, `hide`, `enable`, `disable`, `require`
+
+## Key Concepts
+
+Form and element shapes are defined by `@schema-engine/forms` (`FormConfig`,
+`FormStep`, validation rules, and constraints). Import those types instead of
+copying simplified interfaces so your project stays aligned with the engine.
+
+See [Core Concepts](/docs/forms/core-concepts) for validation, recipes, and
+[Authoring modes](/docs/forms/core-concepts#authoring-modes).
+
+## Validation Rules
+
+Schema Engine uses a declarative validation system:
+
+```typescript
+// Required field
+rules: [{ type: 'required', message: 'This field is required' }];
+
+// Email validation
+rules: [
+	{ type: 'required', message: 'Email is required' },
+	{ type: 'email', message: 'Please enter a valid email' },
+];
+
+// Length validation
+rules: [
+	{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' },
+	{ type: 'maxLength', value: 100, message: 'Must be less than 100 characters' },
+];
+
+// Pattern validation
+rules: [
+	{
+		type: 'pattern',
+		value: '^[A-Za-z\\s]+$',
+		message: 'Only letters and spaces allowed',
+	},
+];
+```
+
+## What's Next?
+
+Now that you've built your first form, explore these topics:
+
+- **[Components](/docs/forms-react/components)** - Pre-built elements and custom components
+- **[View recipes](/docs/forms-react/layouts)** - Shells, blocks, and multi-step composition
+- **[Styling and layout](/docs/styling/overview)** - Widths, areas, appearance axes and copy-paste recipes
+- **[Hooks](/docs/forms-react/hooks)** - React hooks for form interactions
+- **[Actions](/docs/forms/actions)** - Handle form submission and lifecycle events
+- **[Form engine setup](/docs/forms/builder)** - Typed authoring with `defineForm`

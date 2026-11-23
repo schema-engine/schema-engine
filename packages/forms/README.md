@@ -603,7 +603,7 @@ normalized elements for default seeding and field traversal. Authoring JSON does
 not include this marker. Containers without an array marker use object paths.
 See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 
-`templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
+`templatePath` in `@schema-engine/forms` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
 
 Engine construction stores elements, recipes, actions and validation rules in read-only registries
 from `@schema-engine/registry` (last registration wins, no override warning) and
@@ -611,6 +611,8 @@ checks each winning schema once at that boundary. It stores frozen shallow copie
 to the generic result; see [actions](./src/actions/README.md).
 
 ## Pre-publish API
+
+Every symbol is exported from one entry. The package root holds the main API; `/browser`, `/state-container`, `/csrf`, `/server-errors`, `/testing`, `/recipes` and `/recipes/built-in` hold what is separate from it, and `test/engine/entry-points.test.ts` fails when a symbol is exported from two.
 
 Use `FormActionTrigger` and `BuilderActionRuntimeContext` for form actions, and import them with the form actions (`formSubmitPlugin`, the registrations) from `@schema-engine/forms`. `ActionDispatcher` and the dispatch types come from `@schema-engine/actions` only.
 Recipe lookup accepts an engine or `{ getRecipe }` object. Grid configuration

@@ -19,7 +19,7 @@ import type { RuiSelectElement } from '@ecopages/radiant-ui/select';
 import { RuiAutocomplete, RuiAutocompleteCollection, RuiAutocompleteEmpty } from '@ecopages/radiant-ui/autocomplete';
 import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopages/radiant-ui/listbox';
 import type { CountryCode } from 'libphonenumber-js';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired } from '@schema-engine/forms';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { emitControlChange, emitControlCommit } from '@/lib/field-control';
 import { registerHostControl } from '@/lib/control-host';

@@ -1,9 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { expect, test } from 'vitest';
-import { createFormEngine, validateFormValues } from '@schema-engine/forms';
-import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
-import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
+import {
+	createFormEngine,
+	validateFormValues,
+	createDefaultValidationRegistry,
+	createDebounceScope,
+} from '@schema-engine/forms';
 import { InputOTPElementRegistration } from '@/components/schema-engine/forms/inputs/form-input-otp.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { FormRenderer } from '@/components/internals/form-renderer';

@@ -1,5 +1,4 @@
-import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import { ValidationPresets, type FormConfig } from '@schema-engine/forms';
 
 /**
  * Demo configuration showcasing constraint-based field visibility.

@@ -1,4 +1,4 @@
-import { ValidationPresets, type FormConfig } from '@schema-engine/forms/schemas';
+import { ValidationPresets, type FormConfig } from '@schema-engine/forms';
 
 export const surveyFormConfig: FormConfig = {
 	id: 'customer-survey',

@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /** Contact form with conditional fields — constraints example. */
 export const contactFormDemoConfig: FormConfig = {

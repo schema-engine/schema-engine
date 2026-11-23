@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { validateRegistrationConfig } from '@schema-engine/forms/lib/standard-schema';
+import { validateRegistrationConfig } from '@schema-engine/forms';
 import {
 	CardRecipe,
 	CardWizardRecipe,

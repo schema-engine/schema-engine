@@ -41,7 +41,7 @@ Define your form structure using a configuration object:
 
 ```typescript
 // config/contact-form.ts
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 export const contactFormConfig: FormConfig = {
 	id: 'contact-form',
@@ -179,7 +179,7 @@ This creates **conditional logic** where:
 
 ## Key Concepts
 
-Form and element shapes are defined by `@schema-engine/forms/schemas` (`FormConfig`,
+Form and element shapes are defined by `@schema-engine/forms` (`FormConfig`,
 `FormStep`, validation rules, and constraints). Import those types instead of
 copying simplified interfaces so your project stays aligned with the engine.
 

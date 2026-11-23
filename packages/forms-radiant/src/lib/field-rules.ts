@@ -1,5 +1,4 @@
-import type { BaseValidationRule } from '@schema-engine/forms/schemas';
-import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import { type BaseValidationRule, isFieldRequired } from '@schema-engine/forms';
 
 /**
  * Whether the render overlay marks an element required.

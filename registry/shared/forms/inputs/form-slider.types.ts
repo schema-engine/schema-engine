@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+import { BaseFieldSchema } from '@schema-engine/forms';
 
 export const SliderFieldExtensionSchema = z.object({
 	min: z._default(z.optional(z.number()), 0),

@@ -4,7 +4,7 @@
  */
 
 import type { ContextType } from '@ecopages/radiant/context';
-import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import { formEngineContext } from '../../src/components/provider';
 import { formInstanceContext, type FormInstanceContextValue } from '../../src/contexts/form-instance-context';

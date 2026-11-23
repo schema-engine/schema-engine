@@ -1,5 +1,5 @@
 import type { JsxRenderable } from '@ecopages/jsx';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /** Which engine the client hydrates a demo root with. */
 export type ReactDemoKit = 'demo' | 'shadcn';

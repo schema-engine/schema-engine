@@ -3,7 +3,7 @@ import { customElement, onUpdated, prop, RadiantElement, state, ref } from '@eco
 import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import { registerHostControl } from '@/lib/control-host';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired } from '@schema-engine/forms';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { emitControlChange } from '@/lib/field-control';
 import { FieldGroup } from '../field-group';

@@ -1,0 +1,136 @@
+---
+title: 'Recipes'
+description: 'Copy-paste styling recipes: a complete config and the CSS it needs, each rendered live next to its source.'
+order: 5
+---
+
+import { RecipeDemo } from '@/components/recipe-demo';
+import {
+	addressFormRecipe,
+	brandFrameRecipe,
+	brandThemeRecipe,
+	checkoutWizardRecipe,
+	contactCardRecipe,
+	drawnLayoutRecipe,
+	sharedThemeRecipe,
+	tightSizeRecipe,
+} from '@/lib/recipes/catalog';
+
+# Recipes
+
+Each recipe is a complete form config, the CSS it needs, and a live demo. The demo renders the same object the config tab shows, and each file tab is the text of the file the demo runs, so a snippet cannot drift from its demo. Every tab has a copy button.
+
+## Use a recipe
+
+Set up your app as the getting-started page for your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), then:
+
+1. Copy the config tab into a module and render it.
+2. Copy the CSS tab into your global stylesheet, or import it as a file. Every recipe CSS is scoped by the class its config puts on the form with `className`, so it only applies once pasted with that config.
+3. If the recipe has a theme or engine tab, build your engine with it, as that tab shows. A React app also needs `pnpm add @schema-engine/layout` for a theme tab, which imports `createLayoutTheme` and `defineAxis` from it (Radiant installs it as a peer).
+
+In Radiant:
+
+```tsx
+import { FormRenderer, createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { contactCard } from './contact-card';
+
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+export function Contact() {
+	return <FormRenderer engine={engine} config={contactCard} onSubmit={(data) => console.log(data)} />;
+}
+```
+
+In React, create the engine with the registrations and recipes you copied from the shadcn registry, as [Forms React](/docs/forms-react/getting-started) shows, and render `FormRenderer` with the same `config`. The recipes that use `fieldSet` need the fieldset registration in your engine.
+
+The React demos use the docs' Radiant-styled demo kit, not the shadcn registry components, so fallbacks such as the card's maximum width and shadow differ from a registry install. The demos on this page run on one docs engine per renderer, built on the theme of the [brand theme recipe](#a-brand-theme-with-a-host-tone-axis). A recipe that does not name a theme runs on the default one and renders the same without it.
+
+## A contact card with two half-width fields
+
+A single-step form on the `card` recipe. `grid.width: half` puts the two names on one row; the email and message fill the row because they set no width. The CSS sets the card's width, the readable measure `--se-measure`, on the form's own class.
+
+<RecipeDemo recipe={contactCardRecipe} />
+
+## An address fieldset with an inner grid
+
+A fieldset lays its children out on a grid of its own, so `width` works on the children of a container exactly as it does on a step's fields. The step has no `columns`, and it does not need one. The CSS tightens the rhythm with the public gap tokens.
+
+<RecipeDemo recipe={addressFormRecipe} />
+
+## A multi-step card wizard with per-step areas
+
+A step's `grid` replaces the form's grid for that step, so each step of a wizard draws its own layout and claims every area in it. The names are ASCII CSS identifiers, and each field claims one with `grid.area`.
+
+<RecipeDemo recipe={checkoutWizardRecipe} />
+
+## A responsive drawn layout
+
+Five fields, stacked on small screens and drawn from `md` up: `A` spans three columns and two rows, `B` and `C` stack beside it, and `D` and `E` share the last row. `areas` is a record keyed by breakpoint, and it must include `default`. Resize the window to see the layout change.
+
+<RecipeDemo recipe={drawnLayoutRecipe} />
+
+The rules for areas, and every validation error, are in [Drawn layouts](/docs/forms/core-concepts#drawn-layouts-areas).
+
+## A brand theme with a host tone axis
+
+The built-in axes are `size` and `surface`. A host adds its own with `defineAxis`: here `tone`, whose values set the colour roles Radiant UI (`--primary`, `--on-primary`) and shadcn (`--primary`, `--primary-foreground`) components read. The theme tab builds it; every engine receives it as `layout`. The form picks `tone: 'brand'` once, on the form, and the submit button, the checkbox and the border recolor. Try `forest` after you paste it; the tab is static.
+
+The CSS reads `--primary` and keys one rule on the `data-se-tone` attribute the renderer writes on the form element.
+
+<RecipeDemo recipe={brandThemeRecipe} />
+
+## Two engines sharing one theme
+
+Compile a theme once and pass the same object to every engine. Both engines then carry one `data-se-theme` and the same stylesheet content, so a checkout form and a profile form match whatever engine built them. The docs engines use the same pattern across renderers: Radiant and React engines are both built on `brandTheme`.
+
+<RecipeDemo recipe={sharedThemeRecipe} />
+
+Each form picks its own tone. React hoists the shared stylesheet to one element; Radiant puts an identical copy in each form, by design (see [Layout themes](/docs/styling/layout-themes#share-a-theme-between-engines)).
+
+## Overriding size tokens
+
+`size: compact` reads two hooks, `--se-space-compact` and `--se-control-height-compact`, so tighten them on the form's class, or on `:root` or a wrapper for every form below it: the pick on the card shell, a step or a field inherits them. `--se-measure` has a literal value on the element that carries the pick, so override it with a rule that targets that element and has the specificity of a class. The form picks `compact` on the card shell.
+
+<RecipeDemo recipe={tightSizeRecipe} />
+
+## A custom recipe shell in React and in Radiant
+
+A recipe is a registration: a spec (`$type`, kind, slot schemas) bound to the components of one renderer. This one is a single-step shell that frames the fields under a label read from `view.shell.label`. The same config renders in both renderers; only the binding differs, and the CSS is shared.
+
+Register it when you build the engine, then select it with `view.$type`:
+
+In React:
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { elements } from './registrations';
+import { BrandFrameRecipe } from './brand-frame.react';
+
+export const engine = createFormEngine({ elements, recipes: [BrandFrameRecipe] });
+```
+
+In Radiant:
+
+```ts
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { BrandFrameRecipe } from './brand-frame.radiant';
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, recipes: [BrandFrameRecipe] });
+```
+
+<RecipeDemo recipe={brandFrameRecipe} />
+
+The shell receives `slots` (`header`, `progress`, `content`, `actions`, each present only when the recipe declares it) and `viewConfig`, and reads its own slot config with `getSlotConfig` and the schema it declared. A recipe that needs `size` or `surface` on a slot declares them with `appearanceAxes: { shell: ['size', 'surface'] }`. See [View recipes](/docs/forms-react/layouts#custom-recipes).
+
+## Authoring in YAML
+
+Every recipe's config is plain data. Each demo has a `.form.yaml` tab, written from the same object, so the YAML cannot drift either. Load a file with `parseYaml` and your engine's `safeValidateForm`, as [YAML Forms](/docs/forms/yaml) shows, which also covers editor autocomplete from `engine.generateFormConfigSchema()` and the caveats of unquoted values such as `1.10`.
+
+```ts
+import { parseYaml } from '@schema-engine/registry/yaml';
+import { engine } from './engine';
+
+export function loadForm(text: string, filename: string) {
+	return parseYaml(text, (value) => engine.safeValidateForm(value), { filename });
+}
+```

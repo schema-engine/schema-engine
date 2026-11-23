@@ -1,0 +1,39 @@
+---
+title: 'Sequential Actions'
+description: 'Compose submit, notification, reset, and analytics actions.'
+order: 5
+---
+
+import { FormRendererPreview } from '@/components/form-renderer';
+import { FormConfigCode } from '@/components/form-config-code';
+import { sequentialActionsDemoConfig } from '@/lib/form-configs/sequential-actions';
+
+# Sequential Actions
+
+These previews use Radiant because the docs app is Ecopages + Radiant UI.
+
+Actions are registered capabilities that run in response to lifecycle
+triggers. The form configuration determines the order in which action entries
+are evaluated. Single-step recipes such as `card` render a submit control in
+the actions slot; that control starts the submit lifecycle that runs the
+plugins below.
+
+## Interactive demo
+
+<FormRendererPreview config={sequentialActionsDemoConfig} />
+
+## Configuration pattern
+
+<FormConfigCode config={sequentialActionsDemoConfig} />
+
+Register the corresponding action registrations with
+`createFormEngine({ actions: [...] })`. Docs previews route `show_notification`
+through `notificationPlugin({ onNotification })` and the site-wide
+`<RuiToaster position="bottom-end" />`. Use `form_submit_start`,
+`form_submit_success`, `form_submit_error`, and `form_submit_complete` for the
+submit lifecycle; step navigation uses the `step_*` triggers.
+
+The same configuration renders in React: [React Forms](/docs/examples/react-forms#submission-and-actions).
+
+See [Actions](/docs/forms/actions) for the built-in registrations and
+[How Actions Work](/docs/actions/how-it-works) for execution semantics.

@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import { isValidPhoneNumber } from 'libphonenumber-js/min';
-import { PhoneRuleSchema, type PhoneRule, type ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { PhoneRuleSchema, type PhoneRule, type ValidationRegistration } from '@schema-engine/forms';
 
 export function createPhoneValidationRegistration(): ValidationRegistration<PhoneRule> {
 	return {

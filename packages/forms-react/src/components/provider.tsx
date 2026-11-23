@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms';
 
 /**
  * Form Engine context value

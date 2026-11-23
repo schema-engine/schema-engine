@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /**
  * Configs of the styling recipes page. Each is rendered live and serialized into its source tab from

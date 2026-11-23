@@ -1,9 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { safeParseStandardSchema } from '@schema-engine/registry';
 
-export { assertStandardSchema, safeParseStandardSchema } from '@schema-engine/registry';
-export type { StandardSchemaIssue, StandardSchemaSafeParseResult } from '@schema-engine/registry';
-
 /**
  * Validate `value` with a Standard Schema and return parsed data.
  *

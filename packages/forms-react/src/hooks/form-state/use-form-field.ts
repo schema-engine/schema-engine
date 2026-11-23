@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ChangeEvent, CSSProperties } from 'react';
-import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
-import { createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { mergeControlProps, createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms';
 import { selectFieldState, selectValue } from '@schema-engine/forms/state-container';
 import { getGridItemVariables } from '@schema-engine/layout';
 import { isElementRequired } from '@/hooks/is-element-required';

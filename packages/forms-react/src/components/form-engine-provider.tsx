@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
-import type { EngineOutputMaps, FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { EngineOutputMaps, FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms';
 import { FormEngineContext, createFormEngineContextValue } from './provider';
 
 export interface FormEngineProviderProps<

@@ -3,7 +3,7 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import { FormRenderer } from '@schema-engine/forms-radiant';
 import { docsEngines } from '@/lib/form-engine-setup';
 import type { DocsEngineName } from '@/lib/recipes/catalog';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 import './form-renderer-preview.css';
 
 /**

@@ -1,0 +1,218 @@
+---
+title: 'API Reference'
+description: 'Public surface of the actions package.'
+order: 5
+---
+
+# API Reference
+
+## ActionRegistry
+
+```typescript
+class ActionRegistry<TBaseContext, TTrigger>
+	implements
+		ReadOnlyRegistry<ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>,
+		ActionRegistryProvider<TBaseContext, TTrigger>
+{
+	constructor(registrations: readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[]);
+
+	readonly kind: string;
+	readonly size: number;
+	get(key: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
+	has(key: string): boolean;
+	all(): readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[];
+	keys(): readonly string[];
+	getAction(type: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
+	getActionTypes(): string[];
+}
+```
+
+`ActionRegistry` is built from a list with `createRegistry` from `@schema-engine/registry`. It is read-only and frozen. A later registration with the same `$type` replaces an earlier one without a warning, and a winning registration whose schema is not a Standard Schema throws at construction, naming its `$type`. Subclasses may add their own fields. There is no `register` or `clear`; to register at runtime, implement `ActionRegistryProvider` yourself.
+
+## parseActions
+
+```typescript
+function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
+	registry: { getAction(type: string): { schema: StandardSchemaV1 } | undefined },
+	input: unknown,
+): ParseActionsResult<TConfig>;
+
+type ParseActionsResult<TConfig> =
+	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: StandardSchemaIssue[] };
+```
+
+Validates each entry of a serialized sequence, inner arrays included, against the schema of the registration its `$type` names. `data` holds what each schema returned, so defaults and transforms apply, and every entry is checked, so two bad entries report two issues.
+
+An issue is a Standard Schema issue whose `path` is the index of the entry, the index inside a group when the entry is one, then the path the schema reported: `[1, 0, 'endpoint']`. An entry without a string `$type`, and a `$type` no registration answers, are issues at `$type`.
+
+`ParsedAction` is the entry type of `data`. Its brand exists in the type only and `parseActions` is the one function that produces it. `TConfig` is the caller's claim about what the registered schemas return; the parse checks the schemas and not that claim.
+
+## ActionDispatcher
+
+```typescript
+class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
+	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>);
+
+	dispatch<TConfig extends ActionConfigBase>(
+		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
+	): Promise<ActionDispatchResult[]>;
+
+	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void;
+
+	hasMatching<TConfig extends ActionConfigBase>(actions: ParsedActionSequence<TConfig>, trigger: TTrigger): boolean;
+}
+```
+
+`dispatch`, `dispatchSync` and `hasMatching` take only parsed actions, so JSON or an object literal does not type-check until `parseActions` has returned it. When `metadata` is provided in the input, `dispatch()` shallow-merges it into `context.metadata` before execution.
+
+## ActionRegistryProvider
+
+Available from the package root:
+
+```typescript
+interface ActionRegistryProvider<
+	TBaseContext = unknown,
+	TTrigger = string,
+	TRegistration extends ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> = ActionRegistration<
+		ActionConfigBase,
+		TBaseContext,
+		TTrigger
+	>,
+> {
+	getAction(type: string): TRegistration | undefined;
+	getActionTypes(): string[];
+}
+```
+
+## ActionRegistration
+
+```typescript
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+
+interface ActionRegistration<
+	TConfig extends ActionConfigBase = ActionConfigBase,
+	TBaseContext = unknown,
+	TTrigger = string,
+	TData = unknown,
+> extends BaseRegistration<TConfig, ActionMetadata<TTrigger>> {
+	$type: TConfig['$type'];
+	schema: StandardSchemaV1;
+	metadata: ActionMetadata<TTrigger>;
+	execute: ActionHandler<TConfig, TBaseContext, TTrigger, TData>;
+}
+```
+
+Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
+
+`execute` receives an `ActionRuntimeContext` — the caller-provided `TBaseContext` enriched with `config`, `trigger`, and `signal` by the dispatcher.
+
+## ActionRuntimeContext
+
+```typescript
+type ActionRuntimeContext<TConfig = unknown, TBaseContext = unknown, TTrigger = string> = TBaseContext & {
+	config: TConfig;
+	trigger: TTrigger;
+	triggeredBy?: TConfig;
+	signal: AbortSignal;
+};
+```
+
+The shape that action handlers receive at execution time. The dispatcher creates this by spreading the caller-provided base context with the current `config`, `trigger`, and `signal`, and includes `triggeredBy` for nested dispatches.
+
+## ActionDispatchInput
+
+Object-based input for `ActionDispatcher.dispatch()` and `dispatchSync()`.
+
+```typescript
+interface ActionDispatchInput<
+	TConfig extends ActionConfigBase = ActionConfigBase,
+	TBaseContext = unknown,
+	TTrigger = string,
+> {
+	trigger: TTrigger;
+	actions: ParsedActionSequence<TConfig>;
+	context: TBaseContext;
+	triggeredBy?: TConfig;
+	metadata?: Record<string, unknown>;
+}
+```
+
+## ActionMetadata
+
+```typescript
+interface ActionMetadata<TTrigger = string> extends RegistrationMetadata {
+	icon?: string;
+	defaultTriggers?: readonly TTrigger[];
+	category?: string;
+}
+```
+
+## ActionConfigBase
+
+```typescript
+interface ActionConfigBase<TType extends string = string> {
+	id: string;
+	$type: TType;
+	enabled?: boolean;
+	triggers?: readonly string[];
+}
+```
+
+## ActionExecutionResult
+
+```typescript
+interface ActionExecutionResult<TData = unknown> {
+	success: boolean;
+	message?: string;
+	error?: string;
+	cause?: unknown;
+	data?: TData;
+	shouldContinue?: boolean;
+}
+```
+
+## ActionDispatchResult
+
+`dispatch` returns one result per executed action in configuration order. In addition
+to the handler's `ActionExecutionResult`, each result has:
+
+```typescript
+type ActionDispatchResult<TData = unknown> = ActionExecutionResult<TData> & {
+	actionId: string;
+	sequenceIndex: number;
+	groupIndex?: number;
+	status: 'succeeded' | 'failed' | 'cancelled';
+	cancellationRequested: boolean;
+};
+```
+
+Indexes refer to the original action sequence and, for a group member, its index
+inside that group. Disabled or nonmatching actions retain their positions in the
+input, even though they produce no result. `cancelled` means an abort error was
+observed after cancellation was requested; the remote side effect may still have
+occurred. Direct callers constructing `ActionRuntimeContext` must provide `signal`.
+
+## defineAction
+
+A factory helper for creating strongly typed action registrations scoped to one domain:
+
+```typescript
+function defineAction<TBaseContext, TTrigger = string>(): <TConfig extends ActionConfigBase, TData = unknown>(
+	registration: ActionRegistration<TConfig, TBaseContext, TTrigger, TData>,
+) => ActionRegistration<TConfig, TBaseContext, TTrigger, TData>;
+```
+
+Usage:
+
+```typescript
+const define = defineAction<AppContext, AppTrigger>();
+
+const myAction = define({
+	$type: 'my-action',
+	schema: mySchema,
+	metadata: { name: 'My Action' },
+	execute: async (context) => {
+		return { success: true };
+	},
+});
+```

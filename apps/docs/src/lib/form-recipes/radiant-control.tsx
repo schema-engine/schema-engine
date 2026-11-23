@@ -4,8 +4,7 @@ import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import { announceControlConnect, registerFieldControl } from '@ecopages/radiant-ui/form';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
 import * as z from 'zod/mini';
-import { defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+import { defineInput, BaseFieldSchema } from '@schema-engine/forms';
 import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { FormField } from '@schema-engine/forms-radiant/primitives';
 

@@ -17,8 +17,7 @@ Call `useFormField` with the config the widget receives. It returns the field's 
 
 ```tsx title="react/text-field.tsx"
 import * as z from 'zod/mini';
-import { defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
+import { defineInput, BaseFieldSchema } from '@schema-engine/forms';
 import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
 
 const TextFieldSchema = z.extend(BaseFieldSchema, {
@@ -50,8 +49,7 @@ export const textFieldRegistration = defineInput({
 
 ```tsx title="react/rating-field.tsx"
 import * as z from 'zod/mini';
-import { defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
+import { defineInput, BaseFieldSchema } from '@schema-engine/forms';
 import { useFormField } from '@schema-engine/forms-react/hooks';
 
 const RatingFieldSchema = z.extend(BaseFieldSchema, {
@@ -103,8 +101,7 @@ import * as z from 'zod/mini';
 import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiInput } from '@ecopages/radiant-ui/input';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
-import { defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
+import { defineInput, BaseFieldSchema } from '@schema-engine/forms';
 import { FormField } from '@schema-engine/forms-radiant/primitives';
 
 const TextFieldSchema = z.extend(BaseFieldSchema, {
@@ -141,8 +138,7 @@ import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import { announceControlConnect, registerFieldControl } from '@ecopages/radiant-ui/form';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
-import { defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
+import { defineInput, BaseFieldSchema } from '@schema-engine/forms';
 import { FormField } from '@schema-engine/forms-radiant/primitives';
 
 @customElement('example-stars')

@@ -5,8 +5,7 @@ import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import { announceControlConnect, registerFieldControl } from '@ecopages/radiant-ui/form';
 import { RuiLabel } from '@ecopages/radiant-ui/label';
-import { defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
+import { defineInput, BaseFieldSchema } from '@schema-engine/forms';
 import { FormField } from '@schema-engine/forms-radiant/primitives';
 
 @customElement('example-stars')

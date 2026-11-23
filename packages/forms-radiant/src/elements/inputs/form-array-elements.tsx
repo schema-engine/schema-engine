@@ -10,8 +10,16 @@ import { FormElements } from '@/components/internals/form-elements';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext } from '@/components/provider';
 import type { ArrayElementsProps } from './form-array-elements.types';
-import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
-import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
+import {
+	arrayItemScope,
+	createArrayRowDefault,
+	seedArrayRows,
+	usesScalarArrayItem,
+	type FormEngineRuntime as FormEngine,
+	isFieldRequired,
+	getValueAtPath,
+	setValueAtPath,
+} from '@schema-engine/forms';
 import {
 	selectFieldState,
 	type FormIssueFormatter,
@@ -20,9 +28,7 @@ import {
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { describeIssue } from '@/lib/describe-issue';
 import { isRenderedRequired, withContainerState } from '@/lib/field-rules';
-import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { RequiredMarker } from '../field-group';
-import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
 import { GRID_CLASS, GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
 

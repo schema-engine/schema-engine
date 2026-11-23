@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormTaggedConfig } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
-import { safeParseStandardSchema } from '@/lib/standard-schema';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 import { markNormalizedElementConfig, type NormalizedElementConfig } from '@/lib/normalized-form-config';
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
 import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';

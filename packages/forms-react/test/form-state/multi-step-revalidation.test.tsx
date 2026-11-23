@@ -2,7 +2,7 @@ import { fieldText } from '@/hooks/field-text';
 import { afterEach, expect, test } from 'vitest';
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 import { useFormField } from '../../src/hooks/form-state';
 import { useFormStateContext } from '../../src/hooks/form-state/context';
 import { useFormInstanceActions } from '../../src/hooks/use-form-context';

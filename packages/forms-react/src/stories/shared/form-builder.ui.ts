@@ -4,9 +4,8 @@
  * Registers every Schema Engine form element from the Base UI registry source.
  */
 
-import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
-import { SubmitActionRegistration, ResetActionRegistration } from '@schema-engine/forms/browser';
-import { createFormEngine } from '@schema-engine/forms';
+import { ValidationPresets, SubmitActionRegistration, createFormEngine } from '@schema-engine/forms';
+import { ResetActionRegistration } from '@schema-engine/forms/browser';
 import {
 	ArrayElementRegistration,
 	CheckboxElementRegistration,

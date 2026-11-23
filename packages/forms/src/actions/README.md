@@ -4,7 +4,7 @@ Form actions connect form lifecycle events to side effects. The forms package
 provides typed registrations for common actions and uses the generic execution
 engine from [@schema-engine/actions](../../../actions).
 
-Examples that log messages use `logger` imported from `@schema-engine/forms/lib/logger`,
+Examples that log messages use `logger` imported from `@schema-engine/forms`,
 which adds the `[schema-engine/forms]` package tag. Runtime diagnostics use this
 same logger; debug output is disabled by default.
 

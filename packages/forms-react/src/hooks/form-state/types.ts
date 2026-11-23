@@ -1,5 +1,8 @@
-import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import type {
+	EngineOutputMaps,
+	DeepReadonly,
+	ElementConfig,
+	FormActionConfig,
 	DefaultValuesOf,
 	FormActionTrigger,
 	FormSubmissionState as SubmissionState,
@@ -8,8 +11,6 @@ import type {
 	NormalizedFormConfig,
 	SubmissionActionResult,
 } from '@schema-engine/forms';
-import type { DeepReadonly } from '@schema-engine/forms/lib/normalized-form-config';
-import type { ElementConfig, FormActionConfig } from '@schema-engine/forms/schemas';
 import type { RequiredFlagSource } from '@/hooks/is-element-required';
 import type {
 	FieldArrayValue,

@@ -1,7 +1,5 @@
 import { expect, test } from 'vitest';
-import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
-import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
-import { validateFormValues } from '@schema-engine/forms';
+import { createDefaultValidationRegistry, createDebounceScope, validateFormValues } from '@schema-engine/forms';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 

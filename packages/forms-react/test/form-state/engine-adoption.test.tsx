@@ -3,7 +3,13 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import * as z from 'zod/mini';
-import { createFormEngine, type BuilderActionRuntimeContext } from '@schema-engine/forms';
+import {
+	createFormEngine,
+	type BuilderActionRuntimeContext,
+	type ElementConfig,
+	type FormActionConfig,
+	type FormConfig,
+} from '@schema-engine/forms';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { FormProvider } from '../../src/components/form-provider';
@@ -11,7 +17,6 @@ import { FormRenderer } from '../../src/components/internals/form-renderer';
 import { FormEngineContext } from '../../src/components/provider';
 import { useFormContext, useFormField } from '../../src/hooks/form-state';
 import { useFormInstanceActions } from '../../src/hooks/use-form-context';
-import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine/forms/schemas';
 
 const handled: string[] = [];
 const contexts: BuilderActionRuntimeContext[] = [];

@@ -1,0 +1,152 @@
+---
+title: 'Hooks'
+description: 'Hooks for form state and view recipes.'
+order: 6
+---
+
+# Hooks
+
+## View hooks
+
+Recipe shells and blocks can access the active view with:
+
+```tsx
+import { useViewContext, useFormNavigation, useActiveStep, useViewConfig } from '@schema-engine/forms-react/hooks';
+import { MinimalProgressConfigSchema } from '@schema-engine/forms/recipes/built-in';
+
+function ProgressBlock() {
+	const { steps, currentStepIndex } = useViewContext();
+	const navigation = useFormNavigation();
+	const activeStep = useActiveStep();
+	const { showPercentage } = useViewConfig('progress', MinimalProgressConfigSchema);
+
+	return (
+		<div>
+			{activeStep.title}: {currentStepIndex + 1} / {steps.length}
+		</div>
+	);
+}
+```
+
+`useViewConfig(slot, schema)` reads the configuration for the current recipe slot
+and returns the slot schema's output: `validateForm` already filled every
+default, so blocks need no fallbacks. It is available only inside a `ViewProvider` or a slot block rendered by a recipe.
+
+## Form hooks
+
+Import the form hooks from `@schema-engine/forms-react/hooks`.
+
+`useFormContext` exposes `getValues`, `setValue`, `validate`, `reset`, `setFocus`,
+`formatIssue` and `clearSubmission`. `validate()` validates the whole form, shows its errors and resolves
+`{ outcome: 'passed' | 'invalid' | 'overtaken' }`; `'overtaken'` is no verdict, so ask again. It also has a lazy `formState` (`errors`, `isValid`
+and `submission: { status, failures, submitCount }`, the runtime's: `submitCount` counts the submissions
+that passed or failed validation). Its fields
+subscribe the caller only when read, so a component that reads `submission`
+re-renders when that changes and not while the user types; reading `isValid`
+reports the recorded errors and validates nothing. `useWatch` (no argument, a path
+or a list of paths) and `useFieldArray` cover observation and array editing.
+`useFieldArray` provides `fields` plus `append`, `prepend`, `insert`, `swap`, `move`,
+`update`, `replace`, and `remove`.
+
+### useFormField
+
+`useFormField` binds a widget to one field. [Writing a widget](/docs/forms-react/widgets) has a full uncontrolled and controlled example. It has three forms:
+
+| Call                                         | Returns                                                                                                                                                                                                                                 |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useFormField(config)`                       | An uncontrolled field: the state (`error`, `warning`, `issue`, `invalid`, `isTouched`, `isDirty`, `isValidating`), `required`, `disabled`, `defaultValue`, and the props `fieldProps`, `labelProps`, `errorProps` and `containerStyles` |
+| `useFormField(config, { controlled: true })` | The same, plus `value`, `onChange(value)` and `onBlur()`. `fieldProps` has no change handler                                                                                                                                            |
+| `useFormField(path)`                         | The state and texts of a path alone (`FORM_ROOT` is the form), with no value. `useWatch(path)` reads the value                                                                                                                          |
+
+**Uncontrolled is the default.** The control keeps its own value. The field re-renders
+when its error, warning or flags change and never for a keystroke, so typing in a row
+does not render the array around it. Spread `fieldProps` on the control (it carries `ref`,
+`id`, `name`, `required`, `disabled`, `aria-*`, `onChange` and `onBlur`) and give it
+`defaultValue`, which is frozen when the field mounts and is the server's value while
+the form hydrates:
+
+```tsx
+function TextField({ config }: { config: InputFieldConfig }) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<>
+			<label {...labelProps}>{config.label}</label>
+			<input {...fieldProps} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</>
+	);
+}
+```
+
+A checkbox takes `defaultChecked`, and a radio group takes `defaultChecked={defaultValue === option}`
+on each radio, all sharing `fieldProps` (give each radio its own `id` after the spread):
+
+```tsx
+function CheckboxField({ config }: { config: CheckboxFieldConfig }) {
+	const { defaultValue, fieldProps } = useFormField(config);
+	return <input type="checkbox" {...fieldProps} defaultChecked={Boolean(defaultValue)} />;
+}
+
+function RadioField({ config }: { config: RadioFieldConfig }) {
+	const { defaultValue, fieldProps } = useFormField(config);
+	return config.options.map(({ value }) => (
+		<input
+			key={value}
+			type="radio"
+			value={value}
+			{...fieldProps}
+			id={`${config.id}-${value}`}
+			defaultChecked={defaultValue === value}
+		/>
+	));
+}
+```
+
+The form reads what the user did from the control: text from `.value`, a checkbox
+from `.checked` (a checkbox with a `value` attribute adds or removes that value in an array), a radio group from
+the checked radio, a `select multiple` from its selected options, a number input from
+`valueAsNumber` (`undefined` when it is empty or not a number) and a file input from
+its files. When the container changes (a reset, `setValue` in code, a row update) the form
+writes the change back into the control, and only when the control differs, so the cursor,
+an IME composition and a number input that holds `1e` are left alone. Text typed before
+hydration is kept: when a control attaches showing something other than what React rendered, the container takes it.
+
+**Controlled** is for a component that takes only `value` and `onChange` props, such as
+a Radix or Base UI checkbox, select or slider, or a date picker. Pass `{ controlled: true }`:
+
+```tsx
+function DateField({ config }: { config: DateFieldConfig }) {
+	const { value, onChange, onBlur, fieldProps } = useFormField(config, { controlled: true });
+	return <DatePicker {...fieldProps} value={toDate(value)} onChange={onChange} onBlur={onBlur} />;
+}
+```
+
+The field re-renders whenever its value changes. In development, an uncontrolled
+field whose `ref` lands on something that is not an input, select or textarea logs a
+warning that names `{ controlled: true }`.
+
+**Native facts.** In both modes, when `fieldProps.ref` lands on an input, select or
+textarea, React reports what the browser says about its value (`element.validity`) to the
+form: on attach, after each change, on blur and after each render, as `valueMissing`,
+`typeMismatch`, `patternMismatch`, `tooShort`, `tooLong`, `rangeUnderflow`,
+`rangeOverflow`, `stepMismatch` or `badInput`, with the constraint as `params`. A control
+that leaves withdraws its fact. A number input that holds `1e` therefore reports
+`badInput` instead of looking empty. The facts follow the form's validation timing and
+a rule's error wins the display.
+
+## Engine hooks
+
+Import engine hooks from `@schema-engine/forms-react/hooks`.
+
+`useFormEngine` reads the `FormEngine` supplied by `FormEngineProvider`, while
+`useFormInstanceActions` exposes the form's wizard: `current` (the id of the current step), `steps` (every step in
+order, each with `skipped`, `visited`, `complete`, `invalid` and `reachable`), `navigating`, and the commands `next()`, `back()`
+and `goTo(id)`. Each command resolves to one outcome string: `'moved'`, `'invalid'` (the step has errors, which are
+shown and focused), `'failed'` (a rule could not run, so the step has no verdict and the cause is logged), `'overtaken'` (an edit outran the check), `'refused'` (nowhere to go, or a skipped or
+unreachable step), `'busy'` (another command is running) or `'cancelled'` (a reset or an unmount revoked it).
+Submitting before the last step of a wizard is a Next. Steps are keyed by id, and a step that the answers skip
+is passed over by `next` and `back` and refused by `goTo`.
+
+The form's runtime ([`createFormRuntime`](/docs/forms/wizard)) owns all of this and the submission, so
+`useFormContext().reset`, an action's `form.reset` and a native reset button all return the form to its first
+step with an idle submission.

@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import { EmailRuleSchema, type EmailRule, type ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, EmailRuleSchema, type EmailRule, type ValidationRegistration } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/registrations';
 import { testAction } from '../adapters/test-actions';
 

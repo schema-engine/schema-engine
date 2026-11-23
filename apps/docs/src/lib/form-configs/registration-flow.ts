@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /** Registration wizard with submit and reset actions. */
 export const registrationDemoConfig: FormConfig = {

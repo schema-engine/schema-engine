@@ -1,0 +1,134 @@
+---
+title: 'Introduction'
+description: 'Why Schema Engine exists and what makes it different from a typical form library.'
+order: 1
+---
+
+import { FormRendererPreview } from '@/components/form-renderer';
+import { contactFormConfig } from '@/lib/form-configs/homepage-contact';
+
+# Why Schema Engine?
+
+Modern web development requires sophisticated form handling capabilities, yet existing solutions often present significant limitations. Each project brings unique requirements for validation, design integration, user experience patterns, and data flow management.
+
+## Common Challenges
+
+Development teams frequently encounter several recurring issues:
+
+- **Limited Validation Flexibility** - Existing validation systems may not accommodate custom business logic
+- **UI Library Integration** - Form libraries often conflict with established design systems
+- **Advanced Feature Requirements** - Conditional logic, multi-step workflows, or auto-save require extensive custom development
+- **Serialization Needs** - Forms need to be stored, transmitted, and reconstructed from JSON
+
+## The Approach
+
+Schema Engine is a **JSON-driven form system** that adapts to your needs, not the other way around.
+
+<FormRendererPreview config={contactFormConfig} />
+
+## Authoring modes
+
+- **Forms in your codebase** (next to one engine): use `engine.defineForm({ ... })` for full TypeScript narrowing. See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+- **Portable JSON** (CMS, API, shared files): use a `FormConfig` object or raw JSON and `engine.validateForm()` at runtime. The docs site demos use this pattern so the same config works across adapters and copy-paste snippets.
+
+## What Makes It Different?
+
+### Complete Customization
+
+Bring your existing component library. Register it with the engine and it works with form configs. Both renderers keep their form state in the engine's own container, so there is no form library to install. See [Installation](/docs/getting-started/installation#choose-a-renderer).
+
+```typescript
+import { createFormEngine } from '@schema-engine/forms';
+import type { InputRegistration } from '@schema-engine/forms';
+import * as z from 'zod/mini';
+
+const MyInputConfigSchema = z.object({});
+
+const MyInputRegistration: InputRegistration<'my-input'> = {
+	$type: 'my-input',
+	schema: MyInputConfigSchema,
+	metadata: {
+		name: 'My Input',
+		description: 'Custom styled input',
+		category: 'input',
+	},
+	render: (props) => <input {...props} className="my-custom-input" />,
+};
+
+const engine = createFormEngine({ elements: [MyInputRegistration] });
+```
+
+### JSON-Driven Everything
+
+Define complex forms with simple JSON schemas. No more writing repetitive JSX.
+
+```json
+{
+	"id": "contact",
+	"title": "Get In Touch",
+	"steps": [
+		{
+			"id": "details",
+			"title": "Contact Details",
+			"elements": [
+				{
+					"$type": "input",
+					"id": "name",
+					"name": "name",
+					"label": "Full Name",
+					"rules": [{ "type": "required", "message": "Name is required" }]
+				},
+				{
+					"$type": "input",
+					"inputType": "email",
+					"id": "email",
+					"name": "email",
+					"label": "Email",
+					"rules": [
+						{ "type": "required", "message": "Email is required" },
+						{ "type": "email", "message": "Please enter a valid email" }
+					]
+				}
+			]
+		}
+	]
+}
+```
+
+### Registrable Everything
+
+Not just components but also actions, view recipes, appearance axes, and validation rules, all in one [read-only registry](/docs/registry/registries) mechanism. Build your own plugins that fit your exact needs.
+
+### Named styling
+
+A form picks widths and looks by name (`width: half`, `size: compact`), the engine validates them, and React and Radiant render the same result. See [Styling and layout](/docs/styling/overview).
+
+### Zod Mini and Standard Schema
+
+First-party schemas use Zod Mini. Registrations accept any Standard Schema provider, so consumer-owned components can use Zod, Valibot, Effect Schema, or another compatible library.
+
+### Powerful Action System
+
+Perform complex operations at any point in your form lifecycle. Auto-save, analytics tracking, multi-step navigation all through a pluggable action system.
+
+## Philosophy
+
+Schema Engine believes in a few core principles:
+
+**Configuration over Code**: Define what you want, not how to build it.
+
+**Composition over Inheritance**: Build complex forms by combining simple, focused components.
+
+**Flexibility over Opinions**: The library should adapt to your patterns, not force you into ours.
+
+**Developer Experience**: If it's frustrating to use, it's wrong.
+
+## What's Next?
+
+Ready to see what Schema Engine can do?
+
+- **[Installation](/docs/getting-started/installation)** - Get up and running
+- **[Quick Start](/docs/getting-started/quick-start)** - Build your first form
+- **[Forms Package](/docs/forms/overview)** - Core engine documentation
+- **[Forms React](/docs/forms-react/overview)** - React integration
+- **[Styling and layout](/docs/styling/overview)** - Grid, appearance axes, theming and recipes

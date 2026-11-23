@@ -5,7 +5,7 @@ import {
 	type CssVariables,
 	type ElementGridConfig,
 } from '@schema-engine/layout';
-import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 
 type HostStyle = Record<string, string | number | undefined>;

@@ -1,5 +1,9 @@
-import type { NormalizedElementConfig } from '@schema-engine/forms';
-import { foldFieldParticipation, resolveParticipation, type Participation } from '@schema-engine/forms/engine';
+import {
+	type NormalizedElementConfig,
+	foldFieldParticipation,
+	resolveParticipation,
+	type Participation,
+} from '@schema-engine/forms';
 
 /** What a server render decides for one field: whether it shows, is disabled and is required. */
 export interface RenderedConstraints {

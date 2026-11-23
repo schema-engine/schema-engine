@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
-import type { BaseValidationRule } from '@schema-engine/forms/schemas/validation';
+import { BaseFieldSchema, type BaseValidationRule } from '@schema-engine/forms';
 
 export const InputOTPFieldExtensionSchema = z.object({
 	length: z.optional(z._default(z.number().check(z.positive()), 6)),

@@ -1,0 +1,90 @@
+---
+title: 'How It Works'
+description: 'Action lifecycle, dispatch, and error propagation.'
+order: 6
+---
+
+# How Actions Work
+
+This page explains the generic lifecycle of the actions package.
+
+The forms package uses these primitives for form actions.
+
+## Lifecycle
+
+1. Build an `ActionRegistry` from your action registrations.
+2. Provide action configs to the dispatcher.
+3. Trigger execution with a trigger value and base context.
+4. The dispatcher resolves matching registrations.
+5. The dispatcher enriches the provided context with `config`, `trigger` and a cancellation `signal`.
+6. Sequence entries run in order; actions in an inner array run concurrently and return identified results.
+
+## Registration Example
+
+```typescript
+const registration = {
+	$type: 'log',
+	schema: LogActionSchema,
+	metadata: {
+		name: 'Log Action',
+		defaultTriggers: ['submit'],
+	},
+	execute: async (context) => {
+		console.log(context.trigger, context.config.message);
+		return { success: true };
+	},
+};
+```
+
+## Trigger Matching
+
+The dispatcher checks action configs in order.
+
+- If the config has a `triggers` array, that list is used.
+- Otherwise the registration `metadata.defaultTriggers` is used.
+
+## Context Enrichment
+
+The key runtime behavior is this merge:
+
+```typescript
+execute({
+	...context,
+	config: action,
+	trigger,
+	signal,
+	...(triggeredBy ? { triggeredBy } : {}),
+});
+```
+
+That is why actions usually read `context.config` and `context.trigger` directly.
+
+## Execution Order
+
+Sequence entries run in array order, not registry registration order. Inner arrays run as parallel groups.
+
+```typescript
+const parsed = parseActions(registry, [
+	{ id: 'a', $type: 'log', message: 'first' },
+	{ id: 'b', $type: 'log', message: 'second' },
+]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
+await dispatcher.dispatch({ actions: parsed.data, trigger: 'submit', context });
+```
+
+## Control Flow
+
+An action result can stop the chain:
+
+```typescript
+return {
+	success: false,
+	error: 'Stop here',
+	shouldContinue: false,
+};
+```
+
+## Form Integration
+
+Form action handlers receive a context with `formData`, `errors`, form state, and controller methods in addition to the action `config` and `trigger`. `errors` is keyed by dotted field path in both renderers, so a handler reads `context.errors['address.street']`.

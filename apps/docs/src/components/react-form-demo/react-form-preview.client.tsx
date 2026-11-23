@@ -1,7 +1,6 @@
 /** @jsxImportSource react */
 import { hydrateRoot } from 'react-dom/client';
-import type { FormConfig } from '@schema-engine/forms/schemas';
-import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
+import type { FormConfig, FormEngineRuntime } from '@schema-engine/forms';
 import { docsReactFormEngine } from './demo-engine';
 import { ReactFormContent } from './react-form-content.react';
 import { installMockFormApi } from '@/lib/mock-form-api';

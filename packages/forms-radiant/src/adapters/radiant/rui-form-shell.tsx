@@ -1,6 +1,5 @@
 import { RuiForm } from '@ecopages/radiant-ui/form';
-import type { FormConfigView } from '@schema-engine/forms';
-import { collectInitialValues, flattenStepElements } from '@schema-engine/forms/lib/field-scope';
+import { type FormConfigView, collectInitialValues, flattenStepElements } from '@schema-engine/forms';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { getAppearanceAttributes } from '@schema-engine/layout';
 

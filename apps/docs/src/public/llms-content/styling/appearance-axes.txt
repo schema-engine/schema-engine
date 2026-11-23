@@ -1,0 +1,265 @@
+---
+title: 'Appearance axes'
+description: 'Named appearance a form picks, the tokens each value sets, built-in axes, host axes and defineAxis.'
+order: 3
+---
+
+# Appearance axes
+
+An **appearance axis** is one independent dimension of how something looks, with a small closed set of named values. Each value stands for a set of semantic CSS tokens. Components read the tokens and never read an axis value.
+
+```ts
+import { engine } from './engine';
+
+export const config = engine.defineForm({
+	id: 'settings',
+	appearance: { size: 'compact' },
+	view: { $type: 'card', shell: { appearance: { surface: 'outlined' } } },
+	steps: [
+		{
+			id: 'general',
+			title: 'General',
+			elements: [{ $type: 'input', id: 'name', name: 'name', label: 'Name' }],
+		},
+	],
+});
+```
+
+## How an axis works
+
+The roles are separate:
+
+- The **layout theme** declares the vocabulary: each axis, its values and the tokens of each value.
+- A **registration** (an element, or a slot of a recipe) declares which axes it responds to. A pick on any other axis fails validation.
+- The **document** picks values. A pick passes down from the form to a step, a container and a field, or from the form to a recipe slot, and a closer pick wins.
+
+The pipeline is the same in every renderer:
+
+1. A document picks a value: `appearance: { size: 'compact' }`.
+2. `validateForm` checks the pick against the vocabulary and the owner's declaration, then writes the resolved pick into the normalized config.
+3. The renderer writes `data-se-size="compact"` on the element.
+4. The theme's stylesheet has a rule for that attribute that sets tokens: `--se-space`, `--se-font-size`, `--se-measure`, `--se-control-height`.
+5. Component CSS reads `var(--se-space, 1.5rem)` and keeps the look of an unstyled form as its fallback.
+
+Every token rule sits inside `:where()`, so it adds no specificity and a class of yours on the same element wins. (The grid and item rules are not zero-specificity; see [Layout themes](/docs/styling/layout-themes#custom-properties-of-a-container-and-an-item).)
+
+## What makes a good axis
+
+| Rule                                           | Why                                               | A good axis                                           | Not an axis, and where it goes                                                               |
+| ---------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Orthogonal** to every other axis             | A pick on one axis never forces a pick on another | `size` and `surface` combine freely                   | `dense-outlined`: two axes in one                                                            |
+| **Means the same on every component**          | A token names a role, never a component           | `--se-space` pads a card, a fieldset and an array row | `cardWidth`: only one component reads it. Use slot config, or a token only that CSS reads    |
+| **A small closed set of named values**, 2 to 5 | A raw value is a token override, not a pick       | `compact`, `default`, `comfortable`                   | `color: '#f60'`: set a token in CSS. A `variant` with eleven values: split it or drop it     |
+| **Appearance only**                            | Structure belongs to slot config and the grid     | `surface`: border, shadow, background                 | `layout: inline`, `orientation: horizontal`: slot config. Which fields share a row: the grid |
+
+`defineAxis` enforces the part it can: 2 to 5 values, and tokens that are custom properties. The rest is design judgement. If an idea fits only one component, it is slot config.
+
+## Built-in axes
+
+The engine ships `size` and `surface`. They are in `builtInAxes`, the default list of every layout theme.
+
+**`size`** (`compact`, `default`, `comfortable`) sets how much room components take:
+
+| Value         | `--se-space`                                                              | `--se-font-size` | `--se-measure` | `--se-control-height`                                                                          |
+| ------------- | ------------------------------------------------------------------------- | ---------------- | -------------- | ---------------------------------------------------------------------------------------------- |
+| `compact`     | `var(--se-space-compact, var(--se-renderer-space-compact, 1rem))`         | `0.875rem`       | `24rem`        | `var(--se-control-height-compact, var(--se-renderer-control-height-compact, 1.75rem))`         |
+| `default`     | `initial`                                                                 | `initial`        | `initial`      | `initial`                                                                                      |
+| `comfortable` | `var(--se-space-comfortable, var(--se-renderer-space-comfortable, 2rem))` | `1.0625rem`      | `32rem`        | `var(--se-control-height-comfortable, var(--se-renderer-control-height-comfortable, 2.25rem))` |
+
+**`surface`** (`flat`, `outlined`, `elevated`, default `elevated`) sets how a container sets itself apart:
+
+| Value      | `--se-border-width` | `--se-shadow` | `--se-surface-background` |
+| ---------- | ------------------- | ------------- | ------------------------- |
+| `flat`     | `0`                 | `none`        | `initial`                 |
+| `outlined` | `1px`               | `none`        | `initial`                 |
+| `elevated` | `initial`           | `initial`     | `initial`                 |
+
+A token set to `initial` hands the token back to the component's own fallback. So `size: default` and `surface: elevated` look like no pick, in a themed app and also inside a `compact` form. A value that declares no tokens inherits the surrounding value's tokens through custom-property inheritance.
+
+`--se-measure` is the readable width of a block: the card is that wide, so a `compact` card is `24rem` and a `comfortable` one `32rem`. The card shells of both renderers read all the tokens above, and the hero, split screen, sidebar and stack shells read `--se-space` for their padding and gaps (the first three declare `size` on their `shell` slot); `--se-control-height` also sizes single-line controls (Radiant maps it onto its `--size-control-md`, and the React registry controls that carry `data-se-control` read it through `controls.css`, see [View recipes](/docs/forms-react/layouts)). The DOM contract is the same in every renderer, and so is the field layout below; what a value does to a component's own look is the renderer's styling.
+
+The shared field layout, held equal by the renderer conformance suite, is three things: a field that carries a `size` pick reads `--se-font-size`, a text input fills its field, and the action bar of a single-step recipe places its button by `actions.align`. In React the first is a `:where()` rule in `controls.css` (unlayered like the control height, falling back with `revert-layer` so a Tailwind text class on the field wins until a size is picked), the second is the `w-full` of the shadcn `Input` your project copies, and the third is `form-actions.css` (in `recipes.css`); in Radiant they are `appearance.css`, the input's own CSS and the block styles. Everything else (a control's padding and border, its type scale, a field's spacing) is the renderer's own styling. A Tailwind `text-sm` on a registry label keeps its own size, because an inherited font size never beats a class on the element.
+
+The compact and comfortable values of `--se-space` and `--se-control-height` read hooks (`--se-space-compact` and the others). An author sets the hooks, on `:root` or any ancestor, to retune a value without redefining the axis; see [Theming](/docs/styling/theming). Each hook falls back to a `--se-renderer-*` twin (`--se-renderer-space-compact` and the others), set by renderers, not by apps, and then to the neutral value.
+
+## Pick a value
+
+`appearance` is a map from axis name to value. It is accepted on the form, on each step, on a field or container, and inside a recipe slot's config:
+
+```ts
+import { engine } from './engine';
+
+export const config = engine.defineForm({
+	id: 'profile',
+	appearance: { size: 'comfortable' }, // the form
+	view: { $type: 'card-wizard', shell: { appearance: { surface: 'outlined' } } }, // a recipe slot
+	steps: [
+		{
+			id: 'account',
+			title: 'Account',
+			appearance: { size: 'compact' }, // a step
+			elements: [
+				{ $type: 'input', id: 'email', name: 'email', label: 'Email' },
+				{
+					$type: 'input',
+					id: 'code',
+					name: 'code',
+					label: 'Code',
+					appearance: { size: 'comfortable' }, // one field
+				},
+			],
+		},
+		{
+			id: 'review',
+			title: 'Review',
+			elements: [{ $type: 'input', id: 'note', name: 'note', label: 'Note' }],
+		},
+	],
+});
+```
+
+A value flows down, a closer pick winning per axis: the form's picks, then the step's, then each containing element's, then the field's own. A view slot takes the form's picks, then its own. Each owner keeps only the axes it declares, and an element with no resolved pick carries no `appearance` key.
+
+The renderer writes the resolved pick as `data-se-<axis>="<value>"` on the form element (the one carrying `className` and `style`), the step element, the field host and the recipe slot elements. In the example, the `email` field is `compact` and `code` is `comfortable`.
+
+An invalid pick fails `validateForm`, naming the axis and the owner:
+
+| Mistake                           | Message                                                                    | `path` ends with            |
+| --------------------------------- | -------------------------------------------------------------------------- | --------------------------- |
+| An axis the theme does not have   | `Unknown axis 'sise'. Declared axes: size, surface.`                       | `['appearance', 'sise']`    |
+| An axis the owner did not declare | `<owner> does not support the axis 'surface'. Supported axes: size.`       | `['appearance', 'surface']` |
+| A value the axis does not have    | `'huge' is not a value of 'size'. Allowed: compact, default, comfortable.` | `['appearance', 'size']`    |
+
+## Declare the axes a registration supports
+
+An element declares the axes it responds to with `appearanceAxes`, and a recipe declares them per slot:
+
+```ts
+import * as z from 'zod/mini';
+import { defineStatic, BaseFieldSchema } from '@schema-engine/forms';
+
+export const notice = defineStatic({
+	$type: 'notice',
+	appearanceAxes: ['tone'],
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('notice'), text: z.string() }),
+	metadata: { name: 'Notice', category: 'content' },
+	render: () => null,
+});
+```
+
+For a recipe, `defineRecipeSpec({ ..., appearanceAxes: { shell: ['size', 'surface'] } })` lists the axes of each slot; a slot that declares axes must accept an `appearance` key in its schema, so authored configs type-check. The engine does not pass `appearance` to the schema when it parses the view; it writes the resolved pick back. An element schema never sees the key either: the engine strips it before parsing and writes it back, so a strict custom element schema still supports axes.
+
+The engine build throws when a registration declares an axis the theme lacks, naming the registration: `Element 'notice' declares unknown appearance axis 'tone'. Declared axes: size, surface. Add it with createFormEngine({ layout: { appearance: [...builtInAxes, defineAxis({ $type: 'tone', ... })] } }).` The form and each step accept every axis of the theme.
+
+## Add a host axis
+
+`defineAxis` builds an axis. The built-ins are two of them; `tone` and `emphasis` are the usual host additions.
+
+```ts
+import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
+
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone', description: 'Accent colour of a form' },
+	default: 'neutral',
+	values: {
+		neutral: {},
+		brand: { '--primary': '#c2410c', '--on-primary': '#ffffff' },
+		forest: { '--primary': '#15803d', '--on-primary': '#ffffff' },
+	},
+});
+
+export const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
+```
+
+Save it as `theme.ts`.
+
+| Field      | Meaning                                                                                                          |
+| ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| `$type`    | The axis name and the `data-se-<axis>` attribute. Lowercase letters, digits and hyphens, starting with a letter. |
+| `values`   | Each value name, mapped to its tokens. Token names start with `--`. A value may set none (`neutral: {}`).        |
+| `default`  | The value that stands for no pick. It must be one of `values`.                                                   |
+| `metadata` | The name and description an editor or a catalog shows.                                                           |
+
+`defineAxis` also builds the axis's Standard Schema (an enum of the value names), because the registry requires one. It throws on a bad name, fewer than 2 or more than 5 values, a value name that would break a selector, a token that is not a custom property or whose value contains `{`, `}`, `;`, `<` or a comment, and a `default` that is not a value. Axes whose names collide with an attribute a renderer already writes (`step`, `theme`, `control`, and the rest) are rejected by the engine.
+
+Pass the theme to the engine and pick a value:
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { elements } from './registrations';
+import { theme } from './theme';
+
+const engine = createFormEngine({ elements, layout: theme });
+
+export const config = engine.defineForm({
+	id: 'newsletter',
+	appearance: { tone: 'brand' },
+	steps: [
+		{
+			id: 'signup',
+			title: 'Sign up',
+			elements: [{ $type: 'input', id: 'email', name: 'email', label: 'Email' }],
+		},
+	],
+});
+```
+
+The renderer writes `data-se-tone="brand"` on the form, and the theme's stylesheet sets the colour roles below it (`--primary`, `--on-primary`, and the container roles). Radiant UI components read those roles, and shadcn components read `--primary` and `--primary-foreground`, so a button inside recolors with no further CSS. The [brand theme recipe](/docs/styling/recipes#a-brand-theme-with-a-host-tone-axis) is this axis, live.
+
+Tokens are custom properties and inherit. Pick tone on the form and it reaches every field, until a nested form picks a value that declares the same tokens. Keep the axis list inline in `createLayoutTheme` or `as const`, so typed `defineForm` narrows the picks.
+
+## Override a built-in axis
+
+List an axis with the same `$type` after `builtInAxes`: the last one of a name wins.
+
+```ts
+import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
+
+const size = defineAxis({
+	$type: 'size',
+	metadata: { name: 'Size' },
+	default: 'default',
+	values: {
+		compact: { '--se-space': '0.5rem' },
+		default: { '--se-space': 'initial' },
+		comfortable: { '--se-space': '2rem' },
+	},
+});
+
+export const theme = createLayoutTheme({ appearance: [...builtInAxes, size] });
+```
+
+This replaces every token of `size`, so the card width (`--se-measure`) and control height (`--se-control-height`) of the built-in axis are gone. To retune only the numbers, set the hooks and token overrides in CSS instead; see [Overriding size tokens](/docs/styling/recipes#overriding-size-tokens) and [Theming](/docs/styling/theming).
+
+## Style the attributes in CSS
+
+An axis value is a plain attribute, so CSS can key on it:
+
+```css
+.brand-form[data-se-tone='forest'] {
+	border-inline-start-style: dashed;
+}
+
+[data-se-size='compact'] .se-form-field {
+	font-size: 0.8125rem;
+}
+```
+
+Write the selector with at least the specificity of a class: the theme's token rules are zero-specificity, so a class of yours on the same element wins. The renderers' own `data-se-*` attributes (`step`, `theme`, `control`, `constraint-field`, and the others) are reserved and cannot be axis names.
+
+## For editors: a JSON Schema enum
+
+The catalog and the JSON Schema export list each axis and its values, so `appearance.size` on a form and its steps is an enum an editor completes. On an element or a recipe slot, `appearance` lists only the axes its registration declares and is closed, so an undeclared axis is rejected in the editor as `validateForm` rejects it. The children of a fieldset or an array row get the same per-element schema as top-level elements. An element with a lazy schema keeps its own `appearance` in the export; `validateForm` checks it.
+
+## When to use something else
+
+| You want                                                                   | Use                                                                                          |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| To hide the description, change labels or switch orientation of one recipe | Slot config: `view.header.showDescription`, `view.header.labels`                             |
+| A wider card, or a different media width                                   | Slot config that changes layout (`contentWidth`, `sideWidth`), or `--se-measure` in your CSS |
+| Fields on one row, a drawn layout, spacing between rows                    | The grid: `width`, `areas`, the gap tokens                                                   |
+| A one-off colour or size on one form                                       | `className` with a custom property, or `style: { '--primary': '#c2410c' }`                   |
+| A look no axis names, once                                                 | A class in `className`                                                                       |
+
+`maxWidth`, `padding` and `shadowSize` are no longer slot config: the `size` and `surface` tokens set the padding, border and shadow, and the card's width is `--se-measure`.
