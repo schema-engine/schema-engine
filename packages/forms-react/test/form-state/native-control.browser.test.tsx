@@ -6,6 +6,7 @@ import {
 	writeControl,
 	type NativeControl,
 } from '@/hooks/form-state/native-control';
+import { createNativeControl, nativeFactCases, putControlInState } from '../../../../test-utils/native-fact-cases';
 
 function input(type: string, attributes: Record<string, string> = {}): HTMLInputElement {
 	const element = document.createElement('input');
@@ -63,5 +64,29 @@ describe('the fact of a control', () => {
 		expect(readNativeFact(required)).toMatchObject({ type: 'valueMissing' });
 		required.disabled = true;
 		expect(readNativeFact(required)).toBeNull();
+	});
+});
+
+describe('the fact of a control matches the fact rui-form reports', () => {
+	test.each(nativeFactCases.map((spec) => [spec.name, spec] as const))('%s', async (_name, spec) => {
+		const control = createNativeControl(spec);
+		document.body.append(control);
+		try {
+			await putControlInState(control, spec);
+
+			const fact = readNativeFact(control);
+
+			if (spec.fact === null) {
+				expect(fact).toBeNull();
+				return;
+			}
+			expect(fact).toEqual({
+				...spec.fact,
+				...(control.validationMessage && { message: control.validationMessage }),
+			});
+			expect(fact?.message).toBe(control.validationMessage || undefined);
+		} finally {
+			control.remove();
+		}
 	});
 });

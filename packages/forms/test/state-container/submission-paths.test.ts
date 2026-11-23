@@ -3,7 +3,6 @@ import { submittedTree, submittedValues, toFormPath, type SubmissionRecord } fro
 import { toInternalRecord } from '@/state-container/value-tree';
 
 const record = (values: Record<string, unknown>, excluded: string[]): SubmissionRecord => ({
-	outcome: 'passed',
 	values: toInternalRecord(values),
 	ids: undefined,
 	excluded,

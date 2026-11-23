@@ -56,7 +56,7 @@ describe('the submission alert renders the field class once', () => {
 	test.each([
 		['success', ['success'], undefined],
 		['error', ['error'], 'fail'],
-		['pending', ['pending'], 'hang'],
+		['submitting', ['submitting'], 'hang'],
 	])('in the %s state', async (_state, showOn, actionId) => {
 		renderAlert(showOn, actionId);
 		await userEvent.click(screen.getByRole('button', { name: 'Send' }));

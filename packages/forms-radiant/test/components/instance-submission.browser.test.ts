@@ -26,6 +26,7 @@ beforeEach(() => {
 afterEach(() => {
 	gate.hold = false;
 	gate.status = 200;
+	vi.restoreAllMocks();
 	for (const release of gate.pending.splice(0)) release();
 	vi.unstubAllGlobals();
 	document.body.replaceChildren();
@@ -117,25 +118,32 @@ test('a submission outrun by edits again and again submits nothing', async () =>
 	for (const [call] of onSubmit.mock.calls) expect(call).toMatchObject({ name: 'Ada Lov' });
 });
 
-test('a validator that cannot run completes the submission unsuccessfully with its failure, and is no attempt', async () => {
-	const { host, container, instance, onSubmit, completed } = await mount([checked]);
+test('a validator that cannot run is an invalid submission with its failure, never a start or a complete, and is no attempt', async () => {
+	const { host, ruiForm, container, instance, onSubmit, completed } = await mount([checked]);
 	await userEvent.fill(host.querySelector('input')!, 'Ada');
 	gate.status = 500;
-	const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+	vi.spyOn(console, 'error').mockImplementation(() => {});
+	const events: Array<{ type: string; detail: unknown }> = [];
+	for (const type of ['start', 'invalid', 'complete']) {
+		ruiForm.addEventListener(`se-action-submit-${type}`, (event) =>
+			events.push({ type, detail: (event as CustomEvent).detail }),
+		);
+	}
 
 	submit(host);
-	await expect.poll(() => completed.mock.calls.length).toBe(1);
+	await expect.poll(() => events.length).toBe(1);
+	await settle(100);
 
-	const [event] = completed.mock.calls[0] ?? [];
-	expect(event).toBeInstanceOf(CustomEvent);
-	expect(event instanceof CustomEvent && event.detail).toMatchObject({
-		succeeded: false,
-		failures: [{ type: 'validationFailed', source: 'submission' }],
-	});
+	expect(events).toEqual([
+		{
+			type: 'invalid',
+			detail: { failures: [expect.objectContaining({ type: 'validationFailed', source: 'submission' })] },
+		},
+	]);
+	expect(completed).not.toHaveBeenCalled();
 	expect(instance.getContextValue().submission.submitCount).toBe(0);
 	expect(onSubmit).not.toHaveBeenCalled();
 	expect(container.getSnapshot().errors).toEqual({});
-	logged.mockRestore();
 });
 
 test('an invalid submission counts, reports itself and focuses the first invalid field in document order', async () => {
@@ -152,8 +160,26 @@ test('an invalid submission counts, reports itself and focuses the first invalid
 
 	await expect.poll(() => invalid.mock.calls.length).toBe(1);
 	expect(instance.getContextValue().submission.submitCount).toBe(1);
+	expect(invalid.mock.calls[0]?.[0]).toMatchObject({ detail: { failures: [] } });
 	expect(onSubmit).not.toHaveBeenCalled();
 	await expect.poll(() => document.activeElement?.closest('se-field')?.getAttribute('name')).toBe('second');
+});
+
+test('an invalid submission never starts, and a valid one starts and then completes', async () => {
+	const { host, ruiForm } = await mount([
+		{ $type: 'input', id: 'name', name: 'name', label: 'Name', rules: [{ type: 'required', message: 'Required' }] },
+	]);
+	const events: string[] = [];
+	for (const type of ['start', 'invalid', 'complete']) {
+		ruiForm.addEventListener(`se-action-submit-${type}`, () => events.push(type));
+	}
+
+	submit(host);
+	await expect.poll(() => events).toEqual(['invalid']);
+
+	await userEvent.fill(host.querySelector('input')!, 'Ada');
+	submit(host);
+	await expect.poll(() => events).toEqual(['invalid', 'start', 'complete']);
 });
 
 test('a config replaced while a submission validates does not submit the old values into the new form', async () => {
@@ -266,7 +292,7 @@ test('a native fact of an engine-rendered input reaches the container and the pa
 		)
 		.toBe(true);
 	await expect.poll(() => host.textContent).toContain('engine:email:native:typeMismatch');
-	expect(await container.validate()).toBe(false);
+	expect(await container.validate()).toEqual({ outcome: 'invalid' });
 	await userEvent.fill(input, 'a@b.co');
 	await userEvent.tab();
 	await expect.poll(() => container.getSnapshot().errors['email']).toBeUndefined();

@@ -35,6 +35,7 @@ test('a control host defined after its field connected is seeded with the value 
 	const tag = freshTag();
 	const { form, reportNative } = await mountLate(`<${tag}></${tag}>`);
 	expect(form.querySelector<HTMLInputElement>(tag)?.value).toBeUndefined();
+	reportNative.mockClear();
 
 	registerValueControl(tag);
 	customElements.define(tag, class extends SeMaskedInput {});

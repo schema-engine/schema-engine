@@ -1,7 +1,7 @@
 import type { FormFetch } from '@/lib/form-fetch';
 import type { FormActionTrigger } from '../actions/triggers';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
-import type { FormStateError } from '@/state-container/types';
+import type { FormStateError, FormValidateResult } from '@/state-container/types';
 
 export type { FormIssueFormatter, FormStateError, FormStateIssue, FormSubmissionIssue } from '@/state-container/types';
 
@@ -55,8 +55,12 @@ export interface BuilderActionBaseContext {
 		/** Set field value */
 		setValue: (name: string, value: unknown) => void;
 		getValue: (name: string) => unknown;
-		/** Validates the whole form, recording and showing its errors, and resolves to its validity. */
-		validate: () => Promise<boolean>;
+		/**
+		 * Validates the whole form, recording and showing its errors, and says how that ended.
+		 *
+		 * @remarks `'overtaken'` is no verdict: an edit or a reset outran the check, so ask again and do not treat it as invalid.
+		 */
+		validate: () => Promise<FormValidateResult>;
 		/**
 		 * Resolves to whether the values current at the call are valid, recording and showing no errors.
 		 *

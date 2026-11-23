@@ -1,4 +1,4 @@
-import type { ValidationRule } from '@schema-engine/forms/schemas';
+import type { BaseValidationRule } from '@schema-engine/forms/schemas';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 
 /**
@@ -24,7 +24,7 @@ export function isRenderedRequired(config: object): boolean {
  * source; `se-field` then applies the live rule from the constraint context.
  */
 export function withContainerState<T extends object>(
-	config: { disabled?: boolean; constraints?: readonly unknown[]; rules?: ReadonlyArray<ValidationRule> },
+	config: { disabled?: boolean; constraints?: readonly unknown[]; rules?: ReadonlyArray<BaseValidationRule> },
 	elements: readonly T[],
 ): readonly T[] {
 	const disabled = config.disabled === true;

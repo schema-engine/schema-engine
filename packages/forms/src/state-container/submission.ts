@@ -3,7 +3,6 @@ import { frozenCopy } from '@/lib/frozen-copy';
 import type { IdTree } from './row-ids';
 import { getValueAtPath } from '@/lib/path-values';
 import { join, toInternalRecord, toPlainRecord, type NullMap } from './value-tree';
-import type { FormSubmitResult } from './types';
 
 /**
  * What the container keeps of one `submit()`: the values it is about, and how its validation ended.
@@ -11,7 +10,6 @@ import type { FormSubmitResult } from './types';
  * @remarks Mutable and private to the container. The host only ever sees the {@link FormSubmitResult} built from it.
  */
 export interface SubmissionRecord {
-	outcome: FormSubmitResult['outcome'] | undefined;
 	values: NullMap;
 	ids: IdTree | undefined;
 	/** The paths that took no part when `values` were captured. */

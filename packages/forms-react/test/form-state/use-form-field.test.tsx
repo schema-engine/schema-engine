@@ -5,7 +5,7 @@ import { createFormEngine, defineInput } from '@schema-engine/forms';
 import type { ConstraintLogic } from '@schema-engine/forms/schemas/base-field';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
 import { RequiredRuleSchema } from '@schema-engine/forms/schemas/validation';
-import { selectError } from '@schema-engine/forms/state-container';
+import { selectFieldState } from '@schema-engine/forms/state-container';
 import { FORM_ROOT, useFormContext, useWatch } from '@/hooks/form-state';
 import { fieldText } from '@/hooks/field-text';
 import { useFormField } from '@/hooks/form-state/use-form-field';
@@ -192,7 +192,7 @@ describe('the text of an issue', () => {
 
 		await act(() => container.validate(['code']));
 
-		expect(selectError(container.getSnapshot(), 'code')?.type).toBe('minLength');
+		expect(selectFieldState(container.getSnapshot(), 'code').error?.type).toBe('minLength');
 		expect(screen.getByTestId('code-error')).toBeEmptyDOMElement();
 		expect(screen.getByLabelText('code')).toHaveAttribute('aria-invalid', 'true');
 	});

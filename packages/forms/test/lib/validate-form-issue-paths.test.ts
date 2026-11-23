@@ -131,7 +131,7 @@ describe('validation issue paths', () => {
 		]);
 	});
 
-	test('nested elements carry the path through the container to the child rules', () => {
+	test('nested elements carry the path through the container to every bad rule of a child', () => {
 		const issues = issuesOf(
 			formWith([
 				named('before'),
@@ -141,7 +141,13 @@ describe('validation issue paths', () => {
 					name: 'group',
 					elements: [
 						named('first'),
-						named('second', { rules: [{ type: 'required' }, { type: 'unregistered' }] }),
+						named('second', {
+							rules: [
+								{ type: 'required' },
+								{ type: 'unregistered' },
+								{ type: 'minLength', value: 'eight' },
+							],
+						}),
 					],
 				},
 			]),
@@ -150,7 +156,13 @@ describe('validation issue paths', () => {
 		expect(issues).toEqual([
 			{
 				path: ['steps', 0, 'elements', 1, 'elements', 1, 'rules', 1, 'type'],
-				message: expect.stringMatching(/field 'second'.*rule 'unregistered'/i),
+				message: expect.stringMatching(/^Unknown validation rule 'unregistered'\./),
+			},
+			{
+				path: ['steps', 0, 'elements', 1, 'elements', 1, 'rules', 2, 'value'],
+				message: 'Expected number.',
+				code: 'invalid_type',
+				params: { expected: 'number' },
 			},
 		]);
 	});

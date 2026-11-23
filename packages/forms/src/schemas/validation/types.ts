@@ -29,7 +29,18 @@ const ruleFields = {
 	severity: z.optional(z.enum(['error', 'warning'])),
 };
 
-export const BaseValidationRuleSchema = z.object({
+/**
+ * What an element's `rules` accepts: the `type` and the fields every rule has, and whatever else the
+ * rule's registration describes.
+ *
+ * @remarks
+ * Loose, and the only shape of a rule in an element's schema: the validation registry owns the rest.
+ * The engine checks each rule against its registration when it validates a form config
+ * ({@link ValidationRegistry.check}), so a `type` nothing registers and options the registration
+ * refuses are rejected there, and a registration that replaces a built-in decides that rule's options.
+ * The JSON Schema export lists each registered rule with its options instead of this shape.
+ */
+export const BaseValidationRuleSchema = z.looseObject({
 	type: z.string(),
 	...ruleFields,
 });

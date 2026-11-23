@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { containerOptions, formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
+import { containerOptions, formStateContainerCases } from '@/testing/form-state-container-conformance';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
 import {
@@ -180,9 +180,9 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 			return {
 				...inner,
 				validate: async (paths) => {
-					const valid = await inner.validate(paths);
-					if (!valid) failed = true;
-					return valid;
+					const result = await inner.validate(paths);
+					if (result.outcome === 'invalid') failed = true;
+					return result;
 				},
 				setValue: (path, value) => {
 					inner.setValue(path, value);
@@ -194,12 +194,16 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	},
 	{
 		name: 'never records the errors of validate',
-		create: withOverrides((inner) => ({ validate: () => inner.checkValidity() })),
+		create: withOverrides((inner) => ({
+			validate: async () => ({ outcome: (await inner.checkValidity()) ? 'passed' : 'invalid' }),
+		})),
 		caught: ['with onSubmit nothing validates until validate is called'],
 	},
 	{
 		name: 'writes errors from checkValidity',
-		create: withOverrides((inner) => ({ checkValidity: () => inner.validate() })),
+		create: withOverrides((inner) => ({
+			checkValidity: async () => (await inner.validate()).outcome === 'passed',
+		})),
 		caught: ['checkValidity reports validity and changes nothing, not even for subscribers'],
 	},
 	{
@@ -453,7 +457,7 @@ const brokenStores: Array<{ name: string; create: FormStateContainerFactory; cau
 	{
 		name: 'swallows a rule that could not run',
 		create: withOverrides((inner) => ({
-			validate: (paths) => inner.validate(paths).catch(() => false),
+			validate: (paths) => inner.validate(paths).catch(() => ({ outcome: 'invalid' as const })),
 			checkValidity: () => inner.checkValidity().catch(() => false),
 		})),
 		caught: [

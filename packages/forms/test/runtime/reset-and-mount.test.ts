@@ -47,20 +47,14 @@ describe('a direct container.reset()', () => {
 });
 
 describe('mount', () => {
-	test('dispatches form_mount once for the runtime, however often it mounts', () => {
+	test('dispatches form_mount once for the runtime, however often it mounts', async () => {
 		const { runtime, seen, stop } = setup();
 		const count = () => seen.filter(({ trigger }) => trigger === 'form_mount').length;
-		return new Promise<void>((resolve) => {
-			setTimeout(() => {
-				expect(count()).toBe(1);
-				stop();
-				runtime.mount();
-				setTimeout(() => {
-					expect(count()).toBe(1);
-					resolve();
-				}, 0);
-			}, 0);
-		});
+		await vi.waitFor(() => expect(count()).toBe(1));
+		stop();
+		runtime.mount();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(count()).toBe(1);
 	});
 
 	test('reports a change of the values to onChange and form_change, and nothing else', async () => {
@@ -72,6 +66,8 @@ describe('mount', () => {
 		await runtime.container.validate();
 		expect(onChange).not.toHaveBeenCalled();
 		runtime.container.setValue('email', 'a@b.c');
+		await vi.waitFor(() => expect(onChange).toHaveBeenCalledOnce());
+		await vi.waitFor(() => expect(seen.filter(({ trigger }) => trigger === 'form_change')).toHaveLength(1));
 		await new Promise((resolve) => setTimeout(resolve, 0));
 		expect(onChange).toHaveBeenCalledOnce();
 		expect(seen.filter(({ trigger }) => trigger === 'form_change')).toHaveLength(1);
@@ -140,7 +136,7 @@ describe('actions in flight and before mount', () => {
 	test('report no results of form_change after an unmount', async () => {
 		const results = vi.fn();
 		const { runtime, stop, failing } = setup(wizardConfig(), { onActionResults: results });
-		await tick();
+		await vi.waitFor(() => expect(results).toHaveBeenCalledWith(expect.anything(), 'form_mount'));
 		results.mockClear();
 		failing.clear();
 		runtime.container.setValue('email', 'x');
@@ -151,13 +147,17 @@ describe('actions in flight and before mount', () => {
 
 	test('report the results of the form_change a reset itself makes, and not those of the change it cancelled', async () => {
 		const results = vi.fn();
-		const { runtime } = setup(wizardConfig(), { onActionResults: results });
-		await tick();
+		const { runtime, seen } = setup(wizardConfig(), { onActionResults: results });
+		await vi.waitFor(() => expect(results).toHaveBeenCalledWith(expect.anything(), 'form_mount'));
 		results.mockClear();
+		seen.length = 0;
 		runtime.container.setValue('email', 'x');
 		runtime.container.reset();
+		const changes = () => results.mock.calls.filter((call) => call[1] === 'form_change');
+		await vi.waitFor(() => expect(changes()).toHaveLength(1));
 		await tick();
-		expect(results.mock.calls.filter((call) => call[1] === 'form_change')).toHaveLength(1);
+		expect(changes()).toHaveLength(1);
+		expect(seen.filter(({ trigger }) => trigger === 'form_change')).toHaveLength(2);
 	});
 
 	test('a container change after an unmount moves nothing and fires no trigger', async () => {

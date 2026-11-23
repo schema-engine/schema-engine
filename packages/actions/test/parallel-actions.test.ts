@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { ActionDispatcher } from '../src/dispatcher';
 import { ActionRegistry } from '../src/registry';
@@ -37,9 +37,11 @@ describe('parallel action groups', () => {
 		const releaseA = deferred<void>();
 		const releaseB = deferred<void>();
 		const starts: string[] = [];
+		const finishes: string[] = [];
 		const dispatcher = setup(async (config) => {
 			starts.push(config.id);
 			await (config.id === 'a' ? releaseA.promise : releaseB.promise);
+			finishes.push(config.id);
 			return { success: true, data: config.id };
 		});
 		const running = dispatcher.dispatch({
@@ -47,10 +49,9 @@ describe('parallel action groups', () => {
 			trigger: 'submit',
 			context: {},
 		});
-		await Promise.resolve();
-		expect(starts).toEqual(['a', 'b']);
+		await vi.waitFor(() => expect(starts).toEqual(['a', 'b']));
 		releaseB.resolve();
-		await Promise.resolve();
+		await vi.waitFor(() => expect(finishes).toEqual(['b']));
 		releaseA.resolve();
 		expect(await running).toMatchObject([
 			{ actionId: 'a', data: 'a', groupIndex: 0 },
@@ -81,8 +82,7 @@ describe('parallel action groups', () => {
 			context: {},
 		});
 		await started.promise;
-		await new Promise((done) => setTimeout(done, 0));
-		expect(signal?.aborted).toBe(true);
+		await vi.waitFor(() => expect(signal?.aborted).toBe(true));
 		release.resolve();
 		expect(await running).toMatchObject([
 			{ actionId: 'a', success: true, status: 'succeeded', data: 'completed', cancellationRequested: true },
@@ -183,7 +183,7 @@ describe('an outer signal', () => {
 			context: {},
 			signal: outer.signal,
 		});
-		await Promise.resolve();
+		await vi.waitFor(() => expect(started).toEqual(['a']));
 		outer.abort();
 		release.resolve();
 		const results = await running;

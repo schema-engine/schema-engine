@@ -23,8 +23,10 @@ test('previews bind the engine on load and after client navigation without engin
 		await page.waitForFunction(() => customElements.get('se-form-renderer') !== undefined);
 		expect(await page.locator('.docs-form-renderer-preview rui-form').count()).toBeGreaterThan(0);
 
+		const previous = await page.locator('.docs-form-renderer-preview rui-form').first().elementHandle();
 		await page.locator('a[href="/docs/forms-radiant/layouts"]').first().click();
 		await page.waitForURL('**/docs/forms-radiant/layouts');
+		await page.waitForFunction((element) => element === null || !element.isConnected, previous);
 		await page.locator('.docs-form-renderer-preview rui-form').first().waitFor();
 
 		expect(await page.evaluate(() => Reflect.get(window, '__blankedPreview'))).toBe(false);

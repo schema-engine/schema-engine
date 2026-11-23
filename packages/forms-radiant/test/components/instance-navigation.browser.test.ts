@@ -42,9 +42,9 @@ function mountWizard(email: Record<string, unknown> = {}) {
 
 const current = (instance: FormInstanceElement) => instance.getContextValue().current;
 
-test('Next syncs and validates the current step, stays when it does not pass, and updates wizard visibility', async () => {
+test('Next syncs and validates the current step, stays when it is overtaken, and updates wizard visibility', async () => {
 	const { instance, host, steps } = mountWizard();
-	const validate = vi.spyOn(await containerOf(host), 'validate').mockResolvedValue(false);
+	const validate = vi.spyOn(await containerOf(host), 'validate').mockResolvedValue({ outcome: 'overtaken' });
 	const sync = vi.spyOn(host, 'sync');
 	await expect.poll(() => steps[1]?.hidden).toBe(true);
 	expect(await instance.next()).toBe('overtaken');
@@ -52,7 +52,7 @@ test('Next syncs and validates the current step, stays when it does not pass, an
 	expect(validate).toHaveBeenCalledWith(['email']);
 	expect(sync.mock.invocationCallOrder[0]).toBeLessThan(validate.mock.invocationCallOrder[0]!);
 	expect(current(instance)).toBe('first');
-	validate.mockResolvedValue(true);
+	validate.mockResolvedValue({ outcome: 'passed' });
 	expect(await instance.next()).toBe('moved');
 	await expect.poll(() => steps.map((step) => step.hidden)).toEqual([true, false]);
 	expect(instance.getContextValue().steps.map(({ complete }) => complete)).toEqual([true, false]);
@@ -63,7 +63,7 @@ test('Next syncs and validates the current step, stays when it does not pass, an
 
 test('a step is judged against the current step by its id, not its position', async () => {
 	const { instance, host, steps } = mountWizard();
-	vi.spyOn(await containerOf(host), 'validate').mockResolvedValue(true);
+	vi.spyOn(await containerOf(host), 'validate').mockResolvedValue({ outcome: 'passed' });
 	await expect.poll(() => steps[1]?.hidden).toBe(true);
 	await instance.next();
 	await expect.poll(() => steps.map((step) => step.hidden)).toEqual([true, false]);
@@ -115,7 +115,7 @@ test('Next on the last step is refused and validates nothing', async () => {
 	const host = document.createElement('rui-form');
 	instance.append(host);
 	document.body.append(instance);
-	const validate = vi.spyOn(await containerOf(host), 'validate').mockResolvedValue(true);
+	const validate = vi.spyOn(await containerOf(host), 'validate').mockResolvedValue({ outcome: 'passed' });
 
 	expect(await instance.next()).toBe('refused');
 
@@ -126,7 +126,7 @@ test('Next on the last step is refused and validates nothing', async () => {
 test('a direct container.reset() returns the wizard to its first step', async () => {
 	const { instance, host } = mountWizard();
 	const container = await containerOf(host);
-	vi.spyOn(container, 'validate').mockResolvedValue(true);
+	vi.spyOn(container, 'validate').mockResolvedValue({ outcome: 'passed' });
 	await instance.next();
 	expect(current(instance)).toBe('second');
 

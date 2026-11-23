@@ -5,7 +5,7 @@ const form = {
 	reset: () => undefined,
 	setValue: () => undefined,
 	getValue: () => undefined,
-	validate: async () => true,
+	validate: async () => ({ outcome: 'passed' as const }),
 	checkValidity: async () => true,
 };
 const fetch = async () => new Response(null);

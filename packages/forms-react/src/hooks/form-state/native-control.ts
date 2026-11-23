@@ -114,34 +114,44 @@ const FLAGS = [
 	'valueMissing',
 	'typeMismatch',
 	'patternMismatch',
-	'tooShort',
 	'tooLong',
+	'tooShort',
 	'rangeUnderflow',
 	'rangeOverflow',
 	'stepMismatch',
 	'badInput',
+	'customError',
 ] as const;
 
 type Flag = (typeof FLAGS)[number];
 
-/** The constraint behind a flag that a text needs, from the attributes the control carries. */
+/**
+ * The constraint behind a flag that a text needs, from the properties the control carries.
+ *
+ * @remarks
+ * `min`, `max` and `step` are numbers on a number or range input and the attribute's own text on any other type
+ * (a date), as they are in `rui-form`.
+ */
 function flagParams(flag: Flag, control: NativeControl): Readonly<Record<string, unknown>> | undefined {
-	const input = control instanceof HTMLInputElement ? control : undefined;
+	const bound = (input: HTMLInputElement, value: string): string | number => {
+		const numeric = input.type === 'number' || input.type === 'range';
+		return numeric && value !== '' ? Number(value) : value;
+	};
 	switch (flag) {
+		case 'tooShort':
+			return control instanceof HTMLSelectElement ? undefined : { minLength: control.minLength };
+		case 'tooLong':
+			return control instanceof HTMLSelectElement ? undefined : { maxLength: control.maxLength };
+		case 'rangeUnderflow':
+			return control instanceof HTMLInputElement ? { min: bound(control, control.min) } : undefined;
+		case 'rangeOverflow':
+			return control instanceof HTMLInputElement ? { max: bound(control, control.max) } : undefined;
+		case 'patternMismatch':
+			return control instanceof HTMLInputElement ? { pattern: control.pattern } : undefined;
+		case 'stepMismatch':
+			return control instanceof HTMLInputElement ? { step: bound(control, control.step) } : undefined;
 		case 'typeMismatch':
 			return { inputType: control.type };
-		case 'patternMismatch':
-			return input && { pattern: input.pattern };
-		case 'tooShort':
-			return !(control instanceof HTMLSelectElement) ? { minLength: control.minLength } : undefined;
-		case 'tooLong':
-			return !(control instanceof HTMLSelectElement) ? { maxLength: control.maxLength } : undefined;
-		case 'rangeUnderflow':
-			return input && { min: input.min };
-		case 'rangeOverflow':
-			return input && { max: input.max };
-		case 'stepMismatch':
-			return input && { step: input.step };
 		default:
 			return undefined;
 	}
@@ -151,15 +161,18 @@ function flagParams(flag: Flag, control: NativeControl): Readonly<Record<string,
  * What the browser says about the control's value, as the container's native fact, or `null` when it is valid.
  *
  * @remarks
- * Reads the same flags and params as `rui-form` of Radiant. A control the browser does not validate
- * (disabled, read-only, hidden) reports valid. The browser's own message travels only as a fallback, since
- * the form's formatter words the issue. A custom validity message is not a fact: rules decide those.
+ * The same fact `rui-form` of Radiant UI reports for the same control state, so a form validates alike in both
+ * renderers: the first flag set, in the order of {@link FLAGS}, is the `type`, `params` carry the constraint the flag names,
+ * and a control that is invalid with no flag set, or whose script called `setCustomValidity`, is a
+ * `customError` whose `message` is the script's text. A control the browser does not validate (disabled,
+ * read-only, hidden) reports valid. The browser's own message travels only as a fallback, since the form's
+ * formatter words the issue. Reads properties and never calls `checkValidity()`, which fires `invalid`.
  */
 export function readNativeFact(control: NativeControl): NativeValidity | null {
 	if (!control.willValidate) return null;
 	const { validity, validationMessage } = control;
-	const flag = FLAGS.find((name) => validity[name]);
-	if (!flag) return null;
+	if (validity.valid) return null;
+	const flag = FLAGS.find((name) => validity[name]) ?? 'customError';
 	const params = flagParams(flag, control);
 	return {
 		type: flag,

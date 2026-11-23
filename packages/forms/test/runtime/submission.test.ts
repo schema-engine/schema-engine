@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { FORM_ROOT } from '@/state-container';
-import { fill, setup, wizardConfig } from './fixture';
+import { fill, gateReached, releaseGate, setup, wizardConfig } from './fixture';
 
 const toLastStep = async (runtime: ReturnType<typeof setup>['runtime']) => {
 	fill(runtime, { email: 'a@b.c', street: 's' });
@@ -19,6 +19,58 @@ describe('submit before the last active step', () => {
 		expect(runtime.getSnapshot().current).toBe('address');
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 		expect(onSubmit).not.toHaveBeenCalled();
+	});
+});
+
+/** The statuses the submission goes through from now on, each once, starting with the current one. */
+const statusesOf = (runtime: ReturnType<typeof setup>['runtime']) => {
+	const statuses = [runtime.getSnapshot().submission.status];
+	runtime.subscribe(() => {
+		const { status } = runtime.getSnapshot().submission;
+		if (statuses.at(-1) !== status) statuses.push(status);
+	});
+	return statuses;
+};
+
+/** Resolves as soon as the submission has the status, without polling, so a short phase is not missed. */
+const untilStatus = (runtime: ReturnType<typeof setup>['runtime'], status: string) =>
+	new Promise<void>((resolve) => {
+		const stop = runtime.subscribe(() => {
+			if (runtime.getSnapshot().submission.status !== status) return;
+			stop();
+			resolve();
+		});
+	});
+
+describe('the phases of a submission', () => {
+	test('an invalid submission validates and never starts', async () => {
+		const { runtime, seen } = setup();
+		await toLastStep(runtime);
+		const statuses = statusesOf(runtime);
+
+		expect(await runtime.submit()).toBe('invalid');
+
+		expect(statuses).toEqual(['idle', 'validating', 'idle']);
+		expect(seen.map(({ trigger }) => trigger)).not.toContain('form_submit_start');
+	});
+
+	test('a valid submission starts once it passed validation, as form_submit_start fires, and then ends', async () => {
+		const { runtime, seen } = setup();
+		await toLastStep(runtime);
+		fill(runtime, { card: 'c' });
+		const statuses = statusesOf(runtime);
+		const startedBefore: boolean[] = [];
+		runtime.subscribe(() => {
+			if (runtime.getSnapshot().submission.status === 'submitting') {
+				startedBefore.push(seen.some(({ trigger }) => trigger === 'form_submit_start'));
+			}
+		});
+
+		expect(await runtime.submit()).toBe('submitted');
+
+		expect(statuses).toEqual(['idle', 'validating', 'submitting', 'success']);
+		expect(startedBefore).toEqual([false]);
+		expect(seen.map(({ trigger }) => trigger)).toContain('form_submit_start');
 	});
 });
 
@@ -56,11 +108,11 @@ describe('submit on the last active step', () => {
 		expect(host.submitNatively).toHaveBeenCalledWith({ email: 'a@b.c', street: 's', card: 'c' });
 	});
 
-	test('is pending while it runs, and counts a submission that failed validation', async () => {
+	test('is validating while it checks, and counts a submission that failed validation', async () => {
 		const { runtime } = setup();
 		await toLastStep(runtime);
 		const running = runtime.submit();
-		expect(runtime.getSnapshot().submission.status).toBe('pending');
+		expect(runtime.getSnapshot().submission.status).toBe('validating');
 		expect(await running).toBe('invalid');
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 1 });
 	});
@@ -115,7 +167,7 @@ describe('submit on the last active step', () => {
 		expect(seen.filter(({ trigger }) => trigger === 'step_enter')).toHaveLength(1);
 	});
 
-	test('overtaken by an edit: no verdict, nothing shown or counted', async () => {
+	test('a reset that outruns the check: no verdict, nothing focused, shown or counted', async () => {
 		const { runtime, host } = setup();
 		await toLastStep(runtime);
 		fill(runtime, { card: 'c' });
@@ -189,33 +241,29 @@ describe('what a failed submission reports', () => {
 describe('a submission a reset or an edit outran', () => {
 	test('an edit that outruns its validation is overtaken: nothing is shown or counted, and the next submit may pass', async () => {
 		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
-		const release = async () => {
-			await new Promise((resolve) => setTimeout(resolve, 0));
-			gate.waiting.splice(0).forEach((resolve) => resolve());
-		};
 		fill(runtime, { email: 'a@b.c', street: 's', card: 'c' });
 		const first = runtime.next();
-		await release();
+		await releaseGate(gate);
 		await first;
 		await runtime.next();
 		expect(runtime.getSnapshot().current).toBe('payment');
 
+		const statuses = statusesOf(runtime);
 		const running = runtime.submit();
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await gateReached(gate);
 		runtime.container.setValue('card', 'd');
-		await release();
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await releaseGate(gate);
+		await gateReached(gate);
 		runtime.container.setValue('card', 'e');
-		await release();
-		await release();
+		await releaseGate(gate);
 
 		expect(await running).toBe('overtaken');
+		expect(statuses).toEqual(['idle', 'validating', 'idle']);
 		expect(host.focus).not.toHaveBeenCalled();
 		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 
 		const again = runtime.submit();
-		await release();
-		await release();
+		await releaseGate(gate);
 		expect(await again).toBe('submitted');
 	});
 
@@ -235,18 +283,24 @@ describe('a submission a reset or an edit outran', () => {
 });
 
 describe('an unmount during a submission', () => {
-	test('stops the lifecycle before onSubmit and publishes no outcome', async () => {
+	test('stops the lifecycle before onSubmit, ends idle and publishes no outcome', async () => {
 		const onSubmit = vi.fn();
 		const { runtime, stop, slow } = setup(wizardConfig(), { onSubmit });
 		slow.add('form_submit');
 		await toLastStep(runtime);
 		fill(runtime, { card: 'c' });
+		const statuses = statusesOf(runtime);
+		const submitting = untilStatus(runtime, 'submitting');
 		const running = runtime.submit();
-		await new Promise((resolve) => setTimeout(resolve, 15));
+		await submitting;
+
 		stop();
+
+		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 		await running;
 		await new Promise((resolve) => setTimeout(resolve, 20));
 		expect(onSubmit).not.toHaveBeenCalled();
-		expect(runtime.getSnapshot().submission.status).not.toBe('success');
+		expect(statuses).toEqual(['idle', 'validating', 'submitting', 'idle']);
+		expect(runtime.getSnapshot().submission).toEqual({ status: 'idle', failures: [], submitCount: 0 });
 	});
 });

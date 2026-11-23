@@ -28,8 +28,9 @@ test('recipe source tabs preserve whitespace and copy the active file', async ()
 			}),
 		).toEqual(['0px', '0px', '0px', '13px']);
 		expect(await source.locator('code').evaluate((element) => getComputedStyle(element).fontSize)).toBe('13px');
+		await page.evaluate(() => navigator.clipboard.writeText(''));
 		await codeTabs.locator('.code-tabs__copy').first().click();
-		expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+		await pwExpect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
 		let multiTabGroups = 0;
 		for (const recipe of await page.locator('radiant-code-tabs').all()) {
 			const tabs = recipe.getByRole('tab');
@@ -45,8 +46,9 @@ test('recipe source tabs preserve whitespace and copy the active file', async ()
 				await pwExpect(visibleSource).toBeVisible();
 				expect(await visibleSource.evaluate((element) => getComputedStyle(element).whiteSpace)).toMatch(/^pre/);
 				const content = await visibleSource.textContent();
+				await page.evaluate(() => navigator.clipboard.writeText(''));
 				await panel.locator('.code-tabs__copy').click();
-				expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(content);
+				await pwExpect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(content);
 			}
 		}
 		expect(multiTabGroups).toBeGreaterThan(0);

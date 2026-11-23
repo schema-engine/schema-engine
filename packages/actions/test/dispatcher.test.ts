@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { ActionDispatcher } from '../src/dispatcher';
 import type { ActionRegistryProvider } from '../src/registry';
@@ -115,9 +115,7 @@ describe('ActionDispatcher', () => {
 			metadata: { userId: '123' },
 		});
 
-		await new Promise((resolve) => setImmediate(resolve));
-
-		expect(executeCalls).toHaveLength(1);
+		await vi.waitFor(() => expect(executeCalls).toHaveLength(1));
 		expect(executeCalls[0]!.config.id).toBe('a1');
 		expect(executeCalls[0]!.context.id).toBe('ctx-1');
 		expect(executeCalls[0]!.context.metadata).toEqual({ userId: '123' });
@@ -147,6 +145,7 @@ describe('ActionDispatcher', () => {
 			}),
 		).not.toThrow();
 
+		await vi.waitFor(() => expect(executeCalls).toHaveLength(1));
 		await new Promise((resolve) => setImmediate(resolve));
 
 		(process as NodeJS.EventEmitter).off('unhandledRejection', onUnhandled);

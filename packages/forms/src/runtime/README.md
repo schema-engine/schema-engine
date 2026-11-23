@@ -84,7 +84,7 @@ type SubmitOutcome = Extract<
 ```ts
 interface FormRuntimeSnapshot {
 	submission: {
-		status: 'idle' | 'pending' | 'success' | 'error';
+		status: 'idle' | 'validating' | 'submitting' | 'success' | 'error';
 		failures: FormSubmissionIssue[];
 		submitCount: number;
 	};

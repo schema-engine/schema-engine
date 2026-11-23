@@ -187,6 +187,8 @@ test('step navigation dispatches step triggers once from the instance, with no a
 	await nextFrame();
 
 	expect(await instance.next()).toBe('moved');
+	await expect.poll(() => execute.mock.calls.length).toBe(1);
+	await nextFrame();
 
 	expect(execute).toHaveBeenCalledOnce();
 	expect(instance.getContextValue().current).toBe('second');

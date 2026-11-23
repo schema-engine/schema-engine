@@ -2,6 +2,7 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
+import { isSubmissionBusy } from '@schema-engine/forms';
 import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
@@ -46,7 +47,7 @@ export class WizardActionsElement extends RadiantElement {
 		const { labels, variant, showStepCounter } = this.slotConfig;
 		const { isFirstStep, isLastStep: last } = deriveNavigation(meta, instance);
 		const steps = deriveFormSteps(meta, instance);
-		const submitting = instance.submission.status === 'pending';
+		const submitting = isSubmissionBusy(instance.submission.status);
 		return (
 			<div classes={['se-wizard-actions', variant === 'minimal' && 'se-wizard-actions--minimal']}>
 				<RuiButton

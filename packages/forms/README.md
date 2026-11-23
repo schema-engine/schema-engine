@@ -133,6 +133,37 @@ has recipes for Node, Bun, Vite and fetch.
 
 The styling guides are in the docs: [Styling and layout](../../apps/docs/src/content/docs/styling/overview.mdx), [Layout themes](../../apps/docs/src/content/docs/styling/layout-themes.mdx) and [Registries and the catalog](../../apps/docs/src/content/docs/registry/registries.mdx).
 
+### Form state
+
+A form's state is one container, made by `createFormStateContainer` from `@schema-engine/forms/state-container`
+(the runtime builds it for a rendered form): the nested values, the errors and warnings of each field, touched,
+dirty and pending marks, field-array row ids and the native validity a control reports. The contract is public
+so a renderer for any framework binds the same way, and the reads are pure selectors over its snapshot
+(`selectFieldState`, `selectValue`). `isValid` counts the errors recorded and
+validates nothing; `validate()` records and shows them, and `checkValidity()` answers for the current values
+without recording any. `submit()` says how a submission ended (`passed`, `invalid` or `overtaken`), and a passed
+one hands back `setServerErrors`, which `@schema-engine/forms/server-errors` feeds from an RFC 9457 Problem Details
+or a JSON:API response (`fromProblemDetails`, `fromJsonApiErrors`). `@schema-engine/forms/csrf` reads a CSRF token
+for `createFormEngine({ csrf })`. The engine writes no text: `createFormEngine({ formatIssue })` is the one
+formatter that words an issue. The [state container guide](./src/state-container/README.md) has the contract in
+full; the docs pages are [Form state](../../apps/docs/src/content/docs/forms/form-state.mdx),
+[Issue text](../../apps/docs/src/content/docs/forms/issue-text.mdx),
+[Native validity](../../apps/docs/src/content/docs/forms/native-validity.mdx),
+[Server errors](../../apps/docs/src/content/docs/forms/server-errors.mdx),
+[CSRF](../../apps/docs/src/content/docs/forms/csrf.mdx) and
+[Form libraries](../../apps/docs/src/content/docs/forms/form-libraries.mdx), which says why there are no form
+library adapters.
+
+A container of your own, or a store that must behave like this one, proves it with the conformance suite, which
+registers its cases with vitest (an optional peer dependency) and so is imported only from a test file:
+
+```ts
+import { formStateContainerConformance } from '@schema-engine/forms/testing';
+import { createMyContainer } from './my-container';
+
+formStateContainerConformance(createMyContainer);
+```
+
 ### The form runtime
 
 `createFormRuntime({ engine, config, defaults, snapshot, host, onSubmit, onChange, onAction, onActionResults })` is
@@ -145,10 +176,10 @@ submit as Next, skipped steps).
 A step takes `constraints` (`show` or `hide`, on fields of earlier steps) to be skipped, and the form takes
 `navigation: 'linear' | 'free'`. `collectStepActions(config, stepId)` lists the actions a trigger dispatches
 while that step is current: the form's `actions`, then the step's own. `hasConfiguredActions(config)`
-reports whether the form or any step configures one. Steps no longer accept `rules`, `onStepEnter`,
-`onStepLeave` or `onStepValidate`; those never ran. Move an enter or leave hook into the step's `actions` with
-`triggers: ['step_enter']` or `['step_leave']`; `onStepValidate` has no replacement. A JSON config that still
-sets them has the keys stripped.
+reports whether the form or any step configures one. A step takes no `rules`, `onStepEnter`,
+`onStepLeave` or `onStepValidate`: an enter or leave hook is a step action with
+`triggers: ['step_enter']` or `['step_leave']`, and the step's validation is its fields' rules. A JSON config that
+sets those keys has them stripped.
 
 Action lists may contain inner arrays for parallel groups; see the [actions guide](./src/actions/README.md).
 The runtime dispatches the form submit start, submit, success or error, and complete triggers; `onAction(action,
@@ -161,8 +192,7 @@ carries the `actionId` of the configured action that produced it.
 context with form data and timing metadata, including a stable step start time that resets
 when the current step changes; it carries the current `stepId`, and `currentStep` and `totalSteps` count the steps that are not skipped. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
-The form state no longer accepts `touchedFields` or `isSubmitted`: pass `isValid`, `touched` and
-`submitCount`, all required; the context's `isValid` is the one passed, the container's `snapshot.isValid` (see [action context form state](src/engine/README.md#action-context-form-state)).
+Its form state takes `isValid`, `touched` and `submitCount`, all required; the context's `isValid` is the one passed, the container's `snapshot.isValid` (see [action context form state](src/engine/README.md#action-context-form-state)).
 The engine entry point also re-exports `ActionDispatcher` so
 both renderers can use the same action dispatcher class.
 
@@ -182,6 +212,14 @@ elements: [
 	},
 ];
 ```
+
+### Agent skill
+
+The package ships its agent skill as `skill/` (`SKILL.md`, a short router with the core concepts, and `reference/*.md`
+loaded only when a task needs them), so an agent reads the guide of the installed version from
+`node_modules/@schema-engine/forms/skill/`. The skill is the one source: the docs site copies this folder to
+`/skill/` when it builds, as the latest version. Every TypeScript block in it mirrors a tested file under
+`test-utils/skill-examples/`, and `test/skill/skill-sync.test.ts` fails when a block and its file drift apart.
 
 ### Class and style
 
@@ -534,12 +572,12 @@ adapter.
 
 ## Who owns visual chrome
 
-| Layer                                                           | Owns                                                                                                                                                                                                   |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form runtime (`createFormRuntime`), the form state container (`@schema-engine/forms/state-container`), `FieldArrayValue` — no widget `$type` schemas |
-| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/hooks`; the form state is the engine's container                                                                                                  |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                                                            |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                                                                 |
+| Layer                                                           | Owns                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form runtime (`createFormRuntime`), the form state container (`@schema-engine/forms/state-container`) and its conformance suite (`@schema-engine/forms/testing`), `FieldArrayValue` — no widget `$type` schemas |
+| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/hooks`; the form state is the engine's container                                                                                                                                                             |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                                                                                                                       |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                                                                                                                            |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 

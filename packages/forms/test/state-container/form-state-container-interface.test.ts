@@ -1,4 +1,4 @@
-import { containerOptions } from '../../../../test-utils/form-state-container-conformance';
+import { containerOptions } from '@/testing/form-state-container-conformance';
 import { describe, expect, test } from 'vitest';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
@@ -43,7 +43,7 @@ interface BridgeFormState<TIssue> {
 	};
 	subscribe: (listener: () => void) => () => void;
 	reset: () => void;
-	validate: (paths?: string[]) => Promise<boolean>;
+	validate: () => Promise<{ outcome: 'passed' | 'invalid' | 'overtaken' }>;
 	checkValidity: () => Promise<boolean>;
 	reportNative: (facts: Record<string, BridgeNativeValidity | null>) => void;
 }
@@ -52,7 +52,7 @@ interface BridgeFormState<TIssue> {
 type BridgeFormatter<TIssue> = (issue: TIssue, field: { path: string }) => string;
 
 interface NotTheBridge {
-	validate: (paths?: string[]) => Promise<string>;
+	checkValidity: () => Promise<string>;
 }
 
 const element = (config: Record<string, unknown>) => markNormalizedElementConfig(config as unknown as ElementConfig);
@@ -75,10 +75,10 @@ describe('the form state container as a bridge host sees it', () => {
 		bridge.setValue('name', '');
 		bridge.blur('name');
 		bridge.reportNative({ name: { type: 'valueMissing', message: 'Fill in this field' } });
-		expect(await bridge.validate()).toBe(false);
+		expect(await container.validate()).toEqual({ outcome: 'invalid' });
 		expect(bridge.getSnapshot().errors.name?.message).toBe('Fill in this field');
 		bridge.reportNative({ name: null });
-		expect(await bridge.validate(['name'])).toBe(true);
+		expect(await container.validate(['name'])).toEqual({ outcome: 'passed' });
 		bridge.reportNative({ name: { type: 'tooShort', params: { minLength: 8 } }, 'nothing.here': null });
 		expect(bridge.getSnapshot().warnings).toEqual({});
 		bridge.reportNative({ name: null });
@@ -112,7 +112,7 @@ describe('the form state container as a bridge host sees it', () => {
 				elements: [element({ $type: 'input', name: 'name' })],
 			}),
 		);
-		// @ts-expect-error the container resolves a boolean, so it does not fit a validate that resolves a string
+		// @ts-expect-error the container resolves a boolean, so it does not fit a checkValidity that resolves a string
 		const notFit: NotTheBridge = container;
 		expect(notFit).toBe(container);
 	});

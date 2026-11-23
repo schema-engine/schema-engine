@@ -8,8 +8,12 @@ import type {
 	ValidationRegistrationConstraint,
 } from './types.js';
 import { defaultValidations } from './defaults.js';
+import { BaseValidationRuleSchema } from './types.js';
 import { ValidationRuleError } from './errors.js';
 import { globalFetch, type FormFetch } from '@/lib/form-fetch';
+import { safeParseStandardSchema } from '@/lib/standard-schema';
+import { issueAt, type FormValidationIssue } from '@/lib/validate-form/issues';
+import { fromSchemaIssues } from '@/lib/validate-form/schema-issues';
 import { createValidationContext } from './utils.js';
 
 /** @remarks Rule-specific handlers are checked where a registration is defined, then stored together by rule type. */
@@ -81,15 +85,26 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	createSchema<T extends { type: string }>(rule: T, context: ValidationScope): z.ZodMiniType;
 
 	/**
-	 * Why a rule cannot be used, or `undefined` when it can.
+	 * Whether a rule can be used, and the rule as its registration parses it.
 	 *
 	 * @remarks
-	 * Checks that the type is registered and that the handler builds a schema for the rule, so a bad
-	 * pattern is found when the form config is validated and not when a user first types. The shape of the
-	 * rule is checked by the element's own schema, which reports the key at fault.
+	 * The one check of a rule written in a form config: its `type` is registered, its options satisfy the
+	 * registration's `schema`, and the handler builds a schema for it, so a rule that throws is found when
+	 * the form config is validated and not when a user first types. The registration owns the shape, so a
+	 * registration that replaces a built-in decides its options. The rule that comes back is the parsed
+	 * one, which is what the handler runs on: the schema's defaults applied, and `type`, `message`, `id` and
+	 * `severity` kept from the authored rule even when the schema is a plain object that strips them.
+	 *
+	 * Issue paths are relative to the rule: an option the schema refuses is reported at its key, and a
+	 * type nothing registers or a handler that throws at `type`.
 	 */
-	check(rule: { type: string }): string | undefined;
+	check(rule: { type: string }): RuleCheck;
 }
+
+/** What {@link ValidationRegistry.check} found: the rule as its registration parses it, or the issues that make it unusable. */
+export type RuleCheck =
+	| { readonly ok: true; readonly rule: BaseValidationRule }
+	| { readonly ok: false; readonly issues: readonly FormValidationIssue[] };
 
 /** What a validation registry is built with besides its registrations. */
 export interface ValidationRegistryOptions {
@@ -115,6 +130,29 @@ function deriveDefaultRules(
 }
 
 const NO_DEFAULT_RULES: readonly BaseValidationRule[] = Object.freeze([]);
+
+const COMMON_RULE_KEYS = Object.keys(BaseValidationRuleSchema.shape);
+
+/**
+ * The rule as its registration parsed it, with the fields every rule has put back from the authored rule.
+ *
+ * @remarks
+ * The engine owns `type`, `message`, `id` and `severity`: a registration whose schema is a plain object
+ * strips them, which would turn a `warning` into a blocking error and lose the author's text and `id`.
+ * Options and defaults stay the registration's.
+ */
+function withCommonFields(parsed: BaseValidationRule, common: BaseValidationRule): BaseValidationRule {
+	const kept = Object.fromEntries(
+		COMMON_RULE_KEYS.flatMap((key) => (key in common && common[key] !== undefined ? [[key, common[key]]] : [])),
+	);
+	return { ...parsed, ...kept };
+}
+
+/** Names the rule type nothing registers and the types that are, so a typo is easy to see. */
+function unknownRuleMessage(type: string, registrations: readonly AnyValidationRegistration[]): string {
+	const registered = registrations.map((registration) => registration.$type).join(', ');
+	return `Unknown validation rule '${type}'. Register it with createFormEngine({ validations: [...] }). Registered rules: ${registered}.`;
+}
 
 /**
  * Build a read-only validation registry from a list of registrations.
@@ -157,7 +195,7 @@ export function createValidationRegistry(
 		createSchema: (rule, context) => {
 			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
 			if (!registration) {
-				throw new ValidationRuleError(rule.type, `Validation rule '${rule.type}' has no registered handler.`);
+				throw new ValidationRuleError(rule.type, unknownRuleMessage(rule.type, registry.all()));
 			}
 
 			try {
@@ -170,14 +208,28 @@ export function createValidationRegistry(
 		},
 		check: (rule) => {
 			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
-			if (!registration) return `Validation rule '${rule.type}' has no registered handler.`;
+			if (!registration) {
+				return { ok: false, issues: [issueAt(['type'], unknownRuleMessage(rule.type, registry.all()))] };
+			}
+			const common = safeParseStandardSchema(BaseValidationRuleSchema, rule);
+			if (!common.success) {
+				return { ok: false, issues: fromSchemaIssues(common.error.issues, []) };
+			}
+			const parsed = safeParseStandardSchema(registration.schema, rule);
+			if (!parsed.success) {
+				return { ok: false, issues: fromSchemaIssues(parsed.error.issues, []) };
+			}
+			const parsedRule = withCommonFields(parsed.data as BaseValidationRule, common.data);
 			try {
-				registration.handler(rule, { ...createValidationContext(), fetch });
+				registration.handler(parsedRule, { ...createValidationContext(), fetch });
 			} catch (error) {
 				const reason = error instanceof Error ? error.message : String(error);
-				return `Validation rule '${rule.type}' could not be built: ${reason}`;
+				return {
+					ok: false,
+					issues: [issueAt(['type'], `Validation rule '${rule.type}' could not be built: ${reason}`)],
+				};
 			}
-			return undefined;
+			return { ok: true, rule: parsedRule };
 		},
 	};
 	return Object.freeze(api);

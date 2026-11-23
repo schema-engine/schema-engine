@@ -150,10 +150,8 @@ describe('rui-form over the engine container', () => {
 		fields.name.input.focus();
 		fields.name.input.value = 'Ada';
 		fields.name.input.blur();
-		await settle();
-		const snapshot = container.getSnapshot();
-		expect(snapshot.values['name']).toBe('Ada');
-		expect(snapshot.touched['name']).toBe(true);
+		await vi.waitFor(() => expect(container.getSnapshot().touched['name']).toBe(true));
+		expect(container.getSnapshot().values['name']).toBe('Ada');
 		expect(seen.some((one) => one.touched['name'] && one.values['name'] !== 'Ada')).toBe(false);
 	});
 
@@ -161,75 +159,73 @@ describe('rui-form over the engine container', () => {
 		const { container, fields } = await mount();
 		fields.name.input.focus();
 		fields.name.input.blur();
-		await settle();
-		expect(container.getSnapshot().errors['name']?.ruleId).toBe('name-required');
-		expect(fields.name.error.textContent).toBe('name|validation:required:name-required');
+		await vi.waitFor(() => expect(container.getSnapshot().errors['name']?.ruleId).toBe('name-required'));
+		await vi.waitFor(() => expect(fields.name.error.textContent).toBe('name|validation:required:name-required'));
 	});
 
 	test('native required on a marked input reaches the container as a native issue, with its params', async () => {
 		const { container, nativeForm, fields } = await mount();
 		nativeForm.requestSubmit();
-		await settle();
-		const error = container.getSnapshot().errors['email'];
-		expect(error?.all.map((issue) => `${issue.source}:${issue.type}`)).toContain('native:valueMissing');
-		expect(fields.email.error.textContent).toBe('email|native:valueMissing:-');
+		await vi.waitFor(() =>
+			expect(
+				container.getSnapshot().errors['email']?.all.map((issue) => `${issue.source}:${issue.type}`),
+			).toContain('native:valueMissing'),
+		);
+		await vi.waitFor(() => expect(fields.email.error.textContent).toBe('email|native:valueMissing:-'));
 		await userEvent.fill(fields.email.input, 'ada@x.io');
-		await settle();
-		expect(container.getSnapshot().errors['email']).toBeUndefined();
+		await vi.waitFor(() => expect(container.getSnapshot().errors['email']).toBeUndefined());
 	});
 
 	test('a submit with an edit during validation submits what passed, and a server error lands on the submitted row', async () => {
 		const { container, nativeForm, fields, submissions } = await mount();
 		type(fields.name.input, 'Ada');
 		type(fields.email.input, 'ada@x.io');
-		await settle();
+		await vi.waitFor(() => expect(container.getSnapshot().values['email']).toBe('ada@x.io'));
 		gate.hold = true;
 		nativeForm.requestSubmit();
-		await settle();
-		expect(Object.keys(container.getSnapshot().validating).length).toBeGreaterThan(0);
+		await vi.waitFor(() => expect(Object.keys(container.getSnapshot().validating).length).toBeGreaterThan(0));
 		type(fields.name.input, 'Ada Lovelace');
-		await settle();
+		await vi.waitFor(() => expect(container.getSnapshot().values['name']).toBe('Ada Lovelace'));
 		gate.hold = false;
-		for (const release of gate.pending.splice(0)) release();
-		await settle(50);
-		for (const release of gate.pending.splice(0)) release();
-		await settle(50);
+		await vi.waitFor(() => {
+			for (const release of gate.pending.splice(0)) release();
+			const last = submissions.at(-1)?.result;
+			expect(last?.outcome).toBe('passed');
+			expect(last?.outcome === 'passed' && last.values['name']).toBe('Ada Lovelace');
+		});
 		const last = submissions.at(-1)?.result;
 		if (last?.outcome !== 'passed') throw new Error(`Expected a passed submission, got ${last?.outcome}`);
-		expect(last.values['name']).toBe('Ada Lovelace');
 
 		container.fieldArray('contacts').swap(0, 1);
-		await settle();
 		last.setServerErrors({ 'contacts.0.email': { type: 'bounced' }, [FORM_ROOT]: { type: 'rejected' } });
-		await settle();
+		await vi.waitFor(() => expect(fields.second.error.textContent).toBe('contacts.1.email|server:bounced:-'));
 		const errors = container.getSnapshot().errors;
 		expect(errors['contacts.1.email']?.type).toBe('bounced');
 		expect(errors['contacts.0.email']).toBeUndefined();
-		expect(fields.second.error.textContent).toBe('contacts.1.email|server:bounced:-');
 	});
 
 	test('reset rewrites the controls and clears every issue', async () => {
 		const { container, nativeForm, fields } = await mount();
 		type(fields.name.input, 'Ada');
 		nativeForm.requestSubmit();
-		await settle();
-		expect(Object.keys(container.getSnapshot().errors).length).toBeGreaterThan(0);
+		await vi.waitFor(() => expect(Object.keys(container.getSnapshot().errors).length).toBeGreaterThan(0));
 		nativeForm.reset();
-		await settle(50);
+		await vi.waitFor(() => expect(container.getSnapshot().errors).toEqual({}));
 		expect(fields.name.input.value).toBe('');
-		expect(container.getSnapshot().errors).toEqual({});
 	});
 
 	test('a row swap and a row removal keep each control with its row, its fact and its error', async () => {
 		const { container, fields } = await mount({ validationMode: 'onChange' });
 		type(fields.first.input, '');
-		await settle();
-		expect(container.getSnapshot().errors['contacts.0.email']?.ruleId).toBe('contact-required');
+		await vi.waitFor(() =>
+			expect(container.getSnapshot().errors['contacts.0.email']?.ruleId).toBe('contact-required'),
+		);
 		container.fieldArray('contacts').swap(0, 1);
-		await settle();
-		expect(fields.first.input.value).toBe('b@x.io');
+		await vi.waitFor(() =>
+			expect(container.getSnapshot().errors['contacts.1.email']?.ruleId).toBe('contact-required'),
+		);
+		await vi.waitFor(() => expect(fields.first.input.value).toBe('b@x.io'));
 		expect(fields.second.input.value).toBe('');
-		expect(container.getSnapshot().errors['contacts.1.email']?.ruleId).toBe('contact-required');
 		expect(container.getSnapshot().errors['contacts.0.email']).toBeUndefined();
 		const sources = (path: string) => container.getSnapshot().errors[path]?.all.map(({ source }) => source);
 		expect(sources('contacts.1.email')).toContain('native');
@@ -237,21 +233,19 @@ describe('rui-form over the engine container', () => {
 		container.fieldArray('contacts').remove(0);
 		fields.second.field.setAttribute('name', 'contacts.0.email');
 		fields.first.field.remove();
-		await settle();
+		await vi.waitFor(() => expect(sources('contacts.0.email')).toContain('native'));
 
 		expect(container.getSnapshot().values['contacts']).toEqual([{ email: '', role: 'a' }]);
 		expect(container.getSnapshot().errors['contacts.1.email']).toBeUndefined();
-		expect(sources('contacts.0.email')).toContain('native');
-		expect(await container.validate()).toBe(false);
+		expect(await container.validate()).toEqual({ outcome: 'invalid' });
 
 		await userEvent.fill(fields.second.input, 'a@x.io');
-		await settle();
-		expect(container.getSnapshot().errors['contacts.0.email']).toBeUndefined();
+		await vi.waitFor(() => expect(container.getSnapshot().errors['contacts.0.email']).toBeUndefined());
 		fields.name.input.value = 'Ada';
 		fields.name.input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
 		fields.email.input.value = 'ada@x.io';
 		fields.email.input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
-		await settle();
-		expect(await container.validate()).toBe(true);
+		await vi.waitFor(() => expect(container.getSnapshot().values['email']).toBe('ada@x.io'));
+		expect(await container.validate()).toEqual({ outcome: 'passed' });
 	});
 });

@@ -54,6 +54,16 @@ type ZodSchemaWithRegister = z.ZodMiniType & {
 };
 
 /**
+ * A schema the JSON Schema export defines once and refers to by its id, though it is no registration of the catalog.
+ *
+ * @remarks Without an id a schema is written out at every place that uses it.
+ */
+export interface SharedExportSchema {
+	readonly schema: z.ZodMiniType;
+	readonly metadata: FormEngineSchemaMetadata;
+}
+
+/**
  * Bridge catalog metadata into a Zod registry for JSON Schema generation.
  *
  * @remarks
@@ -208,8 +218,10 @@ export function createFormEngineSchemaArtifacts(
 	formConfigValidator: z.ZodMiniType,
 	actionConfigValidators?: Map<string, z.ZodMiniType>,
 	exportSchemas: ReadonlyMap<string, z.ZodMiniType> = new Map(),
+	sharedSchemas: readonly SharedExportSchema[] = [],
 ): FormEngineSchemaArtifacts {
 	const metadataRegistry = createZodRegistryFromCatalog(metadataCatalog, exportSchemas);
+	for (const { schema, metadata } of sharedSchemas) metadataRegistry.add(schema, metadata);
 	return {
 		metadataCatalog,
 		metadataRegistry,

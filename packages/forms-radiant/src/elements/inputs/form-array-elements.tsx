@@ -12,7 +12,11 @@ import { formEngineContext } from '@/components/provider';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { selectError, type FormIssueFormatter, type FormStateContainer } from '@schema-engine/forms/state-container';
+import {
+	selectFieldState,
+	type FormIssueFormatter,
+	type FormStateContainer,
+} from '@schema-engine/forms/state-container';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { describeIssue } from '@/lib/describe-issue';
 import { isRenderedRequired, withContainerState } from '@/lib/field-rules';
@@ -236,7 +240,7 @@ export class SeFormArray extends RadiantElement {
 		const { container, config } = this;
 		if (!container || !config?.name) return;
 		const snapshot = container.getSnapshot();
-		const issue = selectError(snapshot, config.name);
+		const issue = selectFieldState(snapshot, config.name).error;
 		this.fieldError = issue && describeIssue(issue, config.name, this.formatIssue);
 		this.describeGroup();
 		this.setRows(snapshot.rowIds[config.name] ?? []);

@@ -11,6 +11,7 @@ export const ComponentType = {
 	Recipe: 'recipe',
 	Action: 'action',
 	Axis: 'axis',
+	Validation: 'validation',
 } as const;
 
 /**

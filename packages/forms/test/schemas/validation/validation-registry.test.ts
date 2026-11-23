@@ -300,9 +300,44 @@ describe('ValidationRegistry', () => {
 				registration('fine', { handler: () => z.string() }),
 			]);
 
-			expect(registry.check({ type: 'fine' })).toBeUndefined();
-			expect(registry.check({ type: 'nonexistent' })).toMatch(/no registered handler/);
-			expect(registry.check({ type: 'faulty' })).toMatch(/could not be built: no good/);
+			expect(registry.check({ type: 'fine' })).toEqual({ ok: true, rule: { type: 'fine' } });
+			expect(registry.check({ type: 'nonexistent' })).toEqual({
+				ok: false,
+				issues: [
+					{
+						path: ['type'],
+						message: expect.stringMatching(
+							/Unknown validation rule 'nonexistent'.*Registered rules: faulty, fine\./,
+						),
+					},
+				],
+			});
+			expect(registry.check({ type: 'faulty' })).toEqual({
+				ok: false,
+				issues: [{ path: ['type'], message: expect.stringMatching(/could not be built: no good/) }],
+			});
+		});
+
+		it('reports an option its registration refuses at its key, and returns the rule as the registration parses it', () => {
+			const registry = createValidationRegistry([
+				registration('sized', {
+					schema: z.object({ type: z.literal('sized'), size: z._default(z.number(), 10) }),
+					handler: () => z.string(),
+				}),
+			]);
+
+			expect(registry.check({ type: 'sized' })).toEqual({ ok: true, rule: { type: 'sized', size: 10 } });
+			expect(registry.check({ type: 'sized', size: 'big' } as { type: string })).toEqual({
+				ok: false,
+				issues: [
+					{
+						path: ['size'],
+						message: 'Expected number.',
+						code: 'invalid_type',
+						params: { expected: 'number' },
+					},
+				],
+			});
 		});
 
 		it('lets the later registration of a type win without logging', () => {

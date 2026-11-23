@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 import { HtmlAttributesSchema } from './html-attributes';
 import { AppearanceConfigSchema, ElementGridConfigSchema } from '@schema-engine/layout';
-import { ValidationRuleSchema } from './validation/';
+import { BaseValidationRuleSchema } from './validation/';
 
 /**
  * Inline style: CSS custom properties only, keyed `--name`, with string or number values.
@@ -104,7 +104,7 @@ export const BaseFieldSchema = z.object({
 	 */
 	defaultValue: z.optional(z.any()).check(z.describe('Default value for the field')),
 
-	rules: z.optional(z.array(ValidationRuleSchema)).check(z.describe('Validation rules')),
+	rules: z.optional(z.array(BaseValidationRuleSchema)).check(z.describe('Validation rules')),
 
 	className: z.optional(z.string()).check(z.describe('CSS class name')),
 	style: z.optional(RendererStyleSchema).check(z.describe('CSS custom properties')),

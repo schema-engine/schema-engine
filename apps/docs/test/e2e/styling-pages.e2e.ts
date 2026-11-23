@@ -108,10 +108,14 @@ describe('styling docs pages', () => {
 			await pwExpect(tab).toHaveAttribute('aria-selected', 'true');
 			const panel = tabsHost.getByRole('tabpanel').filter({ visible: true });
 			const shown = await panel.locator('.code-tabs__code').textContent();
+			await page.evaluate(() => navigator.clipboard.writeText(''));
 			await panel.locator('.code-tabs__copy').click();
-			const copied = await page.evaluate(() => navigator.clipboard.readText());
-			expect(copied.replace(/\n$/, ''), `${id} tab ${index}`).toBe(shown);
-			expect(copied.length).toBeGreaterThan(40);
+			await pwExpect
+				.poll(async () => (await page.evaluate(() => navigator.clipboard.readText())).replace(/\n$/, ''), {
+					message: `${id} tab ${index}`,
+				})
+				.toBe(shown);
+			expect(shown!.length).toBeGreaterThan(40);
 		}
 	}
 

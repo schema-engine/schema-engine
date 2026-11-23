@@ -5,7 +5,7 @@ import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import type { SubmissionAlertProps } from './form-submission-alert.types';
 
-type AlertStatus = 'idle' | 'pending' | 'success' | 'error';
+type AlertStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 @customElement('se-submission-alert')
 export class SeSubmissionAlert extends RadiantElement {
@@ -37,7 +37,7 @@ export class SeSubmissionAlert extends RadiantElement {
 		}
 
 		const onSubmitStart = () => {
-			this.setStatus('pending');
+			this.setStatus('submitting');
 		};
 		const onSubmitComplete = (event: Event) => {
 			const custom = event as CustomEvent<{ succeeded?: boolean }>;
@@ -71,11 +71,11 @@ export class SeSubmissionAlert extends RadiantElement {
 			return null;
 		}
 
-		if (this.status === 'pending') {
+		if (this.status === 'submitting') {
 			return (
 				<RuiAlert variant="info" layout="inline">
 					<RuiAlertIcon variant="info" />
-					{config.pendingMessage || 'Submitting form...'}
+					{config.submittingMessage || 'Submitting form...'}
 				</RuiAlert>
 			);
 		}

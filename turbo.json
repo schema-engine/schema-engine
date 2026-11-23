@@ -75,6 +75,9 @@
 				"$TURBO_ROOT$/packages/forms-react/.storybook/ui/**"
 			]
 		},
+		"@schema-engine/forms#test:all": {
+			"dependsOn": ["build:lib", "^test:all"]
+		},
 		"@schema-engine/registry#test:all": {
 			"dependsOn": ["build:lib", "^test:all"]
 		}

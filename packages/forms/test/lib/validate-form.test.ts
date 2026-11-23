@@ -548,7 +548,7 @@ describe('validateFormConfig', () => {
 					},
 				],
 			}),
-		).toThrow(/field 'quantity'.*rule 'unregistered'/i);
+		).toThrow(/\(quantity\)\.rules\[0\]\.type: Unknown validation rule 'unregistered'/);
 	});
 
 	test('rejects a rule its handler cannot build, rather than skipping it when a user types', () => {
@@ -563,7 +563,16 @@ describe('validateFormConfig', () => {
 			metadata: { name: 'Field', category: 'input' },
 			render: () => null,
 		});
-		const engine = createFormEngine({ elements: [field] });
+		const fragile = {
+			$type: 'fragile',
+			schema: z.looseObject({ type: z.literal('fragile') }),
+			metadata: { name: 'Fragile' },
+			category: 'string',
+			handler: () => {
+				throw new Error('no good');
+			},
+		} as const;
+		const engine = createFormEngine({ elements: [field], validations: [fragile] });
 
 		expect(() =>
 			engine.validateForm({
@@ -572,18 +581,45 @@ describe('validateFormConfig', () => {
 					{
 						id: 'main',
 						title: 'Main',
-						elements: [
-							{
-								$type: 'field',
-								id: 'code',
-								name: 'code',
-								rules: [{ type: 'pattern', value: '(' }],
-							},
-						],
+						elements: [{ $type: 'field', id: 'code', name: 'code', rules: [{ type: 'fragile' }] }],
 					},
 				],
 			}),
-		).toThrow(/field 'code'.*rule 'pattern' could not be built/i);
+		).toThrow(/\(code\)\.rules\[0\]\.type: Validation rule 'fragile' could not be built: no good/);
+	});
+
+	test('rejects a rule whose options its registration refuses, at the key at fault', () => {
+		const field = defineInput({
+			$type: 'field',
+			schema: z.looseObject({
+				$type: z.literal('field'),
+				id: z.string(),
+				name: z.string(),
+				rules: z.optional(z.array(z.looseObject({ type: z.string() }))),
+			}),
+			metadata: { name: 'Field', category: 'input' },
+			render: () => null,
+		});
+		const engine = createFormEngine({ elements: [field] });
+
+		const result = engine.safeValidateForm({
+			id: 'bad-pattern',
+			steps: [
+				{
+					id: 'main',
+					title: 'Main',
+					elements: [{ $type: 'field', id: 'code', name: 'code', rules: [{ type: 'pattern', value: '(' }] }],
+				},
+			],
+		});
+
+		expect(result.success).toBe(false);
+		expect(!result.success && result.issues).toMatchObject([
+			{
+				path: ['steps', 0, 'elements', 0, 'rules', 0, 'value'],
+				message: expect.stringContaining('Must be a valid regular expression'),
+			},
+		]);
 	});
 
 	test.each(['__root__', '__proto__', 'constructor', 'address.__private', 'prototype'])(

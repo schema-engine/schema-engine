@@ -77,12 +77,7 @@ deterministic, and the server's snapshot carries them to the client.
 ## Runtime boundary
 
 The instance provides the container; `rui-form` is typed by Radiant UI's own
-`FormStateStore` interface and is handed the container with `connect`, so a host
+`FormStateStore` interface and is handed the container with `connect` as it is, so a host
 element reads state from the instance's context and never from `rui-form`'s.
-`watchField`, `watchForm`, the flat/nested translation and `createChangeDetector`
-are removed: select from the snapshot, or observe `values` for changes (the
-container keeps the same `values` object until a value changes).
-
-## Migration
-
-The `connect` / `disconnect` lifecycle, the `@formController` decorator, `ready`, `formState`, `getValues`, `getValue`, `setValue`, `reset`, `trigger`, `field` and `fieldArray` are removed. Use `form.container` for commands and reads and `form.select` to follow state. `FormFieldValue` and `FieldArrayValue` are removed with them.
+To follow state, select from the snapshot, or observe `values` for changes: the container keeps the same
+`values` object until a value changes.

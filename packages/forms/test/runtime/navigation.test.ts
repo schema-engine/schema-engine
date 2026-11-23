@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { fill, setup, wizardConfig } from './fixture';
+import { fill, gateReached, releaseGate, setup, wizardConfig } from './fixture';
 
 const stepTriggers = (seen: ReturnType<typeof setup>['seen']) =>
 	seen.filter(({ trigger }) => trigger.startsWith('step_')).map(({ trigger, stepId }) => `${trigger}:${stepId}`);
@@ -64,23 +64,18 @@ describe('next', () => {
 describe('a check that an edit outran', () => {
 	test('ends overtaken: no focus, no move, and the next attempt may succeed', async () => {
 		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
-		const release = async () => {
-			await new Promise((resolve) => setTimeout(resolve, 0));
-			gate.waiting.splice(0).forEach((resolve) => resolve());
-		};
 		const moving = runtime.next();
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await gateReached(gate);
 		runtime.container.setValue('email', 'b');
-		await release();
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await releaseGate(gate);
+		await gateReached(gate);
 		runtime.container.setValue('email', 'c');
-		await release();
-		await release();
+		await releaseGate(gate);
 		expect(await moving).toBe('overtaken');
 		expect(host.focus).not.toHaveBeenCalled();
 		expect(runtime.getSnapshot().current).toBe('contact');
 		const again = runtime.next();
-		await release();
+		await releaseGate(gate);
 		expect(await again).toBe('moved');
 	});
 });
@@ -192,9 +187,10 @@ describe('skipped steps', () => {
 		expect(runtime.getSnapshot().current).toBe('company');
 		seen.length = 0;
 		runtime.container.setValue('hasCompany', false);
-		await new Promise((resolve) => setTimeout(resolve, 0));
-		expect(runtime.getSnapshot().current).toBe('contact');
-		expect(stepTriggers(seen)).toEqual(['step_leave:company', 'step_change:contact', 'step_enter:contact']);
+		await vi.waitFor(() => expect(runtime.getSnapshot().current).toBe('contact'));
+		await vi.waitFor(() =>
+			expect(stepTriggers(seen)).toEqual(['step_leave:company', 'step_change:contact', 'step_enter:contact']),
+		);
 	});
 
 	test('a step that becomes skipped ahead of the current one is passed over', async () => {
@@ -255,7 +251,7 @@ describe('the lock', () => {
 		await runtime.next();
 		await runtime.next();
 		const submitting = runtime.submit();
-		expect(runtime.getSnapshot().submission.status).toBe('pending');
+		expect(runtime.getSnapshot().submission.status).toBe('validating');
 		expect(await runtime.next()).toBe('busy');
 		expect(await runtime.submit()).toBe('busy');
 		expect(await submitting).toBe('submitted');
@@ -265,33 +261,28 @@ describe('the lock', () => {
 describe('goTo that a check outran, or a reset revoked', () => {
 	test('ends overtaken when an edit outruns the check of a step on the way, and cancelled when a reset comes first', async () => {
 		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
-		const release = async () => {
-			await new Promise((resolve) => setTimeout(resolve, 0));
-			gate.waiting.splice(0).forEach((resolve) => resolve());
-		};
 		fill(runtime, { email: 'a@b.c', street: 's' });
 		const first = runtime.next();
-		await release();
+		await releaseGate(gate);
 		await first;
 		await runtime.next();
 		expect(await runtime.goTo('contact')).toBe('moved');
 
 		const moving = runtime.goTo('payment');
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await gateReached(gate);
 		runtime.container.setValue('email', 'x@b.c');
-		await release();
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await releaseGate(gate);
+		await gateReached(gate);
 		runtime.container.setValue('email', 'y@b.c');
-		await release();
-		await release();
+		await releaseGate(gate);
 		expect(await moving).toBe('overtaken');
 		expect(host.focus).not.toHaveBeenCalled();
 		expect(runtime.getSnapshot().current).toBe('contact');
 
 		const revoked = runtime.goTo('payment');
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await gateReached(gate);
 		runtime.container.reset();
-		await release();
+		await releaseGate(gate);
 		expect(await revoked).toBe('cancelled');
 	});
 });

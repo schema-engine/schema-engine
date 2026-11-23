@@ -59,7 +59,9 @@ execute: async (context) => {
 a pristine form even with an empty required field. `context.form.checkValidity()`
 validates the current values and resolves to whether the whole form passes. It
 records and shows no errors, and only the actions that call it pay for the
-validation.
+validation. `context.form.validate()` validates, shows the errors and resolves
+`{ outcome: 'passed' | 'invalid' | 'overtaken' }`. See
+[Validity](/docs/forms/form-state#validity) for the three reads.
 
 ## Disabled Actions
 

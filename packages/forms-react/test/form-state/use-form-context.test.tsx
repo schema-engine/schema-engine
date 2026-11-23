@@ -79,7 +79,7 @@ describe('useFormContext', () => {
 		expect(Object.keys(context().formState).sort()).toEqual(['errors', 'isValid', 'submission']);
 	});
 
-	test('the submission is the one state: pending while one runs, then how it ended, with the count of those that ended', async () => {
+	test('the submission is the one state: validating while it is checked, then how it ended, with the count of those that ended', async () => {
 		const seen: Array<FormContextValue['formState']['submission']> = [];
 		const { container, runtime } = mount(({ formState }) => {
 			seen.push(formState.submission);
@@ -90,7 +90,7 @@ describe('useFormContext', () => {
 		act(() => {
 			running = runtime.submit();
 		});
-		expect(seen.at(-1)).toMatchObject({ status: 'pending' });
+		expect(seen.at(-1)).toMatchObject({ status: 'validating' });
 		await act(() => running);
 		expect(seen.at(-1)).toEqual({ status: 'idle', failures: [], submitCount: 1 });
 
@@ -223,10 +223,10 @@ describe('useFormContext', () => {
 	test('validate resolves whether the named field, or the whole form, passed', async () => {
 		const { container, context } = mount(() => undefined);
 
-		await expect(context().validate('name')).resolves.toBe(false);
-		await expect(context().validate()).resolves.toBe(false);
+		await expect(context().validate('name')).resolves.toEqual({ outcome: 'invalid' });
+		await expect(context().validate()).resolves.toEqual({ outcome: 'invalid' });
 		act(() => container.setValue('name', 'ada'));
-		await expect(context().validate(['name'])).resolves.toBe(true);
-		await expect(context().validate()).resolves.toBe(true);
+		await expect(context().validate(['name'])).resolves.toEqual({ outcome: 'passed' });
+		await expect(context().validate()).resolves.toEqual({ outcome: 'passed' });
 	});
 });

@@ -1,5 +1,6 @@
 import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
 import type { LayoutTheme } from '@schema-engine/layout';
+import type { RuleCheck } from '@/schemas/validation';
 
 export type ElementRegistration = AnyElementRegistration;
 
@@ -11,8 +12,8 @@ export interface ValidateFormOptions {
 	defaultWizardRecipe?: string;
 	getElement: (id: string) => ElementRegistration | undefined;
 	getAction: (id: string) => AnyActionRegistration | undefined;
-	/** Why a rule cannot be used (no handler, invalid options, a handler that throws), or `undefined` when it can. */
-	checkRule: (rule: { type: string }) => string | undefined;
+	/** Checks a rule of an element against its registration; the engine passes its validation registry's `check`. */
+	checkRule: (rule: { type: string }) => RuleCheck;
 	/** Appearance axes the picks are checked against. Defaults to the built-in `size` and `surface` axes. */
 	axes?: LayoutTheme['axes'];
 }

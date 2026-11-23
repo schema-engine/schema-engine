@@ -15,7 +15,7 @@ import type { ElementConfig, FormActionConfig, FormConfig } from '@schema-engine
 
 const handled: string[] = [];
 const contexts: BuilderActionRuntimeContext[] = [];
-const validationResults: boolean[] = [];
+const validationResults: string[] = [];
 const engine = createFormEngine({
 	elements: [InputElementRegistration, FieldSetRegistration],
 	actions: [
@@ -26,7 +26,7 @@ const engine = createFormEngine({
 			execute: async (context: BuilderActionRuntimeContext) => {
 				handled.push((context.config as { id: string }).id);
 				if ((context.config as { id: string }).id === 'mounted')
-					validationResults.push(await context.form.validate());
+					validationResults.push((await context.form.validate()).outcome);
 				contexts.push(context);
 				if ((context.config as { id: string }).id === 'abort')
 					return { success: false, shouldContinue: false, error: 'Rejected' };
@@ -226,10 +226,10 @@ test('the action context form adapter validates', async () => {
 		<Field name="address.street" />,
 	);
 	await waitFor(() => expect(contexts).toHaveLength(1));
-	expect(validationResults).toEqual([false]);
+	expect(validationResults).toEqual(['invalid']);
 	contexts[0]!.form.setValue('address.street', 'abc');
 	expect(contexts[0]!.form.getValue('address.street')).toBe('abc');
-	expect(await contexts[0]!.form.validate()).toBe(true);
+	expect(await contexts[0]!.form.validate()).toEqual({ outcome: 'passed' });
 });
 
 test('submission validates once before invoking the submit callback', async () => {
@@ -355,7 +355,7 @@ test('every context of a submission carries the submitted values: without exclud
 	);
 	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
-	await waitFor(() => expect(onAction).toHaveBeenCalled());
+	await waitFor(() => expect(submitted).toHaveBeenCalled());
 	const expected = { a: 'x', campaign: 'spring' };
 	expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'saved' }), expected);
 	expect(submitted).toHaveBeenCalledWith(expected, {

@@ -5,6 +5,47 @@ import { playwright } from '@vitest/browser-playwright';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Dependencies the browser project pre-bundles before any test runs.
+ *
+ * @remarks
+ * On a cold Vite cache, a dependency first reached while a test file loads is optimized mid-run, and Vite
+ * reloads the page ("Vite unexpectedly reloaded a test"). The form recipe tests render React and Radiant forms,
+ * which reach these through the built packages.
+ */
+const browserOptimizedDeps = [
+	'@ecopages/jsx/client',
+	'@ecopages/radiant/context',
+	'@ecopages/radiant/form-associated-element',
+	'@ecopages/radiant/is-server',
+	'@ecopages/signals',
+	'@ecopages/radiant-ui/alert',
+	'@ecopages/radiant-ui/autocomplete',
+	'@ecopages/radiant-ui/badge',
+	'@ecopages/radiant-ui/button',
+	'@ecopages/radiant-ui/checkbox',
+	'@ecopages/radiant-ui/checkbox-group',
+	'@ecopages/radiant-ui/combobox',
+	'@ecopages/radiant-ui/field',
+	'@ecopages/radiant-ui/form',
+	'@ecopages/radiant-ui/heading',
+	'@ecopages/radiant-ui/input',
+	'@ecopages/radiant-ui/label',
+	'@ecopages/radiant-ui/listbox',
+	'@ecopages/radiant-ui/number-field',
+	'@ecopages/radiant-ui/radio-group',
+	'@ecopages/radiant-ui/select',
+	'@ecopages/radiant-ui/slider',
+	'@ecopages/radiant-ui/switch',
+	'@ecopages/radiant-ui/tag-group',
+	'@ecopages/radiant-ui/textarea',
+	'country-flag-icons/string/3x2',
+	'imask',
+	'libphonenumber-js',
+	'react',
+	'react-dom/client',
+];
+
 export default defineConfig({
 	root: dirname,
 	resolve: {
@@ -30,6 +71,7 @@ export default defineConfig({
 				},
 			},
 			{
+				optimizeDeps: { include: browserOptimizedDeps },
 				test: {
 					name: 'browser',
 					include: ['src/**/*.test.browser.ts'],

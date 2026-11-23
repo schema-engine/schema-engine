@@ -17,7 +17,7 @@ import { contactFormConfig } from '@/lib/form-configs/homepage-contact';
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-The peers need `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` 0.9.0 or later and `@ecopages/radiant-ui` 0.4.0 or later.
+The peers need `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` 0.12.0 or later and `@ecopages/radiant-ui` 0.6.0 or later.
 
 Load one Radiant UI theme, its aggregate stylesheet and this adapter's stylesheet once, in your global stylesheet:
 
@@ -169,6 +169,12 @@ const head = `<style data-se-theme-css="${id}">${css}</style>`;
 ## Style it
 
 [Styling and layout](/docs/styling/overview) says which tool fits which job, and [Recipes](/docs/styling/recipes) has copy-paste configs and CSS, each rendered live with this adapter.
+
+## Submit and state
+
+`onSubmit(values, { setServerErrors, fetch })` receives the values that passed validation. Send them with that `fetch`, which applies the engine's [CSRF policy](/docs/forms/csrf), and show a rejection on the fields it names with [`setServerErrors`](/docs/forms/server-errors). A form with `action` or `method` and no `onSubmit` posts natively after validation passes.
+
+The form's state is the engine's [container](/docs/forms/form-state), which `rui-form` bridges to the controls: see [Form controls](/docs/forms-radiant/form-controls) for the native events, reading the form from your own element and writing a custom control.
 
 ## Storybook
 

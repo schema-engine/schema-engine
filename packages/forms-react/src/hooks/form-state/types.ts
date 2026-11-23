@@ -16,6 +16,7 @@ import type {
 	FormStateError,
 	FormStateIssue,
 	FormSubmissionIssue,
+	FormValidateResult,
 } from '@schema-engine/forms/state-container';
 import type { ChangeEvent, CSSProperties, ReactNode, RefCallback } from 'react';
 
@@ -35,8 +36,8 @@ export interface FormContextValue {
 	getValues: () => FormValues;
 	/** Writes the branch at `name` as a change. */
 	setValue: (name: string, value: unknown) => void;
-	/** Validates `name` (a path or several; the whole form when omitted) and resolves whether it passed. */
-	validate: (name?: string | readonly string[]) => Promise<boolean>;
+	/** Validates `name` (a path or several; the whole form when omitted) and says how that ended: `passed`, `invalid` or `overtaken` by an edit or a reset, which is no verdict. */
+	validate: (name?: string | readonly string[]) => Promise<FormValidateResult>;
 	/** Restores the defaults, or replaces them with `values` first, and clears the errors, marks and the submission state: a fresh form. */
 	reset: (values?: Record<string, unknown>) => void;
 	/** Focuses the control a field registered with the `ref` of `useFormField`. */
@@ -53,7 +54,7 @@ export interface FormContextValue {
 		errors: Record<string, { message?: string }>;
 		/** Whether no error from any source is recorded. Cheap, and no proof that the values are valid. */
 		isValid: boolean;
-		/** The one submission state: the status (`pending` while one runs), the failures as issues worded by `formatIssue`, and the submissions that ended, whether they passed or failed validation. */
+		/** The one submission state: the status (`validating` while it is checked, `submitting` once it passed and its actions and `onSubmit` run), the failures as issues worded by `formatIssue`, and the submissions that ended, whether they passed or failed validation. */
 		submission: SubmissionState;
 	};
 }

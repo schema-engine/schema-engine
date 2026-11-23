@@ -4,7 +4,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import type { ElementConfig } from '@schema-engine/forms/schemas';
-import { selectError, type FormStateContainer } from '@schema-engine/forms/state-container';
+import { selectFieldState, type FormStateContainer } from '@schema-engine/forms/state-container';
 import { useFieldArray, useFormField, type FormFieldConfig } from '@/hooks/form-state';
 import { fieldText } from '@/hooks/field-text';
 import { logger } from '@/lib/logger';
@@ -90,7 +90,10 @@ describe('an uncontrolled field', () => {
 
 		expect(input.validity.badInput).toBe(true);
 		await act(() => container.validate(['age']));
-		expect(selectError(container.getSnapshot(), 'age')).toMatchObject({ type: 'badInput', source: 'native' });
+		expect(selectFieldState(container.getSnapshot(), 'age').error).toMatchObject({
+			type: 'badInput',
+			source: 'native',
+		});
 	});
 
 	test('a radio group writes the checked option back to every radio of the path', () => {
@@ -339,7 +342,7 @@ describe('native facts', () => {
 
 		await userEvent.type(input, 'abc');
 		await act(() => container.validate(['email']));
-		expect(selectError(container.getSnapshot(), 'email')).toMatchObject({
+		expect(selectFieldState(container.getSnapshot(), 'email').error).toMatchObject({
 			type: 'typeMismatch',
 			source: 'native',
 			params: { inputType: 'email' },
@@ -347,12 +350,12 @@ describe('native facts', () => {
 
 		await userEvent.type(input, '@b.co');
 		await act(() => container.validate(['email']));
-		expect(selectError(container.getSnapshot(), 'email')).toBeUndefined();
+		expect(selectFieldState(container.getSnapshot(), 'email').error).toBeUndefined();
 
 		await userEvent.clear(input);
 		await userEvent.type(input, 'nope');
 		await act(() => container.validate(['email']));
-		expect(selectError(container.getSnapshot(), 'email')?.type).toBe('typeMismatch');
+		expect(selectFieldState(container.getSnapshot(), 'email').error?.type).toBe('typeMismatch');
 
 		rerender(
 			<ContainerHarness container={container}>
@@ -360,7 +363,7 @@ describe('native facts', () => {
 			</ContainerHarness>,
 		);
 		await act(() => container.validate(['email']));
-		expect(selectError(container.getSnapshot(), 'email')).toBeUndefined();
+		expect(selectFieldState(container.getSnapshot(), 'email').error).toBeUndefined();
 	});
 
 	test('a controlled field on a native control reports them too', async () => {
@@ -382,7 +385,7 @@ describe('native facts', () => {
 		await userEvent.type(screen.getByRole('textbox', { name: 'email' }), 'abc');
 		await act(() => container.validate(['email']));
 
-		expect(selectError(container.getSnapshot(), 'email')?.type).toBe('typeMismatch');
+		expect(selectFieldState(container.getSnapshot(), 'email').error?.type).toBe('typeMismatch');
 	});
 });
 

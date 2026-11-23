@@ -45,7 +45,7 @@ Each winning `schema` must be a Standard Schema, so any provider works. A value 
 
 `createFormEngine` builds one read-only registry per kind, from the lists you pass:
 
-| You pass                        | Registry label | Registration                               | Catalog entry id  |
+| You pass                        | Registry label | Registration                               | Metadata entry id |
 | ------------------------------- | -------------- | ------------------------------------------ | ----------------- |
 | `elements`                      | `Element`      | `defineInput`, `defineStatic`              | `element:<$type>` |
 | `recipes`                       | `Recipe`       | `defineRecipe` bound to a spec             | `recipe:<$type>`  |
@@ -81,7 +81,7 @@ export const engine = createFormEngine({
 
 ## The catalog
 
-The engine records a catalog entry for every element, recipe, action and axis it builds. An entry is `{ id, title, description, componentType, category }`, and its `id` is `<componentType>:<$type>`. The catalog feeds the JSON Schema export and the authoring catalog, so an editor completes a registration you added.
+The engine records a metadata entry for every element, recipe, action and axis it builds. An entry is `{ id, title, description, componentType, category }`, and its `id` is `<componentType>:<$type>`. `engine.getSchemaCatalog()` returns these entries: they are the metadata the JSON Schema export and the authoring catalog read, so an editor completes a registration you added. They are not the registrations. To list what the engine has registered, use `engine.getAllElements()`, `getAllRecipes()` and `getAllActions()`, and `engine.getValidationRegistry()` for the rules.
 
 ```ts
 import { engine } from './engine';
@@ -89,7 +89,7 @@ import { engine } from './engine';
 const catalog = engine.getSchemaCatalog();
 
 export const title = catalog.get('axis:tone')?.title; // 'Tone'
-export const recipes = catalog.getAll().filter((entry) => entry.componentType === 'recipe');
+export const registeredRecipes = engine.getAllRecipes().map((recipe) => recipe.$type);
 
 export const jsonSchema = engine.generateFormConfigSchema({ io: 'input' }); // lists the registered $types
 ```

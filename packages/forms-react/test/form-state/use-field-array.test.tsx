@@ -2,7 +2,7 @@ import { fieldText } from '@/hooks/field-text';
 import { describe, expect, test } from 'vitest';
 import { useEffect } from 'react';
 import { act, render, screen } from '@testing-library/react';
-import { selectError, type FieldArrayValue, type FormStateContainer } from '@schema-engine/forms/state-container';
+import { selectFieldState, type FieldArrayValue, type FormStateContainer } from '@schema-engine/forms/state-container';
 import { useFieldArray, useFormField } from '@/hooks/form-state';
 import { markNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
@@ -108,7 +108,7 @@ describe('useFieldArray', () => {
 
 		expect(screen.getByTestId('contacts.1.email-error')).toHaveTextContent('Required');
 		expect(screen.getByTestId('contacts.0.email-error')).toBeEmptyDOMElement();
-		expect(selectError(container.getSnapshot(), 'contacts.1.email')?.type).toBe('required');
+		expect(selectFieldState(container.getSnapshot(), 'contacts.1.email').error?.type).toBe('required');
 	});
 
 	test('shows the error of the array itself apart from the errors of its rows', async () => {

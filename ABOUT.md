@@ -59,6 +59,7 @@ Use:
 - "Declarative interfaces, extended with your own components and actions."
 - "Each team brings its own vocabulary; the engine keeps the rules the same."
 - "Forms is the first domain."
+- "Forms are configured, not coded: the engine owns the form state, so there are no form library adapters."
 
 Avoid:
 

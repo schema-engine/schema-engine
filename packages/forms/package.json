@@ -11,7 +11,8 @@
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"files": [
-		"/dist/*"
+		"/dist/*",
+		"/skill"
 	],
 	"scripts": {
 		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
@@ -50,7 +51,13 @@
 	},
 	"peerDependencies": {
 		"typescript": "^5.4",
-		"zod": "^4.0.17"
+		"zod": "^4.0.17",
+		"vitest": "^4.0.13"
+	},
+	"peerDependenciesMeta": {
+		"vitest": {
+			"optional": true
+		}
 	},
 	"exports": {
 		"./package.json": {
@@ -139,6 +146,10 @@
 		"./server-errors": {
 			"types": "./dist/server-errors/index.d.ts",
 			"import": "./dist/server-errors/index.js"
+		},
+		"./testing": {
+			"types": "./dist/testing/index.d.ts",
+			"import": "./dist/testing/index.js"
 		},
 		"./recipes": {
 			"types": "./dist/recipes/index.d.ts",

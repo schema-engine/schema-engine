@@ -3,15 +3,6 @@ import type { IdTree, RowNode } from './row-ids';
 import type { FormStateHydration, FormStateSnapshot } from './types';
 import { createMap, isStructural, join, toInternalRecord, type NullMap } from './value-tree';
 
-/**
- * Thrown when a hydration cannot come from a real snapshot: its row ids do not match its own values.
- *
- * @remarks A host that serializes `toHydration(container.getServerSnapshot())` never sees it. It means the object was edited, or built by hand.
- */
-export class FormStateHydrationError extends Error {
-	override readonly name = 'FormStateHydrationError';
-}
-
 /** What a client needs of a server's snapshot to start from the same state: its values and row ids, both plain and serializable. */
 export const toHydration = (snapshot: FormStateSnapshot): FormStateHydration => ({
 	values: snapshot.values,
@@ -36,7 +27,7 @@ export interface ReadHydration {
  */
 export function readHydration(hydration: FormStateHydration): ReadHydration {
 	if (!isPlainObject(hydration) || !isPlainObject(hydration.values) || !isPlainObject(hydration.rowIds)) {
-		throw new FormStateHydrationError('A hydration is an object with the values and the rowIds of a snapshot.');
+		throw new Error('A hydration is an object with the values and the rowIds of a snapshot.');
 	}
 	const given = hydration.rowIds;
 	const taken = new Set<string>();
@@ -45,9 +36,9 @@ export function readHydration(hydration: FormStateHydration): ReadHydration {
 		if (!isStructural(value)) return undefined;
 		if (Array.isArray(value)) {
 			const ids: unknown = Object.hasOwn(given, path) ? given[path] : undefined;
-			if (!Array.isArray(ids)) throw new FormStateHydrationError(`The hydration has no row ids for '${path}'.`);
+			if (!Array.isArray(ids)) throw new Error(`The hydration has no row ids for '${path}'.`);
 			if (ids.length !== value.length) {
-				throw new FormStateHydrationError(
+				throw new Error(
 					`The hydration has ${ids.length} row ids for '${path}', which has ${value.length} rows.`,
 				);
 			}
@@ -55,7 +46,7 @@ export function readHydration(hydration: FormStateHydration): ReadHydration {
 			return value.map((row, index): RowNode => {
 				const id: unknown = ids[index];
 				if (typeof id !== 'string' || id === '' || taken.has(id)) {
-					throw new FormStateHydrationError(`The hydration has an invalid or repeated row id for '${path}'.`);
+					throw new Error(`The hydration has an invalid or repeated row id for '${path}'.`);
 				}
 				taken.add(id);
 				const below = idsOf(row, join(path, String(index)));
@@ -73,9 +64,7 @@ export function readHydration(hydration: FormStateHydration): ReadHydration {
 	const ids = idsOf(values, '');
 	for (const path of Object.keys(given)) {
 		if (!used.has(path)) {
-			throw new FormStateHydrationError(
-				`The hydration has row ids for '${path}', which is not an array in its values.`,
-			);
+			throw new Error(`The hydration has row ids for '${path}', which is not an array in its values.`);
 		}
 	}
 	return { values, ids, taken };

@@ -35,7 +35,7 @@ export type {
 	SchemaMetadataEntry,
 } from './engine';
 export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
-export { createFormRuntime } from './runtime';
+export { createFormRuntime, isSubmissionBusy } from './runtime';
 export type { SubmissionActionResult } from './runtime/submission-lifecycle';
 export type {
 	CreateFormRuntimeOptions,

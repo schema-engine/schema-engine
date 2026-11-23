@@ -1,7 +1,7 @@
 ---
 title: 'API Reference'
 description: 'Public surface of the forms package.'
-order: 7
+order: 14
 ---
 
 # API Reference
@@ -24,6 +24,12 @@ interface CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout> {
 	 * (default `builtInAxes`: `size` and `surface`). The last axis of a `$type` wins.
 	 */
 	layout?: TLayout;
+	/** Turns an issue into the text to show: the one formatter both renderers read. Inherited by `extend()`. */
+	formatIssue?: FormIssueFormatter;
+	/** The request function every request the engine makes goes through; the global `fetch` by default. Inherited by `extend()`. */
+	fetch?: FormFetch;
+	/** Where a CSRF token comes from, from `csrf.fromMeta`, `csrf.fromCookie` or `csrf.custom`. Off unless set. Inherited by `extend()`. */
+	csrf?: CsrfPolicy;
 }
 
 function createFormEngine<
@@ -52,8 +58,13 @@ Duplicate `$type` values follow last-wins at runtime. Tuples and inline arrays
 use last-wins typing; open `T[]` values use a union of configs for the same
 `$type`. Spread shared registration barrels and append overrides when needed.
 
-`engine.getSchemaCatalog()` lists the registered elements, recipes, actions and axes
-([Registries](/docs/registry/registries)).
+`formatIssue` is the engine's [issue formatter](/docs/forms/issue-text), `engine.getIssueFormatter()`. `engine.fetch` is the
+request function with the [CSRF policy](/docs/forms/csrf) applied, and `engine.getCsrf()` returns the policy.
+`engine.getValidationRegistry()` is the registry a [state container](/docs/forms/form-state) is made with.
+
+`engine.getSchemaCatalog()` returns the metadata the JSON Schema export reads (title, description and category by id, such as
+`element:input`), not a list of what is registered. Read what is registered with `engine.getAllElements()`,
+`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([Registries](/docs/registry/registries)).
 
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
 and is not typed per engine: field `rules` keep their `type` string. See
@@ -125,6 +136,8 @@ JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
 what authors write. An element whose schema pipes a transform (Radiant's `input-otp`) has no
 JSON Schema for its output side, so `io: 'output'` throws for an engine that registers one.
 
+The collection also holds the `validation-rule` entry: the union of every registered rule, which the form config schema defines once and each element's `rules` refers to.
+
 ```ts
 engine.generateJSONSchemaCollection(); // io: 'input'
 engine.generateFormConfigSchema(); // io: 'input'
@@ -149,26 +162,17 @@ envelope for those schemas.
 
 One framework-free instance per rendered form, shared by React and Radiant. It builds the form's state container and
 owns the submission, the wizard's steps and navigation, `form_mount` and `form_change`, and every action dispatch. A
-renderer supplies only what it alone can do, as the `host`.
+renderer supplies only what it alone can do, as the `host`. The [Wizard and runtime](/docs/forms/wizard) guide has the
+options, the host, the navigation rules and a run of every command.
 
 ```ts
 import { createFormRuntime } from '@schema-engine/forms';
 
-const runtime = createFormRuntime({
-	engine,
-	config, // the normalized form
-	defaults, // optional
-	snapshot, // optional: the server's container snapshot
-	host: { focus: (paths) => {}, sync: () => {}, submitNatively: () => {} }, // sync and submitNatively are optional
-	onSubmit,
-	onChange,
-	onAction, // typed by the engine's actions
-	onActionResults,
-});
+const runtime = createFormRuntime({ engine, config, host: { focus: (paths) => {} }, onSubmit });
 
 const unmount = runtime.mount(); // form_mount once, and the change watch; the cleanup revokes anything in flight
 runtime.container; // the form state
-runtime.getSnapshot(); // { submission: { status, failures, submitCount }, steps: { current, navigating, list } }
+runtime.getSnapshot(); // { submission: { status, failures, submitCount }, current, navigating, steps }
 runtime.subscribe(listener);
 
 await runtime.next();
@@ -185,26 +189,25 @@ Every command returns one string of a single union; why a submission failed is r
 type FormRuntimeOutcome = 'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled';
 type NavigationOutcome = Extract<
 	FormRuntimeOutcome,
-	'moved' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
+	'moved' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
 >;
-type SubmitOutcome = Extract<
-	FormRuntimeOutcome,
-	'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'busy' | 'cancelled'
->;
+type SubmitOutcome = FormRuntimeOutcome;
 
 interface FormStepState {
 	id: string;
 	skipped: boolean; // the step's constraints hide it
 	visited: boolean;
-	complete: boolean;
+	complete: boolean; // next() validated it and moved on
 	invalid: boolean; // an error is recorded at one of its fields
+	reachable: boolean; // goTo can move there
 }
 ```
 
 - One lock covers navigation and submission: a command made while another runs is `'busy'`, and a reset or an unmount
-  revokes the command in flight, which is `'cancelled'` and writes nothing.
+  revokes a command whose values were not yet captured, which is `'cancelled'` and writes nothing.
 - `container.reset()` is the only reset. The container snapshot's `generation` goes up with it, and the runtime then
-  returns the submission to idle with a count of 0 and the steps to the first, firing no step trigger.
+  returns the submission to idle with a count of 0 and the steps to the first, firing no step trigger. A submission
+  whose values were already captured is committed: it runs to its end and publishes its outcome after the reset.
 - `next()` validates the current step and moves to the next active step (`'refused'` on the last); `back()` never
   validates; `goTo(id)` refuses a skipped or unknown step, always allows going back and, going forward, follows the
   form's `navigation` (`'linear'`: visited steps only, validating every step on the way; `'free'`: any active step).
@@ -214,7 +217,14 @@ interface FormStepState {
 - A step takes `constraints` restricted to `show` and `hide`, on non-row fields of earlier steps; a step they hide is
   skipped, and its fields take no part in validation or in the submitted values.
 
-See the [runtime guide](https://github.com/andeeplus/schema-engine/blob/main/packages/forms/src/runtime/README.md) for the rules in full.
+## State container, server errors and CSRF
+
+| Entry                                  | Exports                                                                                                                                                                                                                                 | Guide                                                |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@schema-engine/forms/state-container` | `createFormStateContainer`, the `FormStateContainer`, `FormStateSnapshot` and `FormIssueFormatter` types, `selectFieldState`, `selectValue`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT` and `FormValidationFailure` | [Form state](/docs/forms/form-state)                 |
+| `@schema-engine/forms/server-errors`   | `fromProblemDetails`, `fromJsonApiErrors` and `ServerErrorsInputError`                                                                                                                                                                  | [Server errors](/docs/forms/server-errors)           |
+| `@schema-engine/forms/csrf`            | `csrf` (`fromMeta`, `fromCookie`, `custom`), `csrfFieldFor` and the `CsrfPolicy` type                                                                                                                                                   | [CSRF](/docs/forms/csrf)                             |
+| `@schema-engine/forms/testing`         | `formStateContainerConformance`                                                                                                                                                                                                         | [Form state](/docs/forms/form-state#write-a-binding) |
 
 ## RecipeRegistration
 

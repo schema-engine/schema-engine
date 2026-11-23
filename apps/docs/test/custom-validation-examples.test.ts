@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import * as ts from 'typescript';
 import * as z from 'zod/mini';
 import { afterEach, expect, test, vi } from 'vitest';
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, defineInput } from '@schema-engine/forms';
+import { BaseFieldSchema } from '@schema-engine/forms/schemas';
 import {
 	createDefaultValidationRegistry,
 	createValidationContext,
@@ -55,6 +56,36 @@ test('the documented postal code rule reports its message through the engine', (
 	const schema = engine.getValidationRegistry().createSchema(postalCodeField.rules[1], createValidationContext());
 	expect(schema?.safeParse('12345-6789').success).toBe(true);
 	expect(schema?.safeParse('nope').error?.issues[0]?.message).toBe('Please enter a valid postal code');
+});
+
+test('the documented form uses a registered rule in the rules of an element, and rejects an unregistered one', () => {
+	const { engine, form } = runInNewContext(`${example('### Use the Rule in a Form')}\nexports;`, {
+		exports: {},
+		require: (name: string) => {
+			if (name === 'zod/mini') return z;
+			if (name === '@schema-engine/forms') return { createFormEngine, defineInput };
+			if (name === '@schema-engine/forms/schemas') return { BaseFieldSchema };
+			throw new Error(`Unexpected import ${name}`);
+		},
+	}) as {
+		engine: ReturnType<typeof createFormEngine>;
+		form: { steps: Array<{ elements: Array<{ rules: unknown[] }> }> };
+	};
+	expect(form.steps[0]?.elements[0]?.rules).toEqual([
+		{ type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' },
+	]);
+	const field = (rule: unknown) => ({
+		id: 'address',
+		steps: [{ id: 'main', title: 'Address', elements: [{ $type: 'text', id: 'zip', name: 'zip', rules: [rule] }] }],
+	});
+	expect(engine.safeValidateForm(field({ type: 'postalcode' }))).toMatchObject({
+		success: false,
+		issues: [{ message: /^Unknown validation rule 'postalcode'\. Register it with/ }],
+	});
+	expect(engine.safeValidateForm(field({ type: 'postalCode', country: 'mx' }))).toMatchObject({
+		success: false,
+		issues: [{ path: ['steps', 0, 'elements', 0, 'rules', 0, 'country'] }],
+	});
 });
 
 test('the documented debounced async rule settles replaced checks and keeps fields independent', async () => {

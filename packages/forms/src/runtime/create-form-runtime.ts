@@ -22,16 +22,22 @@ import { collectStepFieldPaths } from '@/engine/value-validation';
 import { collectInitialValues, flattenStepElements } from '@/lib/field-scope';
 import { logger } from '@/lib/logger';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
-import type { FormStateSnapshot, FormSubmissionIssue, FormSubmitResult } from '@/state-container/types';
-import type { BuilderActionBaseContext } from '@/types';
 import type {
-	CreateFormRuntimeOptions,
-	FormRuntime,
-	FormRuntimeSnapshot,
-	FormSubmissionState,
-	FormValues,
-	NavigationOutcome,
-	SubmitOutcome,
+	FormStateSnapshot,
+	FormSubmissionIssue,
+	FormSubmitResult,
+	FormValidateResult,
+} from '@/state-container/types';
+import type { BuilderActionBaseContext } from '@/types';
+import {
+	isSubmissionBusy,
+	type CreateFormRuntimeOptions,
+	type FormRuntime,
+	type FormRuntimeSnapshot,
+	type FormSubmissionState,
+	type FormValues,
+	type NavigationOutcome,
+	type SubmitOutcome,
 } from './types';
 
 const NO_FAILURES: readonly FormSubmissionIssue[] = Object.freeze([]);
@@ -52,7 +58,7 @@ function submissionIssue(
 
 const errorMessage = (error: unknown): string | undefined => (error instanceof Error ? error.message : undefined);
 
-type Verdict = 'valid' | 'invalid' | 'overtaken' | 'failed';
+type Verdict = FormValidateResult['outcome'] | 'failed';
 
 /** A command in flight, which a reset or an unmount revokes by replacing it. */
 interface Operation {
@@ -212,7 +218,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 	function revoke(): void {
 		operation = undefined;
 		navigating = false;
-		if (submission.status === 'pending') submission = { ...submission, status: 'idle', failures: NO_FAILURES };
+		if (isSubmissionBusy(submission.status)) submission = { ...submission, status: 'idle', failures: NO_FAILURES };
 	}
 
 	function setSubmission(next: FormSubmissionState): void {
@@ -344,14 +350,13 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 
 	async function validateStep(id: string): Promise<Verdict> {
 		const paths = stepPaths(id);
-		if (paths.length === 0) return 'valid';
+		if (paths.length === 0) return 'passed';
 		try {
-			if (await container.validate(paths)) return 'valid';
+			return (await container.validate(paths)).outcome;
 		} catch (error) {
 			logger.error('Step validation could not run', error);
 			return 'failed';
 		}
-		return errorPaths(id).length > 0 ? 'invalid' : 'overtaken';
 	}
 
 	/** Validates the current step and moves on to the next active one; the caller has checked there is one. */
@@ -435,7 +440,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 
 	async function submitLastStep(op: Operation): Promise<SubmitOutcome> {
 		host.sync?.();
-		setSubmission({ status: 'pending', failures: NO_FAILURES, submitCount: submission.submitCount });
+		setSubmission({ status: 'validating', failures: NO_FAILURES, submitCount: submission.submitCount });
 		let result: FormSubmitResult;
 		try {
 			result = await container.submit();
@@ -459,6 +464,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			return (await landOnErrors(op)) ? 'invalid' : 'cancelled';
 		}
 
+		setSubmission({ status: 'submitting', failures: NO_FAILURES, submitCount: submission.submitCount });
 		const { values, setServerErrors } = result;
 		const { signal } = lifecycleAbort;
 		const { succeeded, results, failure } = await runSubmissionLifecycle<TAction>(
