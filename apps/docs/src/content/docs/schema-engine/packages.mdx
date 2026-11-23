@@ -1,10 +1,10 @@
 ---
-title: 'Installation'
+title: 'Packages'
 description: 'Install the packages for your renderer, copy the React registry source or load the Radiant styles, and create your first engine.'
-order: 2
+order: 4
 ---
 
-# Installation
+# Packages
 
 Schema Engine is a set of packages. You install the engine and one renderer: **React** with a shadcn registry that copies the field and recipe source into your project, or **Radiant**, which ships its elements in the package.
 
@@ -33,7 +33,7 @@ pnpm add @schema-engine/forms @schema-engine/layout zod
 
 ## React
 
-Add the renderer and its peers, as the [Quick Start](/docs/getting-started/quick-start) and the [Forms React](/docs/forms-react/getting-started) guides use them:
+Add the renderer and its peers, as the [Quick Start](/docs/forms-react/quick-start) and the [Forms React](/docs/forms-react/getting-started) guides use them:
 
 ```bash
 pnpm add @schema-engine/forms-react react react-dom
@@ -66,7 +66,7 @@ The recipes copy their CSS with them, and nothing imports it for you. Import it 
 @import './components/ui/schema-engine/components/controls.css';
 ```
 
-`recipes.css` goes into the `components` layer so your Tailwind utilities and classes sit above it; `controls.css` goes unlayered because a shadcn control sets its height with a Tailwind utility that outranks every layered rule. [View recipes](/docs/forms-react/layouts#default-registry-recipes) says more, and [Styling and layout](/docs/styling/overview) covers sizes, surfaces and tokens.
+`recipes.css` goes into the `components` layer so your Tailwind utilities and classes sit above it; `controls.css` goes unlayered because a shadcn control sets its height with a Tailwind utility that outranks every layered rule. [View recipes](/docs/forms-react/layouts#default-registry-recipes) says more, and [Styling and layout](/docs/layout/overview) covers sizes, surfaces and tokens.
 
 ### Create the engine
 
@@ -83,7 +83,7 @@ export const formEngine = createFormEngine({
 });
 ```
 
-These imports resolve only after the `shadcn add` above has copied the files. The [Quick Start](/docs/getting-started/quick-start) renders a form from here.
+These imports resolve only after the `shadcn add` above has copied the files. The [Quick Start](/docs/forms-react/quick-start) renders a form from here.
 
 ## Radiant
 
@@ -153,8 +153,8 @@ You should see `@schema-engine/forms` and your renderer listed with their versio
 
 ## What's Next?
 
-- **[Quick Start](/docs/getting-started/quick-start)** - Build your first form
+- **[Quick Start](/docs/forms-react/quick-start)** - Build your first form
 - **[Forms Package](/docs/forms/overview)** - Core engine documentation
 - **[Forms React](/docs/forms-react/overview)** - React integration
 - **[Forms Radiant](/docs/forms-radiant/overview)** - Radiant integration
-- **[Styling and layout](/docs/styling/overview)** - Grid, appearance axes, theming and recipes
+- **[Styling and layout](/docs/layout/overview)** - Grid, appearance axes, theming and recipes

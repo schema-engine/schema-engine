@@ -26,7 +26,7 @@ type HomeFeedArticleData = {
 
 const EXPLORE_ARTICLES: HomeFeedArticleData[] = [
 	{
-		href: '/docs/getting-started/introduction',
+		href: '/docs/schema-engine/introduction',
 		label: 'Get Started',
 		title: 'Schema-driven from day one',
 		description:
@@ -68,7 +68,7 @@ type HomePathCardData = {
 
 const PATH_CARDS: HomePathCardData[] = [
 	{
-		href: '/docs/getting-started/installation',
+		href: '/docs/schema-engine/packages',
 		title: 'Install and configure',
 		description: 'Add forms and forms-react to your project and register the engine.',
 	},
@@ -146,8 +146,8 @@ const HOME_FOOTER_COLUMNS: HomeFooterColumnData[] = [
 	{
 		title: 'Guides',
 		links: [
-			{ label: 'Introduction', href: '/docs/getting-started/introduction' },
-			{ label: 'Installation', href: '/docs/getting-started/installation' },
+			{ label: 'Introduction', href: '/docs/schema-engine/introduction' },
+			{ label: 'Packages', href: '/docs/schema-engine/packages' },
 			{ label: 'Forms', href: '/docs/forms/overview' },
 			{ label: 'Forms React', href: '/docs/forms-react/overview' },
 		],
@@ -359,10 +359,10 @@ const HomeHero = () => (
 				automatic Zod Mini validation and type safety. Use with React today, more adapters coming soon.
 			</p>
 			<div class="home-hero__actions">
-				<RuiButton href="/docs/getting-started/quick-start" size="lg">
+				<RuiButton href="/docs/forms-react/quick-start" size="lg">
 					Get Started
 				</RuiButton>
-				<RuiButton href="/docs/getting-started/introduction" variant="outline" size="lg">
+				<RuiButton href="/docs/schema-engine/introduction" variant="outline" size="lg">
 					View Documentation
 				</RuiButton>
 			</div>

@@ -13,18 +13,15 @@ let contentRoot = '';
 
 beforeAll(async () => {
 	contentRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-content-'));
-	const gettingStartedDir = join(contentRoot, 'getting-started');
+	const schemaEngineDir = join(contentRoot, 'schema-engine');
 	const llmsFixtureDir = join(contentRoot, 'llms-fixture');
-	await mkdir(gettingStartedDir, { recursive: true });
+	await mkdir(schemaEngineDir, { recursive: true });
 	await mkdir(llmsFixtureDir, { recursive: true });
 	await copyFile(
-		join(sourceContentRoot, 'getting-started/introduction.mdx'),
-		join(gettingStartedDir, 'introduction.mdx'),
+		join(sourceContentRoot, 'schema-engine/introduction.mdx'),
+		join(schemaEngineDir, 'introduction.mdx'),
 	);
-	await copyFile(
-		join(sourceContentRoot, 'getting-started/next-steps.mdx'),
-		join(gettingStartedDir, 'next-steps.mdx'),
-	);
+	await copyFile(join(sourceContentRoot, 'schema-engine/packages.mdx'), join(schemaEngineDir, 'packages.mdx'));
 	await writeFile(
 		join(llmsFixtureDir, 'excluded.mdx'),
 		`---
@@ -68,12 +65,12 @@ test('generateLlmDocs writes llms.txt and markdown exports', async () => {
 
 		const llmsTxt = await readFile(join(outputRoot, 'llms.txt'), 'utf8');
 		expect(llmsTxt).toContain('# Schema Engine Documentation');
-		expect(llmsTxt).toContain('## Getting Started');
-		expect(llmsTxt).toContain('/docs-llm/getting-started/introduction.md');
+		expect(llmsTxt).toContain('## Schema Engine');
+		expect(llmsTxt).toContain('/docs-llm/schema-engine/introduction.md');
 		expect(llmsTxt).not.toContain('Excluded');
 		expect(llmsTxt).not.toContain('## Llms Fixture');
 
-		const introduction = await readFile(join(outputRoot, 'docs-llm/getting-started/introduction.md'), 'utf8');
+		const introduction = await readFile(join(outputRoot, 'docs-llm/schema-engine/introduction.md'), 'utf8');
 		expect(introduction).toContain('title:');
 		expect(await pathExists(join(outputRoot, 'docs-llm/llms-fixture/excluded.md'))).toBe(false);
 	} finally {
@@ -105,7 +102,7 @@ test('generateLlmDocs replaces stale generator-owned exports', async () => {
 		await generateLlmDocs(outputRoot, { contentRoot });
 
 		expect(await pathExists(join(outputRoot, 'docs-llm/stale-section/gone.md'))).toBe(false);
-		expect(await pathExists(join(outputRoot, 'docs-llm/getting-started/introduction.md'))).toBe(true);
+		expect(await pathExists(join(outputRoot, 'docs-llm/schema-engine/introduction.md'))).toBe(true);
 	} finally {
 		await rm(outputRoot, { recursive: true, force: true });
 	}
@@ -163,6 +160,28 @@ test('generateLlmDocs lists pages in frontmatter order, not slug order', async (
 		const llmsTxt = await readFile(join(outputRoot, 'llms.txt'), 'utf8');
 		expect(llmsTxt.indexOf('Zulu page')).toBeGreaterThan(-1);
 		expect(llmsTxt.indexOf('Zulu page')).toBeLessThan(llmsTxt.indexOf('Alpha page'));
+	} finally {
+		await rm(outputRoot, { recursive: true, force: true });
+		await rm(orderRoot, { recursive: true, force: true });
+	}
+});
+
+test('generateLlmDocs lists sections in the configured order, not alphabetical order', async () => {
+	const outputRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-section-order-'));
+	const orderRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-section-order-content-'));
+
+	try {
+		for (const section of ['examples', 'forms', 'actions', 'registry', 'schema-engine']) {
+			await mkdir(join(orderRoot, section), { recursive: true });
+			await writeFile(join(orderRoot, section, 'page.mdx'), page(`${section} page`, 1), 'utf8');
+		}
+
+		const { generateLlmDocs } = await import('./generate-llm-docs');
+		await generateLlmDocs(outputRoot, { contentRoot: orderRoot });
+
+		const llmsTxt = await readFile(join(outputRoot, 'llms.txt'), 'utf8');
+		const headings = [...llmsTxt.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
+		expect(headings).toEqual(['How to read the docs', 'Schema Engine', 'Registry', 'Actions', 'Forms', 'Examples']);
 	} finally {
 		await rm(outputRoot, { recursive: true, force: true });
 		await rm(orderRoot, { recursive: true, force: true });

@@ -6,7 +6,7 @@ order: 2
 
 # Layout themes
 
-`@schema-engine/layout` compiles the styling vocabulary of a document into one **layout theme**: the grid (breakpoint thresholds, gap tokens, the default minimum column width) and the [appearance axes](/docs/styling/appearance-axes) together. It knows nothing about forms, so any container of items can use it. `@schema-engine/forms` and both renderers build on it.
+`@schema-engine/layout` compiles the styling vocabulary of a document into one **layout theme**: the grid (breakpoint thresholds, gap tokens, the default minimum column width) and the [appearance axes](/docs/layout/appearance-axes) together. It knows nothing about forms, so any container of items can use it. `@schema-engine/forms` and both renderers build on it.
 
 ```bash
 pnpm add @schema-engine/layout zod
@@ -102,7 +102,7 @@ How the stylesheet reaches the page differs by renderer, by design:
 
 The stylesheet content is the same in both. A host that also wants the rules in its own head can serve `engine.getLayout().css`; the forms keep their copies, which hold the same rules.
 
-See the [two engines recipe](/docs/styling/recipes#two-engines-sharing-one-theme) for a working pair.
+See the [two engines recipe](/docs/layout/recipes#two-engines-sharing-one-theme) for a working pair.
 
 ## The neutral hooks
 
@@ -134,7 +134,7 @@ Each property has a variant per breakpoint (`--se-item-grid-column-md`, `--se-gr
 
 An item that needs its own `display` (a flex field, for example) sets `--se-item-display-mode` instead of `display`. The item rule outranks a component's own class, and `--se-item-display-mode` is what a responsive `hidden` toggles against, so a hidden item comes back as the mode you set, not forced to `block`.
 
-The gap tokens (`--se-grid-gap-none`, `-compact`, `-default`, `-loose`, `-wide`) are public: set them to restyle every grid. See [Theming](/docs/styling/theming).
+The gap tokens (`--se-grid-gap-none`, `-compact`, `-default`, `-loose`, `-wide`) are public: set them to restyle every grid. See [Theming](/docs/layout/theming).
 
 ## Nested themes
 

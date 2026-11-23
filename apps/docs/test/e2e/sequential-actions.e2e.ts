@@ -47,7 +47,7 @@ test('sequential actions work after navigating within the docs', async () => {
 	const browser = await chromium.launch();
 	try {
 		const page = await browser.newPage();
-		await page.goto(`${baseUrl}/docs/getting-started/introduction`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}/docs/schema-engine/introduction`, { waitUntil: 'networkidle' });
 		await page.evaluate(() => Reflect.set(window, '__docsNavigationProbe', true));
 		await page.locator('a[href="/docs/examples/sequential-actions"]').first().click();
 		await pwExpect(page).toHaveURL(`${baseUrl}/docs/examples/sequential-actions`);

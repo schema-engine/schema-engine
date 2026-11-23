@@ -218,7 +218,7 @@ describe('snippet harness', () => {
 
 describe('styling recipes', () => {
 	test('every recipe is shown on a page', () => {
-		const shown = ['styling/recipes', 'styling/theming'].map(readPage).join('\n');
+		const shown = ['layout/recipes', 'layout/theming'].map(readPage).join('\n');
 		for (const recipe of allRecipes) {
 			const name = `${recipe.id.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase())}Recipe`;
 			expect(shown, recipe.id).toContain(`recipe={${name}}`);
@@ -319,7 +319,7 @@ describe('styling recipes', () => {
 });
 
 describe('layout themes page', () => {
-	const page = 'styling/layout-themes';
+	const page = 'layout/layout-themes';
 	const modules = { ...packages, './registrations': { elements: radiant.schemaFormRegistrations } };
 
 	test('the compile snippet gives the documented grid', () => {
@@ -416,7 +416,7 @@ describe('layout themes page', () => {
 });
 
 describe('appearance axes page', () => {
-	const page = 'styling/appearance-axes';
+	const page = 'layout/appearance-axes';
 
 	test('the documented snippets type-check and the host axis works', () => {
 		const theme = tsBlock(page, 'Add a host axis');

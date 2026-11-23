@@ -256,7 +256,7 @@ describe('React examples page', () => {
 		};
 		expect(await sheets('/docs/examples/basic-form')).toEqual([]);
 		expect(await sheets('/docs/forms-react/getting-started')).toEqual([]);
-		expect(await sheets('/docs/styling/recipes')).toEqual([]);
+		expect(await sheets('/docs/layout/recipes')).toEqual([]);
 		expect((await sheets(examplesPath)).length).toBe(2);
 
 		const requested: string[] = [];
