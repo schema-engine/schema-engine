@@ -193,6 +193,11 @@ command in flight, returns the submission to idle with `submitCount` 0 and the s
 step trigger. An action's `form.reset`, `useFormContext().reset`, a native reset and
 `FormController.container.reset()` therefore reset everything.
 
+The **agent tool** (`registerFormAgentTool`, `@schema-engine/forms/agent-tool`) is an experimental, opt-in entry that
+offers a rendered form's runtime to a browser agent as a WebMCP tool: its input schema is the form's submission schema,
+and its `execute` writes the values into the container and, with `autoSubmit`, calls `runtime.submit()`. No other entry
+imports it, and the form config has no key for it.
+
 ## Submitted values
 
 The **values** a form submits are typed by its config, and the runtime checks that the type is true.

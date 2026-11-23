@@ -179,6 +179,10 @@
 			"types": "./dist/lib/path-values.d.ts",
 			"import": "./dist/lib/path-values.js"
 		},
+		"./agent-tool": {
+			"types": "./dist/agent-tool/index.d.ts",
+			"import": "./dist/agent-tool/index.js"
+		},
 		"./lib/logger": {
 			"types": "./dist/lib/logger.d.ts",
 			"import": "./dist/lib/logger.js"

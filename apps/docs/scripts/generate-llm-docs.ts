@@ -100,7 +100,9 @@ export async function generateLlmDocs(outputRoot = publicRoot, options: Generate
 				await mkdir(dirname(outputPath), { recursive: true });
 				await writeFile(outputPath, body, 'utf8');
 
-				lines.push(`- [${page.title}](${absoluteUrl(llmUrl, origin)})`);
+				lines.push(
+					`- [${page.title}](${absoluteUrl(llmUrl, origin)})${page.status === 'experimental' ? ' (experimental)' : ''}`,
+				);
 			}
 
 			lines.push('');

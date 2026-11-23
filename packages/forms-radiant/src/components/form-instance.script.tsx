@@ -470,6 +470,7 @@ export class FormInstanceElement extends RadiantElement {
 			goTo: this.goTo,
 			submission: snapshot?.submission ?? idle,
 			container: this.bound?.runtime.container,
+			runtime: this.bound?.runtime,
 			formatIssue: this.issueFormatter(),
 		};
 	}

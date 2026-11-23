@@ -188,6 +188,40 @@ test('generateLlmDocs lists sections in the configured order, not alphabetical o
 	}
 });
 
+test('generateLlmDocs marks an experimental page in llms.txt and no other', async () => {
+	const outputRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-status-'));
+	const statusRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-status-content-'));
+
+	try {
+		await mkdir(join(statusRoot, 'forms'), { recursive: true });
+		await writeFile(join(statusRoot, 'forms/stable.mdx'), page('Stable page', 1), 'utf8');
+		await writeFile(
+			join(statusRoot, 'forms/trial.mdx'),
+			page('Trial page', 2).replace('order: 2\n', 'order: 2\nstatus: experimental\n'),
+			'utf8',
+		);
+
+		const { generateLlmDocs } = await import('./generate-llm-docs');
+		await generateLlmDocs(outputRoot, { contentRoot: statusRoot });
+
+		const lines = (await readFile(join(outputRoot, 'llms.txt'), 'utf8')).split('\n');
+		expect(lines.find((line) => line.includes('[Trial page]'))).toMatch(/\.md\) \(experimental\)$/);
+		expect(lines.find((line) => line.includes('[Stable page]'))).toMatch(/\.md\)$/);
+	} finally {
+		await rm(outputRoot, { recursive: true, force: true });
+		await rm(statusRoot, { recursive: true, force: true });
+	}
+});
+
+test('the frontmatter accepts status experimental and nothing else', async () => {
+	const { docsFrontmatterSchema } = await import('../src/content/docs');
+	const base = { title: 'T', description: 'D' };
+
+	expect(docsFrontmatterSchema.safeParse({ ...base, status: 'experimental' }).success).toBe(true);
+	expect(docsFrontmatterSchema.safeParse(base).success).toBe(true);
+	expect(docsFrontmatterSchema.safeParse({ ...base, status: 'beta' }).success).toBe(false);
+});
+
 test('generateLlmDocs omits the header of a section whose pages are all excluded', async () => {
 	const outputRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-empty-section-'));
 

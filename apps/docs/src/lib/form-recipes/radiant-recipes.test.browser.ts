@@ -1,6 +1,7 @@
 import { createRoot } from '@ecopages/jsx/client';
 import { FormRenderer } from '@schema-engine/forms-radiant';
 import { afterEach, expect, test, vi } from 'vitest';
+import { engine as feedbackEngine, feedback } from './radiant-agent-tool';
 import { engine as toneEngine, type ToneControl } from './radiant-control';
 import { engine } from './radiant-summary';
 
@@ -99,4 +100,47 @@ test("a custom control reports its changes with native events and takes the form
 	host.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
 	await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 	expect(onSubmit.mock.calls[0]![0]).toEqual({ tone: 'bold' });
+});
+
+test('an agent tool registers the rendered form and fills it through execute, leaving the sending to the user', async () => {
+	type Tool = {
+		inputSchema: { properties: Record<string, { description?: string }> };
+		execute(input: unknown, options: { signal: AbortSignal }): Promise<{ content: Array<{ text: string }> }>;
+	};
+	const registered: Array<{ tool: Tool; signal: AbortSignal }> = [];
+	Object.defineProperty(document, 'modelContext', {
+		configurable: true,
+		value: {
+			registerTool: async (tool: Tool, { signal }: { signal: AbortSignal }) => {
+				registered.push({ tool, signal });
+			},
+		},
+	});
+
+	try {
+		const onSubmit = vi.fn();
+		const host = document.createElement('div');
+		document.body.append(host);
+		createRoot(host).render(FormRenderer({ config: feedback, engine: feedbackEngine, onSubmit }));
+
+		await expect.poll(() => registered.length).toBe(1);
+		const { tool, signal } = registered[0]!;
+		expect(tool.inputSchema.properties['comment']!.description).toBe('Comment: What went well or badly');
+
+		const result = await tool.execute({ name: 'Ada', comment: 'Fast' }, { signal: new AbortController().signal });
+
+		expect(result.content[0]!.text).toContain('waits for the user');
+		await expect.poll(() => host.querySelector<HTMLInputElement>('input[name="name"]')?.value).toBe('Ada');
+		expect(host.querySelector<HTMLInputElement>('input[name="comment"]')!.value).toBe('Fast');
+		expect(onSubmit).not.toHaveBeenCalled();
+
+		host.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+		await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+		expect(onSubmit.mock.calls[0]![0]).toEqual({ name: 'Ada', comment: 'Fast' });
+
+		host.remove();
+		expect(signal.aborted).toBe(true);
+	} finally {
+		Reflect.deleteProperty(document, 'modelContext');
+	}
 });

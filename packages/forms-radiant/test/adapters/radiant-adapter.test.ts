@@ -1,8 +1,35 @@
 import { describe, expect, test, vi } from 'vitest';
+import { createFormRuntime } from '@schema-engine/forms';
+import { createRadiantFormEngine } from '@/registries/builder-registry';
+import { schemaFormRegistrations } from '@/registrations';
 import { FormController } from '@/adapters/radiant/controller';
 import { createTestForm, provideTestContainer } from './test-form';
 
 describe('FormController over the form instance container', () => {
+	test('hands over the runtime of the form now, and each runtime the instance replaces it with', () => {
+		const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+		const config = engine.validateForm({ id: 'test', steps: [{ id: 'main', title: 'Main', elements: [] }] });
+		const make = () => createFormRuntime({ engine, config, host: { focus: () => {} } });
+		const [first, second] = [make(), make()];
+		const element = document.createElement('div');
+		const host = document.createElement('div');
+		element.append(host);
+		const provider = provideTestContainer(element, first.container, undefined, first);
+		const seen: Array<unknown> = [];
+
+		const stop = new FormController(host).watchRuntime((runtime) => seen.push(runtime));
+		expect(seen).toEqual([first]);
+
+		provider.setContext({ ...provider.getContext(), runtime: first });
+		expect(seen).toEqual([first]);
+		provider.setContext({ ...provider.getContext(), container: second.container, runtime: second });
+		expect(seen).toEqual([first, second]);
+
+		stop();
+		provider.setContext({ ...provider.getContext(), runtime: first });
+		expect(seen).toEqual([first, second]);
+	});
+
 	test('selects from the snapshot with a signal that notifies only when the selection changes', () => {
 		const { form, container } = createTestForm({ title: 'a', note: 'x' });
 		const title = form.select((snapshot) => snapshot.values['title']);

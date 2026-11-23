@@ -42,6 +42,16 @@ export function useFormInstanceActions(): FormInstanceContextValue {
 }
 
 /**
+ * The form's runtime: its container, its submission and its wizard, for what takes a form over whole, such as `registerFormAgentTool`.
+ *
+ * @remarks
+ * Must be used within a FormProvider. A new config or engine starts a new runtime, and the provider's children remount with it, so an effect that registers it runs again.
+ */
+export function useFormRuntime(): FormRuntime {
+	return useFormStateContext().runtime;
+}
+
+/**
  * Hook to access the form engine context
  * Must be used within a FormEngineProvider
  */

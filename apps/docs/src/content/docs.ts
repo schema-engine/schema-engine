@@ -54,6 +54,8 @@ export const docsFrontmatterSchema = z.object({
 	title: z.string(),
 	description: z.string(),
 	order: z.optional(z.coerce.number()),
+	/** Marks a page about an API that may still change. It adds a flask badge to the sidebar and the page and a note in `llms.txt`. */
+	status: z.optional(z.literal('experimental')),
 	/** Set to `false` to leave the page out of `llms.txt` and the Markdown exports. */
 	llms: z.optional(z.boolean()),
 });
