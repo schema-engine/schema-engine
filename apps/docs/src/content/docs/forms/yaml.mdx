@@ -10,9 +10,7 @@ A form config is plain data, so it can live in a `.form.yaml` file that people w
 The `@schema-engine/registry/yaml` subpath parses the file, hands the value to your engine to validate, and
 turns every problem into a file, line and column.
 
-Bun's `import form from './contact.form.yaml'` or a Vite plugin gives you an object, but a validation
-error then names a config path (`steps[0].elements[2].grid.width`), not the line the author has to fix.
-`parseYaml` keeps the text, so it can do both.
+A form is a [document](/docs/schema-engine/serialized-documents), so the YAML parsing, the errors and the caveats are the ones described there. This page covers what is specific to forms.
 
 ## Install
 
@@ -21,9 +19,6 @@ error then names a config path (`steps[0].elements[2].grid.width`), not the line
 ```bash
 pnpm add @schema-engine/forms @schema-engine/registry yaml zod
 ```
-
-An app that never imports `@schema-engine/registry/yaml` does not need `yaml` and does not bundle it. The
-subpath uses no `node:` imports, so it runs in Node, Bun, Deno and the browser.
 
 ## A form file
 
@@ -66,83 +61,15 @@ JSON. `parseYaml` throws a `YamlDocumentError` when the text is not valid YAML o
 validate; `safeParseYaml` takes the same arguments and returns `{ success: true, data }` or
 `{ success: false, issues }`.
 
-## Load the file
-
-The parser takes text, so loading is yours. Pick the one that fits your runtime.
-
-### Node and Bun
-
-```typescript
-import { readFile } from 'node:fs/promises';
-import { parseForm } from './parse-form';
-
-export async function loadForm(path: string) {
-	return parseForm(await readFile(path, 'utf8'), path);
-}
-```
-
-Bun can also read it with `await Bun.file(path).text()`.
-
-### Vite
-
-Import the file as raw text and parse it in the app:
-
-```typescript
-import contactYaml from './contact.form.yaml?raw';
-import { parseForm } from './parse-form';
-
-export const contactForm = parseForm(contactYaml, 'contact.form.yaml');
-```
-
-Vite's `vite/client` types already declare `?raw` imports as strings. Bun does the same with `import text from './contact.form.yaml' with { type: 'text' }`.
-
-### Fetch
-
-```typescript
-import { parseForm } from './parse-form';
-
-export async function fetchForm(url: string) {
-	const response = await fetch(url);
-	if (!response.ok) {
-		throw new Error(`${url}: ${response.status}`);
-	}
-	return parseForm(await response.text(), url);
-}
-```
-
 ## Show errors with the file and line
 
-A `YamlDocumentError` lists every issue in `error.issues`, each with its `line`, `column` (counting from 1),
-`filename` and config `path`. Its `message` has one line per issue, in the `file:line:column` form that
-terminals and editors turn into links:
-
-```typescript
-import { YamlDocumentError } from '@schema-engine/registry/yaml';
-import { loadForm } from './load-form';
-
-try {
-	await loadForm('contact.form.yaml');
-} catch (error) {
-	if (!(error instanceof YamlDocumentError)) {
-		throw error;
-	}
-	console.error(error.message);
-	for (const issue of error.issues) {
-		console.error(`${issue.filename}:${issue.line}:${issue.column}`, issue.message);
-	}
-}
-```
-
-With `width: halve` on line 17, the message reads:
+A bad form is reported as a `YamlDocumentError` with one `file:line:column path: message` line per issue, as described in [Serialized documents](/docs/schema-engine/serialized-documents#yaml). With `width: halve` on line 17, the message reads:
 
 ```text
 contact.form.yaml:17:24 steps[0].elements[1].grid.width: Expected one of full, three-quarters, ...
 ```
 
-A validation issue points at the start of the value its path names. When the path names a key the file does not
-have, such as a missing `id`, it points at the nearest ancestor that exists, here the element's first line. A
-syntax error, such as a bad indent, has an empty path and the position the parser reports, and the engine is not
-called. Use `safeParseYaml` to render the issues yourself, for example in a form builder UI.
+The path is the form's config path. A missing `id` points at the element it belongs to, since the key itself is absent. Use `safeParseYaml` to render the issues yourself, for example in a form builder UI.
 
 ## Editor autocomplete
 

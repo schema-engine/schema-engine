@@ -8,6 +8,8 @@ order: 7
 
 Every rendered form has one **form state container**. It holds the nested values, the errors and warnings of each field, the touched, dirty and pending marks, the row ids of field arrays and what the browser reports about each control. React and Radiant both read it, so a form validates, resets and submits the same way in either. Nothing else keeps form state: there is no form library underneath.
 
+The engine owns the form state because forms are configured, not coded: no form library API reaches the user, so there is nothing for an adapter to expose. An adapter would also give the same config a different meaning in each library, while one engine-owned container gives it a single meaning in every renderer.
+
 The container is not tied to a renderer. A rendered form creates it through its [runtime](/docs/forms/wizard); build one yourself to test a form without a DOM, to render on a server or to write a binding.
 
 It is called a container, not a store, because `FormStore` is a class of Radiant UI. The interface is `FormStateContainer`, the factory `createFormStateContainer` and the snapshot `FormStateSnapshot`, all from `@schema-engine/forms/state-container`.

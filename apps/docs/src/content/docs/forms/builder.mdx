@@ -1,10 +1,10 @@
 ---
-title: 'Form engine setup'
-description: 'Register elements, recipes, and actions into an immutable form engine.'
-order: 5
+title: 'Engine and registrations'
+description: 'Build the form engine from registrations: elements with defineInput and defineStatic, containers, recipes, actions and rules, and what the engine records about them.'
+order: 3
 ---
 
-# Form engine setup
+# Engine and registrations
 
 `createFormEngine` is the public entry point for assembling a form engine.
 Pass declarative registration arrays; the factory returns an immutable
@@ -136,26 +136,9 @@ a stable item id, not the current index — so ids survive item removal.
 Scalar array items set `{ scalar: true }` so the child binds to the item path
 itself.
 
-## React engine
+## Renderers register their elements
 
-React apps use `createFormEngine` from `@schema-engine/forms`; it binds no
-application field components or visual recipes: install Schema Engine registry
-items and pass their generated registrations explicitly.
-
-```ts
-import { createFormEngine } from '@schema-engine/forms';
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
-
-const engine = createFormEngine({
-	elements: schemaFormRegistrations,
-	recipes: schemaFormRecipeRegistrations,
-});
-```
-
-Radiant uses the same composition model for elements: register them explicitly.
-`createRadiantFormEngine()` already binds the canonical view recipes because
-Radiant has no shadcn registry. Specs still come from `@schema-engine/forms/recipes/built-in`.
+The engine binds no application field components or visual recipes: a renderer package or your own code supplies them. [Forms React](/docs/forms-react/getting-started) writes the first React element and registers it, and [Forms Radiant](/docs/forms-radiant/getting-started) uses `createRadiantFormEngine`, which registers the Radiant elements and binds the canonical view recipes. The specs of those recipes come from `@schema-engine/forms/recipes/built-in`.
 
 ## Author form configuration
 
@@ -225,6 +208,8 @@ for the available compositions and custom recipe API.
 | `layout: { appearance: [...] }` | `Axis`         | `defineAxis`                               | `axis:<$type>`    |
 | `validations`                   | `Validation`   | A validation registration with a `handler` | none              |
 
+The engine starts empty except for what it ships: the 27 [validation rules](/docs/forms/validation) and the two appearance axes `size` and `surface` of the layout theme. It registers no element, recipe or action. `SubmitActionRegistration` and `NotificationActionRegistration` come from `@schema-engine/forms`, and the browser actions from `@schema-engine/forms/browser`: [Actions in forms](/docs/forms/actions) lists them.
+
 Registrations of every kind follow the same rules: a later `$type` wins, and `[...schemaFormRegistrations, mine]` is how you override a default. A recipe is also checked against the forms recipe protocol, and a registration that declares an axis the theme lacks fails the engine build.
 
 ```ts
@@ -270,7 +255,7 @@ The registration's `metadata.name` is the title, and `metadata.description` and 
 
 ## Related APIs
 
-- [Core Concepts](/docs/forms/core-concepts) — registration and validation
+- [Core Concepts](/docs/forms/core-concepts) — authoring modes and configuration errors
 - [Validation](/docs/forms/validation) — declarative field rules
 - [Actions](/docs/forms/actions) — lifecycle behavior
 - [Forms API Reference](/docs/forms/api-reference) — exact engine signatures
