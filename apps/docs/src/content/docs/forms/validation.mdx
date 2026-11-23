@@ -1,22 +1,180 @@
 ---
 title: 'Validation'
-description: 'Declarative validation rules and Zod Mini schema generation.'
-order: 4
+description: 'Write validation rules in a form config: the syntax, the 27 built-in rules, presets and cross-field rules.'
+order: 5
 ---
 
 # Validation
 
-The validation system provides 24 built-in rules with support for custom validation.
+A validation rule is a plain object in an element's `rules`: a `$type` that names a registered rule, the rule's own options and, optionally, a message. Rules are data, so they serialize with the rest of the form, and the engine turns each into a schema that checks the field's value. The engine registers 27 rule types. For a rule of your own, or a check that calls a server, see [Custom and async rules](/docs/forms/validation-custom).
 
-**Note:** Runnable element configs require `$type`, `id`, and `name` (and any
-fields your element registration schema requires). Fragments below omit those
-when the focus is rule shape only.
+```ts title="signup.ts"
+import { engine } from './engine';
 
-See the rules run in a live React form: [Validation on React Forms](/docs/examples/react-forms#validation).
+export const signup = engine.defineForm({
+	id: 'signup',
+	steps: [
+		{
+			id: 'account',
+			title: 'Create your account',
+			elements: [
+				{
+					$type: 'email',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					rules: [
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Enter a valid email address' },
+						{ $type: 'maxLength', value: 254, message: 'That address is too long' },
+					],
+				},
+				{
+					$type: 'text',
+					id: 'username',
+					name: 'username',
+					label: 'Username',
+					rules: [
+						{ $type: 'minLength', value: 3 },
+						{
+							$type: 'pattern',
+							value: '^[a-z0-9_]+$',
+							message: 'Use lowercase letters, numbers and underscores',
+						},
+						{
+							$type: 'minLength',
+							value: 8,
+							severity: 'warning',
+							message: 'A longer username is easier to find',
+						},
+					],
+				},
+			],
+		},
+	],
+});
+```
+
+The property is `rules`, not `validation`. Every rule accepts three optional keys besides its own options:
+
+| Key        | Meaning                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `message`  | The text to show when the rule fails. Without one, the issue shows the schema's own message, or the formatter's text           |
+| `id`       | An identifier for the rule, to tell two rules of one `$type` apart                                                             |
+| `severity` | `'error'` (default) blocks the submission. `'warning'` reports advice that never blocks, with the shape and timing of an error |
+
+An empty value passes every rule except `required`, so `email` on an optional field accepts a blank. How an issue becomes text for the user is in [Issue text](/docs/forms/issue-text), and where it is stored in [Form state](/docs/forms/form-state).
+
+## Built-in rules
+
+### Strings
+
+| `$type`     | Options                                                | Holds when the value                               |
+| ----------- | ------------------------------------------------------ | -------------------------------------------------- |
+| `required`  |                                                        | is not empty: a string of spaces counts as present |
+| `minLength` | `value`                                                | has at least `value` characters                    |
+| `maxLength` | `value`                                                | has at most `value` characters                     |
+| `pattern`   | `value`: a regular expression source                   | matches the expression                             |
+| `email`     | `pattern`: an expression that replaces the default     | is an email address                                |
+| `url`       | `protocol`, `hostname`: expressions the URL must match | is a URL                                           |
+| `uuid`      | `version`: `v1` to `v5`                                | is a UUID, of that version when given              |
+| `phone`     |                                                        | is a phone number                                  |
+| `cuid`      |                                                        | is a CUID                                          |
+| `cuid2`     |                                                        | is a CUID2                                         |
+| `ulid`      |                                                        | is a ULID                                          |
+| `hex`       |                                                        | is a hexadecimal string                            |
+
+### Numbers and lists
+
+| `$type`    | Options | Holds when the value       |
+| ---------- | ------- | -------------------------- |
+| `min`      | `value` | is at least `value`        |
+| `max`      | `value` | is at most `value`         |
+| `minItems` | `value` | has at least `value` items |
+| `maxItems` | `value` | has at most `value` items  |
+
+### Network and encodings
+
+| `$type`  | Options                                                             | Holds when the value                               |
+| -------- | ------------------------------------------------------------------- | -------------------------------------------------- |
+| `ipv4`   |                                                                     | is an IPv4 address                                 |
+| `ipv6`   |                                                                     | is an IPv6 address                                 |
+| `cidr`   | `version`: `v4` or `v6`                                             | is a CIDR range, of that version when given        |
+| `jwt`    | `alg`: the algorithm the header must name                           | is a JSON Web Token                                |
+| `hash`   | `algorithm`: `md5`, `sha1`, `sha256`, `sha384`, `sha512` (required) | is a hex digest of that algorithm                  |
+| `base64` | `urlSafe`                                                           | is Base64, in the URL-safe alphabet when `urlSafe` |
+
+### Dates and times
+
+| `$type`    | Options                        | Holds when the value    |
+| ---------- | ------------------------------ | ----------------------- |
+| `datetime` | `precision`, `offset`, `local` | is an ISO 8601 datetime |
+| `date`     |                                | is an ISO 8601 date     |
+| `time`     | `precision`                    | is an ISO 8601 time     |
+
+### Rules that read other things
+
+| `$type`  | What it does                                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `relate` | Compares the field with other fields: equality, ordering, "at least one of". See [Cross-field rules](#cross-field-rules) |
+| `async`  | Asks a server. See [Custom and async rules](/docs/forms/validation-custom#the-built-in-async-rule)                       |
+
+## Cross-field rules
+
+The `relate` rule compares a field with other fields. Password confirmation, date ordering, "one of these two" and mutual exclusion are the same operation with a different assertion.
+
+```ts title="relate.ts"
+import { engine } from './engine';
+
+export const resetPassword = engine.defineForm({
+	id: 'reset-password',
+	steps: [
+		{
+			id: 'password',
+			title: 'Choose a password',
+			elements: [
+				{ $type: 'text', id: 'password', name: 'password', label: 'Password' },
+				{
+					$type: 'text',
+					id: 'confirm',
+					name: 'confirmPassword',
+					label: 'Confirm password',
+					rules: [
+						{ $type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Passwords must match' },
+					],
+				},
+			],
+		},
+	],
+});
+```
+
+The declaring field's own value comes first in the comparison, then each entry of `fields` in order.
+
+| `assert`             | Holds when                                            |
+| -------------------- | ----------------------------------------------------- |
+| `allEqual`           | every value is the same                               |
+| `allDifferent`       | no value repeats                                      |
+| `ascending`          | each value is greater than or equal to the one before |
+| `strictlyAscending`  | each value is greater than the one before             |
+| `descending`         | each value is less than or equal to the one before    |
+| `strictlyDescending` | each value is less than the one before                |
+| `atLeastOne`         | at least one value is filled                          |
+| `exactlyOne`         | exactly one value is filled                           |
+| `allOrNone`          | all values are filled, or none are                    |
+
+| Option               | Default  | Description                                                                                                                                            |
+| -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `fields`             | required | References to compare against, resolved relative to the declaring field. A dotted reference is absolute from the form root                             |
+| `includeSelf`        | `true`   | Whether the declaring field's value participates, first in the list                                                                                    |
+| `as`                 | `'auto'` | Comparison basis: `string`, `number`, `date`, `boolean` or `auto`                                                                                      |
+| `skipWhenIncomplete` | `true`   | Stay quiet while any participating value is empty. Ignored by `atLeastOne`, `exactlyOne` and `allOrNone`, which exist to fire on a partly filled group |
+
+Ordering reads left to right with the declaring field first, so "this date must be after that one" is `descending`. A cross-field rule re-runs when a field it reads changes, not only when its own field is validated, so correcting a password clears the mismatch on the confirmation. The error surfaces once the dependent field has been touched or the form submitted, so typing a password does not light up a confirmation nobody has reached.
 
 ## Using Validation Presets
 
-```typescript
+```ts
 import { ValidationPresets } from '@schema-engine/forms';
 
 const emailRules = [
@@ -98,22 +256,8 @@ const ageRules = [
 | `date(message)`     | Valid date     |
 | `time(message)`     | Valid time     |
 
-## In Form Configurations
+## Where to go next
 
-Validation rules are applied to elements using the `rules` property:
-
-```json
-{
-	"$type": "input",
-	"id": "email",
-	"name": "email",
-	"label": "Email Address",
-	"inputType": "email",
-	"rules": [
-		{ "$type": "required", "message": "Email is required" },
-		{ "$type": "email", "message": "Invalid email format" }
-	]
-}
-```
-
-> **Note:** The property is `rules`, not `validation`.
+- [Constraints](/docs/forms/constraints): show, hide, enable, disable or require a field from another value.
+- [Custom and async rules](/docs/forms/validation-custom): your own rules, a server check and testing.
+- [Issue text](/docs/forms/issue-text): word every error and warning in your language.

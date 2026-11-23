@@ -104,6 +104,8 @@ const CONTINUES: Record<string, string[]> = {
 	'schema-engine/serialized-documents': ['schema-engine/quick-start'],
 	'actions/sequences-and-cancellation': ['actions/overview'],
 	'forms/core-concepts': ['forms/getting-started'],
+	'forms/constraints': ['forms/getting-started'],
+	'forms/validation': ['forms/getting-started'],
 };
 
 const appFor = (page: string): Record<string, string> => ({

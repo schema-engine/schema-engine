@@ -1,19 +1,14 @@
 ---
-title: 'Custom Validations'
-description: 'Author your own validation rules and integrate them with the engine.'
-order: 16
+title: 'Custom and async rules'
+description: 'Register your own validation rules, ask a server with the async rule, depend on other fields and test a rule on its own.'
+order: 6
 ---
 
 import * as z from 'zod/mini';
 
-# Custom Validations
+# Custom and async rules
 
-While Form Engine provides comprehensive built-in validations, you might need custom validation logic for specific business requirements. A custom rule is a registration you pass to the engine when you create it.
-
-**Note:** Runnable field configs require `$type`, `id`, and `name`. The pattern
-snippets are complete TypeScript: each declares its rule type, types its registration
-with `ValidationRegistration<Rule>` and can be copied as it is. Short rule snippets such
-as the performance and naming examples are fragments.
+The [built-in rules](/docs/forms/validation) cover formats, ranges and cross-field checks. For a business requirement they do not cover, register a rule of your own: a custom rule is a registration you pass to the engine when you create it. For a check that needs a server, use the built-in `async` rule, below.
 
 ## Registration Basics
 
@@ -498,14 +493,11 @@ export const companyNameField = {
 };
 ```
 
-## Async Custom Validations
+## The built-in async rule
 
-> **Best Practice:**
-> For most server-side validations, use the built-in `$type: 'async'` validator. It provides caching, dependency resolution, debouncing, and error handling out of the box.
+For a check that needs a server, use the built-in `async` rule. It sends the value, caches the answer, waits for the user to stop typing and re-validates when the fields it depends on change.
 
-### Built-in Async Validation (Recommended)
-
-```typescript
+```ts title="async-rule.ts"
 import type { AsyncRule } from '@schema-engine/forms';
 
 export const usernameRule = {
@@ -520,73 +512,79 @@ export const usernameRule = {
 } satisfies AsyncRule;
 ```
 
-### Custom Async Validator (Advanced)
+| Property           | Type       | Description                                                           |
+| ------------------ | ---------- | --------------------------------------------------------------------- |
+| `url`              | `string`   | API endpoint for validation                                           |
+| `method`           | `string`   | `GET`, `POST`, `PUT`, `PATCH` or `DELETE`                             |
+| `headers`          | `object`   | Optional HTTP headers                                                 |
+| `extraPayload`     | `object`   | Extra request fields. `value` and `dependsOn` are added automatically |
+| `expectedResponse` | `object`   | The response body that means the value is valid                       |
+| `dependencies`     | `string[]` | Fields that trigger re-validation when they change                    |
+| `debounce`         | `number`   | Delay in ms before the request is made                                |
+| `cacheTTL`         | `number`   | Cache time-to-live in milliseconds (default: 5 minutes)               |
+| `disableCache`     | `boolean`  | Turn the cache off (default: false)                                   |
+| `message`          | `string`   | The text to show when the server says the value is not valid          |
 
-For complex async validation logic that can't be handled by the built-in async type, create custom async validators:
+With `debounce`, a newer validation of the same field replaces a pending one and only the latest request is sent. A replaced validation of the same value shares that request's result. One of a different value has no result, neither a pass nor an issue, so a submit-time check superseded by a later edit never passes. Nothing is shown for it while the user types: each renderer shows the result for the latest value.
 
-```typescript
+### Dependencies
+
+`dependencies` are field references and resolve exactly like `relate`'s `fields`: a bare name is a sibling, including a sibling inside the declaring array row, and a dotted name is absolute from the form root. The request body carries a `dependsOn` object keyed by the reference as authored:
+
+```json
+{
+	"value": "userInputValue",
+	"dependsOn": {
+		"username": "actualUsernameValue",
+		"email": "actual@email.com"
+	}
+}
+```
+
+### Caching and outages
+
+- Successful answers are cached for five minutes by default. The key is the URL and the request payload. Expired entries are evicted on cache reads and writes.
+- A non-ok response or a network failure is not an answer about the value. The rule throws `ValidationUnavailable`, which is reported as a failure to run (`validate()` rejects), and it is never cached.
+
+## A custom async rule
+
+Use a registration when the check is not a request and a response the built-in rule can describe. Answer "taken" only when the server says so. A request that fails is not an answer, so throw `ValidationUnavailable`, as the built-in rule does, and the form reports that the check could not run:
+
+```ts title="unique-username.ts"
 import * as z from 'zod/mini';
-import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
+import { createFormEngine, ValidationUnavailable, type ValidationRegistration } from '@schema-engine/forms';
 
 type UniqueUsernameRule = { $type: 'uniqueUsername'; message?: string };
-type ValidAddressRule = { $type: 'validAddress'; message?: string };
 
 const uniqueUsername: ValidationRegistration<UniqueUsernameRule> = {
 	$type: 'uniqueUsername',
 	schema: z.looseObject({ $type: z.literal('uniqueUsername') }),
-	metadata: { name: 'Unique Username' },
+	metadata: { name: 'Unique username' },
 	category: 'generic',
-	handler: (rule) =>
+	handler: (rule, { fetch }) =>
 		z.string().check(
 			z.refine(async (username) => {
+				let response: Response;
 				try {
-					const response = await fetch('/api/check-username', {
+					response = await fetch('/api/check-username', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ username }),
 					});
-
-					const result = (await response.json()) as { available: boolean };
-					return result.available;
-				} catch (error) {
-					console.error('Username validation failed:', error);
-					return false;
+				} catch (cause) {
+					throw new ValidationUnavailable({ cause });
 				}
-			}, rule.message || 'Username is already taken'),
+				if (!response.ok) throw new ValidationUnavailable();
+				const { available } = (await response.json()) as { available: boolean };
+				return available;
+			}, rule.message ?? 'Username is already taken'),
 		),
 };
 
-const validAddress: ValidationRegistration<ValidAddressRule> = {
-	$type: 'validAddress',
-	schema: z.looseObject({ $type: z.literal('validAddress') }),
-	metadata: { name: 'Valid Address' },
-	category: 'generic',
-	handler: (rule) =>
-		z
-			.object({
-				street: z.string(),
-				city: z.string(),
-				state: z.string(),
-				zip: z.string(),
-			})
-			.check(
-				z.refine(async (address) => {
-					const response = await fetch('/api/validate-address', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify(address),
-					});
-
-					const result = (await response.json()) as { valid: boolean };
-					return result.valid;
-				}, rule.message || 'Address could not be validated'),
-			),
-};
-
-export const engine = createFormEngine({ validations: [uniqueUsername, validAddress] });
+export const engine = createFormEngine({ validations: [uniqueUsername] });
 ```
 
-**Note**: The built-in `async` validation type is preferred for most server-side validations as it provides caching, dependency resolution, debouncing, and better error handling out of the box.
+The handler's second argument is the validation context. Its `fetch` is the engine's, so a CSRF policy and a test double apply to this request too.
 
 ## Several Validations at Once
 
@@ -729,7 +727,7 @@ Place expensive validations last in the rule chain:
 Use the built-in async rule to debounce server-side validation. A pending check
 replaced by a different value has no result (it throws `ValidationSuperseded`, which is no issue); a check replaced
 by the same value shares the latest result. Checks for separate fields do not
-cancel one another. See [Async Validation](/docs/forms/validation-built-in#async-validation)
+cancel one another. See [The built-in async rule](#the-built-in-async-rule)
 for the request and response contract.
 
 ```typescript
@@ -809,34 +807,35 @@ const cardNumber: ValidationRegistration<CardNumberRule> = {
 export const engine = createFormEngine({ validations: [cardNumber] });
 ```
 
-### 4. Document Your Validations
+### 4. Check with a real algorithm
 
-Keep documentation for custom validations. This illustrative function accepts
-only `example-valid` so the registration demonstrates both outcomes. Replace it
-with your own validation logic; it does not validate real Australian Business
-Numbers or their checksums.
+A rule is a good place for a checksum the built-in rules do not have. This rule validates an IBAN with the ISO 7064 mod-97 check, so a typo is caught before the request:
 
-```typescript
+```ts title="iban.ts"
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
-const validateAbn = (value: string) => value === 'example-valid';
+type IbanRule = { $type: 'iban'; message?: string };
 
-/**
- * Illustrates delegating a custom rule to an application validator.
- *
- * @remarks `validateAbn` is a placeholder, not an ABN checksum or registry check.
- */
-const australianABN = {
-	$type: 'australianABN',
-	schema: z.object({ $type: z.literal('australianABN'), message: z.optional(z.string()) }),
-	metadata: { name: 'Australian ABN', description: 'Delegates to the application ABN validator.' },
+export function isValidIban(value: string): boolean {
+	const iban = value.replaceAll(' ', '').toUpperCase();
+	if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
+	const rearranged = `${iban.slice(4)}${iban.slice(0, 4)}`;
+	const digits = [...rearranged].map((char) => (/\d/.test(char) ? char : String(char.charCodeAt(0) - 55))).join('');
+	let remainder = 0;
+	for (const digit of digits) remainder = (remainder * 10 + Number(digit)) % 97;
+	return remainder === 1;
+}
+
+const iban: ValidationRegistration<IbanRule> = {
+	$type: 'iban',
+	schema: z.looseObject({ $type: z.literal('iban') }),
+	metadata: { name: 'IBAN', description: 'An IBAN with a valid mod-97 check.' },
 	category: 'string',
-	handler: (rule: { $type: 'australianABN'; message?: string }) =>
-		z.string().check(z.refine((abn) => validateAbn(abn), rule.message || 'Please enter a valid ABN')),
-} as const;
+	handler: (rule) => z.string().check(z.refine(isValidIban, rule.message ?? 'Enter a valid IBAN')),
+};
 
-const engine = createFormEngine({ validations: [australianABN] });
+export const engine = createFormEngine({ validations: [iban] });
 ```
 
 ## Registry Management
@@ -890,98 +889,24 @@ const testRegistry = createValidationRegistry([testOnly]);
 const schema = testRegistry.createSchema({ $type: 'testOnly' }, createValidationContext());
 ```
 
-## Async Endpoint Example
+## The endpoint
 
-Use the built-in async rule when a field depends on a server response. The endpoint receives `value`, optional `dependsOn`, and any fields from `extraPayload`:
+The endpoint of the built-in rule receives `value`, `dependsOn` when the rule has `dependencies`, and every key of `extraPayload`. It answers with the `expectedResponse` body when the value is valid, and `message` can carry the text to show when it is not:
 
-### Rule Configuration
+```ts title="check-username-endpoint.ts"
+const unavailable = new Set(['admin', 'root']);
 
-```typescript
-{
-  $type: 'async',
-  url: '/api/async-validate',
-  method: 'POST',
-  expectedResponse: { valid: true },
-  debounce: 500,
-  message: 'This username is not available'
-}
-
-{
-  $type: 'async',
-  url: '/api/async-validate',
-  method: 'POST',
-  extraPayload: { field: 'username', validationType: 'complex' },
-  expectedResponse: { valid: true },
-  dependencies: ['username'],
-  debounce: 600,
-  cacheTTL: 300000,
-  message: 'This value conflicts with the selected username'
-}
-```
-
-### Server-Side Implementation
-
-The endpoint can use the automatic `value` and `dependsOn` fields together with values supplied through `extraPayload`:
-
-```typescript
-app.post('/api/async-validate', async (ctx) => {
-	const { field, value, dependsOn } = await ctx.request.json();
-
-	console.log('Validating field:', field);
-	console.log('Field value:', value);
-	console.log('Dependencies:', dependsOn);
-
-	await new Promise((resolve) => setTimeout(resolve, 200 + Math.random() * 300));
-
-	switch (field) {
-		case 'username':
-			const unavailable = ['admin', 'root', 'invalid'];
-			if (unavailable.includes(value?.toLowerCase())) {
-				return ctx.response.json({
-					valid: false,
-					message: `Username "${value}" is not available`,
-				});
-			}
-			break;
-
-		case 'email':
-			const blockedDomains = ['tempmail.com', '10minutemail.com'];
-			const domain = value?.split('@')[1]?.toLowerCase();
-			if (blockedDomains.includes(domain)) {
-				return ctx.response.json({
-					valid: false,
-					message: `Email domain "${domain}" is not supported`,
-				});
-			}
-			break;
-
-		case 'dependentField':
-			const usernameValue = dependsOn?.username;
-			if (usernameValue === 'admin' && value?.toLowerCase() === 'user') {
-				return ctx.response.json({
-					valid: false,
-					message: 'Cannot use "user" value when username is "admin"',
-				});
-			}
-			break;
+export async function POST(request: Request): Promise<Response> {
+	const { value } = (await request.json()) as { value: string };
+	if (unavailable.has(value.toLowerCase())) {
+		return Response.json({ valid: false, message: `Username "${value}" is not available` });
 	}
-
-	return ctx.response.json({ valid: true });
-});
+	return Response.json({ valid: true });
+}
 ```
 
-### Key Benefits
+## Where to go next
 
-- **Real-time Feedback**: Users get immediate validation feedback
-- **Network Optimization**: Debouncing reduces unnecessary API calls
-- **Dependency Tracking**: Fields can re-validate when related fields change
-- **Graceful Error Handling**: Network errors don't break the user experience
-- **Flexible Response Format**: Server can return detailed error messages
-
-## Next Steps
-
-- **[How It Works](./validation-how-it-works)** - Understanding the validation system architecture
-- **[Built-in Validations](./validation-built-in)** - Complete reference of available validators
-- **[Examples](../examples/basic-form)** - See custom validations in complete forms
-
-Custom validations give you the power to implement any business logic while maintaining the consistency and ease of use of the Form Engine validation system. Validations are registrations like every other part of the engine, so they are easy to share across your application and keep your form configurations clean and declarative.
+- [Validation](/docs/forms/validation): the built-in rules and presets.
+- [Constraints](/docs/forms/constraints): show, hide or require a field from another value.
+- [Issue text](/docs/forms/issue-text): word the issues a rule reports.

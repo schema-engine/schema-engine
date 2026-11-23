@@ -141,3 +141,14 @@ describe('forms/getting-started', () => {
 		expect(overview).toContain(`the ${engine.getValidationRegistry().size} validation rules`);
 	});
 });
+
+describe('forms/constraints', () => {
+	const page = 'forms/constraints';
+
+	test('a hidden field leaves the submission, and a required one blocks it only while shown', async () => {
+		const lines = await runTitledFiles(['forms/getting-started', page], packages, 'submit-support.ts', {
+			globals: { Response, FormData },
+		});
+		expect(lines.join('\n')).toEqual(shownOutput(page, 'Hidden and disabled fields do not submit'));
+	});
+});

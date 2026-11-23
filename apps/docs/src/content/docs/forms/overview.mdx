@@ -22,19 +22,19 @@ With it you can:
 
 A form's behavior is independent of the element that collects a value and the recipe that lays out the form. Both the React and Radiant adapters implement the same form configuration contracts.
 
-| Capability       | Use it for                                                               | Start here                                                                        |
-| ---------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Constraints      | Show, hide, enable, disable, or require a field from another value       | [Contact form example](/docs/examples/contact-form)                               |
-| Validation       | Required values, formats, ranges, and custom rules                       | [Validation](/docs/forms/validation)                                              |
-| Actions          | Submit, reset, notifications, and ordered side effects                   | [Actions overview](/docs/actions/overview)                                        |
-| Async validation | Debounced remote checks, dependency values, and failure handling         | [Async validation](/docs/forms/validation-how-it-works#enhanced-async-validation) |
-| Async actions    | Pending, success, and failure states around a remote operation           | [Sequential actions example](/docs/examples/sequential-actions)                   |
-| Dynamic fields   | Repeatable groups and nested field scopes                                | [Components](/docs/forms-react/components)                                        |
-| Form state       | Values, field state, validity and submission, the same in both renderers | [Form state](/docs/forms/form-state)                                              |
-| Wizard steps     | Next, back and jump, with steps skipped from earlier answers             | [Wizard and runtime](/docs/forms/wizard)                                          |
-| Server errors    | Show a server's validation response on the fields it names               | [Server errors](/docs/forms/server-errors)                                        |
-| Issue text       | Word every error and warning in your language                            | [Issue text](/docs/forms/issue-text)                                              |
-| CSRF             | Send a token with the engine's requests and native posts                 | [CSRF](/docs/forms/csrf)                                                          |
+| Capability       | Use it for                                                               | Start here                                                          |
+| ---------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Constraints      | Show, hide, enable, disable, or require a field from another value       | [Constraints](/docs/forms/constraints)                              |
+| Validation       | Required values, formats, ranges, and custom rules                       | [Validation](/docs/forms/validation)                                |
+| Actions          | Submit, reset, notifications, and ordered side effects                   | [Actions overview](/docs/actions/overview)                          |
+| Async validation | Debounced remote checks, dependency values, and failure handling         | [Async rule](/docs/forms/validation-custom#the-built-in-async-rule) |
+| Async actions    | Pending, success, and failure states around a remote operation           | [Sequential actions example](/docs/examples/sequential-actions)     |
+| Dynamic fields   | Repeatable groups and nested field scopes                                | [Components](/docs/forms-react/components)                          |
+| Form state       | Values, field state, validity and submission, the same in both renderers | [Form state](/docs/forms/form-state)                                |
+| Wizard steps     | Next, back and jump, with steps skipped from earlier answers             | [Wizard and runtime](/docs/forms/wizard)                            |
+| Server errors    | Show a server's validation response on the fields it names               | [Server errors](/docs/forms/server-errors)                          |
+| Issue text       | Word every error and warning in your language                            | [Issue text](/docs/forms/issue-text)                                |
+| CSRF             | Send a token with the engine's requests and native posts                 | [CSRF](/docs/forms/csrf)                                            |
 
 ## Installation and quick start
 
@@ -49,7 +49,9 @@ pnpm add @schema-engine/forms zod
 - [Installation and quick start](/docs/forms/getting-started) - Build a form engine and submit a form with no renderer
 - [Core Concepts](/docs/forms/core-concepts) - createFormEngine, FormEngine, registrations
 - [Form engine setup](/docs/forms/builder) - Registrations and typed authoring
-- [Validation](/docs/forms/validation) - Built-in rules and custom validation
+- [Constraints](/docs/forms/constraints) - Show, hide, enable, disable or require a field from another value
+- [Validation](/docs/forms/validation) - The 27 built-in rules and presets
+- [Custom and async rules](/docs/forms/validation-custom) - Your own rules, a server check and testing
 - [Actions](/docs/forms/actions) - The actions a form ships and how its submit runs them
 - [Form state](/docs/forms/form-state) - The container every renderer binds to: values, validity and submission
 - [Issue text](/docs/forms/issue-text) - Word errors and warnings in your language
