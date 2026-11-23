@@ -15,7 +15,28 @@ See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
 
 ## Before you start
 
-This guide uses the React renderer. Follow [Installation](/docs/schema-engine/packages#react) first: it installs the packages, copies the form elements and the default recipes into your project with the shadcn registry (`pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes`), and imports their styles. The `@/components/schema-engine/forms/...` imports below resolve only after that step. Using Radiant instead? Start from [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started).
+This guide uses the React renderer. Install the packages, then copy the form elements and the default recipes into your project from the Schema Engine shadcn registry. Using Radiant instead? Start from [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started).
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
+```
+
+The shadcn registry has one aggregate per component base: `schema-form` for Base UI, `schema-form-radix` for Radix UI and `schema-form-aria` for React Aria, with matching `schema-engine-form-recipes-radix` and `-aria` recipe items. Install one base per app. [Registries](/docs/registry/registries) lists every item.
+
+The command copies source files into your project, and they are yours to read, edit and delete. `components/schema-engine/forms/` holds the form elements, the generated `registrations.ts` barrel, and `recipes/` with the shells, blocks, their CSS files and the generated `recipes/registrations.ts` barrel. `components/ui/schema-engine/components/` holds the primitives the elements share, such as the field wrapper and `controls.css`. A later `shadcn add` overwrites a file only after it asks.
+
+The recipes copy their CSS with them, and nothing imports it for you. Import it once in your global stylesheet, after Tailwind. The path is relative to that file (`./components/...` from a Vite `src/index.css`, `../components/...` from a Next.js `app/globals.css`):
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+@import './components/ui/schema-engine/components/controls.css';
+```
+
+`recipes.css` goes into the `components` layer so your Tailwind utilities and classes sit above it; `controls.css` goes unlayered because a shadcn control sets its height with a Tailwind utility that outranks every layered rule. [View recipes](/docs/forms-react/layouts#default-registry-recipes) says more, and [Styling and layout](/docs/layout/overview) covers sizes, surfaces and tokens.
+
+The `@/components/schema-engine/forms/...` imports below resolve only after the `shadcn add` has copied the files.
 
 ## 1. Create Your Form Engine
 

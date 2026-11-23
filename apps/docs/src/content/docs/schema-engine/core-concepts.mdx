@@ -1,0 +1,95 @@
+---
+title: 'Core concepts'
+description: 'The vocabulary every Schema Engine page shares: document, $type, registration, registry, action entry, trigger, context, domain, renderer and vocabulary.'
+order: 3
+---
+
+# Core concepts
+
+Each term below is defined once. Other pages link here instead of explaining it again.
+
+## Document
+
+A document is plain JSON, or YAML that parses to it, that describes an interface or a process by naming registered pieces. Everything in it is data: strings, numbers, booleans, arrays and objects.
+
+```json
+{
+	"$type": "badge",
+	"label": "New"
+}
+```
+
+A form config is a document, and so is a list of actions. A document never holds a function or a class instance, which is what lets it be stored, sent from a server to a client and checked when it arrives.
+
+## `$type`
+
+`$type` is the one key that says what a node is. An element in a form, an action entry, a validation rule and a constraint all carry a `$type`, and it is the key a registry looks up.
+
+## Registration
+
+A registration is the code behind a `$type`: the `$type` itself, a Standard Schema that validates a node's configuration, and metadata such as a display name. A domain adds what it needs to the contract. A component registration adds a `render` function, and an action registration adds `execute`.
+
+```ts
+import * as z from 'zod/mini';
+import type { ComponentRegistration } from '@schema-engine/registry';
+
+export const badge: ComponentRegistration<'badge', unknown, { label: string }> = {
+	$type: 'badge',
+	schema: z.object({ $type: z.literal('badge'), label: z.string() }),
+	metadata: { name: 'Badge', description: 'A short status label.' },
+	render: (props) => `<span class="badge">${props.label}</span>`,
+};
+```
+
+The schema is any [Standard Schema](https://standardschema.dev/) value, so Zod, Valibot and Effect Schema all work.
+
+## Registry
+
+A registry is a collection of registrations keyed by `$type`. `createRegistry` builds a read-only one from a list. A later registration with the same `$type` replaces an earlier one, so `[...defaults, mine]` overrides a default. `BaseRegistry` is the mutable form, for registrations that arrive at runtime. See [Registry](/docs/registry/overview).
+
+This is the code registry: registrations held in memory, resolved by `$type`. It is not a set of source files copied into an app.
+
+## Action entry
+
+An action entry is one object in a workflow: the `$type` of a registered action, an `id`, the action's own arguments and, optionally, `triggers` and `enabled`. Entries run in order. An entry that is itself an array is a group, and its members run in parallel.
+
+```json
+[
+	{ "id": "reserve", "$type": "reserveStock", "sku": "tee-black-m" },
+	[
+		{ "id": "notify", "$type": "notifyWarehouse", "sku": "tee-black-m" },
+		{ "id": "track", "$type": "trackPurchase", "sku": "tee-black-m" }
+	]
+]
+```
+
+`parseActions` checks every entry against its registration's schema, and only what it returns can be dispatched. See [Actions](/docs/actions/overview).
+
+## Trigger
+
+A trigger is the name of the event that starts a dispatch, such as `submit` or `change`. An entry answers a trigger through its own `triggers`, or through the `defaultTriggers` of its registration when it has none. An entry with `enabled: false` never runs.
+
+## Context
+
+The context is what the caller hands to a dispatch: the data and services every action of the domain needs, such as a form's values or a customer id. The dispatcher adds the entry's `config`, the `trigger`, the `triggeredBy` entry for nested runs and a `signal` for cancellation, and passes the result to the action's `execute`.
+
+## Domain
+
+A domain gives the language a job. Forms is the first: it adds fields, validation rules, constraints, steps and the submit lifecycle, and declares the recipe protocol for the frame around a form. A domain reuses the registry, the actions and the layout machinery, and adds its own registrations and rules. See [Forms](/docs/forms/overview).
+
+## Renderer
+
+A renderer turns a validated document into output with the registrations of its engine. Forms React renders to React elements and Forms Radiant to custom elements. A renderer draws what the engine resolved and does not own the rules for validating or dispatching, so a document keeps its meaning across renderers.
+
+## Vocabulary
+
+The vocabulary is the set of components and actions a team registers inside a domain, usually its design system. The reference vocabulary is the set Schema Engine ships to start from: the built-in inputs and the Radiant elements, for example. It is a starting point to copy and change, not a contract.
+
+| Layer                | What it is                                                                                                            | Who owns it                            |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Core                 | The shared grammar: `$type` dispatch, the registration contract, constraints, actions and triggers, recipes and slots | Schema Engine                          |
+| Domain               | Forms, and others to come. Each declares its own recipe protocol (slots, kinds, rules)                                | Schema Engine                          |
+| Vocabulary           | The components and actions a team registers inside a domain, typically its design system                              | Each developer or company              |
+| Reference vocabulary | The built-in classic components (input, select, checkbox, and so on): a starting point, not a contract                | Schema Engine, freely changed by users |
+
+Every team builds its own vocabulary, and the core keeps those vocabularies working the same way: they resolve, validate, compose and dispatch by the same rules.

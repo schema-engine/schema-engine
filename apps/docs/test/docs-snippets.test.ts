@@ -19,7 +19,7 @@ vi.setConfig({ testTimeout: 60_000 });
  * section that still holds fences that cannot compile stays off, or lists the pages that are ready, so the list
  * is never left failing.
  */
-const CHECKED_DOCS = ['layout', 'registry/registries'];
+const CHECKED_DOCS = ['layout', 'registry/registries', 'schema-engine'];
 
 interface AllowedFence {
 	page: string;

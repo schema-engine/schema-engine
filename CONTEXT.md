@@ -1,5 +1,18 @@
 # Schema Engine — context
 
+## Core terms
+
+- **Document.** Plain JSON, or YAML that parses to it, that describes an interface or a process by naming registered pieces. It holds no function or class instance, so it can be stored, sent from a server to a client and checked when it arrives.
+- **`$type`.** The one key that says what a node is. Elements, action entries, validation rules and constraints carry it, and a registry looks it up.
+- **Registration.** The code behind a `$type`: the `$type`, a Standard Schema for a node's configuration and metadata, plus what its domain adds (`render` for a component, `execute` for an action).
+- **Registry (code).** A collection of registrations keyed by `$type`, built by `createRegistry` (read-only) or `BaseRegistry` (mutable). It is not the **shadcn registry**, which is a set of React source files copied into an app and is a Forms React term only. Never write "registry" bare where the two could be confused.
+- **Action entry.** One object in a workflow: the `$type` of a registered action, an `id`, the action's own arguments and, optionally, `triggers` and `enabled`. An entry that is an array is a group whose members run in parallel. `parseActions` checks entries, and only what it returns can be dispatched.
+- **Trigger.** The name of the event that starts a dispatch, such as `submit`. An entry answers it through its own `triggers`, else through the `defaultTriggers` of its registration.
+- **Context.** What the caller hands to a dispatch. The dispatcher adds the entry's `config`, the `trigger`, `triggeredBy` and a `signal`.
+- **Domain.** A job the language is given (forms is the first). It reuses the core and adds its own registrations and rules.
+- **Renderer.** Turns a validated document into output with the registrations of its engine (Forms React, Forms Radiant). It does not own the rules for validating or dispatching.
+- **Vocabulary / reference vocabulary.** The components and actions a team registers inside a domain, and the built-in set Schema Engine ships as a starting point to copy and change. Working terms, not final.
+
 ## Zod Mini and Standard Schema boundary
 
 The engine uses Zod Mini for its first-party schemas and keeps Standard Schema as the provider-neutral registration boundary:
