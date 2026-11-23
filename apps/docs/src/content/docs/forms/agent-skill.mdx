@@ -1,0 +1,40 @@
+---
+title: 'Agent skill'
+description: 'The skill an AI agent reads to build, validate and extend Schema Engine forms: where it ships, where it is served and how it is laid out.'
+order: 19
+---
+
+# Agent skill
+
+The agent skill is a guide written for an AI coding agent. It teaches the agent the core concepts of Schema Engine once, then routes each task to one reference, so the agent reads what the task needs and nothing more. Every TypeScript block in it mirrors a tested file, so its code runs.
+
+## Where to read it
+
+| Source                                                    | Version               |
+| --------------------------------------------------------- | --------------------- |
+| `node_modules/@schema-engine/forms/skill/SKILL.md`        | The one you installed |
+| [`/skill/SKILL.md`](/skill/SKILL.md) on this site         | The latest version (this repository) |
+| [`/skill.txt`](/skill.txt), an index of the skill's files | The latest version (this repository) |
+
+The skill ships inside `@schema-engine/forms`, so it matches the installed version: point your agent at the `node_modules` copy for the API you have. The site copies the same folder when it builds and serves it at `/skill/`, so use that copy when you want the latest guide or your agent cannot read `node_modules`.
+
+## How it is laid out
+
+`SKILL.md` is the router. It defines the core concepts (the config, the container, the runtime, issues and the formatter), names the packages and has one table that maps a task to a reference. The references assume the concepts and do not repeat them.
+
+| To do                                                                        | Reference                            |
+| ---------------------------------------------------------------------------- | ------------------------------------ |
+| Create an engine, author a config, use the container or the runtime directly | `reference/forms.md`                 |
+| Render a form in React, or use its hooks                                     | `reference/forms-react.md`           |
+| Render a form in Radiant, or reach the container from an element             | `reference/forms-radiant.md`         |
+| Write or change a field widget, and test it                                  | `reference/widgets.md`               |
+| Add a rule, explain a validation result, or translate messages               | `reference/validation-and-issues.md` |
+| Handle submit, server errors, CSRF or wizard steps                           | `reference/submission.md`            |
+| Run code on a form event, or define an action                                | `reference/actions.md`               |
+| Register elements, recipes, actions or validation rules                      | `reference/registry.md`              |
+
+## Use it
+
+Tell your agent where `SKILL.md` is, as an instruction file in your agent's tooling or in a prompt: "Use the Schema Engine skill at `node_modules/@schema-engine/forms/skill/SKILL.md`." The agent reads the router first and opens a reference only for the task at hand. For the full documentation, `SKILL.md` points to [`/llms.txt`](/llms.txt) and the page bodies under `/docs-llm/`.
+
+The skill is part of the package, so a change to a public API changes the skill in the same commit, and a test fails when a code block and its tested file drift apart.
