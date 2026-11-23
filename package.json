@@ -9,9 +9,11 @@
 	"devDependencies": {
 		"@changesets/changelog-github": "^0.5.2",
 		"@changesets/cli": "^2.31.1",
+		"@schema-engine/actions": "workspace:*",
 		"@schema-engine/forms": "workspace:*",
 		"@schema-engine/forms-react": "workspace:*",
 		"@schema-engine/layout": "workspace:*",
+		"@schema-engine/registry": "workspace:*",
 		"@testing-library/dom": "^10.4.1",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.3",

@@ -262,3 +262,7 @@ stores schemas as supplied; use `createRegistry` when the schemas must be checke
 
 The published registry uses a caret range for its logger dependency. Copied
 widget sources live in the separate, private `registry-files` workspace.
+
+## Agent skill
+
+The package ships the router of the Schema Engine agent skill as `skill/SKILL.md`, and its own reference as `skill/reference/registry.md`. The router routes each task to the reference of the package that owns it, so an agent starts at `node_modules/@schema-engine/registry/skill/SKILL.md`. The registry is the router's home because every other package depends on it. See [For AI agents](../../apps/docs/src/content/docs/schema-engine/agent-skill.mdx).

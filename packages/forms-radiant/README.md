@@ -371,3 +371,7 @@ callbacks wait for the engine action lifecycle; an action failure with
 `shouldContinue: false` or a rejected `onAction` callback suppresses submission
 and runs the error and completion triggers. The instance finds its `rui-form`, the light-DOM
 form its view authors, once when it connects and wires submission there.
+
+## Agent skill
+
+The package ships its part of the Schema Engine agent skill as `skill/reference/forms-radiant.md` and `skill/reference/forms-radiant-widgets.md`, which an agent reads from `node_modules/@schema-engine/forms-radiant/skill/reference/`. The router that routes a task to it is `skill/SKILL.md` of `@schema-engine/registry`. See [For AI agents](../../apps/docs/src/content/docs/schema-engine/agent-skill.mdx).

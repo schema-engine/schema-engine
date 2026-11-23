@@ -1,12 +1,21 @@
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, expect, test } from 'vitest';
-import { SKILL_SOURCE, copySkill } from './copy-skill';
+import { copySkill } from './copy-skill';
+import { findSkillSources } from './skill-sources';
 
-let output: string;
+const folders: string[] = [];
 
-afterEach(() => rm(output, { recursive: true, force: true }));
+afterEach(async () => {
+	await Promise.all(folders.splice(0).map((folder) => rm(folder, { recursive: true, force: true })));
+});
+
+async function scratch(): Promise<string> {
+	const folder = await mkdtemp(join(tmpdir(), 'skill-'));
+	folders.push(folder);
+	return folder;
+}
 
 async function filesUnder(root: string): Promise<string[]> {
 	const entries = await readdir(root, { recursive: true, withFileTypes: true });
@@ -16,28 +25,51 @@ async function filesUnder(root: string): Promise<string[]> {
 		.toSorted();
 }
 
-test('serves the skill the package ships, file for file, and indexes every reference', async () => {
-	output = await mkdtemp(join(tmpdir(), 'skill-'));
-	await copySkill(output);
+async function write(file: string, text = '# Title'): Promise<void> {
+	await mkdir(join(file, '..'), { recursive: true });
+	await writeFile(file, text);
+}
 
-	expect(await filesUnder(join(output, 'skill'))).toEqual(await filesUnder(SKILL_SOURCE));
-	for (const file of await filesUnder(SKILL_SOURCE)) {
-		expect(await readFile(join(output, 'skill', file), 'utf8')).toBe(
-			await readFile(join(SKILL_SOURCE, file), 'utf8'),
-		);
-	}
+test('serves the router of the registry package and every package reference, file for file, and indexes each', async () => {
+	const output = await scratch();
+	const sources = await findSkillSources();
+	await copySkill(output, sources);
+
+	expect(sources.references.map(({ package: pkg }) => pkg)).toEqual(
+		expect.arrayContaining(['registry', 'actions', 'layout', 'forms', 'forms-react', 'forms-radiant']),
+	);
+	expect(await filesUnder(join(output, 'skill'))).toEqual(
+		['SKILL.md', ...sources.references.map(({ name }) => join('reference', name))].toSorted(),
+	);
+	expect(await readFile(join(output, 'skill', 'SKILL.md'), 'utf8')).toBe(await readFile(sources.router, 'utf8'));
 	const index = await readFile(join(output, 'skill.txt'), 'utf8');
 	expect(index).toContain('/skill/SKILL.md');
-	for (const name of await readdir(join(SKILL_SOURCE, 'reference')))
+	for (const { name, file } of sources.references) {
+		expect(await readFile(join(output, 'skill', 'reference', name), 'utf8')).toBe(await readFile(file, 'utf8'));
 		expect(index).toContain(`/skill/reference/${name}`);
+	}
 });
 
 test('replaces what an earlier copy left, so a deleted reference is not served', async () => {
-	output = await mkdtemp(join(tmpdir(), 'skill-'));
-	await copySkill(output);
+	const output = await scratch();
+	const sources = await findSkillSources();
+	await copySkill(output, sources);
 	await writeFile(join(output, 'skill', 'reference', 'stale.md'), '# Stale');
 
-	await copySkill(output);
+	await copySkill(output, sources);
 
 	expect(await filesUnder(join(output, 'skill'))).not.toContain(join('reference', 'stale.md'));
+});
+
+test('refuses a reference name two packages ship, and a router outside the registry package', async () => {
+	const packages = await scratch();
+	await write(join(packages, 'registry', 'skill', 'SKILL.md'));
+	await write(join(packages, 'actions', 'skill', 'reference', 'shared.md'));
+	await write(join(packages, 'forms', 'skill', 'reference', 'shared.md'));
+	await expect(findSkillSources(packages)).rejects.toThrow('shared.md is shipped by actions and by forms');
+
+	await rm(join(packages, 'forms'), { recursive: true });
+	await rm(join(packages, 'actions', 'skill', 'reference'), { recursive: true });
+	await write(join(packages, 'actions', 'skill', 'SKILL.md'));
+	await expect(findSkillSources(packages)).rejects.toThrow('router lives in packages/registry only');
 });

@@ -1,13 +1,10 @@
-import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { absoluteUrl } from '../src/lib/docs/site-meta';
+import { findSkillSources, type SkillSources } from './skill-sources';
 
-const repoRoot = join(import.meta.dirname, '../../..');
 const publicRoot = join(import.meta.dirname, '../src/public');
-
-/** The one source of the agent skill: the folder `@schema-engine/forms` ships. */
-export const SKILL_SOURCE = join(repoRoot, 'packages/forms/skill');
 
 /** The title of a reference, from its first heading. */
 async function titleOf(file: string): Promise<string> {
@@ -16,22 +13,23 @@ async function titleOf(file: string): Promise<string> {
 }
 
 /**
- * Serves the skill the package ships at `/skill/`, with `/skill.txt` as its index.
+ * Serves the skill the packages ship at `/skill/`, with `/skill.txt` as its index.
  *
  * @remarks
- * The copy is derived and replaced on every run, so the site always serves the skill of the package in this repository, the latest version. Nothing under `skill/` or `skill.txt` in the public folder is edited by hand.
+ * The router is copied to `/skill/SKILL.md` and each package's references to `/skill/reference/`. The copy is derived and replaced on every run, so the site always serves the skills of the packages in this repository, the latest version. Nothing under `skill/` or `skill.txt` in the public folder is edited by hand.
  */
-export async function copySkill(outputRoot = publicRoot, sourceRoot = SKILL_SOURCE): Promise<void> {
+export async function copySkill(outputRoot = publicRoot, sources?: SkillSources): Promise<void> {
+	const { router, references } = sources ?? (await findSkillSources());
 	const target = join(outputRoot, 'skill');
 	await rm(target, { recursive: true, force: true });
-	await mkdir(outputRoot, { recursive: true });
-	await cp(sourceRoot, target, { recursive: true });
+	await mkdir(join(target, 'reference'), { recursive: true });
+	await copyFile(router, join(target, 'SKILL.md'));
+	for (const { name, file } of references) await copyFile(file, join(target, 'reference', name));
 
-	const references = (await readdir(join(sourceRoot, 'reference'))).toSorted();
 	const lines = [
 		'# Schema Engine — agent skill index',
 		'',
-		'This file points an AI agent to the skill of Schema Engine, a JSON-driven form layer on top of the Ecopages framework.',
+		'This file points an AI agent to the skill of Schema Engine, a common language for declarative interfaces with forms as its first domain, on top of the Ecopages framework.',
 		'',
 		'## How to use this file',
 		'',
@@ -44,8 +42,7 @@ export async function copySkill(outputRoot = publicRoot, sourceRoot = SKILL_SOUR
 		`- [SKILL.md](${absoluteUrl('/skill/SKILL.md')}): the core concepts and the router`,
 		...(await Promise.all(
 			references.map(
-				async (name) =>
-					`- [${await titleOf(join(sourceRoot, 'reference', name))}](${absoluteUrl(`/skill/reference/${name}`)})`,
+				async ({ name, file }) => `- [${await titleOf(file)}](${absoluteUrl(`/skill/reference/${name}`)})`,
 			),
 		)),
 		'',
