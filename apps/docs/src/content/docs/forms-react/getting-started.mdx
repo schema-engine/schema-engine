@@ -4,6 +4,9 @@ description: 'Install the React renderer, write a text widget, register it and r
 order: 2
 ---
 
+import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
+import { basicContactFormConfig } from '@/lib/form-configs/basic-contact';
+
 # Installation and quick start
 
 `@schema-engine/forms-react` renders a form config with React. The renderer binds fields to the engine's form state through hooks, and the fields themselves are registrations you supply: widgets you write, or source you copy. This page gets a form on screen with a widget of your own, then shows the optional shadcn registry path for a project that already uses shadcn.
@@ -165,6 +168,12 @@ export const formEngine = createFormEngine({
 ```
 
 These imports resolve only after the `shadcn add` has copied the files. A config for this engine names the copied elements by `$type` (`input`, `select`, `checkbox` and the rest) and can set `view: { $type: 'card' }` to pick a recipe. Render it with `FormRenderer`, as above.
+
+## Live example
+
+The docs site renders a contact form with its demo kit, which styles the fields with Radiant UI. It is not the widget above: it shows what a validated React form does when you submit it empty.
+
+<ReactFormDemoEmbed config={basicContactFormConfig} />
 
 ## Where to go next
 
