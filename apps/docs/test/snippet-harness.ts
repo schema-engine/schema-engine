@@ -243,15 +243,16 @@ export function titledRunner(
  *
  * @remarks
  * The entry may start asynchronous work, so the call waits one turn of the event loop before it returns, which
- * is enough for work that waits on promises and not on timers.
+ * is enough for work that waits on promises. Work that waits on a timer needs `settleMs`, the time to wait.
  */
 export async function runTitledFiles(
 	pages: string | string[],
 	modules: Record<string, unknown>,
 	entry: string,
+	settleMs = 0,
 ): Promise<string[]> {
 	const runner = titledRunner(pages, modules);
 	runner.load(entry);
-	await new Promise((resolve) => setImmediate(resolve));
+	await new Promise((resolve) => setTimeout(resolve, settleMs));
 	return runner.lines;
 }

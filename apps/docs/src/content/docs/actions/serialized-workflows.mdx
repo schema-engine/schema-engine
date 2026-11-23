@@ -1,0 +1,213 @@
+---
+title: 'Serialized workflows'
+description: 'A workflow is a JSON array of action entries. Parse it with parseActions, read the issues, and dispatch it, with triggers, stops and cancellation.'
+order: 5
+---
+
+# Serialized workflows
+
+An action is defined once, in code, on the client. A workflow is data: a JSON array of action entries whose arguments travel as JSON. A server can build it and send it, a CMS can store it, and a client can run it. Async steps, parallel groups and cancellation are all expressed in the document, so the whole workflow is something you can log and replay.
+
+The flow has four steps: `JSON.parse`, `parseActions`, show the issues, `dispatch`. `parseActions` checks every entry against the schema of its registration, and `ActionDispatcher.dispatch` accepts only what it returned, so an entry that did not pass never reaches a handler. See [Serialized documents](/docs/schema-engine/serialized-documents) for the same boundary on a document of nodes.
+
+## The actions
+
+The page uses four actions of an order flow. The context carries the stock the actions read, so a run is self-contained:
+
+```ts title="shop-actions.ts"
+import { setTimeout as sleep } from 'node:timers/promises';
+import * as z from 'zod/mini';
+import { ActionRegistry, defineAction, type ActionConfigBase } from '@schema-engine/actions';
+
+z.config(z.locales.en());
+
+export interface ShopContext {
+	stock: Record<string, number>;
+}
+
+export type ShopTrigger = 'checkout' | 'refund';
+
+const define = defineAction<ShopContext, ShopTrigger>();
+
+const entry = {
+	id: z.string(),
+	enabled: z.optional(z.boolean()),
+	triggers: z.optional(z.array(z.string())),
+};
+
+interface ReserveStockConfig extends ActionConfigBase<'reserveStock'> {
+	sku: string;
+	quantity: number;
+}
+
+const reserveStock = define<ReserveStockConfig>({
+	$type: 'reserveStock',
+	schema: z.object({ ...entry, $type: z.literal('reserveStock'), sku: z.string(), quantity: z.number() }),
+	metadata: { name: 'Reserve stock', defaultTriggers: ['checkout'] },
+	execute: async ({ config, stock }) => {
+		const left = stock[config.sku] ?? 0;
+		if (left < config.quantity) {
+			return { success: false, error: `Only ${left} of ${config.sku} left`, shouldContinue: false };
+		}
+		stock[config.sku] = left - config.quantity;
+		return { success: true, message: `Reserved ${config.quantity} of ${config.sku}` };
+	},
+});
+
+interface ChargeCardConfig extends ActionConfigBase<'chargeCard'> {
+	amount: number;
+}
+
+const chargeCard = define<ChargeCardConfig>({
+	$type: 'chargeCard',
+	schema: z.object({ ...entry, $type: z.literal('chargeCard'), amount: z.number() }),
+	metadata: { name: 'Charge the card', defaultTriggers: ['checkout'] },
+	execute: async ({ config }) => {
+		if (config.amount > 500) return { success: false, error: 'The card was declined', shouldContinue: false };
+		return { success: true, message: `Charged ${config.amount}` };
+	},
+});
+
+type NotifyWarehouseConfig = ActionConfigBase<'notifyWarehouse'>;
+
+const notifyWarehouse = define<NotifyWarehouseConfig>({
+	$type: 'notifyWarehouse',
+	schema: z.object({ ...entry, $type: z.literal('notifyWarehouse') }),
+	metadata: { name: 'Notify the warehouse', defaultTriggers: ['checkout'] },
+	execute: async ({ signal }) => {
+		await sleep(200, undefined, { signal });
+		return { success: true, message: 'Warehouse notified' };
+	},
+});
+
+type SendReceiptConfig = ActionConfigBase<'sendReceipt'>;
+
+const sendReceipt = define<SendReceiptConfig>({
+	$type: 'sendReceipt',
+	schema: z.object({ ...entry, $type: z.literal('sendReceipt') }),
+	metadata: { name: 'Send the receipt', defaultTriggers: ['checkout'] },
+	execute: async () => ({ success: true, message: 'Receipt sent' }),
+});
+
+export const registry = new ActionRegistry<ShopContext, ShopTrigger>([
+	reserveStock,
+	chargeCard,
+	notifyWarehouse,
+	sendReceipt,
+]);
+```
+
+## The workflow as JSON
+
+This is what a server sends: stock is reserved, then the card is charged while the warehouse is told, then the receipt goes out. The inner array is a parallel group.
+
+```json
+[
+	{ "id": "reserve", "$type": "reserveStock", "sku": "tee-black-m", "quantity": 2 },
+	[
+		{ "id": "charge", "$type": "chargeCard", "amount": 120 },
+		{ "id": "warehouse", "$type": "notifyWarehouse" }
+	],
+	{ "id": "receipt", "$type": "sendReceipt" }
+]
+```
+
+## Parse, show the issues, dispatch
+
+```ts title="run-workflow.ts"
+import { ActionDispatcher, parseActions } from '@schema-engine/actions';
+import { registry, type ShopContext } from './shop-actions';
+
+const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
+	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
+
+export async function runWorkflow(text: string, context: ShopContext): Promise<void> {
+	const parsed = parseActions(registry, JSON.parse(text));
+	if (!parsed.success) {
+		for (const issue of parsed.issues) console.log(`issue ${where(issue.path)}: ${issue.message}`);
+		return;
+	}
+	const results = await new ActionDispatcher(registry).dispatch({
+		actions: parsed.data,
+		trigger: 'checkout',
+		context,
+	});
+	for (const { actionId, status, message, error } of results) {
+		console.log(`${actionId}: ${status}${message ? `, ${message}` : ''}${error ? `, ${error}` : ''}`);
+	}
+}
+```
+
+A workflow arrives as text, and `parseActions` takes its parsed value. When it returns `success: false`, nothing has run: `issues` lists every bad entry, in order. An issue's `path` is the index of the entry, then the index inside a group when the entry is one, then the path the schema reported, so `1.0.amount` is the `amount` of the first member of the group at index 1. An entry without a string `$type` and a `$type` no registration answers are issues at `$type`.
+
+### Run three workflows
+
+```ts title="check.ts"
+import { runWorkflow } from './run-workflow';
+
+const workflow = (amount: number, quantity: number | string = 2) => `[
+	{ "id": "reserve", "$type": "reserveStock", "sku": "tee-black-m", "quantity": ${JSON.stringify(quantity)} },
+	[
+		{ "id": "charge", "$type": "chargeCard", "amount": ${amount} },
+		{ "id": "warehouse", "$type": "notifyWarehouse" }
+	],
+	{ "id": "receipt", "$type": "sendReceipt" }
+]`;
+
+async function main() {
+	console.log('a valid workflow');
+	await runWorkflow(workflow(120), { stock: { 'tee-black-m': 10 } });
+
+	console.log('a bad entry');
+	await runWorkflow(workflow(120, 'two'), { stock: { 'tee-black-m': 10 } });
+
+	console.log('a declined card');
+	await runWorkflow(workflow(900), { stock: { 'tee-black-m': 10 } });
+}
+
+main();
+```
+
+```text
+a valid workflow
+reserve: succeeded, Reserved 2 of tee-black-m
+charge: succeeded, Charged 120
+warehouse: succeeded, Warehouse notified
+receipt: succeeded, Receipt sent
+a bad entry
+issue 0.quantity: Invalid input: expected number, received string
+a declined card
+reserve: succeeded, Reserved 2 of tee-black-m
+charge: failed, The card was declined
+warehouse: cancelled, The operation was aborted
+```
+
+- **A valid workflow** runs in order. The group settles, with both members started together, before the receipt.
+- **A bad entry** is reported with its path and nothing runs: `quantity` is a string, so no action of the workflow ran, not even the valid ones.
+- **A declined card** fails with `shouldContinue: false`. The dispatcher cancels the other member of its group, the warehouse notification, through the `signal` it was waiting on, and runs no later entry, so there is no receipt.
+
+## Triggers are entry points
+
+A workflow can hold entries for several moments. `dispatch` takes a `trigger`, and an entry runs only when it answers it: through its own `triggers`, or, when it has none, through the `defaultTriggers` of its registration. A workflow can therefore carry a step that runs only on `refund`:
+
+```json
+{ "id": "refund-receipt", "$type": "sendReceipt", "triggers": ["refund"] }
+```
+
+An entry with `enabled: false` never runs. The registration's schema has to declare `enabled` and `triggers`, because `parseActions` returns what the schema returns.
+
+## Stops and cancellation
+
+A failed result stops the workflow only when it says `shouldContinue: false`. Otherwise the failure is recorded and the next entry runs. In a group, a stop aborts the `signal` of the other members. Passing `signal` to `dispatch` cancels the whole dispatch from outside.
+
+Cancellation is cooperative: a handler has to observe its `signal`, and one that does not keeps `dispatch` pending. Cancellation does not undo a remote side effect. A charge that reached the card service before the abort still happened.
+
+## triggeredBy
+
+A caller that dispatches a workflow from inside an action can pass the entry that started it as `triggeredBy`. The handlers of that dispatch read it from their context, so a log can say which action caused them.
+
+## Where to go next
+
+- [Sequences, parallel groups, cancellation](/docs/actions/sequences-and-cancellation): the same rules without serialization.
+- [Writing actions](/docs/actions/writing-actions): the registrations a workflow refers to.
+- [Serialized documents](/docs/schema-engine/serialized-documents): validating a document of nodes the same way.

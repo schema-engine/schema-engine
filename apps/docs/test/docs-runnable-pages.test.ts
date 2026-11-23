@@ -103,3 +103,22 @@ describe('actions pages', () => {
 		expect(ok).toMatchObject({ success: true });
 	});
 });
+
+describe('actions/serialized-workflows', () => {
+	const page = 'actions/serialized-workflows';
+
+	test('a valid, a bad and a cancelled run print what the page shows', async () => {
+		const lines = await runTitledFiles(page, packages, 'check.ts', 1000);
+		expect(lines.join('\n')).toEqual(shownOutput(page, 'Run three workflows'));
+	});
+
+	test('the workflow JSON the page shows parses', () => {
+		const json = codeBlocks(page).find(
+			(block) => block.lang === 'json' && block.heading === 'The workflow as JSON',
+		)!;
+		const { registry } = titledRunner(page, packages).load('shop-actions.ts') as {
+			registry: actionsPackage.ActionRegistry;
+		};
+		expect(actionsPackage.parseActions(registry, JSON.parse(json.code)).success).toBe(true);
+	});
+});
