@@ -38,6 +38,17 @@ function assertStandardSchema(schema: unknown, context?: string): StandardSchema
 
 Throws `<context> must implement Standard Schema (~standard.validate).` unless `schema` has a `~standard.validate` function.
 
+## safeParseStandardSchema
+
+```typescript
+function safeParseStandardSchema<TInput, TOutput>(
+	schema: StandardSchemaV1<TInput, TOutput>,
+	value: TInput,
+): { success: true; data: TOutput } | { success: false; error: { issues: StandardSchemaIssue[] } };
+```
+
+Runs a registration's schema without throwing. It supports only synchronous validation and throws for a schema that validates asynchronously.
+
 ## BaseRegistry
 
 Abstract, mutable class for plugin systems that register at runtime. Prefer `createRegistry` otherwise.

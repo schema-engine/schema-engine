@@ -1,10 +1,12 @@
 import {
 	ActionDispatcher,
 	ActionRegistry,
+	parseActions,
 	type ActionConfigBase,
 	type ActionDispatchResult,
 	type ActionRuntimeContext,
 	type ActionSequenceEntry,
+	type ParsedActionSequence,
 } from '@schema-engine/actions';
 import * as z from 'zod/mini';
 
@@ -78,11 +80,8 @@ export const PLAYGROUND_EXAMPLES: Record<PlaygroundExampleId, ExampleDefinition>
 		id: 'sequential',
 		name: 'Sequential dispatch',
 		description: 'Matching actions run in order, each receiving config, trigger and signal',
-		code: `await dispatcher.dispatch({
-  actions: [serialize, persist, index],
-  trigger: 'submit',
-  context,
-});`,
+		code: `const parsed = parseActions(registry, [serialize, persist, index]);
+await dispatcher.dispatch({ actions: parsed.data, trigger: 'submit', context });`,
 		actions: [
 			work('serialize', 'serialize', { result: 'payload' }),
 			work('persist', 'persist', { result: 'row:42' }),
@@ -93,11 +92,8 @@ export const PLAYGROUND_EXAMPLES: Record<PlaygroundExampleId, ExampleDefinition>
 		id: 'parallel',
 		name: 'Parallel group',
 		description: 'An inner array runs concurrently and joins before the next entry',
-		code: `await dispatcher.dispatch({
-  actions: [[analytics, webhook, cache]],
-  trigger: 'submit',
-  context,
-});`,
+		code: `const parsed = parseActions(registry, [[analytics, webhook, cache]]);
+await dispatcher.dispatch({ actions: parsed.data, trigger: 'submit', context });`,
 		actions: [
 			[
 				work('analytics', 'analytics', { result: 'event:12' }),
@@ -234,6 +230,7 @@ export class ActionPlaygroundSession {
 	readonly #sleep: PlaygroundSleep;
 	readonly #delayMs: number | undefined;
 	readonly #listeners = new Set<Listener>();
+	readonly #registry: ActionRegistry<PlaygroundContext, 'submit'>;
 	readonly #dispatcher: ActionDispatcher<PlaygroundContext, 'submit'>;
 	#nodes: PlaygroundNode[];
 	#result: PlaygroundNode = { ...RESULT_NODE, status: 'idle' };
@@ -247,7 +244,7 @@ export class ActionPlaygroundSession {
 		this.#delayMs = options.delayMs;
 		this.#nodes = idleNodes(this.#definition.actions);
 
-		const registry = new ActionRegistry<PlaygroundContext, 'submit'>([
+		this.#registry = new ActionRegistry<PlaygroundContext, 'submit'>([
 			{
 				$type: 'work',
 				schema: demoSchema,
@@ -255,7 +252,7 @@ export class ActionPlaygroundSession {
 				execute: (context) => this.#execute(context),
 			},
 		]);
-		this.#dispatcher = new ActionDispatcher(registry);
+		this.#dispatcher = new ActionDispatcher(this.#registry);
 	}
 
 	snapshot(): PlaygroundSnapshot {
@@ -342,9 +339,16 @@ export class ActionPlaygroundSession {
 		return this.#run;
 	}
 
-	#actionsFor(target: string): readonly ActionSequenceEntry<DemoConfig>[] {
-		if (target === 'result') return this.#definition.actions;
-		const config = findConfig(this.#definition.actions, target);
+	/** @remarks The examples are fixed data, so an action that does not parse is a defect in them, not an input to report. */
+	#actionsFor(target: string): ParsedActionSequence<DemoConfig> {
+		const entries = target === 'result' ? this.#definition.actions : this.#configFor(target);
+		const parsed = parseActions<DemoConfig>(this.#registry, entries);
+		if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+		return parsed.data;
+	}
+
+	#configFor(id: string): readonly DemoConfig[] {
+		const config = findConfig(this.#definition.actions, id);
 		return config ? [config] : [];
 	}
 

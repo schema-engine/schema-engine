@@ -1,10 +1,23 @@
 import { describe, expect, test, vi } from 'vitest';
-import type { ActionDispatchInput, ActionExecutionResult } from '@schema-engine/actions';
-import { runSubmissionLifecycle } from '@/runtime/submission-lifecycle';
+import * as z from 'zod/mini';
+import { parseActions } from '@schema-engine/actions';
+import type { ActionDispatchInput, ActionExecutionResult, ParsedActionSequence } from '@schema-engine/actions';
+import { runSubmissionLifecycle, type FormActionConfig } from '@/runtime/submission-lifecycle';
 import type { FormActionTrigger } from '@/actions';
 import type { BuilderActionBaseContext } from '@/types';
 
 const context = {} as BuilderActionBaseContext;
+const acceptAnything = { getAction: () => ({ schema: z.unknown() }) };
+
+/** Parses actions with a registry that accepts any shape, for tests of the lifecycle and not of the checking. */
+function parsed<TConfig extends FormActionConfig = FormActionConfig>(
+	actions: readonly unknown[],
+): ParsedActionSequence<TConfig> {
+	const result = parseActions<TConfig>(acceptAnything, actions);
+	if (!result.success) throw new Error(result.issues.map((issue) => issue.message).join(', '));
+	return result.data;
+}
+
 const saveAction = { $type: 'submit', id: 'save', enabled: true, endpoint: '/save', method: 'POST' } as const;
 
 function createDispatch(submitResults: ActionExecutionResult[]) {
@@ -40,7 +53,7 @@ describe('runSubmissionLifecycle', () => {
 		const buildContext = vi.fn(() => context);
 
 		const result = await runSubmissionLifecycle(dispatch, {
-			actions: [saveAction],
+			actions: parsed([saveAction]),
 			context: buildContext,
 			hasMatching: () => false,
 		});
@@ -54,7 +67,7 @@ describe('runSubmissionLifecycle', () => {
 		const { dispatch, triggers } = createDispatch([{ success: true }]);
 
 		await runSubmissionLifecycle(dispatch, {
-			actions: [saveAction],
+			actions: parsed([saveAction]),
 			context,
 			hasMatching: (_actions, trigger) => trigger === 'form_submit' || trigger === 'form_submit_complete',
 		});
@@ -65,7 +78,7 @@ describe('runSubmissionLifecycle', () => {
 	test('treats an action that stops on failure as a failed submission', async () => {
 		const { dispatch, triggers } = createDispatch([{ success: false, shouldContinue: false }]);
 
-		const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context });
+		const result = await runSubmissionLifecycle(dispatch, { actions: parsed([saveAction]), context });
 
 		expect(result).toEqual({
 			succeeded: false,
@@ -77,7 +90,7 @@ describe('runSubmissionLifecycle', () => {
 	test('allows a failed action to continue the submission when requested', async () => {
 		const { dispatch, triggers } = createDispatch([{ success: false, shouldContinue: true }]);
 
-		const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context });
+		const result = await runSubmissionLifecycle(dispatch, { actions: parsed([saveAction]), context });
 
 		expect(result.succeeded).toBe(true);
 		expect(triggers).toEqual(['form_submit_start', 'form_submit', 'form_submit_success', 'form_submit_complete']);
@@ -100,7 +113,7 @@ describe('runSubmissionLifecycle', () => {
 		};
 
 		await runSubmissionLifecycle(dispatch, {
-			actions: [saveAction],
+			actions: parsed([saveAction]),
 			context: () => contexts[contextIndex++] ?? context,
 		});
 
@@ -114,7 +127,7 @@ describe('runSubmissionLifecycle', () => {
 			{ ...saveAction, id: 'second', triggers: ['form_submit'] },
 		];
 
-		const result = await runSubmissionLifecycle(dispatchRejectingSecond, { actions, context });
+		const result = await runSubmissionLifecycle(dispatchRejectingSecond, { actions: parsed(actions), context });
 
 		expect(result).toEqual({
 			succeeded: false,
@@ -132,7 +145,7 @@ describe('runSubmissionLifecycle', () => {
 		] as const;
 		const onActionCalls: Array<{ actionId: string; data: Record<string, unknown> }> = [];
 		await runSubmissionLifecycle(dispatchSuccessfulSubmitActions, {
-			actions,
+			actions: parsed(actions),
 			context: { ...context, formData: { name: 'Ada' } },
 			onAction: (action, data) => {
 				onActionCalls.push({ actionId: action.id, data });
@@ -161,7 +174,7 @@ describe('runSubmissionLifecycle', () => {
 		};
 
 		const result = await runSubmissionLifecycle(dispatch, {
-			actions,
+			actions: parsed(actions),
 			context,
 			onAction: () => Promise.reject(new Error('Callback stopped submission')),
 		});
@@ -182,7 +195,7 @@ describe('runSubmissionLifecycle', () => {
 			};
 
 			const result = await runSubmissionLifecycle(dispatch, {
-				actions: [saveAction],
+				actions: parsed([saveAction]),
 				context,
 				onSubmit: () => {
 					order.push('onSubmit');
@@ -203,7 +216,7 @@ describe('runSubmissionLifecycle', () => {
 			const { dispatch, triggers } = createDispatch([{ success: false, shouldContinue: false }]);
 			const onSubmit = vi.fn();
 
-			const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context, onSubmit });
+			const result = await runSubmissionLifecycle(dispatch, { actions: parsed([saveAction]), context, onSubmit });
 
 			expect(result.succeeded).toBe(false);
 			expect(result.failure).toBeUndefined();
@@ -216,7 +229,7 @@ describe('runSubmissionLifecycle', () => {
 			const failure = new Error('Save failed');
 
 			const result = await runSubmissionLifecycle(dispatch, {
-				actions: [saveAction],
+				actions: parsed([saveAction]),
 				context,
 				onSubmit: () => Promise.reject(failure),
 			});
@@ -230,7 +243,7 @@ describe('runSubmissionLifecycle', () => {
 			const onSubmit = vi.fn();
 
 			const result = await runSubmissionLifecycle(dispatch, {
-				actions: [],
+				actions: parsed([]),
 				context,
 				hasMatching: () => false,
 				onSubmit,
@@ -283,7 +296,11 @@ describe('runSubmissionLifecycle', () => {
 				const { dispatch, triggers, boom } = rejectingAt(rejecting);
 				const onSubmit = vi.fn();
 
-				const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context, onSubmit });
+				const result = await runSubmissionLifecycle(dispatch, {
+					actions: parsed([saveAction]),
+					context,
+					onSubmit,
+				});
 
 				expect(result).toMatchObject({ succeeded, failure: { phase: 'trigger', error: boom } });
 				expect(triggers).toEqual(expected);
@@ -296,7 +313,7 @@ describe('runSubmissionLifecycle', () => {
 			const { dispatch, triggers, boom } = rejectingAt('form_submit_error');
 
 			const result = await runSubmissionLifecycle(dispatch, {
-				actions: [saveAction],
+				actions: parsed([saveAction]),
 				context,
 				onSubmit: () => Promise.reject(new Error('Save failed')),
 			});
@@ -318,7 +335,7 @@ describe('runSubmissionLifecycle', () => {
 				return trigger === 'form_submit' ? [{ success: false, shouldContinue: false }] : [];
 			};
 
-			const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context });
+			const result = await runSubmissionLifecycle(dispatch, { actions: parsed([saveAction]), context });
 
 			expect(result.failure).toEqual({ phase: 'trigger', error: boom });
 			expect(triggers).toEqual(['form_submit_start', 'form_submit', 'form_submit_error', 'form_submit_complete']);
@@ -334,7 +351,7 @@ describe('runSubmissionLifecycle', () => {
 				return [];
 			};
 
-			const result = await runSubmissionLifecycle(dispatch, { actions: [saveAction], context });
+			const result = await runSubmissionLifecycle(dispatch, { actions: parsed([saveAction]), context });
 
 			expect(result.failure).toEqual({ phase: 'trigger', error: first });
 			expect(triggers.filter((trigger) => trigger === 'form_submit_complete')).toHaveLength(1);

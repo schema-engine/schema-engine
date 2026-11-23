@@ -95,12 +95,17 @@ const baseContext: BaseContext = {
 	userId: 'user_123',
 };
 
+const parsed = parseActions(registry, [{ id: '1', $type: 'log', message: 'Hello' }]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
 await dispatcher.dispatch({
-	actions: [{ id: '1', $type: 'log', message: 'Hello' }],
+	actions: parsed.data,
 	trigger: 'submit',
 	context: baseContext,
 });
 ```
+
+`parseActions` checks each entry against its registration's schema, and `dispatch` takes only what it returned, so an action that did not pass its schema never reaches a handler.
 
 The handler still receives `BaseContext & { config: LogConfig; trigger: Trigger }`, but that runtime shape is injected by the dispatcher.
 

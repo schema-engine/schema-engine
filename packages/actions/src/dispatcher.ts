@@ -4,6 +4,8 @@ import type {
 	ActionDispatchResult,
 	ActionExecutionResult,
 	ActionSequenceEntry,
+	ParsedAction,
+	ParsedActionSequence,
 } from './types';
 import type { ActionRegistryProvider } from './registry';
 import { Logger } from '@ecopages/logger';
@@ -48,7 +50,10 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 			const controller = new AbortController();
 			const abortWithOuter = () => controller.abort(outer?.reason);
 			outer?.addEventListener('abort', abortWithOuter, { once: true });
-			const run = async (action: TConfig, groupIndex?: number): Promise<ActionDispatchResult | undefined> => {
+			const run = async (
+				action: ParsedAction<TConfig>,
+				groupIndex?: number,
+			): Promise<ActionDispatchResult | undefined> => {
 				const match = this.match(action, trigger);
 				if (!match.runs) return undefined;
 				const { registration } = match;
@@ -118,10 +123,7 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 	 * Lets a caller skip building a context for a trigger no action answers. It checks the same conditions
 	 * `dispatch` does, so the two cannot disagree.
 	 */
-	hasMatching<TConfig extends ActionConfigBase>(
-		actions: readonly ActionSequenceEntry<TConfig>[],
-		trigger: TTrigger,
-	): boolean {
+	hasMatching<TConfig extends ActionConfigBase>(actions: ParsedActionSequence<TConfig>, trigger: TTrigger): boolean {
 		return actions.some((entry) =>
 			isGroup(entry) ? entry.some((action) => this.match(action, trigger).runs) : this.match(entry, trigger).runs,
 		);

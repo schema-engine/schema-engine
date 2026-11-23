@@ -22,7 +22,8 @@ import {
 	type Path,
 } from './validate-form/issues';
 import type { ValidateFormOptions } from './validate-form/options';
-import { brandElementTree, parseActionList, parseElementList, parseElementNode } from './validate-form/parse-elements';
+import { brandElementTree, parseElementList, parseElementNode } from './validate-form/parse-elements';
+import { parseOwnerActions } from './validate-form/parse-owner-actions';
 import { parseView } from './validate-form/parse-view';
 import { stepStructureIssues } from './validate-form/step-checks';
 import { fromSchemaIssues } from './validate-form/schema-issues';
@@ -33,8 +34,6 @@ export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid }
 export type { FormValidationIssue, FormValidationResult } from './validate-form/issues';
 export type { ValidateFormOptions } from './validate-form/options';
 export { FormValidationError, formatIssuePath } from './validate-form/validation-error';
-
-const ACTION_REGISTER_HINT = 'createFormEngine({ actions: [...] })';
 
 /**
  * Validate a single element against its registration schema, including nested child elements.
@@ -133,7 +132,7 @@ export function safeValidateFormConfig(
 			stepPath,
 			stepAppearance.childScope,
 		);
-		const actions = parseActionList(step.actions, options.getAction, ACTION_REGISTER_HINT, stepPath);
+		const actions = parseOwnerActions(step.actions, options, stepPath);
 		issues.push(...elements.issues, ...actions.issues);
 		placed.push(
 			elements.byIndex.flatMap((element, index) =>
@@ -173,7 +172,7 @@ export function safeValidateFormConfig(
 		options,
 		formAppearance.childScope,
 	);
-	const formActions = parseActionList(envelope.actions, options.getAction, ACTION_REGISTER_HINT, []);
+	const formActions = parseOwnerActions(envelope.actions, options, []);
 	issues.push(...view.issues, ...formActions.issues);
 
 	if (issues.length > 0) {

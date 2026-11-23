@@ -1,11 +1,8 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 
-export type StandardSchemaIssue = StandardSchemaV1.Issue;
-
-export type StandardSchemaSafeParseResult<T> =
-	{ success: true; data: T } | { success: false; error: { issues: StandardSchemaIssue[] } };
-
-export { assertStandardSchema } from '@schema-engine/registry';
+export { assertStandardSchema, safeParseStandardSchema } from '@schema-engine/registry';
+export type { StandardSchemaIssue, StandardSchemaSafeParseResult } from '@schema-engine/registry';
 
 /**
  * Validate `value` with a Standard Schema and return parsed data.
@@ -25,41 +22,6 @@ export function parseStandardSchema<TInput, TOutput>(
 		throw new Error(message);
 	}
 	return result.data;
-}
-
-/**
- * Validate `value` with a Standard Schema without throwing.
- *
- * Only synchronous validation is supported. Async schemas throw because builder
- * and registry code paths require immediate results.
- *
- * @param schema - Standard Schema to run
- * @param value - Input to validate
- */
-export function safeParseStandardSchema<TInput, TOutput>(
-	schema: StandardSchemaV1<TInput, TOutput>,
-	value: TInput,
-): StandardSchemaSafeParseResult<TOutput> {
-	const result = schema['~standard'].validate(value);
-	if (result && typeof (result as Promise<unknown>).then === 'function') {
-		throw new Error('Async Standard Schema validation is not supported in this context');
-	}
-	if (result === null || typeof result !== 'object') {
-		throw new Error('Standard Schema validation returned an invalid result');
-	}
-
-	const syncResult = result as StandardSchemaV1.Result<TOutput>;
-
-	if (syncResult.issues !== undefined) {
-		return {
-			success: false,
-			error: {
-				issues: [...syncResult.issues],
-			},
-		};
-	}
-
-	return { success: true, data: syncResult.value };
 }
 
 /**

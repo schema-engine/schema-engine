@@ -10,9 +10,14 @@ order: 4
 
 Flat action arrays execute sequentially. An inner array runs its actions concurrently.
 
+`actions` is what `parseActions` returned for the sequence.
+
 ```typescript
+const parsed = parseActions(registry, [action1, action2, action3]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
 const results = await dispatcher.dispatch({
-	actions: [action1, action2, action3],
+	actions: parsed.data,
 	trigger: 'submit',
 	context,
 });
@@ -23,8 +28,11 @@ const results = await dispatcher.dispatch({
 ## Parallel groups
 
 ```typescript
+const parsed = parseActions(registry, [action1, [action2, action3], action4]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
 const results = await dispatcher.dispatch({
-	actions: [action1, [action2, action3], action4],
+	actions: parsed.data,
 	trigger: 'submit',
 	context,
 });

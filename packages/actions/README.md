@@ -4,10 +4,11 @@ Domain-agnostic action execution primitives for event-driven architectures.
 
 ## Overview
 
-`@schema-engine/actions` provides a small, generic action system built around three pieces:
+`@schema-engine/actions` provides a small, generic action system built around four pieces:
 
 - `ActionRegistration`: describes an action type
 - `ActionRegistry`: a read-only registry built from a list of action registrations
+- `parseActions`: checks serialized actions against their registrations and returns the only actions `ActionDispatcher` accepts
 - `ActionDispatcher`: executes a sequence of actions or parallel action groups for a trigger
 
 The package is intended to be reusable across different domains such as forms, workflows, UI interactions, and state transitions.
@@ -50,6 +51,7 @@ action with `shouldContinue: false` makes the submission fail.
 import * as z from 'zod/mini';
 import {
 	ActionDispatcher,
+	parseActions,
 	type ActionConfigBase,
 	type ActionExecutionResult,
 	type ActionRegistration,
@@ -97,18 +99,17 @@ const baseContext: BaseContext = {
 	data: { foo: 'bar' },
 };
 
+const parsed = parseActions(registry, JSON.parse('[{ "id": "log-1", "$type": "log", "message": "Hello world" }]'));
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
 await dispatcher.dispatch({
-	actions: [
-		{
-			id: 'log-1',
-			$type: 'log',
-			message: 'Hello world',
-		},
-	],
+	actions: parsed.data,
 	trigger: 'submit',
 	context: baseContext,
 });
 ```
+
+The flow is `JSON.parse`, `parseActions`, `dispatch`. `dispatch` accepts only what `parseActions` returned, so an action that did not pass its registration's schema never reaches a handler.
 
 The handler receives `BaseContext & { config: LogActionConfig; trigger: MyTrigger }`. Nested dispatches also include the optional `triggeredBy` action. The runtime shape is injected by the dispatcher.
 
@@ -197,6 +198,24 @@ class ActionRegistry<TBaseContext, TTrigger> {
 
 It is built on `createRegistry` from `@schema-engine/registry` and has no `register` or `clear`.
 
+### parseActions
+
+```typescript
+function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
+	registry: { getAction(type: string): { schema: StandardSchemaV1 } | undefined },
+	input: unknown,
+): ParseActionsResult<TConfig>;
+
+type ParseActionsResult<TConfig> =
+	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: StandardSchemaIssue[] };
+```
+
+`input` is the sequence as it arrived, entries and inner arrays for parallel groups. Each entry is validated with the schema of the registration its `$type` names, and `data` holds what the schema returned, so defaults and transforms apply. Every entry is checked, so a sequence with two bad entries reports both.
+
+An issue is a Standard Schema issue whose `path` is the index of the entry, the index inside a group when the entry is one, then the path the schema reported: `[1, 0, 'endpoint']` is the `endpoint` of the first action of the group at index 1. An entry that has no string `$type`, and a `$type` no registration answers, are issues at `$type`; the second says to register the type.
+
+`ParsedAction` is the entry type of `data`. Its brand exists in the type only, and `parseActions` is the one function that produces it. `TConfig` is the caller's claim about what the registered schemas return; the parse checks the schemas and not that claim.
+
 ### ActionDispatcher
 
 ```typescript
@@ -209,10 +228,7 @@ class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void;
 
-	hasMatching<TConfig extends ActionConfigBase>(
-		actions: readonly ActionSequenceEntry<TConfig>[],
-		trigger: TTrigger,
-	): boolean;
+	hasMatching<TConfig extends ActionConfigBase>(actions: ParsedActionSequence<TConfig>, trigger: TTrigger): boolean;
 }
 ```
 
@@ -230,7 +246,7 @@ MIT
 
 ## Dispatch behavior
 
-`ActionDispatcher` is the execution entry point. It skips disabled actions and
+`ActionDispatcher` is the execution entry point, and it takes only parsed actions (`ActionDispatchInput.actions` is a `ParsedActionSequence`). It skips disabled actions and
 explicit trigger mismatches before looking up a registration. Matching actions run in sequence except within an inner array, with one registration lookup each. Missing registrations
 produce a failed result. Thrown handlers become failed results and execution
 continues; an unsuccessful result with `shouldContinue: false` stops the sequence.

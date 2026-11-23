@@ -21,7 +21,6 @@ function parseRegistration(schema: StandardSchemaV1, config: object, path: Path)
 }
 
 export function parseTypedConfig(
-	kind: 'element' | 'action',
 	item: FormTaggedConfig,
 	getRegistration: (id: string) => { schema: StandardSchemaV1 } | undefined,
 	registerHint: string,
@@ -32,7 +31,7 @@ export function parseTypedConfig(
 		return {
 			ok: false,
 			issues: [
-				issueAt([...path, '$type'], `Unknown ${kind} type '${item.$type}'. Register it with ${registerHint}.`),
+				issueAt([...path, '$type'], `Unknown element type '${item.$type}'. Register it with ${registerHint}.`),
 			],
 		};
 	}
@@ -45,50 +44,12 @@ export function parseTypedConfig(
 			issues: [
 				issueAt(
 					[...path, '$type'],
-					`Invalid ${kind} configuration for '${item.$type}': parsed output is missing $type.`,
+					`Invalid element configuration for '${item.$type}': parsed output is missing $type.`,
 				),
 			],
 		};
 	}
 	return { ok: true, data: parsed.data };
-}
-
-/**
- * Validates the `actions` of the form or of a step. A nested array is a group of actions that
- * render together; its members sit one level deeper in the path.
- */
-export function parseActionList(
-	items: Array<FormTaggedConfig | FormTaggedConfig[]> | undefined,
-	getRegistration: (id: string) => { schema: StandardSchemaV1 } | undefined,
-	registerHint: string,
-	ownerPath: Path,
-): { issues: FormValidationIssue[]; items?: Array<FormTaggedConfig | FormTaggedConfig[]> } {
-	if (!items) return { issues: [] };
-
-	const next: Array<FormTaggedConfig | FormTaggedConfig[]> = [];
-	const issues: FormValidationIssue[] = [];
-	const parseItem = (item: FormTaggedConfig, path: Path): FormTaggedConfig | undefined => {
-		const result = parseTypedConfig('action', item, getRegistration, registerHint, path);
-		if (!result.ok) {
-			issues.push(...result.issues);
-			return undefined;
-		}
-		return result.data;
-	};
-	for (let index = 0; index < items.length; index += 1) {
-		const item = items[index];
-		if (Array.isArray(item)) {
-			const group = item
-				.map((action, actionIndex) => parseItem(action, [...ownerPath, 'actions', index, actionIndex]))
-				.filter((action): action is FormTaggedConfig => action !== undefined);
-			next.push(group);
-			continue;
-		}
-		const parsed = parseItem(item, [...ownerPath, 'actions', index]);
-		if (parsed) next.push(parsed);
-	}
-
-	return { issues, items: next };
 }
 
 /**
@@ -153,7 +114,6 @@ export function parseElementNode(
 	}
 	const { appearance: authoredAppearance, ...authored } = item;
 	const parsed = parseTypedConfig(
-		'element',
 		authored as FormTaggedConfig,
 		getElement,
 		'createFormEngine({ elements: [...] })',

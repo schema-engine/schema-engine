@@ -1,11 +1,12 @@
 import type { ContainerKind } from '../types/registration.js';
 import { isPlainObject } from './is-plain-object.js';
 import type { DeepReadonly } from './deep-readonly.js';
-import type { FormConfig, FormStep, FormValidationModes } from '@/schemas/form-config';
+import type { FormActionConfig, FormConfig, FormStep, FormValidationModes } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import type { BaseField } from '@/schemas/base-field';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormValues } from '@/runtime/types';
+import type { ParsedActionSequence } from '@schema-engine/actions';
 
 const NORMALIZED_FORM_CONFIG = Symbol.for('@schema-engine/forms.normalized-form-config');
 const ELEMENT_CONTAINER_KIND = Symbol.for('@schema-engine/forms.container-kind');
@@ -80,11 +81,20 @@ export type NormalizedElementConfig<TElements extends Record<string, unknown> = 
 		readonly [NORMALIZED_ELEMENT_CONFIG]: true;
 	};
 
+/**
+ * The actions of a normalized form or step: parsed by {@link parseActions} against the engine's registrations,
+ * which is what {@link ActionDispatcher.dispatch} takes.
+ */
+type NormalizedActions<TActions extends Record<string, unknown>> = ParsedActionSequence<
+	DeepReadonly<FormActionConfig<TActions>>
+>;
+
 type NormalizedStep<TElements extends Record<string, unknown>, TActions extends Record<string, unknown>> = Omit<
 	DeepReadonly<FormStep<TElements, TActions>>,
-	'elements'
+	'elements' | 'actions'
 > & {
 	readonly elements: ReadonlyArray<NormalizedElementConfig<TElements>>;
+	readonly actions?: NormalizedActions<TActions>;
 };
 
 /**
@@ -98,9 +108,10 @@ export type NormalizedFormConfig<
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
 	TActions extends Record<string, unknown> = Record<string, unknown>,
 	TValues = FormValues,
-> = Omit<DeepReadonly<FormConfig<TElements, TRecipes, TActions>>, 'steps' | keyof FormValidationModes> &
+> = Omit<DeepReadonly<FormConfig<TElements, TRecipes, TActions>>, 'steps' | 'actions' | keyof FormValidationModes> &
 	Readonly<FormValidationModes> & {
 		readonly steps: ReadonlyArray<NormalizedStep<TElements, TActions>>;
+		readonly actions?: NormalizedActions<TActions>;
 		readonly [NORMALIZED_FORM_CONFIG]: NormalizedFormProvenance;
 	} & ValuesBrand<TValues>;
 

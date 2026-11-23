@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest';
+import { parsed } from './parsed';
 import { ActionDispatcher } from '../src/dispatcher';
 import type { ActionRegistryProvider } from '../src/registry';
 import type { ActionRegistration, ActionConfigBase } from '../src/types';
@@ -74,7 +75,11 @@ describe('ActionDispatcher', () => {
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const actions: TestActionConfig[] = [{ id: 'action-1', $type: 'test-action', name: 'First Action' }];
 
-			const results = await executor.dispatch({ actions, trigger: 'submit', context: createContext() });
+			const results = await executor.dispatch({
+				actions: parsed(actions),
+				trigger: 'submit',
+				context: createContext(),
+			});
 
 			expect(results).toHaveLength(1);
 			expect(results[0].success).toBe(true);
@@ -104,7 +109,7 @@ describe('ActionDispatcher', () => {
 				{ id: 'action-3', $type: 'log-action', name: 'third' },
 			];
 
-			await executor.dispatch({ actions, trigger: 'submit', context: createContext() });
+			await executor.dispatch({ actions: parsed(actions), trigger: 'submit', context: createContext() });
 
 			expect(executionLog).toEqual(['first', 'second', 'third']);
 		});
@@ -159,7 +164,7 @@ describe('ActionDispatcher', () => {
 				{ id: 'action-2', $type: 'action-b', name: 'second' },
 			];
 
-			await executor.dispatch({ actions, trigger: 'submit', context: createContext() });
+			await executor.dispatch({ actions: parsed(actions), trigger: 'submit', context: createContext() });
 
 			expect(executionLog).toEqual(['c', 'a', 'b']);
 		});
@@ -194,7 +199,7 @@ describe('ActionDispatcher', () => {
 			};
 
 			await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'context-test', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'context-test', name: 'test' }]),
 				trigger: 'submit',
 				context: testContext,
 			});
@@ -232,7 +237,7 @@ describe('ActionDispatcher', () => {
 				value: { nested: 'data' },
 			};
 
-			await executor.dispatch({ actions: [testConfig], trigger: 'submit', context: createContext() });
+			await executor.dispatch({ actions: parsed([testConfig]), trigger: 'submit', context: createContext() });
 
 			expect(receivedConfig).toEqual(testConfig);
 		});
@@ -256,7 +261,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'mount-action', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'mount-action', name: 'test' }]),
 				trigger: 'mount',
 				context: createContext(),
 			});
@@ -281,7 +286,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'mount-action', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'mount-action', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -307,14 +312,14 @@ describe('ActionDispatcher', () => {
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 
 			await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{
 						id: 'action-1',
 						$type: 'flexible-action',
 						name: 'test',
 						triggers: ['submit', 'change'],
 					},
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -323,14 +328,14 @@ describe('ActionDispatcher', () => {
 			executionLog = [];
 
 			await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{
 						id: 'action-1',
 						$type: 'flexible-action',
 						name: 'test',
 						triggers: ['submit', 'change'],
 					},
-				],
+				]),
 				trigger: 'mount',
 				context: createContext(),
 			});
@@ -357,9 +362,9 @@ describe('ActionDispatcher', () => {
 			const action = { id: 'action-1', $type: 'multi-trigger', name: 'test' };
 			const context = createContext();
 
-			await executor.dispatch({ actions: [action], trigger: 'mount', context });
-			await executor.dispatch({ actions: [action], trigger: 'submit', context });
-			await executor.dispatch({ actions: [action], trigger: 'change', context });
+			await executor.dispatch({ actions: parsed([action]), trigger: 'mount', context });
+			await executor.dispatch({ actions: parsed([action]), trigger: 'submit', context });
+			await executor.dispatch({ actions: parsed([action]), trigger: 'change', context });
 
 			expect(executionLog).toEqual(['executed', 'executed', 'executed']);
 		});
@@ -383,7 +388,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'test-action', name: 'test', enabled: false }],
+				actions: parsed([{ id: 'action-1', $type: 'test-action', name: 'test', enabled: false }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -408,7 +413,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'test-action', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'test-action', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -433,7 +438,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'test-action', name: 'test', enabled: true }],
+				actions: parsed([{ id: 'action-1', $type: 'test-action', name: 'test', enabled: true }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -460,7 +465,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'failing-action', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'failing-action', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -487,7 +492,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'throwing-action', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'throwing-action', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -513,7 +518,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'throwing-string', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'throwing-string', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -540,11 +545,11 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{ id: 'action-1', $type: 'mixed-action', name: 'success1' },
 					{ id: 'action-2', $type: 'mixed-action', name: 'fail' },
 					{ id: 'action-3', $type: 'mixed-action', name: 'success2' },
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -572,11 +577,11 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{ id: 'action-1', $type: 'stop-action', name: 'first' },
 					{ id: 'action-2', $type: 'stop-action', name: 'stop' },
 					{ id: 'action-3', $type: 'stop-action', name: 'never-reached' },
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -588,7 +593,7 @@ describe('ActionDispatcher', () => {
 		test('should handle unregistered action type', async () => {
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'non-existent', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'non-existent', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -617,7 +622,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'message-action', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'message-action', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -642,7 +647,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'data-action', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'data-action', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -667,10 +672,10 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{ id: 'action-1', $type: 'result-action', name: 'first' },
 					{ id: 'action-2', $type: 'result-action', name: 'second' },
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -684,7 +689,11 @@ describe('ActionDispatcher', () => {
 	describe('Empty and Edge Cases', () => {
 		test('should handle empty actions array', async () => {
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
-			const results = await executor.dispatch({ actions: [], trigger: 'submit', context: createContext() });
+			const results = await executor.dispatch({
+				actions: parsed([]),
+				trigger: 'submit',
+				context: createContext(),
+			});
 
 			expect(results).toEqual([]);
 		});
@@ -706,7 +715,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'mount-only', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'mount-only', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -731,7 +740,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'no-triggers', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'no-triggers', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -756,7 +765,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'empty-triggers', name: 'test', triggers: [] }],
+				actions: parsed([{ id: 'action-1', $type: 'empty-triggers', name: 'test', triggers: [] }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -785,10 +794,10 @@ describe('ActionDispatcher', () => {
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const start = Date.now();
 			await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{ id: 'action-1', $type: 'delay-action', name: 'first' },
 					{ id: 'action-2', $type: 'delay-action', name: 'second' },
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -820,11 +829,11 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{ id: 'action-1', $type: 'sequential-action', name: 'first' },
 					{ id: 'action-2', $type: 'sequential-action', name: 'second' },
 					{ id: 'action-3', $type: 'sequential-action', name: 'third' },
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -852,7 +861,7 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			const results = await executor.dispatch({
-				actions: [{ id: 'action-1', $type: 'sync-action', name: 'test' }],
+				actions: parsed([{ id: 'action-1', $type: 'sync-action', name: 'test' }]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -881,12 +890,12 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{ id: 'action-1', $type: 'complex-action', name: 'enabled-match' },
 					{ id: 'action-2', $type: 'complex-action', name: 'disabled', enabled: false },
 					{ id: 'action-3', $type: 'complex-action', name: 'wrong-trigger', triggers: ['mount'] },
 					{ id: 'action-4', $type: 'complex-action', name: 'custom-match', triggers: ['submit'] },
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -925,11 +934,11 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{ id: 'action-1', $type: 'type-a', name: 'a1' },
 					{ id: 'action-2', $type: 'type-b', name: 'b1' },
 					{ id: 'action-3', $type: 'type-a', name: 'a2' },
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -959,11 +968,11 @@ describe('ActionDispatcher', () => {
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
 			await executor.dispatch({
-				actions: [
+				actions: parsed([
 					{ id: 'action-1', $type: 'stateful-action', name: 'first', value: 'one' },
 					{ id: 'action-2', $type: 'stateful-action', name: 'second', value: 'two' },
 					{ id: 'action-3', $type: 'stateful-action', name: 'read' },
-				],
+				]),
 				trigger: 'submit',
 				context: createContext(),
 			});
@@ -992,7 +1001,7 @@ describe('ActionDispatcher', () => {
 
 		const executor = new ActionDispatcher(registry);
 		await executor.dispatch({
-			actions: [{ id: 'child', $type: 'test-action', name: 'child' }],
+			actions: parsed([{ id: 'child', $type: 'test-action', name: 'child' }]),
 			trigger: 'submit',
 			context: createContext(),
 			triggeredBy: triggerAction,

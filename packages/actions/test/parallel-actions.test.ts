@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
+import { parsed } from './parsed';
 import { ActionDispatcher } from '../src/dispatcher';
 import { ActionRegistry } from '../src/registry';
 import type { ActionConfigBase, ActionRegistration } from '../src/types';
@@ -45,7 +46,7 @@ describe('parallel action groups', () => {
 			return { success: true, data: config.id };
 		});
 		const running = dispatcher.dispatch({
-			actions: [[action('a', 'wait'), action('b', 'wait')]],
+			actions: parsed([[action('a', 'wait'), action('b', 'wait')]]),
 			trigger: 'submit',
 			context: {},
 		});
@@ -77,7 +78,7 @@ describe('parallel action groups', () => {
 			throw new Error('later action must not run');
 		});
 		const running = dispatcher.dispatch({
-			actions: [[action('a', 'wait'), action('b', 'fail')], action('later', 'later')],
+			actions: parsed([[action('a', 'wait'), action('b', 'fail')], action('later', 'later')]),
 			trigger: 'submit',
 			context: {},
 		});
@@ -97,7 +98,7 @@ describe('parallel action groups', () => {
 				: { success: true },
 		);
 		const result = await dispatcher.dispatch({
-			actions: [[action('a', 'optional'), action('b', 'wait')], action('later', 'later')],
+			actions: parsed([[action('a', 'optional'), action('b', 'wait')], action('later', 'later')]),
 			trigger: 'submit',
 			context: {},
 		});
@@ -123,7 +124,7 @@ describe('parallel action groups', () => {
 			});
 		});
 		const results = await dispatcher.dispatch({
-			actions: [[action('wait', 'wait'), action('fail', 'fail')]],
+			actions: parsed([[action('wait', 'wait'), action('fail', 'fail')]]),
 			trigger: 'submit',
 			context: {},
 		});
@@ -140,13 +141,13 @@ describe('parallel action groups', () => {
 			return { success: true };
 		});
 		const results = await dispatcher.dispatch({
-			actions: [
+			actions: parsed([
 				[
 					{ ...action('disabled', 'wait'), enabled: false },
 					{ ...action('wrong', 'wait'), triggers: ['change'] },
 					action('run', 'wait'),
 				],
-			],
+			]),
 			trigger: 'submit',
 			context: {},
 		});
@@ -160,7 +161,11 @@ test('preserves a thrown error for the caller', async () => {
 	const dispatcher = setup(async () => {
 		throw failure;
 	});
-	const results = await dispatcher.dispatch({ actions: [action('save', 'fail')], trigger: 'submit', context: {} });
+	const results = await dispatcher.dispatch({
+		actions: parsed([action('save', 'fail')]),
+		trigger: 'submit',
+		context: {},
+	});
 	expect(results[0]).toMatchObject({ actionId: 'save', success: false, error: 'Network failed', cause: failure });
 	expect(results[0].cause).toBe(failure);
 });
@@ -178,7 +183,7 @@ describe('an outer signal', () => {
 			return { success: true };
 		});
 		const running = dispatcher.dispatch({
-			actions: [action('a', 'wait'), action('b', 'wait')],
+			actions: parsed([action('a', 'wait'), action('b', 'wait')]),
 			trigger: 'submit',
 			context: {},
 			signal: outer.signal,
@@ -202,7 +207,7 @@ describe('an outer signal', () => {
 		});
 		expect(
 			await dispatcher.dispatch({
-				actions: [action('a', 'wait')],
+				actions: parsed([action('a', 'wait')]),
 				trigger: 'submit',
 				context: {},
 				signal: outer.signal,

@@ -91,15 +91,18 @@ const baseContext: BaseContext = {
 	data: { status: 'ready' },
 };
 
+const parsed = parseActions(registry, [
+	{
+		id: 'send-webhook',
+		$type: 'webhook',
+		url: 'https://example.com/hooks',
+		method: 'POST',
+	},
+]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
 await dispatcher.dispatch({
-	actions: [
-		{
-			id: 'send-webhook',
-			$type: 'webhook',
-			url: 'https://example.com/hooks',
-			method: 'POST',
-		},
-	],
+	actions: parsed.data,
 	trigger: 'submit',
 	context: baseContext,
 });
