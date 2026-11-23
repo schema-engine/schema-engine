@@ -1,0 +1,36 @@
+---
+title: 'Overview'
+description: 'What an example is: a tested recipe you copy into an app, with the files it runs, the install line it needs and a live demo where it renders UI.'
+order: 0
+---
+
+# Examples
+
+An example is a recipe: one use case, written as files you can copy into an app and run. Each recipe page shows every file word for word, and a test runs the same files, so a snippet cannot drift from the code that works.
+
+## What a recipe holds
+
+- **The files.** Each is a module that imports only packages and its sibling files (`./engine`). It never imports the docs app, so it runs where you paste it.
+- **The page.** It states the install line, then shows every file under its name. A recipe that renders UI has a live demo, and a forms recipe shows its React and Radiant files in tabs side by side.
+- **The test.** It runs the files, including the failure paths, in the docs unit or browser project. A recipe that is not tested, or whose page differs from its files, fails the docs tests.
+
+## Copy a recipe
+
+1. Run the install line at the top of the recipe's page.
+2. Create one folder and copy every file of the page into it under the name above the code. The files import each other as `./name`, so they keep working side by side.
+3. Run the entry the page names, or render the component it exports.
+
+## Recipes
+
+Recipes by domain, each with what it shows and the install line it needs.
+
+### Forms
+
+The form examples are being rewritten as recipes. Until each lands, its page shows the config and a live demo:
+
+- [Basic form](/docs/examples/basic-form), [Contact form](/docs/examples/contact-form), [Registration flow](/docs/examples/registration-flow), [Survey form](/docs/examples/survey-form) and [Sequential actions](/docs/examples/sequential-actions), each in Radiant.
+- [React forms](/docs/examples/react-forms), the same forms in React.
+
+### Layout
+
+[Layout recipes](/docs/layout/recipes): a form config, the CSS it needs and a live demo, in React and Radiant.

@@ -11,6 +11,12 @@ figure[data-rehype-pretty-code-figure] {
 	background-color: var(--shiki-light-bg);
 }
 
+/** A fence with `title="name.ts"` is a file: its name sits above the code, inside the figure's frame. */
+figure[data-title]::before {
+	content: attr(data-title);
+	@apply block border-b border-border px-4 py-1.5 font-mono text-xs text-on-background-accent;
+}
+
 figure[data-rehype-pretty-code-figure] pre {
 	@apply m-0 overflow-x-auto rounded-none border-0 p-4 shadow-none;
 	background-color: var(--shiki-light-bg);
