@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { act, render } from '@testing-library/react';
 import { useFormContext, FORM_ROOT } from '../../src/hooks/form-state';
+import { useFormRuntime } from '../../src/hooks/use-form-context';
 import type { FormContextValue } from '../../src/hooks/form-state';
 import { ContainerHarness, createTestContainer, runtimeOf } from '../utils/container-harness';
 
@@ -228,5 +229,23 @@ describe('useFormContext', () => {
 		act(() => container.setValue('name', 'ada'));
 		await expect(context().validate(['name'])).resolves.toEqual({ outcome: 'passed' });
 		await expect(context().validate()).resolves.toEqual({ outcome: 'passed' });
+	});
+});
+
+describe('useFormRuntime', () => {
+	test('is the runtime of the form the hook sits in', () => {
+		let seen: unknown;
+		function Reader() {
+			seen = useFormRuntime();
+			return null;
+		}
+		const container = createTestContainer({ elements });
+		render(
+			<ContainerHarness container={container}>
+				<Reader />
+			</ContainerHarness>,
+		);
+
+		expect(seen).toBe(runtimeOf(container));
 	});
 });

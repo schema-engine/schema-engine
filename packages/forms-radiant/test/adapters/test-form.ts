@@ -1,4 +1,5 @@
 import { ContextProvider } from '@ecopages/radiant/context';
+import type { FormRuntime } from '@schema-engine/forms';
 import {
 	createFormStateContainer,
 	type FormIssueFormatter,
@@ -23,6 +24,7 @@ export function provideTestContainer(
 	host: HTMLElement,
 	container: FormStateContainer | undefined,
 	formatIssue?: FormIssueFormatter,
+	runtime?: FormRuntime,
 ) {
 	return new ContextProvider<typeof formInstanceContext>(
 		host as unknown as ConstructorParameters<typeof ContextProvider>[0],
@@ -40,6 +42,7 @@ export function provideTestContainer(
 				goTo: async () => 'refused',
 				submission: { status: 'idle', failures: [], submitCount: 0 },
 				container,
+				runtime,
 				formatIssue,
 			},
 		},

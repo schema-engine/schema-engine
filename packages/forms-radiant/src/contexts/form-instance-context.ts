@@ -1,6 +1,6 @@
 import { createContext } from '@ecopages/radiant/context';
 
-import type { FormStepState, FormSubmissionState, NavigationOutcome } from '@schema-engine/forms';
+import type { FormRuntime, FormStepState, FormSubmissionState, NavigationOutcome } from '@schema-engine/forms';
 import type { FormIssueFormatter, FormStateContainer } from '@schema-engine/forms/state-container';
 import type { FormMeta } from '@/lib/instance-view';
 
@@ -35,6 +35,13 @@ export interface FormInstanceContextValue {
 	 * keeping it.
 	 */
 	container: FormStateContainer | undefined;
+	/**
+	 * The form's runtime, for what hands a form over whole, such as `registerFormAgentTool`.
+	 *
+	 * @remarks
+	 * Absent when `container` is. A new runtime replaces it with the container, so read it from this context rather than keeping it.
+	 */
+	runtime: FormRuntime | undefined;
 	/** Turns an issue into text; the application's i18n layer, given to the renderer. */
 	formatIssue: FormIssueFormatter | undefined;
 }

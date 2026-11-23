@@ -13,7 +13,7 @@ container's row ids.
 
 ## Reads, commands and selectors
 
-`FormController` has three members.
+`FormController` has four members.
 
 - `container` is the engine container itself, `undefined` until the instance has one. Every command and read goes through it: `getSnapshot()`, `getValue(path)`, `setValue(path, value)`, `blur(path)`, `validate(paths?)`, `checkValidity()`, `submit()`, `reset(values?)`, `fieldArray(path)`, `subscribe()`. A new container replaces the old one when the instance's config or engine changes, so read it from the controller on each use rather than keeping it.
 - `select(selector)` returns a signal over a pure selector of the snapshot, built with `fromExternalStore`:
@@ -43,6 +43,7 @@ class ContactCount extends HTMLElement {
 
 Create the signals once, as fields, and read them inside an `effect` or a `computed`, or `subscribe` to them. A signal is total: it reads `undefined` while the form has no container (a `rui-form` or an engine that arrives late) and on the server, and it follows the container the instance has now.
 
+- `watchRuntime(onRuntime)` calls `onRuntime` with the form's runtime (`FormRuntime`: `container`, `submit()`, `next()`, the snapshot of its submission and steps) now and each time the instance replaces it, `undefined` while it has none, and returns the function that stops. It is how a host hands the whole form to something that follows it, such as `registerFormAgentTool` from `@schema-engine/forms/agent-tool`: release what the previous call made before making the next.
 - `formatIssue(issue, { path })` is the text the form shows for an issue: the renderer's `formatIssue`, else the engine's, else the issue's own `message`, else `undefined`.
 
 ```ts

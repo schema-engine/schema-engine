@@ -1,5 +1,6 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import { fromExternalStore, type Signal } from '@ecopages/signals';
+import type { FormRuntime } from '@schema-engine/forms';
 import type {
 	FormStateContainer,
 	FormStateIssue,
@@ -98,6 +99,27 @@ export class FormController {
 			stop();
 			unsubscribeContainer?.();
 		};
+	}
+
+	/**
+	 * Calls `onRuntime` with the form's runtime now and each time the instance replaces it, `undefined` while it has none.
+	 *
+	 * @returns Stops following.
+	 *
+	 * @remarks
+	 * The runtime belongs to one config and one engine, so a new one replaces it when either changes: hand it to something
+	 * that follows the form (such as `registerFormAgentTool`) from here, and release what the previous call made first.
+	 */
+	watchRuntime(onRuntime: (runtime: FormRuntime | undefined) => void): () => void {
+		let current: FormRuntime | undefined;
+		let first = true;
+		return this.follow((context) => {
+			const next = context?.runtime;
+			if (next === current && !first) return;
+			first = false;
+			current = next;
+			onRuntime(next);
+		});
 	}
 
 	/**

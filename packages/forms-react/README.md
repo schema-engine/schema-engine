@@ -121,7 +121,7 @@ Use these from `/hooks` inside the active form:
 
 The hooks read the container with the engine's pure selectors, so while hydrating, the selector hooks (`useFormField`, `useWatch`, `useFieldArray`) read the same server snapshot as the server render, which keeps hydration stable for defaults and array rows. `formState` reads the live container and is not part of that.
 
-Use `useFormEngine`, `useFormInstanceActions`, and `useFieldHost` from `/hooks`. View hooks (`useViewContext`, `useOptionalViewContext`, `useActiveStep`, `useFormNavigation`, and `useViewConfig(slot, schema)`, which returns the slot schema's output with every default filled) also come from `/hooks`.
+Use `useFormEngine`, `useFormInstanceActions`, `useFormRuntime` (the form's runtime, for `registerFormAgentTool` from `@schema-engine/forms/agent-tool`) and `useFieldHost` from `/hooks`. View hooks (`useViewContext`, `useOptionalViewContext`, `useActiveStep`, `useFormNavigation`, and `useViewConfig(slot, schema)`, which returns the slot schema's output with every default filled) also come from `/hooks`.
 
 ## Consumer-owned fields and styling
 
