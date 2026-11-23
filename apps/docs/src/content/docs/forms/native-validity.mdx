@@ -119,7 +119,7 @@ The failing flag is the issue's `type`, and the constraint behind it is `params`
 | `badInput`                        | `badInput`                        | none                             |
 | `customError`                     | `customError`                     | none                             |
 
-`min` and `max` are numbers for `number` and `range` inputs and the attribute's text for any other type, such as a date; `step` is the attribute's text. A control reports its first set flag, in the order of the table, so `typeMismatch` wins over `patternMismatch` and a flag wins over `customError`. A control that is invalid with no flag set, or whose script called `setCustomValidity`, reports `customError`. The browser's `validationMessage` travels as `message`, a fallback: your [formatter](/docs/forms/issue-text) decides the text.
+`min`, `max` and `step` are numbers for `number` and `range` inputs and the attribute's text for any other type, such as a date. A control reports its first set flag, in the order of the table, so `typeMismatch` wins over `patternMismatch` and a flag wins over `customError`. A control that is invalid with no flag set, or whose script called `setCustomValidity`, reports `customError`. The browser's `validationMessage` travels as `message`, a fallback: your [formatter](/docs/forms/issue-text) decides the text.
 
 Both renderers report the same fact for the same control state: React reads the control itself, and Radiant UI's `rui-form` reads it for Radiant. One table of control states and their facts is asserted against both.
 

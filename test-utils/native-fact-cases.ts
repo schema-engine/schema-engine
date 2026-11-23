@@ -22,12 +22,12 @@ export interface NativeFactCase {
 }
 
 /**
- * The facts `rui-form` of Radiant UI 0.5.0 reports, which React's `readNativeFact` must report too.
+ * The facts `rui-form` of Radiant UI 0.6.0 reports, which React's `readNativeFact` must report too.
  *
  * @remarks
  * Each row is a control state and its fact: the first flag set in the order `valueMissing`, `typeMismatch`,
  * `patternMismatch`, `tooLong`, `tooShort`, `rangeUnderflow`, `rangeOverflow`, `stepMismatch`, `badInput`,
- * `customError`; the bounds of a number as numbers and every other param as the control's own property.
+ * `customError`; the bounds and the step of a number as numbers and every other param as the control's own property.
  */
 export const nativeFactCases: readonly NativeFactCase[] = [
 	{ name: 'a text without constraints', fact: null },
@@ -116,9 +116,16 @@ export const nativeFactCases: readonly NativeFactCase[] = [
 		fact: { type: 'rangeOverflow', params: { max: '2024-01-31' } },
 	},
 	{
-		name: 'a number off its step, the step as the attribute text',
+		name: 'a number off its step, as a number',
 		attributes: { type: 'number', step: '2' },
 		value: '3',
+		fact: { type: 'stepMismatch', params: { step: 2 } },
+	},
+	{
+		name: 'a date off its step, as the attribute text',
+		attributes: { type: 'date', step: '2' },
+		value: '2024-01-03',
+		valueByScript: true,
 		fact: { type: 'stepMismatch', params: { step: '2' } },
 	},
 	{

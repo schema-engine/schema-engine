@@ -122,7 +122,9 @@ React reads them through `useSyncExternalStore` and Radiant through `FormControl
 - **Formatter.** The engine writes no text. `FormIssueFormatter = (issue, { path }) => string` is the one seam: the
   form's override, else the engine's `formatIssue`, else `issue.message`, else nothing, and never the rule type.
 - **Native fact.** What the browser's `element.validity` says about a control, reported with
-  `reportNative(facts)`: evidence an application cannot configure, bound to the value it was read for, dropped when
+  `reportNative(facts)`: evidence no rule of the config produces. The first flag set is its `type`
+  (`typeMismatch`, `tooShort`, and so on), and a control made invalid by a script's `setCustomValidity` is a
+  `customError` with that text, in both renderers. It is bound to the value it was read for, dropped when
   the value changes, withdrawn with `null`, moved with its row, shown only when validation runs for that path and
   listed after the rules' own errors.
 - **Validity.** `snapshot.isValid` is that no error is recorded (it validates nothing and is no reason to disable

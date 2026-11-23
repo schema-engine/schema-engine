@@ -129,31 +129,29 @@ type Flag = (typeof FLAGS)[number];
  * The constraint behind a flag that a text needs, from the properties the control carries.
  *
  * @remarks
- * `min` and `max` are numbers on a number or range input and the attribute's own text on any other type (a date),
- * as they are in `rui-form`. `step` stays text in both.
+ * `min`, `max` and `step` are numbers on a number or range input and the attribute's own text on any other type
+ * (a date), as they are in `rui-form`.
  */
 function flagParams(flag: Flag, control: NativeControl): Readonly<Record<string, unknown>> | undefined {
-	const read = (key: string): unknown => Reflect.get(control, key);
-	const bound = (key: 'min' | 'max'): unknown => {
-		const value = read(key);
-		const numeric = control.type === 'number' || control.type === 'range';
-		return numeric && typeof value === 'string' && value !== '' ? Number(value) : value;
+	const bound = (input: HTMLInputElement, value: string): string | number => {
+		const numeric = input.type === 'number' || input.type === 'range';
+		return numeric && value !== '' ? Number(value) : value;
 	};
 	switch (flag) {
 		case 'tooShort':
-			return { minLength: read('minLength') };
+			return control instanceof HTMLSelectElement ? undefined : { minLength: control.minLength };
 		case 'tooLong':
-			return { maxLength: read('maxLength') };
+			return control instanceof HTMLSelectElement ? undefined : { maxLength: control.maxLength };
 		case 'rangeUnderflow':
-			return { min: bound('min') };
+			return control instanceof HTMLInputElement ? { min: bound(control, control.min) } : undefined;
 		case 'rangeOverflow':
-			return { max: bound('max') };
+			return control instanceof HTMLInputElement ? { max: bound(control, control.max) } : undefined;
 		case 'patternMismatch':
-			return { pattern: read('pattern') };
+			return control instanceof HTMLInputElement ? { pattern: control.pattern } : undefined;
 		case 'stepMismatch':
-			return { step: read('step') };
+			return control instanceof HTMLInputElement ? { step: bound(control, control.step) } : undefined;
 		case 'typeMismatch':
-			return { inputType: read('type') };
+			return { inputType: control.type };
 		default:
 			return undefined;
 	}
