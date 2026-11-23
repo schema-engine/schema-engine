@@ -257,8 +257,6 @@ nothing answers.
 `dispatch` merges optional metadata into object contexts without mutating the
 caller. `dispatchSync` starts the same dispatch and logs unexpected rejections.
 Logging uses `@ecopages/logger`; enable debug output through the host's log levels.
-The former `ActionExecutor`, its `execute` method, and the `debug` constructor
-option have been removed. Use `ActionDispatcher.dispatch` instead.
 Browser redirects belong to the forms package's `ActionExecutionResult` type.
 
 ## Parallel groups and results

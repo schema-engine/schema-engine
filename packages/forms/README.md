@@ -193,7 +193,7 @@ context with form data and timing metadata, including a stable step start time t
 when the current step changes; it carries the current `stepId`, and `currentStep` and `totalSteps` count the steps that are not skipped. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
 Its form state takes `isValid`, `touched` and `submitCount`, all required; the context's `isValid` is the one passed, the container's `snapshot.isValid` (see [action context form state](src/engine/README.md#action-context-form-state)).
-Both renderers execute actions with `ActionDispatcher` from `@schema-engine/actions`, which the forms package does not re-export.
+Both renderers execute actions with `ActionDispatcher` from `@schema-engine/actions`.
 
 An `arrayElements` row with one leaf child uses a scalar path when its seed is not object-shaped. A child container such as `fieldSet` stays under its own row object path. Object-shaped array `initialValues`, a child field's object-shaped `defaultValue`, or the first row object from form `defaultValues` (falling back to the array's `defaultValue`) also selects the object path.
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. A `catalog` passed to `createFormEngine` or `extend` is a copied base: every registration writes its own entry over it, and `extend` rebuilds from the source engine's catalog, or from its own `catalog` when one is passed, so custom entries carry over. Author forms with `engine.defineForm({ ... })` object literals.
