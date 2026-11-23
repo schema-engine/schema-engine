@@ -1,44 +1,173 @@
 ---
-title: 'Getting Started'
-description: 'Install the core engine and create a recipe-based FormConfig.'
+title: 'Installation and quick start'
+description: 'Install the forms package, register two elements, check a form loaded as JSON and submit it with no renderer.'
 order: 2
 ---
 
-# Getting Started
+# Installation and quick start
 
-Install the framework-agnostic package and `zod` for its first-party Zod Mini schemas:
+This page builds a contact form with no renderer: two registered elements, a form config loaded as JSON, the issues a bad config reports, and one submission that prints the submitted values. The same engine and config render with [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview) once you register elements that draw.
+
+## Install
 
 ```bash
 pnpm add @schema-engine/forms zod
 ```
 
-Register the elements, recipes, and actions used by the application:
+Zod provides the `zod/mini` entry point the first-party schemas use. Registrations may use any [Standard Schema](https://standardschema.dev/) validator.
 
-```ts
-import { createFormEngine } from '@schema-engine/forms';
+## 1. Register two elements
 
-const engine = createFormEngine({
-	elements: [textInputRegistration],
-	recipes: [cardRecipe],
+An element is a registration with a `$type`, a schema for its config and a `value` declaration: the schema of what the element contributes to the submitted values. `defineInput` checks `render` against the schema. These elements render nothing, which is all a headless run needs. A renderer package supplies elements that draw.
+
+```ts title="registrations.ts"
+import * as z from 'zod/mini';
+import { BaseFieldSchema, defineInput } from '@schema-engine/forms';
+
+export const text = defineInput({
+	$type: 'text',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
+	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
+	render: () => null,
+});
+
+export const email = defineInput({
+	$type: 'email',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('email') }),
+	metadata: { name: 'Email', category: 'input' },
+	value: () => z.string(),
+	render: () => null,
 });
 ```
 
-Then define a form with `engine.defineForm({ ... })`. It returns a frozen
-`NormalizedFormConfig` owned by that engine instance. See [Authoring modes](/docs/forms/core-concepts#authoring-modes)
-for when to use `defineForm` versus portable JSON and `validateForm`.
+## 2. Build the engine
 
-```ts
-const form = engine.defineForm({
-	id: 'contact',
-	steps: [{ id: 'details', title: 'Details', elements: [] }],
-	view: { $type: 'card' },
+`createFormEngine` builds an engine from the lists you register. A form that names an action in `actions` fails validation until the action's registration is on the engine, so register `SubmitActionRegistration` here. The submit action sends the values with the engine's `fetch`, which defaults to the global one. This engine passes a function that answers instead of a server:
+
+```ts title="engine.ts"
+import { createFormEngine, SubmitActionRegistration } from '@schema-engine/forms';
+import { email, text } from './registrations';
+
+export const requests: string[] = [];
+
+export const engine = createFormEngine({
+	elements: [text, email],
+	actions: [SubmitActionRegistration],
+	fetch: async (url, init) => {
+		const fields = init?.body instanceof FormData ? [...init.body.keys()] : [];
+		requests.push(`${init?.method} ${url} with ${fields.join(', ')}`);
+		return new Response(JSON.stringify({ ok: true }), { status: 200 });
+	},
 });
 ```
 
-For external or stored JSON, call `engine.validateForm(unknown)` — the same
-pipeline as `defineForm`, without compile-time narrowing. Use
-`engine.getFormConfigStandardSchema()` when another tool must validate configs
-against Standard JSON Schema outside your app runtime.
+## 3. Check a form loaded as JSON
 
-**Note:** Framework adapters (React, Radiant) render a normalized form. They
-receive the same engine instance you used to validate or define the config.
+A form config is data, so it can come from a file or a server. `engine.validateForm` checks it and returns a frozen `NormalizedFormConfig`, or throws a `FormValidationError`. `engine.safeValidateForm` returns `{ success, data }` or `{ success: false, issues }` instead. Each issue has a `message` and the `path` of the config key it is about. See [Form configuration errors](/docs/forms/core-concepts#form-configuration-errors).
+
+```ts title="contact.ts"
+import { engine } from './engine';
+
+const contactJson = `{
+	"id": "contact",
+	"steps": [
+		{
+			"id": "details",
+			"title": "Your details",
+			"elements": [
+				{ "$type": "text", "id": "name", "name": "name", "label": "Name", "rules": [{ "$type": "required" }] },
+				{
+					"$type": "email",
+					"id": "email",
+					"name": "email",
+					"label": "Email",
+					"rules": [{ "$type": "required" }, { "$type": "email" }]
+				}
+			]
+		}
+	],
+	"actions": [{ "id": "send", "$type": "submit", "endpoint": "/api/contact" }]
+}`;
+
+export const contact = engine.validateForm(JSON.parse(contactJson));
+```
+
+A config with mistakes is reported, not thrown, by `safeValidateForm`. This one names an element type nobody registered and leaves out a field's required `name`:
+
+```ts title="broken.ts"
+import { formatIssuePath } from '@schema-engine/forms';
+import { engine } from './engine';
+
+const brokenJson = `{
+	"id": "contact",
+	"steps": [
+		{
+			"id": "details",
+			"title": "Your details",
+			"elements": [
+				{ "$type": "phone", "id": "phone", "name": "phone" },
+				{ "$type": "text", "id": "name" }
+			]
+		}
+	]
+}`;
+
+const result = engine.safeValidateForm(JSON.parse(brokenJson));
+if (!result.success) {
+	for (const { path, message } of result.issues) console.log(`${formatIssuePath(path)}: ${message}`);
+}
+```
+
+```text
+steps[0].elements[0].$type: Unknown element type 'phone'. Register it with createFormEngine({ elements: [...] }).
+steps[0].elements[1].name: Invalid input: expected string, received undefined
+```
+
+Both problems are reported at once, each with the position of the key to fix.
+
+## 4. Submit it
+
+`createFormRuntime` is the framework-free instance a renderer creates for each rendered form: it owns the form state, the submission and every action dispatch. Here it stands in for a renderer, so the form can be submitted and its values printed:
+
+```ts title="submit.ts"
+import { createFormRuntime } from '@schema-engine/forms';
+import { contact } from './contact';
+import { engine, requests } from './engine';
+
+async function main() {
+	const runtime = createFormRuntime({
+		engine,
+		config: contact,
+		host: { focus: () => {} },
+		onSubmit: (values) => console.log('submitted', JSON.stringify(values)),
+	});
+	runtime.mount();
+
+	console.log(await runtime.submit());
+
+	runtime.container.setValue('name', 'Ada Lovelace');
+	runtime.container.setValue('email', 'ada@example.com');
+
+	console.log(await runtime.submit());
+	console.log(requests.join('\n'));
+}
+
+main();
+```
+
+```text
+invalid
+submitted {"name":"Ada Lovelace","email":"ada@example.com"}
+submitted
+POST /api/contact with name, email, metadata
+```
+
+The first submit finds the required fields empty, so the outcome is `invalid` and nothing is sent. After the values are set, the submit passes: the submit action posts the values, with a `metadata` field the action adds, to its `endpoint` through the engine's `fetch`, `onSubmit` receives the values and the outcome is `submitted`. [Wizard and runtime](/docs/forms/wizard) lists every option, outcome and the host a renderer supplies.
+
+## Where to go next
+
+- [Core concepts](/docs/forms/core-concepts): authoring modes, configuration errors, view recipes.
+- [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview): draw this form.
+- [Validation](/docs/forms/validation): the 27 rules and your own.
+- [Actions](/docs/forms/actions): the actions a form ships.

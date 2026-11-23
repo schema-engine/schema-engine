@@ -3,13 +3,15 @@ import * as actionsPackage from '@schema-engine/actions';
 import * as registryPackage from '@schema-engine/registry';
 import * as registryYaml from '@schema-engine/registry/yaml';
 import * as z from 'zod/mini';
-import { codeBlocks, runTitledFiles, titledRunner } from './snippet-harness';
+import { codeBlocks, readPage, runTitledFiles, titledRunner } from './snippet-harness';
+import * as formsPackage from '@schema-engine/forms';
 import * as nodeTimers from 'node:timers/promises';
 
 const packages = {
 	'@schema-engine/actions': actionsPackage,
 	'@schema-engine/registry': registryPackage,
 	'@schema-engine/registry/yaml': registryYaml,
+	'@schema-engine/forms': formsPackage,
 	'zod/mini': z,
 	'node:timers/promises': nodeTimers,
 };
@@ -108,7 +110,7 @@ describe('actions/serialized-workflows', () => {
 	const page = 'actions/serialized-workflows';
 
 	test('a valid, a bad and a cancelled run print what the page shows', async () => {
-		const lines = await runTitledFiles(page, packages, 'check.ts', 1000);
+		const lines = await runTitledFiles(page, packages, 'check.ts', { settleMs: 1000 });
 		expect(lines.join('\n')).toEqual(shownOutput(page, 'Run three workflows'));
 	});
 
@@ -120,5 +122,22 @@ describe('actions/serialized-workflows', () => {
 			registry: actionsPackage.ActionRegistry;
 		};
 		expect(actionsPackage.parseActions(registry, JSON.parse(json.code)).success).toBe(true);
+	});
+});
+
+describe('forms/getting-started', () => {
+	const page = 'forms/getting-started';
+
+	test('a broken config reports its issues and a submission prints its values', async () => {
+		const lines = await runTitledFiles(page, packages, 'broken.ts');
+		expect(lines.join('\n')).toEqual(shownOutput(page, '3. Check a form loaded as JSON'));
+		const run = await runTitledFiles(page, packages, 'submit.ts', { globals: { Response, FormData } });
+		expect(run.join('\n')).toEqual(shownOutput(page, '4. Submit it'));
+	});
+
+	test('the overview rule count is the number of registered rules', () => {
+		const engine = formsPackage.createFormEngine({ elements: [] });
+		const overview = readPage('forms/overview');
+		expect(overview).toContain(`the ${engine.getValidationRegistry().size} validation rules`);
 	});
 });

@@ -243,15 +243,15 @@ export function titledRunner(
  *
  * @remarks
  * The entry may start asynchronous work, so the call waits one turn of the event loop before it returns, which
- * is enough for work that waits on promises. Work that waits on a timer needs `settleMs`, the time to wait.
+ * is enough for work that waits on promises. Work that waits on a timer needs `settleMs`, the time to wait. `globals` are visible to the files.
  */
 export async function runTitledFiles(
 	pages: string | string[],
 	modules: Record<string, unknown>,
 	entry: string,
-	settleMs = 0,
+	{ settleMs = 0, globals = {} }: { settleMs?: number; globals?: Record<string, unknown> } = {},
 ): Promise<string[]> {
-	const runner = titledRunner(pages, modules);
+	const runner = titledRunner(pages, modules, globals);
 	runner.load(entry);
 	await new Promise((resolve) => setTimeout(resolve, settleMs));
 	return runner.lines;

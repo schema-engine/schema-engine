@@ -25,33 +25,91 @@ type is envelope-level: it does not narrow each `$type` until validation runs.
 
 Both throw a `FormValidationError` on an invalid form. `engine.safeValidateForm(json)`
 returns `{ success, data | issues }` instead, and each issue carries the config `path`
-it is about (see [Form configuration errors](/docs/forms/validation-how-it-works#form-configuration-errors)).
+it is about (see [Form configuration errors](#form-configuration-errors)).
 
 With `FormRenderer`, passing a plain config is enough — the renderer calls
 `validateForm` at the form boundary. Pre-validate only when you need a
 `NormalizedFormConfig` outside the renderer (caching, tests, custom pipelines).
 
+## Form configuration errors
+
+Validation errors are about a field's _value_. A form's _configuration_ (a width that does not exist, a
+recipe that is not registered, a rule with no handler) is checked by `engine.validateForm`, which throws a
+`FormValidationError` listing the problems it found. Each issue has a `message` and the `path` of the config key it
+is about, so you can point at the mistake without parsing English:
+
+| Problem                                           | `path`                                                            |
+| ------------------------------------------------- | ----------------------------------------------------------------- |
+| The third field of step 1 has `grid.width: halve` | `['steps', 0, 'elements', 2, 'grid', 'width']`                    |
+| A fieldset child uses a rule with no handler      | `['steps', 0, 'elements', 1, 'elements', 0, 'rules', 0, '$type']` |
+| `view.$type` is not a registered recipe           | `['view', '$type']`                                               |
+| A problem with the whole form                     | `[]`                                                              |
+
+`error.message` has one line per issue, `<path>: <message>`, with array indexes in brackets and the `id` of each
+element or step the path passes:
+
+```text
+steps[0] (contact).elements[2] (email).grid.width: Expected one of full, three-quarters, two-thirds, half, third, quarter.
+view.$type: Unknown view recipe 'nope'. Register it with createFormEngine({ recipes: [...] }).
+```
+
+An issue a schema reported also has a `code` and `params` (for example `too_small` with `{ minimum: 3 }`), so
+an editor can localize the diagnostic instead of showing the English `message`. An issue the engine finds
+itself has neither. A union that fails is reported at the key that failed in the branch the value was closest
+to, or at the union when no branch is.
+
+A malformed form envelope (its own shape, such as `steps` not being an array) stops the deeper checks and is
+reported alone. An unrecognized key is reported at the key itself, for example `['view', 'shell', 'bogus']`.
+
+Use `engine.safeValidateForm` when you would rather branch on a result than catch:
+
+```ts
+import { formatIssuePath } from '@schema-engine/forms';
+import { engine } from './engine';
+
+export function loadForm(json: unknown) {
+	const result = engine.safeValidateForm(json);
+	if (!result.success) {
+		for (const { path, message } of result.issues) {
+			console.error(`${formatIssuePath(path) || '(form)'}: ${message}`);
+		}
+		return undefined;
+	}
+	return result.data; // the same frozen NormalizedFormConfig validateForm returns
+}
+```
+
+The `{ message, path }` shape is a Standard Schema issue, so a YAML loader or an editor can map each `path` to
+a line or a field. `FormRenderer` and the Radiant provider call `validateForm`, so an invalid config thrown at
+render time shows the same lines in the error message.
+
 ## Registration
 
 ```ts
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, SubmitActionRegistration } from '@schema-engine/forms';
+import { text } from './registrations';
 
-const engine = createFormEngine({
-	elements: [textInputRegistration],
-	recipes: [cardRecipe],
-	actions: [submitActionRegistration],
+export const engine = createFormEngine({
+	elements: [text],
+	actions: [SubmitActionRegistration],
 });
 ```
 
+The registrations are the ones the [quick start](/docs/forms/getting-started) writes. A form that names a `$type` the engine has not registered fails `validateForm`, and a form that names the `submit` action fails the same way until `SubmitActionRegistration` is registered.
+
 Each list is stored in a read-only registry: a later `$type` replaces an earlier one, and a
 schema that is not a Standard Schema fails the build. `validations` adds custom rules and
-`layout` sets the [layout theme](#the-layout-theme-and-appearance); see
+`layout` sets the [layout theme](/docs/layout/grid-and-placement#the-layout-theme-and-appearance); see
 [What the forms engine registers](/docs/forms/builder#what-the-forms-engine-registers).
 
 ## Form configuration
 
 ```ts
-const config = engine.defineForm({
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+export const config = engine.defineForm({
 	id: 'contact',
 	title: 'Contact',
 	steps: [{ id: 'details', title: 'Details', elements: [] }],
@@ -63,7 +121,7 @@ const config = engine.defineForm({
 });
 ```
 
-`view.$type` selects one registered recipe. The recipe determines its kind and
+This engine comes from a renderer package, which registers the recipes it ships. `view.$type` selects one registered recipe. The recipe determines its kind and
 allowed slots. Single-step recipes require exactly one step; wizard recipes
 require at least two. A single-step form may omit `view` to render fields
 directly.
@@ -96,187 +154,3 @@ Authors supply schema **input**; defaulted properties stay optional in
 children are typed from the same engine registrations as top-level fields.
 Containers render those children with `FormElements` and a field scope instead
 of cloning configuration to change paths.
-
-## Placing fields in the grid
-
-A form's `grid` sets its layout (`columns`, `gap`, `responsive`), and each
-element's own `grid` places it. There are three levels, from the most to the
-least readable:
-
-1. `width` and `offset` for fields that flow in rows.
-2. `areas` for a layout you draw as rows of names.
-3. Raw grid lines (`column`, `row`) as the escape hatch.
-
-A grid uses either `width`/`offset`, `areas` or `columns`; raw lines can sit
-next to widths or areas.
-
-### Rows of fields: `width` and `offset`
-
-For the common layouts, name the width:
-
-```ts
-{ $type: 'input', id: 'first', name: 'first', grid: { width: 'half' } },
-{ $type: 'input', id: 'last', name: 'last', grid: { width: 'half' } },
-{ $type: 'input', id: 'bio', name: 'bio', grid: { width: 'half', offset: 'quarter' } },
-```
-
-`width` is `full`, `three-quarters`, `two-thirds`, `half`, `third`, or
-`quarter`. `offset` leaves empty space before the field and takes the same names
-except `full`, so `half` with a `quarter` offset is centred in its row. A width
-on its own is the share of the row the field takes; the grid decides where it
-lands, so two `half` fields share a row. Leave the width out for a field that
-fills the row.
-
-Both change by breakpoint through the element's `grid.responsive`, like every
-other placement key. A slot that sets only the width keeps the offset of the
-slot before it, and the other way round:
-
-```ts
-{ grid: { width: 'full', responsive: { md: { width: 'third' } } } }
-```
-
-A grid whose fields use `width` or `offset` is laid out on 12 tracks, so each
-name is a whole number of tracks (`half` is 6, `third` is 4, `quarter` is 3), and
-a field in that grid that sets no width fills the row. Fieldsets and array rows
-lay out their children on their own grid, so `width` and `offset` work on a
-container's children the same way, and the enclosing grid's `columns` do not conflict
-with them.
-
-Validation enforces these rules for named widths:
-
-- A form grid that sets `columns` or `minColumnWidth` (at any breakpoint) cannot
-  contain a top-level field that uses `width` or `offset`: a grid uses areas,
-  widths or columns.
-- A field that sets `width` or `offset` cannot also set a raw `column`.
-- A field's `offset` plus `width` must fit in 12 tracks, counting the value
-  each carries from a narrower breakpoint: `two-thirds` after a `half` offset
-  is rejected.
-
-### Drawn layouts: `areas`
-
-When a field spans several rows or columns next to stacked fields, `width` and
-`offset` cannot say it. Draw the layout instead: the grid's `areas` is a list
-of rows, each row lists area names separated by spaces, and `.` is an empty
-cell. A field claims a name with `grid.area`.
-
-```yaml
-grid:
-    areas:
-        default: ['a', 'b', 'c', 'd', 'e']
-        md:
-            - 'a a a b b b'
-            - 'a a a c c c'
-            - 'd d e e e e'
-elements:
-    - { $type: input, id: a, name: a, grid: { area: a } }
-    - { $type: input, id: b, name: b, grid: { area: b } }
-    # c, d and e claim their own area the same way
-```
-
-Below `md` the five fields stack. From `md`, `a` spans three columns and two
-rows, `b` and `c` stack beside it, and `d` and `e` share the last row. The
-column count comes from the rows, so a grid with `areas` sets no `columns`.
-`areas` is an array for one layout at every width, or a record keyed `default`,
-`sm`, `md`, `lg`, `xl` and `2xl` (a slot you leave out keeps the layout of the
-slot before it). A responsive record must include `default`. A field's `area`
-is also responsive through `grid.responsive`, so a field can claim a different
-area when the template changes.
-
-A few things the template does not police:
-
-- A field with no `area` in an areas grid is auto-placed: it fills a `.` cell
-  if one is free, otherwise it opens an implicit row after the drawn ones. A raw
-  `column` or `row` on such a field works as it does anywhere else.
-- Two fields may claim the same area. That is meant for fields that are never
-  shown together (constraints, or `hidden` at a breakpoint); if both show, they
-  are drawn over the same cells.
-- A field hidden at a breakpoint (`grid.responsive.<slot>.hidden`) need not be in
-  that breakpoint's template, and the hidden state carries to wider
-  breakpoints until a slot shows it again.
-- A step with no fields under a form-level `areas` needs `grid: {}` from the
-  author: an empty grid of its own that replaces the form's. Without it, every
-  template area counts as unclaimed on that step and validation rejects it.
-
-A step takes its own `grid`, which replaces the form's grid for that step. An
-areas template names specific fields, so each wizard step draws its own. A
-form-level `areas` applies to every step without a `grid` of its own, and each of
-those steps must then claim every area in it:
-
-```ts
-{
-  id: 'checkout',
-  grid: { columns: 2 },
-  steps: [
-    {
-      id: 'address',
-      title: 'Address',
-      grid: { areas: ['street street', 'city zip'] },
-      elements: [
-        { $type: 'input', id: 'street', name: 'street', grid: { area: 'street' } },
-        { $type: 'input', id: 'city', name: 'city', grid: { area: 'city' } },
-        { $type: 'input', id: 'zip', name: 'zip', grid: { area: 'zip' } },
-      ],
-    },
-    { id: 'payment', title: 'Payment', elements: [/* two columns, from the form grid */] },
-  ],
-}
-```
-
-Validation names the path of whatever it rejects:
-
-- Rows of one template must have the same number of cells, and each name's cells
-  must form a rectangle. CSS drops a whole template that breaks either rule.
-- Every field `area` must be in the template at each breakpoint where the grid
-  draws one, and every area in the template must be claimed by a field.
-- `areas` cannot be mixed with `columns` or `minColumnWidth`, or with `width` or
-  `offset` on the grid's fields: a grid uses areas, widths or columns.
-- A field cannot set `area` together with `width`, `offset`, `column` or `row`.
-- Names are ASCII CSS identifiers (`street`, `side-2`) and cannot be `auto`,
-  `span`, `none`, `default`, `inherit`, `initial`, `unset`, `revert` or
-  `revert-layer`. A name is written into a CSS custom property, so anything
-  that is not an identifier is rejected.
-- Fieldsets and array rows lay their children out without `areas`, so `area` is
-  rejected on a container's children. Use `width` and `offset` there.
-
-### Raw grid lines
-
-Raw `column`, `row` and `placeSelf` stay available as the escape hatch for
-anything the names do not cover. `column: 2` is a CSS grid line, not a span:
-it starts the field at line 2. Use `column: 'span 2'` to span two columns, or
-`column: '4 / 10'` for explicit lines. A raw `column` field may sit next to
-width fields, but it counts tracks of the 12 the widths use there, so
-`column: 'span 2'` is two of twelve, a sixth of the row.
-
-## The layout theme and appearance
-
-The grid vocabulary (breakpoint thresholds, gap tokens, the default minimum column
-width) and the appearance axes (`size` and `surface` built in, plus any you define)
-belong to one **layout theme**, compiled by `@schema-engine/layout` and passed to the
-engine as `layout`, either compiled once or as inline `{ grid, appearance }` options:
-
-```ts
-import { createFormEngine } from '@schema-engine/forms';
-import { createLayoutTheme } from '@schema-engine/layout';
-
-const theme = createLayoutTheme({ grid: { breakpoints: { md: '50rem' } } });
-
-const checkout = createFormEngine({ elements, layout: theme });
-const profile = createFormEngine({ elements, layout: theme });
-```
-
-Engines built on one compiled theme carry the same `data-se-theme` and the same stylesheet
-content. React hoists the equal stylesheets to one element; Radiant puts an identical copy in
-each form, by design. A form of one engine can sit inside a grid item of another: the nearest
-theme's token rules apply.
-
-A form, a step, a field or a recipe slot picks a named value per axis with
-`appearance: { size: 'compact' }`, and the renderer writes `data-se-size="compact"`.
-A registration declares the axes it responds to with `appearanceAxes`, and `validateForm`
-rejects a pick on any other axis, an unknown axis and an unknown value.
-
-The full guides are in [Styling](/docs/layout/overview):
-
-- [Layout themes](/docs/layout/layout-themes): the options, sharing a theme, the neutral `.se-grid`, `.se-grid-item` and `[data-se-theme]` hooks, the `--se-item-*` properties and nested themes.
-- [Appearance axes](/docs/layout/appearance-axes): the definition, what makes a good axis, `size` and `surface`, `defineAxis` and host axes.
-- [Theming](/docs/layout/theming): the custom properties a host overrides.
-- [Recipes](/docs/layout/recipes): copy-paste configs with their CSS, rendered live.

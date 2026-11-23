@@ -20,7 +20,15 @@ vi.setConfig({ testTimeout: 60_000 });
  * section that still holds fences that cannot compile stays off, or lists the pages that are ready, so the list
  * is never left failing.
  */
-const CHECKED_DOCS = ['layout', 'registry', 'schema-engine', 'actions'];
+const CHECKED_DOCS = [
+	'layout',
+	'registry',
+	'schema-engine',
+	'actions',
+	'forms/overview',
+	'forms/getting-started',
+	'forms/core-concepts',
+];
 
 interface AllowedFence {
 	page: string;
@@ -95,6 +103,7 @@ export const postalCode = {
 const CONTINUES: Record<string, string[]> = {
 	'schema-engine/serialized-documents': ['schema-engine/quick-start'],
 	'actions/sequences-and-cancellation': ['actions/overview'],
+	'forms/core-concepts': ['forms/getting-started'],
 };
 
 const appFor = (page: string): Record<string, string> => ({

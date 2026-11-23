@@ -1,26 +1,22 @@
 ---
 title: 'Overview'
-description: 'Headless form engine: JSON config, validation rules, constraints.'
+description: 'Forms is the first domain of Schema Engine: fields, validation rules, constraints, steps, form state and submission, as a JSON config.'
 order: 1
 ---
 
-# @schema-engine/forms
+# Forms
 
-Framework-agnostic core engine for building type-safe, JSON-configured forms with advanced validation, actions, and extensibility.
+Forms is the first domain of Schema Engine. It uses the [registry](/docs/registry/overview) for its elements, recipes and validation rules, [actions](/docs/actions/overview) for submit, reset and the work around them, and [layout](/docs/layout/overview) for the grid and named appearance. On top of those it adds what a form needs: fields and their values, validation rules, constraints between fields, steps, form state and the submit lifecycle. A form is a [document](/docs/schema-engine/core-concepts#document): a JSON config that names registered elements by `$type`.
 
-## Overview
+`@schema-engine/forms` is the framework-agnostic package. It has no renderer: [Forms React](/docs/forms-react/overview) and [Forms Radiant](/docs/forms-radiant/overview) draw the same config.
 
-The core package provides the foundational architecture for the JSON Form Engine ecosystem. It enables developers to:
+With it you can:
 
-- Author type-safe form configs with `engine.defineForm()` object literals tied to your registrations
-- Register and manage form components (elements, recipes, actions)
-- Generate JSON schemas for validation and tooling
-- Execute form actions in response to lifecycle events
-- Validate form data with 24 built-in rules and custom validation support
-- Serialize and deserialize form configurations for storage or transmission
-
-The package is completely framework-agnostic, with framework-specific adapters
-such as React and Radiant built on top.
+- Author form configs in TypeScript with `engine.defineForm()`, typed from your registrations, or load them as JSON and check them with `engine.validateForm()`.
+- Register your own elements, view recipes, actions and validation rules.
+- Validate values with the 27 validation rules the engine registers, and with rules of your own.
+- Run a form without a renderer, with `createFormRuntime`, to test it or to write a renderer.
+- Generate JSON Schema from what the engine has registered, for editors and tools.
 
 ## What a form can do
 
@@ -40,22 +36,21 @@ A form's behavior is independent of the element that collects a value and the re
 | Issue text       | Word every error and warning in your language                            | [Issue text](/docs/forms/issue-text)                                              |
 | CSRF             | Send a token with the engine's requests and native posts                 | [CSRF](/docs/forms/csrf)                                                          |
 
-## Installation
+## Installation and quick start
 
 ```bash
 pnpm add @schema-engine/forms zod
 ```
 
-The `zod` package provides the `zod/mini` entry point used by first-party
-schemas. Consumer registrations may use any Standard Schema provider.
+[Installation and quick start](/docs/forms/getting-started) registers two elements, checks a form loaded as JSON and submits it with no renderer. The `zod` package provides the `zod/mini` entry point that first-party schemas use. Registrations may use any Standard Schema validator.
 
 ## Next Steps
 
-- [Getting Started](/docs/forms/getting-started) - Build your first form engine
+- [Installation and quick start](/docs/forms/getting-started) - Build a form engine and submit a form with no renderer
 - [Core Concepts](/docs/forms/core-concepts) - createFormEngine, FormEngine, registrations
 - [Form engine setup](/docs/forms/builder) - Registrations and typed authoring
 - [Validation](/docs/forms/validation) - Built-in rules and custom validation
-- [Actions](/docs/forms/actions) - Action system and built-in plugins
+- [Actions](/docs/forms/actions) - The actions a form ships and how its submit runs them
 - [Form state](/docs/forms/form-state) - The container every renderer binds to: values, validity and submission
 - [Issue text](/docs/forms/issue-text) - Word errors and warnings in your language
 - [Native validity](/docs/forms/native-validity) - What the browser says about a control and how the form uses it

@@ -19,23 +19,23 @@ Because the form only picks names, the same config validates and renders the sam
 
 ## Which tool do I use
 
-| I want to                                                           | Use                                                                     | Read                                                                                    |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Put two fields on one row                                           | `grid.width: half` on each field                                        | [Placing fields in the grid](/docs/forms/core-concepts#rows-of-fields-width-and-offset) |
-| Centre or indent a field                                            | `grid.offset`                                                           | same                                                                                    |
-| Draw a layout where one field spans rows                            | `grid.areas` on the form or step, `grid.area` on each field             | [Drawn layouts](/docs/forms/core-concepts#drawn-layouts-areas)                          |
-| Change the layout at a breakpoint                                   | `grid.responsive`, or an `areas` record                                 | same                                                                                    |
-| Place one field exactly                                             | Raw `column`, `row`, `placeSelf`                                        | [Raw grid lines](/docs/forms/core-concepts#raw-grid-lines)                              |
-| Make a form denser or roomier                                       | `appearance: { size: 'compact' }`                                       | [Appearance axes](/docs/layout/appearance-axes)                                         |
-| Change border, shadow or surface                                    | `appearance: { surface: 'outlined' }`                                   | same                                                                                    |
-| Add a brand colour that every form can pick by name                 | A host axis with `defineAxis`                                           | [Appearance axes](/docs/layout/appearance-axes#add-a-host-axis)                         |
-| Change the rhythm between fields everywhere                         | The `--se-grid-gap-*` tokens, or `createLayoutTheme({ grid: { gap } })` | [Theming](/docs/layout/theming)                                                         |
-| Set a size, a width or a gap for one form                           | A class in `className` that sets the token                              | [Theming](/docs/layout/theming#where-to-set-a-token)                                    |
-| Style one form, step or field once                                  | `className`, or `style` with custom properties                          | [Escape hatches](#escape-hatches)                                                       |
-| Show or hide a part of a recipe (descriptions, labels, orientation) | Slot config on `view`, for example `view.header.showDescription`        | [View recipes](/docs/forms-react/layouts)                                               |
-| Use a different frame around the fields                             | A recipe, built in or your own                                          | [Recipes](/docs/layout/recipes#a-custom-recipe-shell-in-react-and-in-radiant)           |
-| Make two engines or two renderers look the same                     | One compiled layout theme passed to both                                | [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines)               |
-| Copy a working setup                                                | A recipe                                                                | [Recipes](/docs/layout/recipes)                                                         |
+| I want to                                                           | Use                                                                     | Read                                                                                          |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Put two fields on one row                                           | `grid.width: half` on each field                                        | [Placing fields in the grid](/docs/layout/grid-and-placement#rows-of-fields-width-and-offset) |
+| Centre or indent a field                                            | `grid.offset`                                                           | same                                                                                          |
+| Draw a layout where one field spans rows                            | `grid.areas` on the form or step, `grid.area` on each field             | [Drawn layouts](/docs/layout/grid-and-placement#drawn-layouts-areas)                          |
+| Change the layout at a breakpoint                                   | `grid.responsive`, or an `areas` record                                 | same                                                                                          |
+| Place one field exactly                                             | Raw `column`, `row`, `placeSelf`                                        | [Raw grid lines](/docs/layout/grid-and-placement#raw-grid-lines)                              |
+| Make a form denser or roomier                                       | `appearance: { size: 'compact' }`                                       | [Appearance axes](/docs/layout/appearance-axes)                                               |
+| Change border, shadow or surface                                    | `appearance: { surface: 'outlined' }`                                   | same                                                                                          |
+| Add a brand colour that every form can pick by name                 | A host axis with `defineAxis`                                           | [Appearance axes](/docs/layout/appearance-axes#add-a-host-axis)                               |
+| Change the rhythm between fields everywhere                         | The `--se-grid-gap-*` tokens, or `createLayoutTheme({ grid: { gap } })` | [Theming](/docs/layout/theming)                                                               |
+| Set a size, a width or a gap for one form                           | A class in `className` that sets the token                              | [Theming](/docs/layout/theming#where-to-set-a-token)                                          |
+| Style one form, step or field once                                  | `className`, or `style` with custom properties                          | [Escape hatches](#escape-hatches)                                                             |
+| Show or hide a part of a recipe (descriptions, labels, orientation) | Slot config on `view`, for example `view.header.showDescription`        | [View recipes](/docs/forms-react/layouts)                                                     |
+| Use a different frame around the fields                             | A recipe, built in or your own                                          | [Recipes](/docs/layout/recipes#a-custom-recipe-shell-in-react-and-in-radiant)                 |
+| Make two engines or two renderers look the same                     | One compiled layout theme passed to both                                | [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines)                     |
+| Copy a working setup                                                | A recipe                                                                | [Recipes](/docs/layout/recipes)                                                               |
 
 When two tools fit, prefer them in this order: a named width before a raw line, an axis value before a token override, a token override before a class, a class before inline `style`.
 
@@ -47,7 +47,7 @@ A form's `grid` and each element's own `grid` lay fields out. The levels run fro
 2. `areas` for a layout you draw as rows of names, with `area` on each field.
 3. Raw grid lines (`column`, `row`, `placeSelf`) as the escape hatch.
 
-Fieldsets and array rows lay their children out on a grid of their own, so the same names work inside a container. A step's `grid` replaces the form's grid for that step. The rules, the validation errors and the limits are on [Placing fields in the grid](/docs/forms/core-concepts#placing-fields-in-the-grid).
+Fieldsets and array rows lay their children out on a grid of their own, so the same names work inside a container. A step's `grid` replaces the form's grid for that step. The rules, the validation errors and the limits are on [Placing fields in the grid](/docs/layout/grid-and-placement#placing-fields-in-the-grid).
 
 ## Appearance
 
