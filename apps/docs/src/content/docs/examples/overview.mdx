@@ -10,9 +10,9 @@ An example is a recipe: one use case, written as files you can copy into an app 
 
 ## What a recipe holds
 
-- **The files.** Each is a module that imports only packages and its sibling files (`./engine`). It never imports the docs app, so it runs where you paste it.
+- **The files.** Each is a module that imports only packages and its sibling files (`./engine`). It imports nothing else, so it runs where you paste it.
 - **The page.** It states the install line, then shows every file under its name. A recipe that renders UI has a live demo, and a forms recipe shows its React and Radiant files in tabs side by side.
-- **The test.** It runs the files, including the failure paths, in the docs unit or browser project. A recipe that is not tested, or whose page differs from its files, fails the docs tests.
+- **The test.** It runs the files, including the failure paths, in a unit or browser test. A recipe that is not tested, or whose page differs from its files, fails a test.
 
 ## Copy a recipe
 

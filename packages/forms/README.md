@@ -355,9 +355,8 @@ only the axes it supports) into the normalized config. The inheritance walk is `
 (`lib/resolve-appearance.ts`); checking, merging and attribute helpers are in `@schema-engine/layout`.
 Renderers emit `data-se-<axis>` attributes and the token rules, which are part of the layout
 theme's one stylesheet and sit inside `:where()`, so an author's `className` wins. The
-built-in card shell no longer takes `maxWidth`, `padding` or `shadowSize`: it reads the semantic
-tokens `--se-space`, `--se-border-width`, `--se-shadow` and `--se-surface-background`, and maps
-`--se-space` to its own width. The wizard `actions` slot's former `appearance` key is now `variant`.
+built-in card shell reads the semantic tokens `--se-space`, `--se-border-width`, `--se-shadow` and
+`--se-surface-background`, and maps `--se-space` to its own width. The wizard `actions` slot takes a `variant`.
 
 ### Grid theme
 

@@ -50,7 +50,6 @@ lists. `layout` is accepted by `createFormEngine` and by
 copy per form, by design); inline options compile a theme of the engine's own.
 `engine.extend()` does not take `layout`; extended engines inherit the source
 engine's layout theme, which `engine.getLayout()` returns (`id`, `grid`, `axes`, `appearance`, `css`).
-The `grid` and `appearance` engine options no longer exist.
 
 Each array is structurally constrained: `$type`, a Standard Schema
 (`~standard.validate`), and the registration's render/execute function.

@@ -10,13 +10,13 @@ The agent skill is a guide written for an AI coding agent. It teaches the agent 
 
 ## Where to read it
 
-| Source                                                              | Version                              |
-| ------------------------------------------------------------------- | ------------------------------------ |
-| `node_modules/@schema-engine/registry/skill/SKILL.md`               | The one you installed                |
-| `node_modules/@schema-engine/<package>/skill/reference/<file>`      | The one you installed                |
-| [`/skill/SKILL.md`](/skill/SKILL.md) on this site                   | The latest version (this repository) |
-| [`/skill/reference/<file>`](/skill/reference/forms.md) on this site | The latest version (this repository) |
-| [`/skill.txt`](/skill.txt), an index of the skill's files           | The latest version (this repository) |
+| Source                                                              | Version               |
+| ------------------------------------------------------------------- | --------------------- |
+| `node_modules/@schema-engine/registry/skill/SKILL.md`               | The one you installed |
+| `node_modules/@schema-engine/<package>/skill/reference/<file>`      | The one you installed |
+| [`/skill/SKILL.md`](/skill/SKILL.md) on this site                   | The latest version    |
+| [`/skill/reference/<file>`](/skill/reference/forms.md) on this site | The latest version    |
+| [`/skill.txt`](/skill.txt), an index of the skill's files           | The latest version    |
 
 It is one skill, and every package ships its own part of it. The router, `SKILL.md`, ships in `@schema-engine/registry`, the package every other one depends on, and each package ships its references in its own `skill/reference/` folder. Installing a package puts its reference in `node_modules`, and a reference always matches the version of its package: point your agent at the `node_modules` copy for the API you have. The router lists every reference with its package, so an agent reads the rows of the packages the project depends on and skips the rest. If your package manager does not link `@schema-engine/registry` at the top level of `node_modules`, add it with the package you use. The site assembles the router and the references of every package when it builds and serves them at `/skill/`, so use that copy when you want the latest guide or your agent cannot read `node_modules`.
 
