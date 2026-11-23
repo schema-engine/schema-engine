@@ -6,7 +6,7 @@ import type { SubmissionAlertProps } from './form-submission-alert.types';
 
 const DEFAULT_SUCCESS_MESSAGE = 'Form submitted successfully';
 const DEFAULT_ERROR_MESSAGE = 'An error occurred during submission';
-const DEFAULT_PENDING_MESSAGE = 'Submitting...';
+const DEFAULT_SUBMITTING_MESSAGE = 'Submitting...';
 const DEFAULT_AUTO_DISMISS_MS = 5000;
 
 /**
@@ -19,7 +19,7 @@ export function FormSubmissionAlert({
 	autoDismiss = DEFAULT_AUTO_DISMISS_MS,
 	successMessage = DEFAULT_SUCCESS_MESSAGE,
 	errorMessage = DEFAULT_ERROR_MESSAGE,
-	pendingMessage = DEFAULT_PENDING_MESSAGE,
+	submittingMessage = DEFAULT_SUBMITTING_MESSAGE,
 	grid,
 	style,
 }: SubmissionAlertProps) {
@@ -42,18 +42,18 @@ export function FormSubmissionAlert({
 		};
 	}, [status, autoDismiss, clearSubmission]);
 
-	if (!showOn.includes(status)) {
+	if (status === 'validating' || !showOn.includes(status)) {
 		return null;
 	}
 
 	switch (status) {
-		case 'pending':
+		case 'submitting':
 			return (
 				<Alert {...host} variant="default" className={`${host.className} grid-cols-[1rem_1fr] gap-x-3`}>
 					<div className="size-4 mt-0.5">
 						<Loader2 className="size-4 animate-spin" />
 					</div>
-					<AlertTitle>{pendingMessage}</AlertTitle>
+					<AlertTitle>{submittingMessage}</AlertTitle>
 				</Alert>
 			);
 

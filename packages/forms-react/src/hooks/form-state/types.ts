@@ -54,7 +54,7 @@ export interface FormContextValue {
 		errors: Record<string, { message?: string }>;
 		/** Whether no error from any source is recorded. Cheap, and no proof that the values are valid. */
 		isValid: boolean;
-		/** The one submission state: the status (`pending` while one runs), the failures as issues worded by `formatIssue`, and the submissions that ended, whether they passed or failed validation. */
+		/** The one submission state: the status (`validating` while it is checked, `submitting` once it passed and its actions and `onSubmit` run), the failures as issues worded by `formatIssue`, and the submissions that ended, whether they passed or failed validation. */
 		submission: SubmissionState;
 	};
 }

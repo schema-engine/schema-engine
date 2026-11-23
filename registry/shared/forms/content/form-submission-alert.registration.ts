@@ -8,7 +8,7 @@ export const SubmissionAlertElementRegistration = defineStatic({
 	schema: SubmissionAlertConfigSchema,
 	metadata: {
 		name: 'Submission Alert',
-		description: 'Displays form submission status (pending, success, error)',
+		description: 'Displays form submission status (submitting, success, error)',
 		category: 'content',
 	},
 });

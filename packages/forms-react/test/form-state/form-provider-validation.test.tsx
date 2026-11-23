@@ -205,7 +205,7 @@ describe('FormProvider validation', () => {
 
 		fireEvent.change(screen.getByTestId('email'), { target: { value: 'a@b.co' } });
 		fireEvent.click(screen.getByText('Submit'));
-		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('pending:1'));
+		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('submitting:1'));
 		release();
 		await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('success:2'));
 	});

@@ -79,7 +79,7 @@ describe('useFormContext', () => {
 		expect(Object.keys(context().formState).sort()).toEqual(['errors', 'isValid', 'submission']);
 	});
 
-	test('the submission is the one state: pending while one runs, then how it ended, with the count of those that ended', async () => {
+	test('the submission is the one state: validating while it is checked, then how it ended, with the count of those that ended', async () => {
 		const seen: Array<FormContextValue['formState']['submission']> = [];
 		const { container, runtime } = mount(({ formState }) => {
 			seen.push(formState.submission);
@@ -90,7 +90,7 @@ describe('useFormContext', () => {
 		act(() => {
 			running = runtime.submit();
 		});
-		expect(seen.at(-1)).toMatchObject({ status: 'pending' });
+		expect(seen.at(-1)).toMatchObject({ status: 'validating' });
 		await act(() => running);
 		expect(seen.at(-1)).toEqual({ status: 'idle', failures: [], submitCount: 1 });
 

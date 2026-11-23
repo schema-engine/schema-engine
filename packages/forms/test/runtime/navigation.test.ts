@@ -255,7 +255,7 @@ describe('the lock', () => {
 		await runtime.next();
 		await runtime.next();
 		const submitting = runtime.submit();
-		expect(runtime.getSnapshot().submission.status).toBe('pending');
+		expect(runtime.getSnapshot().submission.status).toBe('validating');
 		expect(await runtime.next()).toBe('busy');
 		expect(await runtime.submit()).toBe('busy');
 		expect(await submitting).toBe('submitted');

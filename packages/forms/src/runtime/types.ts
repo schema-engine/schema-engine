@@ -56,8 +56,21 @@ export type SubmitOutcome = Extract<
 	'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled'
 >;
 
-/** Where a submission is: `idle` until one starts, `pending` while it runs, then how it ended. */
-export type SubmissionStatus = 'idle' | 'pending' | 'success' | 'error';
+/**
+ * Where a submission is: `idle` until one starts, `validating` while its validation runs, `submitting` once it passed and the actions and `onSubmit` run, then how it ended.
+ *
+ * @remarks A submission that is `invalid` or `overtaken` goes from `validating` back to `idle` and is never `submitting`: submission starts, for the `form_submit_start` trigger and for a renderer's own start event, once it passed validation.
+ */
+export type SubmissionStatus = 'idle' | 'validating' | 'submitting' | 'success' | 'error';
+
+/**
+ * Whether a submission is in progress: its validation or its actions are running.
+ *
+ * @remarks The one definition of busy, which the runtime's revoke and every renderer's submit button, label and busy state share.
+ */
+export function isSubmissionBusy(status: SubmissionStatus): boolean {
+	return status === 'validating' || status === 'submitting';
+}
 
 /**
  * What the form reports about its submissions.

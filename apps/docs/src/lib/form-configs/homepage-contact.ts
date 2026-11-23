@@ -13,8 +13,8 @@ export const contactFormConfig = {
 					id: 'submission-status',
 					name: 'submissionStatus',
 					$type: 'submission-alert',
-					showOn: ['pending', 'success'],
-					pendingMessage: 'Pending Submission',
+					showOn: ['submitting', 'success'],
+					submittingMessage: 'Pending Submission',
 					successMessage: 'Submission Successful',
 				},
 				{

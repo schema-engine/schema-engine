@@ -7,6 +7,7 @@ import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { deriveFormSteps, deriveNavigation } from '@/lib/instance-view';
+import { isSubmissionBusy } from '@schema-engine/forms';
 import type { ViewNavigation, ViewStep } from '@schema-engine/forms/recipes';
 import type { FormStateSnapshot } from '@schema-engine/forms/state-container';
 
@@ -315,7 +316,7 @@ export class FormDebuggerElement extends RadiantElement {
 						{this.showFormState ? (
 							<DebuggerFormState
 								formState={formState}
-								isSubmitting={this.instance?.submission.status === 'pending'}
+								isSubmitting={this.instance ? isSubmissionBusy(this.instance.submission.status) : false}
 								invalidSteps={steps.filter(({ isInvalid }) => isInvalid).map(({ id }) => id)}
 							/>
 						) : null}

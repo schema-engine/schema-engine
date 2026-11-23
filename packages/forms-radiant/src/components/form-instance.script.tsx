@@ -60,6 +60,42 @@ export interface SubmissionCompleteDetail {
 }
 
 /**
+ * Detail of `se-action-submit-invalid`.
+ *
+ * @remarks `failures` are empty when validation found errors in fields, which are in the form's state, and name why validation could not run (a validator threw, a service was down) otherwise.
+ */
+export interface SubmissionInvalidDetail {
+	failures: readonly FormSubmissionIssue[];
+}
+
+/**
+ * The `se-action-submit-*` event a change of the submission is, or `undefined` when it is none.
+ *
+ * @remarks
+ * The one place the three events are derived, from the runtime's submission and nothing else, so they cannot
+ * disagree: `start` when the status becomes `submitting`, which is after validation passed; `complete` when a
+ * started submission ends in `success` or `error`; `invalid` when validation of a submission ends without a
+ * start, whether it found errors (back to `idle`, one more attempt) or could not run (`error`, no attempt).
+ * `complete` therefore only follows `start`. `started` is true from a `start` until the next `complete`,
+ * and a reset or unmount in between does not cancel the `complete` of the submission that ran.
+ */
+function submissionEvent(
+	previous: FormSubmissionState,
+	next: FormSubmissionState,
+	started: boolean,
+): 'start' | 'invalid' | 'complete' | undefined {
+	if (next.status === previous.status) return undefined;
+	if (next.status === 'submitting') return 'start';
+	if (next.status === 'success' || next.status === 'error') {
+		if (started) return 'complete';
+		return previous.status === 'validating' ? 'invalid' : undefined;
+	}
+	const validationFoundErrors =
+		next.status === 'idle' && previous.status === 'validating' && next.submitCount > previous.submitCount;
+	return validationFoundErrors ? 'invalid' : undefined;
+}
+
+/**
  * The form a `se-form-instance` holds: its runtime and the `rui-form` the runtime's container is injected into.
  *
  * @remarks Identity of the config, engine, `rui-form` and default values decides whether the form is the same: a new one of them is a new form.
@@ -320,14 +356,13 @@ export class FormInstanceElement extends RadiantElement {
 	}
 
 	/**
-	 * Runs one submission through the runtime and reports how it ended on the `rui-form`.
+	 * Runs one submission through the runtime.
 	 *
 	 * @remarks
 	 * `rui-form` calls this on a submit, after it has synced the controls into the container. The runtime holds its one
 	 * lock from here until the submission ends, so a second submit while the first validates or runs is dropped, and
-	 * a submit before the last step of a wizard is a Next. The events follow the status and the outcome:
-	 * `se-action-submit-start` when the submission becomes pending, `se-action-submit-invalid` when validation of the
-	 * submission found errors (a Next that fails is no submission), and `se-action-submit-complete` when it ended, with `succeeded` and the `failures` the runtime recorded.
+	 * a submit before the last step of a wizard is a Next. The `se-action-submit-*` events are not announced here: they follow the
+	 * runtime's submission (see {@link watchRuntime}), so a Next that fails is no submission and announces nothing.
 	 */
 	private async submitForm(context: RuiFormSubmitContext): Promise<void> {
 		this.warnWithoutEngine();
@@ -336,20 +371,7 @@ export class FormInstanceElement extends RadiantElement {
 		bound.inFlight.context = context;
 		bound.inFlight.results = [];
 		try {
-			const counted = bound.runtime.getSnapshot().submission.submitCount;
-			const outcome = await bound.runtime.submit();
-			if (this.bound !== bound) return;
-			const submitted = bound.runtime.getSnapshot().submission.submitCount > counted;
-			if (outcome === 'invalid' && submitted) this.announce(bound.host, 'se-action-submit-invalid');
-			const { failures } = bound.runtime.getSnapshot().submission;
-			if (outcome === 'submitted' || (outcome === 'failed' && failures.length > 0)) {
-				const detail: SubmissionCompleteDetail = {
-					succeeded: outcome === 'submitted',
-					results: bound.inFlight.results,
-					failures,
-				};
-				this.announce(bound.host, 'se-action-submit-complete', detail);
-			}
+			await bound.runtime.submit();
 		} finally {
 			if (bound.inFlight.context === context) bound.inFlight.context = undefined;
 		}
@@ -395,17 +417,39 @@ export class FormInstanceElement extends RadiantElement {
 		this.announce(host, 'se-action-results', { trigger, results });
 	}
 
-	/** Publishes the instance context when the runtime's state changes, and `se-action-submit-start` when a submission becomes pending. */
-	private watchRuntime({ runtime, host }: BoundForm): void {
+	/**
+	 * Publishes the instance context when the runtime's state changes, and announces the `se-action-submit-start`, `-invalid` and `-complete` events of its submission.
+	 *
+	 * @remarks The events are derived by {@link submissionEvent}. `start` and `invalid` carry nothing but the failures of `invalid`, and `complete` carries `succeeded`, the results of the submit actions and the failures.
+	 */
+	private watchRuntime({ runtime, host, inFlight }: BoundForm): void {
 		this.unsubscribeRuntime?.();
 		let seen = runtime.getSnapshot();
+		let started = false;
 		this.unsubscribeRuntime = runtime.subscribe(() => {
 			const next = runtime.getSnapshot();
 			if (next === seen) return;
-			const started = next.submission.status === 'pending' && seen.submission.status !== 'pending';
+			const { submission: previous } = seen;
+			const { submission } = next;
+			const event = submissionEvent(previous, submission, started);
+			if (submission.status === 'validating') started = false;
 			seen = next;
 			this.publish();
-			if (started) this.announce(host, 'se-action-submit-start');
+			if (event === 'start') {
+				started = true;
+				this.announce(host, 'se-action-submit-start');
+			} else if (event === 'invalid') {
+				const detail: SubmissionInvalidDetail = { failures: submission.failures };
+				this.announce(host, 'se-action-submit-invalid', detail);
+			} else if (event === 'complete') {
+				started = false;
+				const detail: SubmissionCompleteDetail = {
+					succeeded: submission.status === 'success',
+					results: inFlight.results,
+					failures: submission.failures,
+				};
+				this.announce(host, 'se-action-submit-complete', detail);
+			}
 		});
 	}
 

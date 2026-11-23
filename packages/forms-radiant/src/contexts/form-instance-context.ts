@@ -24,7 +24,7 @@ export interface FormInstanceContextValue {
 	next: () => Promise<NavigationOutcome>;
 	back: () => Promise<NavigationOutcome>;
 	goTo: (id: string) => Promise<NavigationOutcome>;
-	/** The runtime's submission: its status (`pending` while one runs), its failures and the submissions that ended, a failed validation included, since the form was created or reset. */
+	/** The runtime's submission: its status (`validating` while it is checked, `submitting` once it passed and its actions and `onSubmit` run), its failures and the submissions that ended, a failed validation included, since the form was created or reset. */
 	submission: FormSubmissionState;
 	/**
 	 * The form's state container: values, field state, row ids and validation.

@@ -29,14 +29,15 @@ import type {
 	FormValidateResult,
 } from '@/state-container/types';
 import type { BuilderActionBaseContext } from '@/types';
-import type {
-	CreateFormRuntimeOptions,
-	FormRuntime,
-	FormRuntimeSnapshot,
-	FormSubmissionState,
-	FormValues,
-	NavigationOutcome,
-	SubmitOutcome,
+import {
+	isSubmissionBusy,
+	type CreateFormRuntimeOptions,
+	type FormRuntime,
+	type FormRuntimeSnapshot,
+	type FormSubmissionState,
+	type FormValues,
+	type NavigationOutcome,
+	type SubmitOutcome,
 } from './types';
 
 const NO_FAILURES: readonly FormSubmissionIssue[] = Object.freeze([]);
@@ -217,7 +218,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 	function revoke(): void {
 		operation = undefined;
 		navigating = false;
-		if (submission.status === 'pending') submission = { ...submission, status: 'idle', failures: NO_FAILURES };
+		if (isSubmissionBusy(submission.status)) submission = { ...submission, status: 'idle', failures: NO_FAILURES };
 	}
 
 	function setSubmission(next: FormSubmissionState): void {
@@ -439,7 +440,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 
 	async function submitLastStep(op: Operation): Promise<SubmitOutcome> {
 		host.sync?.();
-		setSubmission({ status: 'pending', failures: NO_FAILURES, submitCount: submission.submitCount });
+		setSubmission({ status: 'validating', failures: NO_FAILURES, submitCount: submission.submitCount });
 		let result: FormSubmitResult;
 		try {
 			result = await container.submit();
@@ -463,6 +464,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			return (await landOnErrors(op)) ? 'invalid' : 'cancelled';
 		}
 
+		setSubmission({ status: 'submitting', failures: NO_FAILURES, submitCount: submission.submitCount });
 		const { values, setServerErrors } = result;
 		const { signal } = lifecycleAbort;
 		const { succeeded, results, failure } = await runSubmissionLifecycle<TAction>(

@@ -29,8 +29,8 @@ const alert = {
 	$type: 'submission-alert',
 	id: 'status',
 	name: 'status',
-	showOn: ['pending', 'success', 'error'],
-	pendingMessage: 'Sending',
+	showOn: ['submitting', 'success', 'error'],
+	submittingMessage: 'Sending',
 	successMessage: 'Sent',
 	errorMessage: 'Failed',
 } as const;
