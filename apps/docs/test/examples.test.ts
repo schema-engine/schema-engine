@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { checkRecipe, examplePagesRoot, readRecipes, type Recipe } from './recipe-format';
+import { checkRecipe, examplePagesRoot, importsOf, packageOf, readRecipes, type Recipe } from './recipe-format';
 
 /**
  * Pages of Examples that are not a folder of `src/lib/examples`.
@@ -38,6 +38,18 @@ describe('the recipes of Examples', () => {
 		expect(checkRecipe(recipe, page(recipe.id), overview)).toEqual([]);
 	});
 
+	test.each(['design-system-registry', 'server-sent-document', 'checkout-workflow', 'server-driven-workflow'])(
+		'%s imports no UI framework and no forms package',
+		(id) => {
+			const recipe = recipes.find((candidate) => candidate.id === id);
+			const packages = recipe?.files.flatMap((file) => importsOf(file.source).map(packageOf)) ?? [];
+			expect(packages.length).toBeGreaterThan(0);
+			expect(
+				packages.filter((name) => /^(react|react-dom|@ecopages\/.+|@schema-engine\/forms.*)$/.test(name)),
+			).toEqual([]);
+		},
+	);
+
 	test('every page of Examples is a recipe or is listed as another kind of page', () => {
 		const ids = new Set(recipes.map((recipe) => recipe.id));
 		const pages = readdirSync(examplePagesRoot)
@@ -46,6 +58,12 @@ describe('the recipes of Examples', () => {
 		expect(pages.filter((id) => !ids.has(id) && !OTHER_PAGES.includes(id))).toEqual([]);
 		expect(OTHER_PAGES.filter((id) => !pages.includes(id))).toEqual([]);
 	});
+});
+
+const shown = (name: string, language: string, text: string) => `\`\`\`${language} title="${name}"\n${text}\n\`\`\``;
+
+const imports = (specifier: string) => ({
+	files: [{ name: 'main.ts', source: `import { x } from '${specifier}';\n` }],
 });
 
 describe('the recipe format checker', () => {
@@ -65,8 +83,6 @@ describe('the recipe format checker', () => {
 		],
 		tests: [{ name: 'demo.test.ts', source: "import { message } from './main';\n" }],
 	};
-	const shown = (name: string, language: string, text: string) =>
-		`\`\`\`${language} title="${name}"\n${text}\n\`\`\``;
 	const goodPage = [
 		'## Install',
 		`\`\`\`bash\n${install}\n\`\`\``,
@@ -90,9 +106,6 @@ describe('the recipe format checker', () => {
 	});
 
 	test('fails a file that imports another recipe, an app alias or a file that is not its own', () => {
-		const imports = (specifier: string) => ({
-			files: [{ name: 'main.ts', source: `import { x } from '${specifier}';\n` }],
-		});
 		for (const specifier of ['../other/main', '@/lib/x', './missing']) {
 			const [first] = problems(imports(specifier), goodPage);
 			expect(first, specifier).toContain(`main.ts imports ${specifier}`);

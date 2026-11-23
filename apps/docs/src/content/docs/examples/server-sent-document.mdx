@@ -1,0 +1,268 @@
+---
+title: 'Render a server-sent document'
+description: 'A route handler answers with a JSON document, and the client renders the nodes it knows through a registry and reports the ones it cannot, with their paths.'
+order: 2
+---
+
+# Render a server-sent document
+
+A server describes a page as data, and the client turns it into HTML. The server can ship a new layout without a client release, and the client does not trust what arrives: every node is checked against its registration. This recipe is the full round trip. A route handler answers with a JSON document, the client fetches it, renders the nodes it has a component for, and reports the nodes it does not, with their paths. The server in the recipe is newer than the client on purpose, so you see what the client does with a component it has never heard of.
+
+It uses the registry of [A design-system registry](/docs/examples/design-system-registry). `components.ts` and `design-system.ts` below are the same files, so copy them from either page.
+
+## Install
+
+```bash
+pnpm add @schema-engine/registry zod
+```
+
+## The server
+
+`orderDocument` builds the document from an order, and `GET` is the route handler of `/orders/:number`. Any runtime that speaks `Request` and `Response` runs it: a Cloudflare Worker, Deno, Bun, Node with a router, or a Next.js route. It answers 404 for an order it does not know.
+
+This server sends a badge with a `warning` tone and a `countdown` component. The client below knows neither.
+
+```ts title="server.ts"
+export interface Order {
+	number: number;
+	paid: boolean;
+	trackingUrl?: string;
+}
+
+/**
+ * The document of an order page, as the server builds it.
+ *
+ * @remarks
+ * This server is newer than the client in the recipe: it sends a `warning` tone and a `countdown` component the
+ * client has not registered yet.
+ */
+export function orderDocument(order: Order): unknown[] {
+	return [
+		{
+			$type: 'callout',
+			tone: 'success',
+			title: `Order ${order.number} confirmed`,
+			text: 'Thanks for shopping with us.',
+		},
+		{ $type: 'badge', label: order.paid ? 'Paid' : 'Payment due', tone: order.paid ? 'success' : 'warning' },
+		{ $type: 'countdown', until: '2026-12-24T00:00:00Z' },
+		...(order.trackingUrl === undefined
+			? []
+			: [{ $type: 'button', label: 'Track parcel', href: order.trackingUrl }]),
+	];
+}
+
+const orders = new Map<number, Order>([
+	[1042, { number: 1042, paid: false, trackingUrl: '/parcels/1042' }],
+	[1043, { number: 1043, paid: true }],
+]);
+
+/** The route handler of `/orders/:number`: it answers with the order's document as JSON, or 404. */
+export function GET(request: Request): Response {
+	const order = orders.get(Number(new URL(request.url).pathname.split('/').at(-1)));
+	return order ? Response.json(orderDocument(order)) : new Response('Not found', { status: 404 });
+}
+```
+
+## The client
+
+`loadDocument` fetches the document and renders it. It takes `request` so a test, or a runtime with its own `fetch`, can supply one. Each way the answer can go wrong is a result the caller can show: the network failed, the status is not a success, or the body is not JSON. A document that arrives with nodes the client cannot render is not a failure: the client renders the rest and returns the `issues`.
+
+```ts title="client.ts"
+import { createDesignSystem, renderDocument, type Rendered } from './design-system';
+
+const system = createDesignSystem();
+
+export type Loaded = ({ success: true } & Rendered) | { success: false; error: string };
+
+/**
+ * Fetches a document and renders what the client knows how to render.
+ *
+ * @remarks
+ * Each way the answer can fail is a result, not an exception: the server could not be reached, it answered with a
+ * status that is not a success, or its body is not JSON. A document that arrives but holds nodes the client cannot
+ * render is a success with `issues`.
+ */
+export async function loadDocument(url: string, request: typeof fetch = fetch): Promise<Loaded> {
+	let response: Response;
+	try {
+		response = await request(url, { headers: { Accept: 'application/json' } });
+	} catch {
+		return { success: false, error: 'The server could not be reached.' };
+	}
+	if (!response.ok) return { success: false, error: `The server answered ${response.status}.` };
+	let body: unknown;
+	try {
+		body = await response.json();
+	} catch {
+		return { success: false, error: 'The answer is not JSON.' };
+	}
+	return { success: true, ...renderDocument(system, body) };
+}
+```
+
+## The registry
+
+The client resolves nodes through the design system's registry. These two files are the ones from [A design-system registry](/docs/examples/design-system-registry), unchanged.
+
+```ts title="components.ts"
+import * as z from 'zod/mini';
+import type { BaseRegistration } from '@schema-engine/registry';
+
+z.config(z.locales.en());
+
+/** A registration of the design system: the schema of its config, and how it draws itself as HTML. */
+export interface Component extends BaseRegistration {
+	render(config: unknown): string;
+}
+
+/** Escapes the characters that end a text or an attribute value in HTML. */
+export const escape = (text: string) => text.replace(/[&<>"]/g, (character) => `&#${character.charCodeAt(0)};`);
+
+/** A link target the design system accepts: a path on this site or an http(s) URL, never `javascript:`. */
+export const hrefSchema = z.string().check(z.regex(/^(\/|https?:\/\/)/, 'Use a path or an http(s) URL'));
+
+const buttonSchema = z.object({
+	$type: z.literal('button'),
+	label: z.string(),
+	href: z.optional(hrefSchema),
+	variant: z.optional(z.enum(['primary', 'secondary'])),
+});
+
+export const button: Component = {
+	$type: 'button',
+	schema: buttonSchema,
+	metadata: { name: 'Button', description: 'An action. With an href it is a link.', tags: ['action'] },
+	render({ label, href, variant = 'primary' }: z.output<typeof buttonSchema>) {
+		return href === undefined
+			? `<button type="button" class="button button-${variant}">${escape(label)}</button>`
+			: `<a class="button button-${variant}" href="${escape(href)}">${escape(label)}</a>`;
+	},
+};
+
+const badgeSchema = z.object({
+	$type: z.literal('badge'),
+	label: z.string(),
+	tone: z.optional(z.enum(['info', 'success', 'danger'])),
+});
+
+export const badge: Component = {
+	$type: 'badge',
+	schema: badgeSchema,
+	metadata: { name: 'Badge', description: 'A short status label.', tags: ['status'] },
+	render({ label, tone = 'info' }: z.output<typeof badgeSchema>) {
+		return `<span class="badge badge-${tone}">${escape(label)}</span>`;
+	},
+};
+
+const calloutSchema = z.object({
+	$type: z.literal('callout'),
+	title: z.string(),
+	text: z.optional(z.string()),
+	tone: z.optional(z.enum(['info', 'success', 'danger'])),
+});
+
+export const callout: Component = {
+	$type: 'callout',
+	schema: calloutSchema,
+	metadata: { name: 'Callout', description: 'A message that stands out from the page.', tags: ['status'] },
+	render({ title, text, tone = 'info' }: z.output<typeof calloutSchema>) {
+		const body = text === undefined ? '' : ` <span>${escape(text)}</span>`;
+		return `<aside class="callout callout-${tone}"><strong>${escape(title)}</strong>${body}</aside>`;
+	},
+};
+
+/** The components the design system ships. */
+export const defaults: readonly Component[] = [button, badge, callout];
+```
+
+```ts title="design-system.ts"
+import { createRegistry, safeParseStandardSchema, type StandardSchemaIssue } from '@schema-engine/registry';
+import { defaults, type Component } from './components';
+
+/**
+ * The design system's registry. Registrations after the defaults override a default with the same `$type`:
+ * the last one wins and keeps the first one's position.
+ */
+export function createDesignSystem(overrides: readonly Component[] = []) {
+	return createRegistry('Component', [...defaults, ...overrides]);
+}
+
+export type DesignSystem = ReturnType<typeof createDesignSystem>;
+
+/** What rendering a document gives: the HTML of every valid node, and an issue for each node that is not. */
+export interface Rendered {
+	html: string[];
+	issues: StandardSchemaIssue[];
+}
+
+/**
+ * Renders a document, a list of nodes that each name a component by `$type`.
+ *
+ * @remarks
+ * A node that cannot be rendered does not stop the others. Its issues carry a path that starts with its index in
+ * the document, so the caller can say which node to fix.
+ */
+export function renderDocument(system: DesignSystem, document: unknown): Rendered {
+	if (!Array.isArray(document)) {
+		return { html: [], issues: [{ message: 'A document is a list of nodes.', path: [] }] };
+	}
+	const html: string[] = [];
+	const issues: StandardSchemaIssue[] = [];
+	document.forEach((node: unknown, index) => {
+		const type = typeof node === 'object' && node !== null && '$type' in node ? node.$type : undefined;
+		if (typeof type !== 'string') {
+			issues.push({ message: 'A node is an object with a string $type.', path: [index] });
+			return;
+		}
+		const component = system.get(type);
+		if (!component) {
+			issues.push({ message: `No component is registered for $type '${type}'.`, path: [index, '$type'] });
+			return;
+		}
+		const parsed = safeParseStandardSchema(component.schema, node);
+		if (parsed.success) html.push(component.render(parsed.data));
+		else issues.push(...parsed.error.issues.map((issue) => ({ ...issue, path: [index, ...(issue.path ?? [])] })));
+	});
+	return { html, issues };
+}
+```
+
+## Run it
+
+`main.ts` talks to the route handler without a network: its `request` builds a `Request` and hands it to `GET`. Replace it with the global `fetch` to call a real server.
+
+```ts title="main.ts"
+import { loadDocument } from './client';
+import { GET } from './server';
+
+const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
+	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
+
+const result = await loadDocument('https://shop.example/orders/1042', async (url, init) => GET(new Request(url, init)));
+
+if (!result.success) console.log(result.error);
+else {
+	for (const line of result.html) console.log(line);
+	for (const issue of result.issues) console.log(`issue ${where(issue.path)}: ${issue.message}`);
+}
+```
+
+```text
+<aside class="callout callout-success"><strong>Order 1042 confirmed</strong> <span>Thanks for shopping with us.</span></aside>
+<a class="button button-primary" href="/parcels/1042">Track parcel</a>
+issue 1.tone: Invalid option: expected one of "info"|"success"|"danger"
+issue 2.$type: No component is registered for $type 'countdown'.
+```
+
+- **The callout and the button render.** They are in the registry and their configuration is valid.
+- **`1.tone` is a configuration the client rejects.** The badge is known, but its schema allows `info`, `success` and `danger`, so the server's `warning` is reported at the field. The badge is not rendered, because a half-valid node is not shown.
+- **`2.$type` is a component the client has not registered.** The path names the node by its index, so a log or an error report says exactly which part of the document the client could not draw.
+
+The test of this recipe runs the same route handler against the client, then replaces the network with a failure, a 503 and a body that is not JSON.
+
+## Take it further
+
+- Show a fallback in place of each issue: the paths say which nodes failed.
+- Validate what a document may contain on the server too: build it from the same registry, so a document the client would reject never leaves the server.
+- Send workflows the same way: [A server-driven workflow](/docs/examples/server-driven-workflow).

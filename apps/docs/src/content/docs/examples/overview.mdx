@@ -22,7 +22,21 @@ An example is a recipe: one use case, written as files you can copy into an app 
 
 ## Recipes
 
-Recipes by domain, each with what it shows and the install line it needs.
+Recipes by domain, with what each shows and the install line it needs.
+
+### Registry
+
+| Recipe                                                               | Shows                                                                           | Install                                |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- |
+| [A design-system registry](/docs/examples/design-system-registry)    | Components with schemas, a document rendered to HTML, and an override that wins | `pnpm add @schema-engine/registry zod` |
+| [Render a server-sent document](/docs/examples/server-sent-document) | A route handler, a client that renders what it knows and reports what it cannot | `pnpm add @schema-engine/registry zod` |
+
+### Actions
+
+| Recipe                                                            | Shows                                                                             | Install                               |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------- |
+| [A checkout workflow](/docs/examples/checkout-workflow)           | A JSON workflow with a parallel group, and a declined card that cancels the group | `pnpm add @schema-engine/actions zod` |
+| [A server-driven workflow](/docs/examples/server-driven-workflow) | A workflow fetched from an endpoint, checked, and run by `submit` and `change`    | `pnpm add @schema-engine/actions zod` |
 
 ### Forms
 
