@@ -30,10 +30,21 @@ export interface ChoiceOption {
 	readonly disabled?: boolean;
 }
 
-/** The text of each value a choice control holds: Radiant UI keys its options by the text of their values. */
+/**
+ * The text of each value a choice control holds: Radiant UI keys its options by the text of their values.
+ *
+ * @remarks
+ * Only a string, a number or a boolean has text a key can stand for. An empty value, an object and any other
+ * value holds no key, so `String` never turns one into `[object Object]`.
+ */
 export function choiceKeys(value: unknown): string[] {
-	if (Array.isArray(value)) return value.map(String);
-	return value === undefined || value === null || value === '' ? [] : [String(value)];
+	const keys: string[] = [];
+	for (const item of Array.isArray(value) ? value : [value]) {
+		if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+			if (item !== '') keys.push(String(item));
+		}
+	}
+	return keys;
 }
 
 /**
