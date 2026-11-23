@@ -35,6 +35,18 @@ runtime.clearSubmission();
 | Values, field state, validation, participation (skipped steps too), the captured submission, `reset()` | Submission status, the one lock, `form_mount`, `form_change` / `onChange`, every action dispatch, step state and navigation, the action context, submit as Next | The element and its context, focus, `sync`, native submit and its events |
 
 The runtime builds the container itself, so no renderer can differ in its timing, payload or participation.
+
+## The values a submission holds
+
+After `container.submit()` passes and before the submit actions, the runtime parses the values with
+`engine.submissionSchema(config)` (the schema composed from each input's `value` declaration), and then with the
+application's schema when the form was bound to one by `engine.validateForm(json, { values })`. The parse output is what
+`onSubmit`, `onAction` and the action context's `formData` receive; `submitNatively` gets the values the form declares (the derived schema's output, before the application's schema), so a native post sends what the fields hold even when the application's schema turns them into a `Date`.
+A mismatch is a broken element contract, not a user error: the submission ends `failed` with status `error` and a
+form-level failure of type `valueMismatch` (`params: { path }`, one per mismatched path), the error is logged, and
+neither the actions nor `onSubmit` run. It is not an attempt (`submitCount` does not move), like a `validationFailed`.
+`defaults` are checked once against a partial of the schema: a default that does not match its field is dropped whole (the field starts as if it had none, and its own rules ask the user for it; a list is one field, so one bad row drops the default of the list, and a leaf inside a group is its own field), and a warning names the paths. The form still renders. `createFormRuntime<TAction,
+TValues>` types the callbacks by `TValues`, the values type of the config, which a renderer passes.
 There is no `runtime.reset()` and no `dispose()`: `container.reset()` is the only reset, and the cleanup of
 `mount()` is the only teardown.
 
@@ -48,7 +60,7 @@ There is no `runtime.reset()` and no `dispose()`: `container.reset()` is the onl
 - `sync()`: writes the controls' values into the container and reports their native validity, as a submit
   does. The runtime calls it before it validates for `next`, `goTo` and `submit`, and before an action's
   `form.validate()` or `form.checkValidity()`. React has none: its controls write as the user types.
-- `submitNatively(values)`: called, with the values that passed, once a submission succeeded, after its actions and `onSubmit` (so the navigation
+- `submitNatively(values)`: called, with the values the form declares, once a submission succeeded, after its actions and `onSubmit` (so the navigation
   cannot cut off the success and complete triggers). The host decides whether it posts: Radiant does when the
   application gave no `onSubmit`, with the engine's CSRF field in the form.
 
@@ -103,7 +115,7 @@ interface FormStepState {
 
 `getSnapshot()` keeps its identity while nothing it reports changed, even when the values did, so it is safe in
 `useSyncExternalStore`. `failures` are issues (`callbackFailed`, `triggerFailed`, `actionFailed`,
-`validationFailed`), so the form's one formatter words them. `submitCount` counts submissions that passed or
+`validationFailed`, `valueMismatch`), so the form's one formatter words them. `submitCount` counts submissions that passed or
 failed validation: a Next is not one, and neither is a validation that could not run or one an edit outran.
 `steps` holds every step in config order, and `reachable` says whether `goTo` can move there (a step before the current one, or after it when the form is `free` or the step was visited); only `visited` and `complete` are stored, by step id, and `skipped`
 (the step's constraints hide it) and `invalid` (an error at one of its fields) are derived from the container,

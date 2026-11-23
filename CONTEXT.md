@@ -46,7 +46,7 @@ dispatch the native `input` (the user changed the value) and `change` (the user 
 a value set from code, and a custom host announces itself with `announceControlConnect` when it connects, so a field
 that registered earlier seeds it. `rui-change` stays only for components that are not form controls. The instance
 provides the container on `formInstanceContext`, and scoped `FormController` instances read it there (`container`,
-`select`, `formatIssue`); there is no global active form. A new config, engine or `defaultValues` is a new container; moving the instance keeps it.
+`select`, `formatIssue`); there is no global active form. A new config, engine or `defaultValues` is a new container; moving the instance keeps it. `rui-form` is connected to the container as it is. Radiant UI's own choice controls hold text, a list of text or a list of numbers where the form holds the value its element declares, so the `select`, `combobox`, `radio`, `checkbox-group` and `slider` elements each wrap their control in a host (`se-select`, `se-combobox`, `se-radio-group`, `se-checkbox-group`, `se-slider`, built on `ControlHost` in `lib/control-host.ts`) whose `value` is the declared value: the host writes it into the control as the control holds it, maps what the user chose back, and dispatches the native `input` and `change` on itself. `FormInstanceElement` is internal to the `FormRenderer` view, which feeds it the callbacks through a `ref` (it has no property to assign and the package does not export it): the view's typed props are the one way to receive the submitted values. `registerHostControl` registers every host with `rui-field` in one of two modes: `wraps` (a host around a Radiant UI control, `ControlHost`, not form-associated, `submission: 'none'`) and `owns` (a host that renders its own control: the form-associated phone, OTP and masked inputs, `submission: 'host'`, and the drop zone, whose file input is the submitted control).
 The application gives the engine a `formatIssue` that turns an issue (`type`, `ruleId`, `params`) into
 text, and a renderer may override it for its forms (renderer over engine);
 without one an issue shows its own `message` and otherwise nothing.
@@ -192,6 +192,37 @@ snapshot carries `generation`, which goes up on every reset, and when it changes
 command in flight, returns the submission to idle with `submitCount` 0 and the steps to the first, firing no
 step trigger. An action's `form.reset`, `useFormContext().reset`, a native reset and
 `FormController.container.reset()` therefore reset everything.
+
+## Submitted values
+
+The **values** a form submits are typed by its config, and the runtime checks that the type is true.
+
+- **Value declaration.** `value: (config) => StandardSchemaV1` on an input registration: what that element's control
+  writes, as a function of the configured element (a select's `options` are an enum, an array of it with `multiple`; a
+  rating's `max` is a bound). `defineInput` requires it and `defineStatic` has none. A container (a schema with
+  `elements`; `containerKind` may sit beside it, `'object'` being the default) declares none, since its value is its children's, and `createFormEngine` rejects an input without `value` whose schema declares no `elements` (`containerKind` does not stand in for them, except for a schema that is not Zod, which cannot be read for `elements`). `defineInput` and `defineStatic` set a runtime `kind` (`'input'` or `'static'`), the one thing the engine reads to tell the two apart: the element's `metadata.category` is for display and decides nothing, so a static element may have the category `input`, and an input without `value` is rejected whatever its category. A registration written by hand states its `kind`, and `createFormEngine` rejects one that does not. Each registration type has its own `kind` discriminant (elements: `input` | `static`; recipes: `single-step` | `wizard`). A control that writes a value
+  its declaration rejects is a bug in the control, fixed in the control.
+- **Submission schema.** `engine.submissionSchema(config)` composes the declarations along the rules the container
+  submits by (`lib/submission-shape.ts`, one walk for both): dotted names nest, a named container is an object of its
+  children, a container of kind `array` is a list of rows, a one-child row is a list of values (unless `initialValues`
+  or the child's default is a record, or the child is a container of its own that is not an array, such as a group, which
+  makes the rows objects of the array's children), and `payload` keys are added. A key no field declares is not submitted. It
+  strips what no field declares, exports JSON Schema where the value schemas can (its `input()` and `output()` throw for
+  a value schema that has no JSON Schema), and has a `partial` that `defaultValues` are checked against when the
+  runtime is created: a default that does not match its field is dropped whole (a list is one field, so one bad row drops the default of the list; a leaf inside a group is its own field), a warning names each field, and the form renders.
+- **Absent value.** A hidden or disabled field, a field of a skipped step and a field never written are missing keys. A
+  key is required (in the schema and in the type) only when the field has a `required` rule and neither it, a
+  container around it nor its step has `constraints` or `disabled`. An optional leaf field's empty value (`''` or `null`)
+  is submitted as it is, so a PATCH can tell "cleared" from "untouched", and its type allows it. A list or a group has no such value: its empty value is its empty list or object.
+- **`valueMismatch`.** After `container.submit()` passes and before the submit actions, the runtime parses the values
+  with the submission schema, and then with the application's own if the form was bound to one. A mismatch is a broken
+  element contract, not a user error: the submission fails with a form-level `FormSubmissionIssue` of type
+  `valueMismatch` (`params: { path }`), the error is logged and `onSubmit` is not called.
+- **Values type.** `ValuesOf` reads a literal config and the engine's value entries: `engine.defineForm` returns the
+  normalized config carrying it, or `FormValues` when the config is not a literal. A JSON config binds the
+  application's schema with `engine.validateForm(json, { values })`, and the type is that schema's output. Renderers
+  type `onSubmit`, `onAction` and `defaultValues` from the config; `onChange`, `useWatch` and live reads stay
+  `FormValues`, since live values hold excluded and unfinished data.
 
 ## Wizard navigation
 

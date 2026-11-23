@@ -21,7 +21,7 @@ Each component follows a consistent 3-file pattern:
 
 - `form-[name].types.ts` - TypeScript types and Zod schemas
 - `form-[name].tsx` - React component implementation
-- `form-[name].registration.ts` - Element registration (`defineInput` / `defineStatic`)
+- `form-[name].registration.ts` - Element registration (`defineInput` / `defineStatic`); an input declares the value its control writes with `value` (the `xFieldValue` function of its types file)
 
 ## Native and controlled fields
 
