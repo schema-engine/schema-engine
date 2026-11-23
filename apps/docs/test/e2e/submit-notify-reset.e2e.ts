@@ -4,20 +4,20 @@ import { chromium } from 'playwright';
 
 const baseUrl = inject('docsBaseUrl');
 
-test('sequential actions complete after submission', async () => {
+test('the actions of the config run after a submission: send, notify, reset', async () => {
 	const browser = await chromium.launch();
 	try {
 		const page = await browser.newPage();
 		const pageErrors: string[] = [];
 		page.on('pageerror', (error) => pageErrors.push(error.message));
-		await page.goto(`${baseUrl}/docs/examples/sequential-actions`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}/docs/examples/submit-notify-reset`, { waitUntil: 'networkidle' });
 		await page.evaluate(() => {
 			const events: string[] = [];
 			Reflect.set(window, '__actionEvents', events);
 			const fetchOriginal = window.fetch.bind(window);
 			window.fetch = async (input, init) => {
 				const response = await fetchOriginal(input, init);
-				if (input === '/api/submit-demo' && init?.method === 'POST') events.push('submit');
+				if (input === '/api/subscriptions' && init?.method === 'POST') events.push('submit');
 				return response;
 			};
 			document.addEventListener('schema-engine:docs-action-notification', () => {
@@ -31,7 +31,9 @@ test('sequential actions complete after submission', async () => {
 		const email = demo.locator('input[name="email"]');
 		await email.fill('test@example.com');
 		await demo.locator('button[type="submit"]').click();
-		await pwExpect(page.getByRole('status').getByText('Submitted successfully', { exact: true })).toBeVisible();
+		await pwExpect(
+			page.getByRole('status').getByText('You are subscribed. Look out for the next update.', { exact: true }),
+		).toBeVisible();
 		await pwExpect(email).toHaveValue('');
 		expect(await page.evaluate(() => Reflect.get(window, '__actionEvents'))).toEqual([
 			'submit',
@@ -43,31 +45,33 @@ test('sequential actions complete after submission', async () => {
 	}
 });
 
-test('sequential actions work after navigating within the docs', async () => {
+test('the actions run after navigating within the docs', async () => {
 	const browser = await chromium.launch();
 	try {
 		const page = await browser.newPage();
 		await page.goto(`${baseUrl}/docs/schema-engine/introduction`, { waitUntil: 'networkidle' });
 		await page.evaluate(() => Reflect.set(window, '__docsNavigationProbe', true));
-		await page.locator('a[href="/docs/examples/sequential-actions"]').first().click();
-		await pwExpect(page).toHaveURL(`${baseUrl}/docs/examples/sequential-actions`);
+		await page.locator('a[href="/docs/examples/submit-notify-reset"]').first().click();
+		await pwExpect(page).toHaveURL(`${baseUrl}/docs/examples/submit-notify-reset`);
 		expect(await page.evaluate(() => Reflect.get(window, '__docsNavigationProbe'))).toBe(true);
 		const demo = page.locator('.docs-form-renderer-preview');
 		const email = demo.locator('input[name="email"]');
 		await email.fill('test@example.com');
 		await demo.locator('button[type="submit"]').click();
-		await pwExpect(page.getByRole('status').getByText('Submitted successfully', { exact: true })).toBeVisible();
+		await pwExpect(
+			page.getByRole('status').getByText('You are subscribed. Look out for the next update.', { exact: true }),
+		).toBeVisible();
 		await pwExpect(email).toHaveValue('');
 	} finally {
 		await browser.close();
 	}
 });
 
-test('invalid submission does not run success actions', async () => {
+test('an invalid submission does not run the success actions', async () => {
 	const browser = await chromium.launch();
 	try {
 		const page = await browser.newPage();
-		await page.goto(`${baseUrl}/docs/examples/sequential-actions`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}/docs/examples/submit-notify-reset`, { waitUntil: 'networkidle' });
 		await page.evaluate(() => {
 			const events: string[] = [];
 			Reflect.set(window, '__actionEvents', events);
@@ -78,8 +82,10 @@ test('invalid submission does not run success actions', async () => {
 		const email = demo.locator('input[name="email"]');
 		await demo.locator('button[type="submit"]').click();
 		await pwExpect(email).toHaveAttribute('aria-invalid', 'true');
-		await pwExpect(demo.getByText('Email is required', { exact: true })).toBeVisible();
-		await pwExpect(page.getByRole('status').getByText('Submitted successfully', { exact: true })).toHaveCount(0);
+		await pwExpect(demo.getByText('Enter your email', { exact: true })).toBeVisible();
+		await pwExpect(
+			page.getByRole('status').getByText('You are subscribed. Look out for the next update.', { exact: true }),
+		).toHaveCount(0);
 		expect(await page.evaluate(() => Reflect.get(window, '__actionEvents'))).toEqual([]);
 	} finally {
 		await browser.close();

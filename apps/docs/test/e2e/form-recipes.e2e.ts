@@ -5,6 +5,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 const baseUrl = inject('docsBaseUrl');
 const contactPath = '/docs/examples/contact-form';
 const wizardPath = '/docs/examples/registration-wizard';
+const surveyPath = '/docs/examples/branching-survey';
 const shadcnPath = '/docs/forms-react/components';
 
 /** Waits until React has hydrated every live demo on the page, so a click is not lost to a pre-hydration form. */
@@ -158,6 +159,27 @@ describe('the forms recipe pages', () => {
 		await pwExpect(result).toContainText('"email": "ada@example.com"');
 		await pwExpect(result).toContainText('"role": "designer"');
 		await expectNoReload(wizardPath);
+	});
+
+	test('a branching survey skips its follow-up step for a good answer and opens it for a poor one', async () => {
+		await open(surveyPath);
+		const form = react();
+		const next = form.getByRole('button', { name: 'Next' });
+
+		await form.locator('input[name="name"]').fill('Ada Lovelace');
+		await form.locator('select[name="satisfaction"]').selectOption('great');
+		await next.click();
+		await pwExpect(form.locator('textarea[name="comments"]')).toBeVisible();
+		await pwExpect(form.locator('select[name="reason"]')).toHaveCount(0);
+
+		await form.getByRole('button', { name: 'Previous' }).click();
+		await form.locator('select[name="satisfaction"]').selectOption('poor');
+		await next.click();
+		await pwExpect(form.locator('select[name="reason"]')).toBeVisible();
+		await next.click();
+		await pwExpect(form.locator('select[name="reason"]')).toHaveAttribute('aria-invalid', 'true');
+		await pwExpect(form.locator('textarea[name="comments"]')).toHaveCount(0);
+		await expectNoReload(surveyPath);
 	});
 
 	test('the renderer tabs show one renderer at a time, with the files of that renderer', async () => {

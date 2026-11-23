@@ -108,7 +108,7 @@ describe.each([
 		expect(send).toHaveBeenCalledTimes(1);
 		const [url, init] = send.mock.calls[0] as unknown as [string, RequestInit];
 		expect(url).toBe('/api/contact');
-		expect(JSON.parse(String(init.body))).toEqual({
+		expect(JSON.parse(init.body as string)).toEqual({
 			name: 'Ada Lovelace',
 			email: 'ada@example.com',
 			subject: 'general',

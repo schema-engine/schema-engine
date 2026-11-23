@@ -7,7 +7,7 @@ order: 3
 import { FormConfigCode } from '@/components/form-config-code';
 import { FormRendererPreview } from '@/components/form-renderer';
 import { registration } from '@/lib/examples/registration-wizard/config';
-import { surveyDemoConfig } from '@/lib/form-configs/survey-form';
+import { survey } from '@/lib/examples/branching-survey/config';
 
 # Radiant layouts
 
@@ -40,10 +40,10 @@ Its config:
 
 ## Survey wizard
 
-The survey demo uses the same `wizard` recipe and shows the Radiant field controls, including its select and radio group composition.
+The survey demo uses the same `wizard` recipe, with a step that is skipped unless the answer was poor, and shows the Radiant field controls, including its select. The [Branching survey](/docs/examples/branching-survey) recipe has its files and tests.
 
-<FormRendererPreview config={surveyDemoConfig} />
+<FormRendererPreview config={survey} />
 
 Its config:
 
-<FormConfigCode config={surveyDemoConfig} />
+<FormConfigCode config={survey} />

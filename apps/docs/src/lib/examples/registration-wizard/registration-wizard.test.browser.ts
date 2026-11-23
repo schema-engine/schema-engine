@@ -115,7 +115,7 @@ describe.each([
 		await expect.poll(() => onRegistered.mock.calls.length).toBe(1);
 		const [url, init] = send.mock.calls[0] as unknown as [string, RequestInit];
 		expect(url).toBe('/api/accounts');
-		expect(JSON.parse(String(init.body))).toEqual({
+		expect(JSON.parse(init.body as string)).toEqual({
 			email: 'ada@example.com',
 			password: 'correct horse battery',
 			name: 'Ada Lovelace',

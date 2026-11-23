@@ -1,5 +1,5 @@
 const MOCK_FLAG = '__schemaEngineMockFetch';
-const MOCK_SUBMIT_PATHS = new Set(['/api/submit-demo', '/api/demo-submit']);
+const MOCK_SUBMIT_PATHS = new Set(['/api/submit-demo', '/api/demo-submit', '/api/subscriptions']);
 
 function parseBody(init?: RequestInit): Record<string, unknown> {
 	if (!init?.body) return {};
