@@ -20,12 +20,12 @@ The engine has three independent registries:
 - **Actions** respond to form and step lifecycle triggers.
 
 ```ts
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, SubmitActionRegistration } from '@schema-engine/forms';
+import { schemaFormRegistrations } from '@schema-engine/forms-radiant';
 
-const engine = createFormEngine({
-	elements: elementRegistrations,
-	recipes: recipeRegistrations,
-	actions: actionRegistrations,
+export const engine = createFormEngine({
+	elements: schemaFormRegistrations,
+	actions: [SubmitActionRegistration],
 });
 ```
 
@@ -39,8 +39,12 @@ Duplicate `$type` values follow last-wins semantics, with no warning. Spread
 shared barrels and append overrides:
 
 ```ts
-const engine = createFormEngine({
-	elements: [...schemaFormRegistrations, customInput],
+import { createFormEngine } from '@schema-engine/forms';
+import { schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { text } from './registrations';
+
+export const engine = createFormEngine({
+	elements: [...schemaFormRegistrations, text],
 });
 ```
 
@@ -146,7 +150,11 @@ When configuration is authored in TypeScript rather than loaded as JSON, pass a
 typed object to `engine.defineForm()`:
 
 ```ts
-const form = engine.defineForm({
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+export const form = engine.defineForm({
 	id: 'contact',
 	title: 'Contact',
 	view: { $type: 'card', shell: { appearance: { size: 'default' } } },
@@ -180,7 +188,9 @@ editable by another system, then pass it to `validateForm` or to `FormRenderer`
 There is one view recipe per form. The recipe is selected at the form level:
 
 ```ts
-const config: FormConfig = {
+import type { FormConfig } from '@schema-engine/forms';
+
+export const config: FormConfig = {
 	id: 'contact',
 	steps: [{ id: 'details', title: 'Contact details', elements: [] }],
 	view: {
@@ -215,7 +225,7 @@ Registrations of every kind follow the same rules: a later `$type` wins, and `[.
 ```ts
 import { createFormEngine } from '@schema-engine/forms';
 import { builtInAxes, defineAxis } from '@schema-engine/layout';
-import { elements } from './registrations';
+import { schemaFormRegistrations as elements } from '@schema-engine/forms-radiant';
 import { BrandFrameRecipe } from './brand-frame';
 import { postalCode } from './postal-code';
 

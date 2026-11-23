@@ -112,6 +112,11 @@ export function typecheck(files: Record<string, string>): Record<string, string[
 	return result;
 }
 
+const REACT_PRAGMA = '/** @jsxImportSource react */';
+
+/** A `tsx` fence that imports from React or the React renderer is React JSX, whose pragma a page leaves out. */
+const REACT_IMPORT = /from '(react|@schema-engine\/forms-react[^']*)'/;
+
 /** A TypeScript fence that does not compile, named by its page, its place on the page and its heading. */
 export interface SnippetFailure {
 	page: string;
@@ -129,7 +134,7 @@ export interface SnippetFailure {
  * meta carries `title="<name>"` is itself a file of the app, so a later fence on the page can import it. A fence
  * with no import or export gets an empty export, so snippets that declare the same name do not collide. A fence
  * for which `skip` returns true is left out. A fence that holds JSX needs the `tsx` tag: under `ts` it fails to
- * parse.
+ * parse. A `tsx` fence that imports React or `@schema-engine/forms-react` is compiled as React JSX.
  */
 export function checkPageSnippets(
 	page: string,
@@ -146,7 +151,8 @@ export function checkPageSnippets(
 		const titled = block.meta.match(/title="([^"]+)"/)?.[1];
 		const name = titled ?? `fence-${fence}.${block.lang === 'tsx' ? 'tsx' : 'ts'}`;
 		names.set(fence, name);
-		files[name] = /^\s*(import|export)\s/m.test(block.code) ? block.code : `${block.code}\nexport {};`;
+		const code = /^\s*(import|export)\s/m.test(block.code) ? block.code : `${block.code}\nexport {};`;
+		files[name] = block.lang === 'tsx' && REACT_IMPORT.test(block.code) ? `${REACT_PRAGMA}\n${code}` : code;
 	}
 	const checked = fences.filter(({ block, fence }) => !skip(block, fence));
 	if (checked.length === 0) return [];

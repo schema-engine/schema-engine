@@ -17,6 +17,7 @@ describe('the pages show the recipes they run', () => {
 		'csrf.ts': ['forms/csrf'],
 		'checkout-wizard.ts': ['forms/wizard'],
 		'react-widgets.react.tsx': ['forms-react/widgets'],
+		'react-quick-start.react.tsx': ['forms-react/getting-started'],
 		'react-embed.react.tsx': ['forms/form-libraries'],
 		'react-typed-values.react.tsx': ['forms/form-state'],
 		'agent-tool.react.tsx': ['forms/agent-tool'],

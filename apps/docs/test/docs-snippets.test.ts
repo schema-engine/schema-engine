@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import { allRecipes, recipeConfigSource } from '../src/lib/recipes/catalog';
 import {
@@ -28,6 +30,14 @@ const CHECKED_DOCS = [
 	'forms/overview',
 	'forms/getting-started',
 	'forms/core-concepts',
+	'forms/constraints',
+	'forms/validation',
+	'forms/validation-custom',
+	'forms/actions',
+	'forms/builder',
+	'forms/form-state',
+	'forms/yaml',
+	'forms-react/getting-started',
 ];
 
 interface AllowedFence {
@@ -43,6 +53,11 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		page: 'actions/concepts',
 		heading: 'Context',
 		reason: 'Shows the call the dispatcher makes inside itself, which is not a module.',
+	},
+	{
+		page: 'forms-react/getting-started',
+		heading: 'Create the engine',
+		reason: 'Imports the barrels that the shadcn command copies into the app, which do not exist before it runs.',
 	},
 	{
 		page: 'actions/api-reference',
@@ -96,6 +111,10 @@ export const postalCode = {
 } as const;`,
 	'contact-card.ts': recipeConfigSource(allRecipes.find((recipe) => recipe.id === 'contact-card')!.demos),
 	'brand-frame.ts': "export { BrandFrameRecipe } from './brand-frame.radiant';",
+	'react-widgets.react.tsx': readFileSync(
+		join(import.meta.dirname, '../src/lib/form-recipes/react-widgets.react.tsx'),
+		'utf8',
+	),
 	...recipeFiles,
 };
 
@@ -106,6 +125,8 @@ const CONTINUES: Record<string, string[]> = {
 	'forms/core-concepts': ['forms/getting-started'],
 	'forms/constraints': ['forms/getting-started'],
 	'forms/validation': ['forms/getting-started'],
+	'forms/builder': ['forms/getting-started'],
+	'forms/validation-custom': [],
 };
 
 const appFor = (page: string): Record<string, string> => ({

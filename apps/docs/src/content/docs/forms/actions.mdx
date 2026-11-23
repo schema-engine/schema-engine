@@ -191,12 +191,16 @@ Use `defineAction` from `@schema-engine/actions` and specialize it with the form
 
 ```ts title="track-submit.ts"
 import * as z from 'zod/mini';
-import { defineAction } from '@schema-engine/actions';
+import { defineAction, type ActionConfigBase } from '@schema-engine/actions';
 import type { BuilderActionBaseContext, FormActionTrigger } from '@schema-engine/forms';
 
 const defineFormAction = defineAction<BuilderActionBaseContext, FormActionTrigger>();
 
-export const trackAction = defineFormAction({
+interface TrackSubmitConfig extends ActionConfigBase<'track_submit'> {
+	eventName: string;
+}
+
+export const trackAction = defineFormAction<TrackSubmitConfig>({
 	$type: 'track_submit',
 	schema: z.object({
 		id: z.string(),

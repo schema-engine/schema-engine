@@ -5,6 +5,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { FeedbackForm } from './agent-tool.react';
 import { ProfileEditor } from './react-embed.react';
+import { ContactForm } from './react-quick-start.react';
 import { engine } from './react-widgets.react';
 
 let root: Root | undefined;
@@ -153,5 +154,21 @@ describe('the agent tool', () => {
 		root!.unmount();
 
 		expect(registered[0]!.signal.aborted).toBe(true);
+	});
+});
+
+describe('the React quick start', () => {
+	test('renders with no recipe, blocks an invalid submit and shows the submitted values', async () => {
+		const host = await mount(createElement(ContactForm));
+		await userEvent.click(host.querySelector<HTMLButtonElement>('button[type="submit"]')!);
+		await expect.poll(() => host.textContent).toContain('Enter your name');
+		expect(host.querySelector('[data-testid="submitted"]')).toBeNull();
+
+		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="name"]')!, 'Ada Lovelace');
+		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="email"]')!, 'ada@example.com');
+		await userEvent.click(host.querySelector<HTMLButtonElement>('button[type="submit"]')!);
+		await expect
+			.poll(() => host.querySelector('[data-testid="submitted"]')?.textContent)
+			.toBe(JSON.stringify({ name: 'Ada Lovelace', email: 'ada@example.com' }));
 	});
 });

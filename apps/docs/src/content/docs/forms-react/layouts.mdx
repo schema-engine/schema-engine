@@ -25,20 +25,7 @@ Recipes compose a **shell** with optional **header**, **progress**, and **action
 
 The [React Forms](/docs/examples/react-forms#copied-shadcn-source) page renders the registry's `card` recipe and `input` field live, from source copied into the docs app.
 
-Install the default source owned by your app:
-
-```bash
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
-```
-
-The install copies the recipe stylesheets next to the components. Import the entry point once in your global stylesheet, after Tailwind and into the `components` layer (the `components` layer keeps Tailwind utilities and your own classes above the recipe rules):
-
-```css
-@import 'tailwindcss';
-@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
-```
-
-The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. Without the import the shells and blocks render unstyled: each shell and block has its layout in a CSS file beside its component (`shells/hero-shell.css`, `blocks/form-actions.css` and the rest), every rule inside `:where()` so a class of yours wins, and the Tailwind classes left on the components are mostly your shadcn theme's colours and type, plus the few that override a shadcn `Button`. Without Tailwind, import the file plain. The size axis also needs `controls.css`, unlayered, after the recipe styles: `@import './components/ui/schema-engine/components/controls.css';` (see [Appearance and the default styles](#appearance-and-the-default-styles)). Then add the generated recipe barrel when you construct the engine:
+Install the recipes from the optional shadcn path of [Installation and quick start](/docs/forms-react/getting-started#optional-start-from-the-shadcn-registry), which also has the stylesheet imports. The recipe CSS lives in a file beside each component (`shells/hero-shell.css`, `blocks/form-actions.css` and the rest), every rule inside `:where()` so a class of yours wins, and the Tailwind classes left on the components are mostly your shadcn theme's colours and type, plus the few that override a shadcn `Button`. Without the import the shells and blocks render unstyled. The size axis also needs `controls.css`, unlayered, after the recipe styles (see [Appearance and the default styles](#appearance-and-the-default-styles)). Then add the generated recipe barrel when you construct the engine:
 
 ```typescript
 import { createFormEngine } from '@schema-engine/forms';

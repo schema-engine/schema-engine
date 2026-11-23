@@ -59,11 +59,7 @@ export const postalCodeField = {
 };
 ```
 
-The patterns below define one registration each. Add each constant to the `validations` list:
-
-```typescript
-createFormEngine({ validations: [postalCode, creditCard, lengthRange] });
-```
+The patterns below define one registration each. Add each constant to the `validations` list of `createFormEngine`, as `createFormEngine({ validations: [postalCode, creditCard, lengthRange] })` does for three of them.
 
 ### Use the Rule in a Form
 
@@ -753,29 +749,29 @@ its implementation must handle those separately.
 
 Choose descriptive type names that clearly indicate what the validation does:
 
-```typescript
-{ $type: 'socialSecurityNumber', ... }
-{ $type: 'businessEmailDomain', ... }
-
-{ $type: 'ssn', ... }
-{ $type: 'customVal1', ... }
-```
+Prefer `socialSecurityNumber` and `businessEmailDomain` to `ssn` and `customVal1`.
 
 ### 2. Provide Helpful Default Messages
 
 Always include meaningful default error messages:
 
-```typescript
-handler: (rule) => {
-	return z
-		.string()
-		.check(z.regex(pattern, rule.message || 'Please enter a valid phone number in format: +1234567890'));
-};
+```ts title="default-messages.ts"
+import * as z from 'zod/mini';
+import type { ValidationRegistration } from '@schema-engine/forms';
 
-handler: (rule) => {
-	return z.string().check(z.regex(pattern, rule.message || 'Invalid format'));
+type PhoneRule = { $type: 'phone-e164'; message?: string };
+
+export const phoneE164: ValidationRegistration<PhoneRule> = {
+	$type: 'phone-e164',
+	schema: z.looseObject({ $type: z.literal('phone-e164') }),
+	metadata: { name: 'Phone number' },
+	category: 'string',
+	handler: (rule) =>
+		z.string().check(z.regex(/^\+\d{8,15}$/, rule.message ?? 'Enter a phone number like +14155550123')),
 };
 ```
+
+A message that says what to type beats `Invalid format`.
 
 ### 3. Handle Edge Cases
 
@@ -842,39 +838,47 @@ export const engine = createFormEngine({ validations: [iban] });
 
 The engine's validation registry is read-only. It lists what is registered but has no `register`, `unregister` or `clear`.
 
-### Checking Registration Status
+### Checking registration status
 
-```typescript
+```ts title="registry-status.ts"
+import { engine } from './iban';
+
 const validationRegistry = engine.getValidationRegistry();
 
-if (validationRegistry.has('postalCode')) {
-	console.log('Postal code validation is available');
-}
-
-const types = validationRegistry.keys();
-console.log('Available validations:', types);
-
-const stringValidations = validationRegistry.getByCategory('string');
+export const hasIban = validationRegistry.has('iban');
+export const types = validationRegistry.keys();
+export const stringValidations = validationRegistry.getByCategory('string');
 ```
 
-### Replacing and Removing Validations
+### Replacing and removing validations
 
 A registration cannot be removed from an engine that is built. To replace one, register another with the same `$type` later in the list, or extend the engine. To drop one, build the engine without it.
 
-```typescript
-const withStrictPostalCodes = engine.extend({ validations: [strictPostalCode] });
-```
+```ts title="replace-iban.ts"
+import * as z from 'zod/mini';
+import type { ValidationRegistration } from '@schema-engine/forms';
+import { engine } from './iban';
 
-Here `strictPostalCode` is another registration with `$type: 'postalCode'`.
+const strictIban: ValidationRegistration<{ $type: 'iban' }> = {
+	$type: 'iban',
+	schema: z.looseObject({ $type: z.literal('iban') }),
+	metadata: { name: 'Strict IBAN' },
+	category: 'string',
+	handler: () => z.string().check(z.regex(/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/)),
+};
+
+export const withStrictIban = engine.extend({ validations: [strictIban] });
+```
 
 `extend` returns a new engine and keeps the validations the source engine was created with.
 
-### Creating Separate Registries
+### Creating separate registries
 
 For different contexts or testing, build a registry from a list. `createDefaultValidationRegistry` adds the built-in rules first:
 
-```typescript
-import { createValidationRegistry } from '@schema-engine/forms';
+```ts title="test-registry.ts"
+import * as z from 'zod/mini';
+import { createValidationContext, createValidationRegistry } from '@schema-engine/forms';
 
 const testOnly = {
 	$type: 'testOnly',
@@ -884,9 +888,9 @@ const testOnly = {
 	handler: () => z.string().check(z.minLength(1)),
 } as const;
 
-const testRegistry = createValidationRegistry([testOnly]);
+export const testRegistry = createValidationRegistry([testOnly]);
 
-const schema = testRegistry.createSchema({ $type: 'testOnly' }, createValidationContext());
+export const schema = testRegistry.createSchema({ $type: 'testOnly' }, createValidationContext());
 ```
 
 ## The endpoint

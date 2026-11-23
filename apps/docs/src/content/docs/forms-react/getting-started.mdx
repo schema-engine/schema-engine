@@ -1,34 +1,138 @@
 ---
-title: 'Getting Started'
-description: 'Install the React adapter and register your engine.'
+title: 'Installation and quick start'
+description: 'Install the React renderer, write a text widget, register it and render a form that submits, with no recipe and no CSS. Then optionally start from the shadcn registry.'
 order: 2
 ---
 
-import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
-import { FormConfigCode } from '@/components/form-config-code';
-import { basicContactFormConfig } from '@/lib/form-configs/basic-contact';
+# Installation and quick start
 
-# Getting Started
+`@schema-engine/forms-react` renders a form config with React. The renderer binds fields to the engine's form state through hooks, and the fields themselves are registrations you supply: widgets you write, or source you copy. This page gets a form on screen with a widget of your own, then shows the optional shadcn registry path for a project that already uses shadcn.
 
-This guide walks you through building your first React form.
+## Install
 
-The live example on this page is the exact configuration shown below, rendered with the docs demo kit (Radiant UI styling).
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
 
-## Live example
+The React renderer needs React 19. Set `"jsx": "react-jsx"` in `tsconfig.json`. See [Packages](/docs/schema-engine/packages) for the peer ranges.
 
-<ReactFormDemoEmbed config={basicContactFormConfig} />
+## Your own widgets
 
-More live React forms, including one built from copied shadcn source: [React Forms](/docs/examples/react-forms).
+One file holds everything: a text widget built on `useFormField`, its `defineInput` registration, `createFormEngine`, a form config and a component that renders it with `FormRenderer` and shows the submitted values. The form has no `view`, so no view recipe is involved and no CSS is needed: fields render as plain markup.
 
-## 1. Create a Form Engine
+```tsx
+import { useState } from 'react';
+import * as z from 'zod/mini';
+import { BaseFieldSchema, createFormEngine, defineInput, defineStatic, type FormValues } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
 
-Install the form elements and, when using a supplied visual recipe, the recipe source from the Schema Engine shadcn registry:
+const TextSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('text'),
+	inputType: z.optional(z.enum(['text', 'email'])),
+});
+
+function TextField(config: z.output<typeof TextSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<input {...fieldProps} type={config.inputType ?? 'text'} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const SubmitSchema = z.extend(BaseFieldSchema, { $type: z.literal('submit') });
+
+function SubmitButton(config: z.output<typeof SubmitSchema>) {
+	return <button type="submit">{config.label}</button>;
+}
+
+const text = defineInput({
+	$type: 'text',
+	schema: TextSchema,
+	render: TextField,
+	value: () => z.string(),
+	metadata: { name: 'Text', category: 'input' },
+});
+
+const submit = defineStatic({
+	$type: 'submit',
+	schema: SubmitSchema,
+	render: SubmitButton,
+	metadata: { name: 'Submit', category: 'action' },
+});
+
+export const engine = createFormEngine({ elements: [text, submit] });
+
+export const contactForm = engine.defineForm({
+	id: 'contact',
+	steps: [
+		{
+			id: 'details',
+			title: 'Your details',
+			elements: [
+				{
+					$type: 'text',
+					id: 'name',
+					name: 'name',
+					label: 'Name',
+					rules: [{ $type: 'required', message: 'Enter your name' }],
+				},
+				{
+					$type: 'text',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [
+						{ $type: 'required', message: 'Enter your email' },
+						{ $type: 'email', message: 'Enter a valid email address' },
+					],
+				},
+				{ $type: 'submit', id: 'send', name: 'send', label: 'Send' },
+			],
+		},
+	],
+});
+
+export function ContactForm() {
+	const [values, setValues] = useState<FormValues>();
+	return (
+		<>
+			<FormRenderer engine={engine} config={contactForm} onSubmit={setValues} />
+			{values && <pre data-testid="submitted">{JSON.stringify(values)}</pre>}
+		</>
+	);
+}
+```
+
+- **The widget** reads its state with `useFormField(config)`, spreads `fieldProps` on a native input and shows `error` through `errorProps`. It is uncontrolled: a keystroke renders nothing. [Writing a widget](/docs/forms-react/widgets) covers the controlled mode and the other hooks.
+- **The registration** gives the widget a `$type`, the schema of its config and the schema of its `value`, which is what it contributes to the submitted values.
+- **The engine** registers the elements. Create it once and reuse it across your application.
+- **The config** is an object. It could equally be JSON from a file or a server, checked with `engine.validateForm`. See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+- **`FormRenderer`** validates the config, renders it and calls `onSubmit` with the values once validation passes. `FormValues` is what a config loaded from JSON submits. With `engine.defineForm()` of a literal config the type comes from the config. See [Submitted values](/docs/forms/form-state#submitted-values).
+
+Submit the empty form and the required rules show their messages. Fill both fields and the values appear under the form.
+
+## Optional: start from the shadcn registry
+
+A project that already uses shadcn can copy ready-made fields and view recipes instead of writing them. This path is one convenient way to get them: nothing on the first path depends on it.
 
 ```bash
 pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes
 ```
 
-The recipes copy their stylesheet with them. Import it once in your global stylesheet, after Tailwind and into the `components` layer (see [View recipes](/docs/forms-react/layouts#default-registry-recipes)):
+The shadcn registry has one aggregate per component base: `schema-form` for Base UI, `schema-form-radix` for Radix UI and `schema-form-aria` for React Aria, with matching `schema-engine-form-recipes-radix` and `-aria` recipe items. Install one base per app. The [shadcn registry README](https://github.com/andeeplus/schema-engine/blob/main/registry/README.md) lists every item.
+
+### What you own
+
+The command copies source files into your project, and they are yours to read, edit and delete. `components/schema-engine/forms/` holds the form elements, the generated `registrations.ts` barrel, and `recipes/` with the shells, blocks, their CSS files and the generated `recipes/registrations.ts` barrel. `components/ui/schema-engine/components/` holds the primitives the elements share, such as the field wrapper and `controls.css`. The copied files use your own `ui` components (`Button`, `Input`, `Label`), and a later `shadcn add` overwrites a file only after it asks.
+
+### Import the styles
+
+The recipes copy their CSS with them, and nothing imports it for you. Import it once in your global stylesheet. The path is relative to that file (`./components/...` from a Vite `src/index.css`, `../components/...` from a Next.js `app/globals.css`). With Tailwind, import it after Tailwind:
 
 ```css
 @import 'tailwindcss';
@@ -36,54 +140,36 @@ The recipes copy their stylesheet with them. Import it once in your global style
 @import './components/ui/schema-engine/components/controls.css';
 ```
 
-The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. The second, unlayered import is the control height of the `size` appearance axis; it comes with the field primitive, and [View recipes](/docs/forms-react/layouts#default-registry-recipes) says why it is not layered.
+`recipes.css` goes into the `components` layer so your Tailwind utilities and classes sit above it. `controls.css` goes unlayered because a shadcn control sets its height with a Tailwind utility that outranks every layered rule. Without Tailwind, import both files plain, `controls.css` last:
 
-Then import their generated registration barrels:
+```css
+@import './components/schema-engine/forms/recipes/recipes.css';
+@import './components/ui/schema-engine/components/controls.css';
+```
 
-```typescript
+[View recipes](/docs/forms-react/layouts#default-registry-recipes) says more, and [Layout](/docs/layout/overview) covers sizes, surfaces and tokens.
+
+### Create the engine
+
+Import the generated barrels from the copied files, through your app's own import alias, and build the engine once. The alias is whatever your `components.json` sets, for example `@/` or `~/`:
+
+```ts
 import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
-const formEngine = createFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
+export const formEngine = createFormEngine({
+	elements: schemaFormRegistrations,
+	recipes: schemaFormRecipeRegistrations,
+});
 ```
 
-## 2. Configure Your Form
+These imports resolve only after the `shadcn add` has copied the files. A config for this engine names the copied elements by `$type` (`input`, `select`, `checkbox` and the rest) and can set `view: { $type: 'card' }` to pick a recipe. Render it with `FormRenderer`, as above.
 
-Create a JSON configuration — this page's live demo renders exactly this:
+## Where to go next
 
-<FormConfigCode config={basicContactFormConfig} />
-
-When the form is authored in TypeScript next to your engine (not loaded from
-JSON), use [`engine.defineForm()`](/docs/forms/builder#author-form-configuration)
-for compile-time checks. See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
-
-## 3. Render the Form
-
-```tsx
-import type { FormValues } from '@schema-engine/forms';
-import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
-
-function ContactForm() {
-	const handleSubmit = (data: FormValues) => {
-		console.log('Form submitted:', data);
-	};
-
-	return (
-		<FormEngineProvider engine={formEngine}>
-			<FormRenderer config={formConfig} onSubmit={handleSubmit} />
-		</FormEngineProvider>
-	);
-}
-```
-
-`FormValues` is what a config loaded from JSON submits. With `engine.defineForm()` of a literal config the type comes
-from the config and `handleSubmit` needs no annotation; with `engine.validateForm(json, { values: Contact })` it is the
-output of your own schema. See [Submitted values](/docs/forms/form-state#submitted-values).
-
-## Next Steps
-
-- [Components](/docs/forms-react/components) - Pre-built elements with examples
-- [Writing a widget](/docs/forms-react/widgets) - Bind your own component to a field
-- [View recipes](/docs/forms-react/layouts) - Shells and slot blocks
-- [Server errors](/docs/forms/server-errors) - Show a server's answer on the fields it names
+- [Writing a widget](/docs/forms-react/widgets): uncontrolled and controlled widgets.
+- [Registry fields](/docs/forms-react/components): the elements the shadcn registry installs.
+- [View recipes](/docs/forms-react/layouts): shells and blocks.
+- [Hooks](/docs/forms-react/hooks): the form state hooks.
+- [Server errors](/docs/forms/server-errors): show a server's answer on the fields it names.
