@@ -6,7 +6,7 @@ import { basicContactFormConfig } from '../../src/lib/form-configs/basic-contact
 const baseUrl = inject('docsBaseUrl');
 const gettingStartedPath = '/docs/forms-react/getting-started';
 
-/** Waits until the React island hydrator binds RHF to the live demo form. */
+/** Waits until React has hydrated the live demo form. */
 async function waitForReactFormHydration(page: Page): Promise<void> {
 	await page.waitForSelector('.docs-react-form-demo[data-se-react-form-demo-root="true"]', {
 		state: 'visible',
