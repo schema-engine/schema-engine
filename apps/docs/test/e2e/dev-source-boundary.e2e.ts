@@ -156,7 +156,7 @@ describe('docs dev server source boundary', () => {
 		expect(problems).toEqual([]);
 	}, 120_000);
 
-	test.each(['/docs/forms-react/layouts', '/docs/layout/recipes', '/docs/examples/contact-form'])(
+	test.each(['/docs/forms-react/layouts', '/docs/examples/layout-recipes', '/docs/examples/contact-form'])(
 		'%s hydrates its form demos without a mismatch in dev',
 		async (pagePath) => {
 			await page.goto(`${baseUrl}${pagePath}`, { waitUntil: 'networkidle' });

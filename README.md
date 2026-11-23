@@ -182,7 +182,7 @@ Detailed architectural documentation is available in the [Documentation App](./a
 
 - **[Quick Start](./apps/docs/src/content/docs/schema-engine/quick-start.mdx)**
 - **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
-- **[Layout](./apps/docs/src/content/docs/layout/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/layout/recipes.mdx)
+- **[Layout](./apps/docs/src/content/docs/layout/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/examples/layout-recipes.mdx)
 - **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Read-only and mutable registries](./apps/docs/src/content/docs/registry/registries.mdx)
 - **[shadcn Registry Sources](./registry/README.md)**
 - **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
