@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
+import { FeedbackForm } from './agent-tool.react';
 import { ProfileEditor } from './react-embed.react';
 import { engine } from './react-widgets.react';
 
@@ -98,5 +99,59 @@ describe('the embedded form', () => {
 		await userEvent.click(host.querySelector('button[type="submit"]')!);
 		await expect.poll(() => save.mock.calls.length).toBe(1);
 		expect(save).toHaveBeenCalledWith({ name: 'Grace', stars: 4 });
+	});
+});
+
+describe('the agent tool', () => {
+	type Tool = {
+		inputSchema: { properties: Record<string, { description?: string }> };
+		execute(input: unknown, options: { signal: AbortSignal }): Promise<{ content: Array<{ text: string }> }>;
+	};
+
+	function stubModelContext() {
+		const registered: Array<{ tool: Tool; signal: AbortSignal }> = [];
+		Object.defineProperty(document, 'modelContext', {
+			configurable: true,
+			value: {
+				registerTool: async (tool: Tool, { signal }: { signal: AbortSignal }) => {
+					registered.push({ tool, signal });
+				},
+			},
+		});
+		return registered;
+	}
+
+	afterEach(() => Reflect.deleteProperty(document, 'modelContext'));
+
+	test('registers the rendered form, fills it through execute and leaves the sending to the user', async () => {
+		const registered = stubModelContext();
+		const send = vi.fn(async () => {});
+		const host = await mount(createElement(FeedbackForm, { send }));
+		await expect.poll(() => registered.length).toBe(1);
+		const { tool } = registered[0]!;
+		expect(tool.inputSchema.properties['stars']!.description).toBe('Rating: From 1 to 5');
+
+		const result = await tool.execute({ name: 'Ada', stars: 4 }, { signal: new AbortController().signal });
+
+		expect(result.content[0]!.text).toContain('waits for the user');
+		await expect.poll(() => host.querySelector<HTMLInputElement>('input[name="name"]')!.value).toBe('Ada');
+		await expect
+			.poll(() => host.querySelectorAll('[role="radiogroup"] button')[3]!.getAttribute('aria-pressed'))
+			.toBe('true');
+		expect(send).not.toHaveBeenCalled();
+
+		await userEvent.click(host.querySelector('button[type="submit"]')!);
+		await expect.poll(() => send.mock.calls.length).toBe(1);
+		expect(send).toHaveBeenCalledWith('Ada', 4);
+	});
+
+	test('unregisters the tool when the form unmounts', async () => {
+		const registered = stubModelContext();
+		await mount(createElement(FeedbackForm, { send: async () => {} }));
+		await expect.poll(() => registered.length).toBe(1);
+
+		root!.unmount();
+
+		expect(registered[0]!.signal.aborted).toBe(true);
 	});
 });

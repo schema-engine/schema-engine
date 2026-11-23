@@ -19,6 +19,8 @@ describe('the pages show the recipes they run', () => {
 		'react-widgets.react.tsx': ['forms-react/widgets'],
 		'react-embed.react.tsx': ['forms/form-libraries'],
 		'react-typed-values.react.tsx': ['forms/form-state'],
+		'agent-tool.react.tsx': ['forms/agent-tool'],
+		'radiant-agent-tool.tsx': ['forms/agent-tool'],
 		'radiant-summary.tsx': ['forms-radiant/form-controls'],
 		'radiant-control.tsx': ['forms-radiant/form-controls'],
 	};
