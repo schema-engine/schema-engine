@@ -47,3 +47,6 @@ export type InputOTPFieldProps = InputOTPFieldConfig & {
 	onBlur?: () => void;
 	onFocus?: () => void;
 };
+
+/** The value an OTP field writes: the code typed so far. */
+export const inputOTPFieldValue = () => z.string();

@@ -23,3 +23,7 @@ export type CheckboxGroupFieldExtension = z.infer<typeof CheckboxGroupFieldExten
 export type CheckboxGroupFieldConfig = z.infer<typeof CheckboxGroupFieldConfigSchema>;
 
 export type CheckboxGroupFieldProps = CheckboxGroupFieldConfig;
+
+/** The value a checkbox group writes: the values of the checked options, as the options declare them. */
+export const checkboxGroupFieldValue = (config: Pick<CheckboxGroupFieldConfig, 'options'>) =>
+	z.array(z.literal(config.options.map((option) => option.value)));

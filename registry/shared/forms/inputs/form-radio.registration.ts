@@ -1,5 +1,5 @@
 import { FormRadio } from './form-radio';
-import { RadioFieldConfigSchema } from './form-radio.types';
+import { RadioFieldConfigSchema, radioFieldValue } from './form-radio.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const RadioElementRegistration = defineInput({
@@ -7,6 +7,7 @@ export const RadioElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormRadio,
 	schema: RadioFieldConfigSchema,
+	value: radioFieldValue,
 	metadata: {
 		name: 'Radio Field',
 		description: 'Radio button field for single selection from multiple options',

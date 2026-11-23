@@ -1,5 +1,5 @@
 import { FormDate } from './form-date';
-import { DateFieldSchema } from './form-date.types';
+import { DateFieldSchema, dateFieldValue } from './form-date.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const DateElementRegistration = defineInput({
@@ -7,6 +7,7 @@ export const DateElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormDate,
 	schema: DateFieldSchema,
+	value: dateFieldValue,
 	metadata: {
 		name: 'Date Field',
 		description: 'Calendar popover for selecting a single ISO date',

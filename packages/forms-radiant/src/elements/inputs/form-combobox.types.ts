@@ -24,3 +24,11 @@ export type ComboboxFieldExtension = z.infer<typeof ComboboxFieldExtensionSchema
 export type ComboboxFieldConfig = z.infer<typeof ComboboxFieldConfigSchema>;
 
 export type ComboboxFieldProps = ComboboxFieldConfig;
+
+/** The value a combobox writes: the value of the chosen option, as the option declares it, or a list of them with `multiple`. */
+export const comboboxFieldValue = (
+	config: Pick<ComboboxFieldConfig, 'options' | 'multiple'>,
+): z.ZodMiniType<string | number | Array<string | number>> => {
+	const option = z.literal(config.options.map((choice) => choice.value));
+	return config.multiple ? z.array(option) : option;
+};

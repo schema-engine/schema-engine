@@ -579,7 +579,7 @@ adapter.
 | `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                                                                                                                       |
 | Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                                                                                                                            |
 
-Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
+Custom fields use `defineInput` with any Standard Schema; an input also declares the value its control writes with `value: (config) => StandardSchemaV1`, from which `engine.submissionSchema(config)` and the type of `onSubmit` are composed (see CONTEXT.md, Submitted values). Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 
 ### Engine-scoped config types
 

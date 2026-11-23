@@ -9,6 +9,7 @@ import { FormTextarea } from '@/components/schema-engine/forms/inputs/form-texta
 import { CardRecipe } from '@/components/schema-engine/forms/recipes/registrations';
 import { InputFieldSchema } from '@/components/schema-engine/forms/inputs/form-input.types';
 import { TextareaFieldSchema } from '@/components/schema-engine/forms/inputs/form-textarea.types';
+import { anyValue } from '../utils/any-value';
 
 describe('React Form Engine factory', () => {
 	describe('Engine creation', () => {
@@ -32,6 +33,8 @@ describe('React Form Engine factory', () => {
 		test('should register multiple elements', () => {
 			const textareaElement = {
 				$type: 'textarea',
+				kind: 'input' as const,
+				value: anyValue,
 				render: FormTextarea,
 				schema: TextareaFieldSchema,
 				metadata: {
@@ -86,6 +89,8 @@ describe('React Form Engine factory', () => {
 				elements: [
 					{
 						$type: 'textarea',
+						kind: 'input',
+						value: anyValue,
 						render: FormTextarea,
 						schema: TextareaFieldSchema,
 						metadata: {
@@ -128,6 +133,8 @@ describe('React Form Engine factory', () => {
 		test('should retrieve all elements', () => {
 			const textareaElement = {
 				$type: 'textarea',
+				kind: 'input' as const,
+				value: anyValue,
 				render: FormTextarea,
 				schema: TextareaFieldSchema,
 				metadata: {

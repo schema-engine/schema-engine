@@ -1,5 +1,5 @@
 import { FormTextarea } from './form-textarea';
-import { TextareaFieldSchema } from './form-textarea.types';
+import { TextareaFieldSchema, textareaFieldValue } from './form-textarea.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const TextareaElementRegistration = defineInput({
@@ -7,6 +7,7 @@ export const TextareaElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormTextarea,
 	schema: TextareaFieldSchema,
+	value: textareaFieldValue,
 	metadata: {
 		name: 'Textarea Field',
 		description: 'Multi-line text input field',

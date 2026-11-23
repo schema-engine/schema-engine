@@ -18,6 +18,7 @@ describe('the pages show the recipes they run', () => {
 		'checkout-wizard.ts': ['forms/wizard'],
 		'react-widgets.react.tsx': ['forms-react/widgets'],
 		'react-embed.react.tsx': ['forms/form-libraries'],
+		'react-typed-values.react.tsx': ['forms/form-state'],
 		'radiant-summary.tsx': ['forms-radiant/form-controls'],
 		'radiant-control.tsx': ['forms-radiant/form-controls'],
 	};

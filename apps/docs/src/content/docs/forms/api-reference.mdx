@@ -87,6 +87,11 @@ export const FieldSetRegistration = defineInput({
 });
 ```
 
+An input declares what its control writes with `value`, a function of the configured element that returns a Standard
+Schema (`value: ({ options }) => z.literal(options.map((option) => option.value))`). `defineInput` requires it, except
+on a container (a schema that declares `elements`; `containerKind` may sit beside it), whose value is its children's, and `createFormEngine` rejects an input that has none. `defineStatic` has none. The two helpers set a `kind` (`'input'` or `'static'`) on the registration, which is what the engine reads, not the element's `metadata.category`; a registration written by hand states its `kind`.
+See [Submitted values](/docs/forms/form-state#submitted-values).
+
 `defineInput` keeps the concrete schema type. Container schemas should use
 `elementChildrenSchema` for `elements`; the engine validates those children
 against its registrations. The render function then receives frozen,
@@ -105,7 +110,9 @@ engine.getRecipe('card');
 engine.getAllRecipes();
 engine.defineForm(config);
 engine.validateForm(json);
+engine.validateForm(json, { values: Profile });
 engine.safeValidateForm(json);
+engine.submissionSchema(config);
 engine.validateElement(field);
 engine.extend({ actions: [extraAction] });
 engine.getFormConfigStandardSchema();
@@ -113,6 +120,11 @@ engine.describeViewCatalog();
 ```
 
 `validateForm` throws a `FormValidationError` when the form is invalid.
+
+`defineForm` with a literal config returns a `NormalizedFormConfig` carrying the values type its elements declare
+(`ValuesOf`), and `FormValues` when the config is not a literal. `validateForm(json, { values })` binds the application's
+Standard Schema: the runtime parses every submission with it after the schema derived from the form, and the values
+type is its output. `submissionSchema(config)` is that derived schema, with `~standard.jsonSchema` (its `input()` and `output()` throw for a value schema that has no JSON Schema) and a `partial` for `defaultValues`. `DefaultValuesOf<TValues>`, exported with `ValuesOf`, is the type of `defaultValues`: the values type with every key optional at every depth and an empty value allowed in place of any leaf field. The rows of a list are as the values type has them: an optional scalar row may be empty, and the rows of a field whose declared value is a list (a checkbox group) may not.
 `safeValidateForm` runs the same validation and returns a result instead:
 
 ```ts
@@ -219,12 +231,12 @@ interface FormStepState {
 
 ## State container, server errors and CSRF
 
-| Entry                                  | Exports                                                                                                                                                                                                                                 | Guide                                                |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Entry                                  | Exports                                                                                                                                                                                                                  | Guide                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
 | `@schema-engine/forms/state-container` | `createFormStateContainer`, the `FormStateContainer`, `FormStateSnapshot` and `FormIssueFormatter` types, `selectFieldState`, `selectValue`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT` and `FormValidationFailure` | [Form state](/docs/forms/form-state)                 |
-| `@schema-engine/forms/server-errors`   | `fromProblemDetails`, `fromJsonApiErrors` and `ServerErrorsInputError`                                                                                                                                                                  | [Server errors](/docs/forms/server-errors)           |
-| `@schema-engine/forms/csrf`            | `csrf` (`fromMeta`, `fromCookie`, `custom`), `csrfFieldFor` and the `CsrfPolicy` type                                                                                                                                                   | [CSRF](/docs/forms/csrf)                             |
-| `@schema-engine/forms/testing`         | `formStateContainerConformance`                                                                                                                                                                                                         | [Form state](/docs/forms/form-state#write-a-binding) |
+| `@schema-engine/forms/server-errors`   | `fromProblemDetails`, `fromJsonApiErrors` and `ServerErrorsInputError`                                                                                                                                                   | [Server errors](/docs/forms/server-errors)           |
+| `@schema-engine/forms/csrf`            | `csrf` (`fromMeta`, `fromCookie`, `custom`), `csrfFieldFor` and the `CsrfPolicy` type                                                                                                                                    | [CSRF](/docs/forms/csrf)                             |
+| `@schema-engine/forms/testing`         | `formStateContainerConformance`                                                                                                                                                                                          | [Form state](/docs/forms/form-state#write-a-binding) |
 
 ## RecipeRegistration
 

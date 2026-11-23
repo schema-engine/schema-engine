@@ -3,11 +3,35 @@ import { provideContext, type ContextProvider } from '@ecopages/radiant/context'
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { FormProviderProps } from '@/adapters/types';
+import type { DefaultValuesOf, FormValues, NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormAction, FormSubmitContext } from '@/adapters/types';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext, type FormEngineContextValue } from '../provider';
 
-export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
+/**
+ * Props of the Radiant `FormRenderer` view.
+ *
+ * @template TValues - The values the form submits, which a normalized `config` carries (`engine.defineForm` of a literal config, or `engine.validateForm(json, { values })`): `onSubmit`, `onAction` and `defaultValues` are typed by it, with no annotation. A config passed as authoring input has none, so they are {@link FormValues}. `onChange` is always {@link FormValues}: live values may hold excluded and unfinished data.
+ */
+export interface FormRendererProps<TValues extends FormValues = FormValues> {
+	/**
+	 * The form: the normalized config of `engine.defineForm` or `engine.validateForm`, or an authoring config.
+	 *
+	 * @remarks An authoring config carries no values type, so it is accepted only where `TValues` is {@link FormValues}: a callback typed by other values needs a normalized config that says so.
+	 */
+	config:
+		| NormalizedFormConfig<Record<string, unknown>, Record<string, unknown>, Record<string, unknown>, TValues>
+		| (FormValues extends TValues ? FormConfig : never);
+	/** Values the form starts from, over the defaults of its fields. */
+	defaultValues?: DefaultValuesOf<NoInfer<TValues>>;
+	/** Native destination of the form: with no `onSubmit` the form posts to `action` with `method` once its actions succeed. */
+	action?: string;
+	method?: string;
+	/** Called with the values that passed validation and matched the form's value schemas, after the submit actions. */
+	onSubmit?: (data: TValues, context: FormSubmitContext) => void | Promise<void>;
+	onChange?: (data: FormValues) => void;
+	onAction?: (action: FormAction, data: TValues) => void | Promise<void>;
 	class?: string;
 	style?: Record<string, string | number | undefined>;
 	engine?: FormEngine;

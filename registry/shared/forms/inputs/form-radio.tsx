@@ -31,7 +31,12 @@ export function FormRadio({
 				<RadioGroup
 					{...fieldProps}
 					value={fieldText(value)}
-					onValueChange={(val: unknown) => combineHandlers(onChange, propsOnChange)(String(val))}
+					onValueChange={(val: unknown) =>
+						combineHandlers(
+							onChange,
+							propsOnChange,
+						)(config.options.find((option) => String(option.value) === String(val))?.value ?? String(val))
+					}
 					onBlur={combineHandlers(onBlur, propsOnBlur)}
 					onFocus={propsOnFocus}
 					className={config.orientation === 'horizontal' ? 'flex space-x-4' : 'space-y-2'}

@@ -36,5 +36,6 @@ export const ratingFieldRegistration = defineInput({
 	$type: 'rating',
 	schema: RatingFieldSchema,
 	metadata: { name: 'Rating', category: 'input' },
+	value: (config) => z.number().check(z.int(), z.gte(1), z.lte(config.max)),
 	render: RatingField,
 });

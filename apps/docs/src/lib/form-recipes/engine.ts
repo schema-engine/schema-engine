@@ -12,6 +12,7 @@ export const textInput = defineInput({
 	$type: 'input',
 	schema: z.looseObject({ $type: z.literal('input'), name: z.string() }),
 	metadata: { name: 'Input', category: 'input' },
+	value: () => z.string(),
 	render: () => null,
 });
 

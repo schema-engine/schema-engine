@@ -1,5 +1,5 @@
 import { FormCheckbox } from './form-checkbox';
-import { CheckboxFieldConfigSchema } from './form-checkbox.types';
+import { CheckboxFieldConfigSchema, checkboxFieldValue } from './form-checkbox.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const CheckboxElementRegistration = defineInput({
@@ -7,6 +7,7 @@ export const CheckboxElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormCheckbox,
 	schema: CheckboxFieldConfigSchema,
+	value: checkboxFieldValue,
 	metadata: {
 		name: 'Checkbox Field',
 		description: 'Single checkbox field',

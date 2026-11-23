@@ -59,6 +59,7 @@ const objectDefaultConfig = engine.validateForm({
 					name: 'members',
 					label: 'Members',
 					minItems: 2,
+					initialValues: { role: '' },
 					elements: [
 						{
 							$type: 'input',

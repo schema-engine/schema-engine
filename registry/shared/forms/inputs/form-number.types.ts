@@ -23,3 +23,6 @@ export type NumberFieldProps = NumberFieldConfig & {
 	onBlur?: () => void;
 	onFocus?: () => void;
 };
+
+/** The value a number field writes: a number. An empty field writes `''`, which only an optional field may hold. */
+export const numberFieldValue = () => z.number();

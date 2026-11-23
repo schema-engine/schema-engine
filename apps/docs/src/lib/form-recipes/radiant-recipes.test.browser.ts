@@ -19,6 +19,7 @@ test('an element inside the form follows the container of its form', async () =>
 						id: 'contacts',
 						name: 'contacts',
 						minItems: 1,
+						initialValues: { email: '' },
 						elements: [{ $type: 'input', id: 'email', name: 'email', rules: [{ type: 'required' }] }],
 					},
 					{ $type: 'summary', id: 'summary' },

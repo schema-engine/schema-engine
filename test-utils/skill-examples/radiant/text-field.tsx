@@ -25,5 +25,6 @@ export const textFieldRegistration = defineInput({
 	$type: 'text',
 	schema: TextFieldSchema,
 	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
 	render: TextField,
 });

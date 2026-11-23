@@ -25,7 +25,7 @@ export function FormCheckbox({
 						{...fieldProps}
 						id={config.id}
 						checked={Boolean(value)}
-						onCheckedChange={combineHandlers(onChange, propsOnChange)}
+						onCheckedChange={(checked) => combineHandlers(onChange, propsOnChange)(checked === true)}
 						onBlur={combineHandlers(onBlur, propsOnBlur)}
 						onFocus={propsOnFocus}
 						autoFocus={config.autoFocus}

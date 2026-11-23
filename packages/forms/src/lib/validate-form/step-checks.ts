@@ -1,3 +1,4 @@
+import { containerKindOf } from '@/lib/container-kind-of';
 import { getElementChildren } from '@/lib/element-children';
 import { getElementName } from '@/lib/field-scope';
 import { resolveFieldRef } from '@/lib/field-ref';
@@ -29,7 +30,7 @@ function readablePaths(
 		const children = getElementChildren(element);
 		const kind =
 			'$type' in element && typeof element.$type === 'string'
-				? getElement(element.$type)?.containerKind
+				? containerKindOf(getElement(element.$type))
 				: undefined;
 		return kind === 'array' || !children
 			? [path]

@@ -3,7 +3,7 @@ import { createFormStateContainer } from '@schema-engine/forms/state-container';
 import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { SeMaskedInput } from '@/elements/inputs/form-masked-input';
-import { registerValueControl } from '@/lib/field-control';
+import { registerHostControl } from '@/lib/control-host';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -37,7 +37,7 @@ test('a control host defined after its field connected is seeded with the value 
 	expect(form.querySelector<HTMLInputElement>(tag)?.value).toBeUndefined();
 	reportNative.mockClear();
 
-	registerValueControl(tag);
+	registerHostControl(tag, { mode: 'owns' });
 	customElements.define(tag, class extends SeMaskedInput {});
 
 	const host = form.querySelector<SeMaskedInput>(tag)!;
@@ -47,7 +47,7 @@ test('a control host defined after its field connected is seeded with the value 
 
 test('a control host inserted into an already connected field is seeded the same way', async () => {
 	const tag = freshTag();
-	registerValueControl(tag);
+	registerHostControl(tag, { mode: 'owns' });
 	customElements.define(tag, class extends SeMaskedInput {});
 	const { form, reportNative } = await mountLate('');
 	reportNative.mockClear();

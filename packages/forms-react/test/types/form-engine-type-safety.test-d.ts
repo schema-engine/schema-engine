@@ -53,8 +53,10 @@ import type { FormProviderProps } from '@/hooks/form-state/types';
 import type { ComponentProps } from 'react';
 import { defineInput } from '@schema-engine/forms/types';
 import * as z from 'zod/mini';
+import { anyValue } from '../utils/any-value';
 
 const transformedElement = defineInput({
+	value: anyValue,
 	$type: 'transformed',
 	schema: z.object({
 		$type: z.literal('transformed'),

@@ -37,6 +37,7 @@ async function mountPost(action = '/save') {
 						$type: 'arrayElements',
 						id: 'contacts',
 						name: 'contacts',
+						initialValues: { email: '' },
 						elements: [{ $type: 'input', id: 'email', name: 'email' }],
 					},
 					{ $type: 'drop-zone', id: 'upload', name: 'upload', maxFiles: 2 },

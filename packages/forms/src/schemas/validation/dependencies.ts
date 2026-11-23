@@ -1,7 +1,7 @@
 import type { BaseValidationRule } from './types.js';
 import type { ValidationRegistry } from './validation-registry.js';
 import { getValidationRulesForElement } from './utils.js';
-import { scalarItemsIn, walkNamedElements } from '@/lib/field-scope.js';
+import { walkNamedElements } from '@/lib/field-scope.js';
 import { resolveFieldRef } from '@/lib/field-ref.js';
 import { expandFieldTemplatePaths } from '@/lib/path-values.js';
 
@@ -67,7 +67,7 @@ export function buildDependencyIndex(
 	const dependents = new Map<string, string[]>();
 	const authored = new Map<string, readonly string[]>();
 
-	for (const { path: templatePath, element } of walkNamedElements(elements, '', false, scalarItemsIn(values))) {
+	for (const { path: templatePath, element } of walkNamedElements(elements)) {
 		const rules = getValidationRulesForElement(element, registry);
 		const constraints = 'constraints' in element && Array.isArray(element.constraints) ? element.constraints : [];
 		const requiredReferences = constraints.flatMap((constraint: unknown) =>

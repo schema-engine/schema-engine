@@ -27,3 +27,7 @@ export type CheckboxGroupFieldProps = CheckboxGroupFieldConfig & {
 	onBlur?: () => void;
 	onFocus?: () => void;
 };
+
+/** The value a checkbox group writes: the values of the checked options, as the options declare them. */
+export const checkboxGroupFieldValue = (config: Pick<CheckboxGroupFieldConfig, 'options'>) =>
+	z.array(z.literal(config.options.map((option) => option.value)));

@@ -21,7 +21,8 @@ import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopag
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
+import { emitControlChange, emitControlCommit } from '@/lib/field-control';
+import { registerHostControl } from '@/lib/control-host';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -255,7 +256,7 @@ export class SePhoneInput extends FormAssociatedElement {
 	}
 }
 
-registerValueControl('se-phone-input');
+registerHostControl('se-phone-input', { mode: 'owns' });
 
 export function FormPhoneInput(config: PhoneInputFieldProps) {
 	return (

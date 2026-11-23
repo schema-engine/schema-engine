@@ -47,7 +47,9 @@ export function createSsrAcceptanceEngine<const TLayout extends LayoutInput = Re
 		elements: [
 			{
 				$type: 'ssr-input',
+				kind: 'input',
 				schema: ssrInputSchema,
+				value: () => z.string(),
 				metadata: { name: 'SSR input', category: 'input' },
 				render: (config: SsrInputConfig) => SsrFixtureInput(config),
 			},

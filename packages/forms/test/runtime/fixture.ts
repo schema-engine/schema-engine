@@ -5,6 +5,7 @@ import { createFormRuntime } from '@/runtime';
 import type { CreateFormRuntimeOptions } from '@/runtime';
 import { defineInput } from '@/types';
 import type { FormActionConfig } from '@/runtime/submission-lifecycle';
+import { anyValue } from '../lib/any-value';
 
 /** A step trigger or lifecycle trigger the probe action saw, with the step that was current. */
 export interface Seen {
@@ -68,6 +69,7 @@ export function createFixture() {
 		],
 		elements: [
 			defineInput({
+				value: anyValue,
 				$type: 'input',
 				schema: z.looseObject({ $type: z.literal('input'), name: z.string() }),
 				metadata: { name: 'Input', category: 'input' },
@@ -76,7 +78,11 @@ export function createFixture() {
 			defineInput({
 				$type: 'group',
 				containerKind: 'object',
-				schema: z.looseObject({ $type: z.literal('group'), name: z.string() }),
+				schema: z.looseObject({
+					$type: z.literal('group'),
+					name: z.string(),
+					elements: z.optional(z.array(z.looseObject({ $type: z.string() }))),
+				}),
 				metadata: { name: 'Group', category: 'input' },
 				render: (_props: Record<string, unknown>) => null,
 			}),

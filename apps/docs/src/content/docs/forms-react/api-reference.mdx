@@ -43,6 +43,11 @@ import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 </FormEngineProvider>;
 ```
 
+`FormRenderer` and `FormProvider` type `onSubmit`, `onAction` and `defaultValues` from the normalized config they are
+given: the inferred type of `engine.defineForm` with a literal config, the output of the schema in
+`engine.validateForm(json, { values })`, else `FormValues`. `onChange`, `useWatch` and live reads stay `FormValues`.
+See [Submitted values](/docs/forms/form-state#submitted-values).
+
 `FormRenderer` validates the config once at the form boundary and renders the
 resulting `NormalizedFormConfig`. Field renderers do not re-parse registration
 schemas. The selected recipe receives a `ViewContext` containing form metadata,

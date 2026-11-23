@@ -51,7 +51,7 @@ function addArrayInitialValues(
 	const children = (getElementChildren(config) ?? []) as object[];
 	return {
 		...config,
-		ssrInitialRows: seedArrayRows(config, rows, usesScalarArrayItem(config, path, children, formValues)),
+		ssrInitialRows: seedArrayRows(config, rows, usesScalarArrayItem(config, children)),
 		ssrRowIds: rowIds?.[path],
 		initialFormValues: initialValues ?? {},
 	};

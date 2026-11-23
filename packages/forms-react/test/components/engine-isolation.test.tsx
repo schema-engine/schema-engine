@@ -11,6 +11,7 @@ import {
 } from '@schema-engine/forms/schemas/validation';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { useFormField } from '@/hooks/form-state';
+import { anyValue } from '../utils/any-value';
 
 const isolatedInputSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('isolated-input'),
@@ -30,6 +31,7 @@ function createValidation(message: string, minimum: number): ValidationRegistrat
 
 function createIsolationEngine(message: string, minimum: number) {
 	const input = defineInput({
+		value: anyValue,
 		$type: 'isolated-input',
 		schema: isolatedInputSchema,
 		metadata: { name: 'Isolated input', category: 'input' },

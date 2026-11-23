@@ -3,10 +3,12 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineInput } from '@/types';
+import { anyValue } from '../lib/any-value';
 
 type Schema = Record<string, unknown>;
 
 const described = defineInput({
+	value: anyValue,
 	$type: 'described',
 	schema: z.extend(BaseFieldSchema, {
 		$type: z.literal('described'),

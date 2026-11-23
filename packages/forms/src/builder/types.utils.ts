@@ -1,6 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
+import type { ContainerKind } from '@/types/registration';
 
 /** Coerce inferred registration maps into the engine generic constraint. */
 export type AsRegistrationMap<T> = T extends Record<string, unknown> ? T : Record<never, never>;
@@ -28,13 +29,47 @@ export type ExtractSchemaOutput<TSchema> = TSchema extends StandardSchemaV1
  */
 export type ExtractTypeId<T> = T extends { $type: infer K } ? K : never;
 
-type ConfigMapFromRegistration<R, TOutput extends boolean = false> = R extends {
+/**
+ * What a registration contributes to a map of the engine: its config as authors write it (`input`), its parsed
+ * config (`output`), or what its control writes (`value`).
+ */
+export type RegistrationMapMode = 'input' | 'output' | 'value';
+
+/**
+ * What a registration says about the value of the elements it types, for the values type of a form.
+ *
+ * @remarks
+ * An input that holds its own value is `{ value }`, the output type of its declared schema. A container (it declares a
+ * `containerKind`) is `{ container }`, which tells whether its children make an object or a list of rows. A static
+ * element has neither, so it is no key of the map and contributes no value.
+ */
+export type ValueEntry =
+	| { readonly value: unknown; readonly container?: undefined }
+	| { readonly container: ContainerKind; readonly value?: undefined };
+
+type ValueEntryOf<R> = 'value' extends keyof R
+	? [NonNullable<R[keyof R & 'containerKind']>] extends [never]
+		? NonNullable<R[keyof R & 'value']> extends (config: never) => infer V
+			? [V] extends [never]
+				? { readonly container: 'object' }
+				: [V] extends [StandardSchemaV1]
+					? { readonly value: StandardSchemaV1.InferOutput<V> }
+					: never
+			: never
+		: { readonly container: NonNullable<R[keyof R & 'containerKind']> }
+	: never;
+
+type ConfigMapFromRegistration<R, TMode extends RegistrationMapMode = 'input'> = R extends {
 	$type: infer K extends string;
 	schema: infer S;
 }
-	? S extends StandardSchemaV1
-		? Record<K, TOutput extends true ? Omit<StandardSchemaV1.InferOutput<S>, '$type'> : ExtractSchemaType<S>>
-		: Record<never, never>
+	? TMode extends 'value'
+		? [ValueEntryOf<R>] extends [never]
+			? Record<never, never>
+			: Record<K, ValueEntryOf<R>>
+		: S extends StandardSchemaV1
+			? Record<K, TMode extends 'output' ? Omit<StandardSchemaV1.InferOutput<S>, '$type'> : ExtractSchemaType<S>>
+			: Record<never, never>
 	: Record<never, never>;
 
 /**
@@ -46,11 +81,11 @@ type UnionMergeMaps<U> = {
 	[K in U extends unknown ? keyof U : never]: U extends Record<K, infer V> ? V : never;
 };
 
-export type MergeRegistrationMaps<T extends readonly unknown[], TOutput extends boolean = false> = [T[number]] extends [
-	never,
-]
+export type MergeRegistrationMaps<T extends readonly unknown[], TMode extends RegistrationMapMode = 'input'> = [
+	T[number],
+] extends [never]
 	? Record<never, never>
-	: UnionMergeMaps<ConfigMapFromRegistration<T[number], TOutput>>;
+	: UnionMergeMaps<ConfigMapFromRegistration<T[number], TMode>>;
 
 /** Later keys in `Override` replace matching keys in `Base`. Empty override maps preserve `Base`. */
 export type LastWinsMerge<Base extends Record<string, unknown>, Override extends Record<string, unknown>> = [
@@ -61,11 +96,11 @@ export type LastWinsMerge<Base extends Record<string, unknown>, Override extends
 
 type IsFixedLengthTuple<T extends readonly unknown[]> = number extends T['length'] ? false : true;
 
-type FoldRegistrationMapsLastWins<T extends readonly unknown[], TOutput extends boolean = false> = T extends readonly [
-	infer Head,
-	...infer Tail extends readonly unknown[],
-]
-	? LastWinsMerge<ConfigMapFromRegistration<Head, TOutput>, FoldRegistrationMapsLastWins<Tail, TOutput>>
+type FoldRegistrationMapsLastWins<
+	T extends readonly unknown[],
+	TMode extends RegistrationMapMode = 'input',
+> = T extends readonly [infer Head, ...infer Tail extends readonly unknown[]]
+	? LastWinsMerge<ConfigMapFromRegistration<Head, TMode>, FoldRegistrationMapsLastWins<Tail, TMode>>
 	: Record<never, never>;
 
 /**
@@ -74,13 +109,13 @@ type FoldRegistrationMapsLastWins<T extends readonly unknown[], TOutput extends 
  * - Tuple / inline arrays: last-wins in the type.
  * - Open arrays (`T[]`): union of configs for the same `$type`.
  */
-export type MergeRegistrationMapsLastWins<T extends readonly unknown[], TOutput extends boolean = false> = [
+export type MergeRegistrationMapsLastWins<T extends readonly unknown[], TMode extends RegistrationMapMode = 'input'> = [
 	T[number],
 ] extends [never]
 	? Record<never, never>
 	: IsFixedLengthTuple<T> extends true
-		? FoldRegistrationMapsLastWins<T, TOutput>
-		: MergeRegistrationMaps<T, TOutput>;
+		? FoldRegistrationMapsLastWins<T, TMode>
+		: MergeRegistrationMaps<T, TMode>;
 
 /** Engine element/recipe map for a registration list (see {@link MergeRegistrationMapsLastWins}). */
 export type MergedRegistrationMap<T extends readonly unknown[]> = AsRegistrationMap<MergeRegistrationMapsLastWins<T>>;
@@ -97,12 +132,15 @@ export type StandardSchemaConstraint = {
 
 export type ElementRegistrationConstraint = {
 	readonly $type: string;
+	/** Set by `defineInput` or `defineStatic`; a registration written by hand states it. */
+	readonly kind: 'input' | 'static';
 	readonly schema: StandardSchemaConstraint;
-	readonly metadata: { readonly name: string };
+	readonly metadata: { readonly name: string; readonly category?: string };
 	readonly render: (props: never) => unknown;
 	readonly validations?: readonly ValidationRegistrationConstraint[];
-	readonly containerKind?: import('@/types/registration').ContainerKind;
+	readonly containerKind?: ContainerKind;
 	readonly appearanceAxes?: AppearanceAxisList;
+	readonly value?: (config: never) => StandardSchemaConstraint;
 };
 
 export type RecipeRegistrationConstraint = {
@@ -129,6 +167,13 @@ export interface EngineOutputMaps {
 	elements: Record<string, unknown>;
 	recipes: Record<string, unknown>;
 	actions: Record<string, unknown>;
+	/** What each element `$type` says about its value, a {@link ValueEntry}; read to type the values of a form. */
+	values: Record<string, unknown>;
 }
 
-export type MergedOutputMap<T extends readonly unknown[]> = AsRegistrationMap<MergeRegistrationMapsLastWins<T, true>>;
+export type MergedOutputMap<T extends readonly unknown[]> = AsRegistrationMap<
+	MergeRegistrationMapsLastWins<T, 'output'>
+>;
+
+/** The value entry of each element `$type` of a registration list, last registration winning. */
+export type MergedValueMap<T extends readonly unknown[]> = AsRegistrationMap<MergeRegistrationMapsLastWins<T, 'value'>>;

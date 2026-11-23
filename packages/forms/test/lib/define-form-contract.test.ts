@@ -4,6 +4,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { defineInput } from '@/types';
+import { anyValue } from '../lib/any-value';
 
 type MinimalFixtureConfig = {
 	id: string;
@@ -41,6 +42,7 @@ const noteSchema = z.object({
 });
 
 const noteElement = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: noteSchema,
 	metadata: { name: 'Note', category: 'input' },
@@ -77,6 +79,7 @@ describe('defineForm contract', () => {
 
 	test('mixed Zod and native Standard Schema registrations appear in the authoring schema', () => {
 		const minimalFixtureElement = defineInput({
+			value: anyValue,
 			$type: 'minimal-fixture',
 			schema: createMinimalStandardSchema(),
 			metadata: { name: 'Minimal fixture', category: 'input' },

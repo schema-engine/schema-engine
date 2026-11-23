@@ -206,7 +206,9 @@ A rule that cannot run is no field error: it says nothing about the value.
   and the JSON Schema export lists the defaults. The container takes both from the config it is
   given and has no fallback of its own, so no renderer can differ.
 - **The `values` of a passed submission** are the values that passed, without the paths that took no part (disabled, or hidden
-  by a `show`/`hide` constraint, and everything inside them), plus the config's `payload`: serializable data
+  by a `show`/`hide` constraint, and everything inside them) and without any key no field declares (a key of
+  `defaultValues` that no element names is not submitted; `payload` is the one way to send extra data, and
+  `lib/submission-shape.ts` is the walk the engine's submission schema shares), plus the config's `payload`: serializable data
   that always travels with a submission, such as ids or context a hidden input used to carry. The payload is
   never rendered, never a value of the form (not in `snapshot.values`, not dirty) and never validated. A key
   that names a field, or a reserved segment, is rejected when the config is validated.

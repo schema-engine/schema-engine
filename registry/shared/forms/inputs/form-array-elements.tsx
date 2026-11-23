@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
-import { useChildGridProps, useFormField, useFieldArray, useFormContext } from '@schema-engine/forms-react/hooks';
+import { useChildGridProps, useFormField, useFieldArray } from '@schema-engine/forms-react/hooks';
 import { FormElements } from '@schema-engine/forms-react/primitives';
 import { arrayItemScope, createArrayRowDefault, usesScalarArrayItem } from '@schema-engine/forms';
 import type { ArrayElementsProps } from './form-array-elements.types';
@@ -137,11 +137,10 @@ function ArrayActions({ canAdd, disabled, addButtonText, onAdd }: ArrayActionsPr
  */
 export function FormArrayElements(config: ArrayElementsProps) {
 	const { fields, append, remove } = useFieldArray(config.name);
-	const { getValues } = useFormContext();
 
 	const { error, containerStyles } = useFormField(config);
 
-	const scalar = usesScalarArrayItem(config, config.name, config.elements, getValues());
+	const scalar = usesScalarArrayItem(config, config.elements);
 
 	const disabled = Boolean(config.disabled);
 

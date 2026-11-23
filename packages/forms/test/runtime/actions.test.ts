@@ -4,6 +4,7 @@ import { createFormEngine } from '@/engine/create-form-engine';
 import { createFormRuntime } from '@/runtime';
 import { defineInput } from '@/types';
 import type { BuilderActionBaseContext } from '@/types';
+import { anyValue } from '../lib/any-value';
 
 type Seen = BuilderActionBaseContext & { trigger: string; config: { id: string } };
 
@@ -21,6 +22,7 @@ function setup(
 	const engine = createFormEngine({
 		elements: [
 			defineInput({
+				value: anyValue,
 				$type: 'input',
 				schema: z.looseObject({ $type: z.literal('input'), name: z.string() }),
 				metadata: { name: 'Input', category: 'input' },
@@ -98,6 +100,7 @@ describe('the action context', () => {
 
 	test('is refreshed between triggers, and keeps its form operations', async () => {
 		const { runtime, seen } = setup([record('prepare', ['form_submit_start', 'form_submit'])], {
+			fields: [{ $type: 'input', name: 'status' }],
 			defaults: { status: 'draft' },
 			answer: ({ trigger, form }) => {
 				if (trigger === 'form_submit_start') form.setValue('status', 'prepared');
@@ -140,6 +143,7 @@ describe('the submit lifecycle', () => {
 			events.push('callback');
 		});
 		const { runtime, seen } = setup([record('save', ['form_submit'])], {
+			fields: [{ $type: 'input', name: 'address.street' }],
 			defaults: { address: { street: 'Main' } },
 			onAction,
 			answer: ({ trigger }) => void events.push(trigger),

@@ -21,6 +21,10 @@ import {
 import { collectStepFieldPaths } from '@/engine/value-validation';
 import { collectInitialValues, flattenStepElements } from '@/lib/field-scope';
 import { logger } from '@/lib/logger';
+import { DEFAULT_NOT_CHECKED, issuePath, type SubmissionSchema } from '@/engine/submission-schema';
+import { omitPaths } from '@/lib/omit-paths';
+import { getNormalizedFormValues } from '@/lib/normalized-form-config';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
 import type {
 	FormStateSnapshot,
@@ -33,6 +37,7 @@ import {
 	isSubmissionBusy,
 	type CreateFormRuntimeOptions,
 	type FormRuntime,
+	type FormRuntimeConfig,
 	type FormRuntimeSnapshot,
 	type FormSubmissionState,
 	type FormValues,
@@ -46,17 +51,76 @@ const IDLE: FormSubmissionState = Object.freeze({ status: 'idle', failures: NO_F
 /** A submission failure, in the shape of an issue so the form's one formatter words it. */
 function submissionIssue(
 	type: string,
-	{ actionId, message }: { actionId?: string; message?: string } = {},
+	{ actionId, path, message }: { actionId?: string; path?: string; message?: string } = {},
 ): FormSubmissionIssue {
 	return {
 		type,
 		source: 'submission',
-		...(actionId === undefined ? {} : { params: { actionId } }),
+		...(actionId === undefined && path === undefined
+			? {}
+			: { params: { ...(actionId === undefined ? {} : { actionId }), ...(path === undefined ? {} : { path }) } }),
 		...(message ? { message } : {}),
 	};
 }
 
+/** What parsing the submitted values with a schema gave: the values, or the issues that say where they are wrong. */
+type Parsed<TValues> =
+	| { readonly ok: true; readonly values: TValues }
+	| { readonly ok: false; readonly issues: readonly StandardSchemaV1.Issue[] };
+
+/** What checking a submission gave: the values the callbacks receive, and the values the form declares. */
+type Checked<TValues> =
+	| { readonly ok: true; readonly declared: FormValues; readonly values: TValues }
+	| Extract<Parsed<unknown>, { readonly ok: false }>;
+
+async function parseValues(schema: StandardSchemaV1, values: unknown): Promise<Parsed<unknown>> {
+	const result = await schema['~standard'].validate(values);
+	return result.issues === undefined ? { ok: true, values: result.value } : { ok: false, issues: result.issues };
+}
+
 const errorMessage = (error: unknown): string | undefined => (error instanceof Error ? error.message : undefined);
+
+/**
+ * The defaults with the default of every field whose value is not the one it declares dropped, so the field starts as if it had none.
+ *
+ * @remarks
+ * A default is a start the application gave, not a submission: a mismatch is the application's, and a form that cannot
+ * render until it is fixed would take the user's form down with it. The whole default of a field goes, never part of
+ * it: a list is one field, and a leaf inside a group is its own. The warning names each dropped field. A default a
+ * value schema cannot check (it throws, or is asynchronous) is dropped too, and an error names its field, because a
+ * default never keeps the form from rendering. The
+ * field's own rules (a required one, say) then ask the user for the value.
+ */
+function withoutMismatchedDefaults(
+	schema: SubmissionSchema,
+	defaults: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+	const { issues } = schema.partial['~standard'].validate(defaults);
+	if (!issues) return { ...defaults };
+	const unchecked = issues.filter((issue) => issue.message.startsWith(DEFAULT_NOT_CHECKED));
+	const mismatched = issues.filter((issue) => !unchecked.includes(issue));
+	const listed = (found: typeof issues) =>
+		Array.from(
+			new Map(found.map((issue) => [issuePath(issue) || '(form)', issue.message])),
+			([path, message]) => `'${path}': ${message}`,
+		);
+	if (unchecked.length) {
+		logger.error(
+			`The defaultValues of these fields could not be checked, so they start without a default: ${listed(unchecked).join(', ')}.`,
+		);
+	}
+	if (mismatched.length) {
+		logger.warn(
+			`The defaultValues do not match what the form declares, so those fields start without a default: ${listed(mismatched).join(', ')}.`,
+		);
+	}
+	return omitPaths(
+		defaults,
+		issues.map((issue) =>
+			(issue.path ?? []).map((segment) => (typeof segment === 'object' ? segment.key : segment)),
+		),
+	);
+}
 
 type Verdict = FormValidateResult['outcome'] | 'failed';
 
@@ -84,6 +148,18 @@ const sameSteps = (a: readonly FormStepState[], b: readonly FormStepState[]): bo
  * state, validation, participation (a skipped step's fields take no part) and `reset()`; the runtime owns what
  * is around it, and the renderer owns the element, focus, sync and native submit.
  *
+ * Every submission is parsed with the schema derived from the form (`FormEngine.submissionSchema`), and then with
+ * the application's own if the form was bound to one, after `container.submit()` passes and before the submit
+ * actions: a mismatch is a broken element contract, so it fails the submission with a form-level `valueMismatch`
+ * issue (`params.path`) and `onSubmit` never receives the values. That check is what makes `TValues`, the type of the
+ * form's config, true of what the callbacks receive. `defaults` are checked against a partial of the same schema once:
+ * a field whose default is not the value it declares, or cannot be checked, starts without one, and a warning or an error names its path, so a form
+ * is never kept from rendering by what the application gave it.
+ *
+ * The values type is read from the config's brand ({@link ValuesBrand}), so only a normalized config can name one. A config
+ * that is not normalized (the second signature) has none, its callbacks take {@link FormValues}, and naming a type for
+ * it is a type error.
+ *
  * `container.reset()` is the only reset. The snapshot's `generation` goes up with it, and the runtime then
  * revokes the command in flight, returns the submission to idle and the steps to the first, firing no step
  * trigger, so whichever caller resets resets everything.
@@ -95,14 +171,24 @@ const sameSteps = (a: readonly FormStepState[], b: readonly FormStepState[]): bo
  * `form_mount` or `form_change` is not a command and runs to its end. Step actions cannot block a move:
  * the validation of the step is the guard, and a failing step action is reported through `onActionResults`.
  */
+export function createFormRuntime<
+	TAction extends FormActionConfig = FormActionConfig,
+	TValues extends FormValues = FormValues,
+>(options: CreateFormRuntimeOptions<TAction, TValues>): FormRuntime;
 export function createFormRuntime<TAction extends FormActionConfig = FormActionConfig>(
-	options: CreateFormRuntimeOptions<TAction>,
+	options: Omit<CreateFormRuntimeOptions<TAction>, 'config'> & { config: FormRuntimeConfig<TAction> },
+): FormRuntime;
+export function createFormRuntime<TAction extends FormActionConfig, TValues extends FormValues>(
+	options: Omit<CreateFormRuntimeOptions<TAction, TValues>, 'config'> & { config: FormRuntimeConfig<TAction> },
 ): FormRuntime {
 	const { engine, config, host, onSubmit, onChange, onAction, onActionResults } = options;
+	const derivedSchema = engine.submissionSchema(config);
+	const appSchema = getNormalizedFormValues(config);
+	const defaults = withoutMismatchedDefaults(derivedSchema, options.defaults ?? {});
 	const container = createFormStateContainer({
 		config,
 		registry: engine.getValidationRegistry(),
-		defaults: collectInitialValues(flattenStepElements(config.steps), options.defaults ?? {}),
+		defaults: collectInitialValues(flattenStepElements(config.steps), defaults),
 		snapshot: options.snapshot,
 	});
 	const dispatcher = new ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>(engine);
@@ -438,6 +524,31 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			return (await move(op, id, passed)) ? 'moved' : 'cancelled';
 		});
 
+	/**
+	 * Parses the values that passed with the schema derived from the form, and then with the application's.
+	 *
+	 * @remarks
+	 * A schema that throws is a broken contract too, and is reported as a mismatch of the form. The values are
+	 * `TValues` because the config carries that type ({@link ValuesBrand}): it is what `ValuesOf` says the derived
+	 * schema accepts, or the output of the application's schema, and this parse is what checks it. It is the one place
+	 * that states so.
+	 *
+	 * `declared` is the derived schema's output, which is the values the form's elements write, for a native post: the
+	 * application's schema may turn them into anything (a `Date`, a class) a form field cannot carry.
+	 */
+	async function checkSubmission(values: unknown): Promise<Checked<TValues>> {
+		try {
+			const derived = await parseValues(derivedSchema, values);
+			if (!derived.ok) return derived;
+			const parsed = appSchema ? await parseValues(appSchema, derived.values) : derived;
+			return parsed.ok
+				? { ok: true, declared: derived.values as FormValues, values: parsed.values as TValues }
+				: parsed;
+		} catch (error) {
+			return { ok: false, issues: [{ message: errorMessage(error) ?? 'The values could not be checked.' }] };
+		}
+	}
+
 	async function submitLastStep(op: Operation): Promise<SubmitOutcome> {
 		host.sync?.();
 		setSubmission({ status: 'validating', failures: NO_FAILURES, submitCount: submission.submitCount });
@@ -464,8 +575,23 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 			return (await landOnErrors(op)) ? 'invalid' : 'cancelled';
 		}
 
+		const parsed = await checkSubmission(result.values);
+		if (!live(op)) return 'cancelled';
+		if (!parsed.ok) {
+			logger.error('The submitted values do not match what the form declares:', {
+				issues: parsed.issues.map((issue) => `${issuePath(issue) || '(form)'}: ${issue.message}`),
+			});
+			setSubmission({
+				status: 'error',
+				failures: parsed.issues.map((issue) => submissionIssue('valueMismatch', { path: issuePath(issue) })),
+				submitCount: submission.submitCount,
+			});
+			return 'failed';
+		}
+
 		setSubmission({ status: 'submitting', failures: NO_FAILURES, submitCount: submission.submitCount });
-		const { values, setServerErrors } = result;
+		const { setServerErrors } = result;
+		const { values, declared } = parsed;
 		const { signal } = lifecycleAbort;
 		const { succeeded, results, failure } = await runSubmissionLifecycle<TAction>(
 			(input) => dispatchActions(input, signal, false),
@@ -473,7 +599,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 				actions: collectStepActions(config, progress.current),
 				context: () => buildContext(values),
 				hasMatching: (actions, trigger) => dispatcher.hasMatching(actions, trigger),
-				onAction: (action, data) => onAction?.(action, data),
+				onAction: (action) => onAction?.(action, values),
 				onSubmit: onSubmit
 					? () => (signal.aborted ? undefined : onSubmit(values, { setServerErrors, fetch: engine.fetch }))
 					: undefined,
@@ -485,7 +611,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 		} catch (error) {
 			logger.error('Action results callback failed:', error);
 		}
-		if (succeeded && live(op)) host.submitNatively?.(values);
+		if (succeeded && live(op)) host.submitNatively?.(declared);
 
 		const count = submission.submitCount + 1;
 		if (succeeded) {

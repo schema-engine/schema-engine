@@ -69,6 +69,15 @@ through it (today the `async` validation rule, built by the engine's validation 
 `engine.fetch` is that function with the CSRF policy applied, and `engine.getCsrf()` the policy, for a binding that
 adds a hidden input to a native post. `extend` inherits both. See [CSRF](../csrf/README.md).
 
+## Submission schema
+
+`FormEngine.submissionSchema(config)` returns the Standard Schema (and Standard JSON Schema, where the value schemas
+export one) of the values a submission of `config` holds. `submission-schema.ts` reads each leaf's schema from its
+registration's `value(element)`, and `lib/submission-shape.ts` supplies the structure, the same walk the container prunes
+its submitted values with. `builder/form-values.ts` (`ValuesOf`) is its type-level twin: it reads the literal config
+and the engine's value entries (`TOutputs['values']`), and `defineForm` returns the normalized config carrying the
+result. Its `~standard.jsonSchema` `input()` and `output()` throw for a value schema that has no JSON Schema. `validateForm(json, { values })` binds an application schema, which the normalized config carries for the runtime.
+
 ## Action context form state
 
 `FormActionContextFormState` no longer accepts `touchedFields` or `isSubmitted`. Pass

@@ -13,6 +13,7 @@ import {
 } from '../../../../test-utils/ssr-grid-acceptance';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
+import { anyValue } from '../utils/any-value';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -46,6 +47,8 @@ export function createSsrAcceptanceEngine<const TLayout extends LayoutInput = Re
 			ArrayElementRegistration,
 			{
 				$type: 'ssr-input',
+				kind: 'input',
+				value: anyValue,
 				schema: ssrInputSchema,
 				metadata: { name: 'SSR input', category: 'input' },
 				render: (config: SsrInputConfig) => <SsrFixtureInput {...config} />,

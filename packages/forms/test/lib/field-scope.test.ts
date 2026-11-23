@@ -17,6 +17,7 @@ import {
 	createArrayRowDefault,
 	flattenStepElements,
 } from '@/lib/field-scope';
+import { anyValue } from '../lib/any-value';
 
 const namedInput = { $type: 'input', id: 'street', name: 'street' };
 const unnamedNote = { $type: 'note', id: 'hint' };
@@ -319,11 +320,15 @@ test('container semantics come from the registration rather than the widget name
 			defineInput({
 				$type: 'rows',
 				containerKind: 'array',
-				schema: z.looseObject({ $type: z.literal('rows') }),
+				schema: z.looseObject({
+					$type: z.literal('rows'),
+					elements: z.optional(z.array(z.looseObject({ $type: z.string() }))),
+				}),
 				metadata: { name: 'Rows', category: 'input' },
 				render: (_props: Record<string, unknown>) => null,
 			}),
 			defineInput({
+				value: anyValue,
 				$type: 'text',
 				schema: z.looseObject({ $type: z.literal('text') }),
 				metadata: { name: 'Text', category: 'input' },

@@ -29,3 +29,6 @@ export const inputFieldExample: InputFieldConfig = {
 	autoComplete: 'off',
 	spellCheck: true,
 };
+
+/** The value an input writes: its text. */
+export const inputFieldValue = () => z.string();

@@ -4,10 +4,12 @@ import { createFormEngine } from '@/engine/create-form-engine';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { defineInput } from '@/types';
 import type { BuilderActionRegistration, BuilderActionRuntimeContext } from '@/types';
+import { anyValue } from '../lib/any-value';
 
 const noteSchema = z.object({ $type: z.literal('note'), id: z.string(), name: z.string() });
 
 const noteElement = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: noteSchema,
 	metadata: { name: 'Note', category: 'input' },
@@ -45,6 +47,7 @@ describe('engine registries', () => {
 		test.each(['debug', 'info', 'log', 'warn', 'error'] as const)('logs no override on console.%s', (level) => {
 			const spy = vi.spyOn(console, level).mockImplementation(() => undefined);
 			const override = defineInput({
+				value: anyValue,
 				$type: 'note',
 				schema: noteSchema,
 				metadata: { name: 'Override', category: 'input' },

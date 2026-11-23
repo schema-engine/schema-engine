@@ -9,6 +9,7 @@ import { FormElements } from '@/components/internals/form-elements';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
+import { anyValue } from '../lib/any-value';
 
 const schema = z.object({
 	$type: z.literal('probe'),
@@ -22,7 +23,16 @@ describe('SSR constraint snapshot', () => {
 	test('SSR constraint snapshot uses default values', () => {
 		const render = (config: z.infer<typeof schema>) => jsx('input', { name: config.name });
 		const engine = createFormEngine({
-			elements: [{ $type: 'probe', schema, metadata: { name: 'Probe', category: 'input' }, render }],
+			elements: [
+				{
+					$type: 'probe',
+					kind: 'input',
+					schema,
+					value: anyValue,
+					metadata: { name: 'Probe', category: 'input' },
+					render,
+				},
+			],
 		});
 		const config = engine.defineForm({
 			id: 'business',
@@ -59,12 +69,15 @@ describe('SSR constraint snapshot', () => {
 			elements: [
 				{
 					$type: 'probe',
+					kind: 'input',
+					value: anyValue,
 					schema,
 					metadata: { name: 'Probe', category: 'input' },
 					render: (config: z.infer<typeof schema>) => jsx('input', { name: config.name }),
 				},
 				{
 					$type: 'group',
+					kind: 'static',
 					schema: containerSchema,
 					metadata: { name: 'Group', category: 'layout' },
 					render: (config: ElementRenderProps<typeof containerSchema>) =>

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { renderRegisteredElement } from '@/components/internals/render-registered-element';
+import { anyValue } from '../lib/any-value';
 
 const countSchema = z.object({
 	$type: z.literal('count'),
@@ -18,6 +19,8 @@ function createCountEngine() {
 		elements: [
 			{
 				$type: 'count',
+				kind: 'input',
+				value: anyValue,
 				schema: countSchema,
 				metadata: { name: 'Count', category: 'input' },
 				render: (props: { count: number; $type: 'count' }) => {

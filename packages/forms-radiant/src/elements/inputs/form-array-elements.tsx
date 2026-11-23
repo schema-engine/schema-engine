@@ -65,10 +65,10 @@ function PlusIcon() {
 	);
 }
 
-function createInitialArrayValue(config: ArrayElementsProps, values: Record<string, unknown>): unknown[] | undefined {
+function createInitialArrayValue(config: ArrayElementsProps): unknown[] | undefined {
 	const formValue = getValueAtPath(config.initialFormValues ?? {}, config.name);
 	const configuredRows = [formValue, config.defaultValue].find(Array.isArray);
-	const scalar = usesScalarArrayItem(config, config.name, config.elements, values);
+	const scalar = usesScalarArrayItem(config, config.elements);
 	const rows = seedArrayRows(
 		config,
 		configuredRows?.map((row) => structuredClone(row)),
@@ -134,7 +134,7 @@ function renderArrayContent({ config, rows, initialValues, renderValues, fieldEr
 					const elements = withContainerState(config, config.elements);
 					const minItems = config.minItems ?? 0;
 					const childrenHost = mergeChildrenGridHost(config.elements, engine);
-					const isSingleField = usesScalarArrayItem(config, config.name, config.elements, renderValues);
+					const isSingleField = usesScalarArrayItem(config, config.elements);
 					const scope = arrayItemScope(config.name, index, id, {
 						scalar: isSingleField,
 						parentInstanceId: config.instanceId,
@@ -259,7 +259,7 @@ export class SeFormArray extends RadiantElement {
 	}
 
 	private initialArrayValue(): unknown[] | undefined {
-		return createInitialArrayValue(this.config, this.currentValues());
+		return createInitialArrayValue(this.config);
 	}
 
 	private currentValues(): Record<string, unknown> {
@@ -335,10 +335,7 @@ export class SeFormArray extends RadiantElement {
 
 	private emptyItem(): unknown {
 		const { config } = this;
-		return createArrayRowDefault(
-			config,
-			usesScalarArrayItem(config, config.name, config.elements, this.currentValues()),
-		);
+		return createArrayRowDefault(config, usesScalarArrayItem(config, config.elements));
 	}
 
 	protected override onConnected(): void {
@@ -420,7 +417,7 @@ export function FormArrayElements(config: ArrayElementsProps) {
 	const engine = resolveFormEngine();
 	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getLayout().id);
 	const initialValues = structuredClone(initialFormValues ?? {});
-	const initialRows = createInitialArrayValue({ ...fieldConfig, initialFormValues }, initialValues);
+	const initialRows = createInitialArrayValue({ ...fieldConfig, initialFormValues });
 	if (initialRows) setValueAtPath(initialValues, fieldConfig.name, initialRows);
 	const arrayConfig = {
 		...fieldConfig,

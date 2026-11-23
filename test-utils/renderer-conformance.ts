@@ -791,11 +791,17 @@ export function rendererConformance(
 			const row = { fullName: 'x', role: 'user' };
 			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ members: [row, row] });
 		});
-		test('a single-child array keeps object rows from form defaultValues', async () => {
+		test('a single-child array with record initialValues keeps object rows from form defaultValues', async () => {
 			const onSubmit = vi.fn();
 			const { host } = await setup({
 				config: form([
-					{ $type: 'arrayElements', id: 'members', name: 'members', elements: [input('role', 'Role')] },
+					{
+						$type: 'arrayElements',
+						id: 'members',
+						name: 'members',
+						initialValues: { role: '' },
+						elements: [input('role', 'Role')],
+					},
 				]),
 				defaultValues: { members: [{ role: 'admin' }] },
 				onSubmit,

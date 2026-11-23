@@ -5,7 +5,8 @@ import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-as
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
+import { emitControlChange, emitControlCommit } from '@/lib/field-control';
+import { registerHostControl } from '@/lib/control-host';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -158,7 +159,7 @@ export class SeInputOtp extends FormAssociatedElement {
 	}
 }
 
-registerValueControl('se-input-otp');
+registerHostControl('se-input-otp', { mode: 'owns' });
 
 export function FormInputOTP(config: InputOTPFieldProps) {
 	return (

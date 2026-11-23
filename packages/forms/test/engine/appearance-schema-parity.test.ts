@@ -8,6 +8,7 @@ import { defineInput } from '@/types';
 import { elementChildrenSchema } from '@/lib/element-children';
 import { defineFormRecipe } from '@/recipes';
 import * as builtInSpecs from '@/recipes/built-in-specs';
+import { anyValue } from '../lib/any-value';
 
 const tone = defineAxis({
 	$type: 'tone',
@@ -18,6 +19,7 @@ const tone = defineAxis({
 
 const field = ($type: string, appearanceAxes?: string[]) =>
 	defineInput({
+		value: anyValue,
 		$type,
 		schema: zm.extend(BaseFieldSchema, { $type: zm.literal($type) }),
 		...(appearanceAxes ? { appearanceAxes } : {}),
@@ -26,6 +28,7 @@ const field = ($type: string, appearanceAxes?: string[]) =>
 	});
 
 const strictField = defineInput({
+	value: anyValue,
 	$type: 'strict',
 	schema: zm.strictObject({ $type: zm.literal('strict'), id: zm.string(), name: zm.string() }),
 	appearanceAxes: ['tone'],
@@ -34,6 +37,7 @@ const strictField = defineInput({
 });
 
 const looseField = defineInput({
+	value: anyValue,
 	$type: 'loose',
 	schema: zm.object({ $type: zm.literal('loose'), id: zm.string(), name: zm.string() }),
 	metadata: { name: 'Loose', category: 'input' },
@@ -41,6 +45,7 @@ const looseField = defineInput({
 });
 
 const pipedField = defineInput({
+	value: anyValue,
 	$type: 'piped',
 	schema: zm.pipe(
 		zm.extend(BaseFieldSchema, { $type: zm.literal('piped') }),

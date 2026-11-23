@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import { getAppearanceAttributes } from '@schema-engine/layout';
-import { createFormRuntime, type FormConfigView } from '@schema-engine/forms';
+import { createFormRuntime, type FormConfigView, type FormValues } from '@schema-engine/forms';
 import { getObjectIdentity } from '@/lib/object-identity';
 import { FormStateContext, type FormStateContextValue } from '@/hooks/form-state/context';
 import { createFieldRegistry, type FieldRegistry } from '@/hooks/form-state/field-registry';
@@ -9,7 +9,7 @@ import type { FormProviderAction, FormProviderProps } from '@/hooks/form-state/t
 import { useFormEngine } from '@/hooks/use-form-context';
 
 /** @remarks The form instance of one normalized config and one engine: the runtime, and the container it builds, are created once, from both. */
-function FormInstance<TOutputs extends EngineOutputMaps>({
+function FormInstance<TOutputs extends EngineOutputMaps, TValues extends FormValues>({
 	config,
 	defaultValues,
 	children,
@@ -18,7 +18,7 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 	onAction,
 	onActionResults,
 	formatIssue,
-}: FormProviderProps<TOutputs>) {
+}: FormProviderProps<TOutputs, TValues>) {
 	const { engine } = useFormEngine();
 	const runtimeConfig: FormConfigView = config;
 
@@ -29,7 +29,7 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
 
 	const [{ runtime, fields }] = useState(() => {
 		let registry: FieldRegistry | undefined;
-		const created = createFormRuntime<FormProviderAction<TOutputs>>({
+		const created = createFormRuntime<FormProviderAction<TOutputs>, TValues>({
 			engine,
 			config,
 			defaults: defaultValues,
@@ -93,7 +93,10 @@ function FormInstance<TOutputs extends EngineOutputMaps>({
  * `generation`, the runtime returns to the first step and an idle submission with it. The one formatter of the
  * form is `formatIssue`, else the engine's.
  */
-export function FormProvider<TOutputs extends EngineOutputMaps = EngineOutputMaps>(props: FormProviderProps<TOutputs>) {
+export function FormProvider<
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+	TValues extends FormValues = FormValues,
+>(props: FormProviderProps<TOutputs, TValues>) {
 	const { engine } = useFormEngine();
 	return <FormInstance key={`${getObjectIdentity(props.config)}:${getObjectIdentity(engine)}`} {...props} />;
 }

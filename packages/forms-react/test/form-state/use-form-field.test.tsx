@@ -11,6 +11,7 @@ import { fieldText } from '@/hooks/field-text';
 import { useFormField } from '@/hooks/form-state/use-form-field';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
+import { anyValue } from '../utils/any-value';
 
 function BoundInput({
 	name,
@@ -382,12 +383,14 @@ describe('useFormField under FormRenderer', () => {
 		const engine = createFormEngine({
 			elements: [
 				defineInput({
+					value: anyValue,
 					$type: 'field',
 					schema: z.looseObject({ $type: z.literal('field'), id: z.string(), name: z.string() }),
 					metadata: { name: 'Field', category: 'input' },
 					render: (config: ElementConfig) => <ConfiguredInput {...config} onRender={onRender} />,
 				}),
 				defineInput({
+					value: anyValue,
 					$type: 'required-field',
 					schema: z.looseObject({ $type: z.literal('required-field'), id: z.string(), name: z.string() }),
 					metadata: { name: 'Required field', category: 'input' },
@@ -404,6 +407,7 @@ describe('useFormField under FormRenderer', () => {
 					],
 				}),
 				defineInput({
+					value: anyValue,
 					$type: 'pair',
 					schema: z.looseObject({ $type: z.literal('pair'), id: z.string(), name: z.string() }),
 					metadata: { name: 'Pair', category: 'input' },

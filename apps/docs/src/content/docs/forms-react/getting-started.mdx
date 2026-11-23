@@ -61,10 +61,11 @@ for compile-time checks. See [Authoring modes](/docs/forms/core-concepts#authori
 ## 3. Render the Form
 
 ```tsx
+import type { FormValues } from '@schema-engine/forms';
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 
 function ContactForm() {
-	const handleSubmit = (data) => {
+	const handleSubmit = (data: FormValues) => {
 		console.log('Form submitted:', data);
 	};
 
@@ -75,6 +76,10 @@ function ContactForm() {
 	);
 }
 ```
+
+`FormValues` is what a config loaded from JSON submits. With `engine.defineForm()` of a literal config the type comes
+from the config and `handleSubmit` needs no annotation; with `engine.validateForm(json, { values: Contact })` it is the
+output of your own schema. See [Submitted values](/docs/forms/form-state#submitted-values).
 
 ## Next Steps
 

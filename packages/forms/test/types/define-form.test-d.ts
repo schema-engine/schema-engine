@@ -5,6 +5,7 @@ import type { FormConfig } from '@/schemas/form-config';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { defineInput } from '@/types';
 import * as z from 'zod/mini';
+import { anyValue } from '../lib/any-value';
 
 type Assert<T extends true> = T;
 
@@ -22,6 +23,7 @@ const noteSchema = z.object({
 });
 
 const noteElement = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: noteSchema,
 	metadata: { name: 'Note', category: 'input' },
@@ -162,6 +164,7 @@ const titledSchema = z.object({
 });
 
 const titledElement = defineInput({
+	value: anyValue,
 	$type: 'titled',
 	schema: titledSchema,
 	metadata: { name: 'Titled', category: 'input' },
@@ -226,12 +229,14 @@ nestedEngine.defineForm({
 });
 
 const firstNote = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: noteSchema,
 	metadata: { name: 'First', category: 'input' },
 	render: () => null,
 });
 const overrideNote = defineInput({
+	value: anyValue,
 	$type: 'note',
 	schema: z.object({
 		$type: z.literal('note'),
@@ -334,6 +339,7 @@ actionEngine.defineForm({
 });
 
 const choiceElement = defineInput({
+	value: anyValue,
 	$type: 'choice',
 	schema: z.object({ $type: z.literal('choice'), name: z.string(), options: z.array(z.string()) }),
 	metadata: { name: 'Choice', category: 'input' },

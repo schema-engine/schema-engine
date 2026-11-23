@@ -558,17 +558,18 @@ describe('rule issues', () => {
 });
 
 describe('an array with one child', () => {
-	const rows = (values: Record<string, unknown>) => {
+	const rows = (values: Record<string, unknown>, objectRows = false) => {
 		const element = normalizeContainerFixture({
 			$type: 'arrayElements',
 			name: 'users',
+			...(objectRows ? { initialValues: { name: '' } } : {}),
 			elements: [{ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Name is required' }] }],
 		});
 		return issuesOf({ steps: [{ elements: [element] }], values, registry, debounceScope: createDebounceScope() });
 	};
 
 	test('is validated at the field of each row when its rows are objects', async () => {
-		expect(Object.keys(await rows({ users: [{ name: '' }, { name: 'Ada' }] }))).toEqual(['users.0.name']);
+		expect(Object.keys(await rows({ users: [{ name: '' }, { name: 'Ada' }] }, true))).toEqual(['users.0.name']);
 	});
 
 	test('is validated at the row itself when its rows are scalars', async () => {
@@ -576,16 +577,35 @@ describe('an array with one child', () => {
 	});
 
 	test('lists the same paths for the rows it holds', () => {
-		const element = normalizeContainerFixture({
+		const objects = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'users',
+			initialValues: { name: '' },
+			elements: [{ $type: 'input', name: 'name' }],
+		});
+		const scalars = normalizeContainerFixture({
 			$type: 'arrayElements',
 			name: 'users',
 			elements: [{ $type: 'input', name: 'name' }],
 		});
 
-		expect(collectStepFieldPaths({ elements: [element] }, { users: [{ name: 'a' }] })).toEqual([
+		expect(collectStepFieldPaths({ elements: [objects] }, { users: [{ name: 'a' }] })).toEqual([
 			'users',
 			'users.0.name',
 		]);
-		expect(collectStepFieldPaths({ elements: [element] }, { users: ['a'] })).toEqual(['users', 'users.0']);
+		expect(collectStepFieldPaths({ elements: [scalars] }, { users: ['a'] })).toEqual(['users', 'users.0']);
+	});
+
+	test('keeps its configured rows whatever the values say: object rows given to a scalar array are not its rows', () => {
+		const scalars = normalizeContainerFixture({
+			$type: 'arrayElements',
+			name: 'users',
+			elements: [{ $type: 'input', name: 'name' }],
+		});
+
+		expect(collectStepFieldPaths({ elements: [scalars] }, { users: [{ name: 'a' }] })).toEqual([
+			'users',
+			'users.0',
+		]);
 	});
 });

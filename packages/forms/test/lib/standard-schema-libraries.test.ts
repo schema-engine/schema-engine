@@ -3,6 +3,7 @@ import * as v from 'valibot';
 import { Schema } from 'effect';
 import { z as classicZod } from 'zod';
 import { createFormEngine } from '@/engine/create-form-engine';
+import { anyValue } from './any-value';
 
 describe('Standard Schema libraries through defineForm', () => {
 	test('classic Zod consumer schemas remain accepted through Standard Schema', () => {
@@ -16,6 +17,8 @@ describe('Standard Schema libraries through defineForm', () => {
 			elements: [
 				{
 					$type: 'classic-zod-note',
+					kind: 'input',
+					value: anyValue,
 					schema,
 					metadata: { name: 'Classic Zod note', category: 'input' },
 					render: () => null,
@@ -48,6 +51,8 @@ describe('Standard Schema libraries through defineForm', () => {
 			elements: [
 				{
 					$type: 'valibot-note',
+					kind: 'input',
+					value: anyValue,
 					schema,
 					metadata: { name: 'Valibot note', category: 'input' },
 					render: () => null,
@@ -102,6 +107,8 @@ describe('Standard Schema libraries through defineForm', () => {
 			elements: [
 				{
 					$type: 'effect-note',
+					kind: 'input',
+					value: anyValue,
 					schema,
 					metadata: { name: 'Effect note', category: 'input' },
 					render: () => null,

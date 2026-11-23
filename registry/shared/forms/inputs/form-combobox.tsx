@@ -14,10 +14,9 @@ import {
 } from '@/components/ui/schema-engine/components/combobox';
 import type { ComboboxFieldProps, ComboboxOption } from './form-combobox.types';
 
-function optionValue(item: ComboboxOption | string | number | null | undefined) {
-	if (item == null) return '';
-	if (typeof item === 'object') return String(item.value);
-	return String(item);
+/** The value of the chosen option, as the option declares it: a number stays a number. */
+function optionValue(item: ComboboxOption | null | undefined) {
+	return item == null ? '' : item.value;
 }
 
 export function FormCombobox({

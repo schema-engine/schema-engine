@@ -136,6 +136,7 @@ describe('the helpers and setServerErrors', () => {
 						{
 							$type: 'arrayElements',
 							name: 'contacts',
+							initialValues: { email: '' },
 							elements: [{ $type: 'input', name: 'email' }],
 						} as unknown as ElementConfig,
 						'array',

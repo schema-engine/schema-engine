@@ -91,7 +91,10 @@ export function safeValidateFormConfig(
 	const existingOwner = getNormalizedFormOwner(config);
 	if (existingOwner) {
 		if (existingOwner === options.owner) {
-			return { success: true, data: config as NormalizedFormConfig };
+			return {
+				success: true,
+				data: markNormalizedFormConfig(config as FormConfig, options.owner, options.values),
+			};
 		}
 		const formId = typeof config === 'object' && config !== null && 'id' in config ? String(config.id) : 'unknown';
 		return {
@@ -192,6 +195,7 @@ export function safeValidateFormConfig(
 				actions: formActions.items ?? envelope.actions,
 			} as unknown as FormConfig,
 			options.owner,
+			options.values,
 		),
 	};
 }

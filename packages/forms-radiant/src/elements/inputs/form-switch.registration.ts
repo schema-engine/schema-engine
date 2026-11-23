@@ -1,5 +1,5 @@
 import { FormSwitch } from './form-switch';
-import { SwitchFieldConfigSchema } from './form-switch.types';
+import { SwitchFieldConfigSchema, switchFieldValue } from './form-switch.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const SwitchElementRegistration = defineInput({
@@ -7,6 +7,7 @@ export const SwitchElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormSwitch,
 	schema: SwitchFieldConfigSchema,
+	value: switchFieldValue,
 	metadata: {
 		name: 'Switch Field',
 		description: 'Toggle switch field',

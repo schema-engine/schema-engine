@@ -5,6 +5,7 @@ import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from
 import { ComponentType } from './component-type';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import * as z from 'zod/mini';
 import type { FormEngineSchemaArtifacts } from './schema-artifacts';
 import {
@@ -13,12 +14,13 @@ import {
 	validateFormConfig,
 	type FormValidationResult,
 } from '@/lib/validate-form';
-import type { NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
+import type { NormalizedElementConfig, NormalizedFormConfig, ValuesBrand } from '@/lib/normalized-form-config';
 import type { ExactFormAppearance, ExactViewConfig, FormAuthoringInput } from '@/builder/form-authoring';
 import type {
 	LastWinsMerge,
 	EngineOutputMaps,
 	MergedOutputMap,
+	MergedValueMap,
 	MergedRegistrationMap,
 	MergedActionRegistrationMap,
 	ElementRegistrationConstraint,
@@ -26,6 +28,8 @@ import type {
 	ActionRegistrationConstraint,
 } from '@/builder/types.utils';
 import type { ExtendFormEngineOptions } from './create-form-engine';
+import type { ValuesOf } from '@/builder/form-values';
+import type { FormValues } from '@/runtime/types';
 import { buildFormEngine } from './build-form-engine';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import type { LayoutTheme, ResolvedAppearanceAxes } from '@schema-engine/layout';
@@ -38,6 +42,7 @@ import {
 } from '@/lib/authoring-catalog';
 import type { RecipeDescriptor, ViewCatalog } from '@/recipes/types';
 import { generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
+import { createSubmissionSchema, type SubmissionSchema, type SubmissionSchemaConfig } from './submission-schema';
 export * from './component-type';
 
 /**
@@ -61,6 +66,11 @@ export interface EngineRegistries {
 	csrf?: CsrfPolicy;
 }
 
+/** What `validateForm` takes beside the config: the application's schema of the submitted values. */
+export interface ValidateFormValuesOption<TSchema extends StandardSchemaV1 = StandardSchemaV1> {
+	readonly values: TSchema;
+}
+
 export class FormEngine<
 	TElements extends Record<string, unknown> = Record<string, unknown>,
 	TRecipes extends Record<string, unknown> = Record<string, unknown>,
@@ -72,6 +82,7 @@ export class FormEngine<
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
 	private readonly layout: LayoutTheme;
 	private readonly validationRegistry: ValidationRegistry;
+	private readonly submissionSchemas = new WeakMap<object, SubmissionSchema>();
 
 	/**
 	 * Every request the engine makes goes through this: the `fetch` given to `createFormEngine`, or the global one,
@@ -210,15 +221,32 @@ export class FormEngine<
 	 * Validate external JSON against this engine's registrations.
 	 * Applies defaults and schema transforms. Prefer {@link defineForm} when authoring in TypeScript.
 	 * Returns a frozen {@link NormalizedFormConfig} owned by this engine.
+	 *
+	 * @remarks
+	 * A config that arrives as JSON cannot be typed by inference, so the application binds the schema of what it
+	 * submits with `values`: the runtime parses a submission with it after the one derived from the elements, and
+	 * the values type of the form is its output. Without `values`, `onSubmit` receives {@link FormValues}, still
+	 * checked at runtime by {@link FormEngine.submissionSchema}. A form that is already normalized keeps its own values
+	 * type, and anything else (JSON, an authoring object) gives `FormValues`, so it is not a form of a narrower type: the
+	 * values type is a claim only a normalized form can make, and naming one for plain input is a type error.
 	 */
+	validateForm<TValues extends FormValues = FormValues>(
+		config: ValuesBrand<TValues>,
+	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions'], NoInfer<TValues>>;
 	validateForm(
 		config: unknown,
-	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
-		return validateFormConfig(config, this.validateOptions()) as unknown as NormalizedFormConfig<
-			TOutputs['elements'],
-			TOutputs['recipes'],
-			TOutputs['actions']
-		>;
+	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions'], FormValues>;
+	validateForm<TSchema extends StandardSchemaV1>(
+		config: unknown,
+		options: ValidateFormValuesOption<TSchema>,
+	): NormalizedFormConfig<
+		TOutputs['elements'],
+		TOutputs['recipes'],
+		TOutputs['actions'],
+		StandardSchemaV1.InferOutput<TSchema>
+	>;
+	validateForm(config: unknown, options?: ValidateFormValuesOption): unknown {
+		return validateFormConfig(config, this.validateOptions(options?.values));
 	}
 
 	/**
@@ -236,14 +264,27 @@ export class FormEngine<
 	 */
 	safeValidateForm(
 		config: unknown,
-	): FormValidationResult<NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>> {
-		return safeValidateFormConfig(config, this.validateOptions()) as FormValidationResult<
-			NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>
-		>;
+	): FormValidationResult<
+		NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions'], FormValues>
+	>;
+	safeValidateForm<TSchema extends StandardSchemaV1>(
+		config: unknown,
+		options: ValidateFormValuesOption<TSchema>,
+	): FormValidationResult<
+		NormalizedFormConfig<
+			TOutputs['elements'],
+			TOutputs['recipes'],
+			TOutputs['actions'],
+			StandardSchemaV1.InferOutput<TSchema>
+		>
+	>;
+	safeValidateForm(config: unknown, options?: ValidateFormValuesOption): unknown {
+		return safeValidateFormConfig(config, this.validateOptions(options?.values));
 	}
 
-	private validateOptions() {
+	private validateOptions(values?: StandardSchemaV1) {
 		return {
+			values,
 			owner: this,
 			getRecipe: (id: string) => this.getRecipe(id),
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
@@ -257,6 +298,13 @@ export class FormEngine<
 	/**
 	 * Author a form from this engine's registered elements, recipes, and actions.
 	 * Same runtime pipeline as {@link validateForm}.
+	 *
+	 * @remarks
+	 * The result carries the values type the literal config declares ({@link ValuesOf}), which a renderer reads to
+	 * type `onSubmit`, `onAction` and `defaultValues`. A config that is not a literal gives {@link FormValues}.
+	 *
+	 * The type is derived from the literal, not from this call's result: it is the static twin of
+	 * {@link FormEngine.submissionSchema}, which `createFormRuntime` checks every submission against.
 	 */
 	defineForm<
 		const TConfig extends FormAuthoringInput<TElements, TRecipes, TActions, TAppearance> & {
@@ -269,8 +317,41 @@ export class FormEngine<
 				TConfig,
 				TAppearance
 			>,
-	): NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']> {
-		return this.validateForm(config);
+	): NormalizedFormConfig<
+		TOutputs['elements'],
+		TOutputs['recipes'],
+		TOutputs['actions'],
+		ValuesOf<TConfig, TOutputs['values']>
+	> {
+		return this.validateForm(config) as NormalizedFormConfig<
+			TOutputs['elements'],
+			TOutputs['recipes'],
+			TOutputs['actions'],
+			ValuesOf<TConfig, TOutputs['values']>
+		>;
+	}
+
+	/**
+	 * The schema of the values a submission of `config` holds, composed from the `value` its elements declare.
+	 *
+	 * @remarks
+	 * It follows the rules the form state container submits by: dotted names nest, named containers become
+	 * objects, a container of kind `array` becomes a list, a one-child row is a list of values (unless its child is a container of its own, which makes the rows objects), and the config's
+	 * `payload` keys are added. A field is a required key only when it has a `required` rule and neither it, a
+	 * container around it nor its step has `constraints` or `disabled`; any other key may be absent, and an
+	 * optional leaf field may hold its empty value (`''` or `null`), and a list or a group its empty list or object. Keys no field declares are not part of it.
+	 * `createFormRuntime` parses every submission with it, so one that does not match fails with a
+	 * `valueMismatch` issue. Its `~standard.jsonSchema` `input()` and `output()` throw for a value schema that has no JSON Schema.
+	 */
+	submissionSchema(config: SubmissionSchemaConfig): SubmissionSchema {
+		const known = this.submissionSchemas.get(config);
+		if (known) return known;
+		const created = createSubmissionSchema(config, {
+			getElement: (id) => this.getElement(id),
+			validationRegistry: this.validationRegistry,
+		});
+		this.submissionSchemas.set(config, created);
+		return created;
 	}
 
 	/**
@@ -406,6 +487,7 @@ export class FormEngine<
 			elements: LastWinsMerge<TOutputs['elements'], MergedOutputMap<TNewElements>>;
 			recipes: LastWinsMerge<TOutputs['recipes'], MergedOutputMap<TNewRecipes>>;
 			actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
+			values: LastWinsMerge<TOutputs['values'], MergedValueMap<TNewElements>>;
 		},
 		TAppearance
 	> {
@@ -428,6 +510,7 @@ export class FormEngine<
 				elements: LastWinsMerge<TOutputs['elements'], MergedOutputMap<TNewElements>>;
 				recipes: LastWinsMerge<TOutputs['recipes'], MergedOutputMap<TNewRecipes>>;
 				actions: LastWinsMerge<TOutputs['actions'], MergedOutputMap<TNewActions>>;
+				values: LastWinsMerge<TOutputs['values'], MergedValueMap<TNewElements>>;
 			},
 			TAppearance
 		>;

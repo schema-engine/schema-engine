@@ -1,3 +1,7 @@
+import { bindTo, customElement, prop, state } from '@ecopages/radiant';
+import { contextSelector } from '@ecopages/radiant/context';
+import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
+import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import {
 	RuiListbox,
 	RuiSelect,
@@ -11,20 +15,76 @@ import {
 import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
+import { ChoiceHost, type ChoiceValue } from '@/lib/choice-host';
+import { choiceControlOptions, choiceKeys, serializeChoiceValue } from '@/lib/choice-value';
+import { registerHostControl } from '@/lib/control-host';
 import { FieldGroup } from '../field-group';
-import { serializeChoiceValue } from '@/lib/choice-value';
 import type { SelectFieldProps } from './form-select.types';
 
-export function FormSelect(config: SelectFieldProps) {
-	const isMultiple = Boolean(config.multiple);
-	const selectionMode = isMultiple ? 'multiple' : 'single';
-	const options = config.options.map((option) => ({
-		value: String(option.value),
-		label: option.label,
-		disabled: option.disabled,
-	}));
-	const listbox = <RuiListbox embedded selectionMode={selectionMode} options={options} />;
+/** The selector of the control's own ARIA target: where the field paints its label, description and state. */
+const ARIA_TARGET = '[data-select-trigger]';
 
+/**
+ * @remarks
+ * `value` is the option's own value, or a list of them with `multiple`, while `rui-select` holds the text of
+ * the chosen options' values as a list.
+ */
+@customElement('se-select', {
+	hostAttributes: { 'data-rui-control': '', 'data-rui-aria-target': ARIA_TARGET },
+})
+export class SeSelect extends ChoiceHost<string[]> {
+	declare readonly [JSX_PROPS]?: Partial<
+		Pick<SeSelect, 'name' | 'disabled' | 'value' | 'options' | 'multiple' | 'placeholder'>
+	>;
+
+	/** The field's context, painted onto the `ARIA_TARGET` by `fieldAriaBindings` (see `ControlHost`). */
+	@contextSelector({ context: fieldContext })
+	@state
+	@bindTo(fieldAriaBindings(ARIA_TARGET))
+	protected field?: FieldContextValue = undefined;
+
+	@prop({ type: Boolean, defaultValue: false }) multiple = false;
+	@prop({ type: String }) placeholder = '';
+
+	protected get controlTag(): string {
+		return 'rui-select';
+	}
+
+	protected override toControl(value: ChoiceValue): string[] {
+		return choiceKeys(value);
+	}
+
+	protected override fromControl(held: unknown): ChoiceValue {
+		return this.chosen(held, this.multiple);
+	}
+
+	override render(): JsxRenderable {
+		const selectionMode = this.multiple ? 'multiple' : 'single';
+		return (
+			<RuiSelect
+				placeholder={this.placeholder}
+				disabled={this.disabled}
+				selectionMode={selectionMode}
+				value={this.toControl(this.value)}
+			>
+				<RuiSelectControl>
+					<RuiSelectTrigger disabled={this.disabled}>
+						<RuiSelectValue>{this.multiple ? <RuiTagGroup embedded /> : null}</RuiSelectValue>
+					</RuiSelectTrigger>
+					<RuiSelectClear disabled={this.disabled} />
+					<RuiSelectToggle disabled={this.disabled} />
+				</RuiSelectControl>
+				<RuiSelectListbox>
+					<RuiListbox embedded selectionMode={selectionMode} options={choiceControlOptions(this.options)} />
+				</RuiSelectListbox>
+			</RuiSelect>
+		);
+	}
+}
+
+registerHostControl('se-select', { mode: 'wraps' });
+
+export function FormSelect(config: SelectFieldProps) {
 	return (
 		<FieldGroup
 			name={config.name}
@@ -41,21 +101,14 @@ export function FormSelect(config: SelectFieldProps) {
 			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>
-			<RuiSelect
-				placeholder={config.placeholder}
+			<SeSelect
+				name={config.name}
 				disabled={config.disabled}
-				selectionMode={selectionMode}
-				{...(config.defaultValue === undefined ? {} : { value: config.defaultValue })}
-			>
-				<RuiSelectControl>
-					<RuiSelectTrigger disabled={config.disabled}>
-						<RuiSelectValue>{isMultiple ? <RuiTagGroup embedded /> : null}</RuiSelectValue>
-					</RuiSelectTrigger>
-					<RuiSelectClear disabled={config.disabled} />
-					<RuiSelectToggle disabled={config.disabled} />
-				</RuiSelectControl>
-				<RuiSelectListbox>{listbox}</RuiSelectListbox>
-			</RuiSelect>
+				options={config.options}
+				multiple={Boolean(config.multiple)}
+				placeholder={config.placeholder}
+				value={config.defaultValue}
+			/>
 		</FieldGroup>
 	);
 }

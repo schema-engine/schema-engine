@@ -5,7 +5,7 @@ import {
 	getValueAtPath,
 	withoutValueAt,
 } from '../lib/path-values.js';
-import { getElementName, scalarItemsIn, walkNamedElements } from '../lib/field-scope.js';
+import { getElementName, walkNamedElements } from '../lib/field-scope.js';
 import { frozenCopy } from '../lib/frozen-copy.js';
 import type { ConstraintLogic } from '../schemas/base-field.js';
 import {
@@ -191,16 +191,14 @@ function fieldElementPathsFor(
 	values: Record<string, unknown>,
 	fallbackToId = false,
 ): FieldElementPath[] {
-	return walkNamedElements(elements, '', fallbackToId, scalarItemsIn(values)).flatMap(
-		({ path, element, hasChildren, arrayItemDepth }) => {
-			const paths = arrayItemDepth
-				? expandArrayItemPaths(values, path, arrayItemDepth)
-				: hasChildren
-					? expandContainerTemplatePaths(values, path)
-					: expandFieldTemplatePaths(values, path);
-			return paths.map((fieldPath) => ({ element, fieldPath, hasChildren }));
-		},
-	);
+	return walkNamedElements(elements, '', fallbackToId).flatMap(({ path, element, hasChildren, arrayItemDepth }) => {
+		const paths = arrayItemDepth
+			? expandArrayItemPaths(values, path, arrayItemDepth)
+			: hasChildren
+				? expandContainerTemplatePaths(values, path)
+				: expandFieldTemplatePaths(values, path);
+		return paths.map((fieldPath) => ({ element, fieldPath, hasChildren }));
+	});
 }
 
 /**

@@ -4,7 +4,7 @@ The engine, the config, validation timing, constraints, the container and the ru
 
 ## Engine
 
-`createFormEngine` takes `elements`, `recipes`, `actions`, `validations` (extra rules), `layout`, `formatIssue`, `fetch` and `csrf`. It builds read-only registries (a later `$type` replaces an earlier one) and returns an immutable engine: create it once and reuse it. `engine.extend({ ... })` adds registrations and inherits the layout theme. The package ships no field widgets; an element is registered with `defineInput({ $type, schema, metadata, render })` (see `widgets.md`), and renderer packages bring the widgets.
+`createFormEngine` takes `elements`, `recipes`, `actions`, `validations` (extra rules), `layout`, `formatIssue`, `fetch` and `csrf`. It builds read-only registries (a later `$type` replaces an earlier one) and returns an immutable engine: create it once and reuse it. `engine.extend({ ... })` adds registrations and inherits the layout theme. The package ships no field widgets; an element is registered with `defineInput({ $type, schema, metadata, value, render })` (see `widgets.md`), and renderer packages bring the widgets.
 
 ```ts title="forms/engine.ts"
 import * as z from 'zod/mini';
@@ -15,6 +15,7 @@ export const textRegistration = defineInput({
 	$type: 'text',
 	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
 	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
 	render: () => null,
 });
 

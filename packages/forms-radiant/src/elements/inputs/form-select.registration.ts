@@ -1,5 +1,5 @@
 import { FormSelect } from './form-select';
-import { SelectFieldConfigSchema } from './form-select.types';
+import { SelectFieldConfigSchema, selectFieldValue } from './form-select.types';
 import { defineInput } from '@schema-engine/forms';
 
 export const SelectElementRegistration = defineInput({
@@ -7,6 +7,7 @@ export const SelectElementRegistration = defineInput({
 	appearanceAxes: ['size'],
 	render: FormSelect,
 	schema: SelectFieldConfigSchema,
+	value: selectFieldValue,
 	metadata: {
 		name: 'Select Field',
 		description: 'Dropdown select field',

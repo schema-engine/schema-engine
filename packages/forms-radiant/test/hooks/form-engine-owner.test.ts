@@ -3,6 +3,7 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { renderRegisteredElement } from '@/components/internals/render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { anyValue } from '../lib/any-value';
 
 const probeSchema = z.object({
 	$type: z.literal('probe'),
@@ -28,6 +29,8 @@ function createProbeEngine(breakpoints: { md: string }, onRender: () => void) {
 		elements: [
 			{
 				$type: 'probe',
+				kind: 'input',
+				value: anyValue,
 				schema: probeSchema,
 				metadata: { name: 'Probe', category: 'input' },
 				render: () => {
@@ -45,6 +48,8 @@ function createNestedProbeEngines(captured: string[]) {
 		elements: [
 			{
 				$type: 'child-probe',
+				kind: 'input',
+				value: anyValue,
 				schema: childProbeSchema,
 				metadata: { name: 'Child probe', category: 'input' },
 				render: () => {
@@ -59,6 +64,8 @@ function createNestedProbeEngines(captured: string[]) {
 		elements: [
 			{
 				$type: 'parent-probe',
+				kind: 'input',
+				value: anyValue,
 				schema: parentProbeSchema,
 				metadata: { name: 'Parent probe', category: 'input' },
 				render: () => {

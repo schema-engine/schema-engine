@@ -9,6 +9,7 @@ import { areaPlacementIssue, namedPlacementIssue } from './grid-checks';
 import { childPath, isTaggedConfig, issueAt, type FormValidationIssue, type ParseResult, type Path } from './issues';
 import type { ValidateFormOptions } from './options';
 import { fromSchemaIssues } from './schema-issues';
+import { containerKindOf } from '@/lib/container-kind-of';
 import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
 
 function parseRegistration(schema: StandardSchemaV1, config: object, path: Path): ParseResult<unknown> {
@@ -247,5 +248,5 @@ export function brandElementTree(
 				children.map((child) => brandElementTree(child as FormTaggedConfig, getElement)),
 			)
 		: config;
-	return markNormalizedElementConfig(next as unknown as ElementConfig, getElement(config.$type)?.containerKind);
+	return markNormalizedElementConfig(next as unknown as ElementConfig, containerKindOf(getElement(config.$type)));
 }

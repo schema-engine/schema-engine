@@ -33,3 +33,6 @@ export const maskedInputFieldExample: MaskedInputFieldConfig = {
 	placeholder: 'ES12 4311 2144 214423',
 	inputMode: 'text',
 };
+
+/** The value a masked field writes: the masked or unmasked text, and the typed value as text with `unmask: 'typed'`. */
+export const maskedInputFieldValue = () => z.string();

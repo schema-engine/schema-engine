@@ -6,6 +6,7 @@ import { useFormField } from '../../src/hooks/form-state';
 import type { ElementConfig, FormConfig } from '@schema-engine/forms/schemas';
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput, type BuilderActionBaseContext } from '@schema-engine/forms';
+import { anyValue } from '../utils/any-value';
 
 type Executed = { trigger: string; context: BuilderActionBaseContext };
 const executed: Executed[] = [];
@@ -15,6 +16,7 @@ let behaviour: (executing: Executed) => void | Promise<void> = () => undefined;
 const testEngine = createFormEngine({
 	elements: [
 		defineInput({
+			value: anyValue,
 			$type: 'input',
 			schema: z.looseObject({ $type: z.literal('input'), name: z.string() }),
 			metadata: { name: 'Input', category: 'input' },

@@ -19,6 +19,7 @@ import { demoFormRegistrations } from '../src/components/react-form-demo/demo-re
 import { docsEngines } from '../src/lib/form-engine-setup';
 import { allRecipes, recipeConfigSource, recipeYamlSources, type Recipe } from '../src/lib/recipes/catalog';
 import { slugifyHeadingText } from '../src/mdx/rehype-heading-ids';
+import { anyValue } from './any-value';
 
 vi.setConfig({ testTimeout: 15_000 });
 
@@ -504,6 +505,7 @@ describe('appearance axes page', () => {
 
 	test('an engine build names the registration that declares an unknown axis', () => {
 		const notice = forms.defineInput({
+			value: anyValue,
 			$type: 'notice',
 			appearanceAxes: ['tone'],
 			schema: z.extend(BaseFieldSchema, { $type: z.literal('notice') }),

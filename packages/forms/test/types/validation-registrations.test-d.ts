@@ -8,6 +8,7 @@ import {
 	type ValidationRegistration,
 	type ValidationRegistrationConstraint,
 } from '@/schemas/validation';
+import { anyValue } from '../lib/any-value';
 
 type PostcodeRule = { type: 'postcode'; country: string; message?: string };
 
@@ -31,7 +32,7 @@ const input = {
 /** A registration typed for one rule shape is accepted wherever validations are taken. */
 createFormEngine({ validations: [postcode] });
 createFormEngine().extend({ validations: [postcode] });
-defineInput({ ...input, validations: [postcode] });
+defineInput({ value: anyValue, ...input, validations: [postcode] });
 createValidationRegistry([postcode]);
 createDefaultValidationRegistry([postcode]);
 

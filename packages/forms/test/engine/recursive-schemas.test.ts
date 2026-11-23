@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import type { StaticRegistration } from '@/types';
+import { anyValue } from '../lib/any-value';
 
 describe('Recursive Schema Handling', () => {
 	describe('Self-Referential Schemas', () => {
@@ -24,8 +25,9 @@ describe('Recursive Schema Handling', () => {
 
 			const commentReg: StaticRegistration = {
 				$type: 'comment',
+				kind: 'static',
 				schema: commentSchema,
-				metadata: { name: 'Comment Thread', category: 'input' },
+				metadata: { name: 'Comment Thread', category: 'content' },
 				render: () => null,
 			};
 
@@ -52,8 +54,9 @@ describe('Recursive Schema Handling', () => {
 
 			const treeReg: StaticRegistration = {
 				$type: 'tree-node',
+				kind: 'static',
 				schema: treeNodeSchema,
-				metadata: { name: 'Tree Node', category: 'input' },
+				metadata: { name: 'Tree Node', category: 'content' },
 				render: () => null,
 			};
 
@@ -99,15 +102,17 @@ describe('Recursive Schema Handling', () => {
 
 			const userReg: StaticRegistration = {
 				$type: 'user',
+				kind: 'static',
 				schema: userSchema,
-				metadata: { name: 'User', category: 'input' },
+				metadata: { name: 'User', category: 'content' },
 				render: () => null,
 			};
 
 			const postReg: StaticRegistration = {
 				$type: 'post',
+				kind: 'static',
 				schema: postSchema,
-				metadata: { name: 'Post', category: 'input' },
+				metadata: { name: 'Post', category: 'content' },
 				render: () => null,
 			};
 
@@ -151,15 +156,17 @@ describe('Recursive Schema Handling', () => {
 
 			const userReg: StaticRegistration = {
 				$type: 'user',
+				kind: 'static',
 				schema: userSchema,
-				metadata: { name: 'User', category: 'input' },
+				metadata: { name: 'User', category: 'content' },
 				render: () => null,
 			};
 
 			const postReg: StaticRegistration = {
 				$type: 'post',
+				kind: 'static',
 				schema: postSchema,
-				metadata: { name: 'Post', category: 'input' },
+				metadata: { name: 'Post', category: 'content' },
 				render: () => null,
 			};
 
@@ -254,30 +261,40 @@ describe('Recursive Schema Handling', () => {
 				elements: [
 					{
 						$type: 'organization',
+						kind: 'input',
+						value: anyValue,
 						schema: organizationSchema,
 						metadata: { name: 'Organization', category: 'input' },
 						render: () => null,
 					},
 					{
 						$type: 'department',
+						kind: 'input',
+						value: anyValue,
 						schema: departmentSchema,
 						metadata: { name: 'Department', category: 'input' },
 						render: () => null,
 					},
 					{
 						$type: 'team',
+						kind: 'input',
+						value: anyValue,
 						schema: teamSchema,
 						metadata: { name: 'Team', category: 'input' },
 						render: () => null,
 					},
 					{
 						$type: 'member',
+						kind: 'input',
+						value: anyValue,
 						schema: memberSchema,
 						metadata: { name: 'Member', category: 'input' },
 						render: () => null,
 					},
 					{
 						$type: 'project',
+						kind: 'input',
+						value: anyValue,
 						schema: projectSchema,
 						metadata: { name: 'Project', category: 'input' },
 						render: () => null,
@@ -317,6 +334,8 @@ describe('Recursive Schema Handling', () => {
 				elements: [
 					{
 						$type: 'comment',
+						kind: 'input',
+						value: anyValue,
 						schema: commentSchema,
 						metadata: { name: 'Comment', category: 'input' },
 						render: () => null,
@@ -352,6 +371,8 @@ describe('Recursive Schema Handling', () => {
 				elements: [
 					{
 						$type: 'node',
+						kind: 'input',
+						value: anyValue,
 						schema: nodeSchema,
 						metadata: { name: 'Node', category: 'input' },
 						render: () => null,
@@ -384,6 +405,8 @@ describe('Recursive Schema Handling', () => {
 				elements: [
 					{
 						$type: 'linked-node',
+						kind: 'input',
+						value: anyValue,
 						schema: linkedNodeSchema,
 						metadata: { name: 'Linked Node', category: 'input' },
 						render: () => null,

@@ -53,6 +53,10 @@ Pass the schema directly. `defineInput` checks that the component accepts
 schema output (defaults and transforms applied). Form authors still write
 schema input, so defaulted properties stay optional in `defineForm`.
 
+An input also declares the value its control writes, with `value`: a function of the configured element that
+returns a Standard Schema. It is what lets the engine check every submission and type `onSubmit` from the config (see
+[Submitted values](/docs/forms/form-state#submitted-values)). Here a rating is a whole number from one to its `max`.
+
 ```tsx
 import { defineInput, createFormEngine } from '@schema-engine/forms';
 import * as z from 'zod/mini';
@@ -72,6 +76,7 @@ export const RatingRegistration = defineInput({
 	$type: 'rating',
 	schema: RatingSchema,
 	metadata: { name: 'Rating', category: 'input' },
+	value: ({ max }) => z.number().check(z.int(), z.gte(1), z.lte(max)),
 	render: RatingField,
 });
 
@@ -123,6 +128,9 @@ export const GroupRegistration = defineInput({
 	render: GroupField,
 });
 ```
+
+A container declares no `value`: its value is its children's, which the engine composes by the same path rules, so
+`defineInput` requires `value` exactly when the schema has no `elements`, and rejects one on a schema that has (`containerKind` may sit beside `elements`; `'object'` is the default), and `createFormEngine` rejects an input without one, whatever its `metadata.category` (the helpers set `kind: 'input'` or `kind: 'static'`, which is what the engine reads; a registration written by hand states its `kind`).
 
 Arrays use `arrayItemScope(name, index, instanceId)` and pass `instanceId` —
 a stable item id, not the current index — so ids survive item removal.

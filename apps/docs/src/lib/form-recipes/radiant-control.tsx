@@ -54,6 +54,7 @@ const ToneSchema = z.extend(BaseFieldSchema, { $type: z.literal('tone') });
 export const ToneRegistration = defineInput({
 	$type: 'tone',
 	schema: ToneSchema,
+	value: () => z.string(),
 	metadata: { name: 'Tone', category: 'input' },
 	render: (config) => (
 		<FormField name={config.name}>

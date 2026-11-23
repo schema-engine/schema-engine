@@ -13,7 +13,7 @@ import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
-import { withExportedChildren } from '@/lib/element-children';
+import { declaresChildren, withExportedChildren } from '@/lib/element-children';
 import { withExportedRules } from '@/lib/exported-rules';
 import {
 	assertAxesNotReserved,
@@ -33,6 +33,34 @@ import { isZodType } from '@/lib/zod-json-schema';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
 import { assertStandardSchema } from '@/lib/standard-schema';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
+
+/**
+ * Rejects an element registration that states no `kind`, or an input that declares no `value`, which types forbid but a hand-written object does not.
+ *
+ * @remarks
+ * `defineInput` and `defineStatic` set `kind`, which is what says whether an element holds a value: its metadata is for display and is never read here.
+ * A registration written without the helpers states its `kind`.
+ *
+ * For an `input` the rule is the one the types state: `value` is required exactly when the schema declares no `elements`, since the
+ * value of a container is composed from its children. A `containerKind` is no escape for that: it belongs beside
+ * `elements`. The one exception is a schema that is not Zod, which cannot be read for `elements`
+ * (`declaresChildren` returns `undefined`), so there `containerKind` says the element holds children. A `static` element holds no value and is not checked further.
+ */
+function assertValueDeclared(registration: ElementRegistrationConstraint): void {
+	const { kind } = registration;
+	if (kind !== 'input' && kind !== 'static') {
+		throw new Error(
+			`Element '${registration.$type}' states no kind. Build it with \`defineInput\` or \`defineStatic\`, or set \`kind: 'input'\` (it holds a value or children) or \`kind: 'static'\` (display only) on a registration written by hand.`,
+		);
+	}
+	if (kind === 'static') return;
+	if (typeof registration.value === 'function') return;
+	const children = declaresChildren(registration.schema);
+	if (children === true || (children === undefined && registration.containerKind !== undefined)) return;
+	throw new Error(
+		`Element '${registration.$type}' is an input that declares no value. Give it \`value: (config) => schema\`, the value its control writes. An input that holds children declares \`elements\` in its schema instead; \`containerKind\` stands in for that only when the schema is not Zod, which cannot be read for them. A display-only element is made with \`defineStatic\`.`,
+	);
+}
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
 	if (schemas.length === 0) {
@@ -265,6 +293,7 @@ function resolveLayout(layout: LayoutInput | undefined): LayoutTheme {
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const layout = resolveLayout(lists.layout);
 	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[]);
+	for (const registration of lists.elements ?? []) assertValueDeclared(registration);
 	const recipeRegistry = createFormRecipeRegistry((lists.recipes ?? []) as readonly AnyRecipeRegistration[]);
 	const actionRegistry = createRegistry('Action', (lists.actions ?? []) as readonly AnyActionRegistration[]);
 

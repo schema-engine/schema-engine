@@ -1,5 +1,6 @@
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
 import type {
+	DefaultValuesOf,
 	FormActionTrigger,
 	FormSubmissionState as SubmissionState,
 	FormSubmitHelpers,
@@ -177,16 +178,21 @@ export type FormProviderAction<TOutputs extends EngineOutputMaps = EngineOutputM
 
 /**
  * Props for the FormProvider component
+ *
+ * @template TValues - The values the form submits: the type its config carries (`engine.defineForm` of a literal, or `engine.validateForm(json, { values })`), else {@link FormValues}. It types `onSubmit`, `onAction` and `defaultValues`, never `onChange`, whose values are live and may be excluded or unfinished.
  */
-export interface FormProviderProps<TOutputs extends EngineOutputMaps = EngineOutputMaps> {
+export interface FormProviderProps<
+	TOutputs extends EngineOutputMaps = EngineOutputMaps,
+	TValues extends FormValues = FormValues,
+> {
 	/**
 	 * The form, normalized by the engine (`engine.validateForm`).
 	 *
 	 * @remarks Its `validationMode`, `reValidateMode` and `payload` go to the form's container as they are.
 	 */
-	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions']>;
+	config: NormalizedFormConfig<TOutputs['elements'], TOutputs['recipes'], TOutputs['actions'], TValues>;
 	/** Optional default values for form fields */
-	defaultValues?: Record<string, unknown>;
+	defaultValues?: DefaultValuesOf<NoInfer<TValues>>;
 	/** React children to render inside the form context */
 	children: ReactNode;
 	/**
@@ -194,11 +200,11 @@ export interface FormProviderProps<TOutputs extends EngineOutputMaps = EngineOut
 	 *
 	 * @remarks `setServerErrors` shows the server's answer to this submission on the fields it names.
 	 */
-	onSubmit?: (data: FormValues, helpers: FormSubmitHelpers) => void | Promise<void>;
+	onSubmit?: (data: TValues, helpers: FormSubmitHelpers) => void | Promise<void>;
 	/** Callback function executed whenever form data changes */
 	onChange?: (data: FormValues) => void;
 	/** Callback function executed when a form action is triggered */
-	onAction?: (action: FormProviderAction<TOutputs>, data: FormValues) => void | Promise<void>;
+	onAction?: (action: FormProviderAction<TOutputs>, data: TValues) => void | Promise<void>;
 	/** Results of each action trigger, including submission failures. */
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 	/**

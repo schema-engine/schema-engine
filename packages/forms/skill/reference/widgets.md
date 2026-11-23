@@ -41,6 +41,7 @@ export const textFieldRegistration = defineInput({
 	$type: 'text',
 	schema: TextFieldSchema,
 	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
 	render: TextField,
 });
 ```
@@ -86,6 +87,7 @@ export const ratingFieldRegistration = defineInput({
 	$type: 'rating',
 	schema: RatingFieldSchema,
 	metadata: { name: 'Rating', category: 'input' },
+	value: (config) => z.number().check(z.int(), z.gte(1), z.lte(config.max)),
 	render: RatingField,
 });
 ```
@@ -124,6 +126,7 @@ export const textFieldRegistration = defineInput({
 	$type: 'text',
 	schema: TextFieldSchema,
 	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
 	render: TextField,
 });
 ```
@@ -211,6 +214,7 @@ export const starsFieldRegistration = defineInput({
 	$type: 'stars',
 	schema: StarsFieldSchema,
 	metadata: { name: 'Stars', category: 'input' },
+	value: (config) => z.number().check(z.int(), z.gte(1), z.lte(config.max)),
 	render: StarsField,
 });
 ```
@@ -226,7 +230,7 @@ A fact follows the form's validation timing, and the rule's error wins the displ
 
 ## Registering the widget
 
-A registration is `defineInput({ $type, schema, metadata, render })`, and the schema is the widget's config: `z.extend(BaseFieldSchema, { $type: z.literal('...'), ...yours })`. `defineInput` keeps the schema's input and output apart, so authors write the input and `render` receives the output with defaults applied. A container widget declares `elements: elementChildrenSchema` and renders its children with `FormElements`, which composes the paths at render time. Pass the registration to the engine: `forms-react.md` shows the React engine, and here is the Radiant one.
+A registration is `defineInput({ $type, schema, metadata, value, render })`, and the schema is the widget's config: `z.extend(BaseFieldSchema, { $type: z.literal('...'), ...yours })`. `defineInput` keeps the schema's input and output apart, so authors write the input and `render` receives the output with defaults applied. `value` declares what the control writes, as a function of the configured element that returns a Standard Schema (the rating's `max` is its bound; a select's options are an enum): `defineInput` requires it, the engine checks every submission against it, and the type of `onSubmit` comes from it. The control writes exactly what it declares (a number option is a number, not its text), and a control that writes something else fails the submission with a `valueMismatch` issue at its path. A container widget declares `elements: elementChildrenSchema`, no `value` (its value is its children's), and renders its children with `FormElements`, which composes the paths at render time. A display-only element uses `defineStatic` and declares none. Pass the registration to the engine: `forms-react.md` shows the React engine, and here is the Radiant one.
 
 ```ts title="radiant/engine.ts"
 import { createRadiantFormEngine } from '@schema-engine/forms-radiant';
