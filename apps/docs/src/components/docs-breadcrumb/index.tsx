@@ -9,6 +9,7 @@ import {
 	RuiBreadcrumbSeparator,
 } from '@ecopages/radiant-ui/breadcrumb';
 import type { Entry } from 'ecopages:content/docs';
+import { ExperimentalBadge } from '@/components/experimental-badge';
 import { DOCS_ROOT } from '@/content/docs';
 import { docsNav } from '@/lib/docs-nav';
 
@@ -40,6 +41,7 @@ export const DocsBreadcrumb = eco.component<{ entry: Entry }, JsxRenderable>({
 						<RuiBreadcrumbSeparator />
 						<RuiBreadcrumbItem>
 							<RuiBreadcrumbPage>{entry.title}</RuiBreadcrumbPage>
+							{entry.status ? <ExperimentalBadge /> : null}
 						</RuiBreadcrumbItem>
 					</RuiBreadcrumbList>
 				</RuiBreadcrumb>
