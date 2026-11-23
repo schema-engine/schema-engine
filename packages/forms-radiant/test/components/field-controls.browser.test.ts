@@ -9,7 +9,7 @@ const phone = { $type: 'phone-input', id: 'contact', name: 'contact', label: 'Co
 const otp = { $type: 'input-otp', id: 'code', name: 'code', label: 'Verification code', length: 6 } as const;
 
 test('a required masked input carries its label and ARIA on the visible input', async () => {
-	const { host } = await mount({ ...masked, label: 'Mobile', rules: [{ type: 'required', message: 'Required' }] });
+	const { host } = await mount({ ...masked, label: 'Mobile', rules: [{ $type: 'required', message: 'Required' }] });
 	await userEvent.click(host.querySelector('se-masked-input input')!);
 	await userEvent.tab();
 
@@ -37,7 +37,7 @@ test.each([
 	['masked-input', masked, 'se-masked-input input'],
 	['phone-input', phone, 'se-phone-input [data-ref="number"]'],
 ])('a %s keeps the same input when its field becomes invalid', async (_name, element, selector) => {
-	const { host } = await mount({ ...element, rules: [{ type: 'required', message: 'Required' }] });
+	const { host } = await mount({ ...element, rules: [{ $type: 'required', message: 'Required' }] });
 	await expect.poll(() => host.querySelector('se-field')?.querySelector(selector)?.id).toBeTruthy();
 	const input = host.querySelector<HTMLInputElement>(selector)!;
 	input.focus();

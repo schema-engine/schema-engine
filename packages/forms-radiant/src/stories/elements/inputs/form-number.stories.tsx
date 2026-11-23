@@ -39,11 +39,11 @@ export const WithValidation: Story = {
 				label: 'Quantity',
 				rules: [
 					{
-						type: 'required',
+						$type: 'required',
 						message: 'Quantity is required',
 					},
 					{
-						type: 'min',
+						$type: 'min',
 						value: 2,
 						message: 'Quantity must be at least 2',
 					},

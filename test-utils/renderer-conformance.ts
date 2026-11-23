@@ -718,7 +718,7 @@ export function rendererConformance(
 							input('kind', 'Kind'),
 							{
 								...input('email', 'Email'),
-								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 							},
 						],
 					},
@@ -733,7 +733,7 @@ export function rendererConformance(
 		});
 		describe('format rules on an optional field', () => {
 			const optionalEmail = () =>
-				form([{ ...input('email', 'Email'), rules: [{ type: 'email', message: 'Bad email' }] }]);
+				form([{ ...input('email', 'Email'), rules: [{ $type: 'email', message: 'Bad email' }] }]);
 			test('an optional email field can be left empty', async () => {
 				const onSubmit = vi.fn();
 				const { host } = await setup({ config: optionalEmail(), onSubmit });
@@ -748,8 +748,8 @@ export function rendererConformance(
 						{
 							...input('code', 'Code'),
 							rules: [
-								{ type: 'pattern', value: '^[a-z]+$', message: 'Letters only' },
-								{ type: 'minLength', value: 3, message: 'Too short' },
+								{ $type: 'pattern', value: '^[a-z]+$', message: 'Letters only' },
+								{ $type: 'minLength', value: 3, message: 'Too short' },
 							],
 						},
 					]),
@@ -877,7 +877,10 @@ export function rendererConformance(
 			id: 'address',
 			name: 'address',
 			elements: [
-				{ ...input('street', 'Street'), rules: [{ type: 'required' as const, message: 'Street is required' }] },
+				{
+					...input('street', 'Street'),
+					rules: [{ $type: 'required' as const, message: 'Street is required' }],
+				},
 			],
 		};
 		test('wizard Next validates a required child inside a fieldset', async () => {
@@ -905,7 +908,7 @@ export function rendererConformance(
 				queryAllByRole(host, 'textbox', { name: new RegExp(`^${name}`) });
 			const required = (name: string, label: string) => ({
 				...input(name, label),
-				rules: [{ type: 'required' as const, message: `${label} is required` }],
+				rules: [{ $type: 'required' as const, message: `${label} is required` }],
 			});
 			test('a direct container.reset() resets the submission and the steps', async () => {
 				const { host, container, submission } = await setup({
@@ -941,7 +944,7 @@ export function rendererConformance(
 						[
 							{
 								...input('slow', 'Slow'),
-								rules: [{ type: 'async', url: '/conformance-slow', disableCache: true }],
+								rules: [{ $type: 'async', url: '/conformance-slow', disableCache: true }],
 							},
 						],
 						[input('second', 'Second')],
@@ -978,7 +981,7 @@ export function rendererConformance(
 			});
 			const checked = {
 				...input('email', 'Email'),
-				rules: [{ type: 'async' as const, url: '/conformance-email', disableCache: true }],
+				rules: [{ $type: 'async' as const, url: '/conformance-email', disableCache: true }],
 			};
 			test('a submit failure moves to the step with the error', async () => {
 				let valid = true;
@@ -1075,9 +1078,7 @@ export function rendererConformance(
 							{
 								id: 'company',
 								title: 'Company',
-								constraints: [
-									{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' },
-								],
+								constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
 								elements: [input2('wants', 'Wants')],
 							},
 							{
@@ -1086,7 +1087,7 @@ export function rendererConformance(
 								elements: [
 									input2('vat', 'Vat', {
 										constraints: [
-											{ field: 'wants', operator: 'equals', value: 'yes', action: 'show' },
+											{ field: 'wants', operator: 'equals', value: 'yes', $type: 'show' },
 										],
 									}),
 									input2('card', 'Card'),
@@ -1104,14 +1105,14 @@ export function rendererConformance(
 				const { host } = await setup({
 					config: form([
 						input2('needs', 'Needs', {
-							constraints: [{ field: 'late', operator: 'equals', value: 'yes', action: 'require' }],
+							constraints: [{ field: 'late', operator: 'equals', value: 'yes', $type: 'require' }],
 						}),
 						input2('shown', 'Shown', {
-							constraints: [{ field: 'late', operator: 'equals', value: 'yes', action: 'show' }],
+							constraints: [{ field: 'late', operator: 'equals', value: 'yes', $type: 'show' }],
 						}),
 						input2('gate', 'Gate'),
 						input2('late', 'Late', {
-							constraints: [{ field: 'gate', operator: 'equals', value: 'open', action: 'show' }],
+							constraints: [{ field: 'gate', operator: 'equals', value: 'open', $type: 'show' }],
 						}),
 					]),
 					defaultValues: { gate: 'closed', late: 'yes' },
@@ -1130,16 +1131,16 @@ export function rendererConformance(
 					[
 						{
 							...input('password', 'Password'),
-							rules: [{ type: 'required', message: 'Password is required' }],
+							rules: [{ $type: 'required', message: 'Password is required' }],
 						},
 					],
 					[
 						{
 							...input('confirm', 'Confirm'),
 							rules: [
-								{ type: 'required', message: 'Confirm is required' },
+								{ $type: 'required', message: 'Confirm is required' },
 								{
-									type: 'relate',
+									$type: 'relate',
 									fields: ['password'],
 									assert: 'allEqual',
 									message: 'Must match password',
@@ -1276,7 +1277,7 @@ export function rendererConformance(
 					[
 						{
 							...input('handle', 'Handle'),
-							rules: [{ type: 'async', url: '/conformance-race', debounce: 0, disableCache: true }],
+							rules: [{ $type: 'async', url: '/conformance-race', debounce: 0, disableCache: true }],
 						},
 					],
 					[input('second', 'Second')],
@@ -1320,7 +1321,7 @@ export function rendererConformance(
 						[
 							{
 								...input('second', 'Second'),
-								rules: [{ type: 'required', message: 'Second is required' }],
+								rules: [{ $type: 'required', message: 'Second is required' }],
 							},
 						],
 						[input('third', 'Third')],
@@ -1373,7 +1374,7 @@ export function rendererConformance(
 					input('kind', 'Kind'),
 					{
 						...input('vat', 'VAT'),
-						constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+						constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'require' }],
 					},
 				]),
 				defaultValues: { kind: 'business', vat: '' },
@@ -1403,7 +1404,7 @@ export function rendererConformance(
 						$type: 'fieldSet',
 						id: 'company',
 						name: 'company',
-						constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+						constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'require' }],
 						elements: [
 							input('vat', 'VAT'),
 							{ $type: 'fieldSet', id: 'office', name: 'office', elements: [input('street', 'Street')] },
@@ -1450,7 +1451,7 @@ export function rendererConformance(
 						elements: [
 							{
 								...input('tag', 'Tag'),
-								constraints: [{ field: 'note', operator: 'not_equals', value: 'hide', action: 'show' }],
+								constraints: [{ field: 'note', operator: 'not_equals', value: 'hide', $type: 'show' }],
 							},
 						],
 					},
@@ -1477,7 +1478,7 @@ export function rendererConformance(
 							id: 'tags',
 							name: 'tags',
 							elements: [
-								{ ...input('tag', 'Tag'), rules: [{ type: 'required', message: 'Tag is required' }] },
+								{ ...input('tag', 'Tag'), rules: [{ $type: 'required', message: 'Tag is required' }] },
 							],
 						},
 					]),
@@ -1504,7 +1505,7 @@ export function rendererConformance(
 						$type: 'arrayElements',
 						id: 'phones',
 						name: 'phones',
-						constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+						constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'require' }],
 						elements: [input('phone', 'Phone')],
 					},
 				]),
@@ -1520,7 +1521,7 @@ export function rendererConformance(
 			const { host } = await setup({
 				config: {
 					...form([
-						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+						{ ...input('fullName', 'Name'), rules: [{ $type: 'required', message: 'Name is required' }] },
 					]),
 					validationMode: 'onSubmit',
 					reValidateMode: 'onBlur',
@@ -1537,7 +1538,7 @@ export function rendererConformance(
 			const { host } = await setup({
 				config: {
 					...form([
-						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+						{ ...input('fullName', 'Name'), rules: [{ $type: 'required', message: 'Name is required' }] },
 					]),
 					validationMode: 'onChange',
 				},
@@ -1550,7 +1551,7 @@ export function rendererConformance(
 			const { host } = await setup({
 				config: {
 					...form([
-						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+						{ ...input('fullName', 'Name'), rules: [{ $type: 'required', message: 'Name is required' }] },
 					]),
 					actions: [{ $type: 'conformance', id: 'submitted', triggers: ['form_submit'] }],
 				},
@@ -1590,7 +1591,7 @@ export function rendererConformance(
 						...form([
 							{
 								...input('counted', 'Counted'),
-								rules: [{ type: 'async', url: '/conformance-count', disableCache: true }],
+								rules: [{ $type: 'async', url: '/conformance-count', disableCache: true }],
 							},
 							input('other', 'Other'),
 						]),
@@ -1612,7 +1613,7 @@ export function rendererConformance(
 						...form([
 							{
 								...input('counted', 'Counted'),
-								rules: [{ type: 'async', url: '/conformance-count', disableCache: true }],
+								rules: [{ $type: 'async', url: '/conformance-count', disableCache: true }],
 							},
 							input('other', 'Other'),
 						]),
@@ -1631,7 +1632,7 @@ export function rendererConformance(
 				const { host } = await setup({
 					config: {
 						...form([
-							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							{ ...input('name', 'Name'), rules: [{ $type: 'required', message: 'Name is required' }] },
 							input('note', 'Note'),
 						]),
 						actions: [changeAction],
@@ -1647,7 +1648,7 @@ export function rendererConformance(
 				const { host } = await setup({
 					config: {
 						...form([
-							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							{ ...input('name', 'Name'), rules: [{ $type: 'required', message: 'Name is required' }] },
 							input('note', 'Note'),
 						]),
 						actions: [mountAction, changeAction],
@@ -1668,7 +1669,7 @@ export function rendererConformance(
 				const { host } = await setup({
 					config: {
 						...form([
-							{ ...input('name', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+							{ ...input('name', 'Name'), rules: [{ $type: 'required', message: 'Name is required' }] },
 							input('note', 'Note'),
 						]),
 						validationMode: 'onBlur',
@@ -1690,18 +1691,18 @@ export function rendererConformance(
 							input('kind', 'Kind'),
 							{
 								...input('company', 'Company'),
-								rules: [{ type: 'required', message: 'Company is required' }],
-								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+								rules: [{ $type: 'required', message: 'Company is required' }],
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 							},
 							{
 								$type: 'fieldSet',
 								id: 'billing',
 								name: 'billing',
-								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 								elements: [
 									{
 										...input('vat', 'VAT'),
-										rules: [{ type: 'required', message: 'VAT is required' }],
+										rules: [{ $type: 'required', message: 'VAT is required' }],
 									},
 								],
 							},
@@ -1731,7 +1732,7 @@ export function rendererConformance(
 							{
 								...input('handle', 'Handle'),
 								rules: [
-									{ type: 'async', url: '/conformance-check', debounce: 300, disableCache: true },
+									{ $type: 'async', url: '/conformance-check', debounce: 300, disableCache: true },
 								],
 							},
 						]),
@@ -1761,7 +1762,7 @@ export function rendererConformance(
 					...form([
 						{
 							...input('handle', 'Handle'),
-							rules: [{ type: 'async', url: '/conformance-check', debounce: 50, disableCache: true }],
+							rules: [{ $type: 'async', url: '/conformance-check', debounce: 50, disableCache: true }],
 						},
 					]),
 					reValidateMode: 'onChange',
@@ -1809,7 +1810,7 @@ export function rendererConformance(
 			const { host } = await setup({
 				config: {
 					...form([
-						{ ...input('fullName', 'Name'), rules: [{ type: 'required', message: 'Name is required' }] },
+						{ ...input('fullName', 'Name'), rules: [{ $type: 'required', message: 'Name is required' }] },
 						input('note', 'Note'),
 					]),
 					validationMode: 'onBlur',
@@ -1838,7 +1839,7 @@ export function rendererConformance(
 							id: 'accepted',
 							name: 'accepted',
 							label: 'Accept',
-							rules: [{ type: 'required', message: 'Must accept' }],
+							rules: [{ $type: 'required', message: 'Must accept' }],
 						},
 						{
 							$type: 'checkbox-group',
@@ -1907,7 +1908,7 @@ export function rendererConformance(
 						...form([
 							{
 								...input('slow', 'Slow'),
-								rules: [{ type: 'async', url: '/conformance-slow', disableCache: true }],
+								rules: [{ $type: 'async', url: '/conformance-slow', disableCache: true }],
 							},
 						]),
 						validationMode: 'onSubmit',

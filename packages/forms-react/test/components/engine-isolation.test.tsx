@@ -70,7 +70,7 @@ function createConfig(id: string) {
 						id: `${id}-field`,
 						name: 'value',
 						label: id,
-						rules: [{ type: 'minLength' as const, value: 1 }],
+						rules: [{ $type: 'minLength' as const, value: 1 }],
 					},
 				],
 			},

@@ -21,14 +21,14 @@ const wizard = (overrides: Partial<FormStateContainerOptions> = {}): FormStateCo
 				element({
 					$type: 'input',
 					name: 'password',
-					rules: [{ type: 'required', message: 'Password is required' }],
+					rules: [{ $type: 'required', message: 'Password is required' }],
 				}),
 				element({
 					$type: 'input',
 					name: 'confirmPassword',
 					rules: [
 						{
-							type: 'relate',
+							$type: 'relate',
 							fields: ['password'],
 							assert: 'allEqual',
 							includeSelf: true,
@@ -61,7 +61,7 @@ const addressForm = (country = 'FR'): FormStateContainer =>
 				element({
 					$type: 'input',
 					name: 'vat',
-					constraints: [{ field: 'address.country', action: 'require', operator: 'equals', value: 'IT' }],
+					constraints: [{ field: 'address.country', $type: 'require', operator: 'equals', value: 'IT' }],
 				}),
 			],
 			defaults: { address: { street: '1 Main', country }, vat: '' },
@@ -159,7 +159,7 @@ describe('createFormStateContainer', () => {
 										$type: 'input',
 										name: 'vat',
 										constraints: [
-											{ field: 'type', action: 'require', operator: 'equals', value: 'company' },
+											{ field: 'type', $type: 'require', operator: 'equals', value: 'company' },
 										],
 									},
 								],
@@ -308,7 +308,7 @@ describe('createFormStateContainer', () => {
 									{
 										$type: 'input',
 										name: 'email',
-										rules: [{ type: 'required', message: 'Email is required' }],
+										rules: [{ $type: 'required', message: 'Email is required' }],
 									},
 									{ $type: 'input', name: 'label' },
 								],
@@ -337,7 +337,7 @@ describe('createFormStateContainer', () => {
 							{
 								$type: 'arrayElements',
 								name: 'tags',
-								rules: [{ type: 'minItems', value: 1, message: 'Add a tag' }],
+								rules: [{ $type: 'minItems', value: 1, message: 'Add a tag' }],
 								elements: [{ $type: 'input', name: 'value' }],
 							},
 							'array',
@@ -360,7 +360,7 @@ describe('createFormStateContainer', () => {
 			const gatedRegistry = createDefaultValidationRegistry([
 				{
 					$type: 'matchesSlow',
-					schema: z.object({ type: z.literal('matchesSlow') }),
+					schema: z.object({ $type: z.literal('matchesSlow') }),
 					metadata: { name: 'Matches slowly' },
 					category: 'cross-field',
 					dependsOn: () => ['password'],
@@ -392,7 +392,7 @@ describe('createFormStateContainer', () => {
 					registry: gate.registry,
 					elements: [
 						element({ $type: 'input', name: 'password' }),
-						element({ $type: 'input', name: 'confirm', rules: [{ type: 'matchesSlow' }] }),
+						element({ $type: 'input', name: 'confirm', rules: [{ $type: 'matchesSlow' }] }),
 					],
 					defaults: { password: 'old', confirm: 'new' },
 				}),
@@ -416,7 +416,7 @@ describe('createFormStateContainer', () => {
 					registry: gate.registry,
 					elements: [
 						element({ $type: 'input', name: 'password' }),
-						element({ $type: 'input', name: 'confirm', rules: [{ type: 'matchesSlow' }] }),
+						element({ $type: 'input', name: 'confirm', rules: [{ $type: 'matchesSlow' }] }),
 						element(
 							{
 								$type: 'arrayElements',
@@ -426,7 +426,7 @@ describe('createFormStateContainer', () => {
 									{
 										$type: 'input',
 										name: 'w',
-										rules: [{ type: 'required', message: 'W is required' }],
+										rules: [{ $type: 'required', message: 'W is required' }],
 									},
 								],
 							},
@@ -457,7 +457,7 @@ describe('createFormStateContainer', () => {
 						element({
 							$type: 'input',
 							name: 'name',
-							rules: [{ type: 'required', message: 'Name is required' }],
+							rules: [{ $type: 'required', message: 'Name is required' }],
 						}),
 						element(
 							{
@@ -467,7 +467,7 @@ describe('createFormStateContainer', () => {
 									{
 										$type: 'input',
 										name: 'email',
-										rules: [{ type: 'required', message: 'Email is required' }],
+										rules: [{ $type: 'required', message: 'Email is required' }],
 									},
 									{ $type: 'input', name: 'label' },
 								],
@@ -496,7 +496,7 @@ describe('createFormStateContainer', () => {
 						element({
 							$type: 'input',
 							name: 'name',
-							rules: [{ type: 'required', message: 'Name is required' }],
+							rules: [{ $type: 'required', message: 'Name is required' }],
 						}),
 					],
 					defaults: { name: 'Ada' },
@@ -526,7 +526,7 @@ describe('createFormStateContainer', () => {
 											{
 												$type: 'input',
 												name: 'street',
-												rules: [{ type: 'required', message: 'Street is required' }],
+												rules: [{ $type: 'required', message: 'Street is required' }],
 											},
 										],
 									},
@@ -559,7 +559,7 @@ describe('createFormStateContainer', () => {
 									{
 										$type: 'input',
 										name: 'street',
-										rules: [{ type: 'required', message: 'Street is required' }],
+										rules: [{ $type: 'required', message: 'Street is required' }],
 									},
 								],
 							},
@@ -588,7 +588,7 @@ describe('createFormStateContainer', () => {
 									{
 										$type: 'input',
 										name: 'street',
-										rules: [{ type: 'required', message: 'Street is required' }],
+										rules: [{ $type: 'required', message: 'Street is required' }],
 									},
 								],
 							},
@@ -610,7 +610,7 @@ describe('createFormStateContainer', () => {
 							{
 								$type: 'arrayElements',
 								name: 'tags',
-								rules: [{ type: 'minItems', value: 1, message: 'Add a tag' }],
+								rules: [{ $type: 'minItems', value: 1, message: 'Add a tag' }],
 								elements: [{ $type: 'input', name: 'value' }],
 							},
 							'array',
@@ -642,7 +642,7 @@ describe('createFormStateContainer', () => {
 			const manualRegistry = createDefaultValidationRegistry([
 				{
 					$type: 'manual',
-					schema: z.object({ type: z.literal('manual') }),
+					schema: z.object({ $type: z.literal('manual') }),
 					metadata: { name: 'Manual' },
 					category: 'cross-field',
 					dependsOn: readsOf,
@@ -674,7 +674,7 @@ describe('createFormStateContainer', () => {
 						element({
 							$type: 'input',
 							name: 'confirm',
-							rules: [{ type: 'manual', reads: 'contacts.0.email' }],
+							rules: [{ $type: 'manual', reads: 'contacts.0.email' }],
 						}),
 						element(
 							{
@@ -716,7 +716,7 @@ describe('createFormStateContainer', () => {
 									{
 										$type: 'input',
 										name: 'confirm',
-										rules: [{ type: 'manual', reads: 'contacts.0.email' }],
+										rules: [{ $type: 'manual', reads: 'contacts.0.email' }],
 									},
 								],
 							},
@@ -752,7 +752,7 @@ describe('createFormStateContainer', () => {
 									{
 										$type: 'input',
 										name: 'confirm',
-										rules: [{ type: 'manual', reads: ['email', 'contacts.0.email'] }],
+										rules: [{ $type: 'manual', reads: ['email', 'contacts.0.email'] }],
 									},
 								],
 							},
@@ -785,7 +785,7 @@ describe('createFormStateContainer', () => {
 								$type: 'arrayElements',
 								name: 'contacts',
 								elements: [
-									{ $type: 'input', name: 'email', rules: [{ type: 'manual' }] },
+									{ $type: 'input', name: 'email', rules: [{ $type: 'manual' }] },
 									{ $type: 'input', name: 'label' },
 								],
 							},
@@ -819,12 +819,12 @@ describe('createFormStateContainer', () => {
 							{
 								$type: 'arrayElements',
 								name: 'contacts',
-								rules: [{ type: 'minItems', value: 2, message: 'Add two contacts' }],
+								rules: [{ $type: 'minItems', value: 2, message: 'Add two contacts' }],
 								elements: [
 									{
 										$type: 'input',
 										name: 'email',
-										rules: [{ type: 'required', message: 'Email is required' }],
+										rules: [{ $type: 'required', message: 'Email is required' }],
 									},
 									{ $type: 'input', name: 'label' },
 								],
@@ -903,7 +903,7 @@ describe('createFormStateContainer', () => {
 							element({
 								$type: 'input',
 								name: 'email',
-								rules: [{ type: 'async', url: '/api/check', debounce: 300, disableCache: true }],
+								rules: [{ $type: 'async', url: '/api/check', debounce: 300, disableCache: true }],
 							}),
 						],
 						defaults: { email: 'a@example.com' },

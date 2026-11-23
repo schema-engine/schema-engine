@@ -7,11 +7,11 @@ import { createFormStateContainer } from '@/state-container';
 import { defineInput } from '@/types';
 import { anyValue } from '../lib/any-value';
 
-type PostalCodeRule = { type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
+type PostalCodeRule = { $type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
 
 const postalCode: ValidationRegistration<PostalCodeRule> = {
 	$type: 'postalCode',
-	schema: z.looseObject({ type: z.literal('postalCode'), country: z.optional(z.enum(['us', 'ca'])) }),
+	schema: z.looseObject({ $type: z.literal('postalCode'), country: z.optional(z.enum(['us', 'ca'])) }),
 	metadata: { name: 'Postal code' },
 	category: 'string',
 	handler: (rule) =>
@@ -55,8 +55,8 @@ describe('a rule type registered with the engine, used in the rules of an elemen
 							id: 'zip',
 							name: 'zip',
 							rules: [
-								{ type: 'required' },
-								{ type: 'postalCode', country: 'ca', id: 'zip-format', message: 'Not a postal code' },
+								{ $type: 'required' },
+								{ $type: 'postalCode', country: 'ca', id: 'zip-format', message: 'Not a postal code' },
 							],
 						},
 					],
@@ -66,14 +66,14 @@ describe('a rule type registered with the engine, used in the rules of an elemen
 
 		expect(config.steps[0]?.elements[0]).toMatchObject({
 			rules: [
-				{ type: 'required' },
-				{ type: 'postalCode', country: 'ca', id: 'zip-format', message: 'Not a postal code' },
+				{ $type: 'required' },
+				{ $type: 'postalCode', country: 'ca', id: 'zip-format', message: 'Not a postal code' },
 			],
 		});
 	});
 
 	test('runs: the container reports its issue for a value it refuses and none for one it accepts', async () => {
-		const config = engine.validateForm(formWith([{ type: 'postalCode', country: 'ca', id: 'zip-format' }]));
+		const config = engine.validateForm(formWith([{ $type: 'postalCode', country: 'ca', id: 'zip-format' }]));
 		const container = createFormStateContainer({
 			config,
 			registry: engine.getValidationRegistry(),
@@ -92,7 +92,7 @@ describe('a rule type registered with the engine, used in the rules of an elemen
 	});
 
 	test('is checked against its own schema, at the option at fault', () => {
-		const result = engine.safeValidateForm(formWith([{ type: 'postalCode', country: 'mx' }]));
+		const result = engine.safeValidateForm(formWith([{ $type: 'postalCode', country: 'mx' }]));
 
 		expect(result.success).toBe(false);
 		expect(!result.success && result.issues.map((issue) => issue.path)).toEqual([
@@ -103,19 +103,19 @@ describe('a rule type registered with the engine, used in the rules of an elemen
 	test('is accepted by an engine built with it and rejected by one built without it', () => {
 		const without = createFormEngine({ elements: [text] });
 
-		expect(without.safeValidateForm(formWith([{ type: 'postalCode' }])).success).toBe(false);
-		expect(engine.safeValidateForm(formWith([{ type: 'postalCode' }])).success).toBe(true);
+		expect(without.safeValidateForm(formWith([{ $type: 'postalCode' }])).success).toBe(false);
+		expect(engine.safeValidateForm(formWith([{ $type: 'postalCode' }])).success).toBe(true);
 	});
 });
 
 describe('a rule type nothing registers', () => {
 	test('is rejected with a message that names it, the engine option and the registered types', () => {
-		const result = engine.safeValidateForm(formWith([{ type: 'postalcode' }]));
+		const result = engine.safeValidateForm(formWith([{ $type: 'postalcode' }]));
 
 		expect(result.success).toBe(false);
 		expect(!result.success && result.issues).toEqual([
 			{
-				path: ['steps', 0, 'elements', 0, 'rules', 0, 'type'],
+				path: ['steps', 0, 'elements', 0, 'rules', 0, '$type'],
 				message: expect.stringMatching(
 					/^Unknown validation rule 'postalcode'\. Register it with createFormEngine\(\{ validations: \[\.\.\.\] \}\)\. Registered rules: required, .*postalCode\.$/,
 				),
@@ -123,16 +123,28 @@ describe('a rule type nothing registers', () => {
 		]);
 	});
 
+	test('is rejected when it is written with `type`, the key of a rule is `$type`', () => {
+		const result = engine.safeValidateForm(formWith([{ type: 'required' }]));
+
+		expect(result.success).toBe(false);
+		expect(!result.success && result.issues).toEqual([
+			expect.objectContaining({
+				path: ['steps', 0, 'elements', 0, 'rules', 0, '$type'],
+				message: 'Expected string.',
+			}),
+		]);
+	});
+
 	test('is rejected in a standalone element too', () => {
 		expect(() =>
-			engine.validateElement({ $type: 'text', id: 'zip', name: 'zip', rules: [{ type: 'nope' }] }),
+			engine.validateElement({ $type: 'text', id: 'zip', name: 'zip', rules: [{ $type: 'nope' }] }),
 		).toThrow(/Unknown validation rule 'nope'/);
 	});
 });
 
 describe('a built-in rule', () => {
 	test('keeps its typed options: a wrong one is refused at its key', () => {
-		const result = engine.safeValidateForm(formWith([{ type: 'minLength', value: 'eight' }]));
+		const result = engine.safeValidateForm(formWith([{ $type: 'minLength', value: 'eight' }]));
 
 		expect(result.success).toBe(false);
 		expect(!result.success && result.issues.map((issue) => issue.path)).toEqual([
@@ -147,47 +159,49 @@ describe('a built-in rule', () => {
 				{
 					$type: 'minLength',
 					schema: z.object({
-						type: z.literal('minLength'),
+						$type: z.literal('minLength'),
 						value: z.number(),
 						unit: z.enum(['chars', 'words']),
 					}),
 					metadata: { name: 'Minimum length' },
 					category: 'string',
-					handler: (rule: { type: 'minLength'; value: number; unit: 'chars' | 'words' }) =>
+					handler: (rule: { $type: 'minLength'; value: number; unit: 'chars' | 'words' }) =>
 						z.string().check(z.minLength(rule.value)),
 				},
 			],
 		});
 
-		const config = replaced.validateForm(formWith([{ type: 'minLength', value: 3, unit: 'words' }]));
-		expect(config.steps[0]?.elements[0]).toMatchObject({ rules: [{ type: 'minLength', value: 3, unit: 'words' }] });
+		const config = replaced.validateForm(formWith([{ $type: 'minLength', value: 3, unit: 'words' }]));
+		expect(config.steps[0]?.elements[0]).toMatchObject({
+			rules: [{ $type: 'minLength', value: 3, unit: 'words' }],
+		});
 
-		const refused = replaced.safeValidateForm(formWith([{ type: 'minLength', value: 3, unit: 'bytes' }]));
+		const refused = replaced.safeValidateForm(formWith([{ $type: 'minLength', value: 3, unit: 'bytes' }]));
 		expect(!refused.success && refused.issues.map((issue) => issue.path)).toEqual([
 			['steps', 0, 'elements', 0, 'rules', 0, 'unit'],
 		]);
-		expect(replaced.safeValidateForm(formWith([{ type: 'minLength', value: 3 }])).success).toBe(false);
+		expect(replaced.safeValidateForm(formWith([{ $type: 'minLength', value: 3 }])).success).toBe(false);
 	});
 
 	test('keeps the defaults its registration applies', () => {
-		const config = engine.validateForm(formWith([{ type: 'relate', fields: ['other'], assert: 'allEqual' }]));
+		const config = engine.validateForm(formWith([{ $type: 'relate', fields: ['other'], assert: 'allEqual' }]));
 
 		expect(config.steps[0]?.elements[0]).toMatchObject({
-			rules: [{ type: 'relate', includeSelf: true, as: 'auto', skipWhenIncomplete: true }],
+			rules: [{ $type: 'relate', includeSelf: true, as: 'auto', skipWhenIncomplete: true }],
 		});
 	});
 });
 
 describe('a rule whose registration describes its options with a plain object', () => {
-	const zip: ValidationRegistration<{ type: 'zip'; country: 'us' }> = {
+	const zip: ValidationRegistration<{ $type: 'zip'; country: 'us' }> = {
 		$type: 'zip',
-		schema: z.object({ type: z.literal('zip'), country: z._default(z.enum(['us', 'ca']), 'us') }),
+		schema: z.object({ $type: z.literal('zip'), country: z._default(z.enum(['us', 'ca']), 'us') }),
 		metadata: { name: 'Zip' },
 		category: 'string',
 		handler: () => z.string().check(z.regex(/^\d{5}$/)),
 	};
 	const zipEngine = createFormEngine({ elements: [text], validations: [zip] });
-	const authored = { type: 'zip', id: 'zip-id', message: 'Bad zip', severity: 'warning' };
+	const authored = { $type: 'zip', id: 'zip-id', message: 'Bad zip', severity: 'warning' };
 
 	test('keeps the fields every rule has, and the defaults of its registration', () => {
 		const config = zipEngine.validateForm(formWith([authored]));
@@ -212,7 +226,7 @@ describe('a rule whose registration describes its options with a plain object', 
 	});
 
 	test('refuses a common field of the wrong kind at its key, whatever the registration says', () => {
-		const result = zipEngine.safeValidateForm(formWith([{ type: 'zip', severity: 'fatal' }]));
+		const result = zipEngine.safeValidateForm(formWith([{ $type: 'zip', severity: 'fatal' }]));
 
 		expect(!result.success && result.issues.map((issue) => issue.path)).toEqual([
 			['steps', 0, 'elements', 0, 'rules', 0, 'severity'],
@@ -233,8 +247,18 @@ describe('the JSON Schema export of an element that extends BaseFieldSchema', ()
 
 	function ruleVariants(source: typeof engine): Map<string, JsonSchema> {
 		const rules = documentOf(source).$defs['validation-rule'];
-		return new Map(rules?.anyOf?.map((variant) => [variant.properties?.type?.const ?? '', variant]));
+		return new Map(rules?.anyOf?.map((variant) => [variant.properties?.$type?.const ?? '', variant]));
 	}
+
+	test('discriminates every rule by `$type`, and by nothing named `type`', () => {
+		const variants = [...ruleVariants(engine).values()];
+
+		expect(variants.length).toBeGreaterThan(0);
+		for (const variant of variants) {
+			expect(variant.properties).toHaveProperty('$type');
+			expect(variant.properties).not.toHaveProperty('type');
+		}
+	});
 
 	test('lists a custom rule with its options', () => {
 		const country = ruleVariants(engine).get('postalCode');
@@ -253,10 +277,10 @@ describe('the JSON Schema export of an element that extends BaseFieldSchema', ()
 			validations: [
 				{
 					$type: 'minLength',
-					schema: z.object({ type: z.literal('minLength'), characters: z.number() }),
+					schema: z.object({ $type: z.literal('minLength'), characters: z.number() }),
 					metadata: { name: 'Minimum length' },
 					category: 'string',
-					handler: (rule: { type: 'minLength'; characters: number }) =>
+					handler: (rule: { $type: 'minLength'; characters: number }) =>
 						z.string().check(z.minLength(rule.characters)),
 				},
 			],

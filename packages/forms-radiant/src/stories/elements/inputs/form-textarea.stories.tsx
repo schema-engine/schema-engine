@@ -36,7 +36,7 @@ export const WithValidation: Story = {
 				rows: 4,
 				rules: [
 					{
-						type: 'required',
+						$type: 'required',
 						message: 'Message is required',
 					},
 				],

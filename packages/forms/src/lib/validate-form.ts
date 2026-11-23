@@ -42,7 +42,7 @@ const ACTION_REGISTER_HINT = 'createFormEngine({ actions: [...] })';
  * The normalized marker is applied only after this element and its children succeed.
  *
  * @throws {FormValidationError} Issue paths are relative to the element, for example `['grid', 'width']`
- * or `['elements', 0, 'rules', 1, 'type']`.
+ * or `['elements', 0, 'rules', 1, '$type']`.
  */
 export function validateElementConfig(
 	config: unknown,

@@ -16,11 +16,11 @@ export const DateFieldSchema = z.extend(BaseFieldSchema, {
 	rules: z.pipe(
 		z.optional(z.array(BaseValidationRuleSchema)),
 		z.transform((rules) => {
-			if (rules?.some((rule) => rule.type === 'date')) {
+			if (rules?.some((rule) => rule.$type === 'date')) {
 				return rules;
 			}
 
-			return [...(rules ?? []), { type: 'date' as const }];
+			return [...(rules ?? []), { $type: 'date' as const }];
 		}),
 	),
 });

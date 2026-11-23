@@ -24,17 +24,17 @@ same logger; debug output is disabled by default.
 Validation rules are plain JavaScript objects that describe how to validate a field value:
 
 ```typescript
-{ type: 'required', message: 'This field is required' }
+{ $type: 'required', message: 'This field is required' }
 
-{ type: 'email', message: 'Please enter a valid email' }
+{ $type: 'email', message: 'Please enter a valid email' }
 
-{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
+{ $type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
 ```
 
 Every rule may also carry an `id` and a `severity`:
 
 ```typescript
-{ type: 'minLength', value: 8, id: 'password-strength', severity: 'warning', message: 'Weak password' }
+{ $type: 'minLength', value: 8, id: 'password-strength', severity: 'warning', message: 'Weak password' }
 ```
 
 `message` is the fallback text. `id` is the stable name a translation is keyed to, so two `pattern` rules stay
@@ -64,7 +64,7 @@ import {
 } from '@schema-engine/forms/schemas/validation';
 
 const registry = createDefaultValidationRegistry();
-const rules = [{ type: 'required' }, { type: 'email' }, { type: 'minLength', value: 5 }];
+const rules = [{ $type: 'required' }, { $type: 'email' }, { $type: 'minLength', value: 5 }];
 
 const schema = createZodSchemaFromRules(rules, createValidationContext({ values, fieldPath: 'email' }), registry);
 ```
@@ -110,13 +110,13 @@ const formConfig = {
 			id: 'input',
 			name: 'email',
 			label: 'Email Address',
-			rules: [{ type: 'required' }, { type: 'email' }],
+			rules: [{ $type: 'required' }, { $type: 'email' }],
 		},
 		{
 			id: 'input',
 			name: 'age',
 			label: 'Age',
-			rules: [{ type: 'required' }, { type: 'min', value: 18 }, { type: 'max', value: 120 }],
+			rules: [{ $type: 'required' }, { $type: 'min', value: 18 }, { $type: 'max', value: 120 }],
 		},
 	],
 };
@@ -149,10 +149,10 @@ import * as z from 'zod/mini';
 
 const postalCode = {
 	$type: 'postalCode',
-	schema: z.object({ type: z.literal('postalCode'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('postalCode'), message: z.optional(z.string()) }),
 	metadata: { name: 'Postal code' },
 	category: 'string',
-	handler: (rule: { type: 'postalCode'; message?: string }) =>
+	handler: (rule: { $type: 'postalCode'; message?: string }) =>
 		z.string().check(z.regex(/^\d{5}$/, rule.message || 'Invalid postal code')),
 } as const;
 
@@ -220,7 +220,7 @@ const only = createValidationRegistry([postalCode]);
 
 ```typescript
 {
-  type: 'relate',
+  $type: 'relate',
   fields: ['password'],
   assert: 'allEqual',
   message: 'Passwords must match'
@@ -238,7 +238,7 @@ The assertion table and reference scoping are under
 
 ```typescript
 {
-  type: 'async',
+  $type: 'async',
   url: '/api/validate-username',
   method: 'POST',
   dependencies: ['email'],
@@ -254,17 +254,17 @@ The issue of an `async` rule has no `params`: its url, headers and dependencies 
 
 ### Phone Inputs
 
-The core `phone` rule checks E.164 numbers. The phone-input registration can replace that handler with its region-aware validator and applies `{ type: 'phone' }` to `phone-input` fields when the author omitted it. Pair the field with `required` when a number is mandatory. The forms package does not depend on a phone-number library.
+The core `phone` rule checks E.164 numbers. The phone-input registration can replace that handler with its region-aware validator and applies `{ $type: 'phone' }` to `phone-input` fields when the author omitted it. Pair the field with `required` when a number is mandatory. The forms package does not depend on a phone-number library.
 
 Format rules skip an empty value. A rule of the `string` or `date` category (`email`, `url`, `pattern`, `minLength`, `phone`, and a consumer's registrations in those categories) passes `undefined`, `null` and `''`, so an optional field can be left blank; `required` is the rule that rejects it, and it reports alone for an empty value. `createZodSchemaFromRules` wraps those rules, re-raising a filled value's issues unchanged. Rules of other categories (`minItems`, `min`) are not wrapped.
 
-Required validation, `relate` emptiness assertions, constraint `is_empty` and `is_not_empty`, and async validation skips share one definition of empty: `undefined`, `null`, `''`, and `[]`. Values such as `false` and `0` are present. `validateForm` and `validateElement` reject a rule without a registered handler, or one its handler cannot build (an invalid `pattern`), with a `FormValidationError` that identifies the field and rule type, at the path of that rule's `type` (for example `['steps', 0, 'elements', 2, 'rules', 1, 'type']`).
+Required validation, `relate` emptiness assertions, constraint `is_empty` and `is_not_empty`, and async validation skips share one definition of empty: `undefined`, `null`, `''`, and `[]`. Values such as `false` and `0` are present. `validateForm` and `validateElement` reject a rule without a registered handler, or one its handler cannot build (an invalid `pattern`), with a `FormValidationError` that identifies the field and rule type, at the path of that rule's `$type` (for example `['steps', 0, 'elements', 2, 'rules', 1, '$type']`).
 
 Debounced async rules share timers only within their caller-owned scope. Replacing a pending validation for the same rendered field path, endpoint, and dependency/extra payload sends only the latest request. A replaced parse of the same value shares that request's result. A replaced parse of a different value throws `ValidationSuperseded`, because its value was never checked: it has no result, which is neither a pass nor an issue, so a superseded submit-time validation cannot pass and nothing is shown. `validateFieldValue` reports it as `superseded`, and the form state container drops that run's result and leaves the path pending only while its latest run is in flight. Different forms use separate scopes, and different field paths in one scope do not cancel each other.
 
 ### Registering Custom Validations
 
-A validation registration has the shared registration shape (`$type`, `schema`, `metadata`) and the handler fields. `$type` is the `type` authors write in `rules`, and `schema` is a Standard Schema for the rule object. Pass registrations to the engine:
+A validation registration has the shared registration shape (`$type`, `schema`, `metadata`) and the handler fields. `$type` is the `$type` authors write in `rules`, and `schema` is a Standard Schema for the rule object. Pass registrations to the engine:
 
 ```typescript
 import * as z from 'zod/mini';
@@ -272,10 +272,10 @@ import { createFormEngine } from '@schema-engine/forms';
 
 const creditCard = {
 	$type: 'creditCard',
-	schema: z.object({ type: z.literal('creditCard'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('creditCard'), message: z.optional(z.string()) }),
 	metadata: { name: 'Credit card', description: 'A card number that passes the Luhn check.' },
 	category: 'string',
-	handler: (rule: { type: 'creditCard'; message?: string }) =>
+	handler: (rule: { $type: 'creditCard'; message?: string }) =>
 		z.string().check(
 			z.refine((value) => {
 				const digits = value.replace(/\D/g, '');
@@ -319,7 +319,7 @@ Converts an array of validation rules into a Zod Mini schema:
 ```typescript
 import { createValidationContext, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
 
-const rules = [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'maxLength', value: 50 }];
+const rules = [{ $type: 'required' }, { $type: 'minLength', value: 3 }, { $type: 'maxLength', value: 50 }];
 
 const schema = createZodSchemaFromRules(rules, createValidationContext({ values, fieldPath: 'contacts.0.email' }));
 ```
@@ -341,17 +341,17 @@ const formElements = [
 	{
 		name: 'firstName',
 		id: 'input',
-		rules: [{ type: 'required' }, { type: 'minLength', value: 2 }],
+		rules: [{ $type: 'required' }, { $type: 'minLength', value: 2 }],
 	},
 	{
 		name: 'email',
 		id: 'input',
-		rules: [{ type: 'required' }, { type: 'email' }],
+		rules: [{ $type: 'required' }, { $type: 'email' }],
 	},
 	{
 		name: 'age',
 		id: 'number',
-		rules: [{ type: 'min', value: 18 }],
+		rules: [{ $type: 'min', value: 18 }],
 	},
 ];
 
@@ -368,7 +368,7 @@ const result = formSchema.safeParse({
 
 ### Validation Presets
 
-Use the exported `ValidationPresets` utility for convenient rule creation. A preset builds rule config only (its `type`, the values you give it and your optional `message`); it adds no text of its own, so the application's language stays above the engine:
+Use the exported `ValidationPresets` utility for convenient rule creation. A preset builds rule config only (its `$type`, the values you give it and your optional `message`); it adds no text of its own, so the application's language stays above the engine:
 
 ```typescript
 import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
@@ -467,7 +467,7 @@ they share one rule rather than one registration each:
 
 ```typescript
 { $type: 'input', name: 'confirmPassword', inputType: 'password',
-  rules: [{ type: 'relate', fields: ['password'], assert: 'allEqual',
+  rules: [{ $type: 'relate', fields: ['password'], assert: 'allEqual',
             message: 'Passwords must match' }] }
 ```
 
@@ -501,7 +501,7 @@ must be after that one" is `descending`:
 
 ```typescript
 { $type: 'date', name: 'endDate',
-  rules: [{ type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date',
+  rules: [{ $type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date',
             message: 'End date must be after the start date' }] }
 ```
 
@@ -511,7 +511,7 @@ Inside an array, references stay in their row:
 { $type: 'arrayElements', name: 'lines', elements: [
     { $type: 'number', name: 'quantity' },
     { $type: 'number', name: 'max',
-      rules: [{ type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number',
+      rules: [{ $type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number',
                 message: 'Max must be at least the quantity' }] },
 ] }
 ```
@@ -535,10 +535,10 @@ Custom validators read other fields through the context:
 ```typescript
 const conditionalRequired = {
 	$type: 'conditionalRequired',
-	schema: z.object({ type: z.literal('conditionalRequired'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('conditionalRequired'), message: z.optional(z.string()) }),
 	metadata: { name: 'Conditional required' },
 	category: 'cross-field',
-	handler: (rule: { type: 'conditionalRequired'; message?: string }, context: ValidationContext) => {
+	handler: (rule: { $type: 'conditionalRequired'; message?: string }, context: ValidationContext) => {
 		return z
 			.string()
 			.check(
@@ -554,7 +554,7 @@ inside the declaring array row:
 
 ```typescript
 const passwordConfirmRule = {
-	type: 'async',
+	$type: 'async',
 	url: '/api/validate-password-match',
 	method: 'POST',
 	dependencies: ['password'],
@@ -583,11 +583,11 @@ will re-run it:
 ```typescript
 const confirmPassword = {
 	$type: 'confirmPassword',
-	schema: z.object({ type: z.literal('confirmPassword'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('confirmPassword'), message: z.optional(z.string()) }),
 	metadata: { name: 'Confirm password' },
 	category: 'cross-field',
 	dependsOn: () => ['password'],
-	handler: (rule: { type: 'confirmPassword'; message?: string }, context: ValidationContext) => …,
+	handler: (rule: { $type: 'confirmPassword'; message?: string }, context: ValidationContext) => …,
 } as const;
 ```
 
@@ -640,7 +640,7 @@ and resolves `{ status: 'skipped' }` otherwise.
 
 ```typescript
 interface ValidationRegistration extends BaseRegistration {
-	/** The rule `type` authors write in `rules`. */
+	/** The rule `$type` authors write in `rules`. */
 	$type: string;
 	/** Standard Schema for the rule object. */
 	schema: StandardSchemaV1;
@@ -665,7 +665,7 @@ All validation rules extend `BaseValidationRule`:
 
 ```typescript
 interface BaseValidationRule {
-	type: string;
+	$type: string;
 	message?: string;
 	id?: string;
 	severity?: 'error' | 'warning';
@@ -674,15 +674,15 @@ interface BaseValidationRule {
 
 Specific rule types add their own properties (e.g., `value` for min/max rules, `url` for async rules).
 
-An element that extends `BaseFieldSchema` accepts, in `rules`, an object with a `type`, the fields every rule has and
+An element that extends `BaseFieldSchema` accepts, in `rules`, an object with a `$type`, the fields every rule has and
 whatever else the rule's registration describes (`BaseValidationRuleSchema`, loose): the registration owns the
 rest, so a registration that replaces a built-in decides that rule's options. `ValidationRegistry.check(rule)` holds
-each rule to it when `validateForm` and `validateElement` run: the `type` must be registered (`Unknown validation
+each rule to it when `validateForm` and `validateElement` run: the `$type` must be registered (`Unknown validation
 rule 'x'. ... Registered rules: ...`), the rule must satisfy the registration's `schema` (reported at the key at
-fault, with the schema's defaults applied to the rule that is kept, and `type`, `message`, `id` and `severity` kept whatever the schema strips) and the handler must build a schema for it. The
+fault, with the schema's defaults applied to the rule that is kept, and `$type`, `message`, `id` and `severity` kept whatever the schema strips) and the handler must build a schema for it. The
 types of `rules` do not narrow to a registration: a typo in a rule's options type-checks and fails there. The JSON
 Schema export (`generateFormConfigSchema`) lists each registered rule, built-in or custom, once as the
-`validation-rule` definition the elements refer to, with its options when its schema is Zod and by its `type` only
+`validation-rule` definition the elements refer to, with its options when its schema is Zod and by its `$type` only
 otherwise.
 
 ## Best Practices
@@ -694,7 +694,7 @@ Form configurations must use plain JSON objects. For custom validation logic, pa
 ```typescript
 const companyEmail = {
 	$type: 'companyEmail',
-	schema: z.object({ type: z.literal('companyEmail'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('companyEmail'), message: z.optional(z.string()) }),
 	metadata: { name: 'Company email' },
 	category: 'string',
 	handler: () => z.email().check(z.endsWith('@company.com')),
@@ -704,8 +704,8 @@ const engine = createFormEngine({ validations: [companyEmail] });
 
 const field = {
 	rules: [
-		{ type: 'required', message: 'Email is required' },
-		{ type: 'companyEmail', message: 'Must be a company email' },
+		{ $type: 'required', message: 'Email is required' },
+		{ $type: 'companyEmail', message: 'Must be a company email' },
 	],
 };
 ```
@@ -715,11 +715,11 @@ const field = {
 Provide clear, user-friendly error messages:
 
 ```typescript
-{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters' }
-{ type: 'email', message: 'Please enter a valid email address' }
+{ $type: 'minLength', value: 8, message: 'Password must be at least 8 characters' }
+{ $type: 'email', message: 'Please enter a valid email address' }
 
-{ type: 'minLength', value: 8, message: 'Invalid' }
-{ type: 'email', message: 'Error' }
+{ $type: 'minLength', value: 8, message: 'Invalid' }
+{ $type: 'email', message: 'Error' }
 ```
 
 ### 3. Leverage Presets for Common Patterns
@@ -733,8 +733,8 @@ const emailRules = [
 ];
 
 const emailRules = [
-	{ type: 'required', message: 'Email is required' },
-	{ type: 'email', message: 'Please enter a valid email' },
+	{ $type: 'required', message: 'Email is required' },
+	{ $type: 'email', message: 'Please enter a valid email' },
 ];
 ```
 
@@ -745,7 +745,7 @@ Always test custom validation logic thoroughly:
 ```typescript
 describe('Custom postal-code validation', () => {
 	it('validates postal codes correctly', () => {
-		const rule = { type: 'postalCode', message: 'Invalid postal code' };
+		const rule = { $type: 'postalCode', message: 'Invalid postal code' };
 		const schema = engine.getValidationRegistry().createSchema(rule, createValidationContext());
 
 		expect(() => schema?.parse('28013')).not.toThrow();

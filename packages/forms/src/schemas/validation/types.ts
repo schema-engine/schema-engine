@@ -15,11 +15,11 @@ const RegexPatternSchema = z.string().check(
 );
 
 /**
- * What every rule can say about itself besides its `type`.
+ * What every rule can say about itself besides its `$type`.
  *
  * @remarks
  * `message` is the fallback text of the issue the rule reports. `id` is the author's stable name for the
- * rule, so two rules of one type (two `pattern`s) stay distinguishable and a translation can be keyed to
+ * rule, so two rules of one `$type` (two `pattern`s) stay distinguishable and a translation can be keyed to
  * one of them. A `severity` of `'warning'` makes the rule advice: its issue goes to `warnings`, and never
  * decides whether the form is valid.
  */
@@ -30,148 +30,148 @@ const ruleFields = {
 };
 
 /**
- * What an element's `rules` accepts: the `type` and the fields every rule has, and whatever else the
+ * What an element's `rules` accepts: the `$type` and the fields every rule has, and whatever else the
  * rule's registration describes.
  *
  * @remarks
  * Loose, and the only shape of a rule in an element's schema: the validation registry owns the rest.
  * The engine checks each rule against its registration when it validates a form config
- * ({@link ValidationRegistry.check}), so a `type` nothing registers and options the registration
+ * ({@link ValidationRegistry.check}), so a `$type` nothing registers and options the registration
  * refuses are rejected there, and a registration that replaces a built-in decides that rule's options.
  * The JSON Schema export lists each registered rule with its options instead of this shape.
  */
 export const BaseValidationRuleSchema = z.looseObject({
-	type: z.string(),
+	$type: z.string(),
 	...ruleFields,
 });
 
 export const RequiredRuleSchema = z.object({
-	type: z.literal('required'),
+	$type: z.literal('required'),
 	...ruleFields,
 });
 
 export const MinLengthRuleSchema = z.object({
-	type: z.literal('minLength'),
+	$type: z.literal('minLength'),
 	value: z.number(),
 	...ruleFields,
 });
 
 export const MaxLengthRuleSchema = z.object({
-	type: z.literal('maxLength'),
+	$type: z.literal('maxLength'),
 	value: z.number(),
 	...ruleFields,
 });
 
 export const EmailRuleSchema = z.object({
-	type: z.literal('email'),
+	$type: z.literal('email'),
 	pattern: z.optional(RegexPatternSchema),
 	...ruleFields,
 });
 
 export const PhoneRuleSchema = z.object({
-	type: z.literal('phone'),
+	$type: z.literal('phone'),
 	...ruleFields,
 });
 
 export const PatternRuleSchema = z.object({
-	type: z.literal('pattern'),
+	$type: z.literal('pattern'),
 	value: RegexPatternSchema,
 	...ruleFields,
 });
 
 export const UrlRuleSchema = z.object({
-	type: z.literal('url'),
+	$type: z.literal('url'),
 	protocol: z.optional(RegexPatternSchema),
 	hostname: z.optional(RegexPatternSchema),
 	...ruleFields,
 });
 
 export const UuidRuleSchema = z.object({
-	type: z.literal('uuid'),
+	$type: z.literal('uuid'),
 	version: z.optional(z.enum(['v1', 'v2', 'v3', 'v4', 'v5'])),
 	...ruleFields,
 });
 
 export const Ipv4RuleSchema = z.object({
-	type: z.literal('ipv4'),
+	$type: z.literal('ipv4'),
 	...ruleFields,
 });
 
 export const Ipv6RuleSchema = z.object({
-	type: z.literal('ipv6'),
+	$type: z.literal('ipv6'),
 	...ruleFields,
 });
 
 export const CidrRuleSchema = z.object({
-	type: z.literal('cidr'),
+	$type: z.literal('cidr'),
 	version: z.optional(z.enum(['v4', 'v6'])),
 	...ruleFields,
 });
 
 export const JwtRuleSchema = z.object({
-	type: z.literal('jwt'),
+	$type: z.literal('jwt'),
 	alg: z.optional(z.string()),
 	...ruleFields,
 });
 
 export const HashRuleSchema = z.object({
-	type: z.literal('hash'),
+	$type: z.literal('hash'),
 	algorithm: z.enum(['md5', 'sha1', 'sha256', 'sha384', 'sha512']),
 	...ruleFields,
 });
 
 export const Base64RuleSchema = z.object({
-	type: z.literal('base64'),
+	$type: z.literal('base64'),
 	urlSafe: z.optional(z.boolean()),
 	...ruleFields,
 });
 
 export const CuidRuleSchema = z.object({
-	type: z.literal('cuid'),
+	$type: z.literal('cuid'),
 	...ruleFields,
 });
 
 export const Cuid2RuleSchema = z.object({
-	type: z.literal('cuid2'),
+	$type: z.literal('cuid2'),
 	...ruleFields,
 });
 
 export const UlidRuleSchema = z.object({
-	type: z.literal('ulid'),
+	$type: z.literal('ulid'),
 	...ruleFields,
 });
 
 export const HexRuleSchema = z.object({
-	type: z.literal('hex'),
+	$type: z.literal('hex'),
 	...ruleFields,
 });
 
 export const MinRuleSchema = z.object({
-	type: z.literal('min'),
+	$type: z.literal('min'),
 	value: z.number(),
 	...ruleFields,
 });
 
 export const MaxRuleSchema = z.object({
-	type: z.literal('max'),
+	$type: z.literal('max'),
 	value: z.number(),
 	...ruleFields,
 });
 
 export const MinItemsRuleSchema = z.object({
-	type: z.literal('minItems'),
+	$type: z.literal('minItems'),
 	value: z.number(),
 	...ruleFields,
 });
 
 export const MaxItemsRuleSchema = z.object({
-	type: z.literal('maxItems'),
+	$type: z.literal('maxItems'),
 	value: z.number(),
 	...ruleFields,
 });
 
 export const DateTimeRuleSchema = z.object({
-	type: z.literal('datetime'),
+	$type: z.literal('datetime'),
 	precision: z.optional(z.number()),
 	offset: z.optional(z.boolean()),
 	local: z.optional(z.boolean()),
@@ -179,18 +179,18 @@ export const DateTimeRuleSchema = z.object({
 });
 
 export const DateRuleSchema = z.object({
-	type: z.literal('date'),
+	$type: z.literal('date'),
 	...ruleFields,
 });
 
 export const TimeRuleSchema = z.object({
-	type: z.literal('time'),
+	$type: z.literal('time'),
 	precision: z.optional(z.number()),
 	...ruleFields,
 });
 
 export const AsyncRuleSchema = z.object({
-	type: z.literal('async'),
+	$type: z.literal('async'),
 	url: z.string(),
 	method: z.optional(z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])),
 	headers: z.optional(z.record(z.string(), z.string())),
@@ -231,7 +231,7 @@ export const RelationAssertSchema = z.enum([
 ]);
 
 export const RelateRuleSchema = z.object({
-	type: z.literal('relate'),
+	$type: z.literal('relate'),
 	fields: z
 		.array(z.string())
 		.check(z.minLength(1), z.describe('Field references, each resolved relative to the field declaring the rule.')),
@@ -347,16 +347,15 @@ export type ValidationScope = Omit<ValidationContext, 'fetch'>;
  * Validation rule registration: the shared registration shape plus the handler that builds the rule's schema.
  *
  * @remarks
- * `$type` is the `type` authors write in a field's `rules`, so a registration with
- * `$type: 'postcode'` handles `{ type: 'postcode' }`. The rule objects themselves keep
- * `type`; `schema` describes them.
+ * `$type` is the `$type` authors write in a field's `rules`, so a registration with
+ * `$type: 'postcode'` handles `{ $type: 'postcode' }`; `schema` describes the rule objects.
  *
  * @template TRule - Specific rule type for type-safe handler
  */
 export interface ValidationRegistration<
-	TRule extends { type: string } = { type: string } & Record<string, unknown>,
+	TRule extends { $type: string } = { $type: string } & Record<string, unknown>,
 > extends BaseRegistration<TRule, RegistrationMetadata> {
-	$type: TRule['type'];
+	$type: TRule['$type'];
 	category: 'string' | 'number' | 'array' | 'boolean' | 'date' | 'generic' | 'cross-field';
 	/**
 	 * Validation handler function
@@ -437,12 +436,12 @@ export type ValidationRegistrationConstraint = {
  * Mapping of validation rule types to their specific rule interfaces.
  */
 export type ValidationTypeMap = {
-	[K in ValidationRule['type']]: Extract<ValidationRule, { type: K }>;
+	[K in ValidationRule['$type']]: Extract<ValidationRule, { $type: K }>;
 };
 
 /**
  * Mapping of validation rule types to their specific registrations.
  */
 export type ValidationRegistrationMap = {
-	[K in ValidationRule['type']]: ValidationRegistration<ValidationTypeMap[K]>;
+	[K in ValidationRule['$type']]: ValidationRegistration<ValidationTypeMap[K]>;
 };

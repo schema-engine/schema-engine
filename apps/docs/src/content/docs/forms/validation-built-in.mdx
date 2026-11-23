@@ -26,14 +26,14 @@ registrations. Examples below sometimes show only `rules` or partial fields.
 Ensures a field has a value (not empty, null, or undefined).
 
 ```typescript
-{ type: 'required', message: 'This field is required' }
+{ $type: 'required', message: 'This field is required' }
 
 {
   id: 'input',
   name: 'fullName',
   label: 'Full Name',
   rules: [
-    { type: 'required', message: 'Please enter your full name' }
+    { $type: 'required', message: 'Please enter your full name' }
   ]
 }
 ```
@@ -45,7 +45,7 @@ Ensures a field has a value (not empty, null, or undefined).
 Validates email address format using Zod Mini's built-in email validation.
 
 ```typescript
-{ type: 'email', message: 'Please enter a valid email address' }
+{ $type: 'email', message: 'Please enter a valid email address' }
 
 {
   id: 'input',
@@ -53,8 +53,8 @@ Validates email address format using Zod Mini's built-in email validation.
   name: 'email',
   label: 'Email Address',
   rules: [
-    { type: 'required', message: 'Email is required' },
-    { type: 'email', message: 'Please enter a valid email address' }
+    { $type: 'required', message: 'Email is required' },
+    { $type: 'email', message: 'Please enter a valid email address' }
   ]
 }
 ```
@@ -66,18 +66,18 @@ Validates email address format using Zod Mini's built-in email validation.
 Control minimum and maximum string lengths.
 
 ```typescript
-{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
+{ $type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
 
-{ type: 'maxLength', value: 100, message: 'Cannot exceed 100 characters' }
+{ $type: 'maxLength', value: 100, message: 'Cannot exceed 100 characters' }
 
 {
   id: 'input',
   name: 'username',
   label: 'Username',
   rules: [
-    { type: 'required', message: 'Username is required' },
-    { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
-    { type: 'maxLength', value: 20, message: 'Username cannot exceed 20 characters' }
+    { $type: 'required', message: 'Username is required' },
+    { $type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
+    { $type: 'maxLength', value: 20, message: 'Username cannot exceed 20 characters' }
   ]
 }
 ```
@@ -90,13 +90,13 @@ Validate against custom regular expression patterns.
 
 ```typescript
 {
-  type: 'pattern',
+  $type: 'pattern',
   value: '^\\+?[1-9]\\d{1,14}$',
   message: 'Please enter a valid phone number'
 }
 
 {
-  type: 'pattern',
+  $type: 'pattern',
   value: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$',
   message: 'Password must contain uppercase, lowercase, number, and special character'
 }
@@ -106,8 +106,8 @@ Validate against custom regular expression patterns.
   name: 'phoneNumber',
   label: 'Phone Number',
   rules: [
-    { type: 'required', message: 'Phone number is required' },
-    { type: 'pattern', value: '^\\+?[1-9]\\d{1,14}$', message: 'Please enter a valid phone number' }
+    { $type: 'required', message: 'Phone number is required' },
+    { $type: 'pattern', value: '^\\+?[1-9]\\d{1,14}$', message: 'Please enter a valid phone number' }
   ]
 }
 ```
@@ -119,7 +119,7 @@ Validate against custom regular expression patterns.
 Validates URL format.
 
 ```typescript
-{ type: 'url', message: 'Please enter a valid URL' }
+{ $type: 'url', message: 'Please enter a valid URL' }
 
 {
   id: 'input',
@@ -127,7 +127,7 @@ Validates URL format.
   name: 'website',
   label: 'Website',
   rules: [
-    { type: 'url', message: 'Please enter a valid website URL' }
+    { $type: 'url', message: 'Please enter a valid website URL' }
   ]
 }
 ```
@@ -139,17 +139,17 @@ Validates URL format.
 Validates UUID format with optional version specification.
 
 ```typescript
-{ type: 'uuid', message: 'Please enter a valid UUID' }
+{ $type: 'uuid', message: 'Please enter a valid UUID' }
 
-{ type: 'uuid', version: 'v4', message: 'Please enter a valid UUID v4' }
+{ $type: 'uuid', version: 'v4', message: 'Please enter a valid UUID v4' }
 
 {
   id: 'input',
   name: 'resourceId',
   label: 'Resource ID',
   rules: [
-    { type: 'required', message: 'Resource ID is required' },
-    { type: 'uuid', version: 'v4', message: 'Please enter a valid UUID v4' }
+    { $type: 'required', message: 'Resource ID is required' },
+    { $type: 'uuid', version: 'v4', message: 'Please enter a valid UUID v4' }
   ]
 }
 ```
@@ -161,7 +161,7 @@ Validates UUID format with optional version specification.
 Validates an international phone number in E.164 format (for example `+14155552671`).
 
 ```typescript
-{ type: 'phone', message: 'Please enter a valid phone number' }
+{ $type: 'phone', message: 'Please enter a valid phone number' }
 ```
 
 **Zod Mini implementation:** `z.e164(message)`
@@ -175,9 +175,9 @@ A `phone-input` element registration can replace this handler with its own valid
 Set minimum and maximum numeric values.
 
 ```typescript
-{ type: 'min', value: 0, message: 'Value cannot be negative' }
+{ $type: 'min', value: 0, message: 'Value cannot be negative' }
 
-{ type: 'max', value: 100, message: 'Value cannot exceed 100' }
+{ $type: 'max', value: 100, message: 'Value cannot exceed 100' }
 
 {
   id: 'input',
@@ -185,9 +185,9 @@ Set minimum and maximum numeric values.
   name: 'age',
   label: 'Age',
   rules: [
-    { type: 'required', message: 'Age is required' },
-    { type: 'min', value: 18, message: 'You must be at least 18 years old' },
-    { type: 'max', value: 120, message: 'Please enter a valid age' }
+    { $type: 'required', message: 'Age is required' },
+    { $type: 'min', value: 18, message: 'You must be at least 18 years old' },
+    { $type: 'max', value: 120, message: 'Please enter a valid age' }
   ]
 }
 
@@ -197,9 +197,9 @@ Set minimum and maximum numeric values.
   name: 'rating',
   label: 'Rating (1-5)',
   rules: [
-    { type: 'required', message: 'Rating is required' },
-    { type: 'min', value: 1, message: 'Rating must be at least 1' },
-    { type: 'max', value: 5, message: 'Rating cannot exceed 5' }
+    { $type: 'required', message: 'Rating is required' },
+    { $type: 'min', value: 1, message: 'Rating must be at least 1' },
+    { $type: 'max', value: 5, message: 'Rating cannot exceed 5' }
   ]
 }
 ```
@@ -213,9 +213,9 @@ Set minimum and maximum numeric values.
 Control array length constraints.
 
 ```typescript
-{ type: 'minItems', value: 1, message: 'Please select at least one option' }
+{ $type: 'minItems', value: 1, message: 'Please select at least one option' }
 
-{ type: 'maxItems', value: 5, message: 'You can select up to 5 options' }
+{ $type: 'maxItems', value: 5, message: 'You can select up to 5 options' }
 
 {
   id: 'checkbox-group',
@@ -229,8 +229,8 @@ Control array length constraints.
     { value: 'food', label: 'Food' }
   ],
   rules: [
-    { type: 'minItems', value: 1, message: 'Please select at least one interest' },
-    { type: 'maxItems', value: 3, message: 'Please select no more than 3 interests' }
+    { $type: 'minItems', value: 1, message: 'Please select at least one interest' },
+    { $type: 'maxItems', value: 3, message: 'Please select no more than 3 interests' }
   ]
 }
 ```
@@ -244,17 +244,17 @@ Control array length constraints.
 Validate IP addresses with explicit IPv4 or IPv6 rule types.
 
 ```typescript
-{ type: 'ipv4', message: 'Please enter a valid IPv4 address' }
+{ $type: 'ipv4', message: 'Please enter a valid IPv4 address' }
 
-{ type: 'ipv6', message: 'Please enter a valid IPv6 address' }
+{ $type: 'ipv6', message: 'Please enter a valid IPv6 address' }
 
 {
   id: 'input',
   name: 'serverIp',
   label: 'Server IP Address',
   rules: [
-    { type: 'required', message: 'Server IP is required' },
-    { type: 'ipv4', message: 'Please enter a valid IPv4 address' }
+    { $type: 'required', message: 'Server IP is required' },
+    { $type: 'ipv4', message: 'Please enter a valid IPv4 address' }
   ]
 }
 ```
@@ -268,9 +268,9 @@ IPv6 validation uses Zod Mini's native address parser and retains support for in
 Validates a CIDR block. Omit `version` to accept either IPv4 or IPv6.
 
 ```typescript
-{ type: 'cidr', message: 'Please enter a valid CIDR range' }
+{ $type: 'cidr', message: 'Please enter a valid CIDR range' }
 
-{ type: 'cidr', version: 'v4', message: 'Please enter a valid IPv4 CIDR range' }
+{ $type: 'cidr', version: 'v4', message: 'Please enter a valid IPv4 CIDR range' }
 ```
 
 **Zod Mini implementation:** `z.cidrv4(message)`, `z.cidrv6(message)`, or a union of both
@@ -280,17 +280,17 @@ Validates a CIDR block. Omit `version` to accept either IPv4 or IPv6.
 Validate JSON Web Token format.
 
 ```typescript
-{ type: 'jwt', message: 'Please enter a valid JWT token' }
+{ $type: 'jwt', message: 'Please enter a valid JWT token' }
 
-{ type: 'jwt', alg: 'HS256', message: 'Please enter a valid HS256 JWT token' }
+{ $type: 'jwt', alg: 'HS256', message: 'Please enter a valid HS256 JWT token' }
 
 {
   id: 'textarea',
   name: 'apiToken',
   label: 'API Token',
   rules: [
-    { type: 'required', message: 'API token is required' },
-    { type: 'jwt', message: 'Please enter a valid JWT token' }
+    { $type: 'required', message: 'API token is required' },
+    { $type: 'jwt', message: 'Please enter a valid JWT token' }
   ]
 }
 ```
@@ -300,17 +300,17 @@ Validate JSON Web Token format.
 Validate hash formats for various algorithms.
 
 ```typescript
-{ type: 'hash', algorithm: 'sha256', message: 'Please enter a valid SHA-256 hash' }
+{ $type: 'hash', algorithm: 'sha256', message: 'Please enter a valid SHA-256 hash' }
 
-{ type: 'hash', algorithm: 'md5', message: 'Please enter a valid MD5 hash' }
+{ $type: 'hash', algorithm: 'md5', message: 'Please enter a valid MD5 hash' }
 
 {
   id: 'input',
   name: 'fileHash',
   label: 'File Hash (SHA-256)',
   rules: [
-    { type: 'required', message: 'File hash is required' },
-    { type: 'hash', algorithm: 'sha256', message: 'Please enter a valid SHA-256 hash' }
+    { $type: 'required', message: 'File hash is required' },
+    { $type: 'hash', algorithm: 'sha256', message: 'Please enter a valid SHA-256 hash' }
   ]
 }
 ```
@@ -320,17 +320,17 @@ Validate hash formats for various algorithms.
 Validate Base64 encoded strings.
 
 ```typescript
-{ type: 'base64', message: 'Please enter valid Base64 data' }
+{ $type: 'base64', message: 'Please enter valid Base64 data' }
 
-{ type: 'base64', urlSafe: true, message: 'Please enter valid URL-safe Base64 data' }
+{ $type: 'base64', urlSafe: true, message: 'Please enter valid URL-safe Base64 data' }
 
 {
   id: 'textarea',
   name: 'encodedData',
   label: 'Base64 Encoded Data',
   rules: [
-    { type: 'required', message: 'Encoded data is required' },
-    { type: 'base64', message: 'Please enter valid Base64 encoded data' }
+    { $type: 'required', message: 'Encoded data is required' },
+    { $type: 'base64', message: 'Please enter valid Base64 encoded data' }
   ]
 }
 ```
@@ -340,21 +340,21 @@ Validate Base64 encoded strings.
 Validate specific string formats using direct rule types.
 
 ```typescript
-{ type: 'cuid', message: 'Please enter a valid CUID' }
+{ $type: 'cuid', message: 'Please enter a valid CUID' }
 
-{ type: 'cuid2', message: 'Please enter a valid CUID2' }
+{ $type: 'cuid2', message: 'Please enter a valid CUID2' }
 
-{ type: 'ulid', message: 'Please enter a valid ULID' }
+{ $type: 'ulid', message: 'Please enter a valid ULID' }
 
-{ type: 'hex', message: 'Please enter valid hexadecimal' }
+{ $type: 'hex', message: 'Please enter valid hexadecimal' }
 
 {
   id: 'input',
   name: 'uniqueId',
   label: 'Unique ID',
   rules: [
-    { type: 'required', message: 'Unique ID is required' },
-    { type: 'cuid2', message: 'Please enter a valid CUID2' }
+    { $type: 'required', message: 'Unique ID is required' },
+    { $type: 'cuid2', message: 'Please enter a valid CUID2' }
   ]
 }
 ```
@@ -366,11 +366,11 @@ Validate specific string formats using direct rule types.
 Validate ISO datetime strings with various options.
 
 ```typescript
-{ type: 'datetime', message: 'Please enter a valid datetime' }
+{ $type: 'datetime', message: 'Please enter a valid datetime' }
 
-{ type: 'datetime', precision: 3, message: 'Please enter datetime with millisecond precision' }
+{ $type: 'datetime', precision: 3, message: 'Please enter datetime with millisecond precision' }
 
-{ type: 'datetime', offset: true, message: 'Please include timezone offset' }
+{ $type: 'datetime', offset: true, message: 'Please include timezone offset' }
 
 {
   id: 'input',
@@ -378,8 +378,8 @@ Validate ISO datetime strings with various options.
   name: 'appointmentTime',
   label: 'Appointment Date & Time',
   rules: [
-    { type: 'required', message: 'Appointment time is required' },
-    { type: 'datetime', message: 'Please enter a valid date and time' }
+    { $type: 'required', message: 'Appointment time is required' },
+    { $type: 'datetime', message: 'Please enter a valid date and time' }
   ]
 }
 ```
@@ -389,7 +389,7 @@ Validate ISO datetime strings with various options.
 Validate date strings.
 
 ```typescript
-{ type: 'date', message: 'Please enter a valid date' }
+{ $type: 'date', message: 'Please enter a valid date' }
 
 {
   id: 'input',
@@ -397,8 +397,8 @@ Validate date strings.
   name: 'birthDate',
   label: 'Date of Birth',
   rules: [
-    { type: 'required', message: 'Date of birth is required' },
-    { type: 'date', message: 'Please enter a valid date' }
+    { $type: 'required', message: 'Date of birth is required' },
+    { $type: 'date', message: 'Please enter a valid date' }
   ]
 }
 ```
@@ -408,9 +408,9 @@ Validate date strings.
 Validate time strings with optional precision.
 
 ```typescript
-{ type: 'time', message: 'Please enter a valid time' }
+{ $type: 'time', message: 'Please enter a valid time' }
 
-{ type: 'time', precision: 2, message: 'Please enter time with centisecond precision' }
+{ $type: 'time', precision: 2, message: 'Please enter time with centisecond precision' }
 
 {
   id: 'input',
@@ -418,8 +418,8 @@ Validate time strings with optional precision.
   name: 'meetingTime',
   label: 'Meeting Time',
   rules: [
-    { type: 'required', message: 'Meeting time is required' },
-    { type: 'time', message: 'Please enter a valid time' }
+    { $type: 'required', message: 'Meeting time is required' },
+    { $type: 'time', message: 'Please enter a valid time' }
   ]
 }
 ```
@@ -437,7 +437,7 @@ they are the same operation with a different assertion.
   inputType: 'password',
   label: 'Confirm Password',
   rules: [
-    { type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Passwords must match' }
+    { $type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Passwords must match' }
   ]
 }
 ```
@@ -474,7 +474,7 @@ be after that one" is `descending`:
   name: 'endDate',
   label: 'End Date',
   rules: [
-    { type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date',
+    { $type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date',
       message: 'End date must be after the start date' }
   ]
 }
@@ -491,7 +491,7 @@ row rather than row zero:
     { id: 'number', name: 'quantity', label: 'Quantity' },
     { id: 'number', name: 'max', label: 'Maximum',
       rules: [
-        { type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number',
+        { $type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number',
           message: 'Max must be at least the quantity' }
       ]
     }
@@ -514,7 +514,7 @@ For server-side validation that requires network requests, with built-in caching
 
 ```typescript
 {
-  type: 'async',
+  $type: 'async',
   url: '/api/validate-username',
   method: 'POST',
   headers: {
@@ -528,7 +528,7 @@ For server-side validation that requires network requests, with built-in caching
 }
 
 {
-  type: 'async',
+  $type: 'async',
   url: '/api/verify-email',
   method: 'POST',
   extraPayload: { source: 'profile' },
@@ -541,7 +541,7 @@ For server-side validation that requires network requests, with built-in caching
 }
 
 {
-  type: 'async',
+  $type: 'async',
   url: '/api/validate-dependent-field',
   method: 'POST',
   extraPayload: { source: 'profile' },
@@ -556,10 +556,10 @@ For server-side validation that requires network requests, with built-in caching
   name: 'username',
   label: 'Username',
   rules: [
-    { type: 'required', message: 'Username is required' },
-    { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
+    { $type: 'required', message: 'Username is required' },
+    { $type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
     {
-      type: 'async',
+      $type: 'async',
       url: '/api/check-username',
       method: 'POST',
       extraPayload: { source: 'profile' },
@@ -602,7 +602,7 @@ reference as authored:
 
 ```typescript
 {
-  type: 'async',
+  $type: 'async',
   url: '/api/validate-field',
   extraPayload: { source: 'profile' },
   dependencies: ['username', 'email']
@@ -670,22 +670,22 @@ You can combine multiple validation rules for comprehensive field validation:
 
 ```typescript
 const passwordRules = [
-	{ type: 'required', message: 'Password is required' },
-	{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
-	{ type: 'maxLength', value: 128, message: 'Password cannot exceed 128 characters' },
+	{ $type: 'required', message: 'Password is required' },
+	{ $type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
+	{ $type: 'maxLength', value: 128, message: 'Password cannot exceed 128 characters' },
 	{
-		type: 'pattern',
+		$type: 'pattern',
 		value: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$',
 		message: 'Password must contain uppercase, lowercase, number, and special character',
 	},
 ];
 
 const emailRules = [
-	{ type: 'required', message: 'Email is required' },
-	{ type: 'email', message: 'Please enter a valid email address' },
-	{ type: 'maxLength', value: 254, message: 'Email address is too long' },
+	{ $type: 'required', message: 'Email is required' },
+	{ $type: 'email', message: 'Please enter a valid email address' },
+	{ $type: 'maxLength', value: 254, message: 'Email address is too long' },
 	{
-		type: 'async',
+		$type: 'async',
 		url: '/api/verify-email-domain',
 		method: 'POST',
 		message: 'Email domain is not supported',
@@ -701,9 +701,9 @@ Start with basic validations and add more specific ones:
 
 ```typescript
 const passwordRules = [
-	{ type: 'required', message: 'Password is required' },
-	{ type: 'minLength', value: 8, message: 'At least 8 chars' },
-	{ type: 'pattern', value: 'complexity', message: 'Complex' },
+	{ $type: 'required', message: 'Password is required' },
+	{ $type: 'minLength', value: 8, message: 'At least 8 chars' },
+	{ $type: 'pattern', value: 'complexity', message: 'Complex' },
 ];
 ```
 
@@ -712,9 +712,9 @@ const passwordRules = [
 Make errors actionable and user-friendly:
 
 ```typescript
-{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
+{ $type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
 
-{ type: 'minLength', value: 8, message: 'Too short' }
+{ $type: 'minLength', value: 8, message: 'Too short' }
 ```
 
 ### 3. Use Appropriate Validation Types
@@ -724,12 +724,12 @@ Choose validation types that match your field's purpose:
 ```typescript
 {
   inputType: 'email',
-  rules: [{ type: 'email', message: 'Please enter a valid email' }]
+  rules: [{ $type: 'email', message: 'Please enter a valid email' }]
 }
 
 {
   inputType: 'text',
-  rules: [{ type: 'pattern', value: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$', message: 'Invalid email' }]
+  rules: [{ $type: 'pattern', value: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$', message: 'Invalid email' }]
 }
 ```
 
@@ -738,7 +738,7 @@ Choose validation types that match your field's purpose:
 Expensive validations (like async) should come last:
 
 ```typescript
-[{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'async', url: '/api/check-availability' }];
+[{ $type: 'required' }, { $type: 'minLength', value: 3 }, { $type: 'async', url: '/api/check-availability' }];
 ```
 
 ## Next Steps

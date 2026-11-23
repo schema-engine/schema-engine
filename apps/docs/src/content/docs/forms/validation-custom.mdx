@@ -19,7 +19,7 @@ as the performance and naming examples are fragments.
 
 A validation registration has the same shape as an element, recipe or action registration:
 
-- `$type`: the `type` authors write in a field's `rules`. The rule objects themselves keep `type`.
+- `$type`: the `$type` authors write in a field's `rules`, so a registration with `$type: 'postalCode'` handles `{ $type: 'postalCode' }`.
 - `schema`: a [Standard Schema](https://standardschema.dev/) for the rule object. The engine build throws if it is not one, and a form config that uses the rule is checked against it, so the options it declares are validated where the form is validated.
 - `metadata`: a `name` and an optional `description`.
 - `category` and `handler`: the handler returns the Zod Mini schema that checks the value. `dependsOn` and `defaultFor` are optional.
@@ -37,11 +37,11 @@ Here's a basic custom validation, passed to the engine, and a field that uses it
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 
-type PostalCodeRule = { type: 'postalCode'; message?: string };
+type PostalCodeRule = { $type: 'postalCode'; message?: string };
 
 const postalCode = {
 	$type: 'postalCode',
-	schema: z.object({ type: z.literal('postalCode'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('postalCode'), message: z.optional(z.string()) }),
 	metadata: { name: 'Postal code', description: 'A US ZIP or ZIP+4 code.' },
 	category: 'string',
 	handler: (rule: PostalCodeRule) => {
@@ -58,8 +58,8 @@ export const postalCodeField = {
 	name: 'postalCode',
 	label: 'Postal code',
 	rules: [
-		{ type: 'required', message: 'Postal code is required' },
-		{ type: 'postalCode', message: 'Please enter a valid postal code' },
+		{ $type: 'required', message: 'Postal code is required' },
+		{ $type: 'postalCode', message: 'Please enter a valid postal code' },
 	],
 };
 ```
@@ -72,7 +72,7 @@ createFormEngine({ validations: [postalCode, creditCard, lengthRange] });
 
 ### Use the Rule in a Form
 
-Every element that extends `BaseFieldSchema` accepts a rule of any registered `type` in its `rules`. When the engine validates a form config (`defineForm`, `validateForm`) it checks each rule against the registry: the `type` must be registered, the rule must satisfy the registration's `schema`, and its handler must build a schema for it. A registration that replaces a built-in rule decides its options, extra ones included. Nothing in the element needs widening, and the JSON Schema export (`generateFormConfigSchema`) lists each registered rule once, as the `validation-rule` definition that every element's `rules` refers to, so an editor offers custom rules too. A rule is listed with its options when its `schema` is Zod; a schema from another Standard Schema library is listed by its `type` only.
+Every element that extends `BaseFieldSchema` accepts a rule of any registered `$type` in its `rules`. When the engine validates a form config (`defineForm`, `validateForm`) it checks each rule against the registry: the `$type` must be registered, the rule must satisfy the registration's `schema`, and its handler must build a schema for it. A registration that replaces a built-in rule decides its options, extra ones included. Nothing in the element needs widening, and the JSON Schema export (`generateFormConfigSchema`) lists each registered rule once, as the `validation-rule` definition that every element's `rules` refers to, so an editor offers custom rules too. A rule is listed with its options when its `schema` is Zod; a schema from another Standard Schema library is listed by its `$type` only.
 
 ```typescript
 import * as z from 'zod/mini';
@@ -80,11 +80,11 @@ import { createFormEngine, defineInput } from '@schema-engine/forms';
 import { BaseFieldSchema } from '@schema-engine/forms/schemas';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type PostalCodeRule = { type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
+type PostalCodeRule = { $type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
 
 const postalCode: ValidationRegistration<PostalCodeRule> = {
 	$type: 'postalCode',
-	schema: z.looseObject({ type: z.literal('postalCode'), country: z.optional(z.enum(['us', 'ca'])) }),
+	schema: z.looseObject({ $type: z.literal('postalCode'), country: z.optional(z.enum(['us', 'ca'])) }),
 	metadata: { name: 'Postal code' },
 	category: 'string',
 	handler: (rule) =>
@@ -112,7 +112,7 @@ export const form = engine.defineForm({
 					$type: 'text',
 					id: 'postal-code',
 					name: 'postalCode',
-					rules: [{ type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' }],
+					rules: [{ $type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' }],
 				},
 			],
 		},
@@ -124,18 +124,18 @@ A `type` nothing registers is rejected when the form is validated, with the type
 
 ### Validation with Parameters
 
-A rule is an object with a `type` and any parameters you choose. Describe it with a type, and the handler receives it typed. Each snippet below is complete and can be copied as it is.
+A rule is an object with a `$type` and any parameters you choose. Describe it with a type, and the handler receives it typed. Each snippet below is complete and can be copied as it is.
 
 ```typescript
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type LengthRangeRule = { type: 'lengthRange'; value?: { min?: number; max?: number }; message?: string };
+type LengthRangeRule = { $type: 'lengthRange'; value?: { min?: number; max?: number }; message?: string };
 
 const lengthRange: ValidationRegistration<LengthRangeRule> = {
 	$type: 'lengthRange',
-	schema: z.looseObject({ type: z.literal('lengthRange') }),
+	schema: z.looseObject({ $type: z.literal('lengthRange') }),
 	metadata: { name: 'Length Range' },
 	category: 'string',
 	handler: (rule) => {
@@ -158,7 +158,7 @@ export const descriptionField = {
 	label: 'Description',
 	rules: [
 		{
-			type: 'lengthRange',
+			$type: 'lengthRange',
 			value: { min: 10, max: 500 },
 			message: 'Description must be between 10 and 500 characters',
 		},
@@ -173,7 +173,7 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type CreditCardRule = { type: 'creditCard'; message?: string };
+type CreditCardRule = { $type: 'creditCard'; message?: string };
 
 function passesLuhn(value: string): boolean {
 	const cleanValue = value.replace(/[\s-]/g, '');
@@ -204,7 +204,7 @@ function passesLuhn(value: string): boolean {
 
 const creditCard: ValidationRegistration<CreditCardRule> = {
 	$type: 'creditCard',
-	schema: z.looseObject({ type: z.literal('creditCard') }),
+	schema: z.looseObject({ $type: z.literal('creditCard') }),
 	metadata: { name: 'Credit Card' },
 	category: 'string',
 	handler: (rule) => z.string().check(z.refine(passesLuhn, rule.message || 'Invalid credit card number')),
@@ -222,11 +222,11 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type CompanyEmailRule = { type: 'companyEmail'; value?: { domains?: string[] }; message?: string };
+type CompanyEmailRule = { $type: 'companyEmail'; value?: { domains?: string[] }; message?: string };
 
 const companyEmail: ValidationRegistration<CompanyEmailRule> = {
 	$type: 'companyEmail',
-	schema: z.looseObject({ type: z.literal('companyEmail') }),
+	schema: z.looseObject({ $type: z.literal('companyEmail') }),
 	metadata: { name: 'Company Email' },
 	category: 'string',
 	handler: (rule) => {
@@ -252,7 +252,7 @@ export const emailField = {
 	label: 'Work email',
 	rules: [
 		{
-			type: 'companyEmail',
+			$type: 'companyEmail',
 			value: { domains: ['mycompany.com', 'subsidiary.com'] },
 			message: 'Please use your company email address',
 		},
@@ -267,11 +267,11 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type AgeRule = { type: 'ageFromBirthDate'; value?: { minAge?: number; maxAge?: number }; message?: string };
+type AgeRule = { $type: 'ageFromBirthDate'; value?: { minAge?: number; maxAge?: number }; message?: string };
 
 const ageFromBirthDate: ValidationRegistration<AgeRule> = {
 	$type: 'ageFromBirthDate',
-	schema: z.looseObject({ type: z.literal('ageFromBirthDate') }),
+	schema: z.looseObject({ $type: z.literal('ageFromBirthDate') }),
 	metadata: { name: 'Age From Birth Date' },
 	category: 'date',
 	handler: (rule) => {
@@ -306,9 +306,9 @@ export const birthDateField = {
 	inputType: 'date',
 	name: 'birthDate',
 	rules: [
-		{ type: 'required', message: 'Birth date is required' },
+		{ $type: 'required', message: 'Birth date is required' },
 		{
-			type: 'ageFromBirthDate',
+			$type: 'ageFromBirthDate',
 			value: { minAge: 18, maxAge: 65 },
 			message: 'You must be between 18 and 65 years old',
 		},
@@ -323,11 +323,11 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type SsnRule = { type: 'ssn'; message?: string };
+type SsnRule = { $type: 'ssn'; message?: string };
 
 const ssn: ValidationRegistration<SsnRule> = {
 	$type: 'ssn',
-	schema: z.looseObject({ type: z.literal('ssn') }),
+	schema: z.looseObject({ $type: z.literal('ssn') }),
 	metadata: { name: 'Ssn' },
 	category: 'string',
 	handler: (rule) =>
@@ -356,7 +356,7 @@ import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
 type PasswordStrengthRule = {
-	type: 'passwordStrength';
+	$type: 'passwordStrength';
 	value?: {
 		minLength?: number;
 		requireUppercase?: boolean;
@@ -369,7 +369,7 @@ type PasswordStrengthRule = {
 
 const passwordStrength: ValidationRegistration<PasswordStrengthRule> = {
 	$type: 'passwordStrength',
-	schema: z.looseObject({ type: z.literal('passwordStrength') }),
+	schema: z.looseObject({ $type: z.literal('passwordStrength') }),
 	metadata: { name: 'Password Strength' },
 	category: 'string',
 	handler: (rule) => {
@@ -404,7 +404,7 @@ export const passwordField = {
 	inputType: 'password',
 	rules: [
 		{
-			type: 'passwordStrength',
+			$type: 'passwordStrength',
 			value: {
 				minLength: 12,
 				requireUppercase: true,
@@ -430,16 +430,16 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type ConfirmPasswordRule = { type: 'confirmPassword'; message?: string };
+type ConfirmPasswordRule = { $type: 'confirmPassword'; message?: string };
 type ConditionalRequiredRule = {
-	type: 'conditionalRequired';
+	$type: 'conditionalRequired';
 	value: { dependsOn: string; when: unknown };
 	message?: string;
 };
 
 const confirmPassword: ValidationRegistration<ConfirmPasswordRule> = {
 	$type: 'confirmPassword',
-	schema: z.looseObject({ type: z.literal('confirmPassword') }),
+	schema: z.looseObject({ $type: z.literal('confirmPassword') }),
 	metadata: { name: 'Confirm Password' },
 	category: 'cross-field',
 	dependsOn: () => ['password'],
@@ -456,7 +456,7 @@ const confirmPassword: ValidationRegistration<ConfirmPasswordRule> = {
 
 const conditionalRequired: ValidationRegistration<ConditionalRequiredRule> = {
 	$type: 'conditionalRequired',
-	schema: z.looseObject({ type: z.literal('conditionalRequired') }),
+	schema: z.looseObject({ $type: z.literal('conditionalRequired') }),
 	metadata: { name: 'Conditional Required' },
 	category: 'cross-field',
 	dependsOn: (rule) => [rule.value.dependsOn],
@@ -499,7 +499,7 @@ export const companyNameField = {
 	label: 'Company Name',
 	rules: [
 		{
-			type: 'conditionalRequired',
+			$type: 'conditionalRequired',
 			value: { dependsOn: 'userType', when: 'business' },
 			message: 'Company name is required for business accounts',
 		},
@@ -510,7 +510,7 @@ export const companyNameField = {
 ## Async Custom Validations
 
 > **Best Practice:**
-> For most server-side validations, use the built-in `type: 'async'` validator. It provides caching, dependency resolution, debouncing, and error handling out of the box.
+> For most server-side validations, use the built-in `$type: 'async'` validator. It provides caching, dependency resolution, debouncing, and error handling out of the box.
 
 ### Built-in Async Validation (Recommended)
 
@@ -518,7 +518,7 @@ export const companyNameField = {
 import type { AsyncRule } from '@schema-engine/forms/schemas/validation';
 
 export const usernameRule = {
-	type: 'async',
+	$type: 'async',
 	url: '/api/check-username',
 	method: 'POST',
 	extraPayload: { validationType: 'premium' },
@@ -538,12 +538,12 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type UniqueUsernameRule = { type: 'uniqueUsername'; message?: string };
-type ValidAddressRule = { type: 'validAddress'; message?: string };
+type UniqueUsernameRule = { $type: 'uniqueUsername'; message?: string };
+type ValidAddressRule = { $type: 'validAddress'; message?: string };
 
 const uniqueUsername: ValidationRegistration<UniqueUsernameRule> = {
 	$type: 'uniqueUsername',
-	schema: z.looseObject({ type: z.literal('uniqueUsername') }),
+	schema: z.looseObject({ $type: z.literal('uniqueUsername') }),
 	metadata: { name: 'Unique Username' },
 	category: 'generic',
 	handler: (rule) =>
@@ -568,7 +568,7 @@ const uniqueUsername: ValidationRegistration<UniqueUsernameRule> = {
 
 const validAddress: ValidationRegistration<ValidAddressRule> = {
 	$type: 'validAddress',
-	schema: z.looseObject({ type: z.literal('validAddress') }),
+	schema: z.looseObject({ $type: z.literal('validAddress') }),
 	metadata: { name: 'Valid Address' },
 	category: 'generic',
 	handler: (rule) =>
@@ -607,13 +607,13 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type PostalCodeRule = { type: 'postalCode'; country?: 'US' | 'CA' | 'UK'; message?: string };
-type WorkingHoursRule = { type: 'workingHours'; message?: string };
-type FileSizeRule = { type: 'fileSize'; maxSize?: number; message?: string };
+type PostalCodeRule = { $type: 'postalCode'; country?: 'US' | 'CA' | 'UK'; message?: string };
+type WorkingHoursRule = { $type: 'workingHours'; message?: string };
+type FileSizeRule = { $type: 'fileSize'; maxSize?: number; message?: string };
 
 const postalCode: ValidationRegistration<PostalCodeRule> = {
 	$type: 'postalCode',
-	schema: z.looseObject({ type: z.literal('postalCode') }),
+	schema: z.looseObject({ $type: z.literal('postalCode') }),
 	metadata: { name: 'Postal code' },
 	category: 'string',
 	handler: (rule) => {
@@ -630,7 +630,7 @@ const postalCode: ValidationRegistration<PostalCodeRule> = {
 
 const workingHours: ValidationRegistration<WorkingHoursRule> = {
 	$type: 'workingHours',
-	schema: z.looseObject({ type: z.literal('workingHours') }),
+	schema: z.looseObject({ $type: z.literal('workingHours') }),
 	metadata: { name: 'Working hours' },
 	category: 'date',
 	handler: (rule) =>
@@ -646,7 +646,7 @@ const workingHours: ValidationRegistration<WorkingHoursRule> = {
 
 const fileSize: ValidationRegistration<FileSizeRule> = {
 	$type: 'fileSize',
-	schema: z.looseObject({ type: z.literal('fileSize') }),
+	schema: z.looseObject({ $type: z.literal('fileSize') }),
 	metadata: { name: 'File size' },
 	category: 'generic',
 	handler: (rule) => {
@@ -678,17 +678,17 @@ import { createValidationContext } from '@schema-engine/forms/schemas/validation
 
 const postalCode = {
 	$type: 'postalCode',
-	schema: z.object({ type: z.literal('postalCode'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('postalCode'), message: z.optional(z.string()) }),
 	metadata: { name: 'Postal code' },
 	category: 'string',
-	handler: (rule: { type: 'postalCode'; message?: string }) =>
+	handler: (rule: { $type: 'postalCode'; message?: string }) =>
 		z.string().check(z.regex(/^\d{5}(?:-\d{4})?$/, rule.message || 'Invalid postal code')),
 } as const;
 
 const registry = createFormEngine({ validations: [postalCode] }).getValidationRegistry();
 
 function schemaFor(message: string) {
-	const schema = registry.createSchema({ type: 'postalCode', message }, createValidationContext());
+	const schema = registry.createSchema({ $type: 'postalCode', message }, createValidationContext());
 	if (!schema) throw new Error('postalCode is not registered');
 	return schema;
 }
@@ -728,11 +728,11 @@ Place expensive validations last in the rule chain:
 
 ```typescript
 {
-	rules: [{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'email' }, { type: 'uniqueEmail' }];
+	rules: [{ $type: 'required' }, { $type: 'minLength', value: 3 }, { $type: 'email' }, { $type: 'uniqueEmail' }];
 }
 
 {
-	rules: [{ type: 'uniqueEmail' }, { type: 'required' }, { type: 'email' }];
+	rules: [{ $type: 'uniqueEmail' }, { $type: 'required' }, { $type: 'email' }];
 }
 ```
 
@@ -748,7 +748,7 @@ for the request and response contract.
 import type { AsyncRule } from '@schema-engine/forms/schemas/validation';
 
 const usernameRule = {
-	type: 'async',
+	$type: 'async',
 	url: '/api/check-username',
 	method: 'POST',
 	expectedResponse: { valid: true },
@@ -800,11 +800,11 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
 
-type CardNumberRule = { type: 'cardNumber'; message?: string };
+type CardNumberRule = { $type: 'cardNumber'; message?: string };
 
 const cardNumber: ValidationRegistration<CardNumberRule> = {
 	$type: 'cardNumber',
-	schema: z.looseObject({ type: z.literal('cardNumber') }),
+	schema: z.looseObject({ $type: z.literal('cardNumber') }),
 	metadata: { name: 'Card Number' },
 	category: 'string',
 	handler: (rule) =>
@@ -842,10 +842,10 @@ const validateAbn = (value: string) => value === 'example-valid';
  */
 const australianABN = {
 	$type: 'australianABN',
-	schema: z.object({ type: z.literal('australianABN'), message: z.optional(z.string()) }),
+	schema: z.object({ $type: z.literal('australianABN'), message: z.optional(z.string()) }),
 	metadata: { name: 'Australian ABN', description: 'Delegates to the application ABN validator.' },
 	category: 'string',
-	handler: (rule: { type: 'australianABN'; message?: string }) =>
+	handler: (rule: { $type: 'australianABN'; message?: string }) =>
 		z.string().check(z.refine((abn) => validateAbn(abn), rule.message || 'Please enter a valid ABN')),
 } as const;
 
@@ -892,7 +892,7 @@ import { createValidationRegistry } from '@schema-engine/forms/schemas/validatio
 
 const testOnly = {
 	$type: 'testOnly',
-	schema: z.object({ type: z.literal('testOnly') }),
+	schema: z.object({ $type: z.literal('testOnly') }),
 	metadata: { name: 'Test only' },
 	category: 'string',
 	handler: () => z.string().check(z.minLength(1)),
@@ -900,7 +900,7 @@ const testOnly = {
 
 const testRegistry = createValidationRegistry([testOnly]);
 
-const schema = testRegistry.createSchema({ type: 'testOnly' }, createValidationContext());
+const schema = testRegistry.createSchema({ $type: 'testOnly' }, createValidationContext());
 ```
 
 ## Async Endpoint Example
@@ -911,7 +911,7 @@ Use the built-in async rule when a field depends on a server response. The endpo
 
 ```typescript
 {
-  type: 'async',
+  $type: 'async',
   url: '/api/async-validate',
   method: 'POST',
   expectedResponse: { valid: true },
@@ -920,7 +920,7 @@ Use the built-in async rule when a field depends on a server response. The endpo
 }
 
 {
-  type: 'async',
+  $type: 'async',
   url: '/api/async-validate',
   method: 'POST',
   extraPayload: { field: 'username', validationType: 'complex' },

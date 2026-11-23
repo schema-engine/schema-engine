@@ -26,8 +26,8 @@ export const validationDemoConfig: FormConfig = {
 					name: 'name',
 					label: 'Name',
 					rules: [
-						{ type: 'required', message: 'Name is required' },
-						{ type: 'minLength', value: 2, message: 'Use at least 2 characters' },
+						{ $type: 'required', message: 'Name is required' },
+						{ $type: 'minLength', value: 2, message: 'Use at least 2 characters' },
 					],
 				},
 				{
@@ -37,8 +37,8 @@ export const validationDemoConfig: FormConfig = {
 					label: 'Email',
 					inputType: 'email',
 					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Enter a valid email' },
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Enter a valid email' },
 					],
 				},
 				{
@@ -48,8 +48,8 @@ export const validationDemoConfig: FormConfig = {
 					label: 'Website',
 					inputType: 'url',
 					rules: [
-						{ type: 'required', message: 'Website is required' },
-						{ type: 'url', message: 'Enter a full URL, such as https://example.com' },
+						{ $type: 'required', message: 'Website is required' },
+						{ $type: 'url', message: 'Enter a full URL, such as https://example.com' },
 					],
 				},
 				{
@@ -58,8 +58,8 @@ export const validationDemoConfig: FormConfig = {
 					name: 'postcode',
 					label: 'Postcode',
 					rules: [
-						{ type: 'required', message: 'Postcode is required' },
-						{ type: 'pattern', value: '^[0-9]{5}$', message: 'Use five digits' },
+						{ $type: 'required', message: 'Postcode is required' },
+						{ $type: 'pattern', value: '^[0-9]{5}$', message: 'Use five digits' },
 					],
 				},
 			],
@@ -87,7 +87,7 @@ export const shadcnContactFormConfig: FormConfig = {
 					id: 'name',
 					name: 'name',
 					label: 'Full name',
-					rules: [{ type: 'required', message: 'Name is required' }],
+					rules: [{ $type: 'required', message: 'Name is required' }],
 				},
 				{
 					$type: 'input',
@@ -96,8 +96,8 @@ export const shadcnContactFormConfig: FormConfig = {
 					label: 'Email',
 					inputType: 'email',
 					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Enter a valid email' },
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Enter a valid email' },
 					],
 				},
 			],

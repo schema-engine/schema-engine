@@ -117,7 +117,7 @@ test('an array error is shown with its message and the group is described by it'
 			id: 'contacts',
 			name: 'contacts',
 			label: 'Contacts',
-			rules: [{ type: 'required', message: 'Add at least one contact' }],
+			rules: [{ $type: 'required', message: 'Add at least one contact' }],
 			elements: [{ $type: 'input', name: 'item', label: 'Item' }],
 		},
 		{ $type: 'submit', id: 'send', name: 'send', label: 'Send' },
@@ -158,7 +158,7 @@ test('a constraint-required choice shows the required marker', async () => {
 				{ value: 'free', label: 'Free' },
 				{ value: 'paid', label: 'Paid' },
 			],
-			constraints: [{ field: 'toggle', operator: 'equals', value: 'on', action: 'require' }],
+			constraints: [{ field: 'toggle', operator: 'equals', value: 'on', $type: 'require' }],
 		},
 		{ $type: 'input', id: 'toggle', name: 'toggle', label: 'Toggle' },
 	]);

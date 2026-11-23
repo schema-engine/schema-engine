@@ -117,7 +117,7 @@ describe('useFormField', () => {
 
 	test('marks a field required when its require constraint matches the watched sibling', () => {
 		const requireWhenBusiness: ConstraintLogic[] = [
-			{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' },
+			{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' },
 		];
 		const { harness } = rendersWith(
 			{ accountType: '', company: '' },
@@ -150,9 +150,9 @@ describe('the text of an issue', () => {
 		{
 			$type: 'input',
 			name: 'code',
-			rules: [{ type: 'minLength', value: 8, id: 'code-length' }],
+			rules: [{ $type: 'minLength', value: 8, id: 'code-length' }],
 		},
-		{ $type: 'input', name: 'note', rules: [{ type: 'required', message: 'Note is required' }] },
+		{ $type: 'input', name: 'note', rules: [{ $type: 'required', message: 'Note is required' }] },
 	];
 
 	function Probe({ name }: { name: string }) {
@@ -240,7 +240,7 @@ describe('the text of an issue', () => {
 
 describe('useFormField with a path', () => {
 	const elements = [
-		{ $type: 'input', name: 'code', rules: [{ type: 'minLength', value: 8 }] },
+		{ $type: 'input', name: 'code', rules: [{ $type: 'minLength', value: 8 }] },
 		{ $type: 'input', name: 'note' },
 	];
 
@@ -322,7 +322,7 @@ describe('useFormField with a path', () => {
 
 describe('useFormField with a config', () => {
 	function Widget() {
-		const field = useFormField({ $type: 'input', name: 'email', id: 'email-id', rules: [{ type: 'required' }] });
+		const field = useFormField({ $type: 'input', name: 'email', id: 'email-id', rules: [{ $type: 'required' }] });
 		return (
 			<>
 				<input data-testid="control" {...field.fieldProps} />
@@ -334,7 +334,7 @@ describe('useFormField with a config', () => {
 
 	test('wires the control, label and error to the id of the element', async () => {
 		const container = createTestContainer({
-			elements: [{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Required' }] }],
+			elements: [{ $type: 'input', name: 'email', rules: [{ $type: 'required', message: 'Required' }] }],
 			defaults: { email: '' },
 		});
 		render(
@@ -442,7 +442,7 @@ describe('useFormField under FormRenderer', () => {
 					$type: 'field',
 					id: 'company',
 					name: 'company',
-					constraints: [{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' }],
+					constraints: [{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' }],
 				},
 			],
 			(name) => renders.push(name),

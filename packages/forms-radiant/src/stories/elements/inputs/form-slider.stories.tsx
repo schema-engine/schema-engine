@@ -48,7 +48,7 @@ export const WithValidation: Story = {
 				min: 18,
 				max: 65,
 				step: 1,
-				rules: [{ type: 'min', value: 25, message: 'You must be at least 25' }],
+				rules: [{ $type: 'min', value: 25, message: 'You must be at least 25' }],
 			},
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Confirm Age' },
 		]),

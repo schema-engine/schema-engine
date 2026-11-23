@@ -40,22 +40,22 @@ export const contactForm = engine.defineForm({
 				{
 					$type: 'text',
 					name: 'name',
-					rules: [{ type: 'required', id: 'name-required', message: 'Name is required' }],
+					rules: [{ $type: 'required', id: 'name-required', message: 'Name is required' }],
 				},
 				{
 					$type: 'text',
 					name: 'email',
-					rules: [{ type: 'required' }, { type: 'email', message: 'Not an email' }],
+					rules: [{ $type: 'required' }, { $type: 'email', message: 'Not an email' }],
 				},
 				{
 					$type: 'text',
 					name: 'nickname',
-					rules: [{ type: 'minLength', value: 3, severity: 'warning', id: 'nickname-short' }],
+					rules: [{ $type: 'minLength', value: 3, severity: 'warning', id: 'nickname-short' }],
 				},
 				{
 					$type: 'text',
 					name: 'company',
-					constraints: [{ field: 'email', operator: 'contains', value: '@example.com', action: 'hide' }],
+					constraints: [{ field: 'email', operator: 'contains', value: '@example.com', $type: 'hide' }],
 				},
 			],
 		},
@@ -71,10 +71,10 @@ Form-level keys: `view` (a registered recipe, optional for a one-step form), `va
 
 ## Constraints
 
-A constraint is `{ field, operator, value, action }` on an element, where `field` names a sibling (resolved from where the element is rendered, so inside `contacts.0.email` it means `contacts.0.<field>`).
+A constraint is `{ field, operator, value, $type }` on an element, where `field` names a sibling (resolved from where the element is rendered, so inside `contacts.0.email` it means `contacts.0.<field>`).
 
 - `operator`: `equals`, `not_equals`, `contains`, `not_contains`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`.
-- `action`: `show`, `hide`, `enable`, `disable`, `require`.
+- `$type`: `show`, `hide`, `enable`, `disable`, `require`.
 
 A hidden or disabled field, and every field of a skipped step, takes no part: it is never validated and is left out of the submitted values. A step takes `show` and `hide` constraints on fields of earlier steps. A renderer never evaluates constraints itself: it reads them from the container (`selectFieldState(snapshot, path)` gives `hidden`, `disabled` and `required`).
 

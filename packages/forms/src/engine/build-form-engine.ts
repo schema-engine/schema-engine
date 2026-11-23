@@ -168,7 +168,7 @@ const RULE_EXPORT_ID = 'validation-rule';
  *
  * @remarks
  * Only a Zod schema can be written out as JSON Schema here: a registration whose schema comes from another
- * Standard Schema library is listed by its `type` alone, with no options. The union is built once and carries
+ * Standard Schema library is listed by its `$type` alone, with no options. The union is built once and carries
  * an id in the metadata registry, so the export defines it once and each element refers to it.
  */
 function createRuleExportSchema(validations: ValidationRegistry): z.ZodMiniType {
@@ -178,7 +178,7 @@ function createRuleExportSchema(validations: ValidationRegistry): z.ZodMiniType 
 			.map((registration) =>
 				isZodType(registration.schema)
 					? registration.schema
-					: z.looseObject({ type: z.literal(registration.$type) }),
+					: z.looseObject({ $type: z.literal(registration.$type) }),
 			),
 	);
 }

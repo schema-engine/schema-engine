@@ -8,12 +8,12 @@ const config = engine.defineForm({
 			id: 'account',
 			title: 'Account',
 			elements: [
-				{ $type: 'input', id: 'email', name: 'email', rules: [{ type: 'required', id: 'email-required' }] },
+				{ $type: 'input', id: 'email', name: 'email', rules: [{ $type: 'required', id: 'email-required' }] },
 				{
 					$type: 'input',
 					id: 'password',
 					name: 'password',
-					rules: [{ type: 'minLength', id: 'password-min', value: 8 }],
+					rules: [{ $type: 'minLength', id: 'password-min', value: 8 }],
 				},
 			],
 		},

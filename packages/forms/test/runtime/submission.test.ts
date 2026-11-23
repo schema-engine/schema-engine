@@ -240,7 +240,7 @@ describe('what a failed submission reports', () => {
 
 describe('a submission a reset or an edit outran', () => {
 	test('an edit that outruns its validation is overtaken: nothing is shown or counted, and the next submit may pass', async () => {
-		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
+		const { runtime, host, gate } = setup(wizardConfig({}, [{ $type: 'gate' }]));
 		fill(runtime, { email: 'a@b.c', street: 's', card: 'c' });
 		const first = runtime.next();
 		await releaseGate(gate);

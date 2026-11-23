@@ -99,7 +99,7 @@ type HasConstraints<E> = E extends { readonly constraints: infer C extends reado
 
 type IsRequiredRule<E> = E extends { readonly rules: infer R extends readonly unknown[] }
 	? R[number] extends infer Rule
-		? Rule extends { readonly type: infer T }
+		? Rule extends { readonly $type: infer T }
 			? 'required' extends T
 				? string extends T
 					? never

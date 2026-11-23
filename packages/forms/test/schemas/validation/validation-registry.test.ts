@@ -11,7 +11,7 @@ import type { AnyValidationRegistration, ValidationRegistration } from '../../..
 import { createValidationContext } from '../../../src/schemas/validation/utils';
 import { logger } from '../../../src/lib/logger';
 
-const looseRule = z.looseObject({ type: z.string(), message: z.optional(z.string()) });
+const looseRule = z.looseObject({ $type: z.string(), message: z.optional(z.string()) });
 
 /** A registration with the shared shape filled in, for tests that only care about the handler. */
 function registration($type: string, rest: Partial<ValidationRegistration> = {}): ValidationRegistration {
@@ -30,7 +30,7 @@ describe('ValidationRegistry', () => {
 		it('should store a custom validation type', () => {
 			const registry = createValidationRegistry([
 				registration('custom', {
-					handler: (rule: { type: string; message?: string }) =>
+					handler: (rule: { $type: string; message?: string }) =>
 						z.string().check(z.minLength(5, rule.message)),
 				}),
 			]);
@@ -94,26 +94,26 @@ describe('ValidationRegistry', () => {
 
 		it('should create schemas for string validations', () => {
 			const requiredSchema = globalRegistry.createSchema(
-				{ type: 'required', message: 'Required field' },
+				{ $type: 'required', message: 'Required field' },
 				createValidationContext(),
 			);
 			expect(requiredSchema?.parse('data')).toBe('data');
 			expect(() => requiredSchema?.parse('')).toThrow();
 
-			const emailSchema = globalRegistry.createSchema({ type: 'email' }, createValidationContext());
+			const emailSchema = globalRegistry.createSchema({ $type: 'email' }, createValidationContext());
 			expect(emailSchema?.parse('test@example.com')).toBe('test@example.com');
 			expect(() => emailSchema?.parse('invalid')).toThrow();
 		});
 
 		it('should create schemas for number validations', () => {
-			const minSchema = globalRegistry.createSchema({ type: 'min', value: 10 }, createValidationContext());
+			const minSchema = globalRegistry.createSchema({ $type: 'min', value: 10 }, createValidationContext());
 			expect(minSchema?.parse(15)).toBe(15);
 			expect(() => minSchema?.parse(5)).toThrow();
 		});
 
 		it('should create schemas for array validations', () => {
 			const minItemsSchema = globalRegistry.createSchema(
-				{ type: 'minItems', value: 2 },
+				{ $type: 'minItems', value: 2 },
 				createValidationContext(),
 			);
 			expect(minItemsSchema?.parse([1, 2])).toEqual([1, 2]);
@@ -124,10 +124,10 @@ describe('ValidationRegistry', () => {
 	describe('Presets', () => {
 		it('should provide string presets', () => {
 			const rule = ValidationPresets.string.required('Required');
-			expect(rule).toEqual({ type: 'required', message: 'Required' });
+			expect(rule).toEqual({ $type: 'required', message: 'Required' });
 
 			const emailRule = ValidationPresets.string.email();
-			expect(emailRule.type).toBe('email');
+			expect(emailRule.$type).toBe('email');
 		});
 
 		it('builds rule config only: a message appears only when the caller passes one', () => {
@@ -146,9 +146,9 @@ describe('ValidationRegistry', () => {
 
 		it('should provide number presets', () => {
 			const minRule = ValidationPresets.number.min(5);
-			expect(minRule).toEqual({ type: 'min', value: 5 });
+			expect(minRule).toEqual({ $type: 'min', value: 5 });
 			expect(ValidationPresets.number.min(5, 'At least five')).toEqual({
-				type: 'min',
+				$type: 'min',
 				value: 5,
 				message: 'At least five',
 			});
@@ -156,26 +156,26 @@ describe('ValidationRegistry', () => {
 
 		it('should provide array presets', () => {
 			const minItemsRule = ValidationPresets.array.minItems(3);
-			expect(minItemsRule).toEqual({ type: 'minItems', value: 3 });
+			expect(minItemsRule).toEqual({ $type: 'minItems', value: 3 });
 		});
 
 		it('should provide async presets with dependencies', () => {
 			const asyncRule = ValidationPresets.custom.async('/api/check', { dependencies: ['otherField'] });
-			expect(asyncRule.type).toBe('async');
+			expect(asyncRule.$type).toBe('async');
 			expect(asyncRule.dependencies).toEqual(['otherField']);
 		});
 	});
 
 	describe('Async Validation', () => {
 		it('should create async validation schema', () => {
-			const rule = { type: 'async', url: '/api/validate' };
+			const rule = { $type: 'async', url: '/api/validate' };
 			const schema = globalRegistry.createSchema(rule, createValidationContext());
 			expect(schema).toBeDefined();
 		});
 
 		it('should include dependencies in async validation rule', () => {
 			const rule = {
-				type: 'async',
+				$type: 'async',
 				url: '/api/validate',
 				dependencies: ['field1', 'field2'],
 			};
@@ -195,7 +195,7 @@ describe('ValidationRegistry', () => {
 			 */
 			const creditCardValidation: ValidationRegistration = {
 				...registration('creditCard', { category: 'string' }),
-				handler: (rule: { type: string; message?: string }) => {
+				handler: (rule: { $type: string; message?: string }) => {
 					return z.string().check(
 						z.refine((value) => {
 							const digits = value.replace(/\s/g, '');
@@ -222,7 +222,7 @@ describe('ValidationRegistry', () => {
 
 			const registry = createValidationRegistry([creditCardValidation]);
 
-			const rule = { type: 'creditCard', message: 'Invalid card' };
+			const rule = { $type: 'creditCard', message: 'Invalid card' };
 			const schema = registry.createSchema(rule, createValidationContext());
 
 			expect(schema).toBeDefined();
@@ -234,7 +234,7 @@ describe('ValidationRegistry', () => {
 		it('should support phone number validation', () => {
 			const phoneValidation: ValidationRegistration = {
 				...registration('phone', { category: 'string' }),
-				handler: (rule: { type: string; message?: string }) => {
+				handler: (rule: { $type: string; message?: string }) => {
 					const phoneRegex = /^\+?[1-9]\d{1,14}$/;
 					return z.string().check(z.regex(phoneRegex, rule.message || 'Invalid phone number'));
 				},
@@ -242,7 +242,7 @@ describe('ValidationRegistry', () => {
 
 			const registry = createValidationRegistry([phoneValidation]);
 
-			const phoneRule = { type: 'phone', message: 'Invalid phone format' };
+			const phoneRule = { $type: 'phone', message: 'Invalid phone format' };
 			const schema = registry.createSchema(phoneRule, createValidationContext());
 
 			expect(schema).toBeDefined();
@@ -255,7 +255,7 @@ describe('ValidationRegistry', () => {
 				registration('phone', { category: 'string', defaultFor: ['phone-input'], handler: () => z.string() }),
 			]);
 
-			expect(registry.getDefaultRulesForFieldType('phone-input')).toEqual([{ type: 'phone' }]);
+			expect(registry.getDefaultRulesForFieldType('phone-input')).toEqual([{ $type: 'phone' }]);
 			expect(registry.getDefaultRulesForFieldType('input')).toEqual([]);
 		});
 
@@ -272,7 +272,7 @@ describe('ValidationRegistry', () => {
 	describe('Error Handling', () => {
 		it('throws, naming the type, for an unregistered validation type', () => {
 			expect(() =>
-				createValidationRegistry([]).createSchema({ type: 'nonexistent' }, createValidationContext()),
+				createValidationRegistry([]).createSchema({ $type: 'nonexistent' }, createValidationContext()),
 			).toThrow(expect.objectContaining({ name: 'ValidationRuleError', ruleType: 'nonexistent' }));
 		});
 
@@ -285,7 +285,7 @@ describe('ValidationRegistry', () => {
 				}),
 			]);
 
-			expect(() => registry.createSchema({ type: 'faulty' }, createValidationContext())).toThrow(
+			expect(() => registry.createSchema({ $type: 'faulty' }, createValidationContext())).toThrow(
 				expect.objectContaining({ ruleType: 'faulty', cause: new Error('Validation handler error') }),
 			);
 		});
@@ -300,34 +300,34 @@ describe('ValidationRegistry', () => {
 				registration('fine', { handler: () => z.string() }),
 			]);
 
-			expect(registry.check({ type: 'fine' })).toEqual({ ok: true, rule: { type: 'fine' } });
-			expect(registry.check({ type: 'nonexistent' })).toEqual({
+			expect(registry.check({ $type: 'fine' })).toEqual({ ok: true, rule: { $type: 'fine' } });
+			expect(registry.check({ $type: 'nonexistent' })).toEqual({
 				ok: false,
 				issues: [
 					{
-						path: ['type'],
+						path: ['$type'],
 						message: expect.stringMatching(
 							/Unknown validation rule 'nonexistent'.*Registered rules: faulty, fine\./,
 						),
 					},
 				],
 			});
-			expect(registry.check({ type: 'faulty' })).toEqual({
+			expect(registry.check({ $type: 'faulty' })).toEqual({
 				ok: false,
-				issues: [{ path: ['type'], message: expect.stringMatching(/could not be built: no good/) }],
+				issues: [{ path: ['$type'], message: expect.stringMatching(/could not be built: no good/) }],
 			});
 		});
 
 		it('reports an option its registration refuses at its key, and returns the rule as the registration parses it', () => {
 			const registry = createValidationRegistry([
 				registration('sized', {
-					schema: z.object({ type: z.literal('sized'), size: z._default(z.number(), 10) }),
+					schema: z.object({ $type: z.literal('sized'), size: z._default(z.number(), 10) }),
 					handler: () => z.string(),
 				}),
 			]);
 
-			expect(registry.check({ type: 'sized' })).toEqual({ ok: true, rule: { type: 'sized', size: 10 } });
-			expect(registry.check({ type: 'sized', size: 'big' } as { type: string })).toEqual({
+			expect(registry.check({ $type: 'sized' })).toEqual({ ok: true, rule: { $type: 'sized', size: 10 } });
+			expect(registry.check({ $type: 'sized', size: 'big' } as { $type: string })).toEqual({
 				ok: false,
 				issues: [
 					{
@@ -347,7 +347,7 @@ describe('ValidationRegistry', () => {
 				registration('test', { handler: () => z.number() }),
 			]);
 
-			const schema = registry.createSchema({ type: 'test' }, createValidationContext());
+			const schema = registry.createSchema({ $type: 'test' }, createValidationContext());
 			expect(schema.parse(123)).toBe(123);
 			expect(registry.size).toBe(1);
 			for (const spy of spies) {

@@ -91,7 +91,7 @@ Show the "State" field only when "Country" is "US".
       field: 'country',
       operator: 'equals',
       value: 'US',
-      action: 'show'
+      $type: 'show'
     }
   ]
 }
@@ -204,14 +204,14 @@ const contactFormSchema = {
 					name: 'company_name',
 					label: 'Company Name',
 					inputType: 'text',
-					rules: [{ type: 'required' }],
+					rules: [{ $type: 'required' }],
 				},
 				{
 					$type: 'input',
 					name: 'business_email',
 					label: 'Business Email',
 					inputType: 'email',
-					rules: [{ type: 'required' }, { type: 'email' }],
+					rules: [{ $type: 'required' }, { $type: 'email' }],
 				},
 			],
 		},

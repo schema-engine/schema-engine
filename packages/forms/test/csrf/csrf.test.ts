@@ -127,7 +127,7 @@ describe('what carries the token', () => {
 		const engine = createFormEngine({ fetch: request, csrf: policy() });
 		const schema = engine
 			.getValidationRegistry()
-			.createSchema({ type: 'async', url: '/api/check', disableCache: true }, createValidationContext());
+			.createSchema({ $type: 'async', url: '/api/check', disableCache: true }, createValidationContext());
 		const result = await schema.safeParseAsync('ada');
 		expect(result.success).toBe(true);
 		expect(calls).toHaveLength(1);

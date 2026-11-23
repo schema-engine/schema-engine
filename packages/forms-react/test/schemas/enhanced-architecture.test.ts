@@ -156,8 +156,8 @@ describe('Clean Enhanced Field System', () => {
 			inputType: 'text',
 			// These would be validation and should come from rules, not direct props
 			rules: [
-				{ type: 'required', message: 'This field is required' },
-				{ type: 'maxLength', value: 50, message: 'Maximum 50 characters' },
+				{ $type: 'required', message: 'This field is required' },
+				{ $type: 'maxLength', value: 50, message: 'Maximum 50 characters' },
 			],
 		};
 

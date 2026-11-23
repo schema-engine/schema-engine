@@ -107,7 +107,7 @@ steps: [
 		id: 'company',
 		title: 'Company',
 		elements: [{ $type: 'input', name: 'companyName', label: 'Company name' }],
-		constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+		constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
 	},
 	{ id: 'payment', title: 'Payment', elements: [] },
 ];

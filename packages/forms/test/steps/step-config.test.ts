@@ -38,7 +38,7 @@ const engine = createFormEngine({
 	],
 });
 
-const show = (field: string) => [{ field, operator: 'equals', value: true, action: 'show' }];
+const show = (field: string) => [{ field, operator: 'equals', value: true, $type: 'show' }];
 const input = (name: string) => ({ $type: 'input', name });
 const step = (id: string, elements: unknown[], extra: Record<string, unknown> = {}) => ({
 	id,
@@ -55,7 +55,7 @@ describe('step constraints and navigation in a form config', () => {
 				step('contact', [input('hasCompany'), { $type: 'group', name: 'owner', elements: [input('adult')] }]),
 				step('company', [input('company')], { constraints: show('hasCompany') }),
 				step('owner', [input('detail')], {
-					constraints: [{ field: 'owner.adult', operator: 'equals', value: true, action: 'hide' }],
+					constraints: [{ field: 'owner.adult', operator: 'equals', value: true, $type: 'hide' }],
 				}),
 			]),
 		);
@@ -70,7 +70,7 @@ describe('step constraints and navigation in a form config', () => {
 				form([
 					step('a', [input('x')]),
 					step('b', [input('y')], {
-						constraints: [{ field: 'x', operator: 'equals', value: true, action: 'require' }],
+						constraints: [{ field: 'x', operator: 'equals', value: true, $type: 'require' }],
 					}),
 				]),
 			),

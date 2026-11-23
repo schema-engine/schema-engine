@@ -22,9 +22,9 @@ function withCompleteCodeRule<T extends { length?: number; incompleteMessage?: s
 	config: T,
 ): T {
 	const length = config.length ?? 6;
-	if (config.rules?.some((rule) => ['minLength', 'maxLength', 'pattern'].includes(rule.type))) return config;
+	if (config.rules?.some((rule) => ['minLength', 'maxLength', 'pattern'].includes(rule.$type))) return config;
 	const complete = {
-		type: 'pattern',
+		$type: 'pattern',
 		value: `^(.{${length}})?$`,
 		message: config.incompleteMessage ?? `Enter all ${length} characters`,
 	} as const;

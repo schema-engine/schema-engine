@@ -55,7 +55,7 @@ test('headless validation rejects an incomplete code and accepts an empty or com
 test('the incomplete-code message is configurable and an authored length rule replaces the default', async () => {
 	expect(await incompleteCodeError({ ...code, incompleteMessage: 'Finish the code' })).toBe('Finish the code');
 	expect(
-		await incompleteCodeError({ ...code, rules: [{ type: 'minLength', value: 2, message: 'Too short' }] }),
+		await incompleteCodeError({ ...code, rules: [{ $type: 'minLength', value: 2, message: 'Too short' }] }),
 	).toBeUndefined();
 });
 

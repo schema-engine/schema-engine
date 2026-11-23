@@ -33,7 +33,7 @@ const form = engine.defineForm({
 					id: 'name',
 					name: 'name',
 					label: 'Name',
-					rules: [{ type: 'required', message: 'Required' }],
+					rules: [{ $type: 'required', message: 'Required' }],
 				},
 				{ $type: 'rating', id: 'stars', name: 'stars', label: 'Rating' },
 				{ $type: 'submit', id: 'save', name: 'save', label: 'Save' },

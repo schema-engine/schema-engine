@@ -148,18 +148,18 @@ describe('createFormEngine', () => {
 		const registry = engine.getValidationRegistry();
 
 		expect(registry.has('phone')).toBe(true);
-		expect(getValidationRulesForElement({ $type: 'phone-input' }, registry)).toEqual([{ type: 'phone' }]);
+		expect(getValidationRulesForElement({ $type: 'phone-input' }, registry)).toEqual([{ $type: 'phone' }]);
 		expect(
 			getValidationRulesForElement(
 				{
 					$type: 'phone-input',
-					rules: [{ type: 'phone', message: 'Use a complete number' }],
+					rules: [{ $type: 'phone', message: 'Use a complete number' }],
 				},
 				registry,
 			),
-		).toEqual([{ type: 'phone', message: 'Use a complete number' }]);
+		).toEqual([{ $type: 'phone', message: 'Use a complete number' }]);
 
-		const schema = createZodSchemaFromRules([{ type: 'phone' }], createValidationContext(), registry);
+		const schema = createZodSchemaFromRules([{ $type: 'phone' }], createValidationContext(), registry);
 		expect(schema.safeParse('+44').success).toBe(false);
 		expect(schema.safeParse('+44-complete').success).toBe(true);
 	});
@@ -167,7 +167,7 @@ describe('createFormEngine', () => {
 	test('does not leak element validations between engines', () => {
 		const customValidation = {
 			$type: 'custom-leak-test',
-			schema: z.looseObject({ type: z.literal('custom-leak-test') }),
+			schema: z.looseObject({ $type: z.literal('custom-leak-test') }),
 			metadata: { name: 'Leak test' },
 			category: 'string',
 			defaultFor: ['leak-input'],

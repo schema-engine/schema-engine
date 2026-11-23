@@ -73,8 +73,8 @@ export function buildDependencyIndex(
 		const requiredReferences = constraints.flatMap((constraint: unknown) =>
 			typeof constraint === 'object' &&
 			constraint !== null &&
-			'action' in constraint &&
-			constraint.action === 'require' &&
+			'$type' in constraint &&
+			constraint.$type === 'require' &&
 			'field' in constraint &&
 			typeof constraint.field === 'string'
 				? [constraint.field]

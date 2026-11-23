@@ -22,7 +22,7 @@ const config: FormConfig = {
 					name: 'email',
 					$type: 'input',
 					inputType: 'email',
-					rules: [{ type: 'required', message: 'Email is required' }],
+					rules: [{ $type: 'required', message: 'Email is required' }],
 				},
 			],
 		},
@@ -62,7 +62,7 @@ const asyncConfig: FormConfig = {
 				{
 					name: 'email',
 					$type: 'input',
-					rules: [{ type: 'async', url: '/check', debounce: 0, disableCache: true }],
+					rules: [{ $type: 'async', url: '/check', debounce: 0, disableCache: true }],
 				},
 			],
 		},
@@ -241,7 +241,7 @@ describe('FormProvider validation', () => {
 						elements: ['first', 'second'].map((name) => ({
 							name,
 							$type: 'input',
-							rules: [{ type: 'required', message: `${name} is required` }],
+							rules: [{ $type: 'required', message: `${name} is required` }],
 						})),
 					},
 				],
@@ -304,7 +304,7 @@ describe('FormProvider validation', () => {
 							{
 								name: 'email',
 								$type: 'input',
-								rules: [{ type: 'async', url: '/check', debounce: 0, disableCache: true }],
+								rules: [{ $type: 'async', url: '/check', debounce: 0, disableCache: true }],
 							},
 						],
 					},

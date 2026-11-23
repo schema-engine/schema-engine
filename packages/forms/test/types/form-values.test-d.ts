@@ -92,9 +92,9 @@ const flat = engine.defineForm({
 			id: 'main',
 			title: 'Main',
 			elements: [
-				{ $type: 'text', name: 'email', rules: [{ type: 'required' }] },
+				{ $type: 'text', name: 'email', rules: [{ $type: 'required' }] },
 				{ $type: 'text', name: 'nickname' },
-				{ $type: 'count', name: 'age', rules: [{ type: 'required' }], disabled: true },
+				{ $type: 'count', name: 'age', rules: [{ $type: 'required' }], disabled: true },
 				{ $type: 'choice', name: 'size', options: [{ value: 1, label: 'S' }] },
 				{ $type: 'note', name: 'aside' },
 			],
@@ -119,25 +119,25 @@ const nested = engine.defineForm({
 			id: 'main',
 			title: 'Main',
 			elements: [
-				{ $type: 'text', name: 'address.street', rules: [{ type: 'required' }] },
+				{ $type: 'text', name: 'address.street', rules: [{ $type: 'required' }] },
 				{
 					$type: 'group',
 					name: 'profile',
 					elements: [
-						{ $type: 'text', name: 'first', rules: [{ type: 'required' }] },
+						{ $type: 'text', name: 'first', rules: [{ $type: 'required' }] },
 						{ $type: 'count', name: 'age' },
 					],
 				},
 				{
 					$type: 'rows',
 					name: 'tags',
-					elements: [{ $type: 'text', name: 'tag', rules: [{ type: 'required' }] }],
+					elements: [{ $type: 'text', name: 'tag', rules: [{ $type: 'required' }] }],
 				},
 				{
 					$type: 'rows',
 					name: 'contacts',
 					elements: [
-						{ $type: 'text', name: 'name', rules: [{ type: 'required' }] },
+						{ $type: 'text', name: 'name', rules: [{ $type: 'required' }] },
 						{ $type: 'text', name: 'email' },
 					],
 				},
@@ -146,8 +146,8 @@ const nested = engine.defineForm({
 		{
 			id: 'later',
 			title: 'Later',
-			constraints: [{ field: 'address.street', operator: 'is_not_empty', value: '', action: 'show' }],
-			elements: [{ $type: 'text', name: 'vat', rules: [{ type: 'required' }] }],
+			constraints: [{ field: 'address.street', operator: 'is_not_empty', value: '', $type: 'show' }],
+			elements: [{ $type: 'text', name: 'vat', rules: [{ $type: 'required' }] }],
 		},
 	],
 });
@@ -224,7 +224,7 @@ const groupRows = engine.defineForm({
 						{
 							$type: 'group',
 							name: 'place',
-							elements: [{ $type: 'text', name: 'city', rules: [{ type: 'required' }] }],
+							elements: [{ $type: 'text', name: 'city', rules: [{ $type: 'required' }] }],
 						},
 					],
 				},
@@ -311,7 +311,7 @@ profileForm(engine.validateForm({}));
 
 /** What can leave a key out: an element's own constraints or disabled, a parent's, a step's, and a wide list or boolean. */
 declare const wide: {
-	constraints: Array<{ field: string; operator: 'equals'; value: unknown; action: 'show' }>;
+	constraints: Array<{ field: string; operator: 'equals'; value: unknown; $type: 'show' }>;
 	disabled: boolean;
 };
 const conditional = engine.defineForm({
@@ -324,25 +324,25 @@ const conditional = engine.defineForm({
 				{
 					$type: 'text',
 					name: 'own',
-					rules: [{ type: 'required' }],
-					constraints: [{ field: 'x', operator: 'equals', value: 1, action: 'show' }],
+					rules: [{ $type: 'required' }],
+					constraints: [{ field: 'x', operator: 'equals', value: 1, $type: 'show' }],
 				},
-				{ $type: 'text', name: 'off', rules: [{ type: 'required' }], disabled: wide.disabled },
-				{ $type: 'text', name: 'wideList', rules: [{ type: 'required' }], constraints: wide.constraints },
+				{ $type: 'text', name: 'off', rules: [{ $type: 'required' }], disabled: wide.disabled },
+				{ $type: 'text', name: 'wideList', rules: [{ $type: 'required' }], constraints: wide.constraints },
 				{
 					$type: 'group',
 					name: 'parent',
 					disabled: true,
-					elements: [{ $type: 'text', name: 'inner', rules: [{ type: 'required' }] }],
+					elements: [{ $type: 'text', name: 'inner', rules: [{ $type: 'required' }] }],
 				},
-				{ $type: 'text', name: 'plain', rules: [{ type: 'required' }], constraints: [] },
+				{ $type: 'text', name: 'plain', rules: [{ $type: 'required' }], constraints: [] },
 			],
 		},
 		{
 			id: 'two',
 			title: 'Two',
 			constraints: wide.constraints,
-			elements: [{ $type: 'text', name: 'stepped', rules: [{ type: 'required' }] }],
+			elements: [{ $type: 'text', name: 'stepped', rules: [{ $type: 'required' }] }],
 		},
 	],
 });

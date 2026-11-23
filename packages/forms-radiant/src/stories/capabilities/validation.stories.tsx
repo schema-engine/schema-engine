@@ -27,8 +27,8 @@ const meta = {
 							inputType: 'email',
 							placeholder: 'name@example.com',
 							rules: [
-								{ type: 'required', message: 'Work email is required' },
-								{ type: 'email', message: 'Enter a valid work email' },
+								{ $type: 'required', message: 'Work email is required' },
+								{ $type: 'email', message: 'Enter a valid work email' },
 							],
 						},
 						{ $type: 'submit', id: 'submit', name: 'submit', label: 'Continue' },
@@ -64,8 +64,8 @@ export const BuiltInRules: Story = {
 							label: 'Email address',
 							inputType: 'email',
 							rules: [
-								{ type: 'required', message: 'Email address is required' },
-								{ type: 'email', message: 'Enter a valid email address' },
+								{ $type: 'required', message: 'Email address is required' },
+								{ $type: 'email', message: 'Enter a valid email address' },
 							],
 						},
 						{
@@ -75,8 +75,8 @@ export const BuiltInRules: Story = {
 							label: 'Password',
 							inputType: 'password',
 							rules: [
-								{ type: 'minLength', value: 8, message: 'Use at least 8 characters' },
-								{ type: 'pattern', value: '(?=.*\\d)', message: 'Include at least one number' },
+								{ $type: 'minLength', value: 8, message: 'Use at least 8 characters' },
+								{ $type: 'pattern', value: '(?=.*\\d)', message: 'Include at least one number' },
 							],
 						},
 						{
@@ -85,8 +85,8 @@ export const BuiltInRules: Story = {
 							name: 'teamSize',
 							label: 'Team size',
 							rules: [
-								{ type: 'min', value: 1, message: 'At least one person is required' },
-								{ type: 'max', value: 100, message: 'Use a number below 101' },
+								{ $type: 'min', value: 1, message: 'At least one person is required' },
+								{ $type: 'max', value: 100, message: 'Use a number below 101' },
 							],
 						},
 						{
@@ -95,14 +95,14 @@ export const BuiltInRules: Story = {
 							name: 'website',
 							label: 'Website URL',
 							inputType: 'url',
-							rules: [{ type: 'url', message: 'Enter a valid URL' }],
+							rules: [{ $type: 'url', message: 'Enter a valid URL' }],
 						},
 						{
 							$type: 'input',
 							id: 'server',
 							name: 'server',
 							label: 'Server IPv4 address',
-							rules: [{ type: 'ipv4', message: 'Enter a valid IPv4 address' }],
+							rules: [{ $type: 'ipv4', message: 'Enter a valid IPv4 address' }],
 						},
 						{ $type: 'submit', id: 'submit', name: 'submit', label: 'Validate fields' },
 					],
@@ -130,8 +130,8 @@ export const FormatRules: Story = {
 							name: 'uuid',
 							label: 'UUID',
 							rules: [
-								{ type: 'required', message: 'UUID is required' },
-								{ type: 'uuid', message: 'Enter a valid UUID' },
+								{ $type: 'required', message: 'UUID is required' },
+								{ $type: 'uuid', message: 'Enter a valid UUID' },
 							],
 						},
 						{
@@ -140,8 +140,8 @@ export const FormatRules: Story = {
 							name: 'ipv6',
 							label: 'Server IPv6 address',
 							rules: [
-								{ type: 'required', message: 'Server IPv6 address is required' },
-								{ type: 'ipv6', message: 'Enter a valid IPv6 address' },
+								{ $type: 'required', message: 'Server IPv6 address is required' },
+								{ $type: 'ipv6', message: 'Enter a valid IPv6 address' },
 							],
 						},
 						{
@@ -150,8 +150,8 @@ export const FormatRules: Story = {
 							name: 'jwt',
 							label: 'JSON Web Token',
 							rules: [
-								{ type: 'required', message: 'JSON Web Token is required' },
-								{ type: 'jwt', message: 'Enter a valid JWT' },
+								{ $type: 'required', message: 'JSON Web Token is required' },
+								{ $type: 'jwt', message: 'Enter a valid JWT' },
 							],
 						},
 						{
@@ -160,8 +160,8 @@ export const FormatRules: Story = {
 							name: 'base64',
 							label: 'Base64 value',
 							rules: [
-								{ type: 'required', message: 'Base64 value is required' },
-								{ type: 'base64', message: 'Enter Base64 data' },
+								{ $type: 'required', message: 'Base64 value is required' },
+								{ $type: 'base64', message: 'Enter Base64 data' },
 							],
 						},
 						{
@@ -170,8 +170,8 @@ export const FormatRules: Story = {
 							name: 'hash',
 							label: 'SHA-256 hash',
 							rules: [
-								{ type: 'required', message: 'SHA-256 hash is required' },
-								{ type: 'hash', algorithm: 'sha256', message: 'Enter a valid SHA-256 hash' },
+								{ $type: 'required', message: 'SHA-256 hash is required' },
+								{ $type: 'hash', algorithm: 'sha256', message: 'Enter a valid SHA-256 hash' },
 							],
 						},
 						{
@@ -180,8 +180,8 @@ export const FormatRules: Story = {
 							name: 'cuid',
 							label: 'CUID',
 							rules: [
-								{ type: 'required', message: 'CUID is required' },
-								{ type: 'cuid', message: 'Enter a valid CUID' },
+								{ $type: 'required', message: 'CUID is required' },
+								{ $type: 'cuid', message: 'Enter a valid CUID' },
 							],
 						},
 						{
@@ -190,8 +190,8 @@ export const FormatRules: Story = {
 							name: 'ulid',
 							label: 'ULID',
 							rules: [
-								{ type: 'required', message: 'ULID is required' },
-								{ type: 'ulid', message: 'Enter a valid ULID' },
+								{ $type: 'required', message: 'ULID is required' },
+								{ $type: 'ulid', message: 'Enter a valid ULID' },
 							],
 						},
 						{
@@ -200,8 +200,8 @@ export const FormatRules: Story = {
 							name: 'hex',
 							label: 'Hexadecimal value',
 							rules: [
-								{ type: 'required', message: 'Hexadecimal value is required' },
-								{ type: 'hex', message: 'Enter hexadecimal characters' },
+								{ $type: 'required', message: 'Hexadecimal value is required' },
+								{ $type: 'hex', message: 'Enter hexadecimal characters' },
 							],
 						},
 						{ $type: 'submit', id: 'submit', name: 'submit', label: 'Validate formats' },
@@ -230,9 +230,9 @@ export const AsyncUsernameAvailability: Story = {
 							name: 'username',
 							label: 'Username',
 							rules: [
-								{ type: 'required', message: 'Username is required > test: taken-user' },
+								{ $type: 'required', message: 'Username is required > test: taken-user' },
 								{
-									type: 'async',
+									$type: 'async',
 									url: '/api/validate-username',
 									debounce: 100,
 									disableCache: true,

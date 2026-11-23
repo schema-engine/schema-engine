@@ -30,7 +30,7 @@ async function mountPost(action = '/save') {
 						$type: 'input',
 						id: 'secret',
 						name: 'secret',
-						constraints: [{ field: 'name', operator: 'equals', value: 'show', action: 'show' }],
+						constraints: [{ field: 'name', operator: 'equals', value: 'show', $type: 'show' }],
 					},
 					{ $type: 'input', id: 'locked', name: 'locked', disabled: true, defaultValue: 'x' },
 					{

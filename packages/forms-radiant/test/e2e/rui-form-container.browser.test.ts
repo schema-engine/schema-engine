@@ -34,15 +34,15 @@ const config = engine.validateForm({
 					id: 'name',
 					name: 'name',
 					rules: [
-						{ type: 'required', id: 'name-required' },
-						{ type: 'async', url: '/check', disableCache: true },
+						{ $type: 'required', id: 'name-required' },
+						{ $type: 'async', url: '/check', disableCache: true },
 					],
 				},
 				{
 					$type: 'input',
 					id: 'email',
 					name: 'email',
-					rules: [{ type: 'minLength', value: 5, id: 'email-min' }],
+					rules: [{ $type: 'minLength', value: 5, id: 'email-min' }],
 				},
 				{
 					$type: 'arrayElements',
@@ -53,7 +53,7 @@ const config = engine.validateForm({
 							$type: 'input',
 							id: 'email',
 							name: 'email',
-							rules: [{ type: 'required', id: 'contact-required' }],
+							rules: [{ $type: 'required', id: 'contact-required' }],
 						},
 						{ $type: 'input', id: 'role', name: 'role' },
 					],
@@ -113,7 +113,7 @@ async function mount(options: { validationMode?: 'onBlur' | 'onChange' | 'onSubm
 	nativeForm.noValidate = true;
 	const fields = {
 		name: makeField('name'),
-		email: makeField('email', { type: 'email', required: '' }),
+		email: makeField('email', { $type: 'email', required: '' }),
 		first: makeField('contacts.0.email', { required: '' }),
 		second: makeField('contacts.1.email', { required: '' }),
 	};

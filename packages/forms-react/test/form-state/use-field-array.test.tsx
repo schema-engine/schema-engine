@@ -11,9 +11,9 @@ const contacts = markNormalizedElementConfig(
 	{
 		$type: 'arrayElements',
 		name: 'contacts',
-		rules: [{ type: 'minItems', value: 3, message: 'Add three' }],
+		rules: [{ $type: 'minItems', value: 3, message: 'Add three' }],
 		elements: [
-			{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Required' }] },
+			{ $type: 'input', name: 'email', rules: [{ $type: 'required', message: 'Required' }] },
 			{ $type: 'input', name: 'label' },
 		],
 	},

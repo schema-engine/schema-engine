@@ -63,7 +63,7 @@ describe('next', () => {
 
 describe('a check that an edit outran', () => {
 	test('ends overtaken: no focus, no move, and the next attempt may succeed', async () => {
-		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
+		const { runtime, host, gate } = setup(wizardConfig({}, [{ $type: 'gate' }]));
 		const moving = runtime.next();
 		await gateReached(gate);
 		runtime.container.setValue('email', 'b');
@@ -260,7 +260,7 @@ describe('the lock', () => {
 
 describe('goTo that a check outran, or a reset revoked', () => {
 	test('ends overtaken when an edit outruns the check of a step on the way, and cancelled when a reset comes first', async () => {
-		const { runtime, host, gate } = setup(wizardConfig({}, [{ type: 'gate' }]));
+		const { runtime, host, gate } = setup(wizardConfig({}, [{ $type: 'gate' }]));
 		fill(runtime, { email: 'a@b.c', street: 's' });
 		const first = runtime.next();
 		await releaseGate(gate);
@@ -289,7 +289,7 @@ describe('goTo that a check outran, or a reset revoked', () => {
 
 describe('a step check that could not run', () => {
 	test('ends failed in next, goTo and submit-as-Next, and moves nothing', async () => {
-		const { runtime } = setup(wizardConfig({}, [{ type: 'boom' }]));
+		const { runtime } = setup(wizardConfig({}, [{ $type: 'boom' }]));
 		const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 		fill(runtime, { email: 'a@b.c', street: 's' });
 		expect(await runtime.next()).toBe('failed');

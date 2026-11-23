@@ -71,7 +71,7 @@ export const demoFormConfig: FormConfig = {
 					name: 'country',
 					label: 'Country',
 					placeholder: 'Select your country',
-					rules: [{ type: 'required', message: 'Please select your country' }],
+					rules: [{ $type: 'required', message: 'Please select your country' }],
 					options: [
 						{ value: 'us', label: 'United States' },
 						{ value: 'ca', label: 'Canada' },
@@ -93,7 +93,7 @@ export const demoFormConfig: FormConfig = {
 					id: 'terms',
 					name: 'terms',
 					label: 'I agree to the terms and conditions',
-					rules: [{ type: 'required', message: 'You must accept the terms and conditions' }],
+					rules: [{ $type: 'required', message: 'You must accept the terms and conditions' }],
 				},
 				{
 					$type: 'submit',

@@ -15,11 +15,11 @@ import {
 const registry = createDefaultValidationRegistry();
 const element = (config: Record<string, unknown>) => markNormalizedElementConfig(config as unknown as ElementConfig);
 const input = (name: string, extra: Record<string, unknown> = {}) => element({ $type: 'input', name, ...extra });
-const when = (field: string, value: unknown, action: 'show' | 'hide' | 'require') => ({
+const when = (field: string, value: unknown, $type: 'show' | 'hide' | 'require') => ({
 	field,
 	operator: 'equals' as const,
 	value,
-	action,
+	$type,
 });
 
 /** hasCompany decides the company step; the company step's `wantsInvoice` decides the payment step's `vat`. */
@@ -28,12 +28,12 @@ const wizard = (): ValidationStep[] => [
 	{
 		id: 'company',
 		constraints: [when('hasCompany', true, 'show')],
-		elements: [input('wantsInvoice'), input('company', { rules: [{ type: 'required' }] })],
+		elements: [input('wantsInvoice'), input('company', { rules: [{ $type: 'required' }] })],
 	},
 	{
 		id: 'payment',
 		elements: [
-			input('vat', { constraints: [when('wantsInvoice', 'yes', 'show')], rules: [{ type: 'required' }] }),
+			input('vat', { constraints: [when('wantsInvoice', 'yes', 'show')], rules: [{ $type: 'required' }] }),
 			input('iban', { constraints: [when('wantsInvoice', 'yes', 'require')] }),
 		],
 	},

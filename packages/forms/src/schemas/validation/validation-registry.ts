@@ -45,13 +45,13 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	 * consumer-registered type is a plain string that `get` would otherwise need
 	 * a cast to reach at every call site.
 	 */
-	getRuleDependencies(rule: { type: string }): readonly string[];
+	getRuleDependencies(rule: { $type: string }): readonly string[];
 
 	/** The options of a rule its registration exposes to messages (`{ minLength: 8 }`), or `undefined` when it exposes none. */
-	getRuleParams(rule: { type: string }): Readonly<Record<string, unknown>> | undefined;
+	getRuleParams(rule: { $type: string }): Readonly<Record<string, unknown>> | undefined;
 
 	/** The fallback text of an issue of a rule: its author's `message`, or what its registration takes from the schema's `reported` text. */
-	getRuleMessage(rule: { type: string; message?: string }, reported: string | undefined): string | undefined;
+	getRuleMessage(rule: { $type: string; message?: string }, reported: string | undefined): string | undefined;
 
 	/** Registrations of one category. */
 	getByCategory(category: string): AnyValidationRegistration[];
@@ -79,26 +79,26 @@ export interface ValidationRegistry extends ReadOnlyRegistry<AnyValidationRegist
 	 * it: a renderer that did exactly that is why cross-field rules were inert on
 	 * one of the two renderers. Build it with `createValidationContext`.
 	 *
-	 * The rule type is generic, not `{ type: string }`, so a rule literal with extra properties such as
-	 * `{ type: 'min', value: 10 }` is not rejected as an excess-property error.
+	 * The rule type is generic, not `{ $type: string }`, so a rule literal with extra properties such as
+	 * `{ $type: 'min', value: 10 }` is not rejected as an excess-property error.
 	 */
-	createSchema<T extends { type: string }>(rule: T, context: ValidationScope): z.ZodMiniType;
+	createSchema<T extends { $type: string }>(rule: T, context: ValidationScope): z.ZodMiniType;
 
 	/**
 	 * Whether a rule can be used, and the rule as its registration parses it.
 	 *
 	 * @remarks
-	 * The one check of a rule written in a form config: its `type` is registered, its options satisfy the
+	 * The one check of a rule written in a form config: its `$type` is registered, its options satisfy the
 	 * registration's `schema`, and the handler builds a schema for it, so a rule that throws is found when
 	 * the form config is validated and not when a user first types. The registration owns the shape, so a
 	 * registration that replaces a built-in decides its options. The rule that comes back is the parsed
-	 * one, which is what the handler runs on: the schema's defaults applied, and `type`, `message`, `id` and
+	 * one, which is what the handler runs on: the schema's defaults applied, and `$type`, `message`, `id` and
 	 * `severity` kept from the authored rule even when the schema is a plain object that strips them.
 	 *
 	 * Issue paths are relative to the rule: an option the schema refuses is reported at its key, and a
-	 * type nothing registers or a handler that throws at `type`.
+	 * `$type` nothing registers or a handler that throws at `$type`.
 	 */
-	check(rule: { type: string }): RuleCheck;
+	check(rule: { $type: string }): RuleCheck;
 }
 
 /** What {@link ValidationRegistry.check} found: the rule as its registration parses it, or the issues that make it unusable. */
@@ -119,7 +119,7 @@ function deriveDefaultRules(
 	for (const registration of registrations) {
 		for (const fieldType of registration.defaultFor ?? []) {
 			const rules = byFieldType.get(fieldType) ?? [];
-			rules.push(Object.freeze({ type: registration.$type }));
+			rules.push(Object.freeze({ $type: registration.$type }));
 			byFieldType.set(fieldType, rules);
 		}
 	}
@@ -137,7 +137,7 @@ const COMMON_RULE_KEYS = Object.keys(BaseValidationRuleSchema.shape);
  * The rule as its registration parsed it, with the fields every rule has put back from the authored rule.
  *
  * @remarks
- * The engine owns `type`, `message`, `id` and `severity`: a registration whose schema is a plain object
+ * The engine owns `$type`, `message`, `id` and `severity`: a registration whose schema is a plain object
  * strips them, which would turn a `warning` into a blocking error and lose the author's text and `id`.
  * Options and defaults stay the registration's.
  */
@@ -184,32 +184,32 @@ export function createValidationRegistry(
 		...registry,
 		getDefaultRulesForFieldType: (fieldType) => defaultRulesByFieldType.get(fieldType) ?? NO_DEFAULT_RULES,
 		getRuleDependencies: (rule) =>
-			(registry.get(rule.type) as StoredValidationRegistration | undefined)?.dependsOn?.(rule) ?? [],
+			(registry.get(rule.$type) as StoredValidationRegistration | undefined)?.dependsOn?.(rule) ?? [],
 		getRuleMessage: (rule, reported) => {
-			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
+			const registration = registry.get(rule.$type) as StoredValidationRegistration | undefined;
 			return registration?.message ? registration.message(rule, reported) : rule.message;
 		},
-		getRuleParams: (rule) => (registry.get(rule.type) as StoredValidationRegistration | undefined)?.params?.(rule),
+		getRuleParams: (rule) => (registry.get(rule.$type) as StoredValidationRegistration | undefined)?.params?.(rule),
 		getByCategory: (category) => registry.all().filter((registration) => registration.category === category),
 		fetch,
 		createSchema: (rule, context) => {
-			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
+			const registration = registry.get(rule.$type) as StoredValidationRegistration | undefined;
 			if (!registration) {
-				throw new ValidationRuleError(rule.type, unknownRuleMessage(rule.type, registry.all()));
+				throw new ValidationRuleError(rule.$type, unknownRuleMessage(rule.$type, registry.all()));
 			}
 
 			try {
 				return registration.handler(rule, { ...context, fetch });
 			} catch (cause) {
-				throw new ValidationRuleError(rule.type, `Validation rule '${rule.type}' could not be built.`, {
+				throw new ValidationRuleError(rule.$type, `Validation rule '${rule.$type}' could not be built.`, {
 					cause,
 				});
 			}
 		},
 		check: (rule) => {
-			const registration = registry.get(rule.type) as StoredValidationRegistration | undefined;
+			const registration = registry.get(rule.$type) as StoredValidationRegistration | undefined;
 			if (!registration) {
-				return { ok: false, issues: [issueAt(['type'], unknownRuleMessage(rule.type, registry.all()))] };
+				return { ok: false, issues: [issueAt(['$type'], unknownRuleMessage(rule.$type, registry.all()))] };
 			}
 			const common = safeParseStandardSchema(BaseValidationRuleSchema, rule);
 			if (!common.success) {
@@ -226,7 +226,7 @@ export function createValidationRegistry(
 				const reason = error instanceof Error ? error.message : String(error);
 				return {
 					ok: false,
-					issues: [issueAt(['type'], `Validation rule '${rule.type}' could not be built: ${reason}`)],
+					issues: [issueAt(['$type'], `Validation rule '${rule.$type}' could not be built: ${reason}`)],
 				};
 			}
 			return { ok: true, rule: parsedRule };

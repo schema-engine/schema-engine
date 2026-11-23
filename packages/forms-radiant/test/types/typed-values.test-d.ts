@@ -14,8 +14,8 @@ const profile = engine.defineForm({
 			id: 'main',
 			title: 'Main',
 			elements: [
-				{ $type: 'input', name: 'email', rules: [{ type: 'required' }] },
-				{ $type: 'number', name: 'age', rules: [{ type: 'required' }] },
+				{ $type: 'input', name: 'email', rules: [{ $type: 'required' }] },
+				{ $type: 'number', name: 'age', rules: [{ $type: 'required' }] },
 			],
 		},
 	],

@@ -75,7 +75,7 @@ const checked = {
 	$type: 'input',
 	id: 'name',
 	name: 'name',
-	rules: [{ type: 'async', url: '/check', disableCache: true }],
+	rules: [{ $type: 'async', url: '/check', disableCache: true }],
 };
 
 const submit = (host: HTMLElement) => host.querySelector('form')!.requestSubmit();
@@ -147,7 +147,7 @@ test('a validator that cannot run is an invalid submission with its failure, nev
 });
 
 test('an invalid submission counts, reports itself and focuses the first invalid field in document order', async () => {
-	const required = [{ type: 'required', message: 'Required' }];
+	const required = [{ $type: 'required', message: 'Required' }];
 	const { host, ruiForm, instance, onSubmit } = await mount([
 		{ $type: 'input', id: 'first', name: 'first', label: 'First' },
 		{ $type: 'input', id: 'second', name: 'second', label: 'Second', rules: required },
@@ -167,7 +167,13 @@ test('an invalid submission counts, reports itself and focuses the first invalid
 
 test('an invalid submission never starts, and a valid one starts and then completes', async () => {
 	const { host, ruiForm } = await mount([
-		{ $type: 'input', id: 'name', name: 'name', label: 'Name', rules: [{ type: 'required', message: 'Required' }] },
+		{
+			$type: 'input',
+			id: 'name',
+			name: 'name',
+			label: 'Name',
+			rules: [{ $type: 'required', message: 'Required' }],
+		},
 	]);
 	const events: string[] = [];
 	for (const type of ['start', 'invalid', 'complete']) {
@@ -218,7 +224,7 @@ test('a validation hung on an old form does not hold back the next form', async 
 
 test('moving the instance keeps its form, and the controls still write to it', async () => {
 	const { host, container, instance } = await mount([
-		{ $type: 'input', id: 'name', name: 'name', rules: [{ type: 'required', message: 'Required' }] },
+		{ $type: 'input', id: 'name', name: 'name', rules: [{ $type: 'required', message: 'Required' }] },
 	]);
 	await userEvent.fill(host.querySelector('input')!, 'Ada');
 	container.blur('name');
@@ -240,7 +246,7 @@ test('moving the instance keeps its form, and the controls still write to it', a
 
 test('reset restores the defaults, and clears touched, errors and dirty', async () => {
 	const { host, container } = await mount([
-		{ $type: 'input', id: 'name', name: 'name', defaultValue: 'D', rules: [{ type: 'minLength', value: 5 }] },
+		{ $type: 'input', id: 'name', name: 'name', defaultValue: 'D', rules: [{ $type: 'minLength', value: 5 }] },
 	]);
 	container.setValue('name', 'abc');
 	container.blur('name');
@@ -300,7 +306,7 @@ test('a native fact of an engine-rendered input reaches the container and the pa
 
 test("the formatter is the renderer's, else the engine's, and changing it refreshes the text", async () => {
 	const { host, container } = await mount([
-		{ $type: 'input', id: 'name', name: 'name', label: 'Name', rules: [{ type: 'required' }] },
+		{ $type: 'input', id: 'name', name: 'name', label: 'Name', rules: [{ $type: 'required' }] },
 	]);
 	await container.validate();
 	await expect.poll(() => host.textContent).toContain('engine:name:validation:required');

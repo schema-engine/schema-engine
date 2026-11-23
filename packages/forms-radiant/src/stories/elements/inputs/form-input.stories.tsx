@@ -37,11 +37,11 @@ export const WithValidation: Story = {
 				inputType: 'text',
 				rules: [
 					{
-						type: 'required',
+						$type: 'required',
 						message: 'Name is required',
 					},
 					{
-						type: 'minLength',
+						$type: 'minLength',
 						value: 2,
 						message: 'Name must be at least 2 characters',
 					},

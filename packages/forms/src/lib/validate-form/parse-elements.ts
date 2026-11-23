@@ -95,10 +95,10 @@ export function parseActionList(
  * Holds each rule of an element to its registration, and replaces it with the rule as the registration parses it.
  *
  * @remarks
- * The element's own schema accepts a rule of any `type`, so this is where a rule is held to the
+ * The element's own schema accepts a rule of any `$type`, so this is where a rule is held to the
  * registry. Every rule is checked, so a form with two bad rules reports both. An issue keeps the path
  * the registry gave it, laid under the rule: a refused option is at its key, a type nothing registers or
- * a handler that throws is at the rule's `type`.
+ * a handler that throws is at the rule's `$type`.
  */
 function checkElementRules(
 	item: FormTaggedConfig,
@@ -110,11 +110,11 @@ function checkElementRules(
 	const issues: FormValidationIssue[] = [];
 	const rules: unknown[] = [];
 	for (const [index, rule] of item.rules.entries()) {
-		if (typeof rule !== 'object' || rule === null || !('type' in rule) || typeof rule.type !== 'string') {
+		if (typeof rule !== 'object' || rule === null || !('$type' in rule) || typeof rule.$type !== 'string') {
 			rules.push(rule);
 			continue;
 		}
-		const checked = checkRule(rule as { type: string });
+		const checked = checkRule(rule as { $type: string });
 		if (checked.ok) {
 			rules.push(checked.rule);
 			continue;

@@ -79,7 +79,7 @@ const formConfig = {
 			label: 'Email Address',
 			inputType: 'email',
 			placeholder: 'Enter your email',
-			rules: [{ type: 'required', message: 'Email is required' }],
+			rules: [{ $type: 'required', message: 'Email is required' }],
 		},
 		{
 			$type: 'textarea',
@@ -261,10 +261,10 @@ All fields support validation through the `rules` property:
 	name: 'email',
 	label: 'Email',
 	rules: [
-		{ type: 'required', message: 'Email is required' },
-		{ type: 'email', message: 'Invalid email format' },
-		{ type: 'minLength', value: 5, message: 'Email too short' },
-		{ type: 'maxLength', value: 100, message: 'Email too long' },
+		{ $type: 'required', message: 'Email is required' },
+		{ $type: 'email', message: 'Invalid email format' },
+		{ $type: 'minLength', value: 5, message: 'Email too short' },
+		{ $type: 'maxLength', value: 100, message: 'Email too long' },
 	],
 }
 ```
@@ -322,7 +322,7 @@ Show/hide or enable/disable fields based on conditions:
 			field: 'reason',
 			operator: 'equals',
 			value: 'other',
-			action: 'show', // show, hide, enable, disable, require
+			$type: 'show', // show, hide, enable, disable, require
 		},
 	],
 }

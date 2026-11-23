@@ -83,7 +83,7 @@ test('an empty optional code is valid and an authored length rule replaces the d
 
 	const { field } = await mountField({
 		...otp,
-		rules: [{ type: 'minLength', value: 4, message: 'Four at least' }],
+		rules: [{ $type: 'minLength', value: 4, message: 'Four at least' }],
 	});
 	const inputs = () => Array.from(document.querySelectorAll<HTMLInputElement>('se-input-otp input'));
 	await userEvent.type(inputs()[0]!, '12');

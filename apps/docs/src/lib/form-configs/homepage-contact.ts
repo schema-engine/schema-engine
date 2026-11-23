@@ -25,8 +25,8 @@ export const contactFormConfig = {
 					label: 'Email Address',
 					placeholder: 'Enter your email',
 					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Please enter a valid email address' },
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Please enter a valid email address' },
 					],
 				},
 				{
@@ -37,7 +37,7 @@ export const contactFormConfig = {
 					placeholder: 'Your message...',
 					rules: [
 						{
-							type: 'minLength',
+							$type: 'minLength',
 							value: 10,
 							message: 'Message must be at least 10 characters long',
 						},

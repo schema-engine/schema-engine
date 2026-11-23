@@ -48,7 +48,7 @@ const street: ElementConfig = {
 	$type: 'input',
 	name: 'address.street',
 	id: 'street',
-	rules: [{ type: 'minLength', value: 3, message: 'Street is too short' }],
+	rules: [{ $type: 'minLength', value: 3, message: 'Street is too short' }],
 };
 const config: FormConfig = {
 	id: 'adoption',
@@ -65,7 +65,7 @@ const config: FormConfig = {
 						{
 							...street,
 							name: 'street',
-							rules: [{ type: 'required', message: 'Street is required' }, ...street.rules!],
+							rules: [{ $type: 'required', message: 'Street is required' }, ...street.rules!],
 						},
 					],
 				},
@@ -169,7 +169,7 @@ const vat: ElementConfig = {
 	$type: 'input',
 	name: 'vatNumber',
 	id: 'vat',
-	constraints: [{ action: 'require', field: 'customerType', operator: 'equals', value: 'company' }],
+	constraints: [{ $type: 'require', field: 'customerType', operator: 'equals', value: 'company' }],
 };
 function Vat() {
 	const { fieldProps, defaultValue, error } = useFormField(vat);
@@ -250,7 +250,7 @@ test('submission validates once before invoking the submit callback', async () =
 								{
 									$type: 'input',
 									name: 'email',
-									rules: [{ type: 'async', url: '/validate', debounce: 0, disableCache: true }],
+									rules: [{ $type: 'async', url: '/validate', debounce: 0, disableCache: true }],
 								},
 							],
 						},

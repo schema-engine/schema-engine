@@ -48,10 +48,10 @@ describe('Phone input field schema', () => {
 			$type: 'phone-input',
 			id: 'phone',
 			name: 'phone',
-			rules: [{ type: 'required', message: 'Phone number is required' }],
+			rules: [{ $type: 'required', message: 'Phone number is required' }],
 		});
 
-		expect(result.rules).toEqual([{ type: 'required', message: 'Phone number is required' }]);
+		expect(result.rules).toEqual([{ $type: 'required', message: 'Phone number is required' }]);
 	});
 
 	test('preserves an explicitly configured phone-validation message', () => {
@@ -59,9 +59,9 @@ describe('Phone input field schema', () => {
 			$type: 'phone-input',
 			id: 'phone',
 			name: 'phone',
-			rules: [{ type: 'phone', message: 'Use a complete number' }],
+			rules: [{ $type: 'phone', message: 'Use a complete number' }],
 		});
 
-		expect(result.rules).toEqual([{ type: 'phone', message: 'Use a complete number' }]);
+		expect(result.rules).toEqual([{ $type: 'phone', message: 'Use a complete number' }]);
 	});
 });

@@ -76,7 +76,7 @@ Define complex forms with simple JSON schemas. No more writing repetitive JSX.
 					"id": "name",
 					"name": "name",
 					"label": "Full Name",
-					"rules": [{ "type": "required", "message": "Name is required" }]
+					"rules": [{ "$type": "required", "message": "Name is required" }]
 				},
 				{
 					"$type": "input",
@@ -85,8 +85,8 @@ Define complex forms with simple JSON schemas. No more writing repetitive JSX.
 					"name": "email",
 					"label": "Email",
 					"rules": [
-						{ "type": "required", "message": "Email is required" },
-						{ "type": "email", "message": "Please enter a valid email" }
+						{ "$type": "required", "message": "Email is required" },
+						{ "$type": "email", "message": "Please enter a valid email" }
 					]
 				}
 			]

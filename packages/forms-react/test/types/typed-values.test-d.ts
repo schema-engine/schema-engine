@@ -20,9 +20,9 @@ const profile = engine.defineForm({
 			id: 'main',
 			title: 'Main',
 			elements: [
-				{ $type: 'input', name: 'email', rules: [{ type: 'required' }] },
+				{ $type: 'input', name: 'email', rules: [{ $type: 'required' }] },
 				{ $type: 'select', name: 'stars', options: [{ value: 1, label: 'One' }] },
-				{ $type: 'checkbox', name: 'agree', rules: [{ type: 'required' }] },
+				{ $type: 'checkbox', name: 'agree', rules: [{ $type: 'required' }] },
 			],
 		},
 	],

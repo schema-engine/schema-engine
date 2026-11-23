@@ -71,7 +71,7 @@ describe('collectStepFieldPaths', () => {
 		const element = normalizeContainerFixture({
 			$type: 'arrayElements',
 			name: 'tags',
-			elements: [{ $type: 'input', name: 'value', rules: [{ type: 'required', message: 'Tag is required' }] }],
+			elements: [{ $type: 'input', name: 'value', rules: [{ $type: 'required', message: 'Tag is required' }] }],
 		});
 		const values = { tags: ['', 'valid'] };
 		const step = { elements: [element] };
@@ -88,7 +88,7 @@ describe('collectStepFieldPaths', () => {
 		const element = normalizeContainerFixture({
 			$type: 'arrayElements',
 			name: 'tags',
-			elements: [{ $type: 'input', name: 'ignored', rules: [{ type: 'required', message: 'Tag is required' }] }],
+			elements: [{ $type: 'input', name: 'ignored', rules: [{ $type: 'required', message: 'Tag is required' }] }],
 		});
 		const tags: undefined[] = [];
 		tags.length = 1;
@@ -111,7 +111,7 @@ describe('collectStepFieldPaths', () => {
 					$type: 'arrayElements',
 					name: 'tags',
 					elements: [
-						{ $type: 'input', name: 'value', rules: [{ type: 'required', message: 'Tag is required' }] },
+						{ $type: 'input', name: 'value', rules: [{ $type: 'required', message: 'Tag is required' }] },
 					],
 				},
 				{ $type: 'input', name: 'label' },
@@ -139,7 +139,7 @@ describe('collectStepFieldPaths', () => {
 						{
 							$type: 'input',
 							name: 'ignored',
-							rules: [{ type: 'required', message: 'Tag is required' }],
+							rules: [{ $type: 'required', message: 'Tag is required' }],
 						},
 					],
 				},
@@ -160,7 +160,7 @@ describe('effectiveRulesFor', () => {
 	const field = normalizeElement({
 		$type: 'input',
 		name: 'taxId',
-		constraints: [{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' }],
+		constraints: [{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' }],
 	});
 
 	test('adds required while its constraint holds and removes the synthetic rule when it does not', () => {
@@ -177,7 +177,7 @@ describe('effectiveRulesFor', () => {
 			registry,
 		});
 
-		expect(requiredRules).toEqual([{ type: 'required' }]);
+		expect(requiredRules).toEqual([{ $type: 'required' }]);
 		expect(optionalRules).toEqual([]);
 	});
 });
@@ -188,7 +188,7 @@ describe('validateFieldValue', () => {
 			element: normalizeElement({
 				$type: 'input',
 				name: 'taxId',
-				constraints: [{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' }],
+				constraints: [{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' }],
 			}),
 			value: '',
 			values: { accountType: 'business', taxId: '' },
@@ -208,7 +208,7 @@ describe('validateFieldValue', () => {
 		const element = normalizeElement({
 			$type: 'input',
 			name: 'email',
-			rules: [{ type: 'async', url: '/api/check', debounce: 300, disableCache: true }],
+			rules: [{ $type: 'async', url: '/api/check', debounce: 300, disableCache: true }],
 		});
 		const debounceScope = createDebounceScope();
 
@@ -251,10 +251,10 @@ describe('validateFormValues', () => {
 			$type: 'fieldset',
 			name: 'address',
 			elements: [
-				{ $type: 'input', name: 'street', rules: [{ type: 'required', message: 'Street is required' }] },
+				{ $type: 'input', name: 'street', rules: [{ $type: 'required', message: 'Street is required' }] },
 			],
 		},
-		{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Email is required' }] },
+		{ $type: 'input', name: 'email', rules: [{ $type: 'required', message: 'Email is required' }] },
 	]);
 
 	test('returns nested address errors and validates only requested names', async () => {
@@ -273,7 +273,7 @@ describe('validateFormValues', () => {
 		const company = normalizeElement({
 			$type: 'fieldset',
 			name: 'company',
-			constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+			constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'require' }],
 			elements: [
 				{ $type: 'input', name: 'vat' },
 				{ $type: 'fieldset', name: 'office', elements: [{ $type: 'input', name: 'street' }] },
@@ -295,7 +295,7 @@ describe('validateFormValues', () => {
 		const company = normalizeElement({
 			$type: 'fieldset',
 			name: 'company',
-			rules: [{ type: 'required' }],
+			rules: [{ $type: 'required' }],
 			elements: [{ $type: 'input', name: 'vat' }],
 		});
 		const errors = await issuesOf({
@@ -312,7 +312,7 @@ describe('validateFormValues', () => {
 		const languages = normalizeElement({
 			$type: 'input',
 			name: 'languages',
-			rules: [{ type: 'minItems', value: 1, message: 'Select a language' }],
+			rules: [{ $type: 'minItems', value: 1, message: 'Select a language' }],
 		});
 		const errors = await issuesOf({
 			steps: [{ elements: [languages] }],
@@ -328,7 +328,7 @@ describe('validateFormValues', () => {
 		const throwing = createDefaultValidationRegistry([
 			{
 				$type: 'boom',
-				schema: z.object({ type: z.literal('boom') }),
+				schema: z.object({ $type: z.literal('boom') }),
 				metadata: { name: 'Boom' },
 				category: 'generic',
 				handler: () =>
@@ -343,7 +343,7 @@ describe('validateFormValues', () => {
 			element: normalizeElement({
 				$type: 'input',
 				name: 'code',
-				rules: [{ type: 'minLength', value: 5, message: 'Too short' }, { type: 'boom' } as never],
+				rules: [{ $type: 'minLength', value: 5, message: 'Too short' }, { $type: 'boom' } as never],
 			}),
 			value: 'a',
 			values: { code: 'a' },
@@ -361,7 +361,7 @@ describe('validateFormValues', () => {
 		const field = normalizeElement({
 			$type: 'input',
 			name: 'email',
-			rules: [{ type: 'required', message: 'Email is required' }],
+			rules: [{ $type: 'required', message: 'Email is required' }],
 		});
 		const input = { steps: [{ elements: [field] }], values: {}, registry, debounceScope: createDebounceScope() };
 
@@ -374,8 +374,8 @@ describe('validateFormValues', () => {
 			$type: 'input',
 			name: 'code',
 			rules: [
-				{ type: 'minLength', value: 5, message: 'Too short' },
-				{ type: 'pattern', value: '^\\d+$', message: 'Digits only' },
+				{ $type: 'minLength', value: 5, message: 'Too short' },
+				{ $type: 'pattern', value: '^\\d+$', message: 'Digits only' },
 			],
 		});
 		const errors = await issuesOf({
@@ -395,9 +395,9 @@ describe('validateFormValues', () => {
 		const contacts = normalizeContainerFixture({
 			$type: 'arrayElements',
 			name: 'contacts',
-			rules: [{ type: 'minItems', value: 2, message: 'Add two contacts' }],
+			rules: [{ $type: 'minItems', value: 2, message: 'Add two contacts' }],
 			elements: [
-				{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Email is required' }] },
+				{ $type: 'input', name: 'email', rules: [{ $type: 'required', message: 'Email is required' }] },
 				{ $type: 'input', name: 'label' },
 			],
 		});
@@ -421,7 +421,7 @@ describe('validateFormValues', () => {
 		const contacts = normalizeElement({
 			$type: 'arrayElements',
 			name: 'contacts',
-			elements: [{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Email is required' }] }],
+			elements: [{ $type: 'input', name: 'email', rules: [{ $type: 'required', message: 'Email is required' }] }],
 		});
 		const errors = await issuesOf({
 			steps: [{ elements: [contacts] }],
@@ -442,7 +442,7 @@ describe('validateFormValues', () => {
 				{
 					$type: 'arrayElements',
 					name: 'phones',
-					rules: [{ type: 'minItems', value: 1 }],
+					rules: [{ $type: 'minItems', value: 1 }],
 					elements: [{ $type: 'input', name: 'number' }],
 				},
 			],
@@ -468,7 +468,7 @@ describe('resolveParticipation', () => {
 		{
 			$type: 'input',
 			name: 'company',
-			constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+			constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 		},
 		{ $type: 'input', name: 'locked', disabled: true },
 		{
@@ -479,7 +479,7 @@ describe('resolveParticipation', () => {
 				{
 					$type: 'input',
 					name: 'fax',
-					constraints: [{ field: 'role', operator: 'equals', value: 'office', action: 'hide' }],
+					constraints: [{ field: 'role', operator: 'equals', value: 'office', $type: 'hide' }],
 				},
 			],
 		},
@@ -512,8 +512,8 @@ describe('resolveParticipation', () => {
 
 	test('validateFormValues does not run the rules of an excluded path', async () => {
 		const required = normalizeElements([
-			{ $type: 'input', name: 'locked', disabled: true, rules: [{ type: 'required' }] },
-			{ $type: 'input', name: 'open', rules: [{ type: 'required' }] },
+			{ $type: 'input', name: 'locked', disabled: true, rules: [{ $type: 'required' }] },
+			{ $type: 'input', name: 'open', rules: [{ $type: 'required' }] },
 		]);
 		const { issues } = await validateFormValues({
 			steps: [{ elements: required }],
@@ -533,8 +533,8 @@ describe('rule issues', () => {
 				$type: 'input',
 				name: 'email',
 				rules: [
-					{ type: 'email', id: 'email-format', message: 'Not an email', pattern: '@corp\\.com$' },
-					{ type: 'minLength', value: 30, severity: 'warning' },
+					{ $type: 'email', id: 'email-format', message: 'Not an email', pattern: '@corp\\.com$' },
+					{ $type: 'minLength', value: 30, severity: 'warning' },
 				],
 			}),
 			value: 'a@b.c',
@@ -563,7 +563,7 @@ describe('an array with one child', () => {
 			$type: 'arrayElements',
 			name: 'users',
 			...(objectRows ? { initialValues: { name: '' } } : {}),
-			elements: [{ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Name is required' }] }],
+			elements: [{ $type: 'input', name: 'name', rules: [{ $type: 'required', message: 'Name is required' }] }],
 		});
 		return issuesOf({ steps: [{ elements: [element] }], values, registry, debounceScope: createDebounceScope() });
 	};

@@ -58,7 +58,7 @@ export const contactFormConfig: FormConfig = {
 					name: 'firstName',
 					label: 'First Name',
 					inputType: 'text',
-					rules: [{ type: 'required', message: 'First name is required' }],
+					rules: [{ $type: 'required', message: 'First name is required' }],
 				},
 				{
 					$type: 'input',
@@ -67,8 +67,8 @@ export const contactFormConfig: FormConfig = {
 					label: 'Email Address',
 					inputType: 'email',
 					rules: [
-						{ type: 'required', message: 'Email is required' },
-						{ type: 'email', message: 'Please enter a valid email address' },
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Please enter a valid email address' },
 					],
 				},
 				{
@@ -81,7 +81,7 @@ export const contactFormConfig: FormConfig = {
 						{ value: 'support', label: 'Technical Support' },
 						{ value: 'billing', label: 'Billing Question' },
 					],
-					rules: [{ type: 'required', message: 'Please select a subject' }],
+					rules: [{ $type: 'required', message: 'Please select a subject' }],
 				},
 				{
 					$type: 'select',
@@ -98,7 +98,7 @@ export const contactFormConfig: FormConfig = {
 							field: 'subject',
 							operator: 'equals',
 							value: 'support',
-							action: 'show',
+							$type: 'show',
 						},
 					],
 				},
@@ -109,8 +109,8 @@ export const contactFormConfig: FormConfig = {
 					label: 'Message',
 					rows: 4,
 					rules: [
-						{ type: 'required', message: 'Message is required' },
-						{ type: 'minLength', value: 10, message: 'Message must be at least 10 characters' },
+						{ $type: 'required', message: 'Message is required' },
+						{ $type: 'minLength', value: 10, message: 'Message must be at least 10 characters' },
 					],
 				},
 			],
@@ -162,7 +162,7 @@ Notice the `priority` field includes a `constraints` array:
 			"field": "subject",
 			"operator": "equals",
 			"value": "support",
-			"action": "show"
+			"$type": "show"
 		}
 	]
 }
@@ -192,24 +192,24 @@ Schema Engine uses a declarative validation system:
 
 ```typescript
 // Required field
-rules: [{ type: 'required', message: 'This field is required' }];
+rules: [{ $type: 'required', message: 'This field is required' }];
 
 // Email validation
 rules: [
-	{ type: 'required', message: 'Email is required' },
-	{ type: 'email', message: 'Please enter a valid email' },
+	{ $type: 'required', message: 'Email is required' },
+	{ $type: 'email', message: 'Please enter a valid email' },
 ];
 
 // Length validation
 rules: [
-	{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' },
-	{ type: 'maxLength', value: 100, message: 'Must be less than 100 characters' },
+	{ $type: 'minLength', value: 3, message: 'Must be at least 3 characters' },
+	{ $type: 'maxLength', value: 100, message: 'Must be less than 100 characters' },
 ];
 
 // Pattern validation
 rules: [
 	{
-		type: 'pattern',
+		$type: 'pattern',
 		value: '^[A-Za-z\\s]+$',
 		message: 'Only letters and spaces allowed',
 	},
