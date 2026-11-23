@@ -1,0 +1,66 @@
+---
+title: 'API reference'
+description: 'The entry points of @schema-engine/forms-radiant, the factory, the renderer and its props, the registrations and the controllers.'
+order: 7
+---
+
+# API reference
+
+## Entry points
+
+| Import                                                     | Holds                                                                                             |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-radiant`                             | The factory, `FormRenderer`, the registrations barrel, the recipes, the controllers and the hosts |
+| `@schema-engine/forms-radiant/index.css`                   | The renderer's stylesheet                                                                         |
+| `@schema-engine/forms-radiant/registrations`               | Each element registration by name, such as `InputElementRegistration`                             |
+| `@schema-engine/forms-radiant/adapters/radiant`            | `FormController` and `FormEngineController`                                                       |
+| `@schema-engine/forms-radiant/registries/builder-registry` | `createRadiantFormEngine`                                                                         |
+| `@schema-engine/forms-radiant/hooks`                       | Helpers for building elements: `combineHandlers`, `mergeFieldGridHost`, `mergeChildrenGridHost`   |
+| `@schema-engine/forms-radiant/primitives`                  | The rendering primitives                                                                          |
+| `@schema-engine/forms-radiant/contexts`                    | The contexts the hosts publish                                                                    |
+
+## createRadiantFormEngine
+
+```ts
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+```
+
+It takes the options of `createFormEngine` and returns the same engine type. It prepends the canonical Radiant recipes (`radiantRecipes`) to the `recipes` you pass, so a recipe of yours with the same `$type` replaces a built-in one. It registers no element: pass `schemaFormRegistrations`, a subset or your own. [Engine and registrations](/docs/forms/builder) covers the options.
+
+## FormRenderer
+
+A view that renders a form with Radiant elements. It validates the config with the engine, so a plain config object or a normalized one both work.
+
+| Prop               | Meaning                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine`           | The form engine. A form that only renders on the client passes it here. See [Server rendering](/docs/forms-radiant/server-rendering) for the rest |
+| `config`           | A form config, or the result of `engine.defineForm` or `engine.validateForm`                                                                      |
+| `defaultValues`    | Values the form starts from, typed from the config                                                                                                |
+| `onSubmit`         | Called with the values that passed validation, and `{ setServerErrors, fetch }`. Typed from the config                                            |
+| `onChange`         | Called with the form's values when they change, never for a touch or an error                                                                     |
+| `onAction`         | Called with each submit action that succeeded. Typed by the engine's actions                                                                      |
+| `formatIssue`      | Words an issue for this renderer's forms. It wins over the engine's                                                                               |
+| `action`, `method` | A native post target. A form with them and no `onSubmit` posts natively after validation passes                                                   |
+| `class`, `style`   | Styling for the host element                                                                                                                      |
+
+`FormRendererElement` is the `se-form-renderer` custom element behind it. Assign `engine` to it, as a property, to bind a server-rendered form. `FormInstance` and `FormElement` are the views for one form and one field.
+
+## Registrations
+
+`schemaFormRegistrations` lists the 18 element registrations of the package, in registration order. Each is also exported by name from `@schema-engine/forms-radiant/registrations`: `InputElementRegistration`, `TextareaElementRegistration`, `NumberElementRegistration`, `SelectElementRegistration`, `CheckboxElementRegistration`, `CheckboxGroupElementRegistration`, `SwitchElementRegistration`, `RadioElementRegistration`, `SliderElementRegistration`, `ComboboxElementRegistration`, `DropZoneElementRegistration`, `FieldSetRegistration`, `InputOTPElementRegistration`, `PhoneInputElementRegistration`, `MaskedInputElementRegistration`, `ArrayElementRegistration`, `SubmitButtonElementRegistration` and `SubmissionAlertElementRegistration`. [Overview](/docs/forms-radiant/overview#what-ships) maps them to their `$type`.
+
+`createRadiantPhoneValidationRegistration` builds the phone validation rule for a set of countries.
+
+## Recipes
+
+`radiantRecipes` lists the canonical view recipes that `createRadiantFormEngine` binds: `CardRecipe`, `SplitScreenRecipe`, `HeroBackgroundRecipe`, `BareControlsRecipe`, `WizardRecipe`, `SidebarWizardRecipe`, `CardWizardRecipe`, `HeroWizardRecipe` and `SplitScreenWizardRecipe`. `defineRecipe` binds your own shell and slots to a recipe spec, and `DEFAULT_WIZARD_RECIPE` names the recipe a multi-step form without a `view` falls back to. See [Layouts](/docs/forms-radiant/layouts).
+
+## Controllers
+
+`FormController` and `FormEngineController` give a custom element access to the form it sits in. [Overview](/docs/forms-radiant/overview#programmatic-form-access) describes them, and [Form controls](/docs/forms-radiant/form-controls) shows a custom control that uses the native events.
+
+## Debugging
+
+`FormDebugger` and `FormDebuggerElement` render a panel with the form's meta and state, for development.

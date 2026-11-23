@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { codeBlocks, readPage, runTitledFiles, titledRunner } from './snippet-harness';
 import * as formsPackage from '@schema-engine/forms';
+import * as radiantPackage from '@schema-engine/forms-radiant';
 import * as browserPackage from '@schema-engine/forms/browser';
 import * as nodeTimers from 'node:timers/promises';
 
@@ -216,5 +217,18 @@ describe('forms-react/components', () => {
 			[...row[1]!.matchAll(/`([^`]+)`/g)].map((token) => token[1]!),
 		);
 		expect(listed.filter((type) => type !== '$type').toSorted()).toEqual(barrelTypes().toSorted());
+	});
+});
+
+describe('forms-radiant/overview', () => {
+	test('the table of elements equals the registrations barrel of the package', () => {
+		const text = readPage('forms-radiant/overview');
+		const table = text.slice(text.indexOf('## What ships'), text.indexOf('## When to use'));
+		const listed = [...table.matchAll(/^\|\s*((?:`[^`]+`(?:,\s*)?)+)\s*\|/gm)].flatMap((row) =>
+			[...row[1]!.matchAll(/`([^`]+)`/g)].map((token) => token[1]!),
+		);
+		const registered = radiantPackage.schemaFormRegistrations.map((registration) => registration.$type);
+		expect(registered).toHaveLength(18);
+		expect(listed.filter((type) => type !== '$type').toSorted()).toEqual(registered.toSorted());
 	});
 });

@@ -38,6 +38,7 @@ const CHECKED_DOCS = [
 	'forms/form-state',
 	'forms/yaml',
 	'forms-react',
+	'forms-radiant',
 ];
 
 interface AllowedFence {

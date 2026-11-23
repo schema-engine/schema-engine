@@ -21,6 +21,7 @@ describe('the pages show the recipes they run', () => {
 		'settings-panel.react.tsx': ['forms-react/other-react-state'],
 		'react-typed-values.react.tsx': ['forms/form-state'],
 		'agent-tool.react.tsx': ['forms/agent-tool'],
+		'radiant-quick-start.tsx': ['forms-radiant/getting-started'],
 		'radiant-agent-tool.tsx': ['forms/agent-tool'],
 		'radiant-summary.tsx': ['forms-radiant/form-controls'],
 		'radiant-control.tsx': ['forms-radiant/form-controls'],

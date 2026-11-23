@@ -20,25 +20,9 @@ Unlike `@schema-engine/forms-react` — where the default view recipes live in t
 pnpm add @schema-engine/forms-radiant @schema-engine/forms @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-The peer ranges are `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.12.0`, and `@ecopages/radiant-ui` `>=0.6.1`.
+[Installation and quick start](../../apps/docs/src/content/docs/forms-radiant/getting-started.mdx) has the peer ranges, the JSX setting, the three stylesheets and a form that renders and submits. [Server rendering and engine binding](../../apps/docs/src/content/docs/forms-radiant/server-rendering.mdx) says how to assign the engine to server-rendered forms.
 
-Load Tailwind preflight (via Radiant core), theme, and component styles:
-
-```ts
-import '@ecopages/radiant-ui/radiant-ui-core.css';
-import '@ecopages/radiant-ui/themes/default';
-import '@ecopages/radiant-ui/styles.css';
-```
-
-Apps should also import the emitted package stylesheet; published JS does not execute CSS:
-
-```ts
-import '@schema-engine/forms-radiant/index.css';
-```
-
-That file includes host display rules and first-party shell/field CSS. Apps that load component CSS without the package root still need the core (or their own Tailwind preflight) so headings, lists, and form controls are not left on user-agent margins.
-
-First-party schemas use the functional `zod/mini` API. Install the `zod` package when authoring schemas; registrations supplied by consumers may use any Standard Schema implementation, including Valibot, Effect Schema, or Zod.
+First-party schemas use the functional `zod/mini` API. Install the `zod` package when authoring schemas; registrations supplied by consumers may use any Standard Schema provider.
 
 ## Quick start
 
@@ -50,38 +34,7 @@ const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 <FormRenderer engine={engine} config={formConfig} onSubmit={handleSubmit} />;
 ```
 
-`engine` is a live JavaScript value. `se-form-renderer` publishes it to descendant hosts through `formEngineContext`.
-
-A host resolves its engine from an explicit `engine`, then the nearest `se-form-renderer` context, then the render in progress, and follows the renderer's context when an engine arrives or changes later. A host that no engine reaches stays quiet while it connects, since the app may bind one later; `se-form-instance` logs one warning per form when the form is focused or submitted without an engine. There is no module-level default, however many engines have been created.
-
-### Server-rendered forms
-
-The engine is a live object, so it is not serialized into server markup. After the page loads, assign it to each `se-form-renderer`; `engine` is a property only (there is no HTML attribute). Hosts below the renderer follow it when it arrives or changes.
-
-```ts
-import type { FormRendererElement } from '@schema-engine/forms-radiant';
-import { formEngine } from './form-engine';
-
-function bindEngine(root: ParentNode): void {
-	for (const renderer of root.querySelectorAll<FormRendererElement>('se-form-renderer')) {
-		renderer.engine = formEngine;
-	}
-}
-
-bindEngine(document);
-```
-
-A client router that swaps in a parsed page does not upgrade the incoming renderers first. Bind them before the swap so they upgrade with the engine already set; this example uses the `eco:before-swap` event of `@ecopages/browser-router`:
-
-```ts
-document.addEventListener('eco:before-swap', (event) => {
-	bindEngine((event as CustomEvent<{ newDocument: Document }>).detail.newDocument);
-});
-```
-
-A form rendered only on the client passes `engine` to `FormRenderer` and needs neither. The docs app does this in `apps/docs/src/lib/preview-engine-binding.ts`.
-
-The docs have [Styling and layout](../../apps/docs/src/content/docs/layout/overview.mdx) and copy-paste [Recipes](../../apps/docs/src/content/docs/layout/recipes.mdx) rendered with this adapter. A scoped `--rui-density` does not resize Radiant controls (Radiant UI computes `--size-control-*` on `:root`); see [Theming](../../apps/docs/src/content/docs/layout/theming.mdx).
+`engine` is a live JavaScript value. `se-form-renderer` publishes it to descendant hosts through `formEngineContext`. A host resolves its engine from an explicit `engine`, then the nearest `se-form-renderer` context, then the render in progress, and follows the renderer's context when it changes.
 
 ### Registering only the elements a form uses
 

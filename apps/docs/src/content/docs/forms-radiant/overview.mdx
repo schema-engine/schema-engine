@@ -1,48 +1,59 @@
 ---
 title: 'Overview'
-description: 'Radiant/JSX adapter for Ecopages apps using @ecopages/radiant-ui.'
+description: 'The Radiant renderer for forms: the 18 elements it ships, the engine factory and the controllers.'
 order: 1
 ---
 
-# @schema-engine/forms-radiant
+# Forms Radiant
 
-Radiant/JSX implementation of the JSON Form Engine for Ecopages apps. It wraps `@ecopages/radiant-ui` primitives and ships default field registrations in the package (no shadcn copy step).
+The Radiant renderer for [Forms](/docs/forms/overview), for Ecopages apps that use `@ecopages/radiant-ui`. It wraps the Radiant UI primitives and ships its field registrations in the package, so there is no copy step. It renders the same form config as [Forms React](/docs/forms-react/overview) and keeps the form state in the engine's own container.
 
-## Key features
+## What ships
 
-- **Same `FormConfig` JSON** as `@schema-engine/forms-react`
-- **One engine form container** with Schema Engine validation rules
-- **Default registrations** for input, textarea, number, select, checkbox, switch, radio, and submit
-- **Shared Zod Mini schemas** from `registry/shared/forms/*.types.ts`
-- **`createRadiantFormEngine()`** — same builder API as the React adapter
-- **Scoped `FormController`** for form state and `FormEngineController` for the nearest renderer engine; the controller gives a host the form's `container`, `select` signals, `formatIssue` and, for the [agent tool](/docs/forms/agent-tool), `watchRuntime`
+`schemaFormRegistrations` lists 18 element registrations:
+
+| `$type`                       | Purpose                                         |
+| ----------------------------- | ----------------------------------------------- |
+| `input`                       | Text, email, password, URL and telephone inputs |
+| `textarea`                    | Multi-line text                                 |
+| `number`                      | Numeric input                                   |
+| `select`                      | Select menu                                     |
+| `checkbox`, `checkbox-group`  | Boolean and multi-choice inputs                 |
+| `switch`                      | Boolean toggle                                  |
+| `radio`                       | Single-choice group                             |
+| `slider`                      | Numeric range                                   |
+| `combobox`                    | Searchable choice input                         |
+| `drop-zone`                   | File drop input                                 |
+| `fieldSet`                    | Grouped content                                 |
+| `input-otp`                   | One-time-password input                         |
+| `phone-input`, `masked-input` | Specialized text inputs                         |
+| `arrayElements`               | Repeated element groups                         |
+| `submit`, `submission-alert`  | Action and submission feedback                  |
+
+`date` and `date-range` exist only in the [React registry](/docs/forms-react/components): Radiant has no element for them. A Radiant element is a registration like any other, so you can write your own, as [Form controls](/docs/forms-radiant/form-controls) shows for a custom control.
+
+`createRadiantFormEngine({ elements })` is `createFormEngine` with the Radiant defaults: it binds the canonical view recipes in the package, whose specs come from `@schema-engine/forms/recipes/built-in`, and it takes the registrations you pass. Radiant needs no shadcn registry, so the recipes ship with it. See [Layouts](/docs/forms-radiant/layouts).
 
 ## When to use
 
-| Use                                                | Package                        |
-| -------------------------------------------------- | ------------------------------ |
-| React + shadcn consumer-owned fields               | `@schema-engine/forms-react`   |
-| Radiant / `@ecopages/jsx` + `@ecopages/radiant-ui` | `@schema-engine/forms-radiant` |
-
-## Next steps
-
-- [Getting Started](/docs/forms-radiant/getting-started) — install peers, load theme CSS, render a form
-- [Form controls](/docs/forms-radiant/form-controls) — native events, `rui-form` and the container, and custom controls
-- [Layouts](/docs/forms-radiant/layouts) — shells, wizard and appearance in Radiant
-- [Styling and layout](/docs/layout/overview) — widths, areas, appearance axes, theming and recipes
+| Use                                                  | Package                        |
+| ---------------------------------------------------- | ------------------------------ |
+| React, with widgets of your own or from the registry | `@schema-engine/forms-react`   |
+| Radiant / `@ecopages/jsx` + `@ecopages/radiant-ui`   | `@schema-engine/forms-radiant` |
 
 ## Programmatic form access
 
-Import `FormController` and `FormEngineController` from
-`@schema-engine/forms-radiant/adapters/radiant`. Create `new FormController(host)`
-for a host inside the form's `se-form-instance`.
+Import `FormController` and `FormEngineController` from `@schema-engine/forms-radiant/adapters/radiant`. Create `new FormController(host)` for a host inside the form's `se-form-instance`. It gives the host the form's `container`, `select` signals, `formatIssue` and, for the [agent tool](/docs/forms/agent-tool), `watchRuntime`.
 
-Create `new FormEngineController(host)` for a host inside `se-form-renderer`.
-Its `engine` and `ready` getters expose the nearest renderer engine, while
-`connect()` and `disconnect()` manage the context subscription.
+Create `new FormEngineController(host)` for a host inside `se-form-renderer`. Its `engine` and `ready` getters expose the nearest renderer engine, while `connect()` and `disconnect()` manage the context subscription.
 
-Use `form.container` for commands and reads (`getValue(path)`, `setValue`, `validate`, `fieldArray(path)`), `select(selector)` for a signal over
-the container's snapshot, and `formatIssue(issue, { path })` for an issue's text. Values are nested and
-paths are dotted (`contacts.0.email`), the engine container's own shape. Shipped
-`FormFieldElement` extends Radiant UI's field element; array components use the container's
-row ids. Radiant rendering goes through `FormRenderer` and does not emulate React hooks.
+Use `form.container` for commands and reads (`getValue(path)`, `setValue`, `validate`, `fieldArray(path)`), `select(selector)` for a signal over the container's snapshot, and `formatIssue(issue, { path })` for an issue's text. Values are nested and paths are dotted (`contacts.0.email`), the engine container's own shape. Radiant rendering goes through `FormRenderer` and does not emulate React hooks.
+
+## Where to go next
+
+- [Installation and quick start](/docs/forms-radiant/getting-started): install peers, load theme CSS, render a form.
+- [Server rendering and engine binding](/docs/forms-radiant/server-rendering): assign the engine to server-rendered forms.
+- [Form controls](/docs/forms-radiant/form-controls): native events, `rui-form` and the container, and custom controls.
+- [Layouts](/docs/forms-radiant/layouts): shells, wizard and appearance in Radiant.
+- [API reference](/docs/forms-radiant/api-reference): every export.
+- [Layout](/docs/layout/overview): widths, areas, appearance axes, theming and recipes.

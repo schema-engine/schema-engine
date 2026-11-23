@@ -1,8 +1,10 @@
 import { createRoot } from '@ecopages/jsx/client';
 import { FormRenderer } from '@schema-engine/forms-radiant';
 import { afterEach, expect, test, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { engine as feedbackEngine, feedback } from './radiant-agent-tool';
 import { engine as toneEngine, type ToneControl } from './radiant-control';
+import { ContactForm } from './radiant-quick-start';
 import { engine } from './radiant-summary';
 
 afterEach(() => document.body.replaceChildren());
@@ -143,4 +145,22 @@ test('an agent tool registers the rendered form and fills it through execute, le
 	} finally {
 		Reflect.deleteProperty(document, 'modelContext');
 	}
+});
+
+test('the quick start renders its form in Radiant, blocks an invalid submit and hands out the values', async () => {
+	const onSubmit = vi.fn();
+	const host = document.createElement('div');
+	document.body.append(host);
+	createRoot(host).render(ContactForm({ onSubmit }));
+	await expect.poll(() => host.querySelector('input[name="name"]')).toBeTruthy();
+
+	await userEvent.click(host.querySelector('button[type="submit"]')!);
+	await expect.poll(() => host.textContent).toContain('Enter your name');
+	expect(onSubmit).not.toHaveBeenCalled();
+
+	await userEvent.type(host.querySelector('input[name="name"]')!, 'Ada Lovelace');
+	await userEvent.type(host.querySelector('input[name="email"]')!, 'ada@example.com');
+	await userEvent.click(host.querySelector('button[type="submit"]')!);
+	await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+	expect(onSubmit.mock.calls[0]![0]).toEqual({ name: 'Ada Lovelace', email: 'ada@example.com' });
 });

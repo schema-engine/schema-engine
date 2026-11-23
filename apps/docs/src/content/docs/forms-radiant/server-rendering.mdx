@@ -1,0 +1,76 @@
+---
+title: 'Server rendering and engine binding'
+description: 'Render Radiant forms on the server, assign the engine in the browser, and know what each form costs in stylesheet.'
+order: 3
+---
+
+# Server rendering and engine binding
+
+Radiant UI views rendered on the server do not register their elements in the browser, so
+the module that builds your engine must reach the client: it imports `@schema-engine/forms-radiant`,
+which registers the form hosts and the Radiant UI components they use. The engine is not
+serialized into server-rendered markup, so the app assigns it
+to each `se-form-renderer`. Assign it before or after the renderer upgrades: the
+hosts below it read the engine from the renderer's context and follow it when it
+arrives or changes.
+
+`engine` is a property only; there is no HTML attribute. The module that builds the engine:
+
+```ts title="form-engine.ts"
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+
+export const formEngine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+```
+
+Bind every renderer on the page:
+
+```ts title="bind-engine.ts"
+import type { FormRendererElement } from '@schema-engine/forms-radiant';
+import { formEngine } from './form-engine';
+
+export function bindEngine(root: ParentNode): void {
+	for (const renderer of root.querySelectorAll<FormRendererElement>('se-form-renderer')) {
+		renderer.engine = formEngine;
+	}
+}
+
+bindEngine(document);
+```
+
+A client-side router that swaps in a parsed page does not upgrade it first. Assign
+the engine to the incoming renderers in the router's `eco:before-swap` event
+(`event.detail.newDocument`); they upgrade with the engine already set:
+
+```ts
+import { bindEngine } from './bind-engine';
+
+document.addEventListener('eco:before-swap', (event) => {
+	bindEngine((event as CustomEvent<{ newDocument: Document }>).detail.newDocument);
+});
+```
+
+A form that is only rendered on the client passes `engine` to
+`FormRenderer` and needs none of this.
+
+### Layout stylesheet per form
+
+Radiant has no head hoisting, so each form carries an identical, self-contained copy of its layout
+theme's stylesheet (`<style data-se-theme-css="<id>">`, about 11 kB raw for the default theme). Every form is
+therefore styled before hydration, whatever the render order, streaming, caching or removal of the other forms, and
+compression makes the repeated copies cheap on the wire. React hoists the equal stylesheets of its forms to one
+element instead; the stylesheet content is the same.
+
+On a page with very many Radiant forms, WebKit spends more time styling, because every form brings its own copy.
+In a one-off headless run with one small form per copy, WebKit needed about 37 ms for 25 forms and 390 ms for
+100, against 3 and 11 ms with one copy, while Chromium and Firefox stayed under 17 ms for 100. For the usual page
+with one form, or a few, the cost is negligible.
+
+A host that also wants the rules in its own head can serve the theme's `css`; the forms keep their copies, which hold
+the same rules:
+
+```ts
+import { formEngine } from './form-engine';
+
+const { id, css } = formEngine.getLayout();
+export const head = `<style data-se-theme-css="${id}">${css}</style>`;
+```
