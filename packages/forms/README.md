@@ -269,12 +269,10 @@ against that list when the engine is built. `engine.getLayout()` returns the fro
 (the `data-se-theme` value), `grid`, `axes` (axis name to its values), `appearance` (the axes as a read-only registry) and the stylesheet `css`. `engine.extend()` inherits it,
 and `layout` is not an extend option.
 
-Moving to the layout theme removed these, with no aliases:
+The theme is configured with `layout` and read with `getLayout()`; the engine has no `grid` or `appearance` option. The grid and appearance schemas, types and helpers (`ElementGridConfig`, `GridLayoutConfig`, `getGridVariables`, `getGridItemVariables`, `getAppearanceAttributes` and the rest) come from `@schema-engine/layout`, not from this package.
 
-- The `grid` and `appearance` engine options, and `getCompiledGrid`, `getGridTheme` and `getAppearance` (use `layout` and `getLayout()`).
-- The `@schema-engine/forms/lib/grid-styles` and `lib/appearance` subpaths, and the appearance exports of the package root. The grid and appearance schemas, types and helpers (`ElementGridConfig`, `GridLayoutConfig`, `getGridVariables`, `getGridItemVariables`, `getAppearanceAttributes` and the rest) come from `@schema-engine/layout`; the emitters were `getFormGridVariables` and `getFieldGridVariables`.
-- `data-se-grid-theme` and `data-se-appearance-theme`, replaced by `data-se-theme`; and the React `useGridThemeId`, now `useLayoutThemeId`. A host built by hand adds `se-grid-item` and `data-se-theme` (`useFieldHost` does).
-- The `theme` and `theme-css` attribute names are now reserved, so an appearance axis cannot be called `theme`.
+- A rendered form, grid and item carry `data-se-theme`, and the React hook for it is `useLayoutThemeId`. A host built by hand adds `se-grid-item` and `data-se-theme` (`useFieldHost` does).
+- The `theme` and `theme-css` attribute names are reserved, so an appearance axis cannot be called `theme`.
 
 ### Appearance
 
