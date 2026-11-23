@@ -1,0 +1,104 @@
+---
+title: 'Server errors'
+description: 'Show a server validation response on the fields it names, from RFC 9457 Problem Details or JSON:API.'
+order: 11
+---
+
+# Server errors
+
+When the server rejects a submission, the form shows its answer on the fields it names. `onSubmit` receives `setServerErrors` for that, and `@schema-engine/forms/server-errors` turns the two common error formats into its input.
+
+```ts
+import { fromJsonApiErrors, fromProblemDetails } from '@schema-engine/forms/server-errors';
+```
+
+## Send the values and show the answer
+
+`onSubmit(values, { setServerErrors, fetch })` runs with exactly the values that passed validation. `fetch` is the engine's, so the [CSRF policy](/docs/forms/csrf) is applied for you. A helper turns the response body into the input of `setServerErrors`.
+
+```ts
+import type { FormSubmitHelpers, FormValues } from '@schema-engine/forms';
+import { fromJsonApiErrors, fromProblemDetails } from '@schema-engine/forms/server-errors';
+
+const post = (url: string, values: FormValues, { fetch }: FormSubmitHelpers) =>
+	fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) });
+
+/** For an API that answers with RFC 9457 Problem Details and an `errors[]` list of `{ pointer, detail, code }`. */
+export async function submitToProblemDetails(values: FormValues, helpers: FormSubmitHelpers) {
+	const response = await post('/api/signup', values, helpers);
+	if (!response.ok) helpers.setServerErrors(fromProblemDetails(await response.json()));
+}
+
+/** For a JSON:API server that answers with `errors[]` and a `source.pointer` on each. */
+export async function submitToJsonApi(values: FormValues, helpers: FormSubmitHelpers) {
+	const response = await post('/api/signup', values, helpers);
+	if (!response.ok) helpers.setServerErrors(fromJsonApiErrors(await response.json()));
+}
+```
+
+Pass either function as `onSubmit` of `FormRenderer`, or of the Radiant `FormRenderer`.
+
+## Problem Details
+
+`fromProblemDetails` reads [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) Problem Details with the common `errors[]` extension, `{ pointer?, detail?, code? }` for each error:
+
+```json
+{
+	"type": "https://example.com/problems/validation",
+	"title": "Validation failed",
+	"status": 422,
+	"errors": [
+		{ "pointer": "#/email", "code": "taken", "detail": "This email is already registered" },
+		{ "detail": "Try again later", "code": "rate_limited" }
+	]
+}
+```
+
+It becomes:
+
+```ts
+{
+	email: { type: 'taken', message: 'This email is already registered' },
+	__root__: { type: 'rate_limited', message: 'Try again later' },
+}
+```
+
+The first lands on the `email` field. The second names no field, so it lands on the form itself, `FORM_ROOT`.
+
+## JSON:API
+
+`fromJsonApiErrors` reads a JSON:API document's `errors[]`, with `source.pointer`, `code`, `detail` and `meta`:
+
+```json
+{
+	"errors": [
+		{
+			"status": "422",
+			"code": "taken",
+			"detail": "This email is already registered",
+			"source": { "pointer": "/data/attributes/email" }
+		}
+	]
+}
+```
+
+It becomes `{ email: { type: 'taken', message: 'This email is already registered' } }`: a leading `/data/attributes` is dropped from the pointer.
+
+## What the helpers do
+
+- **A pointer is a JSON Pointer** (RFC 6901), plain or as a URI fragment (`#/contacts/0/email`), unescaped (`~1`, `~0`) and joined with dots. No pointer, or a pointer to the whole document, is `FORM_ROOT`. A segment that holds a `.`, is empty or is reserved is rejected.
+- **`type` is the error's `code`.** For Problem Details it falls back to the problem's `type`, and `about:blank` is none. `message` is `detail`. The other members of a Problem Details error, and the `meta` of a JSON:API error, become `params` when they are plain serializable values. `title` and `status` are not carried: the engine has no text of its own, and your [formatter](/docs/forms/issue-text) words an issue by its `type`.
+- **A response without `errors`** is one issue on `FORM_ROOT`.
+- **Several errors on one path** become a list, in the order they came.
+- **Unknown shapes throw** a `ServerErrorsInputError` rather than being guessed at.
+
+## What `setServerErrors` does
+
+- It applies to the submission that is current. A later submission or a reset supersedes it, and the call then does nothing.
+- An error lands on a field only if that field, and the values its rules read, are unchanged since the submission. An error for `contacts.0.email` lands on that row wherever it is by then, and is dropped if the row is gone.
+- A path no field declares moves to `FORM_ROOT`, keeping its type, params and message, so the user still sees it.
+- The map replaces the whole answer: one call is one complete answer, and `{}` clears it.
+- A server error is cleared when its path, a path below or around it (the form included), or a value its rules read is edited, because what it described changed.
+- A path with a reserved segment, or a row the submitted values did not have, throws.
+
+In a wizard, an error that lands on an earlier step moves the form there, so it is never invisible. See [Wizard and runtime](/docs/forms/wizard#navigation).

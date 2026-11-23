@@ -1,0 +1,750 @@
+---
+title: 'Built-in Validations'
+description: 'Reference list of every validation rule that ships with the engine.'
+order: 15
+---
+
+# Built-in Validations
+
+Form Engine ships 24 built-in validation types. Each rule can be used directly in a form configuration.
+
+**Format rules skip an empty value.** A rule that judges the shape of a value (`email`, `url`, `pattern`,
+`minLength`, `phone`, `uuid`, `date` and the other string and date rules) passes `undefined`, `null` and
+`''`, so an optional field can be left blank, as in a native `<input type="email">`. Add `required` when the
+field is mandatory; it is the rule that rejects an empty value, and it reports alone for one. A filled value is
+checked as before. Rules for lists and numbers, such as `minItems`, are unchanged: a list with `minItems: 1` is
+not valid when empty. A custom validation you register in the `string` or `date` category is skipped for an
+empty value the same way.
+
+**Note:** Complete step elements need `$type`, `id`, and `name` per your engine
+registrations. Examples below sometimes show only `rules` or partial fields.
+
+## String Validations
+
+### Required
+
+Ensures a field has a value (not empty, null, or undefined).
+
+```typescript
+{ type: 'required', message: 'This field is required' }
+
+{
+  id: 'input',
+  name: 'fullName',
+  label: 'Full Name',
+  rules: [
+    { type: 'required', message: 'Please enter your full name' }
+  ]
+}
+```
+
+**Zod Mini implementation:** `z.any().check(z.refine(...))`
+
+### Email
+
+Validates email address format using Zod Mini's built-in email validation.
+
+```typescript
+{ type: 'email', message: 'Please enter a valid email address' }
+
+{
+  id: 'input',
+  inputType: 'email',
+  name: 'email',
+  label: 'Email Address',
+  rules: [
+    { type: 'required', message: 'Email is required' },
+    { type: 'email', message: 'Please enter a valid email address' }
+  ]
+}
+```
+
+**Zod Mini implementation:** `z.email(message)`
+
+### String Length
+
+Control minimum and maximum string lengths.
+
+```typescript
+{ type: 'minLength', value: 3, message: 'Must be at least 3 characters' }
+
+{ type: 'maxLength', value: 100, message: 'Cannot exceed 100 characters' }
+
+{
+  id: 'input',
+  name: 'username',
+  label: 'Username',
+  rules: [
+    { type: 'required', message: 'Username is required' },
+    { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
+    { type: 'maxLength', value: 20, message: 'Username cannot exceed 20 characters' }
+  ]
+}
+```
+
+**Zod Mini implementation:** `z.string().check(z.minLength(value, message))` / `z.string().check(z.maxLength(value, message))`
+
+### Pattern (Regex)
+
+Validate against custom regular expression patterns.
+
+```typescript
+{
+  type: 'pattern',
+  value: '^\\+?[1-9]\\d{1,14}$',
+  message: 'Please enter a valid phone number'
+}
+
+{
+  type: 'pattern',
+  value: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$',
+  message: 'Password must contain uppercase, lowercase, number, and special character'
+}
+
+{
+  id: 'input',
+  name: 'phoneNumber',
+  label: 'Phone Number',
+  rules: [
+    { type: 'required', message: 'Phone number is required' },
+    { type: 'pattern', value: '^\\+?[1-9]\\d{1,14}$', message: 'Please enter a valid phone number' }
+  ]
+}
+```
+
+**Zod Mini implementation:** `z.string().check(z.regex(new RegExp(pattern), message))`
+
+### URL
+
+Validates URL format.
+
+```typescript
+{ type: 'url', message: 'Please enter a valid URL' }
+
+{
+  id: 'input',
+  inputType: 'url',
+  name: 'website',
+  label: 'Website',
+  rules: [
+    { type: 'url', message: 'Please enter a valid website URL' }
+  ]
+}
+```
+
+**Zod Mini implementation:** `z.url(message)`
+
+### UUID
+
+Validates UUID format with optional version specification.
+
+```typescript
+{ type: 'uuid', message: 'Please enter a valid UUID' }
+
+{ type: 'uuid', version: 'v4', message: 'Please enter a valid UUID v4' }
+
+{
+  id: 'input',
+  name: 'resourceId',
+  label: 'Resource ID',
+  rules: [
+    { type: 'required', message: 'Resource ID is required' },
+    { type: 'uuid', version: 'v4', message: 'Please enter a valid UUID v4' }
+  ]
+}
+```
+
+**Zod Mini implementation:** `z.uuid(message)`
+
+### Phone
+
+Validates an international phone number in E.164 format (for example `+14155552671`).
+
+```typescript
+{ type: 'phone', message: 'Please enter a valid phone number' }
+```
+
+**Zod Mini implementation:** `z.e164(message)`
+
+A `phone-input` element registration can replace this handler with its own validator and apply the rule to its fields by default.
+
+## Number Validations
+
+### Min/Max Values
+
+Set minimum and maximum numeric values.
+
+```typescript
+{ type: 'min', value: 0, message: 'Value cannot be negative' }
+
+{ type: 'max', value: 100, message: 'Value cannot exceed 100' }
+
+{
+  id: 'input',
+  inputType: 'number',
+  name: 'age',
+  label: 'Age',
+  rules: [
+    { type: 'required', message: 'Age is required' },
+    { type: 'min', value: 18, message: 'You must be at least 18 years old' },
+    { type: 'max', value: 120, message: 'Please enter a valid age' }
+  ]
+}
+
+{
+  id: 'input',
+  inputType: 'number',
+  name: 'rating',
+  label: 'Rating (1-5)',
+  rules: [
+    { type: 'required', message: 'Rating is required' },
+    { type: 'min', value: 1, message: 'Rating must be at least 1' },
+    { type: 'max', value: 5, message: 'Rating cannot exceed 5' }
+  ]
+}
+```
+
+**Zod Mini implementation:** `z.number().check(z.gte(value, message))` / `z.number().check(z.lte(value, message))`
+
+## Array Validations
+
+### Min/Max Items
+
+Control array length constraints.
+
+```typescript
+{ type: 'minItems', value: 1, message: 'Please select at least one option' }
+
+{ type: 'maxItems', value: 5, message: 'You can select up to 5 options' }
+
+{
+  id: 'checkbox-group',
+  name: 'interests',
+  label: 'Select your interests',
+  options: [
+    { value: 'tech', label: 'Technology' },
+    { value: 'sports', label: 'Sports' },
+    { value: 'music', label: 'Music' },
+    { value: 'travel', label: 'Travel' },
+    { value: 'food', label: 'Food' }
+  ],
+  rules: [
+    { type: 'minItems', value: 1, message: 'Please select at least one interest' },
+    { type: 'maxItems', value: 3, message: 'Please select no more than 3 interests' }
+  ]
+}
+```
+
+**Zod Mini implementation:** `z.array(...).check(z.minLength(value, message))` / `z.array(...).check(z.maxLength(value, message))`
+
+## Network & Format Validations
+
+### IP Address
+
+Validate IP addresses with explicit IPv4 or IPv6 rule types.
+
+```typescript
+{ type: 'ipv4', message: 'Please enter a valid IPv4 address' }
+
+{ type: 'ipv6', message: 'Please enter a valid IPv6 address' }
+
+{
+  id: 'input',
+  name: 'serverIp',
+  label: 'Server IP Address',
+  rules: [
+    { type: 'required', message: 'Server IP is required' },
+    { type: 'ipv4', message: 'Please enter a valid IPv4 address' }
+  ]
+}
+```
+
+The package registers IPv4 and IPv6 as separate validation rule types.
+
+IPv6 validation uses Zod Mini's native address parser and retains support for interface-scoped addresses such as `fe80::1%eth0`.
+
+### CIDR Range
+
+Validates a CIDR block. Omit `version` to accept either IPv4 or IPv6.
+
+```typescript
+{ type: 'cidr', message: 'Please enter a valid CIDR range' }
+
+{ type: 'cidr', version: 'v4', message: 'Please enter a valid IPv4 CIDR range' }
+```
+
+**Zod Mini implementation:** `z.cidrv4(message)`, `z.cidrv6(message)`, or a union of both
+
+### JWT Token
+
+Validate JSON Web Token format.
+
+```typescript
+{ type: 'jwt', message: 'Please enter a valid JWT token' }
+
+{ type: 'jwt', alg: 'HS256', message: 'Please enter a valid HS256 JWT token' }
+
+{
+  id: 'textarea',
+  name: 'apiToken',
+  label: 'API Token',
+  rules: [
+    { type: 'required', message: 'API token is required' },
+    { type: 'jwt', message: 'Please enter a valid JWT token' }
+  ]
+}
+```
+
+### Hash Validation
+
+Validate hash formats for various algorithms.
+
+```typescript
+{ type: 'hash', algorithm: 'sha256', message: 'Please enter a valid SHA-256 hash' }
+
+{ type: 'hash', algorithm: 'md5', message: 'Please enter a valid MD5 hash' }
+
+{
+  id: 'input',
+  name: 'fileHash',
+  label: 'File Hash (SHA-256)',
+  rules: [
+    { type: 'required', message: 'File hash is required' },
+    { type: 'hash', algorithm: 'sha256', message: 'Please enter a valid SHA-256 hash' }
+  ]
+}
+```
+
+### Base64 Encoding
+
+Validate Base64 encoded strings.
+
+```typescript
+{ type: 'base64', message: 'Please enter valid Base64 data' }
+
+{ type: 'base64', urlSafe: true, message: 'Please enter valid URL-safe Base64 data' }
+
+{
+  id: 'textarea',
+  name: 'encodedData',
+  label: 'Base64 Encoded Data',
+  rules: [
+    { type: 'required', message: 'Encoded data is required' },
+    { type: 'base64', message: 'Please enter valid Base64 encoded data' }
+  ]
+}
+```
+
+### Format Validation
+
+Validate specific string formats using direct rule types.
+
+```typescript
+{ type: 'cuid', message: 'Please enter a valid CUID' }
+
+{ type: 'cuid2', message: 'Please enter a valid CUID2' }
+
+{ type: 'ulid', message: 'Please enter a valid ULID' }
+
+{ type: 'hex', message: 'Please enter valid hexadecimal' }
+
+{
+  id: 'input',
+  name: 'uniqueId',
+  label: 'Unique ID',
+  rules: [
+    { type: 'required', message: 'Unique ID is required' },
+    { type: 'cuid2', message: 'Please enter a valid CUID2' }
+  ]
+}
+```
+
+## Date & Time Validations
+
+### DateTime
+
+Validate ISO datetime strings with various options.
+
+```typescript
+{ type: 'datetime', message: 'Please enter a valid datetime' }
+
+{ type: 'datetime', precision: 3, message: 'Please enter datetime with millisecond precision' }
+
+{ type: 'datetime', offset: true, message: 'Please include timezone offset' }
+
+{
+  id: 'input',
+  inputType: 'datetime-local',
+  name: 'appointmentTime',
+  label: 'Appointment Date & Time',
+  rules: [
+    { type: 'required', message: 'Appointment time is required' },
+    { type: 'datetime', message: 'Please enter a valid date and time' }
+  ]
+}
+```
+
+### Date
+
+Validate date strings.
+
+```typescript
+{ type: 'date', message: 'Please enter a valid date' }
+
+{
+  id: 'input',
+  inputType: 'date',
+  name: 'birthDate',
+  label: 'Date of Birth',
+  rules: [
+    { type: 'required', message: 'Date of birth is required' },
+    { type: 'date', message: 'Please enter a valid date' }
+  ]
+}
+```
+
+### Time
+
+Validate time strings with optional precision.
+
+```typescript
+{ type: 'time', message: 'Please enter a valid time' }
+
+{ type: 'time', precision: 2, message: 'Please enter time with centisecond precision' }
+
+{
+  id: 'input',
+  inputType: 'time',
+  name: 'meetingTime',
+  label: 'Meeting Time',
+  rules: [
+    { type: 'required', message: 'Meeting time is required' },
+    { type: 'time', message: 'Please enter a valid time' }
+  ]
+}
+```
+
+## Cross-Field Validations
+
+The `relate` rule compares a field with its siblings. One rule covers password
+confirmation, date ordering, "one of these two", and mutual exclusion, because
+they are the same operation with a different assertion.
+
+```typescript
+{
+  id: 'input',
+  name: 'confirmPassword',
+  inputType: 'password',
+  label: 'Confirm Password',
+  rules: [
+    { type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Passwords must match' }
+  ]
+}
+```
+
+The declaring field's own value comes first in the comparison, then each entry
+of `fields` in order.
+
+| `assert`             | Holds when                                            |
+| -------------------- | ----------------------------------------------------- |
+| `allEqual`           | every value is the same                               |
+| `allDifferent`       | no value repeats                                      |
+| `ascending`          | each value is greater than or equal to the one before |
+| `strictlyAscending`  | each value is greater than the one before             |
+| `descending`         | each value is less than or equal to the one before    |
+| `strictlyDescending` | each value is less than the one before                |
+| `atLeastOne`         | at least one value is filled                          |
+| `exactlyOne`         | exactly one value is filled                           |
+| `allOrNone`          | all values are filled, or none are                    |
+
+| Option               | Type       | Default  | Description                                                                                                                                                    |
+| -------------------- | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fields`             | `string[]` | —        | References to compare against, resolved relative to the declaring field                                                                                        |
+| `includeSelf`        | `boolean`  | `true`   | Whether the declaring field's value participates, first in the list                                                                                            |
+| `as`                 | `string`   | `'auto'` | Comparison basis: `string`, `number`, `date`, `boolean`, or `auto`                                                                                             |
+| `skipWhenIncomplete` | `boolean`  | `true`   | Stay quiet while any participating value is empty. Ignored by `atLeastOne`, `exactlyOne` and `allOrNone`, whose whole job is to fire on a partly filled group. |
+| `message`            | `string`   | —        | Error message to show on failure                                                                                                                               |
+
+Ordering reads left to right with the declaring field first, so "this date must
+be after that one" is `descending`:
+
+```typescript
+{
+  id: 'date',
+  name: 'endDate',
+  label: 'End Date',
+  rules: [
+    { type: 'relate', fields: ['startDate'], assert: 'descending', as: 'date',
+      message: 'End date must be after the start date' }
+  ]
+}
+```
+
+References are relative, so a rule authored once inside an array reads its own
+row rather than row zero:
+
+```typescript
+{
+  $type: 'arrayElements',
+  name: 'lines',
+  elements: [
+    { id: 'number', name: 'quantity', label: 'Quantity' },
+    { id: 'number', name: 'max', label: 'Maximum',
+      rules: [
+        { type: 'relate', fields: ['quantity'], assert: 'descending', as: 'number',
+          message: 'Max must be at least the quantity' }
+      ]
+    }
+  ]
+}
+```
+
+A dotted reference is absolute from the form root, so `billing.country` always
+means the same field wherever it is written.
+
+A cross-field rule re-runs when a field it reads changes, not only when its own
+field is validated, so correcting a password clears the "passwords must match"
+error on the confirmation. The error surfaces only once the dependent field has
+been touched, or once the form has been submitted, so typing a password does not
+light up a confirmation nobody has reached.
+
+## Async Validation
+
+For server-side validation that requires network requests, with built-in caching and enhanced dependency support.
+
+```typescript
+{
+  type: 'async',
+  url: '/api/validate-username',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  extraPayload: { source: 'profile' },
+  expectedResponse: { valid: true },
+  debounce: 500,
+  cacheTTL: 300000,
+  message: 'Username is already taken'
+}
+
+{
+  type: 'async',
+  url: '/api/verify-email',
+  method: 'POST',
+  extraPayload: { source: 'profile' },
+  dependencies: ['username'],
+  expectedResponse: { valid: true },
+  debounce: 800,
+  cacheTTL: 600000,
+  disableCache: false,
+  message: 'Email address could not be verified'
+}
+
+{
+  type: 'async',
+  url: '/api/validate-dependent-field',
+  method: 'POST',
+  extraPayload: { source: 'profile' },
+  dependencies: ['username', 'email'],
+  expectedResponse: { valid: true },
+  debounce: 600,
+  message: 'This value conflicts with other selections'
+}
+
+{
+  id: 'input',
+  name: 'username',
+  label: 'Username',
+  rules: [
+    { type: 'required', message: 'Username is required' },
+    { type: 'minLength', value: 3, message: 'Username must be at least 3 characters' },
+    {
+      type: 'async',
+      url: '/api/check-username',
+      method: 'POST',
+      extraPayload: { source: 'profile' },
+      debounce: 500,
+      cacheTTL: 300000,
+      message: 'This username is already taken'
+    }
+  ]
+}
+```
+
+### Async Validation Properties
+
+| Property           | Type       | Description                                                           |
+| ------------------ | ---------- | --------------------------------------------------------------------- |
+| `url`              | `string`   | API endpoint for validation                                           |
+| `method`           | `string`   | HTTP method (GET, POST, PUT, PATCH, DELETE)                           |
+| `headers`          | `object`   | Optional HTTP headers                                                 |
+| `extraPayload`     | `object`   | Extra request fields; `value` and `dependsOn` are added automatically |
+| `expectedResponse` | `object`   | Expected response format for success                                  |
+| `dependencies`     | `string[]` | Fields that trigger re-validation when changed                        |
+| `debounce`         | `number`   | Delay in ms before making API call; see below for replaced calls      |
+| `cacheTTL`         | `number`   | Cache time-to-live in milliseconds (default: 5 minutes)               |
+| `disableCache`     | `boolean`  | Whether to disable request caching (default: false)                   |
+| `message`          | `string`   | Error message to show on validation failure                           |
+
+With `debounce`, a newer validation of the same field replaces a pending one and only the
+latest request is sent. A replaced validation of the same value shares that request's
+result; one of a different value has no result (it is neither a pass nor an issue), so a submit-time check
+superseded by a later edit never passes. Nothing is shown for it while the user types: each
+renderer shows the result for the latest value.
+
+### Dependency Resolution
+
+`dependencies` are field references and resolve exactly like `relate`'s
+`fields`: a bare name is a sibling — including a sibling inside the declaring
+array row — and a dotted name is absolute from the form root. The system
+automatically creates a `dependsOn` object in the request body, keyed by the
+reference as authored:
+
+```typescript
+{
+  type: 'async',
+  url: '/api/validate-field',
+  extraPayload: { source: 'profile' },
+  dependencies: ['username', 'email']
+}
+
+{
+  "value": "userInputValue",
+  "dependsOn": {
+    "username": "actualUsernameValue",
+    "email": "actual@email.com"
+  }
+}
+```
+
+### Caching Behavior
+
+- **Default TTL**: 5 minutes for successful validations
+- **Outages**: a non-ok response or a network failure is not an answer about the value. The rule throws `ValidationUnavailable`, which is reported as a failure to run (`validate()` rejects), and it is never cached
+- **Cache Keys**: Generated from URL + request payload for uniqueness
+- **Memory Management**: Expired entries are evicted during cache reads and writes
+- **Cache Control**: Use `disableCache: true` for always-fresh validation
+
+## Using Validation Presets
+
+For programmatic usage, you can use the validation presets for better developer experience:
+
+```typescript
+const nameRules = [
+	ValidationPresets.string.required('Name is required'),
+	ValidationPresets.string.minLength(2, 'Name must be at least 2 characters'),
+	ValidationPresets.string.maxLength(50, 'Name cannot exceed 50 characters'),
+];
+
+const ageRules = [
+	ValidationPresets.number.min(0, 'Age cannot be negative'),
+	ValidationPresets.number.max(150, 'Please enter a valid age'),
+];
+
+const urlRules = [ValidationPresets.string.url('Please enter a valid URL')];
+
+const ipRules = [ValidationPresets.network.ipv4('Please enter a valid IPv4 address')];
+
+const tagsRules = [
+	ValidationPresets.array.minItems(1, 'Please select at least one tag'),
+	ValidationPresets.array.maxItems(10, 'You can select up to 10 tags'),
+];
+
+const confirmPasswordRules = [ValidationPresets.relate.matches('password', 'Passwords must match')];
+
+const endDateRules = [ValidationPresets.relate.after('startDate', 'End date must be after the start date')];
+
+const contactRules = [ValidationPresets.relate.atLeastOneOf(['phone', 'email'], 'Give us a phone number or an email')];
+
+const usernameRules = [
+	ValidationPresets.custom.async('/api/check-username', {
+		method: 'POST',
+		message: 'Username is already taken',
+	}),
+];
+```
+
+## Combining Validations
+
+You can combine multiple validation rules for comprehensive field validation:
+
+```typescript
+const passwordRules = [
+	{ type: 'required', message: 'Password is required' },
+	{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters' },
+	{ type: 'maxLength', value: 128, message: 'Password cannot exceed 128 characters' },
+	{
+		type: 'pattern',
+		value: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$',
+		message: 'Password must contain uppercase, lowercase, number, and special character',
+	},
+];
+
+const emailRules = [
+	{ type: 'required', message: 'Email is required' },
+	{ type: 'email', message: 'Please enter a valid email address' },
+	{ type: 'maxLength', value: 254, message: 'Email address is too long' },
+	{
+		type: 'async',
+		url: '/api/verify-email-domain',
+		method: 'POST',
+		message: 'Email domain is not supported',
+	},
+];
+```
+
+## Best Practices
+
+### 1. Layer Validations Logically
+
+Start with basic validations and add more specific ones:
+
+```typescript
+const passwordRules = [
+	{ type: 'required', message: 'Password is required' },
+	{ type: 'minLength', value: 8, message: 'At least 8 chars' },
+	{ type: 'pattern', value: 'complexity', message: 'Complex' },
+];
+```
+
+### 2. Provide Helpful Error Messages
+
+Make errors actionable and user-friendly:
+
+```typescript
+{ type: 'minLength', value: 8, message: 'Password must be at least 8 characters long' }
+
+{ type: 'minLength', value: 8, message: 'Too short' }
+```
+
+### 3. Use Appropriate Validation Types
+
+Choose validation types that match your field's purpose:
+
+```typescript
+{
+  inputType: 'email',
+  rules: [{ type: 'email', message: 'Please enter a valid email' }]
+}
+
+{
+  inputType: 'text',
+  rules: [{ type: 'pattern', value: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$', message: 'Invalid email' }]
+}
+```
+
+### 4. Consider Performance
+
+Expensive validations (like async) should come last:
+
+```typescript
+[{ type: 'required' }, { type: 'minLength', value: 3 }, { type: 'async', url: '/api/check-availability' }];
+```
+
+## Next Steps
+
+- **[How It Works](./validation-how-it-works)** - Understanding the validation system
+- **[Custom Validations](./validation-custom)** - Creating your own validation logic
+- **[Examples](../examples/basic-form)** - See validations in complete forms
+
+The built-in validations cover most common use cases, but you can always extend the system with custom validation logic when needed.

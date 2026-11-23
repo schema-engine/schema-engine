@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { createFormStateContainer } from '@schema-engine/forms/state-container';
-import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createDefaultValidationRegistry } from '@schema-engine/forms';
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { SeMaskedInput } from '@/elements/inputs/form-masked-input';
 import { registerHostControl } from '@/lib/control-host';

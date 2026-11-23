@@ -43,7 +43,6 @@
 					"**/*.test-d.ts",
 					"**/node_modules/**",
 					"@/lib/form-engine-setup",
-					"@schema-engine/forms/schemas/validation/validation-registry",
 					"@ecopages/radiant-ui/**",
 					"@ecopages/radiant/**",
 					"@testing-library/jest-dom/vitest"

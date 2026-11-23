@@ -2,7 +2,7 @@
 
 The Form Engine validation system provides a flexible, extensible way to define and execute validation rules for form fields. It builds first-party validators with [Zod Mini](https://zod.dev/) and follows a registry pattern for maximum flexibility.
 
-Examples that log messages use `logger` imported from `@schema-engine/forms/lib/logger`,
+Examples that log messages use `logger` imported from `@schema-engine/forms`,
 which adds the `[schema-engine/forms]` package tag. Runtime diagnostics use this
 same logger; debug output is disabled by default.
 
@@ -61,7 +61,7 @@ import {
 	createDefaultValidationRegistry,
 	createValidationContext,
 	createZodSchemaFromRules,
-} from '@schema-engine/forms/schemas/validation';
+} from '@schema-engine/forms';
 
 const registry = createDefaultValidationRegistry();
 const rules = [{ $type: 'required' }, { $type: 'email' }, { $type: 'minLength', value: 5 }];
@@ -82,7 +82,7 @@ import {
 	createValidationContext,
 	createZodSchemaFromRules,
 	ValidationPresets,
-} from '@schema-engine/forms/schemas/validation';
+} from '@schema-engine/forms';
 
 const registry = createDefaultValidationRegistry();
 
@@ -129,7 +129,7 @@ const formConfig = {
 Each `FormEngine` owns a `ValidationRegistry`, built from the built-in handlers, the `validations` of the winning elements and `createFormEngine({ validations })`, in that order. A later registration of the same `$type` replaces the earlier one without a warning. Elements contribute in the element registry's order: a replaced `$type` keeps its first position, so for elements [A1, B, A2] where all declare the same validation `$type`, B's validation wins. Create a standalone copy with `createDefaultValidationRegistry()` when you are not building an engine:
 
 ```typescript
-import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createDefaultValidationRegistry } from '@schema-engine/forms';
 
 const registry = createDefaultValidationRegistry();
 
@@ -144,7 +144,7 @@ const numberValidations = registry.getByCategory('number');
 `createDefaultValidationRegistry(extra)` adds registrations after the built-in ones, so an extra registration with a built-in `$type` overrides it. `createValidationRegistry(list)` builds a registry from exactly the list you give it:
 
 ```typescript
-import { createDefaultValidationRegistry, createValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createDefaultValidationRegistry, createValidationRegistry } from '@schema-engine/forms';
 import * as z from 'zod/mini';
 
 const postalCode = {
@@ -317,7 +317,7 @@ const engine = createFormEngine({ validations: [postalCode, socialSecurity] });
 Converts an array of validation rules into a Zod Mini schema:
 
 ```typescript
-import { createValidationContext, createZodSchemaFromRules } from '@schema-engine/forms/schemas/validation';
+import { createValidationContext, createZodSchemaFromRules } from '@schema-engine/forms';
 
 const rules = [{ $type: 'required' }, { $type: 'minLength', value: 3 }, { $type: 'maxLength', value: 50 }];
 
@@ -335,7 +335,7 @@ every cross-field rule silently passing.
 Generates a complete Zod Mini schema for an entire form:
 
 ```typescript
-import { generateFormSchema } from '@schema-engine/forms/schemas/validation';
+import { generateFormSchema } from '@schema-engine/forms';
 
 const formElements = [
 	{
@@ -371,7 +371,7 @@ const result = formSchema.safeParse({
 Use the exported `ValidationPresets` utility for convenient rule creation. A preset builds rule config only (its `$type`, the values you give it and your optional `message`); it adds no text of its own, so the application's language stays above the engine:
 
 ```typescript
-import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import { ValidationPresets } from '@schema-engine/forms';
 
 const rules = [
 	ValidationPresets.string.required('Name is required'),
@@ -412,7 +412,7 @@ IPv4 and IPv6 rules delegate address parsing to Zod Mini. IPv6 also keeps suppor
 Every handler receives a `ValidationContext` alongside its rule:
 
 ```typescript
-import type { DebounceScope } from '@schema-engine/forms/lib/debounce';
+import type { DebounceScope } from '@schema-engine/forms';
 
 interface ValidationContext {
 	/** Nested value tree for the whole form. */
@@ -437,7 +437,7 @@ constraints use, so one authored name cannot mean two different fields:
 | `billing.country` | `contacts.0.email` | `billing.country`        |
 
 A bare name is a sibling; a name containing a dot is absolute from the form
-root. The rule lives in `@schema-engine/forms/lib/field-ref` as `resolveFieldRef`
+root. The rule lives in `@schema-engine/forms` as `resolveFieldRef`
 and is shared with constraints.
 
 The array-row case is the reason the reference is scoped rather than literal: a
@@ -453,8 +453,7 @@ fields because the debounce key includes the rendered field path; separate forms
 must use separate scopes.
 
 ```typescript
-import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
-import { createValidationContext } from '@schema-engine/forms/schemas/validation';
+import { createDebounceScope, createValidationContext } from '@schema-engine/forms';
 
 const debounceScope = createDebounceScope();
 const context = createValidationContext({ values, fieldPath: 'email', debounceScope });
@@ -625,11 +624,11 @@ Build one with `createValidationRegistry(list)` or `createDefaultValidationRegis
 
 `ValidationPresets` is a plain exported authoring helper, independent of any
 `ValidationRegistry` instance. Import it from
-`@schema-engine/forms/schemas/validation` to build serializable rule objects.
+`@schema-engine/forms` to build serializable rule objects.
 
 ### DebounceScope
 
-`createDebounceScope()` from `@schema-engine/forms/lib/debounce` creates keyed
+`createDebounceScope()` from `@schema-engine/forms` creates keyed
 async validation state. Keep the scope with the form or field that owns it and
 pass it through `createValidationContext` (or the value-validation helpers, which
 require it). `debounce(fn, delay, key, input)` replaces a pending call with the

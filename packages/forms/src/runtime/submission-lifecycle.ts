@@ -1,4 +1,10 @@
-import type { ActionDispatchInput, ActionExecutionResult, ActionSequenceEntry } from '@schema-engine/actions';
+import type {
+	ActionDispatchInput,
+	ActionExecutionResult,
+	ActionSequenceEntry,
+	ParsedAction,
+	ParsedActionSequence,
+} from '@schema-engine/actions';
 import type { FormActionTrigger } from '@/actions';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { BuilderActionBaseContext } from '@/types';
@@ -12,14 +18,14 @@ type FormActionDispatch<TAction extends FormActionConfig> = (
 ) => Promise<Array<ActionExecutionResult & { actionId?: string; sequenceIndex?: number; groupIndex?: number }>>;
 
 interface RunSubmissionLifecycleOptions<TAction extends FormActionConfig> {
-	actions: readonly ActionSequenceEntry<TAction>[];
+	actions: ParsedActionSequence<TAction>;
 	context: BuilderActionBaseContext | (() => BuilderActionBaseContext);
 	/**
 	 * Whether any action answers the trigger. A trigger nothing answers is not dispatched and builds no context.
 	 *
 	 * @remarks Defaults to answering every trigger.
 	 */
-	hasMatching?: (actions: readonly ActionSequenceEntry<TAction>[], trigger: FormActionTrigger) => boolean;
+	hasMatching?: (actions: ParsedActionSequence<TAction>, trigger: FormActionTrigger) => boolean;
 	onAction?: (action: TAction, data: BuilderActionBaseContext['formData']) => void | Promise<void>;
 	/**
 	 * The consumer's submission callback.
@@ -53,7 +59,9 @@ export interface SubmissionLifecycleResult {
 	failure?: SubmissionFailure;
 }
 
-function isGroup<TAction extends FormActionConfig>(entry: ActionSequenceEntry<TAction>): entry is readonly TAction[] {
+function isGroup<TAction extends FormActionConfig>(
+	entry: ActionSequenceEntry<ParsedAction<TAction>>,
+): entry is readonly ParsedAction<TAction>[] {
 	return Array.isArray(entry);
 }
 

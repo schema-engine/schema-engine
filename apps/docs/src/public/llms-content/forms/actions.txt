@@ -1,0 +1,220 @@
+---
+title: 'Actions'
+description: 'Wire submit, reset, auto-save, notifications, and custom plugins.'
+order: 6
+---
+
+import { RuiAlert, RuiAlertDescription } from '@ecopages/radiant-ui/alert';
+
+# Actions
+
+Actions execute in response to form lifecycle triggers.
+
+<RuiAlert variant="info" layout="banner" class="unstyled">
+	<RuiAlertDescription>
+		<p>
+			Learn how actions are registered and dispatched in the <a href="/docs/actions/overview">Actions guide</a>.
+		</p>
+	</RuiAlertDescription>
+</RuiAlert>
+
+## Triggers
+
+### Form Triggers
+
+- `form_mount` - The form's runtime mounts, once
+- `form_change` - The form's values change
+- `form_submit` - The submit actions run, after validation passed
+
+### Submit Lifecycle
+
+- `form_submit_start` - Submit process begins, as the submission status becomes `submitting`: after validation passed and before the submit actions. An invalid or overtaken submission never starts, so it runs none of the submit triggers
+- `form_submit_success` - Submit completed successfully, after the `onSubmit` callback resolved
+- `form_submit_error` - Submit failed: a submit action aborted, the `onSubmit` callback rejected, or a trigger failed
+- `form_submit_complete` - Submit finished (success or failure)
+
+The order, with validation before them and the `onSubmit` callback inside, is in [Form state](/docs/forms/form-state#submit).
+
+### Step Triggers
+
+- `step_leave` - The current step is about to change
+- `step_change` - The current step changed
+- `step_enter` - A step became the current step
+
+They fire in that order and only when the current step changes: by Next, Back or a jump, by the move to
+the first step with an error after a failed or server-rejected submission, and by the move off a step that
+became skipped. A reset fires none. A step action cannot block a move, since the step's validation is the
+guard; if it fails, the failure is reported through `onActionResults`.
+
+## Configuring Triggers
+
+Actions can specify default triggers in metadata or be configured per-form:
+
+```typescript
+metadata: {
+	defaultTriggers: ['form_submit', 'form_submit_success']
+}
+
+{
+	id: 'custom-action',
+	$type: 'submit',
+	triggers: ['form_change']
+}
+```
+
+## Step Actions
+
+A step can declare its own `actions`. They are active while that step is the current
+one: every trigger runs the form's `actions` first, then the current step's.
+
+- `step_leave` fires while the step being left is current, so it runs that step's actions,
+  whether the user moves on with Next, goes back with Back, or jumps to another step.
+- `step_change` and `step_enter` fire once the new step is current, so they run the entered
+  step's actions. The first step is current on mount; it sees `step_enter` only when the
+  user returns to it.
+- Completing the last step is a submission, not a step trigger. Track it with
+  `form_submit_success`.
+
+```json
+{
+	"id": "preferences",
+	"title": "Preferences",
+	"elements": [],
+	"actions": [
+		{
+			"id": "preferences-view",
+			"$type": "gtm_event",
+			"eventName": "form_step_view",
+			"eventData": { "step_name": "preferences" },
+			"triggers": ["step_enter"]
+		}
+	]
+}
+```
+
+## Built-in Plugins
+
+### Submit
+
+Submit form data to an endpoint:
+
+```json
+{
+	"id": "submit-form",
+	"$type": "submit",
+	"endpoint": "/api/forms",
+	"method": "POST",
+	"successMessage": "Form submitted successfully!",
+	"redirectUrl": "/thank-you"
+}
+```
+
+### Auto-save
+
+Automatically save form progress with debouncing:
+
+```json
+{
+	"id": "auto-save",
+	"$type": "auto_save",
+	"storageKey": "contact-form-draft",
+	"debounceMs": 1000,
+	"triggers": ["form_change"]
+}
+```
+
+### Notification
+
+Display user notifications for form events:
+
+```json
+{
+	"id": "success-notification",
+	"$type": "show_notification",
+	"message": "Form submitted successfully!",
+	"variant": "success",
+	"triggers": ["form_submit_success"]
+}
+```
+
+### GTM
+
+Track form events in Google Tag Manager:
+
+```json
+{
+	"id": "track-submit",
+	"$type": "gtm_event",
+	"eventName": "form_submit",
+	"eventData": {
+		"formId": "contact-form",
+		"category": "engagement"
+	},
+	"triggers": ["form_submit"]
+}
+```
+
+### Reset
+
+Reset form to initial state:
+
+```json
+{
+	"id": "reset-form",
+	"$type": "reset",
+	"triggers": ["form_submit_success"]
+}
+```
+
+### Registering browser actions
+
+Auto-save, GTM, and Reset use browser storage, consent, `window.confirm`, and
+the GTM data layer, so their registrations import from
+`@schema-engine/forms/browser`, not the package root:
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import {
+	AutoSaveActionRegistration,
+	GTMActionRegistration,
+	ResetActionRegistration,
+} from '@schema-engine/forms/browser';
+
+const engine = createFormEngine({
+	actions: [AutoSaveActionRegistration, GTMActionRegistration, ResetActionRegistration],
+});
+```
+
+Use `createBrowserActionRegistrations({ storage, consent, confirm })` from the
+same subpath to supply your own storage, consent tool, or confirm dialog.
+
+## Creating Custom Actions
+
+Use `defineAction` from `@schema-engine/actions` and specialize it with the forms runtime types:
+
+```typescript
+import * as z from 'zod/mini';
+import { defineAction } from '@schema-engine/actions';
+import type { BuilderActionBaseContext, FormActionTrigger } from '@schema-engine/forms';
+
+const defineFormAction = defineAction<BuilderActionBaseContext, FormActionTrigger>();
+
+const trackAction = defineFormAction({
+	$type: 'track_submit',
+	schema: z.object({
+		id: z.string(),
+		$type: z.literal('track_submit'),
+		eventName: z.string(),
+	}),
+	metadata: {
+		name: 'Track Submit',
+		defaultTriggers: ['form_submit_success'],
+	},
+	execute: async (context) => {
+		console.log(context.config.eventName, context.formData, context.formId);
+		return { success: true };
+	},
+});
+```
+
+The handler receives the forms base context enriched with `config` and `trigger`, so `context.formData`, `context.formId`, `context.config`, and `context.trigger` are all strongly typed.

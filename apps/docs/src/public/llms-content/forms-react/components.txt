@@ -1,0 +1,117 @@
+---
+title: 'Components'
+description: 'Register and configure the field elements supplied by the React registry.'
+order: 3
+---
+
+# Components
+
+`@schema-engine/forms-react` renders element registrations, but the field
+implementations are consumer-owned registry code. Install the matching Schema
+Engine registry item and import its generated registration barrel:
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+
+const engine = createFormEngine({ elements: schemaFormRegistrations });
+```
+
+## Registry elements
+
+The aggregate `schema-form` item currently includes:
+
+| `$type`                       | Purpose                                                |
+| ----------------------------- | ------------------------------------------------------ |
+| `input`                       | Text, email, password, URL, telephone, and date inputs |
+| `textarea`                    | Multi-line text                                        |
+| `number`                      | Numeric input                                          |
+| `select`                      | Select menu                                            |
+| `checkbox`, `checkbox-group`  | Boolean and multi-choice inputs                        |
+| `radio`                       | Single-choice group                                    |
+| `switch`                      | Boolean toggle                                         |
+| `slider`                      | Numeric range                                          |
+| `combobox`                    | Searchable choice input                                |
+| `drop-zone`                   | File drop input                                        |
+| `fieldSet`                    | Grouped content                                        |
+| `input-otp`                   | One-time-password input                                |
+| `phone-input`, `masked-input` | Specialized text inputs                                |
+| `arrayElements`               | Repeated element groups                                |
+| `submit`, `submission-alert`  | Action and submission feedback                         |
+
+The registry item is an installation boundary: applications can select a
+smaller set of registrations or replace one registration before building the
+engine.
+
+## Element configuration
+
+Every field has a `$type` and `name`; the remaining properties come from that
+registration's schema. Shared properties include `label`, `description`,
+`defaultValue`, `rules`, `constraints`, `grid`, `className`, and `style`.
+`className` and `style` are escape hatches: `style` accepts only CSS custom
+properties (keys that start with `--`) and validation rejects any other key.
+
+```json
+{
+	"$type": "input",
+	"id": "email",
+	"name": "email",
+	"label": "Email address",
+	"inputType": "email",
+	"rules": [
+		{ "type": "required", "message": "Email is required" },
+		{ "type": "email", "message": "Enter a valid email" }
+	]
+}
+```
+
+Responsive placement belongs to the element's `grid` property (named `width` and
+`offset`, an `area` of the grid's `areas`, or raw lines) and the form's top-level
+`grid` configuration, which a step can replace with its own `grid`; see
+[Placing fields in the grid](/docs/forms/core-concepts#placing-fields-in-the-grid). View chrome belongs to `view`, not to a step or
+element; see [View recipes](/docs/forms-react/layouts).
+
+## Custom elements
+
+Create a consumer-owned registration with `InputRegistration` (or
+`StaticRegistration` for display-only content). The render component receives
+the registration config and should use `useFormField` for field
+binding. A native control keeps its own value (`defaultValue` and `fieldProps`); a
+component that takes `value` and `onChange` props uses `useFormField(config, { controlled: true })`,
+see [Hooks](/docs/forms-react/hooks#useformfield):
+
+```tsx
+import type { InputRegistration } from '@schema-engine/forms';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+import * as z from 'zod/mini';
+
+const RatingSchema = z.object({
+	$type: z.literal('rating'),
+	id: z.string(),
+	name: z.string(),
+	label: z.optional(z.string()),
+	max: z._default(z.number().check(z.int(), z.positive()), 5),
+});
+
+function Rating({ ...config }: z.output<typeof RatingSchema>) {
+	const { defaultValue, fieldProps } = useFormField(config);
+	return <input {...fieldProps} type="number" defaultValue={fieldText(defaultValue)} />;
+}
+
+const ratingRegistration: InputRegistration<'rating', typeof RatingSchema> = {
+	$type: 'rating',
+	schema: RatingSchema,
+	render: Rating,
+	metadata: {
+		name: 'Rating',
+		description: 'Numeric rating input',
+		category: 'input',
+	},
+};
+
+const engine = createFormEngine({ elements: [ratingRegistration] });
+```
+
+In a real registry item, make the render props type explicit. The Mini schema
+already implements Standard Schema, so it can be passed directly as the
+registration schema.

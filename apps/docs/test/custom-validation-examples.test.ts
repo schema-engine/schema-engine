@@ -4,14 +4,15 @@ import { fileURLToPath } from 'node:url';
 import * as ts from 'typescript';
 import * as z from 'zod/mini';
 import { afterEach, expect, test, vi } from 'vitest';
-import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
 import {
+	createFormEngine,
+	defineInput,
+	BaseFieldSchema,
 	createDefaultValidationRegistry,
 	createValidationContext,
 	ValidationSuperseded,
-} from '@schema-engine/forms/schemas/validation';
-import { createDebounceScope } from '@schema-engine/forms/lib/debounce';
+	createDebounceScope,
+} from '@schema-engine/forms';
 
 const page = readFileSync(new URL('../src/content/docs/forms/validation-custom.mdx', import.meta.url), 'utf8');
 
@@ -63,8 +64,7 @@ test('the documented form uses a registered rule in the rules of an element, and
 		exports: {},
 		require: (name: string) => {
 			if (name === 'zod/mini') return z;
-			if (name === '@schema-engine/forms') return { createFormEngine, defineInput };
-			if (name === '@schema-engine/forms/schemas') return { BaseFieldSchema };
+			if (name === '@schema-engine/forms') return { createFormEngine, defineInput, BaseFieldSchema };
 			throw new Error(`Unexpected import ${name}`);
 		},
 	}) as {
@@ -184,7 +184,7 @@ test.each([
 	[
 		'### Debouncing Async Validations',
 		0,
-		"\nimport type { ValidationRule } from '@schema-engine/forms/schemas/validation';\nconst fieldRule: ValidationRule = usernameRule;",
+		"\nimport type { ValidationRule } from '@schema-engine/forms';\nconst fieldRule: ValidationRule = usernameRule;",
 	],
 ])('the documented example %# under %s (block %i) type-checks for a consumer', (heading, index, suffix) => {
 	const fileName = fileURLToPath(new URL('./__validation_snippets__.ts', import.meta.url));

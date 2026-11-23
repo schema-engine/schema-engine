@@ -101,6 +101,25 @@ export type ActionDispatchResult<TData = unknown> = ActionExecutionResult<TData>
 /** A sequence entry is either one action or a group that runs concurrently. */
 export type ActionSequenceEntry<TConfig extends ActionConfigBase> = TConfig | readonly TConfig[];
 
+declare const PARSED_ACTION: unique symbol;
+
+/**
+ * An action config that {@link parseActions} checked against its registration's schema.
+ *
+ * @remarks
+ * The brand exists in the type only. {@link parseActions} is the one function that produces it, and
+ * {@link ActionDispatcher.dispatch} accepts nothing else, so an action that arrived as raw JSON or an object
+ * literal cannot reach a handler unchecked.
+ */
+export type ParsedAction<TConfig extends ActionConfigBase = ActionConfigBase> = TConfig & {
+	readonly [PARSED_ACTION]: true;
+};
+
+/** The sequence {@link parseActions} returns and {@link ActionDispatcher.dispatch} runs. */
+export type ParsedActionSequence<TConfig extends ActionConfigBase = ActionConfigBase> = readonly ActionSequenceEntry<
+	ParsedAction<TConfig>
+>[];
+
 /**
  * Action Handler Function Type
  *
@@ -189,7 +208,7 @@ export interface ActionDispatchInput<
 	TTrigger = string,
 > {
 	trigger: TTrigger;
-	actions: readonly ActionSequenceEntry<TConfig>[];
+	actions: ParsedActionSequence<TConfig>;
 	context: TBaseContext;
 	triggeredBy?: TConfig;
 	metadata?: Record<string, unknown>;

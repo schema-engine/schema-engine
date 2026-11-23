@@ -13,7 +13,7 @@ import {
 	RuiSelectValue,
 } from '@ecopages/radiant-ui/select';
 import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired } from '@schema-engine/forms';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { ChoiceHost, type ChoiceValue } from '@/lib/choice-host';
 import { choiceControlOptions, choiceKeys, serializeChoiceValue } from '@/lib/choice-value';

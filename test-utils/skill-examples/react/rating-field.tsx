@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
-import { defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
+import { defineInput, BaseFieldSchema } from '@schema-engine/forms';
 import { useFormField } from '@schema-engine/forms-react/hooks';
 
 const RatingFieldSchema = z.extend(BaseFieldSchema, {

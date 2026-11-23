@@ -48,7 +48,7 @@ const contactForm = engine.defineForm({
 });
 ```
 
-`defineForm` is the typed authoring API for that engine's registrations. `validateForm(input: unknown)` validates external JSON. Both run the same pipeline: envelope parse, Standard Schema dispatch by `$type` (including nested child elements), recipe-kind checks, and schema defaults/transforms. The normalized marker is applied only after that succeeds. `defineForm` and `validateForm` return a frozen `NormalizedFormConfig` owned by that engine. Snapshot isolation copies plain objects and arrays, so caller data of those kinds is not frozen. Other objects currently remain shared. A normalized form cannot be reused on another engine; pass the original authoring input or JSON instead. Renderers consume that normalized output. They do not re-run registration input schemas. Standalone or dynamically created fields that are not already inside a form must go through `engine.validateElement()` first. Containers render children with `FormElements` and a field scope (`namePrefix`, `instanceId`); they do not clone normalized configs to change paths.
+`defineForm` is the typed authoring API for that engine's registrations. `validateForm(input: unknown)` validates external JSON. Both run the same pipeline: envelope parse, Standard Schema dispatch by `$type` (including nested child elements, and the form's and steps' actions, which are parsed by `parseActions` from `@schema-engine/actions`), recipe-kind checks, and schema defaults/transforms. The normalized marker is applied only after that succeeds. `defineForm` and `validateForm` return a frozen `NormalizedFormConfig` owned by that engine. Snapshot isolation copies plain objects and arrays, so caller data of those kinds is not frozen. Other objects currently remain shared. A normalized form cannot be reused on another engine; pass the original authoring input or JSON instead. Renderers consume that normalized output. They do not re-run registration input schemas. Standalone or dynamically created fields that are not already inside a form must go through `engine.validateElement()` first. Containers render children with `FormElements` and a field scope (`namePrefix`, `instanceId`); they do not clone normalized configs to change paths.
 
 ### Validation errors
 
@@ -193,8 +193,7 @@ context with form data and timing metadata, including a stable step start time t
 when the current step changes; it carries the current `stepId`, and `currentStep` and `totalSteps` count the steps that are not skipped. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
 Its form state takes `isValid`, `touched` and `submitCount`, all required; the context's `isValid` is the one passed, the container's `snapshot.isValid` (see [action context form state](src/engine/README.md#action-context-form-state)).
-The engine entry point also re-exports `ActionDispatcher` so
-both renderers can use the same action dispatcher class.
+Both renderers execute actions with `ActionDispatcher` from `@schema-engine/actions`.
 
 An `arrayElements` row with one leaf child uses a scalar path when its seed is not object-shaped. A child container such as `fieldSet` stays under its own row object path. Object-shaped array `initialValues`, a child field's object-shaped `defaultValue`, or the first row object from form `defaultValues` (falling back to the array's `defaultValue`) also selects the object path.
 Use `engine.extend({ ... })` to add registrations without re-spreading shared barrels. A `catalog` passed to `createFormEngine` or `extend` is a copied base: every registration writes its own entry over it, and `extend` rebuilds from the source engine's catalog, or from its own `catalog` when one is passed, so custom entries carry over. Author forms with `engine.defineForm({ ... })` object literals.
@@ -270,12 +269,10 @@ against that list when the engine is built. `engine.getLayout()` returns the fro
 (the `data-se-theme` value), `grid`, `axes` (axis name to its values), `appearance` (the axes as a read-only registry) and the stylesheet `css`. `engine.extend()` inherits it,
 and `layout` is not an extend option.
 
-Moving to the layout theme removed these, with no aliases:
+The theme is configured with `layout` and read with `getLayout()`; the engine has no `grid` or `appearance` option. The grid and appearance schemas, types and helpers (`ElementGridConfig`, `GridLayoutConfig`, `getGridVariables`, `getGridItemVariables`, `getAppearanceAttributes` and the rest) come from `@schema-engine/layout`, not from this package.
 
-- The `grid` and `appearance` engine options, and `getCompiledGrid`, `getGridTheme` and `getAppearance` (use `layout` and `getLayout()`).
-- The `@schema-engine/forms/lib/grid-styles` and `lib/appearance` subpaths, and the appearance exports of the package root. The grid and appearance schemas, types and helpers (`ElementGridConfig`, `GridLayoutConfig`, `getGridVariables`, `getGridItemVariables`, `getAppearanceAttributes` and the rest) come from `@schema-engine/layout`; the emitters were `getFormGridVariables` and `getFieldGridVariables`.
-- `data-se-grid-theme` and `data-se-appearance-theme`, replaced by `data-se-theme`; and the React `useGridThemeId`, now `useLayoutThemeId`. A host built by hand adds `se-grid-item` and `data-se-theme` (`useFieldHost` does).
-- The `theme` and `theme-css` attribute names are now reserved, so an appearance axis cannot be called `theme`.
+- A rendered form, grid and item carry `data-se-theme`, and the React hook for it is `useLayoutThemeId`. A host built by hand adds `se-grid-item` and `data-se-theme` (`useFieldHost` does).
+- The `theme` and `theme-css` attribute names are reserved, so an appearance axis cannot be called `theme`.
 
 ### Appearance
 
@@ -604,7 +601,7 @@ normalized elements for default seeding and field traversal. Authoring JSON does
 not include this marker. Containers without an array marker use object paths.
 See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 
-`templatePath` in `@schema-engine/forms/lib/path-values` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
+`templatePath` in `@schema-engine/forms` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
 
 Engine construction stores elements, recipes, actions and validation rules in read-only registries
 from `@schema-engine/registry` (last registration wins, no override warning) and
@@ -613,8 +610,9 @@ to the generic result; see [actions](./src/actions/README.md).
 
 ## Pre-publish API
 
-Use `FormActionTrigger` and `BuilderActionRuntimeContext` for form actions. The
-`@schema-engine/forms/actions` entry exports `ActionDispatcher` for renderers.
+Every symbol is exported from one entry. The package root holds the main API; `/browser`, `/state-container`, `/csrf`, `/server-errors`, `/testing`, `/recipes` and `/recipes/built-in` hold what is separate from it, and `test/engine/entry-points.test.ts` fails when a symbol is exported from two.
+
+Use `FormActionTrigger` and `BuilderActionRuntimeContext` for form actions, and import them with the form actions (`formSubmitPlugin`, the registrations) from `@schema-engine/forms`. `ActionDispatcher` and the dispatch types come from `@schema-engine/actions` only.
 Recipe lookup accepts an engine or `{ getRecipe }` object. Grid configuration
 rejects unknown keys, including `rows`, `autoFit`, `autoFill`, and
 `maxColumnWidth`; automatic columns use `columns: 'auto'` and `minColumnWidth`.

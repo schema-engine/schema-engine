@@ -6,9 +6,7 @@ import { BrandFrameRecipe } from '@/lib/recipes/brand-frame.radiant';
 import { brandTheme } from '@/lib/recipes/brand-theme';
 import { checkoutEngine, profileEngine } from '@/lib/recipes/shared-engines';
 import type { DocsEngineName } from '@/lib/recipes/catalog';
-import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
-
-import '@schema-engine/forms/schemas/validation/validation-registry';
+import type { FormEngineRuntime } from '@schema-engine/forms';
 
 installMockFormApi();
 

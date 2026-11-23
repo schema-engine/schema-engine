@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useFormContext } from '@schema-engine/forms-react/hooks';
-import { isSubmissionBusy } from '@schema-engine/forms';
-import { mergeControlProps } from '@schema-engine/forms/schemas/html-attributes';
+import { isSubmissionBusy, mergeControlProps } from '@schema-engine/forms';
 import type { SubmitButtonProps } from './submit-button.types';
 
 export function SubmitButton({ label, disabled, onClick, className, id, name, htmlAttributes }: SubmitButtonProps) {

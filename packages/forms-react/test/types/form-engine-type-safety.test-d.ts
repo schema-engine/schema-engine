@@ -3,9 +3,13 @@
  * Run via: bun run check-types (tsconfig.test-types.json)
  */
 
-import { createFormEngine } from '@schema-engine/forms';
-import type { FormEngine, FormEngineRuntime } from '@schema-engine/forms/engine';
-import type { GetElementConfig } from '@schema-engine/forms/schemas';
+import {
+	createFormEngine,
+	type FormEngine,
+	type FormEngineRuntime,
+	type GetElementConfig,
+	defineInput,
+} from '@schema-engine/forms';
 
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';
@@ -51,7 +55,6 @@ import { FormEngineContext } from '@/components/provider';
 import type { FormEngineContextValue } from '@/components/provider';
 import type { FormProviderProps } from '@/hooks/form-state/types';
 import type { ComponentProps } from 'react';
-import { defineInput } from '@schema-engine/forms/types';
 import * as z from 'zod/mini';
 import { anyValue } from '../utils/any-value';
 

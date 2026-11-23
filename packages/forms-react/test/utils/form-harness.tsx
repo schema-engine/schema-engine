@@ -1,7 +1,6 @@
 import { type ReactNode } from 'react';
 import { render } from '@testing-library/react';
-import { createFormEngine } from '@schema-engine/forms';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import { createFormEngine, type FormConfig } from '@schema-engine/forms';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { FormProvider } from '@/components/form-provider';

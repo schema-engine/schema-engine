@@ -1,9 +1,17 @@
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
-import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
-import { applyFieldOverlay, getElementChildren, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
-import { getElementContainerKind } from '@schema-engine/forms/lib/normalized-form-config';
-import type { NormalizedElementConfig, FieldOverlay } from '@schema-engine/forms';
-import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
+import {
+	type FormEngineRuntime as CoreFormEngine,
+	applyFieldOverlay,
+	getElementChildren,
+	seedArrayRows,
+	usesScalarArrayItem,
+	getElementContainerKind,
+	type NormalizedElementConfig,
+	type FieldOverlay,
+	isFieldRequired,
+	type Participation,
+	getValueAtPath,
+} from '@schema-engine/forms';
 import {
 	renderWithOwningFormEngine,
 	renderWithConstraintValues,
@@ -17,10 +25,8 @@ import {
 	standaloneConstraints,
 	type RenderedConstraints,
 } from '@/lib/participation-snapshot';
-import type { Participation } from '@schema-engine/forms/engine';
 import { ElementError } from './element-error';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
 
 /** Live values the constraint snapshot is evaluated against. */
 export interface ConstraintEvaluationContext {

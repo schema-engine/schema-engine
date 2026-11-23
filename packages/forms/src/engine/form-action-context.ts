@@ -1,5 +1,6 @@
 import type { FormFetch } from '../lib/form-fetch';
-import type { BuilderActionBaseContext, FormStateError } from '@/types';
+import type { BuilderActionBaseContext } from '@/types';
+import type { FormStateError } from '@/state-container/types';
 
 /**
  * Renderer form state in the engine's shape.

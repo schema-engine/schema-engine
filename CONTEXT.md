@@ -17,7 +17,7 @@ Default widget `$type` schemas (for example `input`, `drop-zone`) live beside ea
 
 1. **Author** first-party field/action/config schemas with the functional `zod/mini` API. Installing the `zod` package is required to import its `zod/mini` entry point.
 2. **Register** the concrete schema. Prefer `defineInput` / `defineStatic` so the render function is checked against schema **output**. Consumer schemas may come from any Standard Schema provider, including Zod, Valibot, and Effect Schema.
-3. **Validate** via `~standard.validate` at engine and action boundaries. The forms package wraps the spec call in `safeParseStandardSchema` (`packages/forms/src/lib/standard-schema.ts`; import as `@schema-engine/forms/lib/standard-schema`) for callers that prefer a tagged result over a thrown error.
+3. **Validate** via `~standard.validate` at engine and action boundaries. The registry package wraps the spec call in `safeParseStandardSchema` (import from `@schema-engine/registry`) for callers that prefer a tagged result over a thrown error.
 4. **Consumers** may register custom elements with a hand-written Standard Schema — they are not required to install Zod unless they use Zod-authored built-ins.
 
 Form authors supply schema **input** (defaults stay optional). After `defineForm` / `validateForm`, components receive schema **output**. Nested container `elements` are authored against the same engine registrations as top-level fields.
@@ -30,7 +30,7 @@ Form authors supply schema **input** (defaults stay optional). After `defineForm
 
 `@schema-engine/forms` and the renderer packages use `@ecopages/logger` through
 each package’s shared `logger` instance. The forms instance is also exported as
-`@schema-engine/forms/lib/logger`. Tags identify
+`logger` from `@schema-engine/forms`. Tags identify
 the package (`[schema-engine/forms]`, `[schema-engine/forms-react]`, and so on).
 Debug output stays off unless the host enables Ecopages log levels.
 
@@ -87,7 +87,7 @@ one-element array compares as its element, so a single-selection control matches
 an authored scalar.
 
 Field references resolve identically for constraints and for validation, and
-that is deliberate: `resolveFieldRef` in `@schema-engine/forms/lib/field-ref` is
+that is deliberate: `resolveFieldRef` in `@schema-engine/forms` is
 the single implementation, and `resolveConstraintPath` is an alias of it. A
 validation handler reaches it through the `ValidationContext` its second
 argument carries — `resolve`, plus the form's nested `values` and the field's

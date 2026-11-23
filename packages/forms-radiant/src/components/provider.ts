@@ -1,6 +1,6 @@
 import { createContext } from '@ecopages/radiant/context';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
-import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms';
 
 export interface FormEngineContextValue {
 	/** Absent until the renderer has an engine to publish. */

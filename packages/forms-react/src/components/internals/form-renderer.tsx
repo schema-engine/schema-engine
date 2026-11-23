@@ -14,13 +14,19 @@ import type { FormProviderProps } from '../../hooks/form-state/types';
 import { FormElements } from './form-elements';
 import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormEngineProvider } from '../form-engine-provider';
-import type { EngineOutputMaps, FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { FormValues, NormalizedFormConfig } from '@schema-engine/forms';
-import { isNormalizedFormConfig } from '@schema-engine/forms/lib/normalized-form-config';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import {
+	type EngineOutputMaps,
+	type FormEngineRuntime as FormEngine,
+	type FormValues,
+	type NormalizedFormConfig,
+	isNormalizedFormConfig,
+	type FormConfig,
+	getRenderableSteps,
+	assertFormEngine,
+	stepGrid,
+} from '@schema-engine/forms';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from './recipe-renderer';
-import { getRenderableSteps, assertFormEngine, stepGrid } from '@schema-engine/forms/lib/validate-form';
 
 function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }) {
 	return (

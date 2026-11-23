@@ -1,0 +1,119 @@
+---
+title: 'Validation'
+description: 'Declarative validation rules and Zod Mini schema generation.'
+order: 4
+---
+
+# Validation
+
+The validation system provides 24 built-in rules with support for custom validation.
+
+**Note:** Runnable element configs require `$type`, `id`, and `name` (and any
+fields your element registration schema requires). Fragments below omit those
+when the focus is rule shape only.
+
+See the rules run in a live React form: [Validation on React Forms](/docs/examples/react-forms#validation).
+
+## Using Validation Presets
+
+```typescript
+import { ValidationPresets } from '@schema-engine/forms';
+
+const emailRules = [
+	ValidationPresets.string.required('Email is required'),
+	ValidationPresets.string.email('Invalid email address'),
+	ValidationPresets.string.maxLength(100, 'Email too long'),
+];
+
+const passwordRules = [
+	ValidationPresets.string.required('Password is required'),
+	ValidationPresets.string.minLength(8, 'At least 8 characters'),
+	ValidationPresets.string.pattern(
+		'^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)',
+		'Must contain uppercase, lowercase, and number',
+	),
+];
+
+const ageRules = [
+	ValidationPresets.number.required('Age is required'),
+	ValidationPresets.number.min(18, 'Must be 18 or older'),
+	ValidationPresets.number.max(120, 'Invalid age'),
+];
+```
+
+## Available Presets
+
+### String
+
+| Preset                    | Description              |
+| ------------------------- | ------------------------ |
+| `required(message)`       | Non-empty string         |
+| `email(message)`          | Valid email format       |
+| `url(message)`            | Valid URL format         |
+| `uuid(message)`           | Valid UUID               |
+| `uuidv4(message)`         | Valid UUID v4            |
+| `cuid(message)`           | Valid CUID               |
+| `cuid2(message)`          | Valid CUID2              |
+| `ulid(message)`           | Valid ULID               |
+| `hex(message)`            | Valid hexadecimal string |
+| `minLength(min, message)` | Minimum string length    |
+| `maxLength(max, message)` | Maximum string length    |
+| `pattern(regex, message)` | Regex pattern match      |
+
+### Number
+
+| Preset              | Description     |
+| ------------------- | --------------- |
+| `required(message)` | Non-null number |
+| `min(min, message)` | Minimum value   |
+| `max(max, message)` | Maximum value   |
+
+### Boolean
+
+| Preset              | Description            |
+| ------------------- | ---------------------- |
+| `required(message)` | Required boolean value |
+
+### Array
+
+| Preset                   | Description                                  |
+| ------------------------ | -------------------------------------------- |
+| `required(message)`      | Non-empty array                              |
+| `minItems(min, message)` | Minimum array length                         |
+| `maxItems(max, message)` | Maximum array length                         |
+| `nonEmpty(message)`      | Convenience alias for `minItems(1, message)` |
+
+### Network
+
+| Preset          | Description        |
+| --------------- | ------------------ |
+| `ipv4(message)` | Valid IPv4 address |
+| `ipv6(message)` | Valid IPv6 address |
+
+### Date
+
+| Preset              | Description    |
+| ------------------- | -------------- |
+| `datetime(message)` | Valid datetime |
+| `date(message)`     | Valid date     |
+| `time(message)`     | Valid time     |
+
+## In Form Configurations
+
+Validation rules are applied to elements using the `rules` property:
+
+```json
+{
+	"$type": "input",
+	"id": "email",
+	"name": "email",
+	"label": "Email Address",
+	"inputType": "email",
+	"rules": [
+		{ "type": "required", "message": "Email is required" },
+		{ "type": "email", "message": "Invalid email format" }
+	]
+}
+```
+
+> **Note:** The property is `rules`, not `validation`.

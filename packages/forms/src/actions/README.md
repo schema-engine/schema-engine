@@ -4,7 +4,7 @@ Form actions connect form lifecycle events to side effects. The forms package
 provides typed registrations for common actions and uses the generic execution
 engine from [@schema-engine/actions](../../../actions).
 
-Examples that log messages use `logger` imported from `@schema-engine/forms/lib/logger`,
+Examples that log messages use `logger` imported from `@schema-engine/forms`,
 which adds the `[schema-engine/forms]` package tag. Runtime diagnostics use this
 same logger; debug output is disabled by default.
 
@@ -231,4 +231,4 @@ configuration type to that engine; no global namespace augmentation is needed.
 
 Form action results use `ActionExecutionResult` from `@schema-engine/forms`, which
 extends the generic action result with optional `redirectUrl` for browser navigation.
-Both renderers execute actions through `ActionDispatcher.dispatch` or `dispatchSync`; see the [actions package](../../../actions/README.md#parallel-groups-and-results) for cancellation and result semantics.
+Both renderers execute actions through `ActionDispatcher.dispatch` or `dispatchSync` from `@schema-engine/actions`; the actions of a validated form are already parsed, as `parseActions` returns them. See the [actions package](../../../actions/README.md#parallel-groups-and-results) for cancellation and result semantics.

@@ -1,0 +1,71 @@
+---
+title: 'Theming'
+description: 'The CSS custom properties and gap tokens a host overrides, where to set each one, and a complete example theme file.'
+order: 4
+---
+
+import { RecipeDemo } from '@/components/recipe-demo';
+import { acmeThemeRecipe } from '@/lib/recipes/catalog';
+
+# Theming
+
+Theming is CSS: you set custom properties, and the grid, the appearance axes and the recipes read them. The vocabulary (which names exist) belongs to the [layout theme](/docs/styling/layout-themes); the values belong to your stylesheet.
+
+## The properties you override
+
+| Group              | Properties                                                                                                                                   | Read by                                                                                                                                                                                                                        |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Gap tokens**     | `--se-grid-gap-none`, `--se-grid-gap-compact`, `--se-grid-gap-default`, `--se-grid-gap-loose`, `--se-grid-gap-wide`                          | Every grid: step grids, fieldsets, array rows                                                                                                                                                                                  |
+| **Size hooks**     | `--se-space-compact`, `--se-space-comfortable`, `--se-control-height-compact`, `--se-control-height-comfortable`                             | The built-in `size` axis, for `compact` and `comfortable`                                                                                                                                                                      |
+| **Axis tokens**    | `--se-space`, `--se-font-size`, `--se-measure`, `--se-control-height`, `--se-border-width`, `--se-shadow`, `--se-surface-background`         | Card shells read all but `--se-font-size`; the hero, split screen, sidebar and stack shells read `--se-space`; controls read `--se-control-height`; a field that carries a `size` pick reads `--se-font-size` (both renderers) |
+| **Colour roles**   | `--primary` with `--on-primary` (Radiant UI) or `--primary-foreground` (shadcn), `--border`, `--surface`, and the rest of your design system | Radiant UI and shadcn components, and the card shells                                                                                                                                                                          |
+| **Item placement** | `--se-item-*`, `--se-item-display-mode`                                                                                                      | Field hosts; see [Layout themes](/docs/styling/layout-themes#custom-properties-of-a-container-and-an-item)                                                                                                                     |
+
+A card shell keeps the look of an unstyled card as the fallback of each token it reads (`var(--se-space, 1.5rem)`), so with no token set it looks as it does without a theme.
+
+## Where to set a token
+
+Custom properties inherit, so most tokens can be set on any element above the one that reads them. The rule for the size hooks is one line: **set them on `:root`, on any ancestor of the form or on the form's own `className`**, which works the same in both renderers for a pick on the card shell, a step or a field. The table says what else works.
+
+| Token                                                                   | Set it on                                                                                                       | Why                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Gap tokens** `--se-grid-gap-*`                                        | `:root`, a wrapper, or the form's `className`                                                                   | The theme never declares them on an element, so an inherited value always reaches the grid.                                                                                                                                                                                                                                                           |
+| **Size hooks** `--se-space-*`, `--se-control-height-*`                  | `:root`, any ancestor of the form, or the form's own `className`                                                | The axis rule reads the hook where the pick sits, and the pick inherits it. A hook you set always wins: in Radiant, the theme's own value sits in a `--se-renderer-*` fallback (set by renderers, not by apps) that the hook outranks, so a value set above the form is not replaced. The nearest setting wins, so a class on the form beats `:root`. |
+| **Axis tokens** with a literal value (`--se-font-size`, `--se-measure`) | A rule with class specificity on the element that carries the pick: `.my-form [data-se-size='compact'] { ... }` | The axis rule declares them on that element, and it is closer than anything above. With **no** pick they are not declared, so the form's `className` works.                                                                                                                                                                                           |
+| **Colour roles**                                                        | `:root`, or a class on the form                                                                                 | They are your design system's variables; a host axis can set them per value.                                                                                                                                                                                                                                                                          |
+
+The token rules (the tokens an axis value sets) sit inside `:where()`, so a class of yours wins over them when it targets the same element, with no `!important`. The grid and item rules do not: `.se-grid[data-se-theme="<id>"]` and `.se-grid-item[data-se-theme="<id>"]` outrank a lone class. Change layout through the `--se-grid-*` and `--se-item-*` properties, and use `--se-item-display-mode` to give an item its own `display`, rather than overriding `display` or `grid-column` with a class.
+
+A host override of a gap token replaces it at every width, including a width the theme ramps through `grid.responsive`: the public token is the first `var()` argument and a ramp only changes the fallback. A host that wants its own rhythm per width declares its own media queries.
+
+### Radiant: the spacing tokens of its own theme
+
+Radiant UI computes `--size-control-sm`, `--size-control-md` and `--size-control-lg` on `:root` in its default spacing pack, for example `--size-control-md: calc(2rem * var(--rui-density))`. A custom property that holds a `var()` is resolved where it is declared and inherited as the resolved value, so setting `--rui-density` on a wrapper does **not** resize the controls below it: they keep the size computed from the `:root` density.
+
+To make a region denser, set the tokens on the wrapper too:
+
+```css
+.dense-region {
+	--rui-density: 0.8;
+	--size-control-sm: calc(1.75rem * var(--rui-density));
+	--size-control-md: calc(2rem * var(--rui-density));
+	--size-control-lg: calc(2.25rem * var(--rui-density));
+}
+```
+
+`size: compact` and `size: comfortable` map onto `--size-control-sm` and `--size-control-lg`, so a region with a Radiant UI theme of its own needs these tokens redeclared, as above. Prefer the size hooks above for form controls, and Radiant UI's token packs (`@ecopages/radiant-ui/tokens/spacing/compact`) when the whole app should change density.
+
+### React: the registry controls
+
+The recipe styles and the controls styles are two imports with different jobs:
+
+- `recipes.css` is imported into the `components` layer, so your Tailwind utilities and classes sit above it. Its rules are `:where()`, so any class beats them.
+- `controls.css` is imported **unlayered**, after `recipes.css`, because a shadcn control sets its height with a Tailwind utility that outranks every layered rule. It lets `--se-control-height` set the height of controls that carry `data-se-control`, and gives a field that carries a `size` pick the font size `--se-font-size`. While a size is picked, a Tailwind height utility you pass to a control and a text utility you pass to a field lose to it; with no pick, or `default`, they keep their size. An unlayered class of yours always wins.
+
+See [Forms React getting started](/docs/forms-react/getting-started) for the two import lines.
+
+## A complete theme file
+
+This file themes every form that carries `className: 'acme'`: rhythm, the size hooks, the colour roles and the literal tokens of two axis values. The form below picks `size: comfortable` and `surface: outlined`, so it exercises all four groups. Give each form that should use it `className: 'acme'`. The gap tokens, colour roles and size hooks also work from `:root`. The rules in the last two blocks target the elements that carry the picks.
+
+<RecipeDemo recipe={acmeThemeRecipe} />

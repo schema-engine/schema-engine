@@ -2,9 +2,13 @@ import { customElement, onUpdated, prop, RadiantElement, registerSsrPreparationC
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
-import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import type { DefaultValuesOf, FormValues, NormalizedFormConfig } from '@schema-engine/forms';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type {
+	FormEngineRuntime as FormEngine,
+	DefaultValuesOf,
+	FormValues,
+	NormalizedFormConfig,
+	FormConfig,
+} from '@schema-engine/forms';
 import type { FormAction, FormSubmitContext } from '@/adapters/types';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 import { formEngineContext, type FormEngineContextValue } from '../provider';

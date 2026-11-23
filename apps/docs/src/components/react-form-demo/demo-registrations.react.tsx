@@ -1,7 +1,6 @@
 /** @jsxImportSource react */
 import * as z from 'zod/mini';
-import { defineInput, defineStatic } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+import { defineInput, defineStatic, BaseFieldSchema } from '@schema-engine/forms';
 import { DemoCheckbox, DemoInput, DemoSelect, DemoSubmit, DemoTextarea } from './demo-kit.react';
 
 export const DemoInputSchema = z.extend(BaseFieldSchema, {

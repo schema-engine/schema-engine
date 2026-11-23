@@ -1,4 +1,4 @@
-import type { ActionSequenceEntry } from '@schema-engine/actions';
+import type { ParsedActionSequence } from '@schema-engine/actions';
 import type { FormEngineRuntime } from '@/engine/form-engine';
 import type { FormActionConfig, SubmissionActionResult } from '@/runtime/submission-lifecycle';
 import type { FormStepState, StepNavigationMode } from '@/engine/step-machine';
@@ -119,7 +119,7 @@ export interface FormRuntimeHost {
 export interface FormRuntimeStep<TAction extends FormActionConfig = FormActionConfig> extends ValidationStep {
 	readonly id: string;
 	/** Actions dispatched after the form's on every trigger while this step is current. */
-	readonly actions?: readonly ActionSequenceEntry<TAction>[];
+	readonly actions?: ParsedActionSequence<TAction>;
 }
 
 /** The normalized form config, in the shape the runtime reads. */
@@ -128,7 +128,7 @@ export interface FormRuntimeConfig<
 > extends FormStateContainerConfig {
 	readonly id?: string;
 	readonly navigation?: StepNavigationMode;
-	readonly actions?: readonly ActionSequenceEntry<TAction>[];
+	readonly actions?: ParsedActionSequence<TAction>;
 	readonly steps: readonly FormRuntimeStep<TAction>[];
 }
 

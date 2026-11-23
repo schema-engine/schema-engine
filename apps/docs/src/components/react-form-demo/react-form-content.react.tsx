@@ -1,7 +1,6 @@
 /** @jsxImportSource react */
 import { useState } from 'react';
-import type { FormConfig } from '@schema-engine/forms/schemas';
-import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
+import type { FormConfig, FormEngineRuntime } from '@schema-engine/forms';
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 
 /**

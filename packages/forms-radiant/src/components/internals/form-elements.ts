@@ -1,12 +1,12 @@
 import { jsx, type JsxRenderable } from '@ecopages/jsx/jsx-runtime';
 import {
+	type FormEngineRuntime as FormEngine,
 	type FieldScope,
 	composeElementKey,
 	composeFieldId,
 	composeFieldName,
 	type NormalizedElementConfig,
 } from '@schema-engine/forms';
-import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { FormElement } from './field-renderer';
 import { peekOwningConstraintValues, peekOwningRowIds } from '@/contexts/form-engine-owner';
 import type { ConstraintEvaluationContext } from './render-registered-element';

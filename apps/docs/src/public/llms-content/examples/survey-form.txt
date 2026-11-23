@@ -1,0 +1,34 @@
+---
+title: 'Survey Form'
+description: 'A branching survey with conditional logic and rich inputs.'
+order: 4
+---
+
+import { FormRendererPreview } from '@/components/form-renderer';
+import { FormConfigCode } from '@/components/form-config-code';
+import { surveyDemoConfig } from '@/lib/form-configs/survey-form';
+
+# Survey Form
+
+These previews use Radiant because the docs app is Ecopages + Radiant UI.
+
+This survey demonstrates a wizard recipe, choice elements, and a conditional
+follow-up question.
+
+## Interactive demo
+
+<FormRendererPreview config={surveyDemoConfig} />
+
+## Configuration pattern
+
+<FormConfigCode config={surveyDemoConfig} />
+
+Constraints are direct element properties with one effect per object. Use
+multiple elements when a follow-up should appear for several independent
+answers, or register a custom element when the interaction needs richer
+behavior.
+
+The [React Forms](/docs/examples/react-forms#multi-step-wizard) page runs a wizard like this one in React.
+
+See [constraint logic](/docs/forms-react/advanced), [validation](/docs/forms/validation),
+and [View recipes](/docs/forms-react/layouts).

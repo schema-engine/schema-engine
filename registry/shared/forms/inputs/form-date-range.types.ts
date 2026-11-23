@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+import { BaseFieldSchema } from '@schema-engine/forms';
 
 export const DateRangeValueSchema = z.object({
 	from: z.optional(z.string()),

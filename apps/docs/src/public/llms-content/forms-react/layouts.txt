@@ -1,0 +1,195 @@
+---
+title: 'View recipes'
+description: 'Card, wizard, and other view recipes for form chrome.'
+order: 4
+---
+
+import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
+import { FormConfigCode } from '@/components/form-config-code';
+import { DefaultRecipeSources } from '@/components/default-recipe-sources';
+import { viewRecipesDemoConfig } from '@/lib/form-configs/onboarding-wizard';
+
+# View recipes
+
+Recipes compose a **shell** with optional **header**, **progress**, and **actions** blocks. Select one with form-level `view.$type`. `@schema-engine/forms-react` is headless: the factory does not bind default recipes. `FormRenderer` still lives in the package.
+
+| Layer                                          | Owns                                                                                                                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@schema-engine/layout`                        | The recipe protocol every domain shares: `defineRecipeProtocol`, `resolveRecipeView`, slot defaults                                                    |
+| `@schema-engine/forms/recipes`                 | The forms protocol (slots `shell`, `header`, `progress`, `actions`; kinds `single-step`, `wizard`): `defineRecipeSpec`, `defineFormRecipe`, view model |
+| `@schema-engine/forms/recipes/built-in`        | Built-in specs, slot schemas and their config types                                                                                                    |
+| `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                                                                                                  |
+| `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()`                                                                                   |
+
+## Default registry recipes
+
+The [React Forms](/docs/examples/react-forms#copied-shadcn-source) page renders the registry's `card` recipe and `input` field live, from source copied into the docs app.
+
+Install the default source owned by your app:
+
+```bash
+pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-engine-form-recipes
+```
+
+The install copies the recipe stylesheets next to the components. Import the entry point once in your global stylesheet, after Tailwind and into the `components` layer (the `components` layer keeps Tailwind utilities and your own classes above the recipe rules):
+
+```css
+@import 'tailwindcss';
+@import './components/schema-engine/forms/recipes/recipes.css' layer(components);
+```
+
+The path is relative to your global stylesheet: `./components/schema-engine/forms/recipes/recipes.css` from a Vite `src/index.css`, `../components/schema-engine/forms/recipes/recipes.css` from a Next.js `app/globals.css`. Without the import the shells and blocks render unstyled: each shell and block has its layout in a CSS file beside its component (`shells/hero-shell.css`, `blocks/form-actions.css` and the rest), every rule inside `:where()` so a class of yours wins, and the Tailwind classes left on the components are mostly your shadcn theme's colours and type, plus the few that override a shadcn `Button`. Without Tailwind, import the file plain. The size axis also needs `controls.css`, unlayered, after the recipe styles: `@import './components/ui/schema-engine/components/controls.css';` (see [Appearance and the default styles](#appearance-and-the-default-styles)). Then add the generated recipe barrel when you construct the engine:
+
+```typescript
+import { createFormEngine } from '@schema-engine/forms';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+
+const engine = createFormEngine({ elements: schemaFormRegistrations, recipes: schemaFormRecipeRegistrations });
+```
+
+| `$type`               | Kind        | Description                        |
+| --------------------- | ----------- | ---------------------------------- |
+| `card`                | single-step | Centered card shell                |
+| `split-screen`        | single-step | Side panel plus form               |
+| `hero-background`     | single-step | Hero image or video                |
+| `bare-controls`       | wizard      | Previous / next / submit only      |
+| `card-wizard`         | wizard      | Card shell with progress           |
+| `wizard`              | wizard      | Horizontal step indicators         |
+| `sidebar-wizard`      | wizard      | Step indicators in a sidebar       |
+| `hero-wizard`         | wizard      | Wizard over a hero background      |
+| `split-screen-wizard` | wizard      | Wizard with a marketing side panel |
+
+Slot config is optional. The recipe fixes block identity; `view` only passes options such as `shell`, `header`, `progress`, and `actions`.
+
+## Single-step
+
+Single-step recipes render a submit-only actions bar below the fields (aligned with the `actions.align` slot config), so the form is submittable without wizard navigation:
+
+```typescript
+const formConfig: FormConfig = {
+	id: 'contact',
+	view: {
+		$type: 'card',
+		shell: { appearance: { size: 'comfortable', surface: 'elevated' } },
+	},
+	steps: [{ id: 'step-1', title: 'Contact', elements: [/* ... */] }],
+};
+```
+
+## Appearance and the default styles
+
+Recipe slots, steps, fields and the form take a named `appearance`. The guides are [Appearance axes](/docs/styling/appearance-axes) and [Theming](/docs/styling/theming); in short, the engine's layout theme declares the axes (`size`: `compact | default | comfortable`, `surface`: `flat | outlined | elevated`, plus any a host adds), each element or slot declares the axes it supports, and both renderers emit the picked value as `data-se-<axis>`. The hero, split screen and sidebar shells declare `size` on their `shell` slot and read `--se-space` for their padding and gaps (the stack shell reads it too, from the form's `appearance`; a step's pick does not reach a shell, which sits above the steps), as their Radiant shells do. The card shell reads the semantic tokens those values set (`--se-space`, `--se-measure`, `--se-border-width`, `--se-shadow`, `--se-surface-background`) from `card-shell.css`, so, with the built-in axes and no host theme overrides, the same config gives the same padding, width, border and shadow as the Radiant card. `controls.css`, a separate import from `recipes.css`, reads `--se-control-height` for the single-line controls that carry `data-se-control` (inputs, selects, number, masked and phone inputs, date triggers, the submit and wizard buttons): `compact` is `1.75rem` and `comfortable` `2.25rem` unless the host sets `--se-control-height-compact` or `--se-control-height-comfortable`, and no pick or `default` keeps the height of your own `ui` component. Import it unlayered, after the layered `recipes.css`: `@import './components/ui/schema-engine/components/controls.css';`. A shadcn control sets its height with a Tailwind utility, which outranks every `components` layer rule, so only an unlayered rule lets the pick win. While a size is picked, a Tailwind height utility you pass to a control loses to it, and an unlayered class of yours still wins. Structural slot config such as `header.showDescription` is unchanged.
+
+## Multi-step
+
+Wizard recipes require **at least two steps**. Set `view.$type` to a wizard recipe such as `wizard` or `card-wizard`. The live demo renders exactly the configuration below:
+
+<ReactFormDemoEmbed config={viewRecipesDemoConfig} />
+
+<FormConfigCode config={viewRecipesDemoConfig} />
+
+If you omit `view.$type` on a multi-step form, `validateForm` writes the engine's default wizard recipe as `view` (`bare-controls` unless `createFormEngine({ defaultWizardRecipe })` names another wizard recipe). If that recipe is not registered, the form keeps no `view`, `validateForm` warns, and fields render without chrome.
+
+See [Registration Flow](/docs/examples/registration-flow) for a full wizard configuration.
+
+### Skipping steps and the stepper
+
+A step takes `constraints` (`show` or `hide`, the same logic as fields) on fields of **earlier** steps. A step its
+constraints hide is skipped: Next and Back pass over it, `goTo` refuses it, progress counts only the steps that are
+not skipped, and its fields take no part (they are not validated and are left out of the submitted values; the
+values are kept and come back if the step is shown again). The first step cannot have constraints:
+
+```typescript
+steps: [
+	{ id: 'contact', title: 'Contact', elements: [{ $type: 'input', name: 'hasCompany', label: 'Company?' }] },
+	{
+		id: 'company',
+		title: 'Company',
+		elements: [{ $type: 'input', name: 'companyName', label: 'Company name' }],
+		constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+	},
+	{ id: 'payment', title: 'Payment', elements: [] },
+];
+```
+
+The form's `navigation` setting decides how freely the stepper moves forward: `'linear'` (the default) reaches only
+steps already visited and validates every step on the way, landing on the first that fails; `'free'` reaches any step
+without validating. Going back is always allowed and Next validates in both. A block reads this from the view model:
+`steps` lists the steps that are not skipped (`index` and `total` count only those), and `navigation.canGoToStep(id)`
+and `navigation.goToStep(id)` take step ids.
+
+## Style a recipe
+
+A copy-paste path from install to a styled card:
+
+1. Install the recipes and import the stylesheet as above.
+2. Pick the look in config. `size` is `compact`, `default` or `comfortable`; `surface` is `flat`, `outlined` or `elevated`:
+
+```typescript
+const config = engine.defineForm({
+	id: 'contact',
+	className: 'checkout-form',
+	view: { $type: 'card', shell: { appearance: { size: 'comfortable', surface: 'outlined' } } },
+	steps: [
+		{
+			id: 'details',
+			title: 'Details',
+			elements: [{ $type: 'input', id: 'email', name: 'email', label: 'Email' }],
+		},
+	],
+});
+```
+
+3. Override it with your own CSS. The recipe rules sit inside `:where()`, so any class beats them without `!important`. The form's `className` (here `checkout-form`) is on an ancestor of the shell, so style the shell parts under it:
+
+```css
+.checkout-form .se-card-shell__section {
+	padding: 2.5rem;
+}
+
+.checkout-form .se-card-shell__card {
+	border-radius: 0;
+}
+```
+
+The card shell sets no inline styles. Its class hooks are `se-card-shell`, `se-card-shell__card`, `se-card-shell__section`, `se-card-shell__header` and `se-card-shell__content`. The other shells and blocks have hooks of the same kind: `se-hero-shell` (with `__video`, `__overlay`, `__content`, `__header` and `__form`), `se-split-screen-shell` (`__side`, `__main`, `__actions`, `__title` and `__side-content`), `se-sidebar-shell` (`__progress`, `__separator`, `__main` and the `--stacked` modifier), `se-stack-shell`, `se-step-header`, `se-form-actions` (with `--align-*`), `se-wizard-actions` (`--minimal`, `__forward`), `se-step-indicators` (`--sidebar`, `__list`, `__item`, `__button`, `__number`, `__copy`, `__title`) and `se-minimal-progress` (`__labels`, `__track`, `__fill`). The hero image is the only inline style: it is data, so it stays an inline `background-image`, and the progress fill takes its width from the custom property `--se-progress`. The stack shell and the stacked sidebar are as wide as Radiant's, at most `40rem` and centred, so a wizard or a bare-controls form no longer fills its container. [Styling and layout](/docs/styling/overview) says which tool (a token, an axis value, a class) fits which job.
+
+## Copy the default source
+
+Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files land under `@/components/schema-engine/forms/recipes`. Copy the files for each recipe you want. A recipe that has a stylesheet lists `recipes.css` with it; copy it together with every stylesheet it imports and import it as above. Every shell and block now ships a stylesheet, so when you copy only some recipes, delete the `@import` lines of `recipes.css` for the files you did not copy, or the stylesheet fails to resolve them. Each tab has a copy button.
+
+<DefaultRecipeSources />
+
+## Custom recipes
+
+A recipe is a registration: a spec bound to your components. [Recipes](/docs/styling/recipes#a-custom-recipe-shell-in-react-and-in-radiant) has a custom shell that renders live in React and in Radiant, with its CSS.
+
+```typescript
+import * as z from 'zod/mini';
+import { createFormEngine } from '@schema-engine/forms';
+import { defineRecipeSpec } from '@schema-engine/forms/recipes';
+import { defineRecipe, type FormShellProps } from '@schema-engine/forms-react/primitives';
+
+function BrandShell({ slots }: FormShellProps) {
+	return (
+		<div>
+			{slots.header}
+			{slots.content}
+			{slots.actions}
+		</div>
+	);
+}
+
+const BrandRecipe = defineRecipe(
+	defineRecipeSpec({
+		$type: 'brand',
+		kind: 'single-step',
+		slotSchemas: { shell: z.strictObject({ accent: z.optional(z.string()) }) },
+		metadata: { name: 'Brand', description: 'Branded form shell' },
+	}),
+	{ shell: BrandShell, slots: {} },
+);
+
+const engine = createFormEngine({ recipes: [BrandRecipe] });
+```

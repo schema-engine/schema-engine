@@ -33,4 +33,3 @@ export type {
 	FormValidationMode,
 	NativeValidity,
 } from './types';
-export { FormValidationFailure } from '../engine/value-validation';

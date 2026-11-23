@@ -8,7 +8,7 @@
  * ```typescript
  * import * as z from 'zod/mini';
  * import { Logger } from '@ecopages/logger';
- * import { ActionDispatcher, ActionRegistry } from '@schema-engine/actions';
+ * import { ActionDispatcher, ActionRegistry, parseActions } from '@schema-engine/actions';
  *
  * const logger = new Logger('[my-app]');
  * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>([
@@ -24,14 +24,14 @@
  * ]);
  *
  * const dispatcher = new ActionDispatcher(registry);
- * await dispatcher.dispatch({
- *   actions: [{ id: '1', $type: 'log', message: 'hello' }],
- *   trigger: 'change',
- *   context: { formId: 'demo' },
- * });
+ * const parsed = parseActions(registry, [{ id: '1', $type: 'log', message: 'hello' }]);
+ * if (parsed.success) {
+ *   await dispatcher.dispatch({ actions: parsed.data, trigger: 'change', context: { formId: 'demo' } });
+ * }
  * ```
  */
 
 export * from './types';
 export * from './registry';
 export * from './dispatcher';
+export * from './parse-actions';

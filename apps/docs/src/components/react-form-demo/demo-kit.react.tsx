@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig } from '@schema-engine/forms';
 import type { ElementGridConfig } from '@schema-engine/layout';
 import { fieldText, useFormField, useFieldHost } from '@schema-engine/forms-react/hooks';
 

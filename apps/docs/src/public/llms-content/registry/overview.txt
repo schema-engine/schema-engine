@@ -1,0 +1,61 @@
+---
+title: 'Overview'
+description: 'The base registry system used by every other package.'
+order: 1
+---
+
+# @schema-engine/registry
+
+Base registry system for managing named resources in an extensible architecture.
+
+## Quick Look
+
+```typescript
+import * as z from 'zod/mini';
+import { createRegistry } from '@schema-engine/registry';
+import type { BaseRegistration } from '@schema-engine/registry';
+
+interface Feature extends BaseRegistration {
+	execute: () => void;
+}
+
+const features = createRegistry<Feature>('Feature', [
+	{
+		$type: 'dark-mode',
+		schema: z.object({}),
+		metadata: { name: 'Dark Mode' },
+		execute: () => console.log('Dark mode active'),
+	},
+]);
+
+features.get('dark-mode')?.execute();
+```
+
+The flow is: define a registration shape, build a registry from a list, then look items up by `$type`.
+
+## Overview
+
+`@schema-engine/registry` provides the registry mechanism for Schema Engine registrations. `createRegistry` builds a read-only, frozen registry from a list: later registrations with the same `$type` win without a warning, and each winning schema is checked as a Standard Schema at build. The forms engine stores its elements, recipes, actions and validation rules this way, and the actions package builds `ActionRegistry` on it. `ValidationRegistry` in `@schema-engine/forms` is a read-only registry of this kind with a few validation lookups added. `BaseRegistry` stays as an explicit, mutable opt-in for plugin systems that register at runtime.
+
+**Key Features:**
+
+- **One mechanism for elements, recipes, actions and validation rules**: `createRegistry` for read-only registries, `BaseRegistry` only when you need to register at runtime.
+- **Last wins**: `[...defaults, custom]` overrides a default without logging.
+- **Type Safe**: Full TypeScript support with generic constraints for registrations.
+- **Standard Schema boundary**: Register schemas from Zod Mini, Zod, Valibot, Effect Schema, or another compatible provider. A schema without `~standard.validate` is rejected at build, naming its `$type`.
+
+## Installation
+
+```bash
+pnpm add @schema-engine/registry
+
+# Install zod only when authoring schemas with zod/mini.
+pnpm add zod
+```
+
+## Next Steps
+
+- [Core Concepts](/docs/registry/core-concepts) - Understand createRegistry, BaseRegistry and registration types
+- [API Reference](/docs/registry/api-reference) - Complete API documentation
+- [Registries and the catalog](/docs/registry/registries) - Read-only and mutable registries, what the forms engine registers, adding a kind
+- [Examples](/docs/registry/examples) - Build your own registry

@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react';
 import { eco } from '@ecopages/core';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 import { ReactFormContent } from './react-form-content.react';
 import { docsShadcnFormEngine } from './shadcn-engine';
 import { installMockFormApi } from '@/lib/mock-form-api';

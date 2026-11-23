@@ -8,8 +8,7 @@ The engine, the config, validation timing, constraints, the container and the ru
 
 ```ts title="forms/engine.ts"
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
+import { createFormEngine, defineInput, BaseFieldSchema } from '@schema-engine/forms';
 
 export const textRegistration = defineInput({
 	$type: 'text',

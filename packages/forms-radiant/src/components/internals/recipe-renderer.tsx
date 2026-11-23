@@ -1,13 +1,16 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
-import type { NormalizedFormConfig, RecipeRegistration } from '@schema-engine/forms';
-import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import { GRID_CLASS, getGridVariables } from '@schema-engine/layout';
-import { stepGrid } from '@schema-engine/forms/lib/validate-form';
+import {
+	type NormalizedFormConfig,
+	type RecipeRegistration,
+	type FormEngineRuntime as FormEngine,
+	stepGrid,
+	resolveParticipation,
+} from '@schema-engine/forms';
 import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
 import { createFormMeta } from '@/lib/instance-view';
-import { resolveParticipation } from '@schema-engine/forms/engine';
 import { FormElements } from './form-elements';
 import { collectFormInitialValues } from '@/adapters/radiant/rui-form-shell';
 import { FormStep } from '@/components/form-step';

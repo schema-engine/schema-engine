@@ -11,7 +11,7 @@ import * as registryYaml from '@schema-engine/registry/yaml';
 import * as z from 'zod/mini';
 import * as reactJsxRuntime from 'react/jsx-runtime';
 import * as reactPrimitives from '@schema-engine/forms-react/primitives';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+import { BaseFieldSchema } from '@schema-engine/forms';
 import { docsReactFormEngine } from '../src/components/react-form-demo/demo-engine';
 import { demoFormRegistrations } from '../src/components/react-form-demo/demo-registrations.react';
 import { docsEngines } from '../src/lib/form-engine-setup';

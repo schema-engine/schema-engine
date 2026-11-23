@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { createRegistry, type ReadOnlyRegistry } from '@schema-engine/registry';
+import { createRegistry, safeParseStandardSchema, type ReadOnlyRegistry } from '@schema-engine/registry';
 import type {
 	AnyValidationRegistration,
 	BaseValidationRule,
@@ -11,7 +11,6 @@ import { defaultValidations } from './defaults.js';
 import { BaseValidationRuleSchema } from './types.js';
 import { ValidationRuleError } from './errors.js';
 import { globalFetch, type FormFetch } from '@/lib/form-fetch';
-import { safeParseStandardSchema } from '@/lib/standard-schema';
 import { issueAt, type FormValidationIssue } from '@/lib/validate-form/issues';
 import { fromSchemaIssues } from '@/lib/validate-form/schema-issues';
 import { createValidationContext } from './utils.js';

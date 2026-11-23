@@ -7,11 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
-import { FormActionTriggerSchema, formResetPlugin, formSubmitPlugin } from '@schema-engine/forms/actions';
+import {
+	FormActionTriggerSchema,
+	formResetPlugin,
+	formSubmitPlugin,
+	type ActionExecutionResult,
+	type BuilderActionRuntimeContext,
+	type BuilderActionRegistration,
+} from '@schema-engine/forms';
 import { localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@schema-engine/forms/types';
-import type { ActionExecutionResult } from '@schema-engine/forms';
 
 export interface ActionLogEntry {
 	id: string;

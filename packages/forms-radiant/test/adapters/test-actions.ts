@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext } from '@schema-engine/forms';
-import type { FormActionTrigger } from '@schema-engine/forms/actions';
+import type { BuilderActionRuntimeContext, FormActionTrigger } from '@schema-engine/forms';
 
 /** The parts of an action result the submission lifecycle reads. */
 type TestActionResult = { success: boolean; shouldContinue?: boolean };

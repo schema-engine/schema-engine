@@ -3,14 +3,16 @@ import { customElement, onEvent, RadiantElement, state } from '@ecopages/radiant
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
-import { formResetPlugin, formSubmitPlugin, FormActionTriggerSchema } from '@schema-engine/forms/actions';
 import { localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
-import type {
-	ActionExecutionResult,
-	BuilderActionRuntimeContext,
-	BuilderActionRegistration,
+import {
+	formResetPlugin,
+	formSubmitPlugin,
+	FormActionTriggerSchema,
+	type ActionExecutionResult,
+	type BuilderActionRuntimeContext,
+	type BuilderActionRegistration,
+	type FormConfig,
 } from '@schema-engine/forms';
-import type { FormConfig } from '@schema-engine/forms/schemas';
 import * as z from 'zod/mini';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { FormController } from '@/adapters/radiant/controller';

@@ -29,6 +29,24 @@ class ActionRegistry<TBaseContext, TTrigger>
 
 `ActionRegistry` is built from a list with `createRegistry` from `@schema-engine/registry`. It is read-only and frozen. A later registration with the same `$type` replaces an earlier one without a warning, and a winning registration whose schema is not a Standard Schema throws at construction, naming its `$type`. Subclasses may add their own fields. There is no `register` or `clear`; to register at runtime, implement `ActionRegistryProvider` yourself.
 
+## parseActions
+
+```typescript
+function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
+	registry: { getAction(type: string): { schema: StandardSchemaV1 } | undefined },
+	input: unknown,
+): ParseActionsResult<TConfig>;
+
+type ParseActionsResult<TConfig> =
+	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: StandardSchemaIssue[] };
+```
+
+Validates each entry of a serialized sequence, inner arrays included, against the schema of the registration its `$type` names. `data` holds what each schema returned, so defaults and transforms apply, and every entry is checked, so two bad entries report two issues.
+
+An issue is a Standard Schema issue whose `path` is the index of the entry, the index inside a group when the entry is one, then the path the schema reported: `[1, 0, 'endpoint']`. An entry without a string `$type`, and a `$type` no registration answers, are issues at `$type`.
+
+`ParsedAction` is the entry type of `data`. Its brand exists in the type only and `parseActions` is the one function that produces it. `TConfig` is the caller's claim about what the registered schemas return; the parse checks the schemas and not that claim.
+
 ## ActionDispatcher
 
 ```typescript
@@ -40,10 +58,12 @@ class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 	): Promise<ActionDispatchResult[]>;
 
 	dispatchSync<TConfig extends ActionConfigBase>(input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): void;
+
+	hasMatching<TConfig extends ActionConfigBase>(actions: ParsedActionSequence<TConfig>, trigger: TTrigger): boolean;
 }
 ```
 
-When `metadata` is provided in the input, `dispatch()` shallow-merges it into `context.metadata` before execution.
+`dispatch`, `dispatchSync` and `hasMatching` take only parsed actions, so JSON or an object literal does not type-check until `parseActions` has returned it. When `metadata` is provided in the input, `dispatch()` shallow-merges it into `context.metadata` before execution.
 
 ## ActionRegistryProvider
 
@@ -110,7 +130,7 @@ interface ActionDispatchInput<
 	TTrigger = string,
 > {
 	trigger: TTrigger;
-	actions: readonly (TConfig | readonly TConfig[])[];
+	actions: ParsedActionSequence<TConfig>;
 	context: TBaseContext;
 	triggeredBy?: TConfig;
 	metadata?: Record<string, unknown>;

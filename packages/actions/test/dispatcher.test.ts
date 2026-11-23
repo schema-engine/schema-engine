@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import * as z from 'zod/mini';
+import { parsed } from './parsed';
 import { ActionDispatcher } from '../src/dispatcher';
 import type { ActionRegistryProvider } from '../src/registry';
 import type { ActionRegistration, ActionConfigBase } from '../src/types';
@@ -42,7 +43,7 @@ describe('ActionDispatcher', () => {
 
 	test('returns empty array when no actions provided', async () => {
 		const results = await dispatcher.dispatch({
-			actions: [],
+			actions: parsed([]),
 			trigger: 'submit',
 			context: { id: 'ctx-1' },
 		});
@@ -63,7 +64,7 @@ describe('ActionDispatcher', () => {
 		});
 
 		await dispatcher.dispatch({
-			actions: [{ id: 'a1', $type: 'log', name: 'test' }],
+			actions: parsed([{ id: 'a1', $type: 'log', name: 'test' }]),
 			trigger: 'submit',
 			context: { id: 'ctx-1', metadata: { existing: true } },
 			metadata: { userId: '123' },
@@ -86,7 +87,7 @@ describe('ActionDispatcher', () => {
 		});
 
 		await dispatcher.dispatch({
-			actions: [{ id: 'a1', $type: 'log', name: 'test' }],
+			actions: parsed([{ id: 'a1', $type: 'log', name: 'test' }]),
 			trigger: 'submit',
 			context: { id: 'ctx-plain' },
 			metadata: { userId: '123' },
@@ -109,7 +110,7 @@ describe('ActionDispatcher', () => {
 		});
 
 		dispatcher.dispatchSync({
-			actions: [{ id: 'a1', $type: 'log', name: 'test' }],
+			actions: parsed([{ id: 'a1', $type: 'log', name: 'test' }]),
 			trigger: 'submit',
 			context: { id: 'ctx-1' },
 			metadata: { userId: '123' },
@@ -139,7 +140,7 @@ describe('ActionDispatcher', () => {
 
 		expect(() =>
 			dispatcher.dispatchSync({
-				actions: [{ id: 'a1', $type: 'log', name: 'test' }],
+				actions: parsed([{ id: 'a1', $type: 'log', name: 'test' }]),
 				trigger: 'submit',
 				context: { id: 'ctx-1' },
 			}),
@@ -165,28 +166,28 @@ describe('ActionDispatcher', () => {
 			registry.register(logRegistration);
 			const actions = [{ id: 'a1', $type: 'log', name: 'test' }];
 
-			expect(dispatcher.hasMatching(actions, 'submit')).toBe(true);
-			expect(dispatcher.hasMatching(actions, 'change')).toBe(false);
+			expect(dispatcher.hasMatching(parsed(actions), 'submit')).toBe(true);
+			expect(dispatcher.hasMatching(parsed(actions), 'change')).toBe(false);
 		});
 
 		test('lets explicit triggers override the defaults, including inside a group', () => {
 			registry.register(logRegistration);
 			const actions = [[{ id: 'a1', $type: 'log', name: 'test', triggers: ['change' as const] }]];
 
-			expect(dispatcher.hasMatching(actions, 'change')).toBe(true);
-			expect(dispatcher.hasMatching(actions, 'submit')).toBe(false);
+			expect(dispatcher.hasMatching(parsed(actions), 'change')).toBe(true);
+			expect(dispatcher.hasMatching(parsed(actions), 'submit')).toBe(false);
 		});
 
 		test('ignores a disabled action', () => {
 			registry.register(logRegistration);
 
-			expect(dispatcher.hasMatching([{ id: 'a1', $type: 'log', name: 'test', enabled: false }], 'submit')).toBe(
-				false,
-			);
+			expect(
+				dispatcher.hasMatching(parsed([{ id: 'a1', $type: 'log', name: 'test', enabled: false }]), 'submit'),
+			).toBe(false);
 		});
 
 		test('matches an unregistered type, which dispatch reports as a missing handler', () => {
-			expect(dispatcher.hasMatching([{ id: 'a1', $type: 'missing' }], 'submit')).toBe(true);
+			expect(dispatcher.hasMatching(parsed([{ id: 'a1', $type: 'missing' }]), 'submit')).toBe(true);
 		});
 	});
 });
@@ -195,7 +196,7 @@ test('unregistered action with another trigger produces no result', async () => 
 	const dispatcher = new ActionDispatcher({ getAction: () => undefined, getActionTypes: () => [] });
 	expect(
 		await dispatcher.dispatch({
-			actions: [{ id: 'audit-1', $type: 'audit', triggers: ['form_submit'] }],
+			actions: parsed([{ id: 'audit-1', $type: 'audit', triggers: ['form_submit'] }]),
 			trigger: 'form_change',
 			context: {},
 		}),
@@ -213,11 +214,11 @@ test('runs actions that match by default or explicit triggers and skips explicit
 		getActionTypes: () => ['audit'],
 	});
 	const results = await dispatcher.dispatch({
-		actions: [
+		actions: parsed([
 			{ id: 'skip', $type: 'audit', triggers: ['form_change'] },
 			{ id: 'default', $type: 'audit' },
 			{ id: 'explicit', $type: 'audit', triggers: ['form_submit'] },
-		],
+		]),
 		trigger: 'form_submit',
 		context: {},
 	});

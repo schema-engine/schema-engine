@@ -1,5 +1,5 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
-import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms';
 import { formEngineContext } from '@/components/provider';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
 

@@ -3,7 +3,7 @@ import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig } from '@schema-engine/forms';
 import { selectFieldState, type FormStateContainer } from '@schema-engine/forms/state-container';
 import { useFieldArray, useFormField, type FormFieldConfig } from '@/hooks/form-state';
 import { fieldText } from '@/hooks/field-text';

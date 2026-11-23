@@ -1,5 +1,4 @@
-import type { Participation } from '@schema-engine/forms/engine';
-import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
+import type { Participation, FormEngineRuntime as FormEngine } from '@schema-engine/forms';
 
 /**
  * Engine that owns the field currently being rendered.

@@ -64,14 +64,13 @@ That is why actions usually read `context.config` and `context.trigger` directly
 Sequence entries run in array order, not registry registration order. Inner arrays run as parallel groups.
 
 ```typescript
-await dispatcher.dispatch({
-	actions: [
-		{ id: 'a', $type: 'log', message: 'first' },
-		{ id: 'b', $type: 'log', message: 'second' },
-	],
-	trigger: 'submit',
-	context,
-});
+const parsed = parseActions(registry, [
+	{ id: 'a', $type: 'log', message: 'first' },
+	{ id: 'b', $type: 'log', message: 'second' },
+]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
+await dispatcher.dispatch({ actions: parsed.data, trigger: 'submit', context });
 ```
 
 ## Control Flow

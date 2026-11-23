@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
+import { BaseFieldSchema } from '@schema-engine/forms';
 
 export const InputFieldExtensionSchema = z.object({
 	inputType: z._default(z.enum(['text', 'email', 'password', 'url', 'tel', 'search', 'date']), 'text'),

@@ -3,7 +3,7 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiRadioGroup } from '@ecopages/radiant-ui/radio-group';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired } from '@schema-engine/forms';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { ChoiceHost, type ChoiceValue } from '@/lib/choice-host';
 import { choiceControlOptions, choiceKeys, choiceValueOf } from '@/lib/choice-value';

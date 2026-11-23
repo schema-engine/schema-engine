@@ -1,4 +1,4 @@
-import type { StandardSchemaIssue } from '@/lib/standard-schema';
+import type { StandardSchemaIssue } from '@schema-engine/registry';
 import { issueAt, type FormValidationIssue, type Path } from './issues';
 
 function schemaIssuePath(path: StandardSchemaIssue['path']): PropertyKey[] {

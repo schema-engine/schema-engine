@@ -66,18 +66,23 @@ const baseContext: BaseContext = {
 	data: {},
 };
 
+const parsed = parseActions(registry, [
+	{
+		id: 'log-1',
+		$type: 'log',
+		message: 'Hello world',
+	},
+]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
 await dispatcher.dispatch({
-	actions: [
-		{
-			id: 'log-1',
-			$type: 'log',
-			message: 'Hello world',
-		},
-	],
+	actions: parsed.data,
 	trigger: 'submit',
 	context: baseContext,
 });
 ```
+
+`parseActions` validates each entry against its registration's schema and returns the only actions `dispatch` accepts. A workflow that arrives as JSON takes the same path: `JSON.parse`, `parseActions`, `dispatch`.
 
 ## Note on Typing
 

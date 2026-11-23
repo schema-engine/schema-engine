@@ -3,7 +3,7 @@
  * Run via: pnpm check-types (tsconfig.test-types.json)
  */
 
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, type FormEngine, type ElementConfig } from '@schema-engine/forms';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { SelectElementRegistration } from '@/components/schema-engine/forms/inputs/form-select.registration';
 import { TextareaElementRegistration } from '@/components/schema-engine/forms/inputs/form-textarea.registration';
@@ -11,8 +11,6 @@ import { CheckboxElementRegistration } from '@/components/schema-engine/forms/in
 import { NumberElementRegistration } from '@/components/schema-engine/forms/inputs/form-number.registration';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import type { InputFieldConfig } from '@/components/schema-engine/forms/inputs/form-input.types';
-import type { FormEngine } from '@schema-engine/forms/engine';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
 
 type Assert<T extends true> = T;
 

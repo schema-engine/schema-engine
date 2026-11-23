@@ -1,0 +1,125 @@
+---
+title: 'Custom Plugins'
+description: 'Author and register your own action plugins.'
+order: 8
+---
+
+# Custom Actions
+
+`@schema-engine/actions` does not ship built-in domain plugins. Instead, you define your own registrations for your domain.
+
+## Define a Config Schema
+
+```typescript
+import * as z from 'zod/mini';
+
+export const WebhookActionSchema = z.strictObject({
+	id: z.string(),
+	$type: z.literal('webhook'),
+	url: z.url(),
+	method: z._default(z.enum(['POST', 'PUT']), 'POST'),
+	body: z.optional(z.record(z.string(), z.unknown())),
+	enabled: z.optional(z.boolean()),
+	triggers: z.optional(z.array(z.string())),
+});
+
+export type WebhookActionConfig = z.infer<typeof WebhookActionSchema>;
+```
+
+## Define the Base Context and Trigger
+
+```typescript
+type Trigger = 'submit' | 'sync';
+
+interface BaseContext {
+	entityId: string;
+	data: Record<string, unknown>;
+}
+```
+
+## Create the Registration
+
+```typescript
+export const webhookAction: ActionRegistration<WebhookActionConfig, BaseContext, Trigger> = {
+	$type: 'webhook',
+	schema: WebhookActionSchema,
+	metadata: {
+		name: 'Webhook',
+		description: 'Sends the current payload to a remote endpoint',
+		defaultTriggers: ['submit'],
+	},
+	execute: async (context) => {
+		const response = await fetch(context.config.url, {
+			method: context.config.method,
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				trigger: context.trigger,
+				entityId: context.entityId,
+				data: context.data,
+				payload: context.config.body ?? null,
+			}),
+		});
+
+		if (!response.ok) {
+			return {
+				success: false,
+				error: `Webhook failed with status ${response.status}`,
+			};
+		}
+
+		return {
+			success: true,
+			message: 'Webhook delivered',
+		};
+	},
+};
+```
+
+The handler receives `BaseContext & { config: WebhookActionConfig; trigger: Trigger }`. That runtime shape is created by the dispatcher; you do not provide it at the call site.
+
+## Register and Execute
+
+```typescript
+const registry = new ActionRegistry<BaseContext, Trigger>([webhookAction]);
+
+const dispatcher = new ActionDispatcher<BaseContext, Trigger>(registry);
+
+const baseContext: BaseContext = {
+	entityId: 'entity-1',
+	data: { status: 'ready' },
+};
+
+const parsed = parseActions(registry, [
+	{
+		id: 'send-webhook',
+		$type: 'webhook',
+		url: 'https://example.com/hooks',
+		method: 'POST',
+	},
+]);
+if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
+
+await dispatcher.dispatch({
+	actions: parsed.data,
+	trigger: 'submit',
+	context: baseContext,
+});
+```
+
+## Design Guidance
+
+- Keep schemas strict and serializable.
+- Keep `execute()` focused on one side effect.
+- Use `defaultTriggers` for broad defaults and per-action `triggers` for overrides.
+- Return `shouldContinue: false` only when you want to stop the chain explicitly.
+
+## Typing Model
+
+There are two layers:
+
+- `BaseContext` is what callers pass into `dispatch()` or `dispatchSync()`.
+- The action handler receives `ActionRuntimeContext<WebhookActionConfig, BaseContext, Trigger>`, which the dispatcher constructs by adding `config` and `trigger`.
+
+This keeps the call site simple while preserving a strongly typed handler context.

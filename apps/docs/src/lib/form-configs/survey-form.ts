@@ -1,4 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 
 /** Customer satisfaction survey with a conditional follow-up field. */
 export const surveyDemoConfig: FormConfig = {

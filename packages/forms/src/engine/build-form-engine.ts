@@ -1,6 +1,6 @@
 import { globalFetch, withCsrf, type CsrfPolicy, type FormFetch } from '@/lib/form-fetch';
 import type { FormIssueFormatter } from '@/state-container/types';
-import { createRegistry } from '@schema-engine/registry';
+import { assertStandardSchema, createRegistry } from '@schema-engine/registry';
 import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '@/types/registration';
 import type {
 	ActionRegistrationConstraint,
@@ -31,7 +31,6 @@ import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
-import { assertStandardSchema } from '@/lib/standard-schema';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
 /**

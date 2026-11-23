@@ -37,7 +37,7 @@ The path is relative to your global stylesheet: `./components/schema-engine/form
 import { createFormEngine } from '@schema-engine/forms';
 import { FormEngineProvider, FormRenderer } from '@schema-engine/forms-react';
 import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
 const engine = createFormEngine({
 	elements: schemaFormRegistrations,
@@ -186,7 +186,7 @@ See [Getting started](../../apps/docs/src/content/docs/forms-react/getting-start
 
 Registry source type checks run through the registry workspace's `check-types`
 task in Turbo. Renderer actions import the dispatcher from
-`@schema-engine/forms/actions`.
+`@schema-engine/actions`.
 
 ## Validation, navigation and action contexts
 

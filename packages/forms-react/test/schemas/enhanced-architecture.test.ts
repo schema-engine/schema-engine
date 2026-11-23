@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import type { ElementConfig } from '@schema-engine/forms/schemas';
+import type { ElementConfig } from '@schema-engine/forms';
 import { InputFieldSchema, type InputFieldConfig } from '@/components/schema-engine/forms/inputs/form-input.types';
 import {
 	TextareaFieldSchema,

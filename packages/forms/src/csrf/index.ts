@@ -1,6 +1,6 @@
 import { isSameOrigin, type CsrfPolicy } from '@/lib/form-fetch';
 
-export type { CsrfPolicy, FormFetch } from '@/lib/form-fetch';
+export type { CsrfPolicy } from '@/lib/form-fetch';
 
 /** Where the policy puts the token, besides the reader's own part. */
 interface CsrfPlacement {

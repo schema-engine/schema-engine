@@ -1,0 +1,85 @@
+---
+title: 'Form libraries'
+description: 'Why Schema Engine has no form library adapters, and how to embed a form in an existing hand-written one.'
+order: 13
+---
+
+# Form libraries
+
+Schema Engine has no adapter for React Hook Form, Formik, TanStack Form or any other form library. The engine owns the form state, and every renderer binds to it.
+
+## Why there are no adapters
+
+**Forms are configured, not coded.** You write a JSON config, pick the widgets and handle `onSubmit` and actions. You never call `useForm`, `register` or `<Formik>`, so there is no form library API to expose and nothing for an adapter to hand you.
+
+**An adapter would fork the meaning of the same config.** Each library has its own validation timing, error shape, field-array identity and submit semantics. With an adapter, `validationMode: 'onBlur'`, an array's error or the order of two errors on one field would mean something slightly different in each one, and the config would describe the form as one adapter reads it. One engine-owned [container](/docs/forms/form-state) gives the config a single meaning in every renderer, React and Radiant alike. Radiant could never use a React library anyway.
+
+**The integration point is the container.** Its contract is public, and its conformance suite proves that an implementation keeps it. A new binding is written against that contract and checked by that suite: see [Write a binding](/docs/forms/form-state#write-a-binding).
+
+What you keep: the hooks follow familiar names (`useFieldArray`, `useWatch`, `useFormContext`), rules are Standard Schema registrations so Zod, Valibot and Effect Schema still work, and a field renders for its own state, not for a keystroke. What you give up: a form library's own API, its devtools and its resolvers, and the option to put a library under the renderer.
+
+## Embed a form in an existing form
+
+An application with a hand-written form can host a Schema Engine form for part of it. They share no form state: values go in through `defaultValues` and come out through `onChange` and `onSubmit`.
+
+```tsx
+import { useState } from 'react';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { engine } from './react-widgets.react';
+
+const profileForm = engine.defineForm({
+	id: 'profile',
+	steps: [
+		{
+			id: 'main',
+			title: 'Profile',
+			elements: [
+				{
+					$type: 'text',
+					id: 'name',
+					name: 'name',
+					label: 'Name',
+					rules: [{ type: 'required', message: 'Required' }],
+				},
+				{ $type: 'rating', id: 'stars', name: 'stars', label: 'Rating' },
+				{ $type: 'submit', id: 'save', name: 'save', label: 'Save' },
+			],
+		},
+	],
+});
+
+interface Profile {
+	name: string;
+	stars?: number;
+}
+
+/**
+ * A hand-written form that hosts a Schema Engine form: values go in as `defaultValues` and come out through
+ * `onChange` and `onSubmit`. The two share no form state.
+ */
+export function ProfileEditor({ profile, save }: { profile: Profile; save: (profile: Profile) => Promise<void> }) {
+	const [name, setName] = useState(profile.name);
+
+	return (
+		<section>
+			<h2>{name || 'New profile'}</h2>
+			<FormRenderer
+				engine={engine}
+				config={profileForm}
+				defaultValues={{ ...profile }}
+				onChange={(values) => setName(typeof values['name'] === 'string' ? values['name'] : '')}
+				onSubmit={async (values) =>
+					save({ name: values.name, stars: typeof values.stars === 'number' ? values.stars : undefined })
+				}
+			/>
+		</section>
+	);
+}
+```
+
+- `defaultValues` sets what the form starts from and is read once, when the form is created. A new config builds a new form with fresh state, so define the config once, outside the component, as above.
+- `onChange` receives the nested values, and only when a value changed. A touch, a blur or an error does not call it.
+- `onSubmit` receives the values that passed validation, without the fields that took no part, and the config's `payload`. Their type comes from the config, so no cast is needed; an optional leaf field's cleared value (`''` or `null`) is part of it, which is why the example sends `stars` only when it is a number. Reject its promise to fail the submission; the rejection is reported in `formState.submission`.
+- The host reads the values; it does not write them back. To change the form from outside, use `useFormContext().setValue` or `reset` inside it.
+
+The `engine` here is the one built in [Writing a widget](/docs/forms-react/widgets).

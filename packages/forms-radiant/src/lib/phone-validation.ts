@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { PhoneRuleSchema, type PhoneRule, type ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { PhoneRuleSchema, type PhoneRule, type ValidationRegistration } from '@schema-engine/forms';
 import { loadLibphonenumber } from './phone-number';
 
 /**

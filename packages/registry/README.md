@@ -84,7 +84,7 @@ widgets.size;
 - The result is frozen and has no `register` or `clear`. `all()` and `keys()` return frozen arrays, and each stored registration is a frozen shallow copy of the winner. The copy is a snapshot taken at build: the objects you passed stay untouched, but assigning to them or spying on their methods afterwards does not reach the registry, so patch or spy before building, or build a new registry. Nested values such as `schema` are shared with the original. Build a new registry from a new list to change the contents.
 - Type the result with `ReadOnlyRegistry<TRegistration>`.
 
-`assertStandardSchema(schema, context)` is exported for code that needs the same check outside a registry.
+`assertStandardSchema(schema, context)` is exported for code that needs the same check outside a registry. `safeParseStandardSchema(schema, value)` runs a registration's schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }`; it throws for a schema that validates asynchronously. Form validation and `parseActions` in `@schema-engine/actions` both run registrations through it.
 
 ## Using `BaseRegistry` (mutable opt-in)
 
@@ -233,7 +233,7 @@ export * from '@schema-engine/registry';
 
 Main exports:
 
-- `createRegistry`, `assertStandardSchema`, `ReadOnlyRegistry`
+- `createRegistry`, `assertStandardSchema`, `safeParseStandardSchema`, `ReadOnlyRegistry`
 - `BaseRegistry` (mutable)
 - `BaseRegistration`
 - `ComponentRegistration`

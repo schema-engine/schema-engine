@@ -76,9 +76,7 @@ Every element that extends `BaseFieldSchema` accepts a rule of any registered `$
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, defineInput, BaseFieldSchema, type ValidationRegistration } from '@schema-engine/forms';
 
 type PostalCodeRule = { $type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
 
@@ -128,8 +126,7 @@ A rule is an object with a `$type` and any parameters you choose. Describe it wi
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type LengthRangeRule = { $type: 'lengthRange'; value?: { min?: number; max?: number }; message?: string };
 
@@ -170,8 +167,7 @@ A credit card rule checks the Luhn sum:
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type CreditCardRule = { $type: 'creditCard'; message?: string };
 
@@ -219,8 +215,7 @@ export const engine = createFormEngine({ validations: [creditCard] });
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type CompanyEmailRule = { $type: 'companyEmail'; value?: { domains?: string[] }; message?: string };
 
@@ -264,8 +259,7 @@ export const emailField = {
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type AgeRule = { $type: 'ageFromBirthDate'; value?: { minAge?: number; maxAge?: number }; message?: string };
 
@@ -320,8 +314,7 @@ export const birthDateField = {
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type SsnRule = { $type: 'ssn'; message?: string };
 
@@ -352,8 +345,7 @@ export const engine = createFormEngine({ validations: [ssn] });
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type PasswordStrengthRule = {
 	$type: 'passwordStrength';
@@ -427,8 +419,7 @@ the form root.
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type ConfirmPasswordRule = { $type: 'confirmPassword'; message?: string };
 type ConditionalRequiredRule = {
@@ -515,7 +506,7 @@ export const companyNameField = {
 ### Built-in Async Validation (Recommended)
 
 ```typescript
-import type { AsyncRule } from '@schema-engine/forms/schemas/validation';
+import type { AsyncRule } from '@schema-engine/forms';
 
 export const usernameRule = {
 	$type: 'async',
@@ -535,8 +526,7 @@ For complex async validation logic that can't be handled by the built-in async t
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type UniqueUsernameRule = { $type: 'uniqueUsername'; message?: string };
 type ValidAddressRule = { $type: 'validAddress'; message?: string };
@@ -604,8 +594,7 @@ Pass several custom validations at once. A later entry replaces an earlier one w
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type PostalCodeRule = { $type: 'postalCode'; country?: 'US' | 'CA' | 'UK'; message?: string };
 type WorkingHoursRule = { $type: 'workingHours'; message?: string };
@@ -673,8 +662,7 @@ Always test your custom validations thoroughly. Build an engine with the rule an
 ```typescript
 import * as z from 'zod/mini';
 import { describe, it, expect } from 'vitest';
-import { createFormEngine } from '@schema-engine/forms';
-import { createValidationContext } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, createValidationContext } from '@schema-engine/forms';
 
 const postalCode = {
 	$type: 'postalCode',
@@ -745,7 +733,7 @@ cancel one another. See [Async Validation](/docs/forms/validation-built-in#async
 for the request and response contract.
 
 ```typescript
-import type { AsyncRule } from '@schema-engine/forms/schemas/validation';
+import type { AsyncRule } from '@schema-engine/forms';
 
 const usernameRule = {
 	$type: 'async',
@@ -797,8 +785,7 @@ Consider edge cases and provide graceful error handling:
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, type ValidationRegistration } from '@schema-engine/forms';
 
 type CardNumberRule = { $type: 'cardNumber'; message?: string };
 
@@ -888,7 +875,7 @@ Here `strictPostalCode` is another registration with `$type: 'postalCode'`.
 For different contexts or testing, build a registry from a list. `createDefaultValidationRegistry` adds the built-in rules first:
 
 ```typescript
-import { createValidationRegistry } from '@schema-engine/forms/schemas/validation';
+import { createValidationRegistry } from '@schema-engine/forms';
 
 const testOnly = {
 	$type: 'testOnly',

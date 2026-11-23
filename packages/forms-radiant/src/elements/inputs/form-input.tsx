@@ -1,5 +1,5 @@
 import { RuiInput } from '@ecopages/radiant-ui/input';
-import { isFieldRequired } from '@schema-engine/forms/schemas';
+import { isFieldRequired } from '@schema-engine/forms';
 import { isRenderedRequired } from '@/lib/field-rules';
 import { FieldGroup } from '../field-group';
 import type { InputFieldProps } from './form-input.types';

@@ -1,7 +1,11 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { isServer } from '@ecopages/radiant/is-server';
-import type { DefaultValuesOf, FormValues, NormalizedFormConfig } from '@schema-engine/forms';
-import type { FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms/engine/form-engine';
+import type {
+	DefaultValuesOf,
+	FormValues,
+	NormalizedFormConfig,
+	FormEngineRuntime as CoreFormEngine,
+} from '@schema-engine/forms';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';

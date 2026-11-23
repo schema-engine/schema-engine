@@ -3,8 +3,7 @@
  */
 
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas/base-field';
-import { elementChildrenSchema, type ElementRenderProps } from '@schema-engine/forms';
+import { BaseFieldSchema, elementChildrenSchema, type ElementRenderProps } from '@schema-engine/forms';
 
 export const FieldSetConfigSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('fieldSet'),

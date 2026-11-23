@@ -1,7 +1,7 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { EcoEmbed } from '@ecopages/ecopages-jsx/eco-embed';
-import type { FormConfig } from '@schema-engine/forms/schemas';
+import type { FormConfig } from '@schema-engine/forms';
 import { ReactFormDemoRoot } from './react-form-demo-root';
 import { ReactFormPreview } from './react-form-preview.react';
 

@@ -1,6 +1,6 @@
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
-import { ValidationPresets } from '@schema-engine/forms/schemas/validation';
+import { ValidationPresets } from '@schema-engine/forms';
 
 export { ValidationPresets };
 

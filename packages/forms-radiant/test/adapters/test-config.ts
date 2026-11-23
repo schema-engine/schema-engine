@@ -1,5 +1,4 @@
-import type { FormConfig } from '@schema-engine/forms/schemas';
-import { markNormalizedFormConfig } from '@schema-engine/forms/lib/normalized-form-config';
+import { type FormConfig, markNormalizedFormConfig } from '@schema-engine/forms';
 
 const testOwner = {};
 

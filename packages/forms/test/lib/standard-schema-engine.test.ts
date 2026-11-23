@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { FormValidationError } from '@/lib/validate-form';
-import { safeParseStandardSchema } from '@/lib/standard-schema';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 import { anyValue } from './any-value';
 
 type MinimalFixtureConfig = {

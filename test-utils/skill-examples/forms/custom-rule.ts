@@ -1,7 +1,5 @@
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput } from '@schema-engine/forms';
-import { BaseFieldSchema } from '@schema-engine/forms/schemas';
-import type { ValidationRegistration } from '@schema-engine/forms/schemas/validation';
+import { createFormEngine, defineInput, BaseFieldSchema, type ValidationRegistration } from '@schema-engine/forms';
 
 type PostalCodeRule = { $type: 'postalCode'; message?: string };
 

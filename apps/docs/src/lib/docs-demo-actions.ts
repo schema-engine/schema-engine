@@ -1,13 +1,13 @@
-import type { ActionRegistrationConstraint } from '@schema-engine/forms';
-import type { NotificationAction } from '@schema-engine/forms/actions';
 import { GDPRConsent, GTMTracker, localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
 import {
+	type ActionRegistrationConstraint,
+	type NotificationAction,
 	autoSavePlugin,
 	formResetPlugin,
 	formSubmitPlugin,
 	gtmPlugin as gtmEventPlugin,
 	notificationPlugin,
-} from '@schema-engine/forms/actions';
+} from '@schema-engine/forms';
 import { showDocsActionNotification } from '@/lib/docs-demo-notification';
 
 /**

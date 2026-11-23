@@ -1,8 +1,6 @@
 import { expectTypeOf } from 'vitest';
 import * as z from 'zod/mini';
-import { createFormEngine } from '@schema-engine/forms';
-import type { FormValues } from '@schema-engine/forms';
-import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
+import { createFormEngine, type FormValues, type EngineOutputMaps } from '@schema-engine/forms';
 import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { SelectElementRegistration } from '@/components/schema-engine/forms/inputs/form-select.registration';

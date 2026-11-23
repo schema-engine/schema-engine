@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { selectFieldState, type FieldArrayValue, type FormStateContainer } from '@schema-engine/forms/state-container';
 import { useFieldArray, useFormField } from '@/hooks/form-state';
-import { markNormalizedElementConfig } from '@schema-engine/forms/lib/normalized-form-config';
+import { markNormalizedElementConfig } from '@schema-engine/forms';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
 const contacts = markNormalizedElementConfig(
