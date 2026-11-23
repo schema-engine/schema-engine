@@ -183,6 +183,22 @@ elements: [
 ];
 ```
 
+### The form state container
+
+The container owns a form's values, errors and field state and is the contract a renderer binds to. Its entries
+are `@schema-engine/forms/state-container` (the contract types, `createFormStateContainer`, the selectors and
+hydration), `@schema-engine/forms/csrf` and `@schema-engine/forms/server-errors`; see the
+[container guide](./src/state-container/README.md). A container of your own, or a store that must behave like
+this one, proves it with the conformance suite, which registers its cases with vitest (an optional peer
+dependency):
+
+```ts
+import { formStateContainerConformance } from '@schema-engine/forms/testing';
+import { createMyContainer } from './my-container';
+
+formStateContainerConformance(createMyContainer);
+```
+
 ### Class and style
 
 A form, a step and a field each take `className` and `style` as an escape hatch
@@ -534,12 +550,12 @@ adapter.
 
 ## Who owns visual chrome
 
-| Layer                                                           | Owns                                                                                                                                                                                                   |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form runtime (`createFormRuntime`), the form state container (`@schema-engine/forms/state-container`), `FieldArrayValue` — no widget `$type` schemas |
-| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/hooks`; the form state is the engine's container                                                                                                  |
-| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                                                            |
-| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                                                                 |
+| Layer                                                           | Owns                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms`                                          | Engine, validation, actions, recipe protocol, the form runtime (`createFormRuntime`), the form state container (`@schema-engine/forms/state-container`) and its conformance suite (`@schema-engine/forms/testing`), `FieldArrayValue` — no widget `$type` schemas |
+| `@schema-engine/forms-react`                                    | React renderer components; the form state hooks at `/hooks`; the form state is the engine's container                                                                                                                                                             |
+| `@schema-engine/forms-radiant`                                  | Radiant widgets, default-aware SSR constraints, shells, blocks, and scoped form controllers                                                                                                                                                                       |
+| Schema Engine shadcn registry (`schemaFormRegistrations`, etc.) | Copied React widgets, colocated field schemas, and view recipes for the React renderer                                                                                                                                                                            |
 
 Custom fields use `defineInput` with any Standard Schema. Default widgets ship their own Zod schemas beside their registrations; those schemas are not engine contracts and may differ between React and Radiant.
 
