@@ -2,8 +2,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 import pkg from '../../package.json' with { type: 'json' };
-import { createFormStateContainer } from '@schema-engine/forms/state-container';
-import { formStateContainerConformance } from '@schema-engine/forms/testing';
+await import('../../../../test-utils/skill-examples/forms/container-conformance.suite');
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -14,5 +13,3 @@ test('the testing entry is declared with built code and types, and vitest is an 
 	expect(existsSync(`${root}${entry.types}`)).toBe(true);
 	expect(pkg.peerDependenciesMeta.vitest).toEqual({ optional: true });
 });
-
-formStateContainerConformance(createFormStateContainer);

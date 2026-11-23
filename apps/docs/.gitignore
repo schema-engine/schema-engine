@@ -7,6 +7,8 @@ dist
 src/public/llms.txt
 src/public/llms-content
 src/public/docs-llm
+src/public/skill
+src/public/skill.txt
 src/components/ui
 .docs-llm-staging
 
