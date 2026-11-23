@@ -36,17 +36,21 @@ Debug output stays off unless the host enables Ecopages log levels.
 
 ## Radiant form state
 
-`se-form-instance` creates one engine form state container per form instance from the
-normalized config, the engine's validation registry and the defaults, and hands it to its
-`rui-form` with `connect`. The container owns values, validation, field state and field-array
-row ids, all with nested values and dotted paths; `rui-form` is only the control bridge, typed by
-Radiant UI's own `FormStateStore` interface, which sends each control's value and native validity
-into the container. The instance provides the container on `formInstanceContext`, and scoped
-`FormController` instances read it there (`container`, `select`, `formatIssue`); there is no global active form. A new config, engine or `defaultValues` is a new container; moving the instance keeps it.
+`se-form-instance` creates the form's **form runtime** (below) from the normalized config, the engine's validation
+registry and the defaults, and the runtime builds the form's **form state container** (below). The instance hands
+the container to its `rui-form` with `connect(container, { formatError, submitHandler, resetHandler })`. `rui-form`
+is only the control bridge, typed by Radiant UI's own `FormStateStore` interface: it sends each control's value
+(`setValue`), blur (`blur`) and native validity (`reportNative`) into the container and presents what the container
+holds, and it ignores its own `mode`, `defaultValues`, `resolver` and field `rules`. Radiant UI's form controls
+dispatch the native `input` (the user changed the value) and `change` (the user committed it) on the host, never for
+a value set from code, and a custom host announces itself with `announceControlConnect` when it connects, so a field
+that registered earlier seeds it. `rui-change` stays only for components that are not form controls. The instance
+provides the container on `formInstanceContext`, and scoped `FormController` instances read it there (`container`,
+`select`, `formatIssue`); there is no global active form. A new config, engine or `defaultValues` is a new container; moving the instance keeps it.
 The application gives the engine a `formatIssue` that turns an issue (`type`, `ruleId`, `params`) into
 text, and a renderer may override it for its forms (renderer over engine);
 without one an issue shows its own `message` and otherwise nothing.
-`se-form-instance` creates the form's **form runtime** (below), mounts it on connect and unmounts it on disconnect, and keeps only what an element can do: the focus, `rui-form`'s `sync`, the native submit with its CSRF field and the `se-action-*` events. The submission, the steps and every action dispatch are the runtime's, not those of elements that find each other in the document. The app binds the client engine by
+The instance mounts the runtime on connect and unmounts it on disconnect, and keeps only what an element can do: the focus, `rui-form`'s `sync`, the native submit with its CSRF field and the `se-action-*` events. The submission, the steps and every action dispatch are the runtime's, not those of elements that find each other in the document. The app binds the client engine by
 assigning `engine` to `se-form-renderer`, before or after it upgrades, and the instance,
 array and fields follow the renderer's context, so they catch up with an engine that
 arrives or changes later.
@@ -57,7 +61,10 @@ The form's **form runtime** (below) is created once per form instance, and its l
 identity of the normalized form config passed to `FormRenderer`. Replacing that config starts a
 fresh runtime and container with its defaults and step state. The container is the only form state: the hooks
 read it with `useSyncExternalStore` through the engine's pure selectors, so a field re-renders only
-for its own value, error or flags. The runtime's change watch compares the container's
+for its own value, error or flags. A field binds in one of two modes: `useFormField(config)` is
+uncontrolled (the DOM holds what the user types, a keystroke renders nothing, `fieldProps` carries `ref`, `name` and
+the handlers and `defaultValue` starts the control) and `useFormField(config, { controlled: true })` is for a component
+that takes only `value` and `onChange(value)`, and renders with its value. The runtime's change watch compares the container's
 `values`, so a parent render by itself does not call `onChange` or dispatch a `form_change` action.
 
 An issue (a field's, or why a submission failed) shows as the text of the `formatIssue` formatter set on `FormProvider`/`FormRenderer` for one form, else on the engine, else as its own `message`, else as nothing: the rule type is never shown, so a field
@@ -96,6 +103,41 @@ result may be shown — touched, or the form submitted. That gate lives in the
 engine rather than in each renderer, because the constraint subsystem already
 demonstrated what happens when a decision of this class is made twice.
 See [the controller contract](./packages/forms-radiant/src/adapters/radiant/controller/README.md).
+
+## Form state container
+
+The **form state container** (`FormStateContainer`, made by `createFormStateContainer` from
+`@schema-engine/forms/state-container`) is the only form state, in both renderers. It is called a container, not a
+store, because `FormStore` is a class of Radiant UI. It owns the nested value tree and the defaults, field state
+(errors, warnings, touched, dirty, pending), the row ids of field arrays, the **native facts**, which paths take
+part in validation and the `generation` of `reset()`. Every command is one atomic update and notifies once. Paths
+are dotted with the row index in them (`contacts.1.email`), and `FORM_ROOT` (`'__root__'`) is the form itself.
+Reads are pure selectors over its snapshot (`selectFieldState`, `selectValue`, `selectError`, `selectWarning`), so
+React reads them through `useSyncExternalStore` and Radiant through `FormController.select`.
+
+- **Issue.** What is wrong with a path, as data: `{ type, source, ruleId?, params?, message? }`. `source` is
+  `validation`, `native` or `server` (and `submission` for a failure of the form as a whole, which the snapshot never
+  holds). An error is an issue plus every issue of its path in `all`: what the server said, then each rule in
+  authored order, then what the browser reported. An error is never inherited by a path below it.
+- **Formatter.** The engine writes no text. `FormIssueFormatter = (issue, { path }) => string` is the one seam: the
+  form's override, else the engine's `formatIssue`, else `issue.message`, else nothing, and never the rule type.
+- **Native fact.** What the browser's `element.validity` says about a control, reported with
+  `reportNative(facts)`: evidence an application cannot configure, bound to the value it was read for, dropped when
+  the value changes, withdrawn with `null`, moved with its row, shown only when validation runs for that path and
+  listed after the rules' own errors.
+- **Validity.** `snapshot.isValid` is that no error is recorded (it validates nothing and is no reason to disable
+  submit), `validate()` records and shows errors, and `checkValidity()` answers for the current values without
+  recording any. `submit()` ends `passed` (with `values` and `setServerErrors`), `invalid` or `overtaken`.
+- **No form library adapters.** Forms are configured, not coded, so no form library API reaches the user, and an
+  adapter would give the same config a different meaning in each library. The integration point is the container's
+  public contract and its conformance suite, `formStateContainerConformance` from `@schema-engine/forms/testing`. A
+  hand-written form embeds a rendered one through values in and out (`defaultValues`, `onChange`, `onSubmit`) and
+  shares no form state with it.
+
+`@schema-engine/forms/server-errors` (`fromProblemDetails`, `fromJsonApiErrors`) turns an RFC 9457 or JSON:API
+response into the input of `setServerErrors`, and `@schema-engine/forms/csrf` reads the token of
+`createFormEngine({ csrf })`, which the engine's `fetch` sends on a same-origin unsafe request and a Radiant native
+post carries as a hidden input.
 
 ## Recipes and the resolved view
 

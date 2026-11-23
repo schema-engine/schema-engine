@@ -242,6 +242,12 @@ presentation, and the engine's container validates. `config.validationMode` and
 `config.reValidateMode` set the container's timing; unset, fields validate on
 submit and re-validate on change after a failed check.
 
+### Form state and controls
+
+A form's state is the engine's container, which `se-form-instance` hands to its `rui-form` with `connect(container, { formatError, submitHandler, resetHandler })`. `rui-form` bridges the controls: it sends each control's value, blur and native validity into the container and presents what the container holds. The controls are Radiant UI's own, and they dispatch the platform's `input` and `change` events on the host (`rui-change` is only for components that are not form controls). A custom control registers with `registerFieldControl`, dispatches those two events and calls `announceControlConnect(this)` when it connects.
+
+The docs cover [Form controls](../../apps/docs/src/content/docs/forms-radiant/form-controls.mdx), [Form state](../../apps/docs/src/content/docs/forms/form-state.mdx), [Native validity](../../apps/docs/src/content/docs/forms/native-validity.mdx), [Wizard and runtime](../../apps/docs/src/content/docs/forms/wizard.mdx) and [CSRF](../../apps/docs/src/content/docs/forms/csrf.mdx).
+
 ### Issue text
 
 An issue carries identity for translation (`type`, `ruleId`, `params`, `source`) and a `message` only as a fallback. Give the engine a `formatIssue` once (`createFormEngine({ formatIssue })`), the same `FormIssueFormatter` the React renderer uses, and every form reads it from `engine.getIssueFormatter()`. `FormRenderer` (published by `se-form-renderer`, so every form below it) takes one `formatIssue` to override it for its forms; the renderer's wins over the engine's:
@@ -256,9 +262,7 @@ const engine = createRadiantFormEngine({ formatIssue });
 
 `rui-form` shows the formatter's text, or the issue's `message` when it returns nothing. With no formatter an issue shows its `message` and otherwise nothing, never the rule type.
 
-The controller provides `container` (every command and read: `setValue`, `validate`, `fieldArray`, `getSnapshot`), `select` signals over a selector of the container's snapshot (`fromExternalStore`), and `formatIssue(issue, { path })`. See the [controller API and migration
-guide](./src/adapters/radiant/controller/README.md) for examples and the replacement
-for the removed snapshot hooks.
+The controller provides `container` (every command and read: `setValue`, `validate`, `fieldArray`, `getSnapshot`), `select` signals over a selector of the container's snapshot (`fromExternalStore`), and `formatIssue(issue, { path })`. See the [controller API](./src/adapters/radiant/controller/README.md) for examples.
 
 `arrayElements` takes its rows from the container's `rowIds` and shows its own error (`errors[name]`). A `minItems` rule in
 `rules` checks the row count at submission. The `minItems` config property seeds
@@ -314,11 +318,10 @@ Published JavaScript files are marked as side effects so bundlers preserve
 custom element registration for every entry point. Supported Radiant peers are
 `>=0.12.0` (JSX, Radiant and Signals) and `>=0.6.0` (Radiant UI).
 
-### Custom recipe migration
+### Recipe chrome
 
-Custom shell props and slot factory contexts now receive `meta` in place of
-`config`. Import `FormMeta` from `@schema-engine/forms-radiant` when annotating
-these inputs. Replace chrome reads such as `context.config.steps` with
+Custom shell props and slot factory contexts receive `meta`. Import `FormMeta` from
+`@schema-engine/forms-radiant` when annotating these inputs, and read chrome from
 `context.meta.steps`. Metadata includes form and step ids, titles, and descriptions;
 it omits elements, rules, defaults, and actions. Keep field rendering in the
 recipe content supplied by the renderer.
