@@ -23,7 +23,7 @@ Recipes compose a **shell** with optional **header**, **progress**, and **action
 
 ## Default registry recipes
 
-The [React Forms](/docs/examples/react-forms#copied-shadcn-source) page renders the registry's `card` recipe and `input` field live, from source copied into the docs app.
+[Registry fields](/docs/forms-react/components#see-them) renders the registry's `card` recipe and `input` field live.
 
 Install the recipes from the optional shadcn path of [Installation and quick start](/docs/forms-react/getting-started#optional-start-from-the-shadcn-registry), which also has the stylesheet imports. The recipe CSS lives in a file beside each component (`shells/hero-shell.css`, `blocks/form-actions.css` and the rest), every rule inside `:where()` so a class of yours wins, and the Tailwind classes left on the components are mostly your shadcn theme's colours and type, plus the few that override a shadcn `Button`. Without the import the shells and blocks render unstyled. The size axis also needs `controls.css`, unlayered, after the recipe styles (see [Appearance and the default styles](#appearance-and-the-default-styles)). Then add the generated recipe barrel when you construct the engine:
 
@@ -80,7 +80,7 @@ Wizard recipes require **at least two steps**. Set `view.$type` to a wizard reci
 
 If you omit `view.$type` on a multi-step form, `validateForm` writes the engine's default wizard recipe as `view` (`bare-controls` unless `createFormEngine({ defaultWizardRecipe })` names another wizard recipe). If that recipe is not registered, the form keeps no `view`, `validateForm` warns, and fields render without chrome.
 
-See [Registration Flow](/docs/examples/registration-flow) for a full wizard configuration.
+See the [Registration wizard](/docs/examples/registration-wizard) recipe for a full wizard in React and Radiant.
 
 ### Skipping steps and the stepper
 

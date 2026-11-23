@@ -40,10 +40,14 @@ Recipes by domain, with what each shows and the install line it needs.
 
 ### Forms
 
-The form examples are being rewritten as recipes. Until each lands, its page shows the config and a live demo:
+Each forms recipe has React and Radiant tabs and one install line for each renderer.
 
-- [Basic form](/docs/examples/basic-form), [Contact form](/docs/examples/contact-form), [Registration flow](/docs/examples/registration-flow), [Survey form](/docs/examples/survey-form) and [Sequential actions](/docs/examples/sequential-actions), each in Radiant.
-- [React forms](/docs/examples/react-forms), the same forms in React.
+| Recipe                                                    | Shows                                                                                               | Install                                                                                                                                                                                                                                                                                 |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Contact form](/docs/examples/contact-form)               | Rules with messages, a field shown only for a support request, a JSON submit and a 422 on its field | React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`<br />Radiant: `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod` |
+| [Registration wizard](/docs/examples/registration-wizard) | Two steps, Next that validates the step it leaves, and a taken email that sends the visitor back    | React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`<br />Radiant: `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod` |
+
+The survey and the sequential actions are being rewritten as recipes. Until they land, their pages show the config and a live demo in Radiant: [Survey form](/docs/examples/survey-form) and [Sequential actions](/docs/examples/sequential-actions).
 
 ### Layout
 

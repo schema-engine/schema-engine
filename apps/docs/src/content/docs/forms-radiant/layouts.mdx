@@ -6,7 +6,7 @@ order: 3
 
 import { FormConfigCode } from '@/components/form-config-code';
 import { FormRendererPreview } from '@/components/form-renderer';
-import { registrationDemoConfig } from '@/lib/form-configs/registration-flow';
+import { registration } from '@/lib/examples/registration-wizard/config';
 import { surveyDemoConfig } from '@/lib/form-configs/survey-form';
 
 # Radiant layouts
@@ -30,13 +30,13 @@ Each form carries an identical copy of the layout stylesheet by design; see [Lay
 
 ## Wizard shell
 
-The registration demo is a multi-step form with `view: { $type: 'wizard' }`, rendered with the canonical Radiant wizard shell and step navigation.
+The registration demo is a multi-step form with `view: { $type: 'wizard' }`, rendered with the canonical Radiant wizard shell and step navigation. The [Registration wizard](/docs/examples/registration-wizard) recipe has its files and tests.
 
-<FormRendererPreview config={registrationDemoConfig} />
+<FormRendererPreview config={registration} />
 
 Its config:
 
-<FormConfigCode config={registrationDemoConfig} />
+<FormConfigCode config={registration} />
 
 ## Survey wizard
 

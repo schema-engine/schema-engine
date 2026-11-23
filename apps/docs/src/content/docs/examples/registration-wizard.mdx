@@ -1,0 +1,329 @@
+---
+title: 'Registration wizard'
+description: 'A two-step registration form where Next validates the step it leaves, Previous keeps the values, and a taken email sends the visitor back to the step that holds it, in React and in Radiant.'
+order: 6
+---
+
+import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { RendererTabs } from '@/components/renderer-tabs';
+import { registration } from '@/lib/examples/registration-wizard/config';
+
+# Registration wizard
+
+A long form is easier to finish in steps. A wizard shows one step at a time, checks a step before it lets the visitor leave it, and keeps what they typed when they go back. This recipe is a two-step sign-up: an account step with an email and a password, and a profile step with a name and a role. When the server says the email is already taken, the wizard takes the visitor back to the step that holds it, because an error on a step they cannot see would be invisible.
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started).
+
+## See it
+
+Select Next on the empty form: the account step stays, with a message for each field. Fill it in, select Next, then Previous: the values are still there.
+
+<FormRecipeDemo config={registration} />
+
+## The config
+
+A form with more than one step names the recipe that draws the wizard in `view.$type`. A recipe is the shell and the controls around the steps: the progress, the title and Previous, Next and Submit. Each renderer registers a recipe of that name, so the same config runs in both. Each step holds its own `elements`.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/**
+ * The registration form both renderers render: two steps with a wizard around them.
+ *
+ * @remarks
+ * `view.$type` names the recipe that draws the steps and the navigation. Each renderer registers a recipe of that
+ * name, so the same config runs in both. Next validates the step it leaves, so the password rule is checked before
+ * the profile step opens.
+ */
+export const registration: FormConfig = {
+	id: 'registration',
+	title: 'Create your account',
+	view: { $type: 'wizard' },
+	steps: [
+		{
+			id: 'account',
+			title: 'Account',
+			elements: [
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [
+						{ $type: 'required', message: 'Enter your email' },
+						{ $type: 'email', message: 'Enter a valid email address' },
+					],
+				},
+				{
+					$type: 'input',
+					id: 'password',
+					name: 'password',
+					label: 'Password',
+					inputType: 'password',
+					rules: [
+						{ $type: 'required', message: 'Choose a password' },
+						{ $type: 'minLength', value: 12, message: 'Use at least 12 characters' },
+					],
+				},
+			],
+		},
+		{
+			id: 'profile',
+			title: 'Profile',
+			elements: [
+				{
+					$type: 'input',
+					id: 'name',
+					name: 'name',
+					label: 'Full name',
+					rules: [{ $type: 'required', message: 'Enter your name' }],
+				},
+				{
+					$type: 'select',
+					id: 'role',
+					name: 'role',
+					label: 'Role',
+					placeholder: 'Choose your role',
+					options: [
+						{ value: 'developer', label: 'Developer' },
+						{ value: 'designer', label: 'Designer' },
+						{ value: 'product', label: 'Product manager' },
+					],
+					rules: [{ $type: 'required', message: 'Choose your role' }],
+				},
+			],
+		},
+	],
+};
+```
+
+## The submit handler
+
+`register` posts the values of both steps. A 409 means the email is taken, and `setServerErrors` puts that on the `email` field. The field is on the first step, so the wizard moves back there: an error is never left on a step the visitor cannot see. It returns whether the account was created.
+
+```ts title="submit.ts"
+import type { FormSubmitHelpers, FormValues } from '@schema-engine/forms';
+
+/**
+ * Creates the account and says whether it was created.
+ *
+ * @remarks
+ * A 409 means the email is taken. It is shown on the email field, which sits on the first step, so the wizard
+ * moves back to that step: an error is never left on a step the visitor cannot see. Any other failure throws,
+ * which the form reports as a failed submission.
+ */
+export async function register(values: FormValues, { fetch, setServerErrors }: FormSubmitHelpers): Promise<boolean> {
+	const response = await fetch('/api/accounts', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(values),
+	});
+	if (response.status === 409) {
+		setServerErrors({ email: { type: 'taken', message: 'An account with this email already exists' } });
+		return false;
+	}
+	if (!response.ok) throw new Error(`The server answered ${response.status}.`);
+	return true;
+}
+```
+
+## The renderer
+
+Radiant ships the wizard recipe and the elements, so its file is the same as the contact form's. React ships neither: the React tab has an input and a select, and a recipe of its own. A recipe is a spec, which names it and its slots, bound to React components by `defineRecipe`. This one has a shell that lays out the current step and the controls, and the controls read the navigation from `useViewContext`: Previous, a step counter, and Next or the submit button. [View recipes](/docs/forms-react/layouts) covers the built-in specs.
+
+<RendererTabs name="registration-wizard">
+<div data-renderer="react">
+
+```tsx title="widgets.react.tsx"
+import * as z from 'zod/mini';
+import { BaseFieldSchema, defineInput } from '@schema-engine/forms';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+
+const InputSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('input'),
+	inputType: z.optional(z.enum(['text', 'email', 'password'])),
+});
+
+function InputField(config: z.output<typeof InputSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<input {...fieldProps} type={config.inputType ?? 'text'} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const SelectSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('select'),
+	options: z.array(z.object({ value: z.string(), label: z.string() })),
+});
+
+function SelectField(config: z.output<typeof SelectSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<select {...fieldProps} defaultValue={fieldText(defaultValue)}>
+				<option value="">{config.placeholder}</option>
+				{config.options.map((option) => (
+					<option key={option.value} value={option.value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const input = defineInput({
+	$type: 'input',
+	schema: InputSchema,
+	render: InputField,
+	value: () => z.string(),
+	metadata: { name: 'Input', category: 'input' },
+});
+
+const select = defineInput({
+	$type: 'select',
+	schema: SelectSchema,
+	render: SelectField,
+	value: ({ options }) => z.enum(options.map((option) => option.value)),
+	metadata: { name: 'Select', category: 'input' },
+});
+
+export const elements = [input, select];
+```
+
+```tsx title="wizard.react.tsx"
+import { defineRecipeSpec } from '@schema-engine/forms/recipes';
+import { WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { useViewContext } from '@schema-engine/forms-react/hooks';
+import { defineRecipe, type FormShellProps } from '@schema-engine/forms-react/primitives';
+
+const wizardSpec = defineRecipeSpec({
+	$type: 'wizard',
+	kind: 'wizard',
+	slotSchemas: { actions: WizardActionsConfigSchema },
+	metadata: { name: 'Wizard', category: 'wizard' },
+});
+
+/** The shell lays out what the recipe draws: the fields of the current step, then the controls. */
+function Shell({ slots }: FormShellProps) {
+	return (
+		<div>
+			{slots.content}
+			{slots.actions}
+		</div>
+	);
+}
+
+/**
+ * Previous, the step counter, and Next or the submit button.
+ *
+ * @remarks
+ * Next and Submit carry distinct keys so React replaces the button instead of turning Next into a submit button
+ * while its click is still being handled, which would submit the form on arriving at the last step.
+ */
+function Controls() {
+	const { navigation, form, steps, currentStepIndex } = useViewContext();
+	return (
+		<div>
+			<button type="button" onClick={navigation.goToPreviousStep} disabled={navigation.isFirstStep}>
+				Previous
+			</button>
+			<span aria-live="polite">
+				Step {currentStepIndex + 1} of {steps.length}
+			</span>
+			{navigation.isLastStep ? (
+				<button key="submit" type="submit">
+					{form.isSubmitting ? 'Creating account' : 'Create account'}
+				</button>
+			) : (
+				<button key="next" type="button" onClick={navigation.goToNextStep} disabled={!navigation.canGoNext}>
+					Next
+				</button>
+			)}
+		</div>
+	);
+}
+
+export const WizardRecipe = defineRecipe(wizardSpec, { shell: Shell, slots: { actions: Controls } });
+```
+
+```tsx title="registration-wizard.react.tsx"
+import { createFormEngine } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { registration } from './config';
+import { register } from './submit';
+import { elements } from './widgets.react';
+import { WizardRecipe } from './wizard.react';
+
+export const engine = createFormEngine({ elements, recipes: [WizardRecipe] });
+
+/** Renders the wizard and calls `onRegistered` once the server has created the account. */
+export function RegistrationWizard({ onRegistered }: { onRegistered: () => void }) {
+	return (
+		<FormRenderer
+			engine={engine}
+			config={registration}
+			onSubmit={async (values, helpers) => {
+				if (await register(values, helpers)) onRegistered();
+			}}
+		/>
+	);
+}
+```
+
+</div>
+<div data-renderer="radiant">
+
+```tsx title="registration-wizard.radiant.tsx"
+import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { registration } from './config';
+import { register } from './submit';
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+/** Renders the wizard and calls `onRegistered` once the server has created the account. */
+export function RegistrationWizard({ onRegistered }: { onRegistered: () => void }) {
+	return (
+		<FormRenderer
+			engine={engine}
+			config={registration}
+			onSubmit={async (values, helpers) => {
+				if (await register(values, helpers)) onRegistered();
+			}}
+		/>
+	);
+}
+```
+
+</div>
+</RendererTabs>
+
+## What the tests check
+
+The recipe's tests render both files in a browser. Next stays on the account step while its rules fail and names each one, including the 12-character password rule. Previous keeps what was typed. The last step submits the values of both steps and calls `onRegistered`. A 409 moves the wizard back to the account step and shows the message on the email field.
+
+## Take it further
+
+- Navigate a form from code: [Wizard and runtime](/docs/forms/wizard).
+- Pick another look for the wizard: [View recipes](/docs/forms-react/layouts).

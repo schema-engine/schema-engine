@@ -60,10 +60,15 @@ export function packageOf(specifier: string): string {
 	return specifier.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0]!;
 }
 
-/** The first `pnpm add` command of the page's Install section, or undefined when it has none. */
-export function installLine(page: string): string | undefined {
-	const section = page.split(/^## /m).find((part) => /^Install\b/.test(part));
-	return section?.match(/```(?:bash|sh)\n(pnpm add [^\n]+)\n```/)?.[1];
+/**
+ * The `pnpm add` commands of the page's Install section.
+ *
+ * @remarks
+ * A recipe that runs in two renderers has one command for each, because their peers differ.
+ */
+export function installLines(page: string): string[] {
+	const section = page.split(/^## /m).find((part) => /^Install\b/.test(part)) ?? '';
+	return [...section.matchAll(/```(?:bash|sh)\n(pnpm add [^\n]+)\n```/g)].map((match) => match[1]!);
 }
 
 /**
@@ -103,15 +108,18 @@ export function checkRecipe(recipe: Recipe, page: string | undefined, overview: 
 		else if (!page.includes(fence)) problems.push(`the page does not show ${file.name} word for word`);
 	}
 
-	const install = installLine(page);
-	if (install === undefined) {
+	const installs = installLines(page);
+	if (installs.length === 0) {
 		problems.push('the page has no "Install" section with a pnpm add command');
 	} else {
+		const installed = new Set(installs.flatMap((install) => install.split(/\s+/)));
 		const imported = new Set(recipe.files.flatMap((file) => importsOf(file.source).map(packageOf)));
 		for (const name of [...imported].filter((specifier) => PACKAGE_SPECIFIER.test(specifier))) {
-			if (!install.split(/\s+/).includes(name)) problems.push(`the install line lacks ${name}`);
+			if (!installed.has(name)) problems.push(`the install line lacks ${name}`);
 		}
-		if (!overview.includes(`\`${install}\``)) problems.push('the overview does not list its install line');
+		if (installs.some((install) => !overview.includes(`\`${install}\``))) {
+			problems.push('the overview does not list its install line');
+		}
 	}
 	if (!overview.includes(`](/docs/examples/${recipe.id})`)) problems.push('the overview does not link to the page');
 

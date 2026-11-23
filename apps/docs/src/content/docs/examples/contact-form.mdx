@@ -1,34 +1,329 @@
 ---
-title: 'Contact Form'
-description: 'Conditional fields and validation.'
-order: 22
+title: 'Contact form'
+description: 'A contact form with validation, a field a constraint shows only for a support request, and a submit that sends JSON and shows the server answer on the fields, in React and in Radiant.'
+order: 5
 ---
 
-import { FormRendererPreview } from '@/components/form-renderer';
-import { FormConfigCode } from '@/components/form-config-code';
-import { contactFormDemoConfig } from '@/lib/form-configs/contact-with-constraints';
+import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { RendererTabs } from '@/components/renderer-tabs';
+import { contactForm } from '@/lib/examples/contact-form/config';
 
-# Contact Form
+# Contact form
 
-These previews use Radiant because the docs app is Ecopages + Radiant UI.
+A contact form is the smallest form worth shipping. This one validates each field with its own message, asks for a ticket number only when the subject is a support request, sends the values as JSON, and shows a server rejection on the field it names. The form is one config, so React and Radiant render the same data: only the renderer file differs.
 
-This example combines shared element configuration with conditional behavior.
-Each field sits on its own line. Form-level `title` and `description` feed the
-card header together with the step `title` (required on every step).
+## Install
 
-## Interactive demo
+For React:
 
-<FormRendererPreview config={contactFormDemoConfig} />
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
 
-## Configuration reference
+For Radiant:
 
-<FormConfigCode config={contactFormDemoConfig} />
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
 
-`constraints` are direct objects on the element. The field's visibility is
-derived from the current form value; it is not a separate layout or step
-configuration.
+Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started). React needs `"jsx": "react-jsx"` in `tsconfig.json`. Copy the files below into one folder.
 
-The same configuration renders in React: [React Forms](/docs/examples/react-forms#conditional-fields).
+## See it
 
-See [constraints](/docs/forms/constraints), [validation](/docs/forms/validation),
-and [components](/docs/forms-react/components) for the underlying contracts.
+Both forms render the config below. Submit the empty form to see each message, choose "Technical support" to show the ticket field, then submit a valid form to see its values. The demos use the docs' styled components, so they look different from the plain files below, and a valid submit shows the values instead of calling a server.
+
+<FormRecipeDemo config={contactForm} />
+
+## The config
+
+The config is data, so it could equally be a JSON file or a server's answer. `rules` validate a field and carry the message the visitor reads. The ticket field has a `constraints` entry that shows it only when `subject` equals `support`, and a field a constraint hides takes no part in validation or in the submitted values: a general question needs no ticket. A `submit` element is the button.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/**
+ * The contact form both renderers render.
+ *
+ * @remarks
+ * It is data, so it could equally be a JSON file or a server's answer. The ticket field shows only for a support
+ * request, and is validated only then: a field a constraint hides takes no part in validation or in the submitted
+ * values.
+ */
+export const contactForm: FormConfig = {
+	id: 'contact',
+	title: 'Contact us',
+	description: 'We answer within one working day.',
+	steps: [
+		{
+			id: 'details',
+			title: 'Contact us',
+			elements: [
+				{
+					$type: 'input',
+					id: 'name',
+					name: 'name',
+					label: 'Full name',
+					rules: [{ $type: 'required', message: 'Enter your name' }],
+				},
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [
+						{ $type: 'required', message: 'Enter your email' },
+						{ $type: 'email', message: 'Enter a valid email address' },
+					],
+				},
+				{
+					$type: 'select',
+					id: 'subject',
+					name: 'subject',
+					label: 'Subject',
+					placeholder: 'Choose a subject',
+					options: [
+						{ value: 'general', label: 'General question' },
+						{ value: 'support', label: 'Technical support' },
+					],
+					rules: [{ $type: 'required', message: 'Choose a subject' }],
+				},
+				{
+					$type: 'input',
+					id: 'ticket',
+					name: 'ticket',
+					label: 'Support ticket',
+					placeholder: 'SUP-1024',
+					constraints: [{ field: 'subject', operator: 'equals', value: 'support', $type: 'show' }],
+					rules: [
+						{ $type: 'required', message: 'Enter your ticket number' },
+						{
+							$type: 'pattern',
+							value: '^[A-Z]{2,4}-[0-9]{3,6}$',
+							message: 'Use a ticket number such as SUP-1024',
+						},
+					],
+				},
+				{
+					$type: 'textarea',
+					id: 'message',
+					name: 'message',
+					label: 'Message',
+					rows: 5,
+					rules: [
+						{ $type: 'required', message: 'Write a message' },
+						{ $type: 'minLength', value: 10, message: 'Use at least 10 characters' },
+					],
+				},
+				{ $type: 'submit', id: 'send', name: 'send', label: 'Send message' },
+			],
+		},
+	],
+};
+```
+
+## The submit handler
+
+`sendMessage` is the same for both renderers. It receives the values, which passed validation, and the engine's `fetch`, so a [CSRF policy](/docs/forms/csrf) applies without code here. A 422 answers with RFC 9457 Problem Details: `fromProblemDetails` turns it into the errors `setServerErrors` shows on the fields it names ([Server errors](/docs/forms/server-errors)). It returns whether the server accepted the message.
+
+```ts title="submit.ts"
+import type { FormSubmitHelpers, FormValues } from '@schema-engine/forms';
+import { fromProblemDetails } from '@schema-engine/forms/server-errors';
+
+/**
+ * Sends the message to the API and says whether it was accepted.
+ *
+ * @remarks
+ * The values are exactly those that passed validation, and `fetch` is the engine's, so a CSRF policy applies
+ * without code here. A 422 answers with Problem Details: it is shown on the fields it names, and the message
+ * counts as not sent. Any other failure throws, which the form reports as a failed submission.
+ */
+export async function sendMessage(values: FormValues, { fetch, setServerErrors }: FormSubmitHelpers): Promise<boolean> {
+	const response = await fetch('/api/contact', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(values),
+	});
+	if (response.status === 422) {
+		setServerErrors(fromProblemDetails(await response.json()));
+		return false;
+	}
+	if (!response.ok) throw new Error(`The server answered ${response.status}.`);
+	return true;
+}
+```
+
+## The renderer
+
+Each tab builds an engine, renders the config with `FormRenderer`, and calls `onSent` once the server accepted the message. The React renderer has no elements of its own, so the React tab starts with the widgets of the form: an input, a textarea, a select and a submit button, each a registration with a `$type` the config names. [Writing a widget](/docs/forms-react/widgets) explains them. Radiant ships these elements, so its engine registers the package's.
+
+<RendererTabs name="contact-form">
+<div data-renderer="react">
+
+```tsx title="widgets.react.tsx"
+import * as z from 'zod/mini';
+import { BaseFieldSchema, defineInput, defineStatic } from '@schema-engine/forms';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+
+const InputSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('input'),
+	inputType: z.optional(z.enum(['text', 'email', 'password', 'url'])),
+});
+
+function InputField(config: z.output<typeof InputSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<input
+				{...fieldProps}
+				type={config.inputType ?? 'text'}
+				placeholder={config.placeholder}
+				defaultValue={fieldText(defaultValue)}
+			/>
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const TextareaSchema = z.extend(BaseFieldSchema, { $type: z.literal('textarea'), rows: z.optional(z.number()) });
+
+function TextareaField(config: z.output<typeof TextareaSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<textarea {...fieldProps} rows={config.rows} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const SelectSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('select'),
+	options: z.array(z.object({ value: z.string(), label: z.string() })),
+});
+
+function SelectField(config: z.output<typeof SelectSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<select {...fieldProps} defaultValue={fieldText(defaultValue)}>
+				<option value="">{config.placeholder}</option>
+				{config.options.map((option) => (
+					<option key={option.value} value={option.value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const SubmitSchema = z.extend(BaseFieldSchema, { $type: z.literal('submit') });
+
+function SubmitButton(config: z.output<typeof SubmitSchema>) {
+	return <button type="submit">{config.label}</button>;
+}
+
+const input = defineInput({
+	$type: 'input',
+	schema: InputSchema,
+	render: InputField,
+	value: () => z.string(),
+	metadata: { name: 'Input', category: 'input' },
+});
+
+const textarea = defineInput({
+	$type: 'textarea',
+	schema: TextareaSchema,
+	render: TextareaField,
+	value: () => z.string(),
+	metadata: { name: 'Textarea', category: 'input' },
+});
+
+const select = defineInput({
+	$type: 'select',
+	schema: SelectSchema,
+	render: SelectField,
+	value: ({ options }) => z.enum(options.map((option) => option.value)),
+	metadata: { name: 'Select', category: 'input' },
+});
+
+const submit = defineStatic({
+	$type: 'submit',
+	schema: SubmitSchema,
+	render: SubmitButton,
+	metadata: { name: 'Submit', category: 'action' },
+});
+
+export const elements = [input, textarea, select, submit];
+```
+
+```tsx title="contact-form.react.tsx"
+import { createFormEngine } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { contactForm } from './config';
+import { sendMessage } from './submit';
+import { elements } from './widgets.react';
+
+export const engine = createFormEngine({ elements });
+
+/** Renders the form and calls `onSent` once the server has accepted the message. */
+export function ContactForm({ onSent }: { onSent: () => void }) {
+	return (
+		<FormRenderer
+			engine={engine}
+			config={contactForm}
+			onSubmit={async (values, helpers) => {
+				if (await sendMessage(values, helpers)) onSent();
+			}}
+		/>
+	);
+}
+```
+
+</div>
+<div data-renderer="radiant">
+
+```tsx title="contact-form.radiant.tsx"
+import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { contactForm } from './config';
+import { sendMessage } from './submit';
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+/** Renders the form and calls `onSent` once the server has accepted the message. */
+export function ContactForm({ onSent }: { onSent: () => void }) {
+	return (
+		<FormRenderer
+			engine={engine}
+			config={contactForm}
+			onSubmit={async (values, helpers) => {
+				if (await sendMessage(values, helpers)) onSent();
+			}}
+		/>
+	);
+}
+```
+
+</div>
+</RendererTabs>
+
+Render it where the page needs it:
+
+```tsx
+<ContactForm onSent={() => setSent(true)} />
+```
+
+## What the tests check
+
+The recipe's tests render both files in a browser. An empty submit shows each message of the visible required fields and sends nothing. The ticket field appears for a support request and is required there. A valid submit posts the values as JSON and calls `onSent`. A 422 puts the server's message on its field and does not call `onSent`.
+
+## Take it further
+
+- Add a rule of your own: [Custom and async rules](/docs/forms/validation-custom).
+- Show or hide more fields: [Constraints](/docs/forms/constraints).
+- Wrap the form in a card or a wizard: [Registration wizard](/docs/examples/registration-wizard) and [View recipes](/docs/forms-react/layouts).

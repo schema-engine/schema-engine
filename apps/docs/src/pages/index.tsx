@@ -78,9 +78,10 @@ const PATH_CARDS: HomePathCardData[] = [
 		description: 'Construct your engine once with createFormEngine, then extend it as your app grows.',
 	},
 	{
-		href: '/docs/examples/basic-form',
+		href: '/docs/examples/overview',
 		title: 'Explore the examples',
-		description: 'Basic, contact, registration, survey, and sequential-action forms — real configs you can copy.',
+		description:
+			'Tested recipes for a registry, a workflow and forms in React and Radiant, with the files to copy.',
 	},
 ];
 
@@ -157,7 +158,7 @@ const HOME_FOOTER_COLUMNS: HomeFooterColumnData[] = [
 		links: [
 			{ label: 'Actions', href: '/docs/actions/overview' },
 			{ label: 'Registry', href: '/docs/registry/overview' },
-			{ label: 'Examples', href: '/docs/examples/basic-form' },
+			{ label: 'Examples', href: '/docs/examples/overview' },
 		],
 	},
 	{

@@ -11,15 +11,7 @@ import { checkRecipe, examplePagesRoot, importsOf, packageOf, readRecipes, type 
  * `test/styling-docs.test.ts` holds it to the same rules. A page of the old form examples stays until the recipe
  * that replaces it lands, and then leaves this list.
  */
-const OTHER_PAGES = [
-	'overview',
-	'basic-form',
-	'contact-form',
-	'registration-flow',
-	'survey-form',
-	'sequential-actions',
-	'react-forms',
-];
+const OTHER_PAGES = ['overview', 'survey-form', 'sequential-actions'];
 
 const page = (id: string): string | undefined => {
 	try {

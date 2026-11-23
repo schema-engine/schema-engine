@@ -1,17 +1,15 @@
 import { describe, expect, test } from 'vitest';
 import { docsReactFormEngine } from '../src/components/react-form-demo/demo-engine';
-import { basicContactFormConfig } from '../src/lib/form-configs/basic-contact';
-import { validationDemoConfig } from '../src/lib/form-configs/react-examples';
+import { contactForm } from '../src/lib/examples/contact-form/config';
+import { registration } from '../src/lib/examples/registration-wizard/config';
 import { formEngine } from '../src/lib/form-engine-setup';
 
-describe('shared docs form config', () => {
-	test('is accepted by both renderer engines', () => {
-		expect(() => formEngine.validateForm(basicContactFormConfig)).not.toThrow();
-		expect(() => docsReactFormEngine.validateForm(basicContactFormConfig)).not.toThrow();
-	});
-
-	test('the React examples validation config is accepted by both renderer engines', () => {
-		expect(() => formEngine.validateForm(validationDemoConfig)).not.toThrow();
-		expect(() => docsReactFormEngine.validateForm(validationDemoConfig)).not.toThrow();
+describe('the configs of the forms recipes', () => {
+	test.each([
+		['contact form', contactForm],
+		['registration wizard', registration],
+	])('the %s is accepted by the docs engine of each renderer, which the live demos run', (_name, config) => {
+		expect(() => formEngine.validateForm(config)).not.toThrow();
+		expect(() => docsReactFormEngine.validateForm(config)).not.toThrow();
 	});
 });

@@ -76,4 +76,4 @@ The full documentation is at `/docs` on the deployed site. The LLM-exported corp
 | `@schema-engine/forms-react`   | `/docs/forms-react/overview`       |
 | `@schema-engine/forms-radiant` | `/docs/forms-radiant/overview`     |
 | `@schema-engine/layout`        | `/docs/layout/overview`            |
-| Examples                       | `/docs/examples/basic-form`        |
+| Examples                       | `/docs/examples/overview`          |
