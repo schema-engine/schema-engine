@@ -79,7 +79,7 @@ describe('SSR array hydration', () => {
 				.toBe('Add at least three contacts');
 			expect(completedSubmissions).toBe(0);
 
-			await expect(containerOf(arrayHost).validate()).resolves.toBe(false);
+			await expect(containerOf(arrayHost).validate()).resolves.toEqual({ outcome: 'invalid' });
 			expect(selectError(containerOf(arrayHost).getSnapshot(), 'contacts')?.message).toBe(
 				'Add at least three contacts',
 			);
@@ -92,7 +92,7 @@ describe('SSR array hydration', () => {
 			await expect
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
 				.toEqual(['Edited Alice', 'Bob', 'Viewer']);
-			await expect(containerOf(arrayHost).validate()).resolves.toBe(true);
+			await expect(containerOf(arrayHost).validate()).resolves.toEqual({ outcome: 'passed' });
 
 			containerOf(arrayHost).reset();
 			await expect

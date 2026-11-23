@@ -68,17 +68,17 @@ test('an incomplete code is invalid by default and keeps its slots positional', 
 	await userEvent.type(slots()[2]!, '3456');
 	await expect.poll(() => values()).toEqual(['1', '', '3', '4', '5', '6']);
 
-	await expect(containerOf(field).validate()).resolves.toBe(false);
+	await expect(containerOf(field).validate()).resolves.toEqual({ outcome: 'invalid' });
 	expect(selectError(containerOf(field).getSnapshot(), 'code')?.message).toBe('Enter all 6 characters');
 	expect(values()).toEqual(['1', '', '3', '4', '5', '6']);
 
 	await userEvent.type(slots()[1]!, '2');
-	await expect(containerOf(field).validate()).resolves.toBe(true);
+	await expect(containerOf(field).validate()).resolves.toEqual({ outcome: 'passed' });
 });
 
 test('an empty optional code is valid and an authored length rule replaces the default', async () => {
 	const optional = await mountOtp();
-	await expect(containerOf(optional.field).validate()).resolves.toBe(true);
+	await expect(containerOf(optional.field).validate()).resolves.toEqual({ outcome: 'passed' });
 	document.body.replaceChildren();
 
 	const { field } = await mountField({
@@ -87,7 +87,7 @@ test('an empty optional code is valid and an authored length rule replaces the d
 	});
 	const inputs = () => Array.from(document.querySelectorAll<HTMLInputElement>('se-input-otp input'));
 	await userEvent.type(inputs()[0]!, '12');
-	await expect(containerOf(field).validate()).resolves.toBe(false);
+	await expect(containerOf(field).validate()).resolves.toEqual({ outcome: 'invalid' });
 	expect(selectError(containerOf(field).getSnapshot(), 'code')?.message).toBe('Four at least');
 });
 

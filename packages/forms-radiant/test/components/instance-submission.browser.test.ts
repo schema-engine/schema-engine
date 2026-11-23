@@ -266,7 +266,7 @@ test('a native fact of an engine-rendered input reaches the container and the pa
 		)
 		.toBe(true);
 	await expect.poll(() => host.textContent).toContain('engine:email:native:typeMismatch');
-	expect(await container.validate()).toBe(false);
+	expect(await container.validate()).toEqual({ outcome: 'invalid' });
 	await userEvent.fill(input, 'a@b.co');
 	await userEvent.tab();
 	await expect.poll(() => container.getSnapshot().errors['email']).toBeUndefined();

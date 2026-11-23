@@ -27,6 +27,7 @@ import '@ecopages/radiant-ui/form';
 import type { RuiFormElement, RuiFormSubmitContext } from '@ecopages/radiant-ui/form';
 import { createFormMeta, initialSteps, type FormMeta } from '@/lib/instance-view';
 import { logger } from '@/lib/logger';
+import { toRadiantStore } from '@/lib/radiant-store';
 import { replaceFormData } from '@/lib/native-form-data';
 import { csrfFieldFor } from '@schema-engine/forms/csrf';
 import { syncCsrfField } from '@/lib/csrf-field';
@@ -294,7 +295,7 @@ export class FormInstanceElement extends RadiantElement {
 
 	/** Injects the container into the `rui-form`, replacing the earlier binding, with the handlers of this instance. */
 	private attachForm({ host, runtime }: BoundForm): void {
-		this.releaseForm = host.connect(runtime.container, {
+		this.releaseForm = host.connect(toRadiantStore(runtime.container), {
 			formatError: (issue, field) => this.issueFormatter()?.(issue, field) ?? '',
 			submitHandler: (context) => this.submitForm(context),
 			resetHandler: () => runtime.container.reset(),

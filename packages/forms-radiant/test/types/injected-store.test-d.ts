@@ -1,9 +1,10 @@
 /**
- * Compile-time check that the engine's container is the store Radiant UI's `rui-form` is typed by.
+ * Compile-time check that the engine's container, through `toRadiantStore`, is the store Radiant UI's `rui-form` is typed by.
  * Run via: pnpm check-types (tsconfig.test-types.json)
  */
 
 import type { FormStateStore, RuiFormElement } from '@ecopages/radiant-ui/form';
+import { toRadiantStore } from '@/lib/radiant-store';
 import type { FormIssueFormatter, FormStateContainer, FormStateError } from '@schema-engine/forms/state-container';
 
 /**
@@ -19,10 +20,10 @@ declare const container: FormStateContainer;
 declare const form: RuiFormElement;
 declare const formatIssue: FormIssueFormatter;
 
-export const store: Strict<FormStateStore<FormStateError>> = container;
+export const store: Strict<FormStateStore<FormStateError>> = toRadiantStore(container);
 
-form.connect(container, { formatError: formatIssue });
-form.connect(container, {
+form.connect(toRadiantStore(container), { formatError: formatIssue });
+form.connect(toRadiantStore(container), {
 	formatError: (issue, field) => `${field.path}:${issue.source}:${issue.ruleId ?? issue.all.length}`,
 	submitHandler: ({ submitNatively }) => submitNatively(),
 });

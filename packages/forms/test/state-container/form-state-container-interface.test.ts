@@ -1,4 +1,4 @@
-import { containerOptions } from '../../../../test-utils/form-state-container-conformance';
+import { containerOptions } from '@/testing/form-state-container-conformance';
 import { describe, expect, test } from 'vitest';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
@@ -25,7 +25,8 @@ type Strict<T> = {
  *
  * @remarks
  * It checks a copy, not the host's own declaration: the host's interface has to declare the same members,
- * or this proves nothing about it. The conformance suite is the guard on behaviour.
+ * or this proves nothing about it. The conformance suite is the guard on behaviour. Radiant UI's own
+ * `validate()` resolves a boolean, so it is not in the copy: `forms-radiant` adapts that one member.
  */
 type BridgeNativeValidity = { type: string; params?: Record<string, unknown>; message?: string };
 
@@ -43,7 +44,6 @@ interface BridgeFormState<TIssue> {
 	};
 	subscribe: (listener: () => void) => () => void;
 	reset: () => void;
-	validate: (paths?: string[]) => Promise<boolean>;
 	checkValidity: () => Promise<boolean>;
 	reportNative: (facts: Record<string, BridgeNativeValidity | null>) => void;
 }
@@ -52,7 +52,7 @@ interface BridgeFormState<TIssue> {
 type BridgeFormatter<TIssue> = (issue: TIssue, field: { path: string }) => string;
 
 interface NotTheBridge {
-	validate: (paths?: string[]) => Promise<string>;
+	checkValidity: () => Promise<string>;
 }
 
 const element = (config: Record<string, unknown>) => markNormalizedElementConfig(config as unknown as ElementConfig);
@@ -75,10 +75,10 @@ describe('the form state container as a bridge host sees it', () => {
 		bridge.setValue('name', '');
 		bridge.blur('name');
 		bridge.reportNative({ name: { type: 'valueMissing', message: 'Fill in this field' } });
-		expect(await bridge.validate()).toBe(false);
+		expect(await container.validate()).toEqual({ outcome: 'invalid' });
 		expect(bridge.getSnapshot().errors.name?.message).toBe('Fill in this field');
 		bridge.reportNative({ name: null });
-		expect(await bridge.validate(['name'])).toBe(true);
+		expect(await container.validate(['name'])).toEqual({ outcome: 'passed' });
 		bridge.reportNative({ name: { type: 'tooShort', params: { minLength: 8 } }, 'nothing.here': null });
 		expect(bridge.getSnapshot().warnings).toEqual({});
 		bridge.reportNative({ name: null });
@@ -112,7 +112,7 @@ describe('the form state container as a bridge host sees it', () => {
 				elements: [element({ $type: 'input', name: 'name' })],
 			}),
 		);
-		// @ts-expect-error the container resolves a boolean, so it does not fit a validate that resolves a string
+		// @ts-expect-error the container resolves a boolean, so it does not fit a checkValidity that resolves a string
 		const notFit: NotTheBridge = container;
 		expect(notFit).toBe(container);
 	});

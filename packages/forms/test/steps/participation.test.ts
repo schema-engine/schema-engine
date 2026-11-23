@@ -150,7 +150,7 @@ describe('the container with skipped steps', () => {
 	test('validate and checkValidity pass although a skipped step holds an empty required field', async () => {
 		const container = make(held);
 		expect(await container.checkValidity()).toBe(true);
-		expect(await container.validate()).toBe(true);
+		expect(await container.validate()).toEqual({ outcome: 'passed' });
 		expect(container.getSnapshot().errors).toEqual({});
 	});
 
@@ -158,7 +158,7 @@ describe('the container with skipped steps', () => {
 		const container = make(held);
 		container.setValue('hasCompany', true);
 		expect(await container.checkValidity()).toBe(false);
-		expect(await container.validate(['company'])).toBe(false);
+		expect(await container.validate(['company'])).toEqual({ outcome: 'invalid' });
 		expect(Object.keys(container.getSnapshot().errors)).toContain('company');
 		container.setValue('hasCompany', false);
 		expect(container.getSnapshot().errors).toEqual({});

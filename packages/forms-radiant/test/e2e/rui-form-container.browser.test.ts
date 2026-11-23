@@ -5,6 +5,7 @@ import '@ecopages/radiant-ui/form';
 import '@ecopages/radiant-ui/field';
 import { createFormStateContainer, FORM_ROOT } from '@schema-engine/forms/state-container';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
+import { toRadiantStore } from '@/lib/radiant-store';
 import { schemaFormRegistrations } from '@/registrations';
 
 /**
@@ -124,7 +125,7 @@ async function mount(options: { validationMode?: 'onBlur' | 'onChange' | 'onSubm
 	await customElements.whenDefined('rui-form');
 	await customElements.whenDefined('rui-field');
 	const submissions: Array<{ result: Awaited<ReturnType<typeof container.submit>> }> = [];
-	const disconnect = form.connect(container, {
+	const disconnect = form.connect(toRadiantStore(container), {
 		formatError: format,
 		submitHandler: async () => {
 			submissions.push({ result: await container.submit() });
@@ -242,7 +243,7 @@ describe('rui-form over the engine container', () => {
 		expect(container.getSnapshot().values['contacts']).toEqual([{ email: '', role: 'a' }]);
 		expect(container.getSnapshot().errors['contacts.1.email']).toBeUndefined();
 		expect(sources('contacts.0.email')).toContain('native');
-		expect(await container.validate()).toBe(false);
+		expect(await container.validate()).toEqual({ outcome: 'invalid' });
 
 		await userEvent.fill(fields.second.input, 'a@x.io');
 		await settle();
@@ -252,6 +253,6 @@ describe('rui-form over the engine container', () => {
 		fields.email.input.value = 'ada@x.io';
 		fields.email.input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
 		await settle();
-		expect(await container.validate()).toBe(true);
+		expect(await container.validate()).toEqual({ outcome: 'passed' });
 	});
 });

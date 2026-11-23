@@ -223,10 +223,10 @@ describe('useFormContext', () => {
 	test('validate resolves whether the named field, or the whole form, passed', async () => {
 		const { container, context } = mount(() => undefined);
 
-		await expect(context().validate('name')).resolves.toBe(false);
-		await expect(context().validate()).resolves.toBe(false);
+		await expect(context().validate('name')).resolves.toEqual({ outcome: 'invalid' });
+		await expect(context().validate()).resolves.toEqual({ outcome: 'invalid' });
 		act(() => container.setValue('name', 'ada'));
-		await expect(context().validate(['name'])).resolves.toBe(true);
-		await expect(context().validate()).resolves.toBe(true);
+		await expect(context().validate(['name'])).resolves.toEqual({ outcome: 'passed' });
+		await expect(context().validate()).resolves.toEqual({ outcome: 'passed' });
 	});
 });

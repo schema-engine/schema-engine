@@ -16,6 +16,7 @@ import type {
 	FormStateError,
 	FormStateIssue,
 	FormSubmissionIssue,
+	FormValidateResult,
 } from '@schema-engine/forms/state-container';
 import type { ChangeEvent, CSSProperties, ReactNode, RefCallback } from 'react';
 
@@ -35,8 +36,8 @@ export interface FormContextValue {
 	getValues: () => FormValues;
 	/** Writes the branch at `name` as a change. */
 	setValue: (name: string, value: unknown) => void;
-	/** Validates `name` (a path or several; the whole form when omitted) and resolves whether it passed. */
-	validate: (name?: string | readonly string[]) => Promise<boolean>;
+	/** Validates `name` (a path or several; the whole form when omitted) and says how that ended: `passed`, `invalid` or `overtaken` by an edit or a reset, which is no verdict. */
+	validate: (name?: string | readonly string[]) => Promise<FormValidateResult>;
 	/** Restores the defaults, or replaces them with `values` first, and clears the errors, marks and the submission state: a fresh form. */
 	reset: (values?: Record<string, unknown>) => void;
 	/** Focuses the control a field registered with the `ref` of `useFormField`. */

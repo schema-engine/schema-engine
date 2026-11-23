@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { containerOptions } from '../../../../test-utils/form-state-container-conformance';
+import { containerOptions } from '@/testing/form-state-container-conformance';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
 import { createDefaultValidationRegistry } from '@/schemas/validation';

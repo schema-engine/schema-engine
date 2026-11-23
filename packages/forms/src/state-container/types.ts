@@ -18,7 +18,8 @@ import type { FieldArrayCommands } from './field-array';
  *
  * The container is named for what it holds, not `FormStore`, which is a class of Radiant UI. The contract is
  * public through `@schema-engine/forms/state-container`, with `@schema-engine/forms/csrf` and
- * `@schema-engine/forms/server-errors` beside it. The conformance suite is published separately, later (#337).
+ * `@schema-engine/forms/server-errors` beside it. Its conformance suite is `formStateContainerConformance` from
+ * `@schema-engine/forms/testing`.
  */
 
 /**
@@ -146,6 +147,19 @@ export interface NativeValidity {
 }
 
 /**
+ * How a check of the form ended, and what the host may do next.
+ *
+ * @remarks
+ * `'passed'`: the scope was current and no error from any source remains at the paths that take part.
+ * `'invalid'`: the scope was current and an error blocks. `'overtaken'`: an edit, a row move or a reset outran the
+ * check, and the retry over the same rows was outrun too or the rows are gone, so there is no verdict and nothing
+ * stale was written: ask again, and do not show errors the user did not cause. A {@link FormSubmitResult} is built on
+ * it, so the outcomes are listed here only.
+ */
+export type FormValidateResult =
+	{ readonly outcome: 'passed' } | { readonly outcome: 'invalid' } | { readonly outcome: 'overtaken' };
+
+/**
  * How a submission ended, and what the host may do next.
  *
  * @remarks
@@ -157,6 +171,7 @@ export interface NativeValidity {
  * it, so there is no verdict on anything: ask again, and do not show errors the user did not cause.
  */
 export type FormSubmitResult =
+	| Exclude<FormValidateResult, { readonly outcome: 'passed' }>
 	| {
 			readonly outcome: 'passed';
 			readonly values: Readonly<Record<string, unknown>>;
@@ -174,9 +189,7 @@ export type FormSubmitResult =
 			 * when its path, or a path its rules read, is edited.
 			 */
 			readonly setServerErrors: (errors: FormStateErrorsInput) => void;
-	  }
-	| { readonly outcome: 'invalid' }
-	| { readonly outcome: 'overtaken' };
+	  };
 
 /**
  * The immutable state a subscriber reads.
@@ -306,19 +319,20 @@ export interface FormStateContainer {
 	 */
 	reset(values?: Record<string, unknown>): void;
 	/**
-	 * Validates `paths` (the whole form when omitted, nothing when empty), records the findings and resolves whether it passed.
+	 * Validates `paths` (the whole form when omitted, nothing when empty), records the findings and says how that ended.
 	 *
 	 * @remarks
 	 * Every check records the scope it covered: the values it read, the values its rules depend on, the
-	 * native facts, the reset generation and the rows by id. It resolves `true` only when no error from any
+	 * native facts, the reset generation and the rows by id. It is `'passed'` only when no error from any
 	 * source remains at the paths that take part and that scope was still current when it finished. A check
 	 * overtaken by an edit, a row move or a reset runs once more over the same rows, wherever they are now,
-	 * and one that is overtaken again, or whose rows are gone, resolves `false` without writing anything stale.
+	 * and one that is overtaken again, or whose rows are gone, is `'overtaken'` without writing anything stale:
+	 * it is not `'invalid'`, so the host must not read it as a failed field.
 	 * It rejects with a `FormValidationFailure` naming the path and rule when a rule could not run. A failure
 	 * of its own validation starts the failed-check state for those paths, so they re-validate by
 	 * `reValidateMode` from then on. It does not mark anything submitted or touched.
 	 */
-	validate(paths?: readonly string[]): Promise<boolean>;
+	validate(paths?: readonly string[]): Promise<FormValidateResult>;
 	/**
 	 * Whether the form is valid for the state at the moment of the call, by the same count as `validate`, without its writes.
 	 *

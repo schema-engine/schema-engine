@@ -52,6 +52,7 @@ import {
 	type FormStateIssue,
 	type FormStateSnapshot,
 	type FormSubmitResult,
+	type FormValidateResult,
 	type NativeValidity,
 } from './types';
 import {
@@ -651,6 +652,8 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		return validationMode === 'all' || validationMode === target;
 	}
 
+	type Outcome = FormValidateResult['outcome'];
+
 	interface ValidationMode {
 		/** Writes the result, tracks it against later requests and marks its paths pending; a silent check does none of that. */
 		readonly record: boolean;
@@ -658,7 +661,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 		readonly markFailed: boolean;
 		/** Match `names` as exact paths, not as prefixes. */
 		readonly exact?: boolean;
-		/** Run once more over the same rows when the result was overtaken; a second overtaking resolves `false`. */
+		/** Run once more over the same rows when the result was overtaken; a second overtaking is `'overtaken'`. */
 		readonly retry?: boolean;
 		/** Reject, rather than only record, when a rule could not run. */
 		readonly reject?: boolean;
@@ -684,12 +687,13 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 	 * so a result for a row that moved lands on that row, and one for a row that is gone is dropped. It is
 	 * dropped for a path when that path's value or native fact changed while it ran, a value a rule of the
 	 * path reads changed, or a check that started later asked for the path. A reset drops the whole result,
-	 * nothing is run again, and the call resolves `false`. When the scope was overtaken otherwise, an
-	 * explicit check runs once more over the same rows, wherever they are by then, and resolves `false` when
-	 * that one is overtaken too or a row it was asked about is gone.
+	 * nothing is run again, and the call is `'overtaken'`. When the scope was overtaken otherwise, an
+	 * explicit check runs once more over the same rows, wherever they are by then, and is `'overtaken'` when
+	 * that one is overtaken too or a row it was asked about is gone. A silent check is never overtaken: it
+	 * answers for the state it started from.
 	 */
-	async function runValidation(names: readonly string[] | undefined, mode: ValidationMode): Promise<boolean> {
-		if (names?.length === 0) return true;
+	async function runValidation(names: readonly string[] | undefined, mode: ValidationMode): Promise<Outcome> {
+		if (names?.length === 0) return 'passed';
 		const start = {
 			values: state.values,
 			ids: state.ids,
@@ -774,12 +778,11 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			const answeredByServer = entries(start.server).some(
 				([path]) => inScope(path) && !isPathExcluded(start.excluded, path),
 			);
-			return !blocking && !answeredByServer && unchecked.size === 0;
+			return !blocking && !answeredByServer && unchecked.size === 0 ? 'passed' : 'invalid';
 		}
 		if (tracker.outdated(run)) {
 			finish();
-			if (mode.submission) mode.submission.outcome = 'overtaken';
-			return false;
+			return 'overtaken';
 		}
 
 		const now = (path: string): string | undefined => resolveAnchor(anchorOf(start.ids, path), state.ids);
@@ -854,10 +857,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			return batch(() => {
 				const again = names?.map((name) => now(name));
 				finish();
-				if (again?.some((name) => name === undefined)) {
-					if (mode.submission) mode.submission.outcome = 'overtaken';
-					return Promise.resolve(false);
-				}
+				if (again?.some((name) => name === undefined)) return Promise.resolve('overtaken');
 				return runValidation(again as string[] | undefined, { ...mode, retry: false });
 			});
 		}
@@ -886,10 +886,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				: setSelfAt(failed, '', true, isArrayNow);
 		}
 		finish({ validation, validated, failed });
-		if (overtaken) {
-			if (mode.submission) mode.submission.outcome = 'overtaken';
-			return false;
-		}
+		if (overtaken) return 'overtaken';
 		if (failure && mode.reject) throw failure;
 		const scopeNow = names?.flatMap((name) => now(name) ?? []);
 		const stillInScope = (path: string): boolean =>
@@ -900,8 +897,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			mode.submission.ids = start.ids;
 			mode.submission.excluded = start.excluded;
 		}
-		if (mode.submission) mode.submission.outcome = passed ? 'passed' : 'invalid';
-		return passed;
+		return passed ? 'passed' : 'invalid';
 	}
 
 	let cachedIndex: { ids: State['ids']; shape: string; index: DependencyIndex } | undefined;
@@ -1222,7 +1218,6 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 
 	async function submit(): Promise<FormSubmitResult> {
 		const record: SubmissionRecord = {
-			outcome: undefined,
 			values: state.values,
 			ids: state.ids,
 			excluded: state.excluded,
@@ -1230,7 +1225,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 			epoch: tracker.epoch(),
 		};
 		latestSubmission = record;
-		await batch(() => {
+		const outcome = await batch(() => {
 			commit({ server: undefined });
 			return runValidation(undefined, {
 				record: true,
@@ -1240,7 +1235,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				submission: record,
 			});
 		});
-		const outcome = latestSubmission === record ? record.outcome : undefined;
+		if (latestSubmission !== record) return { outcome: 'overtaken' };
 		if (outcome === 'passed') {
 			return {
 				outcome,
@@ -1248,7 +1243,7 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				setServerErrors: (errors) => setServerErrors(record, errors),
 			};
 		}
-		return { outcome: outcome === 'invalid' ? 'invalid' : 'overtaken' };
+		return { outcome };
 	}
 
 	return {
@@ -1282,8 +1277,11 @@ export function createFormStateContainer(options: FormStateContainerOptions): Fo
 				generation: state.generation + 1,
 			});
 		},
-		validate: async (paths) => runValidation(paths, { record: true, markFailed: true, retry: true, reject: true }),
-		checkValidity: async () => runValidation(undefined, { record: false, markFailed: false, reject: true }),
+		validate: async (paths) => ({
+			outcome: await runValidation(paths, { record: true, markFailed: true, retry: true, reject: true }),
+		}),
+		checkValidity: async () =>
+			(await runValidation(undefined, { record: false, markFailed: false, reject: true })) === 'passed',
 		submit,
 		fieldArray,
 	};

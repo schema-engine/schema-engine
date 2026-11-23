@@ -2,8 +2,8 @@
 
 The contract for a form's state container, and its reference implementation. Both renderer bindings run on it, so
 the contract is public through the package entries `@schema-engine/forms/state-container`,
-`@schema-engine/forms/csrf` and `@schema-engine/forms/server-errors`. The conformance suite is published
-separately, later (#337).
+`@schema-engine/forms/csrf` and `@schema-engine/forms/server-errors`. Its conformance suite is
+`formStateContainerConformance` from `@schema-engine/forms/testing`.
 
 It is called a container, not a store, because `FormStore` is a class of Radiant UI; the engine's interface
 is `FormStateContainer`, its factory `createFormStateContainer` and its snapshot `FormStateSnapshot`.
@@ -84,13 +84,17 @@ Every check, whether `validate`, `checkValidity` or one the container starts aft
 scope it covers when it starts: the values it reads, the values its rules depend on (from the dependency
 index), the native facts, the exclusions, the reset generation and the rows it names, by row id.
 
-- A result is applied, and `validate()` resolves `true`, only if that scope is still current when it
+- A result is applied, and `validate()` is `passed`, only if that scope is still current when it
   finishes. Each path is checked on its own: its value, its native fact, the values its rules read and the
   checks that asked for it after.
 - An overtaken `validate()` runs once more over the same rows, wherever they are by then: the retry keeps
   the original row anchors and never reads an index again. If the retry is overtaken too, or a row it was
-  asked about is gone, it resolves `false`, and nothing stale is written. A reset overtakes everything and
-  resolves `false` without a retry.
+  asked about is gone, it ends `overtaken`, and nothing stale is written. A reset overtakes everything and
+  ends `overtaken` without a retry.
+- **How a check ended.** `validate()` resolves `{ outcome: 'passed' }`, `{ outcome: 'invalid' }` (the scope was
+  current and an error blocks) or `{ outcome: 'overtaken' }` (no verdict: show nothing the user did not cause,
+  ask again). They are the outcomes of `submit()` as well, with its `values` and `setServerErrors` on `passed`
+  only. `checkValidity()` is a plain boolean: it is never overtaken, because it answers for the state at the call.
 - `checkValidity()` answers for the values, native facts, server errors and exclusions current when it was
   called, and for no later state. It is never retried, and it never mixes those with errors set after. Its
   answer may be out of date when it resolves.
@@ -212,8 +216,8 @@ A rule that cannot run is no field error: it says nothing about the value.
 ## Entry point
 
 `@schema-engine/forms/state-container` (`src/state-container/index.ts`) exports the contract types, the factory,
-`selectFieldState`, `selectValue`, `selectError`, `selectWarning`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT`, `FormIssueFormatter`,
-`FormValidationFailure` and `FormStateHydrationError`. The conformance suite is not part of it.
+`selectFieldState`, `selectValue`, `selectError`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT`, `FormIssueFormatter` and
+`FormValidationFailure`. The conformance suite is not part of it: it has its own entry, `@schema-engine/forms/testing`.
 
 `createFormStateContainer({ config, registry, defaults?, snapshot? })` is the whole option list: the elements, the
 validation timing and the payload come from the normalized form config.
@@ -242,13 +246,14 @@ defaults with new row ids. Without `snapshot` the container starts from `default
 `validate`, `checkValidity`, `submit` and `fieldArray`. No member depends on how it is called.
 
 Reads are pure selectors over the snapshot, memoized per snapshot and path, so they are safe as selectors
-for `useSyncExternalStore` or an external store source: `selectFieldState`, `selectValue`, `selectError` and
-`selectWarning` in [selectors.ts](./selectors.ts), and `toFieldArrayValue(rowIds, commands)` in
+for `useSyncExternalStore` or an external store source: `selectFieldState`, `selectValue` and `selectError`
+in [selectors.ts](./selectors.ts), and `toFieldArrayValue(rowIds, commands)` in
 [field-array.ts](./field-array.ts), which builds the React Hook Form style `FieldArrayValue` both bindings
 hand to their widgets, memoized by the commands and the row ids. `fieldArray(path)` returns the same commands
 object for a path each time, and a path names a position: `contacts.0.phones` is whatever row is at index 0 now.
 A field state (`error`, `warning`, `invalid`, `isTouched`, `isDirty`, `isValidating`) is the same object in
-every snapshot while it is unchanged. `selectErrorsUnder` and `selectFields` are internal helpers of the module.
+every snapshot while it is unchanged. `selectFields` is an internal helper of the module. A hydration that does not match its own values throws an error
+named `FormStateHydrationError`.
 
 ### Naming, after React Hook Form
 
@@ -257,7 +262,7 @@ every snapshot while it is unchanged. `selectErrorsUnder` and `selectFields` are
 | `selectFieldState(snapshot, path)`   | `getFieldState`             | `{ error, warning, invalid, isTouched, isDirty, isValidating }`; an error is never inherited           |
 | `submit()` and its `setServerErrors` | `setError`/`clearErrors`    | Errors are tied to the submission they answer, resolved to rows and applied only to unchanged targets  |
 | `reportNative(facts)`                | `shouldUseNativeValidation` | Native validity is reported on its own, is tied to the value, and has the timing of rules              |
-| `validate(paths?)`                   | `trigger`                   | Resolves `true` only when its scope is still current; `checkValidity()` is the silent one              |
+| `validate(paths?)`                   | `trigger`                   | Says `passed`, `invalid` or `overtaken`; `checkValidity()` is the silent one, a boolean                |
 | `snapshot.validating`                | `validatingFields`          | Superseded checks do not keep a path pending                                                           |
 | `snapshot.warnings`                  | none                        | A separate, never blocking channel with the shape of errors                                            |
 | `fieldArray(path)` and `rowIds`      | `useFieldArray`             | The same operations and `fields` with stable ids; falsy rows are kept, and row state travels with rows |
@@ -269,7 +274,7 @@ every snapshot while it is unchanged. `selectErrorsUnder` and `selectFields` are
 - Unchanged branches keep their references. Opaque values, such as an array of `File` objects, are never
   copied, frozen or diffed, and are compared by reference.
 - `setValue` replaces the whole branch.
-- `validate` resolves `false` while any error, from any source, or any native fact, remains at the
+- `validate` is `invalid` while any error, from any source, or any native fact, remains at the
   validated paths that take part; `checkValidity` gives the same answer without writing. Writing identical
   errors changes nothing and notifies nobody.
 - An explicit `validate` starts re-validation by `reValidateMode` for the paths it covered, whether it passed or
@@ -284,8 +289,8 @@ every snapshot while it is unchanged. `selectErrorsUnder` and `selectFields` are
 - A row operation validates the array's own rules, not its rows, and `reset` gives every row a new id.
 - A command notifies subscribers once, including when it starts a validation.
 
-The rules are tests: `formStateContainerConformance(createStore)` in [test-utils/form-state-container-conformance.ts](../../../../test-utils/form-state-container-conformance.ts)
-registers them with vitest, like the renderer conformance suite, with a case for each failure sequence of
+The rules are tests: `formStateContainerConformance(createStore)` in [testing/form-state-container-conformance.ts](../testing/form-state-container-conformance.ts),
+published as `@schema-engine/forms/testing` (vitest is an optional peer dependency), registers them with vitest, with a case for each failure sequence of
 the review that motivated freshness, provenance, native facts and participation.
 `test/state-container/form-state-container-rules.test.ts` points each rule at a container written to break it,
 and two files mock the run tracker and the row anchors to show the late-result cases fail without them.

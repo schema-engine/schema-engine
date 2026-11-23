@@ -1,4 +1,4 @@
-import { containerOptions } from '../../../../test-utils/form-state-container-conformance';
+import { containerOptions } from '@/testing/form-state-container-conformance';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { formStateContainerCases } from '../../../../test-utils/form-state-container-conformance';
+import { formStateContainerCases } from '@/testing/form-state-container-conformance';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
 
 vi.mock('@/state-container/row-ids', async (importOriginal) => {

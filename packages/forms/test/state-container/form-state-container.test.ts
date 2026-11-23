@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { containerOptions, watchValidation } from '../../../../test-utils/form-state-container-conformance';
+import { containerOptions, watchValidation } from '@/testing/form-state-container-conformance';
 import * as z from 'zod/mini';
 import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
 import type { ElementConfig } from '@/schemas/field-config';
@@ -87,7 +87,7 @@ describe('createFormStateContainer', () => {
 	describe('a failed check of one step', () => {
 		test('marks nothing submitted and keeps later steps quiet until they are touched', async () => {
 			const store = wizard();
-			expect(await store.validate(['password'])).toBe(false);
+			expect(await store.validate(['password'])).toEqual({ outcome: 'invalid' });
 			expect(store.getSnapshot()).not.toHaveProperty('isSubmitted');
 
 			store.setValue('password', 'other');
@@ -105,7 +105,7 @@ describe('createFormStateContainer', () => {
 
 		test('a failed check of the whole form surfaces every dependent', async () => {
 			const store = wizard();
-			expect(await store.validate()).toBe(false);
+			expect(await store.validate()).toEqual({ outcome: 'invalid' });
 			store.setValue('password', 'other');
 			await vi.waitFor(() =>
 				expect(store.getSnapshot().errors.confirmPassword?.message).toBe('Passwords differ'),
@@ -321,7 +321,7 @@ describe('createFormStateContainer', () => {
 
 		test('a failed check follows its row when rows move', async () => {
 			const store = contactsForm();
-			expect(await store.validate(['contacts.1.email'])).toBe(false);
+			expect(await store.validate(['contacts.1.email'])).toEqual({ outcome: 'invalid' });
 			store.fieldArray('contacts').remove(0);
 			store.setValue('contacts.0.email', 'a@example.com');
 			await vi.waitFor(() => expect(store.getSnapshot().errors['contacts.0.email']).toBeUndefined());
@@ -345,7 +345,7 @@ describe('createFormStateContainer', () => {
 					defaults: { tags: [] },
 				}),
 			);
-			expect(await store.validate()).toBe(false);
+			expect(await store.validate()).toEqual({ outcome: 'invalid' });
 			expect(store.getSnapshot().errors.tags?.message).toBe('Add a tag');
 			store.fieldArray('tags').append('a');
 			await vi.waitFor(() => expect(store.getSnapshot().errors.tags).toBeUndefined());
@@ -403,11 +403,11 @@ describe('createFormStateContainer', () => {
 			store.setValue('password', 'new');
 			await vi.waitFor(() => expect(store.getSnapshot().errors.confirm).toBeUndefined());
 			gate.release();
-			expect(await submit).toBe(true);
+			expect(await submit).toEqual({ outcome: 'passed' });
 			expect(store.getSnapshot().errors).toEqual({});
 		});
 
-		test('a row operation during validate makes it resolve with the validity of the current state', async () => {
+		test('a row operation during validate ends with the verdict of the current state', async () => {
 			const gate = gatedPasswords();
 			const store = createFormStateContainer(
 				containerOptions({
@@ -435,7 +435,7 @@ describe('createFormStateContainer', () => {
 			store.fieldArray('tags').append({ v: 'x' });
 			gate.stopHolding();
 			gate.release();
-			expect(await submit).toBe(false);
+			expect(await submit).toEqual({ outcome: 'invalid' });
 			expect(store.getSnapshot().errors.confirm).toBeDefined();
 			expect(isValidating(store)).toBe(false);
 		});
@@ -476,7 +476,7 @@ describe('createFormStateContainer', () => {
 			const store = requiredForm();
 			const run = store.validate(['name']);
 			store.setValue('name', '');
-			expect(await run).toBe(false);
+			expect(await run).toEqual({ outcome: 'invalid' });
 			expect(store.getSnapshot().errors.name?.message).toBe('Name is required');
 		});
 
@@ -497,7 +497,7 @@ describe('createFormStateContainer', () => {
 			);
 			const run = store.validate(['name']);
 			store.setValue('name', '');
-			expect(await run).toBe(false);
+			expect(await run).toEqual({ outcome: 'invalid' });
 			expect(store.getSnapshot().errors.name?.message).toBe('Name is required');
 		});
 
@@ -590,7 +590,7 @@ describe('createFormStateContainer', () => {
 					],
 				}),
 			);
-			expect(await store.validate()).toBe(false);
+			expect(await store.validate()).toEqual({ outcome: 'invalid' });
 			expect(store.getSnapshot().errors['address.street']?.message).toBe('Street is required');
 		});
 
@@ -614,15 +614,15 @@ describe('createFormStateContainer', () => {
 			);
 			const run = store.validate(['tags']);
 			store.setValue('tags', []);
-			expect(await run).toBe(false);
+			expect(await run).toEqual({ outcome: 'invalid' });
 			expect(store.getSnapshot().errors.tags?.message).toBe('Add a tag');
 		});
 
-		test('a result for a row removed meanwhile is dropped, and the check resolves false: its rows are gone', async () => {
+		test('a result for a row removed meanwhile is dropped, and the check is overtaken: its rows are gone', async () => {
 			const store = requiredForm();
 			const run = store.validate(['contacts.0.email']);
 			store.setValue('contacts', []);
-			expect(await run).toBe(false);
+			expect(await run).toEqual({ outcome: 'overtaken' });
 			expect(store.getSnapshot().errors).toEqual({});
 		});
 	});
@@ -689,7 +689,7 @@ describe('createFormStateContainer', () => {
 			store.fieldArray('contacts').swap(0, 1);
 			rule.auto();
 			rule.calls[0].resolve(true);
-			expect(await run).toBe(false);
+			expect(await run).toEqual({ outcome: 'invalid' });
 			expect(store.getSnapshot().errors.confirm).toBeDefined();
 		});
 
@@ -826,16 +826,16 @@ describe('createFormStateContainer', () => {
 					defaults: { contacts: [] },
 				}),
 			);
-			expect(await store.validate()).toBe(false);
+			expect(await store.validate()).toEqual({ outcome: 'invalid' });
 			expect(Object.keys(store.getSnapshot().errors)).toEqual(['contacts']);
 			store.fieldArray('contacts').append({ label: 'x' });
-			expect(await store.validate()).toBe(false);
+			expect(await store.validate()).toEqual({ outcome: 'invalid' });
 			expect(Object.keys(store.getSnapshot().errors).toSorted()).toEqual(['contacts', 'contacts.0.email']);
 			store.fieldArray('contacts').append({ email: 'b@example.com' });
-			expect(await store.validate()).toBe(false);
+			expect(await store.validate()).toEqual({ outcome: 'invalid' });
 			expect(Object.keys(store.getSnapshot().errors)).toEqual(['contacts.0.email']);
 			store.setValue('contacts.0.email', 'a@example.com');
-			expect(await store.validate()).toBe(true);
+			expect(await store.validate()).toEqual({ outcome: 'passed' });
 			expect(store.getSnapshot().errors).toEqual({});
 		});
 	});

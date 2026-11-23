@@ -508,7 +508,7 @@ test('a require released after a failed check clears its error', async () => {
 	]);
 	try {
 		containerOf(form.host).setValue('mode', 'need');
-		expect(await containerOf(form.host).validate()).toBe(false);
+		expect(await containerOf(form.host).validate()).toEqual({ outcome: 'invalid' });
 		expect(containerOf(form.host).getSnapshot().errors.code).toBeTruthy();
 
 		containerOf(form.host).setValue('mode', '');
