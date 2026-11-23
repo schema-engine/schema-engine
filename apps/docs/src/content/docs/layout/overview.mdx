@@ -1,23 +1,99 @@
 ---
-title: 'Styling and layout'
-description: 'Which tool styles what: the layout theme, the grid, appearance axes, tokens and escape hatches.'
+title: 'Overview'
+description: 'Domain-neutral layout: a grid with named placement, named appearance, themes and the recipe protocol. Install it, compile a theme and place items in a container with no forms.'
 order: 1
 ---
 
-# Styling and layout
+# Layout
 
-Schema Engine splits styling in two. The engine owns a **vocabulary** of names (`half`, `compact`, `elevated`, a gap token). The form owns the **intent**, written with those names in plain data. A renderer turns the intent into the same DOM contract in React and in Radiant: `data-se-*` attributes and CSS custom properties.
+`@schema-engine/layout` places items in a container and styles them by name, and it knows nothing about forms. It has a 12-track grid with named widths and drawn areas, named appearance axes such as `size` and `surface`, a compiler that turns both into one theme and one stylesheet, and a recipe protocol a domain uses to declare the frame around its content. Forms is the first domain built on it. Any host that puts items in a container can use the same rules: a marketing page, a dashboard, a document type.
 
-| Owner                | Holds                                                                                  | Written in                                                                         |
-| -------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| The **layout theme** | Breakpoint thresholds, gap tokens, appearance axes and the tokens each axis value sets | `createLayoutTheme` from `@schema-engine/layout`, passed to the engine as `layout` |
-| The **form**         | Which width, which areas, which `size`                                                 | `grid`, `appearance`, `className`, `style` in the form config                      |
-| The **recipe**       | The markup and CSS of the frame around the fields, which reads the tokens              | A shell, as a registered recipe                                                    |
-| The **host app**     | Values of tokens, extra axes, its own CSS                                              | A stylesheet and the theme you pass to the engine                                  |
+Layout splits styling in two. The theme owns a **vocabulary** of names (`half`, `compact`, `elevated`, a gap token). A document owns the **intent**, written with those names in plain data. A renderer turns the intent into one DOM contract: `data-se-*` attributes and CSS custom properties.
 
-Because the form only picks names, the same config validates and renders the same in every renderer, and it can live in JSON or [YAML](/docs/forms/yaml).
+## Install
+
+```bash
+pnpm add @schema-engine/layout zod
+```
+
+The grid, axis and recipe schemas use `zod/mini`, so `zod` is a peer dependency. A form package installs this package for you: `@schema-engine/forms` depends on it, and the React and Radiant renderers declare it as a peer.
+
+## Quick start
+
+A theme compiles the grid and the appearance into one stylesheet. A host emits that stylesheet, puts the hooks on its container and its items, and writes their custom properties. This needs no renderer and no forms:
+
+```ts title="theme.ts"
+import { createLayoutTheme } from '@schema-engine/layout';
+
+export const theme = createLayoutTheme();
+```
+
+```ts title="section.ts"
+import {
+	GRID_CLASS,
+	GRID_ITEM_CLASS,
+	getAppearanceAttributes,
+	getGridItemVariables,
+	getGridVariables,
+	type CssVariables,
+	type ElementGridConfig,
+} from '@schema-engine/layout';
+import { theme } from './theme';
+
+interface Item {
+	label: string;
+	grid?: ElementGridConfig;
+}
+
+const items: Item[] = [
+	{ label: 'First name', grid: { width: 'half' } },
+	{ label: 'Last name', grid: { width: 'half' } },
+	{ label: 'Email' },
+];
+
+function style(variables: CssVariables): string {
+	return Object.entries(variables)
+		.map(([name, value]) => `${name}:${value}`)
+		.join(';');
+}
+
+export function renderSection(): string {
+	const attributes = Object.entries(getAppearanceAttributes({ size: 'compact' }))
+		.map(([name, value]) => `${name}="${value}"`)
+		.join(' ');
+	const cells = items.map(
+		(item) =>
+			`<div class="${GRID_ITEM_CLASS}" data-se-theme="${theme.id}" style="${style(getGridItemVariables(item.grid))}">${item.label}</div>`,
+	);
+	return [
+		`<section class="${GRID_CLASS}" data-se-theme="${theme.id}" ${attributes} style="${style(getGridVariables(undefined, theme.grid, items))}">`,
+		...cells,
+		`</section>`,
+	].join('\n');
+}
+```
+
+```ts title="page.ts"
+import { renderSection } from './section';
+
+console.log(renderSection());
+```
+
+```text
+<section class="se-grid" data-se-theme="l1tvu4rv" data-se-size="compact" style="--se-grid-template:repeat(12, minmax(0, 1fr));--se-grid-default-column:1 / -1">
+<div class="se-grid-item" data-se-theme="l1tvu4rv" style="--se-item-grid-column:span 6">First name</div>
+<div class="se-grid-item" data-se-theme="l1tvu4rv" style="--se-item-grid-column:span 6">Last name</div>
+<div class="se-grid-item" data-se-theme="l1tvu4rv" style="">Email</div>
+</section>
+```
+
+The theme id (`l1tvu4rv` here) is derived from the compiled vocabulary, so it changes when the vocabulary does.
+
+`createLayoutTheme()` compiles the default vocabulary. `theme.css` is the stylesheet, scoped by `[data-se-theme="<id>"]`: add it to the page once. `getGridVariables(grid, theme.grid, items)` gives the container its tracks and, for items with named widths, a `1 / -1` default placement. `getGridItemVariables(item.grid)` gives each item its placement. Appearance travels the same way: `size: 'compact'` becomes `data-se-size="compact"` and the theme's token rules read it. [Layout themes](/docs/layout/layout-themes) explains the theme, and [Grid and placement](/docs/layout/grid-and-placement) the placement names.
 
 ## Which tool do I use
+
+The table names forms as the example consumer: its `grid`, `appearance` and `view` keys are the config of a form. Another domain reads the same keys from its own documents.
 
 | I want to                                                           | Use                                                                     | Read                                                                                          |
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |

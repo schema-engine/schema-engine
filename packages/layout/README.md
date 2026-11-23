@@ -136,6 +136,8 @@ Walking a document tree to inherit picks belongs to each domain, because only it
 
 ## Recipe protocol
 
+The docs page [Recipe protocol](../../apps/docs/src/content/docs/layout/recipe-protocol.mdx) walks through it.
+
 A recipe composes slots (shell, header, content, ...) into a view. The spec, binding, slot defaults and resolved view are the same for every domain, so they live here; each domain declares the slots, kinds and rules its recipes use, once:
 
 ```ts
@@ -211,7 +213,7 @@ Left internal on purpose: `compileAppearance`, `getAppearanceCss`, `resolveGridT
 
 ## Documentation
 
-Guides with copy-paste recipes: [Layout themes](../../apps/docs/src/content/docs/layout/layout-themes.mdx), [Appearance axes](../../apps/docs/src/content/docs/layout/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/layout/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/layout/recipes.mdx).
+Guides with copy-paste recipes: [Overview and quick start](../../apps/docs/src/content/docs/layout/overview.mdx), [Grid and placement](../../apps/docs/src/content/docs/layout/grid-and-placement.mdx), [Layout themes](../../apps/docs/src/content/docs/layout/layout-themes.mdx), [Appearance axes](../../apps/docs/src/content/docs/layout/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/layout/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/layout/recipes.mdx).
 
 ## Agent skill
 

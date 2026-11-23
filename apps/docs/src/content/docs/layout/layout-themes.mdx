@@ -147,58 +147,9 @@ The token rules (the tokens an axis value sets) stay at zero specificity, so a c
 
 ## A hand-built host
 
-Any code that places items in a container can use the theme: a marketing page, a dashboard, a future document type. A renderer does three things: it emits the stylesheet, puts the hooks on the container and its items, and writes the custom properties.
+Any code that places items in a container can use the theme: a marketing page, a dashboard, a document type. A renderer does three things: it emits the stylesheet, puts the hooks on the container and its items, and writes the custom properties. The [quick start](/docs/layout/overview#quick-start) builds one in a single file.
 
-```ts
-import {
-	GRID_CLASS,
-	GRID_ITEM_CLASS,
-	createLayoutTheme,
-	getAppearanceAttributes,
-	getGridItemVariables,
-	getGridVariables,
-} from '@schema-engine/layout';
-import type { CssVariables, ElementGridConfig } from '@schema-engine/layout';
-
-interface Item {
-	label: string;
-	grid?: ElementGridConfig;
-}
-
-const theme = createLayoutTheme();
-
-const items: Item[] = [
-	{ label: 'First name', grid: { width: 'half' } },
-	{ label: 'Last name', grid: { width: 'half' } },
-	{ label: 'Email' },
-];
-
-function style(variables: CssVariables): string {
-	return Object.entries(variables)
-		.map(([name, value]) => `${name}:${value}`)
-		.join(';');
-}
-
-export function renderSection(): string {
-	const attributes = Object.entries(getAppearanceAttributes({ size: 'compact' }))
-		.map(([name, value]) => `${name}="${value}"`)
-		.join(' ');
-	const cells = items.map(
-		(item) =>
-			`<div class="${GRID_ITEM_CLASS}" data-se-theme="${theme.id}" style="${style(getGridItemVariables(item.grid))}">${item.label}</div>`,
-	);
-	return [
-		`<style>${theme.css}</style>`,
-		`<section class="${GRID_CLASS}" data-se-theme="${theme.id}" ${attributes} style="${style(getGridVariables(undefined, theme.grid, items))}">`,
-		...cells,
-		`</section>`,
-	].join('\n');
-}
-```
-
-`getGridVariables(grid, theme.grid, items)` takes the container's `GridLayoutConfig` (`undefined` for none), the theme's grid and the items it places; it gives the container 12 tracks and a `1 / -1` default placement when the items use named widths, and the template of its `areas` when it draws a layout. `getGridItemVariables(item.grid)` takes an item's `ElementGridConfig`. Both return a record of `--*` custom properties that is assignable to React `CSSProperties` and to a plain `style` object.
-
-Appearance travels the same way: a value on the container becomes `data-se-size="compact"`, and the theme's token rules read it.
+`getGridVariables(grid, theme.grid, items)` takes the container's `GridLayoutConfig` (`undefined` for none), the theme's grid and the items it places. It gives the container 12 tracks and a `1 / -1` default placement when the items use named widths, and the template of its `areas` when it draws a layout. `getGridItemVariables(item.grid)` takes an item's `ElementGridConfig`. Both return a record of `--*` custom properties that is assignable to React `CSSProperties` and to a plain `style` object.
 
 ## A theme for a new domain
 

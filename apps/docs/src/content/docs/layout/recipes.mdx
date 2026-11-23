@@ -26,7 +26,7 @@ Set up your app as the getting-started page for your renderer says ([Forms Radia
 
 1. Copy the config tab into a module and render it.
 2. Copy the CSS tab into your global stylesheet, or import it as a file. Every recipe CSS is scoped by the class its config puts on the form with `className`, so it only applies once pasted with that config.
-3. If the recipe has a theme or engine tab, build your engine with it, as that tab shows. A React app also needs `pnpm add @schema-engine/layout` for a theme tab, which imports `createLayoutTheme` and `defineAxis` from it (Radiant installs it as a peer).
+3. If the recipe has a theme or engine tab, build your engine with it, as that tab shows. A theme tab imports `createLayoutTheme` and `defineAxis` from `@schema-engine/layout`, which both renderers declare as a peer dependency, so the install on the getting-started page already covers it.
 
 In Radiant:
 

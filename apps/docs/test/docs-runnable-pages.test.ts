@@ -6,6 +6,7 @@ import * as z from 'zod/mini';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { codeBlocks, readPage, runTitledFiles, titledRunner } from './snippet-harness';
+import * as layoutPackage from '@schema-engine/layout';
 import * as formsPackage from '@schema-engine/forms';
 import * as radiantPackage from '@schema-engine/forms-radiant';
 import * as browserPackage from '@schema-engine/forms/browser';
@@ -17,6 +18,7 @@ const packages = {
 	'@schema-engine/registry/yaml': registryYaml,
 	'@schema-engine/forms': formsPackage,
 	'@schema-engine/forms/browser': browserPackage,
+	'@schema-engine/layout': layoutPackage,
 	'zod/mini': z,
 	'node:timers/promises': nodeTimers,
 };
@@ -230,5 +232,13 @@ describe('forms-radiant/overview', () => {
 		const registered = radiantPackage.schemaFormRegistrations.map((registration) => registration.$type);
 		expect(registered).toHaveLength(18);
 		expect(listed.filter((type) => type !== '$type').toSorted()).toEqual(registered.toSorted());
+	});
+});
+
+describe('layout/overview', () => {
+	test('the quick start builds the section the page shows from its own files', async () => {
+		const page = 'layout/overview';
+		const lines = await runTitledFiles(page, packages, 'page.ts');
+		expect(lines.join('\n')).toEqual(shownOutput(page, 'Quick start'));
 	});
 });
