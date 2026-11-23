@@ -1,0 +1,123 @@
+---
+title: 'Writing actions'
+description: 'Define an action with defineAction, call a service from one, register actions at runtime and test a handler on its own.'
+order: 4
+---
+
+# Writing actions
+
+The package ships the primitives, not a catalog: `ActionRegistry`, `ActionDispatcher`, `parseActions`, `defineAction` and the shared types. The actions of an application, such as webhooks, analytics, notifications, persistence or workflow transitions, are registrations you write. A domain package ships its own on top of these.
+
+## Define an action
+
+An action needs a config schema, a base context and a trigger type, then a registration. `defineAction` fixes the context and trigger once for a domain, so each registration states only its config:
+
+```ts title="webhook.ts"
+import * as z from 'zod/mini';
+import { defineAction, type ActionConfigBase } from '@schema-engine/actions';
+
+z.config(z.locales.en());
+
+export interface AppContext {
+	fetch: typeof fetch;
+}
+
+export type AppTrigger = 'order-paid' | 'order-shipped';
+
+const defineAppAction = defineAction<AppContext, AppTrigger>();
+
+interface WebhookConfig extends ActionConfigBase<'webhook'> {
+	url: string;
+	payload: Record<string, string>;
+}
+
+export const webhook = defineAppAction<WebhookConfig>({
+	$type: 'webhook',
+	schema: z.object({
+		id: z.string(),
+		$type: z.literal('webhook'),
+		enabled: z.optional(z.boolean()),
+		triggers: z.optional(z.array(z.string())),
+		url: z.url(),
+		payload: z.record(z.string(), z.string()),
+	}),
+	metadata: { name: 'Call a webhook', defaultTriggers: ['order-paid', 'order-shipped'] },
+	execute: async ({ config, fetch, signal }) => {
+		const response = await fetch(config.url, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(config.payload),
+			signal,
+		});
+		if (!response.ok) {
+			return { success: false, error: `${config.url} answered ${response.status}`, shouldContinue: false };
+		}
+		return { success: true, message: `Called ${config.url}` };
+	},
+});
+```
+
+The handler passes `signal` to `fetch`, so a cancelled workflow aborts the request. The base context carries `fetch`, so a test or another runtime can supply its own.
+
+## Typing model
+
+There are two layers. `TBaseContext` is what callers pass to `dispatch()`. The handler receives `ActionRuntimeContext<TConfig, TBaseContext, TTrigger>`, which the dispatcher builds by adding `config`, `trigger`, `triggeredBy` and `signal`. The call site stays simple and the handler stays fully typed.
+
+## Register actions at runtime
+
+`ActionRegistry` is built once from a list and cannot change. To register actions at runtime, implement `ActionRegistryProvider` on a store of your own. `parseActions` and `ActionDispatcher` need only `getAction`:
+
+```ts
+import type { ActionConfigBase, ActionRegistration, ActionRegistryProvider } from '@schema-engine/actions';
+
+export class MutableActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider<TBaseContext, TTrigger> {
+	private actions = new Map<string, ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>();
+
+	register(action: ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>) {
+		this.actions.set(action.$type, action);
+	}
+
+	getAction(type: string) {
+		return this.actions.get(type);
+	}
+
+	getActionTypes(): string[] {
+		return Array.from(this.actions.keys());
+	}
+}
+```
+
+## Test an action
+
+A registration's `execute` is a function, so a test calls it with the context the dispatcher would build. Pass the `signal` a real dispatch provides:
+
+```ts title="webhook.test.ts"
+import { describe, expect, test } from 'vitest';
+import { webhook } from './webhook';
+
+describe('webhook', () => {
+	test('fails and stops the workflow when the endpoint answers an error', async () => {
+		const result = await webhook.execute({
+			fetch: async () => new Response(null, { status: 502 }),
+			trigger: 'order-paid',
+			signal: new AbortController().signal,
+			config: { id: 'notify', $type: 'webhook', url: 'https://example.com/hooks/orders', payload: {} },
+		});
+
+		expect(result).toMatchObject({ success: false, shouldContinue: false });
+	});
+});
+```
+
+## Design guidance
+
+- Keep schemas strict and serializable: the entry is data that travels as JSON.
+- Keep `execute()` focused on one side effect.
+- Use `defaultTriggers` for broad defaults and per-entry `triggers` for overrides.
+- Return `shouldContinue: false` only when you want to stop the workflow.
+- Observe `signal` in anything that waits.
+
+## Where to go next
+
+- [Sequences, parallel groups, cancellation](/docs/actions/sequences-and-cancellation)
+- [API reference](/docs/actions/api-reference)

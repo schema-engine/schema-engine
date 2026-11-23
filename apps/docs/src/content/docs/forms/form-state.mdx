@@ -170,7 +170,7 @@ The example above shows all three: after `setValue('password', 'short')` the rec
 
 Do not disable a submit button with `isValid`. A server error makes it `false`, and only the next attempt clears that, so the user could not retry. Let the user submit and show the errors.
 
-Actions see the same three. In an action, `context.isValid` is `isValid`, `context.form.checkValidity()` is `checkValidity()` and `context.form.validate()` is `validate()`, so it resolves `{ outcome }` too. See [Actions](/docs/actions/advanced#stop-on-failure).
+Actions see the same three. In an action, `context.isValid` is `isValid`, `context.form.checkValidity()` is `checkValidity()` and `context.form.validate()` is `validate()`, so it resolves `{ outcome }` too. See [Actions in forms](/docs/forms/actions#stop-on-failure).
 
 A check is **fresh** only while its scope is current. If an edit, a row move or a reset outruns it, `validate()` runs once more over the same rows, and if it is overtaken again it resolves `{ outcome: 'overtaken' }` and writes nothing stale. `'overtaken'` is no verdict: ask again, and do not treat it as `'invalid'`.
 

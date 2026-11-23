@@ -1,24 +1,16 @@
 ---
-title: 'Overview'
-description: 'Domain-agnostic action execution with sequential and parallel groups.'
+title: 'Overview and quick start'
+description: 'Register actions, check a workflow that arrives as JSON with parseActions, and dispatch it in sequence and in parallel groups.'
 order: 1
 ---
 
 import { ActionFlow } from '@/components/action-flow/action-flow';
 
-# @schema-engine/actions
+# Actions
 
-## Overview
+An action is registered behaviour: you define what it does once, in code, and a workflow refers to it by `$type`. A workflow is a list of action entries, plain data that can be stored, sent from a server to a client and replayed. `@schema-engine/actions` registers actions, checks a workflow against them with `parseActions`, and dispatches it: entries run in order, and an entry that is itself a list runs in parallel. See [Core concepts](/docs/schema-engine/core-concepts) for the shared vocabulary.
 
-`@schema-engine/actions` is the generic action core used across Schema Engine packages.
-
-It provides:
-
-- action registrations
-- a registry for resolving action types
-- a dispatcher with sequential and parallel execution and metadata merging
-
-The package is reusable across domains. It is not form-specific.
+The package does not depend on any domain. A checkout flow, a support workflow and a background job all use the same registry, dispatcher and result type.
 
 ## Action flow
 
@@ -26,92 +18,150 @@ These playgrounds dispatch through `ActionDispatcher`. Run an action, or run the
 
 <ActionFlow />
 
-## Execution Model
+## Install
 
-The dispatcher separates the caller-provided base context from the runtime context seen by action handlers.
-
-When an action runs, the dispatcher enriches the base context with the current action config, trigger and cancellation signal before calling `execute()`.
-
-```typescript
-execute({
-	...context,
-	config: action,
-	trigger,
-	signal,
-});
+```bash
+pnpm add @schema-engine/actions zod
 ```
 
-At the call site you pass only the base context. The merged runtime shape is constructed internally.
+`@schema-engine/actions` has no schema-library dependency. Zod is the validator these examples use, and any [Standard Schema](https://standardschema.dev/) validator works in its place.
 
-## Dependencies
+## Quick start
 
-The package has no schema-library runtime dependency. Its `schema` values use
-the provider-neutral Standard Schema contract; applications may choose Zod Mini,
-Zod, Valibot, Effect Schema, or another compatible provider.
+### 1. Define a context and two actions
 
-## Quick Example
+The context is what the caller hands to every dispatch: here an API for support tickets, so no action reaches for a global. The first action is async. Each schema declares `id`, `enabled` and `triggers`, because `parseActions` returns what the schema returns and the dispatcher reads `enabled` and `triggers` from it.
 
-```typescript
+```ts title="actions.ts"
 import * as z from 'zod/mini';
+import { ActionRegistry, type ActionConfigBase, type ActionRegistration } from '@schema-engine/actions';
 
-type Trigger = 'submit' | 'change';
+z.config(z.locales.en());
 
-type BaseContext = {
-	userId: string;
-	metadata?: Record<string, unknown>;
+export interface TicketApi {
+	assign(ticketId: string, assignee: string): Promise<void>;
+	notify(channel: string, text: string): void;
+}
+
+export interface TicketContext {
+	tickets: TicketApi;
+}
+
+export type TicketTrigger = 'created' | 'escalated';
+
+const actionBase = {
+	id: z.string(),
+	enabled: z.optional(z.boolean()),
+	triggers: z.optional(z.array(z.string())),
 };
 
-type LogConfig = {
-	id: string;
-	$type: 'log';
-	message: string;
-	enabled?: boolean;
-	triggers?: readonly string[];
-};
+interface AssignConfig extends ActionConfigBase<'assign'> {
+	ticketId: string;
+	assignee: string;
+}
 
-const logAction: ActionRegistration<LogConfig, BaseContext, Trigger> = {
-	$type: 'log',
-	schema: z.strictObject({
-		id: z.string(),
-		$type: z.literal('log'),
-		message: z.string(),
+interface NotifyConfig extends ActionConfigBase<'notify'> {
+	channel: string;
+	text: string;
+}
+
+const assign: ActionRegistration<AssignConfig, TicketContext, TicketTrigger> = {
+	$type: 'assign',
+	schema: z.object({
+		...actionBase,
+		$type: z.literal('assign'),
+		ticketId: z.string(),
+		assignee: z.string(),
 	}),
-	metadata: {
-		name: 'Log Message',
-		description: 'Logs a message',
-		defaultTriggers: ['submit'],
+	metadata: { name: 'Assign ticket', defaultTriggers: ['created', 'escalated'] },
+	execute: async ({ config, tickets }) => {
+		await tickets.assign(config.ticketId, config.assignee);
+		return { success: true, message: `Assigned ${config.ticketId} to ${config.assignee}` };
 	},
-	execute: (context) => {
-		console.log(context.userId, context.trigger, context.config.message);
+};
+
+const notify: ActionRegistration<NotifyConfig, TicketContext, TicketTrigger> = {
+	$type: 'notify',
+	schema: z.object({
+		...actionBase,
+		$type: z.literal('notify'),
+		channel: z.string(),
+		text: z.string(),
+	}),
+	metadata: { name: 'Notify a channel', defaultTriggers: ['created', 'escalated'] },
+	execute: ({ config, tickets }) => {
+		tickets.notify(config.channel, config.text);
 		return { success: true };
 	},
 };
 
-const registry = new ActionRegistry<BaseContext, Trigger>([logAction]);
-
-const dispatcher = new ActionDispatcher(registry);
-
-const baseContext: BaseContext = {
-	userId: 'user_123',
-};
-
-const parsed = parseActions(registry, [{ id: '1', $type: 'log', message: 'Hello' }]);
-if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join(', '));
-
-await dispatcher.dispatch({
-	actions: parsed.data,
-	trigger: 'submit',
-	context: baseContext,
-});
+export const registry = new ActionRegistry<TicketContext, TicketTrigger>([assign, notify]);
 ```
 
-`parseActions` checks each entry against its registration's schema, and `dispatch` takes only what it returned, so an action that did not pass its schema never reaches a handler.
+`execute` receives `TicketContext` enriched by the dispatcher with `config`, `trigger` and a cancellation `signal`, so a handler reads `config.ticketId` and `tickets` from one object.
 
-The handler still receives `BaseContext & { config: LogConfig; trigger: Trigger }`, but that runtime shape is injected by the dispatcher.
+### 2. Parse a workflow and dispatch it
 
-## Next Steps
+The workflow arrives as JSON text. `parseActions` checks every entry against its registration's schema, and `dispatch` accepts only what it returned. The inner list is a group: both notifications run at the same time, after the assignment has finished.
 
-- [Getting Started](/docs/actions/getting-started)
-- [Core Concepts](/docs/actions/core-concepts)
-- [Advanced Usage](/docs/actions/advanced)
-- [API Reference](/docs/actions/api-reference)
+```ts title="main.ts"
+import { ActionDispatcher, parseActions } from '@schema-engine/actions';
+import { registry, type TicketApi } from './actions';
+
+const workflowJson = `[
+	{ "id": "assign", "$type": "assign", "ticketId": "T-1042", "assignee": "grace" },
+	[
+		{ "id": "notify-team", "$type": "notify", "channel": "#support", "text": "T-1042 was assigned to grace" },
+		{ "id": "notify-requester", "$type": "notify", "channel": "ada@example.com", "text": "We are on it" }
+	]
+]`;
+
+const tickets: TicketApi = {
+	async assign(ticketId, assignee) {
+		console.log(`assign ${ticketId} to ${assignee}`);
+	},
+	notify(channel, text) {
+		console.log(`notify ${channel}: ${text}`);
+	},
+};
+
+async function main() {
+	const parsed = parseActions(registry, JSON.parse(workflowJson));
+	if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join('; '));
+
+	const results = await new ActionDispatcher(registry).dispatch({
+		actions: parsed.data,
+		trigger: 'created',
+		context: { tickets },
+	});
+	for (const { actionId, sequenceIndex, groupIndex, status } of results) {
+		console.log(
+			`${actionId} (entry ${sequenceIndex}${groupIndex === undefined ? '' : `, member ${groupIndex}`}): ${status}`,
+		);
+	}
+}
+
+main();
+```
+
+### 3. Run it and read the results
+
+```text
+assign T-1042 to grace
+notify #support: T-1042 was assigned to grace
+notify ada@example.com: We are on it
+assign (entry 0): succeeded
+notify-team (entry 1, member 0): succeeded
+notify-requester (entry 1, member 1): succeeded
+```
+
+The first three lines come from the handlers. The rest print the results.
+
+`dispatch` returns one `ActionDispatchResult` per action that ran, in workflow order. Each carries the handler's own result (`success`, `message`, `error`, `data`) plus the `actionId`, the position in the workflow (`sequenceIndex`, and `groupIndex` for a group member), a `status` of `succeeded`, `failed` or `cancelled`, and whether cancellation had been requested. An action that does not match the trigger, or that has `enabled: false`, produces no result.
+
+## Where to go next
+
+- [Concepts](/docs/actions/concepts): the registration, the context, trigger matching and results.
+- [Sequences, parallel groups, cancellation](/docs/actions/sequences-and-cancellation): ordering, stopping a workflow and cancelling members of a group.
+- [Writing actions](/docs/actions/writing-actions): `defineAction`, an action that calls a service, testing and design guidance.
+- [API reference](/docs/actions/api-reference): every export.

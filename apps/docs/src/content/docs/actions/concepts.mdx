@@ -1,0 +1,96 @@
+---
+title: 'Concepts'
+description: 'The registration, the context an action receives, how a trigger selects actions, and what dispatch returns.'
+order: 2
+---
+
+# Concepts
+
+## Lifecycle
+
+1. Build an `ActionRegistry` from your action registrations.
+2. Check the workflow with `parseActions`. A workflow that arrives as JSON takes the same path as one written in code.
+3. Call `dispatch` with the parsed actions, a trigger and the base context.
+4. For each entry in order, the dispatcher finds the actions whose trigger matches and resolves their registrations.
+5. It enriches the base context with `config`, `trigger` and a cancellation `signal`, and calls `execute`. Actions in an inner list run concurrently.
+6. `dispatch` returns one `ActionDispatchResult` per action that ran.
+
+## Registration
+
+An action registration defines one action type. It extends the registry's `BaseRegistration`, so it has a `$type`, a Standard Schema `schema` and `metadata`, and it adds `execute`:
+
+```ts
+import * as z from 'zod/mini';
+import type { ActionConfigBase, ActionRegistration } from '@schema-engine/actions';
+
+interface LogConfig extends ActionConfigBase<'log'> {
+	message: string;
+}
+
+export const log: ActionRegistration<LogConfig, { userId: string }, 'submit' | 'change'> = {
+	$type: 'log',
+	schema: z.object({
+		id: z.string(),
+		$type: z.literal('log'),
+		message: z.string(),
+		enabled: z.optional(z.boolean()),
+		triggers: z.optional(z.array(z.string())),
+	}),
+	metadata: { name: 'Log message', defaultTriggers: ['submit'] },
+	execute: ({ config, trigger, userId }) => {
+		console.log(userId, trigger, config.message);
+		return { success: true };
+	},
+};
+```
+
+The schema is the contract of a workflow entry. `schema` is a plain Standard Schema value, so its type does not tie to `LogConfig`: the config type is what you claim the schema returns.
+
+## Action entry
+
+An action entry is one object in a workflow, validated against the schema of the registration its `$type` names.
+
+| Field      | Meaning                                                                              |
+| ---------- | ------------------------------------------------------------------------------------ |
+| `id`       | Identifies this entry. Results carry it as `actionId`                                |
+| `$type`    | The registered action to run                                                         |
+| `enabled`  | `false` skips the entry. Omitted or `true` runs it                                   |
+| `triggers` | The triggers this entry answers. Omitted, the registration's `defaultTriggers` apply |
+
+The registration's schema must keep `enabled` and `triggers` for the entry to honour them, because the parse returns what the schema returns.
+
+## Trigger matching
+
+An action runs when its trigger matches:
+
+1. The entry defines `triggers` and the current trigger is in the list.
+2. Otherwise the registration's `metadata.defaultTriggers` includes the current trigger.
+
+`triggers` on an entry override the defaults. An entry whose `$type` has no registration always matches, so `dispatch` can report the missing handler as a failed result instead of skipping it silently. `hasMatching` answers whether any entry would run or be reported on a trigger, so a caller can skip building a context for a trigger no action answers.
+
+## Context
+
+Callers pass a base context, `TBaseContext`: the data and services every action of the domain needs. The dispatcher builds the runtime context a handler receives:
+
+```ts
+execute({
+	...context,
+	config: action,
+	trigger,
+	signal,
+	...(triggeredBy ? { triggeredBy } : {}),
+});
+```
+
+`config` is the parsed entry, `trigger` is the trigger of this dispatch, `signal` is the cancellation signal for this action and `triggeredBy` is the entry that started a nested dispatch. When the call passes `metadata`, the dispatcher shallow-merges it into `context.metadata` first.
+
+## Results
+
+A handler returns an `ActionExecutionResult`: `success`, and optionally `message`, `error`, `cause`, `data` and `shouldContinue`. The dispatcher turns a thrown error into a failed result with `shouldContinue: true`. It adds `actionId`, `sequenceIndex`, `groupIndex`, `status` and `cancellationRequested` and returns the list.
+
+| Field            | Meaning                                                                                             |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `status`         | `succeeded`, `failed`, or `cancelled` when an abort error was seen after cancellation was requested |
+| `shouldContinue` | `false` on a failed result stops the rest of the workflow. Omitted or `true` continues              |
+
+See [Sequences, parallel groups, cancellation](/docs/actions/sequences-and-cancellation) for what a stop does to a group.

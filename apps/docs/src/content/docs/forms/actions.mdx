@@ -218,3 +218,33 @@ const trackAction = defineFormAction({
 ```
 
 The handler receives the forms base context enriched with `config` and `trigger`, so `context.formData`, `context.formId`, `context.config`, and `context.trigger` are all strongly typed.
+
+## Stop on Failure
+
+Return `shouldContinue: false` to stop the chain.
+
+```typescript
+execute: async (context) => {
+	if (!(await context.form.checkValidity())) {
+		return {
+			success: false,
+			error: 'Validation failed',
+			shouldContinue: false,
+		};
+	}
+
+	return { success: true };
+};
+```
+
+`context.isValid` is true while no validation error is recorded, so it is true on
+a pristine form even with an empty required field. `context.form.checkValidity()`
+validates the current values and resolves to whether the whole form passes. It
+records and shows no errors, and only the actions that call it pay for the
+validation. `context.form.validate()` validates, shows the errors and resolves
+`{ outcome: 'passed' | 'invalid' | 'overtaken' }`. See
+[Validity](/docs/forms/form-state#validity) for the three reads.
+
+## Form Integration
+
+Form action handlers receive a context with `formData`, `errors`, form state, and controller methods in addition to the action `config` and `trigger`. `errors` is keyed by dotted field path in both renderers, so a handler reads `context.errors['address.street']`.

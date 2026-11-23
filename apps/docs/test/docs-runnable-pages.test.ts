@@ -4,12 +4,14 @@ import * as registryPackage from '@schema-engine/registry';
 import * as registryYaml from '@schema-engine/registry/yaml';
 import * as z from 'zod/mini';
 import { codeBlocks, runTitledFiles, titledRunner } from './snippet-harness';
+import * as nodeTimers from 'node:timers/promises';
 
 const packages = {
 	'@schema-engine/actions': actionsPackage,
 	'@schema-engine/registry': registryPackage,
 	'@schema-engine/registry/yaml': registryYaml,
 	'zod/mini': z,
+	'node:timers/promises': nodeTimers,
 };
 
 const quickStart = 'schema-engine/quick-start';
@@ -67,5 +69,37 @@ describe('registry pages', () => {
 	test('a document resolves to HTML, and a broken one reports its paths', async () => {
 		const lines = await runTitledFiles('registry/resolve-a-document', packages, 'check.ts');
 		expect(lines.join('\n')).toEqual(shownOutput('registry/resolve-a-document', 'Use it'));
+	});
+});
+
+describe('actions pages', () => {
+	test('the quick start runs the workflow and prints the results the page shows', async () => {
+		const lines = await runTitledFiles('actions/overview', packages, 'main.ts');
+		expect(lines.join('\n')).toEqual(shownOutput('actions/overview', '3. Run it and read the results'));
+	});
+
+	test('a failed charge cancels its group sibling and stops the workflow', async () => {
+		const lines = await runTitledFiles('actions/sequences-and-cancellation', packages, 'cancel.ts');
+		expect(lines.join('\n')).toEqual(shownOutput('actions/sequences-and-cancellation', 'Cancellation'));
+	});
+
+	test('the webhook action fails with shouldContinue false on an error status', async () => {
+		const { webhook } = titledRunner('actions/writing-actions', packages).load('webhook.ts') as {
+			webhook: { execute: (context: unknown) => Promise<unknown> };
+		};
+		const result = await webhook.execute({
+			fetch: async () => new Response(null, { status: 502 }),
+			trigger: 'order-paid',
+			signal: new AbortController().signal,
+			config: { id: 'notify', $type: 'webhook', url: 'https://example.com/hooks/orders', payload: {} },
+		});
+		expect(result).toMatchObject({ success: false, shouldContinue: false });
+		const ok = await webhook.execute({
+			fetch: async () => new Response(null, { status: 200 }),
+			trigger: 'order-paid',
+			signal: new AbortController().signal,
+			config: { id: 'notify', $type: 'webhook', url: 'https://example.com/hooks/orders', payload: {} },
+		});
+		expect(ok).toMatchObject({ success: true });
 	});
 });

@@ -1,7 +1,7 @@
 ---
-title: 'API Reference'
+title: 'API reference'
 description: 'Public surface of the actions package.'
-order: 5
+order: 6
 ---
 
 # API Reference
@@ -33,7 +33,7 @@ class ActionRegistry<TBaseContext, TTrigger>
 
 ```typescript
 function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
-	registry: { getAction(type: string): { schema: StandardSchemaV1 } | undefined },
+	registry: ActionSchemaLookup,
 	input: unknown,
 ): ParseActionsResult<TConfig>;
 
@@ -134,8 +134,11 @@ interface ActionDispatchInput<
 	context: TBaseContext;
 	triggeredBy?: TConfig;
 	metadata?: Record<string, unknown>;
+	signal?: AbortSignal;
 }
 ```
+
+`signal` cancels the dispatch from outside. It is chained into the signal each action receives, and the sequence runs no further entry once it is aborted.
 
 ## ActionMetadata
 
@@ -191,6 +194,40 @@ inside that group. Disabled or nonmatching actions retain their positions in the
 input, even though they produce no result. `cancelled` means an abort error was
 observed after cancellation was requested; the remote side effect may still have
 occurred. Direct callers constructing `ActionRuntimeContext` must provide `signal`.
+
+## ActionSchemaLookup
+
+```typescript
+interface ActionSchemaLookup {
+	getAction(type: string): Pick<BaseRegistration, 'schema'> | undefined;
+}
+```
+
+What `parseActions` needs of a registry: the registration of a `$type`, for its schema. `ActionRegistry` and every `ActionRegistryProvider` fit.
+
+## ActionSequenceEntry, ParsedAction and ParsedActionSequence
+
+```typescript
+type ActionSequenceEntry<TConfig extends ActionConfigBase> = TConfig | readonly TConfig[];
+
+type ParsedAction<TConfig extends ActionConfigBase = ActionConfigBase> = TConfig & { readonly [PARSED_ACTION]: true };
+
+type ParsedActionSequence<TConfig extends ActionConfigBase = ActionConfigBase> = readonly ActionSequenceEntry<
+	ParsedAction<TConfig>
+>[];
+```
+
+A sequence entry is one action or a group that runs concurrently. A `ParsedActionSequence` is what `parseActions` returns in `data` and what `dispatch` and `hasMatching` take.
+
+## ActionHandler
+
+```typescript
+type ActionHandler<TConfig = unknown, TContext = unknown, TTrigger = string, TData = unknown> = (
+	context: ActionRuntimeContext<TConfig, TContext, TTrigger>,
+) => Promise<ActionExecutionResult<TData>> | ActionExecutionResult<TData>;
+```
+
+The type of `execute`.
 
 ## defineAction
 

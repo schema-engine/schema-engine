@@ -20,7 +20,7 @@ vi.setConfig({ testTimeout: 60_000 });
  * section that still holds fences that cannot compile stays off, or lists the pages that are ready, so the list
  * is never left failing.
  */
-const CHECKED_DOCS = ['layout', 'registry', 'schema-engine'];
+const CHECKED_DOCS = ['layout', 'registry', 'schema-engine', 'actions'];
 
 interface AllowedFence {
 	page: string;
@@ -31,6 +31,15 @@ interface AllowedFence {
 
 /** Fences that are fragments on purpose. A fence that is not listed here must compile. */
 const ALLOWED_FENCES: AllowedFence[] = [
+	{
+		page: 'actions/concepts',
+		heading: 'Context',
+		reason: 'Shows the call the dispatcher makes inside itself, which is not a module.',
+	},
+	{
+		page: 'actions/api-reference',
+		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
+	},
 	{
 		page: 'registry/api-reference',
 		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
@@ -79,9 +88,19 @@ export const postalCode = {
 } as const;`,
 	'contact-card.ts': recipeConfigSource(allRecipes.find((recipe) => recipe.id === 'contact-card')!.demos),
 	'brand-frame.ts': "export { BrandFrameRecipe } from './brand-frame.radiant';",
-	...titledFiles('schema-engine/quick-start'),
 	...recipeFiles,
 };
+
+/** The pages whose titled files a page imports without defining them: it continues from them. */
+const CONTINUES: Record<string, string[]> = {
+	'schema-engine/serialized-documents': ['schema-engine/quick-start'],
+	'actions/sequences-and-cancellation': ['actions/overview'],
+};
+
+const appFor = (page: string): Record<string, string> => ({
+	...APP,
+	...Object.assign({}, ...(CONTINUES[page] ?? []).map(titledFiles)),
+});
 
 const isChecked = (page: string): boolean =>
 	CHECKED_DOCS.some((entry) => page === entry || page.startsWith(`${entry}/`));
@@ -106,7 +125,7 @@ describe('docs snippets', () => {
 		const failures = docsPageIds()
 			.filter(isChecked)
 			.flatMap((page) =>
-				checkPageSnippets(page, readPage(page), APP, (block) => isAllowed(page, block)).map(
+				checkPageSnippets(page, readPage(page), appFor(page), (block) => isAllowed(page, block)).map(
 					(failure) =>
 						`${failure.page}, fence ${failure.fence} under "${failure.heading}": ${failure.messages.join(' ')}`,
 				),
@@ -123,7 +142,7 @@ describe('docs snippets', () => {
 				(block) => isTypeScriptFence(block) && inScope(block.heading),
 			);
 			expect(fences.length, `${entry.page} has no TypeScript fence under "${entry.heading}"`).toBeGreaterThan(0);
-			const failures = checkPageSnippets(entry.page, readPage(entry.page), APP).filter((failure) =>
+			const failures = checkPageSnippets(entry.page, readPage(entry.page), appFor(entry.page)).filter((failure) =>
 				inScope(failure.heading),
 			);
 			if (entry.heading === undefined) {
