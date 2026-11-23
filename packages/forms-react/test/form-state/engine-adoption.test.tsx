@@ -169,7 +169,7 @@ const vat: ElementConfig = {
 	$type: 'input',
 	name: 'vatNumber',
 	id: 'vat',
-	constraints: [{ action: 'require', field: 'customerType', operator: 'equals', value: 'company' }],
+	constraints: [{ $type: 'require', field: 'customerType', operator: 'equals', value: 'company' }],
 };
 function Vat() {
 	const { fieldProps, defaultValue, error } = useFormField(vat);

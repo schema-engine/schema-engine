@@ -47,7 +47,7 @@ describe('SSR constraint snapshot', () => {
 							id: 'vatNumber',
 							name: 'vatNumber',
 							constraints: [
-								{ field: 'accountType', operator: 'equals', value: 'business', action: 'show' },
+								{ field: 'accountType', operator: 'equals', value: 'business', $type: 'show' },
 							],
 						},
 					],
@@ -103,7 +103,7 @@ describe('SSR constraint snapshot', () => {
 									id: 'vatNumber',
 									name: 'vatNumber',
 									constraints: [
-										{ field: 'accountType', operator: 'equals', value: 'business', action: 'show' },
+										{ field: 'accountType', operator: 'equals', value: 'business', $type: 'show' },
 									],
 								},
 							],
@@ -121,7 +121,7 @@ describe('SSR constraint snapshot', () => {
 
 	test.each([
 		['an authored', { disabled: true }],
-		['a constraint', { constraints: [{ field: 'mode', operator: 'equals', value: 'lock', action: 'disable' }] }],
+		['a constraint', { constraints: [{ field: 'mode', operator: 'equals', value: 'lock', $type: 'disable' }] }],
 	])('%s disabled fieldset renders its children disabled', (_, fieldSet) => {
 		const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 		const config = engine.validateForm({
@@ -157,21 +157,21 @@ describe('SSR constraint snapshot', () => {
 		[
 			'its own',
 			'city',
-			{ constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }] },
+			{ constraints: [{ field: 'mode', operator: 'equals', value: 'need', $type: 'require' }] },
 			{},
 		],
 		[
 			'a fieldset',
 			'address.city',
 			{},
-			{ constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }] },
+			{ constraints: [{ field: 'mode', operator: 'equals', value: 'need', $type: 'require' }] },
 		],
 		[
 			'an outer fieldset',
 			'address.inner.city',
 			{},
 			{
-				constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+				constraints: [{ field: 'mode', operator: 'equals', value: 'need', $type: 'require' }],
 				elements: [
 					{
 						$type: 'fieldSet',
@@ -230,7 +230,7 @@ describe('SSR participation', () => {
 				{
 					id: 'company',
 					title: 'Company',
-					constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+					constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
 					elements: [input('wants', { defaultValue: 'yes' })],
 				},
 				{
@@ -238,7 +238,7 @@ describe('SSR participation', () => {
 					title: 'Payment',
 					elements: [
 						input('vat', {
-							constraints: [{ field: 'wants', operator: 'equals', value: 'yes', action: 'show' }],
+							constraints: [{ field: 'wants', operator: 'equals', value: 'yes', $type: 'show' }],
 						}),
 					],
 				},
@@ -257,7 +257,7 @@ describe('standalone element constraints', () => {
 			$type: 'input',
 			id: 'ref',
 			name: 'ref',
-			constraints: [{ field: 'mode', operator: 'equals', value: 'hide', action: 'hide' }],
+			constraints: [{ field: 'mode', operator: 'equals', value: 'hide', $type: 'hide' }],
 		});
 		const render = (mode: string) =>
 			renderToString(jsx(FormElement, { config: element, engine, name: 'ref', values: { mode } }));

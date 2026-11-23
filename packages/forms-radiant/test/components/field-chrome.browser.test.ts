@@ -158,7 +158,7 @@ test('a constraint-required choice shows the required marker', async () => {
 				{ value: 'free', label: 'Free' },
 				{ value: 'paid', label: 'Paid' },
 			],
-			constraints: [{ field: 'toggle', operator: 'equals', value: 'on', action: 'require' }],
+			constraints: [{ field: 'toggle', operator: 'equals', value: 'on', $type: 'require' }],
 		},
 		{ $type: 'input', id: 'toggle', name: 'toggle', label: 'Toggle' },
 	]);

@@ -322,7 +322,7 @@ Show/hide or enable/disable fields based on conditions:
 			field: 'reason',
 			operator: 'equals',
 			value: 'other',
-			action: 'show', // show, hide, enable, disable, require
+			$type: 'show', // show, hide, enable, disable, require
 		},
 	],
 }

@@ -167,8 +167,8 @@ export function evaluateResolvedConstraints(
 function evaluateVisibility(constraints: readonly ConstraintLogic[], fieldValues: Record<string, unknown>): boolean {
 	if (constraints.length === 0) return true;
 
-	const showConstraints = constraints.filter((c) => c.action === 'show');
-	const hideConstraints = constraints.filter((c) => c.action === 'hide');
+	const showConstraints = constraints.filter((c) => c.$type === 'show');
+	const hideConstraints = constraints.filter((c) => c.$type === 'hide');
 
 	if (showConstraints.length > 0) {
 		const anyShow = showConstraints.some((constraint) =>
@@ -193,7 +193,7 @@ function evaluateDisabled(constraints: readonly ConstraintLogic[], fieldValues: 
 	return constraints.some((constraint) => {
 		const conditionMet = evaluateConstraint(constraint, fieldValues[constraint.field]);
 
-		switch (constraint.action) {
+		switch (constraint.$type) {
 			case 'disable':
 				return conditionMet;
 			case 'enable':
@@ -210,8 +210,7 @@ function evaluateRequired(
 	baseRequired: boolean,
 ): boolean {
 	const hasRequireAction = constraints.some(
-		(constraint) =>
-			constraint.action === 'require' && evaluateConstraint(constraint, fieldValues[constraint.field]),
+		(constraint) => constraint.$type === 'require' && evaluateConstraint(constraint, fieldValues[constraint.field]),
 	);
 
 	return baseRequired || hasRequireAction;

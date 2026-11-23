@@ -49,7 +49,7 @@ export const surveyDemoConfig: FormConfig = {
 					id: 'improvements',
 					name: 'improvements',
 					label: 'What could we improve?',
-					constraints: [{ field: 'satisfaction', operator: 'equals', value: '1', action: 'show' }],
+					constraints: [{ field: 'satisfaction', operator: 'equals', value: '1', $type: 'show' }],
 				},
 			],
 		},

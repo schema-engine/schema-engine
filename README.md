@@ -91,7 +91,7 @@ Show the "State" field only when "Country" is "US".
       field: 'country',
       operator: 'equals',
       value: 'US',
-      action: 'show'
+      $type: 'show'
     }
   ]
 }

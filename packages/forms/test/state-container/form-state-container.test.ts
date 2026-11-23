@@ -61,7 +61,7 @@ const addressForm = (country = 'FR'): FormStateContainer =>
 				element({
 					$type: 'input',
 					name: 'vat',
-					constraints: [{ field: 'address.country', action: 'require', operator: 'equals', value: 'IT' }],
+					constraints: [{ field: 'address.country', $type: 'require', operator: 'equals', value: 'IT' }],
 				}),
 			],
 			defaults: { address: { street: '1 Main', country }, vat: '' },
@@ -159,7 +159,7 @@ describe('createFormStateContainer', () => {
 										$type: 'input',
 										name: 'vat',
 										constraints: [
-											{ field: 'type', action: 'require', operator: 'equals', value: 'company' },
+											{ field: 'type', $type: 'require', operator: 'equals', value: 'company' },
 										],
 									},
 								],

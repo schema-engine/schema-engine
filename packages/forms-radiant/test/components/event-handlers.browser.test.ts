@@ -163,7 +163,7 @@ test('a step the answers skip is passed over, hidden from the progress and refus
 			{
 				id: 'company',
 				title: 'Company',
-				constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+				constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
 				elements: [text('companyName')],
 			},
 			{ id: 'three', title: 'Three', elements: [] },

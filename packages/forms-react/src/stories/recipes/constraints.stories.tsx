@@ -34,7 +34,7 @@ const meta = {
 							id: 'ticket',
 							name: 'ticket',
 							label: 'Support ticket number',
-							constraints: [{ field: 'subject', operator: 'equals', value: 'support', action: 'show' }],
+							constraints: [{ field: 'subject', operator: 'equals', value: 'support', $type: 'show' }],
 						},
 					],
 				},

@@ -160,7 +160,7 @@ describe('effectiveRulesFor', () => {
 	const field = normalizeElement({
 		$type: 'input',
 		name: 'taxId',
-		constraints: [{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' }],
+		constraints: [{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' }],
 	});
 
 	test('adds required while its constraint holds and removes the synthetic rule when it does not', () => {
@@ -188,7 +188,7 @@ describe('validateFieldValue', () => {
 			element: normalizeElement({
 				$type: 'input',
 				name: 'taxId',
-				constraints: [{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' }],
+				constraints: [{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' }],
 			}),
 			value: '',
 			values: { accountType: 'business', taxId: '' },
@@ -273,7 +273,7 @@ describe('validateFormValues', () => {
 		const company = normalizeElement({
 			$type: 'fieldset',
 			name: 'company',
-			constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+			constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'require' }],
 			elements: [
 				{ $type: 'input', name: 'vat' },
 				{ $type: 'fieldset', name: 'office', elements: [{ $type: 'input', name: 'street' }] },
@@ -468,7 +468,7 @@ describe('resolveParticipation', () => {
 		{
 			$type: 'input',
 			name: 'company',
-			constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+			constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 		},
 		{ $type: 'input', name: 'locked', disabled: true },
 		{
@@ -479,7 +479,7 @@ describe('resolveParticipation', () => {
 				{
 					$type: 'input',
 					name: 'fax',
-					constraints: [{ field: 'role', operator: 'equals', value: 'office', action: 'hide' }],
+					constraints: [{ field: 'role', operator: 'equals', value: 'office', $type: 'hide' }],
 				},
 			],
 		},

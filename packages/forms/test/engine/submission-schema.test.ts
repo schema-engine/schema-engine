@@ -179,7 +179,7 @@ describe('engine.submissionSchema', () => {
 							$type: 'text',
 							name: 'company',
 							rules: [{ $type: 'required' }],
-							constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+							constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 						},
 						{ $type: 'text', name: 'locked', disabled: true, rules: [{ $type: 'required' }] },
 					],
@@ -187,7 +187,7 @@ describe('engine.submissionSchema', () => {
 				{
 					id: 'two',
 					title: 'Two',
-					constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+					constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 					elements: [{ $type: 'text', name: 'vat', rules: [{ $type: 'required' }] }],
 				},
 			],
@@ -205,7 +205,7 @@ describe('engine.submissionSchema', () => {
 				$type: 'text',
 				name: 'sometimes',
 				rules: [{ $type: 'required' }],
-				constraints: [{ field: 'must', operator: 'is_not_empty', value: '', action: 'show' }],
+				constraints: [{ field: 'must', operator: 'is_not_empty', value: '', $type: 'show' }],
 			},
 			{
 				$type: 'fieldSet',

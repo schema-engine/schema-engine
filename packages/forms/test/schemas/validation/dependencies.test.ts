@@ -47,7 +47,7 @@ describe('buildDependencyIndex', () => {
 					{
 						name: 'vatNumber',
 						constraints: [
-							{ field: 'customerType', action: 'require', operator: 'equals', value: 'company' },
+							{ field: 'customerType', $type: 'require', operator: 'equals', value: 'company' },
 						],
 					},
 				],

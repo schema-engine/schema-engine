@@ -29,7 +29,7 @@ const createLinesStore = () =>
 								$type: 'input',
 								name: 'vat',
 								constraints: [
-									{ field: 'type', action: 'require', operator: 'equals', value: 'company' },
+									{ field: 'type', $type: 'require', operator: 'equals', value: 'company' },
 								],
 							},
 						],

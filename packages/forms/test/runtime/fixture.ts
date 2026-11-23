@@ -126,7 +126,7 @@ export function wizardConfig(extra: Record<string, unknown> = {}, emailRules: un
 			{
 				id: 'company',
 				title: 'Company',
-				constraints: [{ field: 'hasCompany', operator: 'equals', value: true, action: 'show' }],
+				constraints: [{ field: 'hasCompany', operator: 'equals', value: true, $type: 'show' }],
 				elements: [input('companyName', { rules: required })],
 			},
 			{ id: 'address', title: 'Address', elements: [input('street', { rules: required })] },

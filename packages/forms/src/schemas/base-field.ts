@@ -69,7 +69,7 @@ export const ConstraintLogicSchema = z.object({
 		'is_not_empty',
 	]),
 	value: ConstraintValueSchema,
-	action: z.enum(['show', 'hide', 'enable', 'disable', 'require']),
+	$type: z.enum(['show', 'hide', 'enable', 'disable', 'require']),
 });
 
 /**
@@ -80,7 +80,7 @@ export const ConstraintLogicSchema = z.object({
  */
 export const StepConstraintSchema = z.object({
 	...ConstraintLogicSchema.shape,
-	action: z.enum(['show', 'hide']),
+	$type: z.enum(['show', 'hide']),
 });
 
 /**

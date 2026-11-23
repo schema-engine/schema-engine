@@ -26,7 +26,7 @@ export const contactForm = engine.defineForm({
 				{
 					$type: 'text',
 					name: 'company',
-					constraints: [{ field: 'email', operator: 'contains', value: '@example.com', action: 'hide' }],
+					constraints: [{ field: 'email', operator: 'contains', value: '@example.com', $type: 'hide' }],
 				},
 			],
 		},

@@ -16,7 +16,7 @@ export const config = engine.defineForm({
 		{
 			id: 'company',
 			title: 'Company',
-			constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+			constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
 			elements: [{ $type: 'input', id: 'vat', name: 'vat', rules: [{ $type: 'required' }] }],
 		},
 		{

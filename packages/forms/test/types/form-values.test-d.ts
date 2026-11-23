@@ -146,7 +146,7 @@ const nested = engine.defineForm({
 		{
 			id: 'later',
 			title: 'Later',
-			constraints: [{ field: 'address.street', operator: 'is_not_empty', value: '', action: 'show' }],
+			constraints: [{ field: 'address.street', operator: 'is_not_empty', value: '', $type: 'show' }],
 			elements: [{ $type: 'text', name: 'vat', rules: [{ $type: 'required' }] }],
 		},
 	],
@@ -311,7 +311,7 @@ profileForm(engine.validateForm({}));
 
 /** What can leave a key out: an element's own constraints or disabled, a parent's, a step's, and a wide list or boolean. */
 declare const wide: {
-	constraints: Array<{ field: string; operator: 'equals'; value: unknown; action: 'show' }>;
+	constraints: Array<{ field: string; operator: 'equals'; value: unknown; $type: 'show' }>;
 	disabled: boolean;
 };
 const conditional = engine.defineForm({
@@ -325,7 +325,7 @@ const conditional = engine.defineForm({
 					$type: 'text',
 					name: 'own',
 					rules: [{ $type: 'required' }],
-					constraints: [{ field: 'x', operator: 'equals', value: 1, action: 'show' }],
+					constraints: [{ field: 'x', operator: 'equals', value: 1, $type: 'show' }],
 				},
 				{ $type: 'text', name: 'off', rules: [{ $type: 'required' }], disabled: wide.disabled },
 				{ $type: 'text', name: 'wideList', rules: [{ $type: 'required' }], constraints: wide.constraints },

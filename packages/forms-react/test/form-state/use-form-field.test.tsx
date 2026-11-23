@@ -117,7 +117,7 @@ describe('useFormField', () => {
 
 	test('marks a field required when its require constraint matches the watched sibling', () => {
 		const requireWhenBusiness: ConstraintLogic[] = [
-			{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' },
+			{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' },
 		];
 		const { harness } = rendersWith(
 			{ accountType: '', company: '' },
@@ -442,7 +442,7 @@ describe('useFormField under FormRenderer', () => {
 					$type: 'field',
 					id: 'company',
 					name: 'company',
-					constraints: [{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' }],
+					constraints: [{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' }],
 				},
 			],
 			(name) => renders.push(name),

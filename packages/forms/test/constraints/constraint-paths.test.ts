@@ -3,7 +3,7 @@ import { evaluateConstraints, resolveConstraintPath, resolveConstraintPaths } fr
 import type { ConstraintLogic } from '@/schemas';
 
 const showWhenBusiness: ConstraintLogic[] = [
-	{ field: 'accountType', operator: 'equals', value: 'business', action: 'show' },
+	{ field: 'accountType', operator: 'equals', value: 'business', $type: 'show' },
 ];
 
 describe('resolveConstraintPath', () => {
@@ -33,8 +33,8 @@ describe('resolveConstraintPath', () => {
 describe('resolveConstraintPaths', () => {
 	test('preserves declaration order so subscribers can zip values back by index', () => {
 		const constraints: ConstraintLogic[] = [
-			{ field: 'b', operator: 'equals', value: 1, action: 'show' },
-			{ field: 'a', operator: 'equals', value: 2, action: 'show' },
+			{ field: 'b', operator: 'equals', value: 1, $type: 'show' },
+			{ field: 'a', operator: 'equals', value: 2, $type: 'show' },
 		];
 
 		expect(resolveConstraintPaths(constraints, 'items.3.name')).toEqual(['items.3.b', 'items.3.a']);
@@ -60,7 +60,7 @@ describe('evaluateConstraints', () => {
 
 	test('reads a sibling inside the declaring object', () => {
 		const values = { address: { country: 'it', vat: '' }, country: 'us' };
-		const constraints: ConstraintLogic[] = [{ field: 'country', operator: 'equals', value: 'it', action: 'show' }];
+		const constraints: ConstraintLogic[] = [{ field: 'country', operator: 'equals', value: 'it', $type: 'show' }];
 
 		expect(evaluateConstraints({ constraints, values, fieldPath: 'address.vat' }).shouldShow).toBe(true);
 	});
@@ -71,7 +71,7 @@ describe('evaluateConstraints', () => {
 
 	test('compares a single-selection value as its element', () => {
 		const constraints: ConstraintLogic[] = [
-			{ field: 'interests', operator: 'equals', value: 'sports', action: 'show' },
+			{ field: 'interests', operator: 'equals', value: 'sports', $type: 'show' },
 		];
 
 		expect(evaluateConstraints({ constraints, values: { interests: ['sports'] } }).shouldShow).toBe(true);
@@ -82,8 +82,8 @@ describe('evaluateConstraints', () => {
 	test('reports disable and require alongside visibility', () => {
 		const values = { accountType: 'business' };
 		const constraints: ConstraintLogic[] = [
-			{ field: 'accountType', operator: 'equals', value: 'business', action: 'require' },
-			{ field: 'accountType', operator: 'equals', value: 'personal', action: 'disable' },
+			{ field: 'accountType', operator: 'equals', value: 'business', $type: 'require' },
+			{ field: 'accountType', operator: 'equals', value: 'personal', $type: 'disable' },
 		];
 
 		expect(evaluateConstraints({ constraints, values })).toEqual({

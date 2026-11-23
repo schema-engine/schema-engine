@@ -113,7 +113,7 @@ Show submit button based on conditions:
 			field: 'agreeToTerms',
 			operator: 'equals',
 			value: true,
-			action: 'show',
+			$type: 'show',
 		},
 	],
 }

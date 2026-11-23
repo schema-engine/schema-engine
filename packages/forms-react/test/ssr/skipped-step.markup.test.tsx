@@ -14,7 +14,7 @@ test('the server markup leaves out a field whose show condition reads a skipped 
 			{
 				id: 'company',
 				title: 'Company',
-				constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+				constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
 				elements: [input('wants', { defaultValue: 'yes' })],
 			},
 			{
@@ -22,7 +22,7 @@ test('the server markup leaves out a field whose show condition reads a skipped 
 				title: 'Payment',
 				elements: [
 					input('vat', {
-						constraints: [{ field: 'wants', operator: 'equals', value: 'yes', action: 'show' }],
+						constraints: [{ field: 'wants', operator: 'equals', value: 'yes', $type: 'show' }],
 					}),
 					input('card'),
 				],

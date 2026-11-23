@@ -252,7 +252,7 @@ const stepsForm = (defaults: Record<string, unknown>): FormStateContainerOptions
 				{ id: 'contact', elements: [input('hasCompany')] },
 				{
 					id: 'company',
-					constraints: [{ field: 'hasCompany', operator: 'equals', value: true, action: 'show' }],
+					constraints: [{ field: 'hasCompany', operator: 'equals', value: true, $type: 'show' }],
 					elements: [input('wantsInvoice'), input('company', { rules: [{ $type: 'required' }] })],
 				},
 				{
@@ -260,7 +260,7 @@ const stepsForm = (defaults: Record<string, unknown>): FormStateContainerOptions
 					elements: [
 						input('vat', {
 							rules: [{ $type: 'required' }],
-							constraints: [{ field: 'wantsInvoice', operator: 'equals', value: 'yes', action: 'show' }],
+							constraints: [{ field: 'wantsInvoice', operator: 'equals', value: 'yes', $type: 'show' }],
 						}),
 					],
 				},
@@ -278,7 +278,7 @@ const businessForm = (defaults: Record<string, unknown> = { kind: 'person', comp
 				$type: 'input',
 				name: 'company',
 				rules: [{ $type: 'required', id: 'company-required', message: 'Company is required' }],
-				constraints: [{ field: 'kind', action: 'show', operator: 'equals', value: 'business' }],
+				constraints: [{ field: 'kind', $type: 'show', operator: 'equals', value: 'business' }],
 			},
 		],
 		defaults,
@@ -2219,12 +2219,12 @@ const cases: FormStateContainerCase[] = [
 							$type: 'input',
 							name: 'frozen',
 							rules: [{ $type: 'required' }],
-							constraints: [{ field: 'mode', action: 'enable', operator: 'equals', value: 'edit' }],
+							constraints: [{ field: 'mode', $type: 'enable', operator: 'equals', value: 'edit' }],
 						},
 						{
 							$type: 'fieldset',
 							name: 'extra',
-							constraints: [{ field: 'mode', action: 'show', operator: 'equals', value: 'edit' }],
+							constraints: [{ field: 'mode', $type: 'show', operator: 'equals', value: 'edit' }],
 							elements: [{ $type: 'input', name: 'note', rules: [{ $type: 'required' }] }],
 						},
 						{ $type: 'input', name: 'later', rules: [{ $type: 'required' }] },
@@ -2432,7 +2432,7 @@ const cases: FormStateContainerCase[] = [
 							$type: 'input',
 							name: 'company',
 							rules: [{ $type: 'required', severity: 'warning' }],
-							constraints: [{ field: 'kind', action: 'show', operator: 'equals', value: 'business' }],
+							constraints: [{ field: 'kind', $type: 'show', operator: 'equals', value: 'business' }],
 						},
 					],
 					{ kind: 'business', company: '' },
@@ -2642,7 +2642,7 @@ const cases: FormStateContainerCase[] = [
 						$type: 'input',
 						name: 'company',
 						rules: [{ $type: 'required' }],
-						constraints: [{ field: 'kind', action: 'show', operator: 'equals', value: 'business' }],
+						constraints: [{ field: 'kind', $type: 'show', operator: 'equals', value: 'business' }],
 					},
 					{ $type: 'input', name: 'locked', disabled: true },
 					{
@@ -2653,7 +2653,7 @@ const cases: FormStateContainerCase[] = [
 							{
 								$type: 'input',
 								name: 'fax',
-								constraints: [{ field: 'role', action: 'hide', operator: 'equals', value: 'office' }],
+								constraints: [{ field: 'role', $type: 'hide', operator: 'equals', value: 'office' }],
 							},
 						],
 					},

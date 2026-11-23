@@ -718,7 +718,7 @@ export function rendererConformance(
 							input('kind', 'Kind'),
 							{
 								...input('email', 'Email'),
-								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 							},
 						],
 					},
@@ -1078,9 +1078,7 @@ export function rendererConformance(
 							{
 								id: 'company',
 								title: 'Company',
-								constraints: [
-									{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' },
-								],
+								constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
 								elements: [input2('wants', 'Wants')],
 							},
 							{
@@ -1089,7 +1087,7 @@ export function rendererConformance(
 								elements: [
 									input2('vat', 'Vat', {
 										constraints: [
-											{ field: 'wants', operator: 'equals', value: 'yes', action: 'show' },
+											{ field: 'wants', operator: 'equals', value: 'yes', $type: 'show' },
 										],
 									}),
 									input2('card', 'Card'),
@@ -1107,14 +1105,14 @@ export function rendererConformance(
 				const { host } = await setup({
 					config: form([
 						input2('needs', 'Needs', {
-							constraints: [{ field: 'late', operator: 'equals', value: 'yes', action: 'require' }],
+							constraints: [{ field: 'late', operator: 'equals', value: 'yes', $type: 'require' }],
 						}),
 						input2('shown', 'Shown', {
-							constraints: [{ field: 'late', operator: 'equals', value: 'yes', action: 'show' }],
+							constraints: [{ field: 'late', operator: 'equals', value: 'yes', $type: 'show' }],
 						}),
 						input2('gate', 'Gate'),
 						input2('late', 'Late', {
-							constraints: [{ field: 'gate', operator: 'equals', value: 'open', action: 'show' }],
+							constraints: [{ field: 'gate', operator: 'equals', value: 'open', $type: 'show' }],
 						}),
 					]),
 					defaultValues: { gate: 'closed', late: 'yes' },
@@ -1376,7 +1374,7 @@ export function rendererConformance(
 					input('kind', 'Kind'),
 					{
 						...input('vat', 'VAT'),
-						constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+						constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'require' }],
 					},
 				]),
 				defaultValues: { kind: 'business', vat: '' },
@@ -1406,7 +1404,7 @@ export function rendererConformance(
 						$type: 'fieldSet',
 						id: 'company',
 						name: 'company',
-						constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+						constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'require' }],
 						elements: [
 							input('vat', 'VAT'),
 							{ $type: 'fieldSet', id: 'office', name: 'office', elements: [input('street', 'Street')] },
@@ -1453,7 +1451,7 @@ export function rendererConformance(
 						elements: [
 							{
 								...input('tag', 'Tag'),
-								constraints: [{ field: 'note', operator: 'not_equals', value: 'hide', action: 'show' }],
+								constraints: [{ field: 'note', operator: 'not_equals', value: 'hide', $type: 'show' }],
 							},
 						],
 					},
@@ -1507,7 +1505,7 @@ export function rendererConformance(
 						$type: 'arrayElements',
 						id: 'phones',
 						name: 'phones',
-						constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'require' }],
+						constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'require' }],
 						elements: [input('phone', 'Phone')],
 					},
 				]),
@@ -1694,13 +1692,13 @@ export function rendererConformance(
 							{
 								...input('company', 'Company'),
 								rules: [{ $type: 'required', message: 'Company is required' }],
-								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 							},
 							{
 								$type: 'fieldSet',
 								id: 'billing',
 								name: 'billing',
-								constraints: [{ field: 'kind', operator: 'equals', value: 'business', action: 'show' }],
+								constraints: [{ field: 'kind', operator: 'equals', value: 'business', $type: 'show' }],
 								elements: [
 									{
 										...input('vat', 'VAT'),

@@ -33,8 +33,8 @@ test('authored disabled survives live constraints', async () => {
 						name: 'ref',
 						disabled: true,
 						constraints: [
-							{ field: 'mode', operator: 'equals', value: 'manual', action: 'enable' },
-							{ field: 'mode', operator: 'equals', value: 'manual', action: 'hide' },
+							{ field: 'mode', operator: 'equals', value: 'manual', $type: 'enable' },
+							{ field: 'mode', operator: 'equals', value: 'manual', $type: 'hide' },
 						],
 					},
 				],
@@ -99,7 +99,7 @@ async function mountFieldSet(fieldSet: Record<string, unknown>) {
 
 test('a child keeps its own disabled state after live constraints', async () => {
 	const { form, street, city, wrapper, cleanup } = await mountFieldSet({
-		constraints: [{ field: 'mode', operator: 'equals', value: 'hide', action: 'hide' }],
+		constraints: [{ field: 'mode', operator: 'equals', value: 'hide', $type: 'hide' }],
 	});
 	try {
 		containerOf(form.host).setValue('mode', 'hide');
@@ -113,7 +113,7 @@ test('a child keeps its own disabled state after live constraints', async () => 
 
 test('a constraint disable on a fieldset reaches every child it owns', async () => {
 	const { form, street, city, cleanup } = await mountFieldSet({
-		constraints: [{ field: 'mode', operator: 'equals', value: 'lock', action: 'disable' }],
+		constraints: [{ field: 'mode', operator: 'equals', value: 'lock', $type: 'disable' }],
 	});
 	try {
 		containerOf(form.host).setValue('mode', 'lock');
@@ -128,13 +128,13 @@ test('a constraint disable on a fieldset reaches every child it owns', async () 
 
 test('a constrained child inside a constrained fieldset keeps the fieldset disable', async () => {
 	const { form, city, cleanup } = await mountFieldSet({
-		constraints: [{ field: 'mode', operator: 'equals', value: 'lock', action: 'disable' }],
+		constraints: [{ field: 'mode', operator: 'equals', value: 'lock', $type: 'disable' }],
 		elements: [
 			{
 				$type: 'input',
 				id: 'city',
 				name: 'city',
-				constraints: [{ field: 'mode', operator: 'equals', value: 'never', action: 'hide' }],
+				constraints: [{ field: 'mode', operator: 'equals', value: 'never', $type: 'hide' }],
 			},
 		],
 	});
@@ -148,7 +148,7 @@ test('a constrained child inside a constrained fieldset keeps the fieldset disab
 
 test('a fieldset require reaches its children and releases them', async () => {
 	const { form, city, cleanup } = await mountFieldSet({
-		constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+		constraints: [{ field: 'mode', operator: 'equals', value: 'need', $type: 'require' }],
 	});
 	try {
 		containerOf(form.host).setValue('mode', 'need');
@@ -162,7 +162,7 @@ test('a fieldset require reaches its children and releases them', async () => {
 
 test('a child keeps its own required marker after live constraints', async () => {
 	const { form, city, wrapper, cleanup } = await mountFieldSet({
-		constraints: [{ field: 'mode', operator: 'equals', value: 'hide', action: 'hide' }],
+		constraints: [{ field: 'mode', operator: 'equals', value: 'hide', $type: 'hide' }],
 		elements: [{ $type: 'input', id: 'city', name: 'city', label: 'City', rules: [{ $type: 'required' }] }],
 	});
 	try {
@@ -196,7 +196,7 @@ test('a row field of an authored disabled array stays disabled after live constr
 								$type: 'input',
 								id: 'email',
 								name: 'email',
-								constraints: [{ field: 'phone', operator: 'equals', value: 'hide', action: 'hide' }],
+								constraints: [{ field: 'phone', operator: 'equals', value: 'hide', $type: 'hide' }],
 							},
 							{ $type: 'input', id: 'phone', name: 'phone' },
 						],
@@ -228,7 +228,7 @@ const trigger = (source: string, kind: 'lock' | 'need') => ({
 	field: `ctl.${kind}${source}`,
 	operator: 'equals',
 	value: 'x',
-	action: kind === 'lock' ? 'disable' : 'require',
+	$type: kind === 'lock' ? 'disable' : 'require',
 });
 
 const constraintsFor = (source: string) => [trigger(source, 'lock'), trigger(source, 'need')];
@@ -367,7 +367,7 @@ async function mountRequireOnDependent() {
 						$type: 'input',
 						id: 'code',
 						name: 'code',
-						constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+						constraints: [{ field: 'mode', operator: 'equals', value: 'need', $type: 'require' }],
 					},
 				],
 			},
@@ -443,7 +443,7 @@ async function mountForm(elements: Record<string, unknown>[], defaultValues?: Re
 	};
 }
 
-const hideWhen = (field: string, value: string) => [{ field, operator: 'equals', value, action: 'hide' }];
+const hideWhen = (field: string, value: string) => [{ field, operator: 'equals', value, $type: 'hide' }];
 
 const rowForm = [
 	{
@@ -479,7 +479,7 @@ test('a require released on a touched field clears its error', async () => {
 			$type: 'input',
 			id: 'code',
 			name: 'code',
-			constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+			constraints: [{ field: 'mode', operator: 'equals', value: 'need', $type: 'require' }],
 		},
 	]);
 	try {
@@ -504,7 +504,7 @@ test('a require released after a failed check clears its error', async () => {
 			$type: 'input',
 			id: 'code',
 			name: 'code',
-			constraints: [{ field: 'mode', operator: 'equals', value: 'need', action: 'require' }],
+			constraints: [{ field: 'mode', operator: 'equals', value: 'need', $type: 'require' }],
 		},
 	]);
 	try {

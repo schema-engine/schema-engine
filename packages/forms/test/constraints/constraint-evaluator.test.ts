@@ -18,7 +18,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'status',
 					operator: 'equals',
 					value: 'active',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -36,7 +36,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'status',
 					operator: 'equals',
 					value: 'active',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -54,7 +54,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'count',
 					operator: 'equals',
 					value: 5,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -74,7 +74,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'status',
 					operator: 'not_equals',
 					value: 'active',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -92,7 +92,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'status',
 					operator: 'not_equals',
 					value: 'active',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -112,7 +112,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'inquiryType',
 					operator: 'contains',
 					value: ['sales', 'partnership'],
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -141,7 +141,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'email',
 					operator: 'contains',
 					value: '@example.com',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -164,7 +164,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'text',
 					operator: 'contains',
 					value: 'test',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -183,7 +183,7 @@ describe('evaluateResolvedConstraints', () => {
 
 		test('does not stringify object values for text containment', () => {
 			const constraints: ConstraintLogic[] = [
-				{ field: 'value', operator: 'contains', value: 'object', action: 'show' },
+				{ field: 'value', operator: 'contains', value: 'object', $type: 'show' },
 			];
 
 			const result = evaluate({ constraints, fieldValues: { value: { name: 'object' } } });
@@ -199,7 +199,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'role',
 					operator: 'not_contains',
 					value: ['admin', 'superuser'],
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -222,7 +222,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'email',
 					operator: 'not_contains',
 					value: 'spam',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -241,7 +241,7 @@ describe('evaluateResolvedConstraints', () => {
 
 		test('does not stringify object values for negative text containment', () => {
 			const constraints: ConstraintLogic[] = [
-				{ field: 'value', operator: 'not_contains', value: 'object', action: 'show' },
+				{ field: 'value', operator: 'not_contains', value: 'object', $type: 'show' },
 			];
 
 			const result = evaluate({ constraints, fieldValues: { value: { name: 'object' } } });
@@ -257,7 +257,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'age',
 					operator: 'greater_than',
 					value: 18,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -275,7 +275,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'age',
 					operator: 'greater_than',
 					value: 18,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -298,7 +298,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'count',
 					operator: 'greater_than',
 					value: '10',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -318,7 +318,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'price',
 					operator: 'less_than',
 					value: 100,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -336,7 +336,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'price',
 					operator: 'less_than',
 					value: 100,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -361,7 +361,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'optional',
 					operator: 'is_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -382,7 +382,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'items',
 					operator: 'is_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -400,7 +400,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'items',
 					operator: 'is_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -418,7 +418,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'optional',
 					operator: 'is_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -441,7 +441,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'required',
 					operator: 'is_not_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -462,7 +462,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'items',
 					operator: 'is_not_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -480,7 +480,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'items',
 					operator: 'is_not_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -498,7 +498,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'required',
 					operator: 'is_not_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -519,7 +519,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'quantity',
 					operator: 'is_not_empty',
 					value: null,
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -530,14 +530,14 @@ describe('evaluateResolvedConstraints', () => {
 		});
 	});
 
-	describe('show action', () => {
+	describe('show constraint', () => {
 		test('should show when single show constraint is met', () => {
 			const constraints: ConstraintLogic[] = [
 				{
 					field: 'type',
 					operator: 'equals',
 					value: 'premium',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -555,7 +555,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'type',
 					operator: 'equals',
 					value: 'premium',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -573,13 +573,13 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'type',
 					operator: 'equals',
 					value: 'premium',
-					action: 'show',
+					$type: 'show',
 				},
 				{
 					field: 'role',
 					operator: 'equals',
 					value: 'admin',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -603,14 +603,14 @@ describe('evaluateResolvedConstraints', () => {
 		});
 	});
 
-	describe('hide action', () => {
+	describe('hide constraint', () => {
 		test('should hide when hide constraint is met', () => {
 			const constraints: ConstraintLogic[] = [
 				{
 					field: 'status',
 					operator: 'equals',
 					value: 'disabled',
-					action: 'hide',
+					$type: 'hide',
 				},
 			];
 
@@ -628,7 +628,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'status',
 					operator: 'equals',
 					value: 'disabled',
-					action: 'hide',
+					$type: 'hide',
 				},
 			];
 
@@ -646,13 +646,13 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'type',
 					operator: 'equals',
 					value: 'premium',
-					action: 'show',
+					$type: 'show',
 				},
 				{
 					field: 'status',
 					operator: 'equals',
 					value: 'disabled',
-					action: 'hide',
+					$type: 'hide',
 				},
 			];
 
@@ -665,14 +665,14 @@ describe('evaluateResolvedConstraints', () => {
 		});
 	});
 
-	describe('disable action', () => {
+	describe('disable constraint', () => {
 		test('should disable when disable constraint is met', () => {
 			const constraints: ConstraintLogic[] = [
 				{
 					field: 'locked',
 					operator: 'equals',
 					value: true,
-					action: 'disable',
+					$type: 'disable',
 				},
 			];
 
@@ -690,7 +690,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'locked',
 					operator: 'equals',
 					value: true,
-					action: 'disable',
+					$type: 'disable',
 				},
 			];
 
@@ -703,14 +703,14 @@ describe('evaluateResolvedConstraints', () => {
 		});
 	});
 
-	describe('enable action', () => {
+	describe('enable constraint', () => {
 		test('should disable when enable constraint is not met', () => {
 			const constraints: ConstraintLogic[] = [
 				{
 					field: 'hasPermission',
 					operator: 'equals',
 					value: true,
-					action: 'enable',
+					$type: 'enable',
 				},
 			];
 
@@ -728,7 +728,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'hasPermission',
 					operator: 'equals',
 					value: true,
-					action: 'enable',
+					$type: 'enable',
 				},
 			];
 
@@ -741,14 +741,14 @@ describe('evaluateResolvedConstraints', () => {
 		});
 	});
 
-	describe('require action', () => {
+	describe('require constraint', () => {
 		test('should mark as required when require constraint is met', () => {
 			const constraints: ConstraintLogic[] = [
 				{
 					field: 'type',
 					operator: 'equals',
 					value: 'business',
-					action: 'require',
+					$type: 'require',
 				},
 			];
 
@@ -766,7 +766,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'type',
 					operator: 'equals',
 					value: 'business',
-					action: 'require',
+					$type: 'require',
 				},
 			];
 
@@ -784,7 +784,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'type',
 					operator: 'equals',
 					value: 'business',
-					action: 'require',
+					$type: 'require',
 				},
 			];
 
@@ -803,7 +803,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'type',
 					operator: 'equals',
 					value: 'business',
-					action: 'require',
+					$type: 'require',
 				},
 			];
 
@@ -869,19 +869,19 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'userType',
 					operator: 'equals',
 					value: 'premium',
-					action: 'show',
+					$type: 'show',
 				},
 				{
 					field: 'status',
 					operator: 'not_equals',
 					value: 'suspended',
-					action: 'enable',
+					$type: 'enable',
 				},
 				{
 					field: 'agreeToTerms',
 					operator: 'equals',
 					value: true,
-					action: 'require',
+					$type: 'require',
 				},
 			];
 
@@ -905,7 +905,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'nonexistent',
 					operator: 'equals',
 					value: 'test',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -923,7 +923,7 @@ describe('evaluateResolvedConstraints', () => {
 					field: 'inquiryType',
 					operator: 'contains',
 					value: ['sales', 'partnership'],
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -955,7 +955,7 @@ describe('evaluateResolvedConstraints', () => {
 					// @ts-expect-error: Testing invalid operator handling
 					operator: 'invalid_operator',
 					value: 'test',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
@@ -978,13 +978,13 @@ describe('evaluateResolvedConstraints', () => {
 			expect(result.isRequired).toBe(false);
 		});
 
-		test('should handle constraints with no matching action', () => {
+		test('should handle constraints with no matching $type', () => {
 			const constraints: ConstraintLogic[] = [
 				{
 					field: 'test',
 					operator: 'equals',
 					value: 'value',
-					action: 'show',
+					$type: 'show',
 				},
 			];
 
