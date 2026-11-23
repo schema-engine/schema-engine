@@ -25,8 +25,7 @@ type Strict<T> = {
  *
  * @remarks
  * It checks a copy, not the host's own declaration: the host's interface has to declare the same members,
- * or this proves nothing about it. The conformance suite is the guard on behaviour. Radiant UI's own
- * `validate()` resolves a boolean, so it is not in the copy: `forms-radiant` adapts that one member.
+ * or this proves nothing about it. The conformance suite is the guard on behaviour.
  */
 type BridgeNativeValidity = { type: string; params?: Record<string, unknown>; message?: string };
 
@@ -44,6 +43,7 @@ interface BridgeFormState<TIssue> {
 	};
 	subscribe: (listener: () => void) => () => void;
 	reset: () => void;
+	validate: () => Promise<{ outcome: 'passed' | 'invalid' | 'overtaken' }>;
 	checkValidity: () => Promise<boolean>;
 	reportNative: (facts: Record<string, BridgeNativeValidity | null>) => void;
 }

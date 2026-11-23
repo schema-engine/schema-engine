@@ -5,7 +5,6 @@ import '@ecopages/radiant-ui/form';
 import '@ecopages/radiant-ui/field';
 import { createFormStateContainer, FORM_ROOT } from '@schema-engine/forms/state-container';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
-import { toRadiantStore } from '@/lib/radiant-store';
 import { schemaFormRegistrations } from '@/registrations';
 
 /**
@@ -125,7 +124,7 @@ async function mount(options: { validationMode?: 'onBlur' | 'onChange' | 'onSubm
 	await customElements.whenDefined('rui-form');
 	await customElements.whenDefined('rui-field');
 	const submissions: Array<{ result: Awaited<ReturnType<typeof container.submit>> }> = [];
-	const disconnect = form.connect(toRadiantStore(container), {
+	const disconnect = form.connect(container, {
 		formatError: format,
 		submitHandler: async () => {
 			submissions.push({ result: await container.submit() });

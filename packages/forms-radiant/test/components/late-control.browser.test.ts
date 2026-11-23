@@ -4,7 +4,6 @@ import { createDefaultValidationRegistry } from '@schema-engine/forms/schemas/va
 import type { RuiFormElement } from '@ecopages/radiant-ui/form';
 import { SeMaskedInput } from '@/elements/inputs/form-masked-input';
 import { registerValueControl } from '@/lib/field-control';
-import { toRadiantStore } from '@/lib/radiant-store';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -27,7 +26,7 @@ async function mountLate(controlHtml: string) {
 	form.innerHTML = `<rui-field name="late">${controlHtml}</rui-field>`;
 	document.body.append(form);
 	await customElements.whenDefined('rui-form');
-	form.connect(toRadiantStore(container), { formatError: () => '' });
+	form.connect(container, { formatError: () => '' });
 	await new Promise((resolve) => setTimeout(resolve, 50));
 	return { container, form, reportNative };
 }
