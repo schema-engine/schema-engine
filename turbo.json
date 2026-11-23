@@ -10,7 +10,7 @@
 			"outputs": [".eco/**"]
 		},
 		"check-types": {
-			"dependsOn": ["^check-types", "^build:lib"]
+			"dependsOn": ["build:lib", "^check-types", "^build:lib"]
 		},
 		"lint-staged": {
 			"dependsOn": ["^lint-staged"]
@@ -33,7 +33,7 @@
 			"dependsOn": ["^build:lib"]
 		},
 		"test:all": {
-			"dependsOn": ["^build:lib", "^test:all"]
+			"dependsOn": ["build:lib", "^build:lib", "^test:all"]
 		},
 		"test:e2e": {
 			"dependsOn": ["^build:lib", "build"],
@@ -74,12 +74,6 @@
 				"$TURBO_ROOT$/registry/**",
 				"$TURBO_ROOT$/packages/forms-react/.storybook/ui/**"
 			]
-		},
-		"@schema-engine/forms#test:all": {
-			"dependsOn": ["build:lib", "^test:all"]
-		},
-		"@schema-engine/registry#test:all": {
-			"dependsOn": ["build:lib", "^test:all"]
 		}
 	}
 }
