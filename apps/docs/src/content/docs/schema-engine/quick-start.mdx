@@ -1,0 +1,194 @@
+---
+title: 'Quick start'
+description: 'Register two components and an async action, resolve a JSON document through the registry and run a JSON workflow, with no UI.'
+order: 2
+---
+
+# Quick start
+
+This page builds the core of Schema Engine in three files and no UI: a registry that resolves a JSON document, and a workflow sent as JSON, checked and dispatched. It needs no renderer and no UI.
+
+## Install
+
+```bash
+pnpm add @schema-engine/registry @schema-engine/actions zod
+```
+
+Run the files with any TypeScript runner, for example `pnpm dlx tsx main.ts`. Zod is the validator these examples use. Any [Standard Schema](https://standardschema.dev/) validator works in its place. Zod Mini ships no error messages, so `components.ts` loads the English ones once.
+
+## 1. Register two components
+
+A registration is a `$type`, a schema for its configuration and metadata, plus whatever its domain adds. Here a component adds `render`. `createRegistry` builds a read-only registry from a list.
+
+```ts title="components.ts"
+import * as z from 'zod/mini';
+import { createRegistry, type BaseRegistration } from '@schema-engine/registry';
+
+z.config(z.locales.en());
+
+interface Component extends BaseRegistration {
+	render(config: unknown): string;
+}
+
+const badgeSchema = z.object({
+	$type: z.literal('badge'),
+	label: z.string(),
+	tone: z.optional(z.enum(['info', 'success', 'warning'])),
+});
+
+const calloutSchema = z.object({
+	$type: z.literal('callout'),
+	title: z.string(),
+	text: z.string(),
+});
+
+const badge: Component = {
+	$type: 'badge',
+	schema: badgeSchema,
+	metadata: { name: 'Badge', description: 'A short status label.' },
+	render({ label, tone = 'info' }: z.output<typeof badgeSchema>) {
+		return `<span class="badge badge-${tone}">${label}</span>`;
+	},
+};
+
+const callout: Component = {
+	$type: 'callout',
+	schema: calloutSchema,
+	metadata: { name: 'Callout', description: 'A boxed message with a title.' },
+	render({ title, text }: z.output<typeof calloutSchema>) {
+		return `<aside class="callout"><strong>${title}</strong> ${text}</aside>`;
+	},
+};
+
+export const components = createRegistry('Component', [badge, callout]);
+```
+
+## 2. Register an async action
+
+An action is registered behaviour. Its context is whatever the caller hands to a dispatch: here a mailer, so the action does not reach for a global. A shared `actionBase` keeps `id`, `enabled` and `triggers` in every schema, because `parseActions` returns what the schema returns and the dispatcher reads `enabled` and `triggers` from it.
+
+```ts title="actions.ts"
+import * as z from 'zod/mini';
+import { ActionRegistry, defineAction, type ActionConfigBase } from '@schema-engine/actions';
+
+export interface Mailer {
+	send(message: { to: string; subject: string }): Promise<void>;
+}
+
+export interface ShopContext {
+	mailer: Mailer;
+}
+
+export type ShopTrigger = 'checkout';
+
+interface SendEmailConfig extends ActionConfigBase<'sendEmail'> {
+	to: string;
+	subject: string;
+}
+
+const actionBase = {
+	id: z.string(),
+	enabled: z.optional(z.boolean()),
+	triggers: z.optional(z.array(z.string())),
+};
+
+const defineShopAction = defineAction<ShopContext, ShopTrigger>();
+
+const sendEmail = defineShopAction<SendEmailConfig>({
+	$type: 'sendEmail',
+	schema: z.object({
+		...actionBase,
+		$type: z.literal('sendEmail'),
+		to: z.email(),
+		subject: z.string(),
+	}),
+	metadata: { name: 'Send email', defaultTriggers: ['checkout'] },
+	execute: async ({ config, mailer }) => {
+		await mailer.send({ to: config.to, subject: config.subject });
+		return { success: true, message: `Sent "${config.subject}" to ${config.to}` };
+	},
+});
+
+export const actions = new ActionRegistry<ShopContext, ShopTrigger>([sendEmail]);
+```
+
+## 3. Resolve a document and run a workflow
+
+Both inputs arrive as JSON text, as they would from a file or a server. The document is a list of nodes: each `$type` is looked up in the registry, the node is checked against the registration's schema, and the component renders it. The workflow is a list of action entries, where the inner list is a group that runs in parallel. `parseActions` checks every entry against its registration, and `dispatch` accepts only what it returns.
+
+```ts title="main.ts"
+import { ActionDispatcher, parseActions } from '@schema-engine/actions';
+import { safeParseStandardSchema } from '@schema-engine/registry';
+import { actions, type Mailer } from './actions';
+import { components } from './components';
+
+const documentJson = `[
+	{ "$type": "callout", "title": "Order 1042 confirmed", "text": "Thanks for shopping with us." },
+	{ "$type": "badge", "label": "Paid", "tone": "success" }
+]`;
+
+const workflowJson = `[
+	{ "id": "receipt", "$type": "sendEmail", "to": "ada@example.com", "subject": "Your receipt for order 1042" },
+	[
+		{ "id": "warehouse", "$type": "sendEmail", "to": "warehouse@example.com", "subject": "Pack order 1042" },
+		{ "id": "accounts", "$type": "sendEmail", "to": "accounts@example.com", "subject": "Order 1042 is paid" }
+	]
+]`;
+
+const mailer: Mailer = {
+	async send({ to, subject }) {
+		console.log(`mail to ${to}: ${subject}`);
+	},
+};
+
+function renderNode(node: { $type: string }): string {
+	const component = components.get(node.$type);
+	if (!component) throw new Error(`No component is registered for '${node.$type}'.`);
+	const parsed = safeParseStandardSchema(component.schema, node);
+	if (!parsed.success) throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
+	return component.render(parsed.data);
+}
+
+async function main() {
+	const nodes: { $type: string }[] = JSON.parse(documentJson);
+	console.log(nodes.map(renderNode).join('\n'));
+
+	const parsed = parseActions(actions, JSON.parse(workflowJson));
+	if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join('; '));
+
+	const results = await new ActionDispatcher(actions).dispatch({
+		actions: parsed.data,
+		trigger: 'checkout',
+		context: { mailer },
+	});
+	for (const { actionId, status, message } of results) console.log(`${actionId}: ${status}, ${message}`);
+}
+
+main();
+```
+
+## Run it
+
+```bash
+pnpm dlx tsx main.ts
+```
+
+```text
+<aside class="callout"><strong>Order 1042 confirmed</strong> Thanks for shopping with us.</aside>
+<span class="badge badge-success">Paid</span>
+mail to ada@example.com: Your receipt for order 1042
+mail to warehouse@example.com: Pack order 1042
+mail to accounts@example.com: Order 1042 is paid
+receipt: succeeded, Sent "Your receipt for order 1042" to ada@example.com
+warehouse: succeeded, Sent "Pack order 1042" to warehouse@example.com
+accounts: succeeded, Sent "Order 1042 is paid" to accounts@example.com
+```
+
+The two component nodes became HTML strings. The three emails went out as one workflow: the receipt first, then the warehouse and accounts messages together. Each `ActionDispatchResult` carries the entry's `actionId`, its `status` and the `message` the action returned.
+
+## Where to go next
+
+- [Registry](/docs/registry/overview): registrations and registries in depth, and how to resolve a whole document.
+- [Actions](/docs/actions/overview): triggers, groups, cancellation and writing your own actions.
+- [Serialized documents](/docs/schema-engine/serialized-documents): validate a document and a workflow at the boundary, and read the issues a caller gets.
+- [Forms](/docs/forms/overview) and [Layout](/docs/layout/overview): the first two domains, each with its own installation and quick start.

@@ -1,0 +1,190 @@
+---
+title: 'Serialized documents'
+description: 'A document is plain data in JSON or YAML. Validate it at the boundary with the registry and parseActions, send it from a server to a client, and read the issues a caller gets.'
+order: 5
+---
+
+# Serialized documents
+
+A document is plain data: strings, numbers, booleans, arrays and objects. It names registered pieces by `$type`, so it carries no code. That is what lets a server build an interface and send it, a CMS store it and a tool generate it, and what lets the receiving side check it before it trusts it.
+
+The examples continue from the [Quick start](/docs/schema-engine/quick-start): its `components.ts` and `actions.ts` hold the two registries used here.
+
+## What a document can hold
+
+A document is whatever survives `JSON.stringify` and `JSON.parse`. It cannot hold a function, a class instance, a `Date` or `undefined`: a `Date` arrives as a string and the rest are dropped or fail. Behaviour stays in the registrations on the receiving side, and the document refers to it by `$type`. A YAML file parses to the same data, with the caveats [below](#yaml).
+
+What arrives from a file or a network is `unknown`. Nothing in it is trusted until a schema has checked it.
+
+## Validate at the boundary
+
+Two kinds of node cross the boundary, and each has one check.
+
+### Nodes: the registry
+
+A node is checked against the schema of the registration its `$type` names. The function below renders a document and returns every issue instead of stopping at the first. Each issue carries a `path` that starts with the index of the node:
+
+```ts title="render-document.ts"
+import { safeParseStandardSchema, type StandardSchemaIssue } from '@schema-engine/registry';
+import { components } from './components';
+
+export type RenderResult = { success: true; data: string[] } | { success: false; issues: StandardSchemaIssue[] };
+
+export function renderDocument(input: unknown): RenderResult {
+	if (!Array.isArray(input)) {
+		return { success: false, issues: [{ message: 'A document is an array of nodes.', path: [] }] };
+	}
+	const html: string[] = [];
+	const issues: StandardSchemaIssue[] = [];
+	input.forEach((node: { $type?: unknown }, index) => {
+		const component = typeof node?.$type === 'string' ? components.get(node.$type) : undefined;
+		if (!component) {
+			issues.push({
+				message: `No component is registered for $type '${String(node?.$type)}'.`,
+				path: [index, '$type'],
+			});
+			return;
+		}
+		const parsed = safeParseStandardSchema(component.schema, node);
+		if (parsed.success) html.push(component.render(parsed.data));
+		else issues.push(...parsed.error.issues.map((issue) => ({ ...issue, path: [index, ...(issue.path ?? [])] })));
+	});
+	return issues.length > 0 ? { success: false, issues } : { success: true, data: html };
+}
+```
+
+### Actions: `parseActions`
+
+A workflow is checked by `parseActions`. It validates each entry, and each member of a group, against the schema of its registration, and returns either the parsed sequence or every issue. The issue path is the index of the entry, then the index inside a group when the entry is one, then the path the schema reported. An unknown `$type` is an issue at its `$type`.
+
+The `ActionDispatcher` takes only what `parseActions` returned, so a workflow that was not checked cannot be dispatched.
+
+### See the issues
+
+A document with a wrong `label`, an unregistered `$type` and a missing field, and a workflow with a bad address, a missing subject inside a group and an unregistered action:
+
+```ts title="bad-input.ts"
+import { parseActions } from '@schema-engine/actions';
+import { actions } from './actions';
+import { renderDocument } from './render-document';
+
+const badDocument = [
+	{ $type: 'badge', label: 5 },
+	{ $type: 'banner', text: 'Sale' },
+	{ $type: 'callout', title: 'Order 1042 confirmed' },
+];
+
+const badWorkflow = [
+	{ id: 'receipt', $type: 'sendEmail', to: 'not-an-email', subject: 'Your receipt' },
+	[
+		{ id: 'warehouse', $type: 'sendEmail', to: 'warehouse@example.com' },
+		{ id: 'refund', $type: 'refundCard', orderId: '1042' },
+	],
+];
+
+const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
+	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
+
+const document = renderDocument(badDocument);
+if (!document.success)
+	for (const issue of document.issues) console.log(`document ${where(issue.path)}: ${issue.message}`);
+
+const workflow = parseActions(actions, badWorkflow);
+if (!workflow.success)
+	for (const issue of workflow.issues) console.log(`workflow ${where(issue.path)}: ${issue.message}`);
+```
+
+```text
+document 0.label: Invalid input: expected string, received number
+document 1.$type: No component is registered for $type 'banner'.
+document 2.text: Invalid input: expected string, received undefined
+workflow 0.to: Invalid email address
+workflow 1.0.subject: Invalid input: expected string, received undefined
+workflow 1.1.$type: Unknown action type 'refundCard'. Register it in the action registry.
+```
+
+Every bad node and entry is reported, in the order it appears, so a caller can show all of them at once. `path` is the position in the document, so an editor can mark the node and a log can name it.
+
+## From a server to a client
+
+A server builds the document and sends it as JSON. The client parses and validates it before it renders or dispatches anything:
+
+```ts title="server.ts"
+const document = [
+	{ $type: 'callout', title: 'Order 1042 confirmed', text: 'Thanks for shopping with us.' },
+	{ $type: 'badge', label: 'Paid', tone: 'success' },
+];
+
+export function GET(): Response {
+	return Response.json(document);
+}
+```
+
+```ts title="client.ts"
+import { renderDocument } from './render-document';
+
+export async function loadDocument(url: string) {
+	const response = await fetch(url);
+	if (!response.ok) throw new Error(`${url}: ${response.status}`);
+	return renderDocument(await response.json());
+}
+```
+
+The client registers the components and actions, so the server decides what to show and the client decides how it is drawn and what the actions do. A `$type` the client has not registered is an issue, not a crash. A document is data, so a server can also store it and a test can replay it.
+
+## YAML
+
+A document can be written as YAML. Install the optional peer dependency of the registry in the app that imports the subpath:
+
+```bash
+pnpm add yaml
+```
+
+The `@schema-engine/registry/yaml` subpath parses the text, hands the value to a validator of your choice and turns every issue into a file, line and column. A function that returns `{ success, data }` or `{ success: false, issues }`, such as `renderDocument` and `parseActions`, is that validator:
+
+```ts title="parse-welcome.ts"
+import { parseYaml, YamlDocumentError } from '@schema-engine/registry/yaml';
+import { renderDocument } from './render-document';
+
+const text = `- $type: callout
+  title: Order 1042 confirmed
+  text: Thanks for shopping with us.
+- $type: badge
+  label: Paid
+  tone: succes
+`;
+
+try {
+	parseYaml(text, renderDocument, { filename: 'welcome.yaml' });
+} catch (error) {
+	if (!(error instanceof YamlDocumentError)) throw error;
+	console.log(error.message);
+}
+```
+
+```text
+welcome.yaml:6:9 [1].tone: Invalid option: expected one of "info"|"success"|"warning"
+```
+
+A `YamlDocumentError` lists every issue in `error.issues`, each with its `line`, `column` (counting from 1), `filename` and `path`. Its `message` has one line per issue, in the `file:line:column` form that terminals and editors turn into links. Use `safeParseYaml`, which takes the same arguments, to get `{ success: true, data }` or `{ success: false, issues }` without a throw. `stringifyYaml` writes a value back out as YAML.
+
+A validation issue points at the start of the value its path names. When the path names a key the file does not have, it points at the nearest ancestor that exists. A syntax error, such as a bad indent, has an empty path and the position the parser reports, and the validator is not called.
+
+The subpath uses no `node:` imports, so it runs in Node, Bun, Deno and the browser. It takes text: reading the file, importing it as raw text or fetching it is yours.
+
+### Caveats
+
+- The file is YAML 1.2. `no`, `yes`, `on` and `off` stay strings. A YAML 1.1 reader (PyYAML, some older editor plugins) reads them as booleans.
+- An unquoted `1.10` is the number `1.1` in every YAML version. Quote it to keep a string: `version: "1.10"`. The same goes for a value such as `007` or `1e3`.
+- One document per file. There are no includes across files.
+- Anchors, aliases and merge keys work inside a file, so a shared value can be written once. A text with more than 100 alias expansions in all is reported as an issue, which guards against files that expand to enormous values.
+- Tags are not supported. `!!binary`, `!!set`, `!!timestamp`, `!custom` and the like are reported as issues, so the validator only ever sees plain values.
+- Mapping keys are read as strings, so `1: a` is the key `"1"`.
+- Duplicate keys in a map are a syntax error.
+- There is no build-time loader, plugin or CLI: parse where you load.
+
+## Where to go next
+
+- [Registry](/docs/registry/overview): registrations and registries.
+- [Actions](/docs/actions/overview): the workflow side of a document.
+- [Core concepts](/docs/schema-engine/core-concepts): the shared vocabulary.

@@ -22,7 +22,7 @@ Four ideas carry everything else. [Core concepts](/docs/schema-engine/core-conce
 
 **Actions.** An action is registered behaviour. You define it once in code, on the client. An action entry in a document is plain data: its `$type`, its arguments and the triggers it answers. Entries run in order, a nested list runs in parallel, and an action that fails can stop the rest and cancel its siblings. An async workflow is therefore a JSON array you can store, send and replay, and `parseActions` checks every entry against its registration before anything runs. See [Actions](/docs/actions/overview).
 
-**Serialized documents.** Everything a document holds is JSON: no functions, no class instances, no framework objects. That is what lets a server send an interface to a client, a CMS store it or a tool generate it, and what lets the engine check it, at the boundary, against the schemas your registrations declare. YAML works too.
+**Serialized documents.** Everything a document holds is JSON: no functions, no class instances, no framework objects. That is what lets a server send an interface to a client, a CMS store it or a tool generate it, and what lets the engine check it, at the boundary, against the schemas your registrations declare. YAML works too. See [Serialized documents](/docs/schema-engine/serialized-documents).
 
 **Rendering from data.** A renderer takes a validated document and draws it with the registrations of its engine. The rules for resolving, validating and dispatching live in the engine, not in the renderer, so a document keeps its meaning from one renderer to the next.
 
@@ -36,4 +36,4 @@ You own your vocabulary: the components and actions you register, usually your d
 
 ## Where to start
 
-Read in order: [Registry](/docs/registry/overview), [Actions](/docs/actions/overview), [Forms](/docs/forms/overview), then [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview), and [Layout](/docs/layout/overview). Each section starts with its installation and a quick start. [Packages](/docs/schema-engine/packages) says what to install for which job.
+Start with the [Quick start](/docs/schema-engine/quick-start), then read in order: [Registry](/docs/registry/overview), [Actions](/docs/actions/overview), [Forms](/docs/forms/overview), then [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview), and [Layout](/docs/layout/overview). Each section starts with its installation and a quick start. [Packages](/docs/schema-engine/packages) says what to install for which job.

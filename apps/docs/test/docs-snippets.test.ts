@@ -6,6 +6,7 @@ import {
 	isTypeScriptFence,
 	parseCodeBlocks,
 	readPage,
+	titledFiles,
 	type CodeBlock,
 } from './snippet-harness';
 
@@ -64,6 +65,7 @@ export const postalCode = {
 } as const;`,
 	'contact-card.ts': recipeConfigSource(allRecipes.find((recipe) => recipe.id === 'contact-card')!.demos),
 	'brand-frame.ts': "export { BrandFrameRecipe } from './brand-frame.radiant';",
+	...titledFiles('schema-engine/quick-start'),
 	...recipeFiles,
 };
 

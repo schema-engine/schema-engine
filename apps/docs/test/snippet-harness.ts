@@ -177,3 +177,81 @@ export function run(code: string, modules: Record<string, unknown>): Record<stri
 	});
 	return exports;
 }
+
+/** The fences of a page whose meta names a file (`title="<name>"`), in page order. */
+export function titledFiles(page: string): Record<string, string> {
+	return Object.fromEntries(
+		codeBlocks(page).flatMap((block) => {
+			const name = block.meta.match(/title="([^"]+)"/)?.[1];
+			return name ? [[name, block.code] as const] : [];
+		}),
+	);
+}
+
+/** What {@link titledRunner} gives back: the files' modules, loaded on demand, and what they logged. */
+export interface TitledRunner {
+	/** Runs the titled file `name` once and returns its exports. */
+	load(name: string): Record<string, unknown>;
+	/** Every line the files logged, in order. */
+	lines: string[];
+}
+
+/**
+ * Loads the titled files of one or more pages as modules.
+ *
+ * @remarks
+ * A relative import (`./components`) loads the titled file of that name from the pages, the last page winning;
+ * any other import comes from `modules`. `globals` are visible to the files, for example `Response` and
+ * `fetch`.
+ */
+export function titledRunner(
+	pages: string | string[],
+	modules: Record<string, unknown>,
+	globals: Record<string, unknown> = {},
+): TitledRunner {
+	const names = [pages].flat();
+	const files = Object.assign({}, ...names.map(titledFiles)) as Record<string, string>;
+	const lines: string[] = [];
+	const loaded = new Map<string, Record<string, unknown>>();
+	const load = (name: string): Record<string, unknown> => {
+		const cached = loaded.get(name);
+		if (cached) return cached;
+		const source = files[name];
+		if (source === undefined) throw new Error(`${names.join(', ')} has no file titled ${name}`);
+		const output = ts.transpileModule(source, {
+			compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+		}).outputText;
+		const exports: Record<string, unknown> = {};
+		loaded.set(name, exports);
+		runInNewContext(output, {
+			...globals,
+			exports,
+			console: { log: (...args: unknown[]) => lines.push(args.join(' ')) },
+			require: (request: string) => {
+				if (request.startsWith('./')) return load(`${request.slice(2)}.ts`);
+				if (!(request in modules)) throw new Error(`Unexpected import ${request}`);
+				return modules[request];
+			},
+		});
+		return exports;
+	};
+	return { load, lines };
+}
+
+/**
+ * Runs the titled files of one or more pages, starting at `entry`, and returns every line they logged.
+ *
+ * @remarks
+ * The entry may start asynchronous work, so the call waits one turn of the event loop before it returns, which
+ * is enough for work that waits on promises and not on timers.
+ */
+export async function runTitledFiles(
+	pages: string | string[],
+	modules: Record<string, unknown>,
+	entry: string,
+): Promise<string[]> {
+	const runner = titledRunner(pages, modules);
+	runner.load(entry);
+	await new Promise((resolve) => setImmediate(resolve));
+	return runner.lines;
+}
