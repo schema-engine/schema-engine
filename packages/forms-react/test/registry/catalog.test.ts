@@ -66,10 +66,11 @@ describe('schema-engine GitHub registry catalog', () => {
 	});
 
 	for (const name of RECIPE_AGGREGATES) {
-		test(`${name} installs the explicit default recipe barrel`, () => {
+		test(`${name} installs the default recipe barrel at one path`, () => {
 			const item = catalog.find((entry) => entry.name === name);
 			expect(item).toBeDefined();
 			expect(item?.files.some((file) => file.target.endsWith('/recipes/registrations.ts'))).toBe(true);
+			expect(item?.files.some((file) => file.target.endsWith('/recipes/index.ts'))).toBe(false);
 			expect(item?.registryDependencies).toEqual(expect.arrayContaining(['button', 'badge', 'separator']));
 		});
 	}

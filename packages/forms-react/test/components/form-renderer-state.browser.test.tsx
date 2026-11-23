@@ -3,15 +3,13 @@ import { useState } from 'react';
 import { userEvent } from 'vitest/browser';
 import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
-import type { BuilderActionRegistration } from '@schema-engine/forms';
+import { createFormEngine, formResetPlugin, type BuilderActionRegistration } from '@schema-engine/forms';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { CheckboxElementRegistration } from '@/components/schema-engine/forms/inputs/form-checkbox.registration';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
-import { formResetPlugin } from '@schema-engine/forms/actions';
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
-import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@/components/internals/form-renderer';
 
 const actionSchema = z.object({

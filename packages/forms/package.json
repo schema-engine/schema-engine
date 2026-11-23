@@ -71,18 +71,6 @@
 			"types": "./dist/browser/index.d.ts",
 			"import": "./dist/browser/index.js"
 		},
-		"./actions": {
-			"types": "./dist/actions/index.d.ts",
-			"import": "./dist/actions/index.js"
-		},
-		"./actions/*": {
-			"types": "./dist/actions/*.d.ts",
-			"import": "./dist/actions/*.js"
-		},
-		"./actions/plugins/*": {
-			"types": "./dist/actions/plugins/*.d.ts",
-			"import": "./dist/actions/plugins/*.js"
-		},
 		"./types": {
 			"types": "./dist/types/index.d.ts",
 			"import": "./dist/types/index.js"

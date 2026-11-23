@@ -5,7 +5,7 @@
  * Tree-shakable library designed for maximum flexibility and performance.
  */
 
-export { createFormEngine, FormEngine, SchemaMetadataCatalog, ActionDispatcher } from './engine';
+export { createFormEngine, FormEngine, SchemaMetadataCatalog } from './engine';
 export type { CreateFormEngineOptions, SubmissionSchema } from './engine';
 export {
 	collectStepFieldPaths,
