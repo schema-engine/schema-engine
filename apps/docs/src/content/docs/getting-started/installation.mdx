@@ -19,9 +19,9 @@ Schema Engine is a set of packages. You install the engine and one renderer: **R
 | Renderer    | Package                        | Form state                           | Styling                                                             |
 | ----------- | ------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
 | **React**   | `@schema-engine/forms-react`   | The engine's own container, built in | Source you own, copied from the shadcn registry; Tailwind helps     |
-| **Radiant** | `@schema-engine/forms-radiant` | Radiant's own form controller        | Three CSS imports: a Radiant UI theme, its styles and the package's |
+| **Radiant** | `@schema-engine/forms-radiant` | The engine's own container, built in | Three CSS imports: a Radiant UI theme, its styles and the package's |
 
-Both render the same `FormConfig` JSON; the React renderer keeps its form state in the engine's container, built in, and the Radiant renderer has its own form controller.
+Both render the same `FormConfig` JSON and keep their form state in the engine's own container, so a form validates, resets and submits the same way in either. See [Form state](/docs/forms/form-state).
 
 ## The engine
 
@@ -124,7 +124,7 @@ The ranges are the ones in the package manifests:
 - `typescript` `^5.4`
 - `react` and `react-dom` `^19` (React renderer)
 - `yaml` `^2.8.0` (optional; needed only for `@schema-engine/registry/yaml`)
-- `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.9.0`, and `@ecopages/radiant-ui` `>=0.4.0` (Radiant renderer; [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the rest)
+- `@ecopages/radiant`, `@ecopages/jsx` and `@ecopages/signals` `>=0.12.0`, and `@ecopages/radiant-ui` `>=0.6.0` (Radiant renderer; [Forms Radiant: Getting Started](/docs/forms-radiant/getting-started) has the rest)
 
 ## TypeScript configuration
 

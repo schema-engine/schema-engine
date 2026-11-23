@@ -33,6 +33,8 @@ Actions execute in response to form lifecycle triggers.
 - `form_submit_error` - Submit failed: a submit action aborted, the `onSubmit` callback rejected, or a trigger failed
 - `form_submit_complete` - Submit finished (success or failure)
 
+The order, with validation before them and the `onSubmit` callback inside, is in [Form state](/docs/forms/form-state#submit).
+
 ### Step Triggers
 
 - `step_leave` - The current step is about to change

@@ -49,7 +49,7 @@ or a list of paths) and `useFieldArray` cover observation and array editing.
 
 ### useFormField
 
-`useFormField` binds a widget to one field. It has three forms:
+`useFormField` binds a widget to one field. [Writing a widget](/docs/forms-react/widgets) has a full uncontrolled and controlled example. It has three forms:
 
 | Call                                         | Returns                                                                                                                                                                                                                                 |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -139,13 +139,13 @@ Import engine hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormEngine` reads the `FormEngine` supplied by `FormEngineProvider`, while
 `useFormInstanceActions` exposes the form's wizard: `current` (the id of the current step), `steps` (every step in
-order, each with `skipped`, `visited`, `complete` and `invalid`), `navigating`, and the commands `next()`, `back()`
+order, each with `skipped`, `visited`, `complete`, `invalid` and `reachable`), `navigating`, and the commands `next()`, `back()`
 and `goTo(id)`. Each command resolves to one outcome string: `'moved'`, `'invalid'` (the step has errors, which are
 shown and focused), `'overtaken'` (an edit outran the check), `'refused'` (nowhere to go, or a skipped or
 unreachable step), `'busy'` (another command is running) or `'cancelled'` (a reset or an unmount revoked it).
 Submitting before the last step of a wizard is a Next. Steps are keyed by id, and a step that the answers skip
 is passed over by `next` and `back` and refused by `goTo`.
 
-The form's runtime ([`createFormRuntime`](/docs/forms/api-reference)) owns all of this and the submission, so
+The form's runtime ([`createFormRuntime`](/docs/forms/wizard)) owns all of this and the submission, so
 `useFormContext().reset`, an action's `form.reset` and a native reset button all return the form to its first
 step with an idle submission.
