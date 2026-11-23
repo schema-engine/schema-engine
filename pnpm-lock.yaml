@@ -71,10 +71,10 @@ importers:
         specifier: ^15.5.2
         version: 15.5.2
       oxlint:
-        specifier: latest
+        specifier: 1.94.0
         version: 1.94.0(oxlint-tsgolint@7.0.2008)
       oxlint-tsgolint:
-        specifier: latest
+        specifier: 7.0.2008
         version: 7.0.2008
       prettier:
         specifier: ^3.9.6
