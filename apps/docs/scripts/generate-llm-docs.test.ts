@@ -70,29 +70,12 @@ test('generateLlmDocs writes llms.txt and markdown exports', async () => {
 		expect(llmsTxt).toContain('# Schema Engine Documentation');
 		expect(llmsTxt).toContain('## Getting Started');
 		expect(llmsTxt).toContain('/docs-llm/getting-started/introduction.md');
-		expect(llmsTxt).not.toContain('/llms-content/');
 		expect(llmsTxt).not.toContain('Excluded');
 		expect(llmsTxt).not.toContain('## Llms Fixture');
 
 		const introduction = await readFile(join(outputRoot, 'docs-llm/getting-started/introduction.md'), 'utf8');
 		expect(introduction).toContain('title:');
 		expect(await pathExists(join(outputRoot, 'docs-llm/llms-fixture/excluded.md'))).toBe(false);
-	} finally {
-		await rm(outputRoot, { recursive: true, force: true });
-	}
-});
-
-test('generateLlmDocs keeps writing the previous llms-content exports, unlisted', async () => {
-	const outputRoot = await mkdtemp(join(tmpdir(), 'schema-engine-llm-legacy-'));
-
-	try {
-		const { generateLlmDocs } = await import('./generate-llm-docs');
-		await generateLlmDocs(outputRoot, { contentRoot });
-
-		const legacy = await readFile(join(outputRoot, 'llms-content/getting-started/introduction.txt'), 'utf8');
-		const current = await readFile(join(outputRoot, 'docs-llm/getting-started/introduction.md'), 'utf8');
-		expect(legacy).toBe(current);
-		expect(await pathExists(join(outputRoot, 'llms-content/llms-fixture/excluded.txt'))).toBe(false);
 	} finally {
 		await rm(outputRoot, { recursive: true, force: true });
 	}
@@ -116,15 +99,12 @@ test('generateLlmDocs replaces stale generator-owned exports', async () => {
 
 	try {
 		await mkdir(join(outputRoot, 'docs-llm/stale-section'), { recursive: true });
-		await mkdir(join(outputRoot, 'llms-content/llms-fixture'), { recursive: true });
 		await writeFile(join(outputRoot, 'docs-llm/stale-section/gone.md'), '# Obsolete export\n', 'utf8');
-		await writeFile(join(outputRoot, 'llms-content/llms-fixture/excluded.txt'), '# Should be removed\n', 'utf8');
 
 		const { generateLlmDocs } = await import('./generate-llm-docs');
 		await generateLlmDocs(outputRoot, { contentRoot });
 
 		expect(await pathExists(join(outputRoot, 'docs-llm/stale-section/gone.md'))).toBe(false);
-		expect(await pathExists(join(outputRoot, 'llms-content/llms-fixture/excluded.txt'))).toBe(false);
 		expect(await pathExists(join(outputRoot, 'docs-llm/getting-started/introduction.md'))).toBe(true);
 	} finally {
 		await rm(outputRoot, { recursive: true, force: true });

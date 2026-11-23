@@ -129,9 +129,3 @@ test('Copy for LLM renders on the server and copies the page Markdown export', a
 		await browser.close();
 	}
 });
-
-test('the previous llms-content exports still answer for one release', async () => {
-	const legacy = await fetch(`${baseUrl}/llms-content/forms/builder.txt`);
-	expect(legacy.status).toBe(200);
-	expect(await legacy.text()).toBe(await (await fetch(`${baseUrl}/docs-llm/forms/builder.md`)).text());
-});
