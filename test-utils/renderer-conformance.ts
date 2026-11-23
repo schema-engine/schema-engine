@@ -3,7 +3,8 @@ import { getByRole, queryAllByRole, queryAllByText, queryByRole, queryByText, wi
 import { page, userEvent } from 'vitest/browser';
 import * as v from 'valibot';
 import { builtInAxes, defineAxis } from '@schema-engine/layout';
-import type { BuilderActionRuntimeContext, FormConfigView } from '@schema-engine/forms';
+import type { BuilderActionRuntimeContext, FormConfigView, FormSubmissionState } from '@schema-engine/forms';
+import type { FormStateContainer, FormStateErrorsInput } from '@schema-engine/forms/state-container';
 import {
 	builtInRecipeSpecs,
 	MinimalProgressConfigSchema,
@@ -70,16 +71,30 @@ export const customArrayType = 'repeater';
 export interface ConformanceMountOptions {
 	config: FormConfigView;
 	defaultValues?: Record<string, unknown>;
-	onSubmit?: (data: Record<string, unknown>) => void | Promise<void>;
+	onSubmit?: (
+		data: Record<string, unknown>,
+		helpers: { setServerErrors: (errors: FormStateErrorsInput) => void },
+	) => void | Promise<void>;
 	onChange?: (data: Record<string, unknown>) => void;
 	onAction?: () => void;
 }
-export type ConformanceMount = (options: ConformanceMountOptions) => Promise<{
+/** What every renderer mounts for a conformance case. */
+export interface ConformanceView {
 	host: HTMLElement;
 	cleanup: () => void;
 	/** Renders the same renderer again with a replaced config and the original callbacks. */
 	update: (config: FormConfigView) => Promise<void>;
-}>;
+}
+export type ConformanceMount = (options: ConformanceMountOptions) => Promise<ConformanceView>;
+
+/** A {@link ConformanceView} that also reaches what the form runtime owns, as the renderer's own host does. */
+export interface ConformanceRuntimeView extends ConformanceView {
+	/** The form's state container. */
+	container: () => FormStateContainer | undefined;
+	/** The submission state the renderer reports: the runtime's, as a host reads it. */
+	submission: () => FormSubmissionState | undefined;
+}
+export type ConformanceRuntimeMount = (options: ConformanceMountOptions) => Promise<ConformanceRuntimeView>;
 
 const lastActionContext = () => conformanceAction.execute.mock.calls.at(-1)?.[0];
 const input = (name: string, label: string) => ({ $type: 'input', id: name, name, label });
@@ -312,7 +327,7 @@ function cardForm(appearance: Record<string, string>): FormConfigView {
 
 /** @remarks Both browser projects execute these assertions against their own FormRenderer. */
 export function rendererConformance(
-	mount: ConformanceMount,
+	mount: ConformanceRuntimeMount,
 	{ knownFailures = [] }: { knownFailures?: readonly string[] } = {},
 ): void {
 	describe('FormRenderer conformance', () => {
@@ -774,7 +789,7 @@ export function rendererConformance(
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			const row = { fullName: 'x', role: 'user' };
-			expect(onSubmit).toHaveBeenCalledWith({ members: [row, row] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ members: [row, row] });
 		});
 		test('a single-child array keeps object rows from form defaultValues', async () => {
 			const onSubmit = vi.fn();
@@ -791,7 +806,7 @@ export function rendererConformance(
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Role' }).length).toBe(2);
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith({ members: [{ role: 'admin' }, { role: '' }] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ members: [{ role: 'admin' }, { role: '' }] });
 		});
 		test('both renderers add the same scalar row', async () => {
 			const onSubmit = vi.fn();
@@ -811,7 +826,7 @@ export function rendererConformance(
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith({ tags: ['x', 'x'] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ tags: ['x', 'x'] });
 		});
 		test('keeps empty scalar rows seeded to minItems and added after them', async () => {
 			const onSubmit = vi.fn();
@@ -829,7 +844,7 @@ export function rendererConformance(
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Tag' }).length).toBe(2);
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith({ tags: ['', 'c'] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ tags: ['', 'c'] });
 		});
 		test(`seeds a custom array registration (${customArrayType}) to minItems`, async () => {
 			const onSubmit = vi.fn();
@@ -849,7 +864,7 @@ export function rendererConformance(
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 			const row = { label: '', color: '' };
-			expect(onSubmit).toHaveBeenCalledWith({ tags: [row, row] });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ tags: [row, row] });
 		});
 		const address = {
 			$type: 'fieldSet',
@@ -874,6 +889,287 @@ export function rendererConformance(
 			await userEvent.tab();
 			await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
 			await expect.poll(() => queryAllByRole(host, 'textbox', { name: 'Last' }).length).toBe(1);
+		});
+		describe('the form runtime', () => {
+			afterEach(() => {
+				vi.unstubAllGlobals();
+			});
+			const next = (host: HTMLElement) => getByRole(host, 'button', { name: 'Go to next step' });
+			const textbox = (host: HTMLElement, name: string) =>
+				queryAllByRole(host, 'textbox', { name: new RegExp(`^${name}`) });
+			const required = (name: string, label: string) => ({
+				...input(name, label),
+				rules: [{ type: 'required' as const, message: `${label} is required` }],
+			});
+			test('a direct container.reset() resets the submission and the steps', async () => {
+				const { host, container, submission } = await setup({
+					config: wizard([required('first', 'First')], [required('last', 'Last')]),
+				});
+				await userEvent.fill(getByRole(host, 'textbox', { name: /^First/ }), 'a');
+				await userEvent.click(next(host));
+				await expect.poll(() => textbox(host, 'Last')).toHaveLength(1);
+				const element = host.querySelector('form')!;
+				element.requestSubmit();
+				await expect.poll(() => submission()?.submitCount).toBe(1);
+
+				container()?.reset();
+
+				await expect.poll(() => textbox(host, 'First')).toHaveLength(1);
+				expect(textbox(host, 'Last')).toHaveLength(0);
+				expect(submission()).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+			});
+			test('Next and submit cannot interleave: submit while Next validates does nothing more', async () => {
+				const release: Array<() => void> = [];
+				vi.stubGlobal(
+					'fetch',
+					vi.fn(
+						() =>
+							new Promise<Response>((resolve) =>
+								release.push(() => resolve(new Response('{"valid":true}'))),
+							),
+					),
+				);
+				const onSubmit = vi.fn();
+				const { host } = await setup({
+					config: wizard(
+						[
+							{
+								...input('slow', 'Slow'),
+								rules: [{ type: 'async', url: '/conformance-slow', disableCache: true }],
+							},
+						],
+						[input('second', 'Second')],
+						[input('third', 'Third')],
+					),
+					defaultValues: { slow: 'x' },
+					onSubmit,
+				});
+				next(host).click();
+				await expect.poll(() => release.length).toBeGreaterThan(0);
+				host.querySelector('form')!.requestSubmit();
+				await new Promise((resolve) => setTimeout(resolve, 50));
+				release.splice(0).forEach((resolve) => resolve());
+				await expect.poll(() => textbox(host, 'Second')).toHaveLength(1);
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				expect(textbox(host, 'Third')).toHaveLength(0);
+				expect(onSubmit).not.toHaveBeenCalled();
+			});
+			test('submit before the last step advances, and submits nothing', async () => {
+				const onSubmit = vi.fn();
+				const { host, submission } = await setup({
+					config: wizard([required('first', 'First')], [input('last', 'Last')]),
+					onSubmit,
+				});
+				const element = host.querySelector('form')!;
+				element.requestSubmit();
+				await expect.poll(() => queryByText(host, 'First is required') !== null).toBe(true);
+				expect(textbox(host, 'Last')).toHaveLength(0);
+				await userEvent.fill(getByRole(host, 'textbox', { name: /^First/ }), 'a');
+				element.requestSubmit();
+				await expect.poll(() => textbox(host, 'Last')).toHaveLength(1);
+				expect(onSubmit).not.toHaveBeenCalled();
+				expect(submission()).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+			});
+			const checked = {
+				...input('email', 'Email'),
+				rules: [{ type: 'async' as const, url: '/conformance-email', disableCache: true }],
+			};
+			test('a submit failure moves to the step with the error', async () => {
+				let valid = true;
+				vi.stubGlobal(
+					'fetch',
+					vi.fn(async () => new Response(JSON.stringify({ valid }))),
+				);
+				const onSubmit = vi.fn();
+				const { host, submission } = await setup({
+					config: wizard([checked], [input('last', 'Last')]),
+					defaultValues: { email: 'a@example.com' },
+					onSubmit,
+				});
+				await userEvent.click(next(host));
+				await expect.poll(() => textbox(host, 'Last')).toHaveLength(1);
+
+				valid = false;
+				host.querySelector('form')!.requestSubmit();
+
+				await expect.poll(() => textbox(host, 'Email')).toHaveLength(1);
+				expect(textbox(host, 'Last')).toHaveLength(0);
+				expect(onSubmit).not.toHaveBeenCalled();
+				expect(submission()).toMatchObject({ status: 'idle', submitCount: 1 });
+				await expect.poll(() => document.activeElement?.closest('input')?.getAttribute('name')).toBe('email');
+			});
+			test('a server error on an earlier step moves there', async () => {
+				const { host, submission } = await setup({
+					config: wizard([input('email', 'Email')], [input('last', 'Last')]),
+					defaultValues: { email: 'a@example.com' },
+					onSubmit: (_data, { setServerErrors }) => setServerErrors({ email: { message: 'Email is taken' } }),
+				});
+				await userEvent.click(next(host));
+				await expect.poll(() => textbox(host, 'Last')).toHaveLength(1);
+
+				host.querySelector('form')!.requestSubmit();
+
+				await expect.poll(() => textbox(host, 'Email')).toHaveLength(1);
+				expect(textbox(host, 'Last')).toHaveLength(0);
+				await expect.poll(() => queryByText(host, 'Email is taken') !== null).toBe(true);
+				expect(submission()).toMatchObject({ status: 'success', submitCount: 1 });
+			});
+			test('reports how a submission failed: a rejected onSubmit, and an action that stopped it', async () => {
+				const rejected = await setup({
+					config: form([input('fullName', 'Name')]),
+					onSubmit: () => Promise.reject(new Error('Save failed')),
+				});
+				await userEvent.click(getByRole(rejected.host, 'button', { name: /submit/i }));
+				await expect
+					.poll(() => rejected.submission())
+					.toEqual({
+						status: 'error',
+						failures: [{ type: 'callbackFailed', source: 'submission', message: 'Save failed' }],
+						submitCount: 1,
+					});
+				cleanup?.();
+
+				const stopped = await setup({
+					config: {
+						...form([input('fullName', 'Name')]),
+						actions: [{ $type: 'conformance', id: 'abort', triggers: ['form_submit'] }],
+					},
+				});
+				await userEvent.click(getByRole(stopped.host, 'button', { name: /submit/i }));
+				await expect
+					.poll(() => stopped.submission())
+					.toEqual({
+						status: 'error',
+						failures: [
+							{
+								type: 'actionFailed',
+								source: 'submission',
+								params: { actionId: 'abort' },
+								message: 'Submission stopped',
+							},
+						],
+						submitCount: 1,
+					});
+			});
+		});
+		describe('skipped steps and constraints', () => {
+			const input2 = (name: string, label: string, extra: Record<string, unknown> = {}) => ({
+				...input(name, label),
+				...extra,
+			});
+			const label = (host: HTMLElement, name: string) =>
+				queryAllByRole(host, 'textbox', { name: new RegExp(`^${name}`) });
+			test('a field whose show condition reads a skipped step is not rendered', async () => {
+				const { host } = await setup({
+					config: {
+						id: 'conformance',
+						view: { $type: 'wizard', actions: { showStepCounter: true } },
+						steps: [
+							{ id: 'one', title: 'One', elements: [input2('hasCompany', 'Company?')] },
+							{
+								id: 'company',
+								title: 'Company',
+								constraints: [
+									{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' },
+								],
+								elements: [input2('wants', 'Wants')],
+							},
+							{
+								id: 'payment',
+								title: 'Payment',
+								elements: [
+									input2('vat', 'Vat', {
+										constraints: [
+											{ field: 'wants', operator: 'equals', value: 'yes', action: 'show' },
+										],
+									}),
+									input2('card', 'Card'),
+								],
+							},
+						],
+					},
+					defaultValues: { hasCompany: 'no', wants: 'yes' },
+				});
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => label(host, 'Card')).toHaveLength(1);
+				expect(label(host, 'Vat')).toHaveLength(0);
+			});
+			test('require and show read a field that comes later the same way', async () => {
+				const { host } = await setup({
+					config: form([
+						input2('needs', 'Needs', {
+							constraints: [{ field: 'late', operator: 'equals', value: 'yes', action: 'require' }],
+						}),
+						input2('shown', 'Shown', {
+							constraints: [{ field: 'late', operator: 'equals', value: 'yes', action: 'show' }],
+						}),
+						input2('gate', 'Gate'),
+						input2('late', 'Late', {
+							constraints: [{ field: 'gate', operator: 'equals', value: 'open', action: 'show' }],
+						}),
+					]),
+					defaultValues: { gate: 'closed', late: 'yes' },
+				});
+				await expect.poll(() => label(host, 'Shown')).toHaveLength(1);
+				expect(label(host, 'Late')).toHaveLength(0);
+				const needs = getByRole(host, 'textbox', { name: /^Needs/ });
+				await expect
+					.poll(() => (needs as HTMLInputElement).required || needs.getAttribute('aria-required') === 'true')
+					.toBe(true);
+			});
+		});
+		describe('a failed wizard step', () => {
+			const dependentStep: FormConfigView = {
+				...wizard(
+					[
+						{
+							...input('password', 'Password'),
+							rules: [{ type: 'required', message: 'Password is required' }],
+						},
+					],
+					[
+						{
+							...input('confirm', 'Confirm'),
+							rules: [
+								{ type: 'required', message: 'Confirm is required' },
+								{
+									type: 'relate',
+									fields: ['password'],
+									assert: 'allEqual',
+									message: 'Must match password',
+								},
+							],
+						},
+					],
+				),
+				actions: [{ $type: 'conformance', id: 'changed', triggers: ['form_change'] }],
+			};
+			test('leaves an untouched dependent field of a later step without an error', async () => {
+				const { host } = await setup({ config: dependentStep });
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => queryByText(host, 'Password is required') !== null).toBe(true);
+				expect(queryByText(host, 'Confirm is required')).toBeNull();
+				await userEvent.type(getByRole(host, 'textbox', { name: /^Password/ }), 'secret');
+				await expect.poll(() => queryByText(host, 'Password is required')).toBeNull();
+				expect(queryByText(host, 'Must match password')).toBeNull();
+				expect(queryByText(host, 'Confirm is required')).toBeNull();
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => queryAllByRole(host, 'textbox', { name: /^Confirm/ }).length).toBe(1);
+				expect(queryByText(host, 'Must match password')).toBeNull();
+				expect(queryByText(host, 'Confirm is required')).toBeNull();
+			});
+			test('does not count as a submit attempt', async () => {
+				const { host } = await setup({ config: dependentStep });
+				await userEvent.click(getByRole(host, 'button', { name: 'Go to next step' }));
+				await expect.poll(() => queryByText(host, 'Password is required') !== null).toBe(true);
+				const password = getByRole(host, 'textbox', { name: /^Password/ });
+				await userEvent.type(password, 'secret');
+				await userEvent.tab();
+				conformanceAction.execute.mockClear();
+				await userEvent.type(password, 'z');
+				await expect.poll(actionIds).toContain('changed');
+				expect(lastActionContext()?.metadata.userInteractions).toBe(1);
+			});
 		});
 		test('dispatches step leave, change and enter when the wizard advances', async () => {
 			const { host } = await setup({
@@ -1047,7 +1343,7 @@ export function rendererConformance(
 			await expect.poll(() => queryByText(host, 'Street is required')).toBeNull();
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith({ address: { street: 'Main Street' } });
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual({ address: { street: 'Main Street' } });
 		});
 		test('handlers receive errors by dotted path', async () => {
 			const { host } = await setup({
@@ -1090,7 +1386,7 @@ export function rendererConformance(
 				.toBe('false');
 			await userEvent.click(getByRole(host, 'button', { name: /submit/i }));
 			await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
-			expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ kind: 'personal' }));
+			expect(onSubmit.mock.calls.at(-1)?.[0]).toEqual(expect.objectContaining({ kind: 'personal' }));
 		});
 		test('a fieldset require constraint makes its children required, nested containers included', async () => {
 			const onSubmit = vi.fn();

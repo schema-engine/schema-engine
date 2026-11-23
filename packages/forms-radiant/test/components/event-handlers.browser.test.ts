@@ -92,7 +92,7 @@ test('Enter on an early wizard step does not submit and shows no errors on later
 	);
 	const form = host.querySelector('rui-form')!;
 	let invalid = 0;
-	form.addEventListener('rui-invalid', () => invalid++);
+	form.addEventListener('se-action-submit-invalid', () => invalid++);
 	await expect.poll(() => host.querySelector('se-wizard-actions button')).toBeTruthy();
 	expect(form.querySelector('button[type="submit"]')).toBeNull();
 
@@ -121,13 +121,61 @@ test('Enter in the only text input of a wizard goes to the next step instead of 
 	const form = host.querySelector('rui-form')!;
 	const instance = host.querySelector<FormInstanceElement>('se-form-instance')!;
 	let invalid = 0;
-	form.addEventListener('rui-invalid', () => invalid++);
+	form.addEventListener('se-action-submit-invalid', () => invalid++);
 	await expect.poll(() => host.querySelector('se-wizard-actions button')).toBeTruthy();
 
 	await userEvent.click(form.querySelector<HTMLInputElement>('input[name="only"]')!);
 	await userEvent.keyboard('{Enter}');
 
-	await expect.poll(() => instance.currentStep).toBe(1);
+	await expect
+		.poll(() => instance.getContextValue().steps.findIndex(({ id }) => id === instance.getContextValue().current))
+		.toBe(1);
 	expect(submitted).toBe(0);
 	expect(invalid).toBe(0);
+});
+
+const required = [{ type: 'required', message: 'Required' }];
+
+test('a failed Next shows the error and focuses the field, outside a submit', async () => {
+	const host = await mount({
+		id: 'focus-wizard',
+		view: { $type: 'wizard' },
+		steps: [
+			{ id: 'one', title: 'One', elements: [text('first'), { ...text('second'), rules: required }] },
+			{ id: 'two', title: 'Two', elements: [] },
+		],
+	});
+	const instance = host.querySelector<FormInstanceElement>('se-form-instance')!;
+	await expect.poll(() => host.querySelector('se-wizard-actions button')).toBeTruthy();
+
+	expect(await instance.next()).toBe('invalid');
+
+	await expect.poll(() => document.activeElement?.closest('se-field')?.getAttribute('name')).toBe('second');
+	expect(instance.getContextValue().current).toBe('one');
+});
+
+test('a step the answers skip is passed over, hidden from the progress and refused by goTo', async () => {
+	const host = await mount({
+		id: 'skipping-wizard',
+		view: { $type: 'wizard' },
+		steps: [
+			{ id: 'one', title: 'One', elements: [text('hasCompany')] },
+			{
+				id: 'company',
+				title: 'Company',
+				constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+				elements: [text('companyName')],
+			},
+			{ id: 'three', title: 'Three', elements: [] },
+		],
+	});
+	const instance = host.querySelector<FormInstanceElement>('se-form-instance')!;
+	await expect.poll(() => host.querySelector('se-wizard-actions button')).toBeTruthy();
+
+	expect(await instance.goTo('company')).toBe('refused');
+	expect(await instance.next()).toBe('moved');
+
+	expect(instance.getContextValue().current).toBe('three');
+	await expect.poll(() => host.querySelector('.se-wizard-actions__counter')?.textContent).toContain('2');
+	expect(host.querySelector('.se-wizard-actions__counter')?.textContent).toContain('2');
 });

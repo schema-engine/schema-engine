@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { cardSpec, wizardSpec, builtInRecipeSpecs } from '@/recipes/built-in-specs';
 import { createFormEngine } from '@/engine/create-form-engine';
@@ -9,8 +9,8 @@ import {
 	StepHeaderConfigSchema,
 	WizardActionsConfigSchema,
 } from '@/recipes/slot-schemas';
-import { buildViewModel, buildViewSteps, getSlotConfig } from '@/recipes/view-model';
-import { createInitialStepStates } from '@/engine/step-machine';
+import { buildViewModel, createViewNavigation, getSlotConfig, projectViewSteps } from '@/recipes/view-model';
+import type { FormStepState } from '@/engine/step-machine';
 
 describe('defineRecipeSpec', () => {
 	test('rejects wizard recipes without actions', () => {
@@ -121,12 +121,26 @@ describe('built-in recipe specs', () => {
 	});
 });
 
-describe('buildViewSteps', () => {
-	test('projects active, completed, valid and visited flags per step', () => {
-		const steps = buildViewSteps(
+const state = (id: string, extra: Partial<FormStepState> = {}): FormStepState => ({
+	id,
+	skipped: false,
+	visited: false,
+	complete: false,
+	invalid: false,
+	reachable: false,
+	...extra,
+});
+
+describe('projectViewSteps', () => {
+	test('projects the live state of each step, counting only the steps that are not skipped', () => {
+		const steps = projectViewSteps(
 			[{ id: 'one', title: 'One', description: 'First' }, { id: 'two' }, { id: 'three', title: 'Three' }],
-			1,
-			{ completed: [true, false, false], valid: [true, true, false], visited: [true, true, false] },
+			[
+				state('one', { visited: true, complete: true }),
+				state('two', { skipped: true }),
+				state('three', { visited: true, invalid: true }),
+			],
+			'three',
 		);
 
 		expect(steps).toEqual([
@@ -135,69 +149,99 @@ describe('buildViewSteps', () => {
 				title: 'One',
 				description: 'First',
 				index: 0,
-				total: 3,
+				total: 2,
 				isActive: false,
 				isCompleted: true,
-				isValid: true,
-				isVisited: true,
-			},
-			{
-				id: 'two',
-				title: undefined,
-				description: undefined,
-				index: 1,
-				total: 3,
-				isActive: true,
-				isCompleted: false,
-				isValid: true,
+				isInvalid: false,
 				isVisited: true,
 			},
 			{
 				id: 'three',
 				title: 'Three',
 				description: undefined,
-				index: 2,
-				total: 3,
-				isActive: false,
+				index: 1,
+				total: 2,
+				isActive: true,
 				isCompleted: false,
-				isValid: false,
-				isVisited: false,
+				isInvalid: true,
+				isVisited: true,
 			},
 		]);
 	});
 });
 
-describe('view model', () => {
-	test('builds steps with stable index and total', () => {
-		const model = buildViewModel({
-			config: {
-				id: 'onboarding',
-				steps: [
-					{ id: 'one', title: 'One', elements: [] },
-					{ id: 'two', title: 'Two', elements: [] },
-				],
-			},
-			kind: 'wizard',
-			currentStepIndex: 1,
-			navigation: {
-				canGoNext: false,
-				canGoPrevious: true,
-				isFirstStep: false,
-				isLastStep: true,
-				goToStep: () => undefined,
-				goToNextStep: () => undefined,
-				goToPreviousStep: () => undefined,
-			},
-			viewConfig: { $type: 'wizard' },
-			stepStates: createInitialStepStates(2),
-		});
+describe('createViewNavigation', () => {
+	const commands = { next: vi.fn(), back: vi.fn(), goTo: vi.fn() };
+	const states = [state('one'), state('two', { skipped: true }), state('three')];
 
-		expect(model.activeStep.index).toBe(1);
-		expect(model.activeStep.total).toBe(2);
-		expect(model.steps).toHaveLength(2);
+	test('derives first, last and what can be reached from the active steps', () => {
+		expect(createViewNavigation(states, 'one', commands)).toMatchObject({
+			canGoNext: true,
+			canGoPrevious: false,
+			isFirstStep: true,
+			isLastStep: false,
+		});
+		expect(createViewNavigation(states, 'three', commands)).toMatchObject({
+			canGoNext: false,
+			canGoPrevious: true,
+			isFirstStep: false,
+			isLastStep: true,
+		});
+	});
+
+	test('says which steps a stepper can go to from the runtime step state', () => {
+		const all = [state('a', { reachable: true }), state('b'), state('c', { skipped: true }), state('d')];
+		const navigation = createViewNavigation(all, 'b', commands);
+		expect(['a', 'b', 'c', 'd', 'nowhere'].map((id) => navigation.canGoToStep(id))).toEqual([
+			true,
+			false,
+			false,
+			false,
+			false,
+		]);
+	});
+
+	test('forwards its commands to the runtime, with step ids', () => {
+		const navigation = createViewNavigation(states, 'one', commands);
+		navigation.goToStep('three');
+		navigation.goToNextStep();
+		navigation.goToPreviousStep();
+		expect(commands.goTo).toHaveBeenCalledWith('three');
+		expect(commands.next).toHaveBeenCalledOnce();
+		expect(commands.back).toHaveBeenCalledOnce();
 	});
 });
 
+describe('view model', () => {
+	const navigation = createViewNavigation([], '', { next: vi.fn(), back: vi.fn(), goTo: vi.fn() });
+	const config = {
+		id: 'onboarding',
+		steps: [
+			{ id: 'one', title: 'One', elements: [] },
+			{ id: 'two', title: 'Two', elements: [] },
+			{ id: 'three', title: 'Three', elements: [] },
+		],
+	};
+
+	test('lists the steps that are not skipped, with a stable index and total', () => {
+		const model = buildViewModel({
+			config,
+			kind: 'wizard',
+			states: [
+				state('one', { visited: true }),
+				state('two', { skipped: true }),
+				state('three', { visited: true }),
+			],
+			current: 'three',
+			navigation,
+			viewConfig: { $type: 'wizard' },
+		});
+
+		expect(model.steps.map(({ id }) => id)).toEqual(['one', 'three']);
+		expect(model.activeStep).toMatchObject({ id: 'three', index: 1, total: 2 });
+		expect(model.currentStepIndex).toBe(1);
+	});
+});
 describe('normalized slot defaults', () => {
 	const engine = createFormEngine({ recipes: [defineFormRecipe(cardSpec, {})] });
 	const steps = [{ id: 'main', title: 'Main', elements: [] }];

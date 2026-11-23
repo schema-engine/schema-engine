@@ -19,10 +19,10 @@ describe('buildFormActionContext', () => {
 		vi.useFakeTimers();
 		vi.setSystemTime(1_000);
 		const input = {
-			config: { id: 'contact', steps: [{}, {}] },
+			config: { id: 'contact' },
 			values: { email: 'person@example.com' },
 			formState: { isValid: true, errors: {}, touched: { email: true }, submitCount: 2 },
-			currentStep: 0,
+			step: { id: 'first', position: 0, total: 2 },
 			mountedAt: 900,
 			form,
 			fetch,
@@ -31,9 +31,11 @@ describe('buildFormActionContext', () => {
 		const first = buildFormActionContext(input);
 		vi.advanceTimersByTime(50);
 		const sameStep = buildFormActionContext(input);
-		const nextStep = buildFormActionContext({ ...input, currentStep: 1 });
+		const nextStep = buildFormActionContext({ ...input, step: { id: 'second', position: 1, total: 2 } });
 
 		expect(first.formData).toEqual(input.values);
+		expect([first.stepId, first.currentStep, first.totalSteps]).toEqual(['first', 0, 2]);
+		expect([nextStep.stepId, nextStep.currentStep, nextStep.totalSteps]).toEqual(['second', 1, 2]);
 		expect(first.metadata).toEqual({ stepStartTime: 900, totalFormTime: 100, userInteractions: 3 });
 		expect(sameStep.metadata.stepStartTime).toBe(900);
 		expect(nextStep.metadata).toEqual({ stepStartTime: 1_050, totalFormTime: 150, userInteractions: 3 });
@@ -41,7 +43,7 @@ describe('buildFormActionContext', () => {
 
 	test('counts each touched field by path as one interaction', () => {
 		const context = buildFormActionContext({
-			config: { id: 'contact', steps: [{}] },
+			config: { id: 'contact' },
 			values: {},
 			formState: {
 				isValid: true,
@@ -54,7 +56,7 @@ describe('buildFormActionContext', () => {
 				},
 				submitCount: 1,
 			},
-			currentStep: 0,
+			step: { id: 'main', position: 0, total: 1 },
 			mountedAt: 1_800,
 			form,
 			fetch,
@@ -65,9 +67,9 @@ describe('buildFormActionContext', () => {
 
 	test('reports the isValid of the form state it is given, never one recomputed from the errors', () => {
 		const input = {
-			config: { id: 'contact', steps: [{}] },
+			config: { id: 'contact' },
 			values: {},
-			currentStep: 0,
+			step: { id: 'main', position: 0, total: 1 },
 			mountedAt: 1_900,
 			form,
 			fetch,
@@ -146,9 +148,9 @@ describe('buildFormActionContext', () => {
 			all: [{ type: 'warning-only', source: 'validation' as const }],
 		};
 		const context = buildFormActionContext({
-			config: { id: 'contact', steps: [{}] },
+			config: { id: 'contact' },
 			values: {},
-			currentStep: 0,
+			step: { id: 'main', position: 0, total: 1 },
 			mountedAt: 1_900,
 			form,
 			fetch,

@@ -1,5 +1,6 @@
 import '@ecopages/radiant/client/install-hydrator';
 import { expect } from 'vitest';
+import type { FormInstanceElement } from '@/components/form-instance.script';
 import { FormController } from '@/adapters/radiant/controller';
 import { createRoot } from '@ecopages/jsx/client';
 import * as z from 'zod/mini';
@@ -37,32 +38,24 @@ const engine = createRadiantFormEngine({
 	layout: conformanceLayout,
 });
 
-rendererConformance(
-	async ({ config, ...props }) => {
-		const host = document.createElement('div');
+rendererConformance(async ({ config, ...props }) => {
+	const host = document.createElement('div');
 
-		document.body.append(host);
-		const root = createRoot(host);
-		const renderConfig = (next: typeof config) =>
-			root.render(FormRenderer({ ...props, config: engine.validateForm(next), engine }));
-		renderConfig(config);
-		const form = new FormController(host.querySelector('rui-form')!);
-		await expect.poll(() => form.ready).toBe(true);
-		return {
-			host,
-			cleanup: () => {
-				form.disconnect();
-				root.unmount();
-				host.remove();
-			},
-			update: async (next) => renderConfig(next),
-		};
-	},
-	{
-		/** Radiant UI's `rui-field` unregisters and registers again on its first `name` update, so the values read as changed. */
-		knownFailures: [
-			'only value changes trigger change',
-			'a checkbox and a checkbox group trigger change only when toggled',
-		],
-	},
-);
+	document.body.append(host);
+	const root = createRoot(host);
+	const renderConfig = (next: typeof config) =>
+		root.render(FormRenderer({ ...props, config: engine.validateForm(next), engine }));
+	renderConfig(config);
+	const form = new FormController(host.querySelector('rui-form')!);
+	await expect.poll(() => form.container).toBeTruthy();
+	return {
+		host,
+		cleanup: () => {
+			root.unmount();
+			host.remove();
+		},
+		update: async (next) => renderConfig(next),
+		container: () => new FormController(host.querySelector('rui-form')!).container,
+		submission: () => host.querySelector<FormInstanceElement>('se-form-instance')?.getContextValue().submission,
+	};
+});

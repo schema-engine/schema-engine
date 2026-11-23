@@ -1,3 +1,4 @@
+import { foldFieldParticipation } from '@/engine/value-validation';
 import { getValueAtPath } from '@/lib/path-values';
 import type { FormStateError, FormStateSnapshot, FormStateWarning } from './types';
 
@@ -15,6 +16,12 @@ export interface FormFieldState {
 	readonly isDirty: boolean;
 	/** Whether the latest check that asked for exactly this path is still running. */
 	readonly isValidating: boolean;
+	/** Whether a `show` or `hide` constraint of the path or of a path around it hides it, or a skipped step holds it. A hidden field takes no part. */
+	readonly hidden: boolean;
+	/** Whether the path or a path around it is disabled, by authoring or by a constraint. */
+	readonly disabled: boolean;
+	/** Whether a `require` constraint of the path, or of a container around it, holds. The field's own `required` rule is not in it. */
+	readonly required: boolean;
 }
 
 const isAround = (mark: string, path: string): boolean => path === mark || path.startsWith(`${mark}.`);
@@ -36,6 +43,9 @@ function internFieldState(
 	isTouched: boolean,
 	isDirty: boolean,
 	isValidating: boolean,
+	hidden: boolean,
+	disabled: boolean,
+	required: boolean,
 ): FormFieldState {
 	const errorKey = error ?? NO_ERROR;
 	let byWarning = statesByIssues.get(errorKey);
@@ -43,7 +53,13 @@ function internFieldState(
 	const warningKey = warning ?? NO_WARNING;
 	let states = byWarning.get(warningKey);
 	if (!states) byWarning.set(warningKey, (states = []));
-	const index = (isTouched ? 1 : 0) + (isDirty ? 2 : 0) + (isValidating ? 4 : 0);
+	const index =
+		(isTouched ? 1 : 0) +
+		(isDirty ? 2 : 0) +
+		(isValidating ? 4 : 0) +
+		(hidden ? 8 : 0) +
+		(disabled ? 16 : 0) +
+		(required ? 32 : 0);
 	return (states[index] ??= Object.freeze({
 		error,
 		warning,
@@ -51,6 +67,9 @@ function internFieldState(
 		isTouched,
 		isDirty,
 		isValidating,
+		hidden,
+		disabled,
+		required,
 	}));
 }
 
@@ -71,12 +90,16 @@ export function selectFieldState(snapshot: FormStateSnapshot, path: string): For
 	if (!state) {
 		const touched = Object.keys(snapshot.touched);
 		const dirty = Object.keys(snapshot.dirty);
+		const folded = foldFieldParticipation(snapshot.participation.fields, path);
 		state = internFieldState(
 			selectError(snapshot, path),
 			selectWarning(snapshot, path),
 			touched.some((mark) => isAround(mark, path) || isBelow(mark, path)),
 			dirty.some((mark) => mark === path || isBelow(mark, path)),
 			Object.hasOwn(snapshot.validating, path),
+			folded.hidden,
+			folded.disabled,
+			folded.required,
 		);
 		states.set(path, state);
 	}

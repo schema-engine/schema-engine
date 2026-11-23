@@ -7,9 +7,9 @@ import { stepGrid } from '@schema-engine/forms/lib/validate-form';
 import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
 import { createFormMeta } from '@/lib/instance-view';
+import { resolveParticipation } from '@schema-engine/forms/engine';
 import { FormElements } from './form-elements';
-import { collectFormDefaultValues } from '@/adapters/radiant/rui-form-shell';
-import { expandValues } from '@/adapters/radiant/controller/values';
+import { collectFormInitialValues } from '@/adapters/radiant/rui-form-shell';
 import { FormStep } from '@/components/form-step';
 
 /**
@@ -30,14 +30,18 @@ export function RecipeRenderer({
 	recipe,
 	children,
 	initialValues,
+	rowIds,
 }: {
 	config: NormalizedFormConfig;
 	engine: FormEngine;
 	recipe: RecipeRegistration | undefined;
 	children?: JsxRenderable;
 	initialValues?: Record<string, unknown>;
+	/** The row ids the server's container gave each array, which the arrays render their rows with. */
+	rowIds?: Readonly<Record<string, readonly string[]>>;
 }): JsxRenderable {
-	const values = expandValues(initialValues ?? collectFormDefaultValues(config));
+	const values = initialValues ?? collectFormInitialValues(config);
+	const participation = resolveParticipation(config.steps, values);
 	const layout = engine.getLayout();
 	const viewConfig = (config.view as Record<string, unknown> | undefined) ?? {};
 	const meta = createFormMeta(config);
@@ -54,7 +58,6 @@ export function RecipeRenderer({
 				<FormStep
 					key={step.id}
 					stepId={step.id}
-					stepIndex={index}
 					hidden={isWizard && index !== 0}
 					class={step.className}
 					style={step.style}
@@ -71,7 +74,7 @@ export function RecipeRenderer({
 								engine={engine}
 								initialValues={initialValues}
 								values={values}
-								constraintContext={{ values, initialValues }}
+								constraintContext={{ values, initialValues, rowIds, participation }}
 							/>
 						</div>
 					) : null}

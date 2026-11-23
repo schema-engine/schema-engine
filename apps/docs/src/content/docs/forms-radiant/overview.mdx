@@ -11,11 +11,11 @@ Radiant/JSX implementation of the JSON Form Engine for Ecopages apps. It wraps `
 ## Key features
 
 - **Same `FormConfig` JSON** as `@schema-engine/forms-react`
-- **One Radiant UI form store** with Schema Engine validation rules
+- **One engine form container** with Schema Engine validation rules
 - **Default registrations** for input, textarea, number, select, checkbox, switch, radio, and submit
 - **Shared Zod Mini schemas** from `registry/shared/forms/*.types.ts`
 - **`createRadiantFormEngine()`** — same builder API as the React adapter
-- **Scoped `FormController`** for form state and `FormEngineController` for the nearest renderer engine; explicit lifecycle or optional `@formController` decorator
+- **Scoped `FormController`** for form state and `FormEngineController` for the nearest renderer engine; the controller gives a host the form's `container`, `select` signals and `formatIssue`
 
 ## When to use
 
@@ -32,22 +32,19 @@ Radiant/JSX implementation of the JSON Form Engine for Ecopages apps. It wraps `
 
 ## Programmatic form access
 
-Import `FormController`, `FormEngineController`, and `formController` from
+Import `FormController` and `FormEngineController` from
 `@schema-engine/forms-radiant/adapters/radiant`. Create `new FormController(host)`
-for a host inside `rui-form`, call `connect(listener)` on connection, and call
-`disconnect()` on disconnection. Radiant elements can declare
-`@formController form!: FormController` for automatic lifecycle wiring.
+for a host inside the form's `se-form-instance`.
 
 Create `new FormEngineController(host)` for a host inside `se-form-renderer`.
 Its `engine` and `ready` getters expose the nearest renderer engine, while
 `connect()` and `disconnect()` manage the context subscription.
 
-Use `getValue(name)` / `getValues()` for snapshots, `watchField(name, listener)` /
-`watchForm(listener)` for subscriptions, and `fieldArray(name)` for array edits.
-Watches return cleanup functions. Shipped `FormFieldElement` extends Radiant UI's
-field element and exposes `form` and `field`; array components use the same store.
-Defaults and submissions use nested values, while Radiant UI registration keeps
-flat field names internally.
+Use `form.container` for commands and reads (`getValue(path)`, `setValue`, `validate`, `fieldArray(path)`), `select(selector)` for a signal over
+the container's snapshot, and `formatIssue(issue, { path })` for an issue's text. Values are nested and
+paths are dotted (`contacts.0.email`), the engine container's own shape. Shipped
+`FormFieldElement` extends Radiant UI's field element; array components use the container's
+row ids.
 
 The former `useFormContext`, `useFormField`, `useWatchField`, `useWatchForm`,
 `useFieldArray`, and `getActiveFormStore` exports have been replaced by this scoped

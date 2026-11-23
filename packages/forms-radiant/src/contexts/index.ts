@@ -1,2 +1,2 @@
-export { formInstanceContext, type FormInstanceContextValue, type StepStates } from './form-instance-context';
+export { formInstanceContext, type FormInstanceContextValue } from './form-instance-context';
 export { formEngineContext, type FormEngineContextValue } from '@/components/provider';

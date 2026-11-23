@@ -1,164 +1,107 @@
 import { describe, expect, test, vi } from 'vitest';
 import { FormController } from '@/adapters/radiant/controller';
-import { createTestForm } from './test-form';
-import { toFieldRules } from '@/lib/field-rules';
+import { createTestForm, provideTestContainer } from './test-form';
 
-function registerInput(store: ReturnType<typeof createTestForm>['store'], name: string, initial: unknown = '') {
-	let value = initial;
-	const unregister = store.register({
-		name,
-		rules: toFieldRules({ rules: [{ type: 'required', message: 'Required' }] }),
-		getValue: () => value,
-		setValue: (next) => {
-			value = next;
-		},
-	});
-	return {
-		get value() {
-			return value;
-		},
-		set value(next) {
-			value = next;
-		},
-		unregister,
-	};
-}
-
-describe('FormController with Radiant UI store', () => {
-	test('reads and writes the registered control and receives user changes', async () => {
-		const { form, store } = createTestForm({ title: 'Initial' });
-		const input = registerInput(store, 'title');
-		const field = form.field('title');
-		field.onChange('Programmatic');
-		expect(input.value).toBe('Programmatic');
-		input.value = 'Typed';
-		await store.handleFieldChange('title');
-		expect(field.value).toBe('Typed');
-		expect(form.getValues()).toEqual({ title: 'Typed' });
-	});
-
-	test('uses Radiant UI validation and touched state', async () => {
-		const { form, store } = createTestForm({ title: '' });
-		registerInput(store, 'title');
-		expect(await form.trigger()).toBe(false);
-		expect(form.field('title').error).toBe('Required');
-		form.field('title').onBlur();
-		expect(store.touched.title).toBe(true);
-		form.setValue('title', 'Valid');
-		expect(await form.trigger('title')).toBe(true);
-		expect(form.formState.isValid).toBe(true);
-	});
-
-	test('watch subscriptions receive initial and live values, with explicit and lifecycle cleanup', () => {
-		const { form, store } = createTestForm({ title: 'Initial' });
-		const fieldListener = vi.fn();
-		const formListener = vi.fn();
-		const stop = form.watchField('title', fieldListener);
-		form.watchForm(formListener);
-		expect(fieldListener).toHaveBeenLastCalledWith('Initial');
-		store.setValue('title', 'Changed');
-		expect(fieldListener).toHaveBeenLastCalledWith('Changed');
-		stop();
-		form.disconnect();
-		store.setValue('title', 'After cleanup');
-		expect(fieldListener).toHaveBeenCalledTimes(2);
-		expect(formListener).toHaveBeenCalledTimes(2);
-	});
-
-	test('connecting keeps existing watch subscriptions', () => {
-		const { form, store } = createTestForm({ title: 'Initial' });
+describe('FormController over the form instance container', () => {
+	test('selects from the snapshot with a signal that notifies only when the selection changes', () => {
+		const { form, container } = createTestForm({ title: 'a', note: 'x' });
+		const title = form.select((snapshot) => snapshot.values['title']);
 		const listener = vi.fn();
-		form.watchForm(listener);
+		const stop = title.subscribe(listener);
+		listener.mockClear();
+		container.setValue('note', 'y');
+		expect(listener).not.toHaveBeenCalled();
+		container.setValue('title', 'b');
+		expect(listener).toHaveBeenCalledTimes(1);
+		expect(title.get()).toBe('b');
+		stop();
+	});
 
-		form.connect();
-		store.setValue('title', 'Changed');
+	test('shows an issue through the formatter of the form, else its message, never its type', () => {
+		const { form } = createTestForm({}, [], (issue, { path }) => `${path}:${issue.type}`);
+		expect(form.formatIssue({ type: 'required', source: 'validation' }, { path: 'title' })).toBe('title:required');
 
-		expect(listener).toHaveBeenLastCalledWith({ title: 'Changed' });
+		const bare = createTestForm({});
+		expect(bare.form.formatIssue({ type: 'minLength', source: 'validation' }, { path: 'title' })).toBeUndefined();
+		expect(
+			bare.form.formatIssue({ type: 'minLength', source: 'validation', message: 'Too short' }, { path: 'title' }),
+		).toBe('Too short');
 	});
 
 	test('uses the nearest form and never selects an unrelated form', () => {
 		const outer = createTestForm({ title: 'Outer' });
 		const inner = createTestForm({ title: 'Inner' });
 		outer.host.append(inner.element);
-		expect(inner.form.getValue('title')).toBe('Inner');
-		expect(outer.form.getValue('title')).toBe('Outer');
-		expect(inner.form.store).toBe(inner.store);
-		const detached = new FormController(document.createElement('div'));
-		expect(detached.ready).toBe(false);
-		expect(() => detached.getValues()).toThrow('connected rui-form');
+		expect(inner.form.container).toBe(inner.container);
+		expect(outer.form.container).toBe(outer.container);
+		expect(new FormController(document.createElement('div')).container).toBeUndefined();
 	});
 
-	test('reads formContext when the host is the rui-form provider', () => {
-		const { element, store } = createTestForm({ title: 'Direct' });
-		const form = new FormController(element);
-		expect(form.getValue('title')).toBe('Direct');
-		expect(form.store).toBe(store);
+	test('reads the context when the host is the provider', () => {
+		const { element, container } = createTestForm({ title: 'Direct' });
+		expect(new FormController(element).container).toBe(container);
 	});
 
-	test('does not read a descendant form; the host must sit inside rui-form', () => {
+	test('does not read a descendant form; the host must sit inside the instance', () => {
 		const nested = createTestForm({ title: 'Nested' });
-		const wrapper = document.createElement('se-form-instance');
+		const wrapper = document.createElement('div');
 		wrapper.append(nested.element);
-		const form = new FormController(wrapper);
-		expect(form.ready).toBe(false);
+		expect(new FormController(wrapper).container).toBeUndefined();
 	});
 
-	test('ignores a private store field on the form host', () => {
+	test('a selection is total: undefined before the form has a container, and it binds when one arrives', () => {
+		const element = document.createElement('div');
 		const host = document.createElement('div');
-		const element = document.createElement('rui-form');
-		Reflect.set(element, 'store', { getValues: () => ({ title: 'Secret' }) });
 		element.append(host);
+		const provider = provideTestContainer(element, undefined);
 		const form = new FormController(host);
-		expect(form.ready).toBe(false);
-		expect(form.store).toBeUndefined();
-	});
-
-	test('moves live array values and metadata together and removes stale fields', async () => {
-		const { form, store } = createTestForm({ users: [{ name: 'A' }, { name: 'B' }] });
-		const first = registerInput(store, 'users.0.name');
-		const second = registerInput(store, 'users.1.name');
-		first.value = 'Typed A';
-		await store.handleFieldChange('users.0.name');
-		store.markTouched('users.0.name');
-		store.errors = { 'users.0.name': { type: 'validation', message: 'A error' } };
-		const array = form.fieldArray('users');
-		const ids = array.fields;
-		array.move(0, 1);
-		expect(form.getValue('users')).toEqual([{ name: 'B' }, { name: 'Typed A' }]);
-		expect(array.fields).toEqual([ids[1], ids[0]]);
-		expect(store.touched['users.1.name']).toBe(true);
-		expect(store.errors['users.1.name']?.message).toBe('A error');
-		array.remove(1);
-		second.unregister();
-		expect(form.getValue('users')).toEqual([{ name: 'B' }]);
-		expect(store.errors['users.1.name']).toBeUndefined();
-	});
-	test('controller watchers observe only complete array changes', () => {
-		const { form, store } = createTestForm({ users: [{ name: 'A' }, { name: 'B' }] });
-		registerInput(store, 'users.0.name');
-		registerInput(store, 'users.1.name');
+		const title = form.select((snapshot) => snapshot.values['title']);
 		const listener = vi.fn();
-		form.watchField('users', listener);
+
+		expect(title.get()).toBeUndefined();
+		const stop = title.subscribe(listener);
+		expect(title.get()).toBeUndefined();
+		const { container } = createTestForm({ title: 'Arrived' });
+		provider.setContext({ ...provider.getContext(), container });
+
+		expect(listener).toHaveBeenCalled();
+		expect(title.get()).toBe('Arrived');
+		stop();
+	});
+
+	test('a selection reads undefined where there is no instance at all, as on the server', () => {
+		const form = new FormController(document.createElement('div'));
+		const rows = form.select((snapshot) => snapshot.rowIds['contacts']?.length ?? 0);
+
+		expect(rows.get()).toBeUndefined();
+		const stop = rows.subscribe(() => {});
+		expect(rows.get()).toBeUndefined();
+		stop();
+	});
+
+	test('a selection follows the container the instance replaces', () => {
+		const first = createTestForm({ title: 'First' });
+		const second = createTestForm({ title: 'Second' });
+		const element = document.createElement('div');
+		const host = document.createElement('div');
+		element.append(host);
+		const provider = provideTestContainer(element, first.container);
+		const form = new FormController(host);
+		const title = form.select((snapshot) => snapshot.values['title']);
+		const listener = vi.fn();
+		const stop = title.subscribe(listener);
+		expect(title.get()).toBe('First');
 		listener.mockClear();
-		form.fieldArray('users').swap(0, 1);
-		expect(listener).toHaveBeenCalledTimes(1);
-		expect(listener).toHaveBeenLastCalledWith([{ name: 'B' }, { name: 'A' }]);
-	});
 
-	test('clears dotted values without resurrecting defaults and resets the same controls', () => {
-		const { form, store } = createTestForm({ user: { name: 'Ada' } });
-		const input = registerInput(store, 'user.name');
-		form.setValue('user.name', undefined);
-		expect(form.getValue('user.name')).toBeUndefined();
-		form.reset({ user: { name: 'Grace' } });
-		expect(input.value).toBe('Grace');
-		expect(form.getValues()).toEqual({ user: { name: 'Grace' } });
-	});
+		provider.setContext({ ...provider.getContext(), container: second.container });
 
-	test('editing an unrelated array preserves existing row identity', () => {
-		const { form } = createTestForm({ first: ['A'], second: ['B'] });
-		const firstIds = form.fieldArray('first').fields;
-		form.fieldArray('second').append('C');
-		expect(form.fieldArray('first').fields).toEqual(firstIds);
+		expect(form.container).toBe(second.container);
+		expect(title.get()).toBe('Second');
+		second.container.setValue('title', 'Edited');
+		expect(title.get()).toBe('Edited');
+		first.container.setValue('title', 'Ignored');
+		expect(title.get()).toBe('Edited');
+		expect(listener).toHaveBeenCalled();
+		stop();
 	});
 });

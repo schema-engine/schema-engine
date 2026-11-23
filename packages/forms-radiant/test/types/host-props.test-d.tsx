@@ -6,10 +6,10 @@
 import { FormStepElement } from '@/components/form-step';
 import { SplitScreenSideElement } from '@/components/shells/shells';
 
-export const typed = <FormStepElement stepIndex={1} />;
+export const typed = <FormStepElement stepId="one" />;
 
 // @ts-expect-error -- "stepIdx" is not a prop of the step host
-export const misspelled = <FormStepElement stepIdx={1} />;
+export const misspelled = <FormStepElement stepIdx="one" />;
 
 // @ts-expect-error -- "sideContent" takes a string
 export const wrongType = <SplitScreenSideElement sideContent={1} />;

@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { ActionDispatcher } from '@schema-engine/actions';
-import { createFormEngine, runSubmissionLifecycle } from '@/index';
+import { createFormEngine } from '@/index';
+import { runSubmissionLifecycle } from '@/runtime/submission-lifecycle';
 import { formSubmitPlugin } from '@/actions';
 import type { BuilderActionBaseContext } from '@/types';
 

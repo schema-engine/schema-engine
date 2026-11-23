@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, inject, test, vi } from 'vitest';
 import { FormController } from '@/adapters/radiant/controller';
+import { selectError } from '@schema-engine/forms/state-container';
+import { containerOf } from '../components/mount-field';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { FormRendererElement } from '@/components/internals/form-renderer';
@@ -52,14 +54,16 @@ describe('SSR array hydration', () => {
 			document.body.append(isolatedApp);
 			await Promise.resolve();
 			expect(isolatedApp.querySelector('.se-form-array')).toBe(isolatedRows[0]?.parentElement);
-			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="seed-0"]')).toBe(isolatedRows[0]);
-			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="seed-1"]')).toBe(isolatedRows[1]);
+			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="row-1"]')).toBe(isolatedRows[0]);
+			expect(isolatedApp.querySelector('.se-form-array__item[data-se-row-id="row-2"]')).toBe(isolatedRows[1]);
 
 			renderer.engine = engine;
 			document.body.append(app);
-			await expect.poll(() => form.ready).toBe(true);
-			expect(app.querySelector('.se-form-array__item[data-se-row-id="seed-0"]')).toBe(serverRows[0]);
-			await expect.poll(() => form.getValues()).toEqual({ contacts: [{ role: 'Alice' }, { role: 'Bob' }] });
+			await expect.poll(() => form.container).toBeTruthy();
+			expect(app.querySelector('.se-form-array__item[data-se-row-id="row-1"]')).toBe(serverRows[0]);
+			await expect
+				.poll(() => containerOf(arrayHost).getSnapshot().values)
+				.toEqual({ contacts: [{ role: 'Alice' }, { role: 'Bob' }] });
 			await expect
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
 				.toEqual(['Alice', 'Bob']);
@@ -67,17 +71,19 @@ describe('SSR array hydration', () => {
 			const ruiForm = app.querySelector('rui-form');
 			const submitButton = app.querySelector<HTMLButtonElement>('button[type="submit"]');
 			if (!ruiForm || !submitButton) throw new Error('Expected the form submit control');
-			let invalidSubmissions = 0;
-			let validSubmissions = 0;
-			ruiForm.addEventListener('rui-invalid', () => invalidSubmissions++);
-			ruiForm.addEventListener('rui-submit', () => validSubmissions++);
+			let completedSubmissions = 0;
+			ruiForm.addEventListener('se-action-submit-complete', () => completedSubmissions++);
 			submitButton.click();
-			await expect.poll(() => invalidSubmissions).toBe(1);
-			expect(validSubmissions).toBe(0);
+			await expect
+				.poll(() => containerOf(arrayHost).getSnapshot().errors.contacts?.message)
+				.toBe('Add at least three contacts');
+			expect(completedSubmissions).toBe(0);
 
-			await expect(form.trigger()).resolves.toBe(false);
-			expect(form.field('contacts').error).toBe('Add at least three contacts');
-			form.setValue('contacts.0.role', 'Edited Alice');
+			await expect(containerOf(arrayHost).validate()).resolves.toBe(false);
+			expect(selectError(containerOf(arrayHost).getSnapshot(), 'contacts')?.message).toBe(
+				'Add at least three contacts',
+			);
+			containerOf(arrayHost).setValue('contacts.0.role', 'Edited Alice');
 			await expect.poll(() => app.querySelector<HTMLInputElement>('.rui-input')?.value).toBe('Edited Alice');
 
 			const addButton = arrayHost.querySelector<HTMLButtonElement>('.se-form-array__add');
@@ -86,15 +92,16 @@ describe('SSR array hydration', () => {
 			await expect
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
 				.toEqual(['Edited Alice', 'Bob', 'Viewer']);
-			await expect(form.trigger()).resolves.toBe(true);
+			await expect(containerOf(arrayHost).validate()).resolves.toBe(true);
 
-			form.reset();
-			await expect.poll(() => form.getValues()).toEqual({ contacts: [{ role: 'Alice' }, { role: 'Bob' }] });
+			containerOf(arrayHost).reset();
+			await expect
+				.poll(() => containerOf(arrayHost).getSnapshot().values)
+				.toEqual({ contacts: [{ role: 'Alice' }, { role: 'Bob' }] });
 			await expect
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
 				.toEqual(['Alice', 'Bob']);
 		} finally {
-			form.disconnect();
 			app.remove();
 			isolatedApp.remove();
 		}
@@ -113,9 +120,9 @@ describe('SSR array hydration', () => {
 		try {
 			renderer.engine = engine;
 			document.body.append(app);
-			await expect.poll(() => form.ready).toBe(true);
+			await expect.poll(() => form.container).toBeTruthy();
 			await expect
-				.poll(() => form.getValues())
+				.poll(() => containerOf(arrayHost).getSnapshot().values)
 				.toEqual({
 					contacts: [{ role: 'Viewer' }, { role: 'Viewer' }],
 				});
@@ -123,11 +130,11 @@ describe('SSR array hydration', () => {
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
 				.toEqual(['Viewer', 'Viewer']);
 
-			form.setValue('contacts.0.role', 'Edited');
+			containerOf(arrayHost).setValue('contacts.0.role', 'Edited');
 			await expect.poll(() => app.querySelector<HTMLInputElement>('.rui-input')?.value).toBe('Edited');
-			form.reset();
+			containerOf(arrayHost).reset();
 			await expect
-				.poll(() => form.getValues())
+				.poll(() => containerOf(arrayHost).getSnapshot().values)
 				.toEqual({
 					contacts: [{ role: 'Viewer' }, { role: 'Viewer' }],
 				});
@@ -135,7 +142,6 @@ describe('SSR array hydration', () => {
 				.poll(() => [...app.querySelectorAll<HTMLInputElement>('.rui-input')].map(({ value }) => value))
 				.toEqual(['Viewer', 'Viewer']);
 		} finally {
-			form.disconnect();
 			app.remove();
 		}
 	});
@@ -153,9 +159,9 @@ describe('SSR array hydration', () => {
 		try {
 			renderer.engine = engine;
 			document.body.append(app);
-			await expect.poll(() => form.ready).toBe(true);
+			await expect.poll(() => form.container).toBeTruthy();
 			await expect
-				.poll(() => form.getValues())
+				.poll(() => containerOf(arrayHost).getSnapshot().values)
 				.toEqual({
 					members: [{ role: 'Admin' }, { role: '' }],
 				});
@@ -164,12 +170,11 @@ describe('SSR array hydration', () => {
 			if (!addButton) throw new Error('Expected array add button');
 			addButton.click();
 			await expect
-				.poll(() => form.getValues())
+				.poll(() => containerOf(arrayHost).getSnapshot().values)
 				.toEqual({
 					members: [{ role: 'Admin' }, { role: '' }, { role: '' }],
 				});
 		} finally {
-			form.disconnect();
 			app.remove();
 		}
 	});
@@ -181,12 +186,13 @@ describe('SSR array hydration', () => {
 		const renderer = app.querySelector<FormRendererElement>('se-form-renderer');
 		const arrayHost = app.querySelector<SeFormArray>('se-form-array');
 		if (!renderer || !arrayHost) throw new Error('Expected rendered form and array hosts');
-		const form = new FormController(arrayHost);
 
 		try {
 			renderer.engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 			document.body.append(app);
-			await expect.poll(() => form.getValues()).toEqual({ contacts: [{ role: 'Alice' }, { role: 'Bob' }] });
+			await expect
+				.poll(() => containerOf(arrayHost).getSnapshot().values)
+				.toEqual({ contacts: [{ role: 'Alice' }, { role: 'Bob' }] });
 
 			arrayHost.config = { ...arrayHost.config, disabled: true, addButtonText: 'Add contact' };
 			await expect
@@ -198,7 +204,6 @@ describe('SSR array hydration', () => {
 			]);
 			expect(arrayHost.querySelector('.se-form-array__add')?.textContent).toContain('Add contact');
 		} finally {
-			form.disconnect();
 			app.remove();
 		}
 	});

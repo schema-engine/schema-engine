@@ -870,6 +870,9 @@ describe('createFormStateContainer', () => {
 				isTouched: false,
 				isDirty: false,
 				isValidating: false,
+				hidden: false,
+				disabled: false,
+				required: false,
 			});
 			expect(field('hasOwnProperty').isTouched).toBe(true);
 			expect(Object.hasOwn(store.getSnapshot().rowIds, 'valueOf')).toBe(false);

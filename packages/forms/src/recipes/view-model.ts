@@ -1,20 +1,32 @@
 import * as z from 'zod/mini';
 import type { FormConfigView } from '@/lib/normalized-form-config';
-import type { StepStates } from '@/engine/step-machine';
+import { stepAfter, stepBefore, type FormStepState } from '@/engine/step-machine';
 import type { AnyRecipeRegistration } from '@/types/registration';
 import { readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './types';
 
+/**
+ * The commands a stepper or an actions block calls, and whether each is available.
+ *
+ * @remarks `goToStep` takes a step id, which stays right when steps are skipped; indexes do not.
+ */
 export interface ViewNavigation {
 	canGoNext: boolean;
 	canGoPrevious: boolean;
 	isFirstStep: boolean;
 	isLastStep: boolean;
-	goToStep: (stepIndex: number) => void;
+	/** Whether `goToStep(stepId)` can move there, as the runtime's step state says. */
+	canGoToStep: (stepId: string) => boolean;
+	goToStep: (stepId: string) => void;
 	goToNextStep: () => void;
 	goToPreviousStep: () => void;
 }
 
+/**
+ * One step that is not skipped, as a recipe block reads it.
+ *
+ * @remarks `index` is the position among the steps that are not skipped and `total` how many there are, so progress reads "step 2 of 3" however many are skipped.
+ */
 export interface ViewStep {
 	id: string;
 	title?: string;
@@ -23,7 +35,7 @@ export interface ViewStep {
 	total: number;
 	isActive: boolean;
 	isCompleted: boolean;
-	isValid: boolean;
+	isInvalid: boolean;
 	isVisited: boolean;
 }
 
@@ -34,8 +46,10 @@ export interface ViewModel extends RecipeViewModel<RecipeKind> {
 		description?: string;
 		isSubmitting: boolean;
 	};
+	/** The steps that are not skipped, in order: what progress and a stepper count. */
 	steps: ViewStep[];
 	activeStep: ViewStep;
+	/** The position of the current step among `steps`. */
 	currentStepIndex: number;
 	navigation: ViewNavigation;
 }
@@ -71,45 +85,68 @@ export function getViewRecipe(
 	return recipe;
 }
 
-/** Projects form steps and the live step state onto the {@link ViewStep} list both renderers expose to recipe blocks. */
-export function buildViewSteps(
+/** Projects the steps that are not skipped, with their live state, onto the {@link ViewStep} list. */
+export function projectViewSteps(
 	steps: ReadonlyArray<{ id: string; title?: string; description?: string }>,
-	currentStep: number,
-	stepStates: StepStates,
+	states: readonly FormStepState[],
+	current: string,
 ): ViewStep[] {
-	return steps.map((step, index) => ({
+	const active = steps.flatMap((step) => {
+		const state = states.find(({ id }) => id === step.id);
+		return state?.skipped ? [] : [{ step, state }];
+	});
+	return active.map(({ step, state }, index) => ({
 		id: step.id,
 		title: step.title,
 		description: step.description,
 		index,
-		total: steps.length,
-		isActive: index === currentStep,
-		isCompleted: stepStates.completed[index] ?? false,
-		isValid: stepStates.valid[index] ?? false,
-		isVisited: stepStates.visited[index] ?? false,
+		total: active.length,
+		isActive: step.id === current,
+		isCompleted: state?.complete ?? false,
+		isInvalid: state?.invalid ?? false,
+		isVisited: state?.visited ?? false,
 	}));
+}
+
+/** The navigation a recipe block reads, from the step states and the commands of a runtime. */
+export function createViewNavigation(
+	states: readonly FormStepState[],
+	current: string,
+	commands: { next: () => unknown; back: () => unknown; goTo: (id: string) => unknown },
+): ViewNavigation {
+	const canGoNext = stepAfter(states, current) !== undefined;
+	const canGoPrevious = stepBefore(states, current) !== undefined;
+	return {
+		canGoNext,
+		canGoPrevious,
+		isFirstStep: !canGoPrevious,
+		isLastStep: !canGoNext,
+		canGoToStep: (stepId) => states.find(({ id }) => id === stepId)?.reachable ?? false,
+		goToStep: (stepId) => void commands.goTo(stepId),
+		goToNextStep: () => void commands.next(),
+		goToPreviousStep: () => void commands.back(),
+	};
 }
 
 export function buildViewModel({
 	config,
 	kind,
-	currentStepIndex,
+	states,
+	current,
 	navigation,
 	isSubmitting,
 	viewConfig,
-	stepStates,
 }: {
 	config: FormConfigView;
 	kind: RecipeKind;
-	currentStepIndex: number;
+	states: readonly FormStepState[];
+	current: string;
 	navigation: ViewNavigation;
 	isSubmitting?: boolean;
 	viewConfig: Record<string, unknown>;
-	stepStates: StepStates;
 }): ViewModel {
-	const steps = buildViewSteps(config.steps, currentStepIndex, stepStates);
-
-	const activeStep = steps[currentStepIndex] ?? steps[0];
+	const steps = projectViewSteps(config.steps, states, current);
+	const activeStep = steps.find(({ isActive }) => isActive) ?? steps[0];
 	if (!activeStep) {
 		throw new Error(`Form '${config.id}' has no steps.`);
 	}
@@ -124,7 +161,7 @@ export function buildViewModel({
 		},
 		steps,
 		activeStep,
-		currentStepIndex,
+		currentStepIndex: activeStep.index,
 		navigation,
 		viewConfig,
 	};

@@ -90,10 +90,11 @@ export type FormStep<
 };
 
 /**
- * The validation timing a form config carries: authors may leave both out, and normalization fills them
- * with `'onSubmit'` and `'onChange'`, so a normalized config always has both.
+ * The settings a form config carries with defaults: authors may leave them out, and normalization fills
+ * `validationMode` with `'onSubmit'`, `reValidateMode` with `'onChange'` and `navigation` with `'linear'`,
+ * so a normalized config always has all three.
  */
-export type FormValidationModes = Pick<InferredForm, 'validationMode' | 'reValidateMode'>;
+export type FormValidationModes = Pick<InferredForm, 'validationMode' | 'reValidateMode' | 'navigation'>;
 
 /** Form config narrowed to one engine's registered elements, recipes, and actions. */
 export type FormConfig<

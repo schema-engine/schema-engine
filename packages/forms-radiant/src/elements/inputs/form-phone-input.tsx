@@ -1,3 +1,4 @@
+import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import './form-phone-input.css';
 import { customElement, bindTo, onUpdated, prop, state } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
@@ -14,12 +15,13 @@ import {
 	RuiSelectTrigger,
 	RuiSelectValue,
 } from '@ecopages/radiant-ui/select';
+import type { RuiSelectElement } from '@ecopages/radiant-ui/select';
 import { RuiAutocomplete, RuiAutocompleteCollection, RuiAutocompleteEmpty } from '@ecopages/radiant-ui/autocomplete';
 import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopages/radiant-ui/listbox';
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -101,12 +103,14 @@ export class SePhoneInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
+		super.onConnected();
 		void this.boot();
 		this.registerCleanupCallback(() => {
 			this.bootGeneration += 1;
 			this.lib = undefined;
 			this.ready = false;
 		});
+		announceControlConnect(this);
 	}
 
 	@onUpdated(['value'])
@@ -128,13 +132,17 @@ export class SePhoneInput extends FormAssociatedElement {
 		if (!this.lib) {
 			return;
 		}
-		const next = (event as CustomEvent<{ value?: string | readonly string[] }>).detail?.value;
-		this.country = resolvePhoneCountry(this.lib, next, this.country);
-		this.applyNumber(this.display);
+		this.country = resolvePhoneCountry(this.lib, (event.currentTarget as RuiSelectElement).value, this.country);
+		this.applyNumber(this.display, true);
 	};
 
 	private readonly onNumberInput = (event: Event) => {
 		this.applyNumber((event.target as HTMLInputElement).value);
+	};
+
+	private readonly onNumberCommit = (event: Event) => {
+		event.stopPropagation();
+		emitControlCommit(this);
 	};
 
 	private async boot() {
@@ -163,7 +171,7 @@ export class SePhoneInput extends FormAssociatedElement {
 		this.value = hydrated.e164;
 	}
 
-	private applyNumber(raw: string) {
+	private applyNumber(raw: string, commit = false) {
 		let next = raw;
 		if (this.lib) {
 			this.country = detectCountryFromInput(this.lib, raw, this.country);
@@ -178,7 +186,7 @@ export class SePhoneInput extends FormAssociatedElement {
 			return;
 		}
 		this.value = next;
-		emitControlChange(this, next);
+		emitControlChange(this, { commit });
 	}
 
 	private selectedCountry() {
@@ -192,7 +200,7 @@ export class SePhoneInput extends FormAssociatedElement {
 			<div class="se-phone">
 				<RuiSelect
 					label="Country"
-					on:rui-change={this.onCountryChange}
+					on:change={this.onCountryChange}
 					value={this.country}
 					disabled={this.effectiveDisabled || !this.ready}
 				>
@@ -233,6 +241,7 @@ export class SePhoneInput extends FormAssociatedElement {
 					{...fieldAria(this.field)}
 					data-ref="number"
 					on:input={this.onNumberInput}
+					on:change={this.onNumberCommit}
 					class="rui-input se-phone__number"
 					type="tel"
 					autocomplete="tel"
@@ -256,12 +265,12 @@ export function FormPhoneInput(config: PhoneInputFieldProps) {
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
+			authoredRequired={isFieldRequired(config.rules)}
 			description={config.description}
 			grid={config.grid}
 			appearance={config.appearance}
 			class={config.className}
 			style={config.style}
-			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

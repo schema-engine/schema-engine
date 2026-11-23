@@ -281,7 +281,7 @@ export class ActionDemoControlsElement extends RadiantElement {
 	reset(): void {
 		const demo = this.closest('.se-action-demo');
 		const ruiForm = demo?.querySelector('rui-form');
-		if (ruiForm instanceof HTMLElement) new FormController(ruiForm).reset();
+		if (ruiForm instanceof HTMLElement) new FormController(ruiForm).container?.reset();
 	}
 
 	override render() {

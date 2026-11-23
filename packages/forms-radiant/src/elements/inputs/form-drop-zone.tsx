@@ -1,6 +1,6 @@
 import './form-drop-zone.css';
 import { customElement, onUpdated, prop, RadiantElement, state, ref } from '@ecopages/radiant';
-import { registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
+import { announceControlConnect, registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
@@ -69,6 +69,12 @@ export class SeDropZone extends RadiantElement {
 	>;
 
 	@prop({ type: String }) name = '';
+
+	protected override onConnected(): void {
+		super.onConnected();
+		announceControlConnect(this);
+	}
+
 	@prop({ type: Number, defaultValue: 1 }) maxFiles = 1;
 	@prop({ type: Number, defaultValue: 0 }) maxSize = 0;
 	@prop({ type: Number, defaultValue: 0 }) minSize = 0;
@@ -127,7 +133,7 @@ export class SeDropZone extends RadiantElement {
 		});
 
 		this.files = accepted.slice(0, this.maxFiles || accepted.length);
-		emitControlChange(this, this.files);
+		emitControlChange(this, { commit: true });
 	}
 
 	@onUpdated(['files'])
@@ -218,12 +224,12 @@ export function FormDropZone(config: DropZoneFieldProps) {
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
+			authoredRequired={isFieldRequired(config.rules)}
 			description={config.description}
 			grid={config.grid}
 			appearance={config.appearance}
 			class={config.className}
 			style={config.style}
-			validation={config}
 			defaultValue={config.defaultValue ?? []}
 			disabled={config.disabled}
 		>

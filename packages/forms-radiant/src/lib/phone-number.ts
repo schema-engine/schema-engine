@@ -47,7 +47,7 @@ export function countryFlagEmoji(code: string) {
 
 /**
  * Resolves the active country from a selection value, falling back when unsupported.
- * @remarks `RuiSelect` is a multi-value control, so `rui-change` emits `string[]`
+ * @remarks `RuiSelect` is a multi-value control, so its `value` is a `string[]`
  * even in single-selection mode. Passing that array to libphonenumber-js throws
  * `Invalid second argument`, so it is normalized to its first entry here.
  */

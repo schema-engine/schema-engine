@@ -193,6 +193,12 @@ export interface ActionDispatchInput<
 	context: TBaseContext;
 	triggeredBy?: TConfig;
 	metadata?: Record<string, unknown>;
+	/**
+	 * Cancels the dispatch from outside.
+	 *
+	 * @remarks It is chained into the signal each action receives, and the sequence runs no further entry once it is aborted.
+	 */
+	signal?: AbortSignal;
 }
 
 /**

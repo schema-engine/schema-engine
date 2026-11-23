@@ -1,6 +1,7 @@
 import { customElement, onUpdated, prop, RadiantElement, registerSsrPreparationCallback } from '@ecopages/radiant';
 import { provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
+import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 import type { FormProviderProps } from '@/adapters/types';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -10,6 +11,16 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
 	class?: string;
 	style?: Record<string, string | number | undefined>;
 	engine?: FormEngine;
+	/**
+	 * Turns an issue into the text to show, for the application's language, for every form of this renderer; it replaces the engine's `formatIssue`.
+	 *
+	 * @remarks
+	 * It receives the issue (`type`, `ruleId`, `params`, `source` and any `message`) and the path of its field, and
+	 * returns the text; `rui-form` falls back to the issue's own `message` when it returns nothing. Without a
+	 * formatter an issue shows its `message` and otherwise nothing, never the rule type. The same function type
+	 * serves the React renderer.
+	 */
+	formatIssue?: FormIssueFormatter;
 	/** Rendered inside the form after its fields, for opt-in tools such as FormDebugger. */
 	children?: JsxRenderable;
 }
@@ -27,7 +38,11 @@ export interface FormRendererProps extends Omit<FormProviderProps, 'children'> {
  */
 @customElement('se-form-renderer')
 export class FormRendererElement extends RadiantElement {
-	declare readonly [JSX_PROPS]?: { engine?: FormEngine; defaultValues?: Record<string, unknown> };
+	declare readonly [JSX_PROPS]?: {
+		engine?: FormEngine;
+		defaultValues?: Record<string, unknown>;
+		formatIssue?: FormIssueFormatter;
+	};
 
 	/**
 	 * The engine every host below this renderer reads from the context it publishes.
@@ -42,6 +57,12 @@ export class FormRendererElement extends RadiantElement {
 	 */
 	@prop({ type: Object, attribute: false }) engine?: FormEngine;
 	@prop({ type: Object }) defaultValues?: Record<string, unknown>;
+	/**
+	 * Turns an issue into text for every form below this renderer, in place of the engine's `formatIssue`; the one override a form has.
+	 *
+	 * @remarks Property-only (`attribute: false`): a function is never serialized into the server markup.
+	 */
+	@prop({ type: Object, attribute: false }) formatIssue?: FormIssueFormatter;
 
 	@provideContext<typeof formEngineContext>({
 		context: formEngineContext,
@@ -59,7 +80,7 @@ export class FormRendererElement extends RadiantElement {
 		this.publishContext();
 	}
 
-	@onUpdated(['engine'])
+	@onUpdated(['engine', 'formatIssue'])
 	onEngineUpdated(): void {
 		this.publishContext();
 	}
@@ -69,6 +90,12 @@ export class FormRendererElement extends RadiantElement {
 		if (!engine) {
 			return;
 		}
-		this.provider.setContext({ engine } satisfies FormEngineContextValue);
+		this.provider.setContext({ engine, formatIssue: this.formatIssue } satisfies FormEngineContextValue);
+	}
+}
+
+declare global {
+	interface HTMLElementTagNameMap {
+		'se-form-renderer': FormRendererElement;
 	}
 }

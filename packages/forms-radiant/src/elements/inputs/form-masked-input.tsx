@@ -1,10 +1,11 @@
+import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import './form-masked-input.css';
 import { customElement, bindTo, onUpdated, prop, state, ref } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -80,11 +81,13 @@ export class SeMaskedInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
+		super.onConnected();
 		void this.attachMask();
 		this.registerCleanupCallback(() => {
 			this.attachGeneration += 1;
 			this.destroyMask();
 		});
+		announceControlConnect(this);
 	}
 
 	@onUpdated(['mask', 'unmask', 'lazy', 'overwrite', 'placeholderChar', 'definitions'])
@@ -145,7 +148,12 @@ export class SeMaskedInput extends FormAssociatedElement {
 		}
 
 		this.value = next;
-		emitControlChange(this, next);
+		emitControlChange(this);
+	};
+
+	private readonly onCommit = (event: Event) => {
+		event.stopPropagation();
+		emitControlCommit(this);
 	};
 
 	private applyValue() {
@@ -176,6 +184,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 					id={this.inputId || undefined}
 					{...fieldAria(this.field)}
 					data-ref="input"
+					on:change={this.onCommit}
 					class="rui-input se-masked__input"
 					type="text"
 					placeholder={getMaskedInputPlaceholder(this.mask, this.placeholder)}
@@ -200,12 +209,12 @@ export function FormMaskedInput(config: MaskedInputFieldProps) {
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
+			authoredRequired={isFieldRequired(config.rules)}
 			description={config.description}
 			grid={config.grid}
 			appearance={config.appearance}
 			class={config.className}
 			style={config.style}
-			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

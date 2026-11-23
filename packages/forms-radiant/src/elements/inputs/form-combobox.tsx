@@ -31,12 +31,12 @@ export function FormCombobox(config: ComboboxFieldProps) {
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
+			authoredRequired={isFieldRequired(config.rules)}
 			description={config.description}
 			grid={config.grid}
 			appearance={config.appearance}
 			class={config.className}
 			style={config.style}
-			validation={config}
 			defaultValue={serializeChoiceValue(config.defaultValue)}
 			disabled={config.disabled}
 		>

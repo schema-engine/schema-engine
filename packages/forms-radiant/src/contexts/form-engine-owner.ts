@@ -1,3 +1,4 @@
+import type { Participation } from '@schema-engine/forms/engine';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
 
 /**
@@ -45,5 +46,45 @@ export function renderWithConstraintValues<T>(values: Record<string, unknown> | 
 		return render();
 	} finally {
 		owningValues = previous;
+	}
+}
+
+/** @remarks Synchronous container renders inherit the server container's row ids, so a nested array renders the rows the client's container will hold. */
+let owningRowIds: Readonly<Record<string, readonly string[]>> | undefined;
+
+export function peekOwningRowIds(): Readonly<Record<string, readonly string[]>> | undefined {
+	return owningRowIds;
+}
+
+export function renderWithRowIds<T>(
+	rowIds: Readonly<Record<string, readonly string[]>> | undefined,
+	render: () => T,
+): T {
+	const previous = owningRowIds;
+	owningRowIds = rowIds ?? previous;
+	try {
+		return render();
+	} finally {
+		owningRowIds = previous;
+	}
+}
+
+/** @remarks Synchronous container renders inherit the participation of the values the server rendered, so a nested field is shown, disabled and required as the client's container will say. */
+let owningParticipation: Pick<Participation, 'fields'> | undefined;
+
+export function peekOwningParticipation(): Pick<Participation, 'fields'> | undefined {
+	return owningParticipation;
+}
+
+export function renderWithParticipation<T>(
+	participation: Pick<Participation, 'fields'> | undefined,
+	render: () => T,
+): T {
+	const previous = owningParticipation;
+	owningParticipation = participation ?? previous;
+	try {
+		return render();
+	} finally {
+		owningParticipation = previous;
 	}
 }

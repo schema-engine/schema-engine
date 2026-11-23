@@ -69,6 +69,24 @@ export function setValueAtPath(target: Record<string, unknown>, path: string, va
 }
 
 /**
+ * A copy of `values` with the value at `path` absent, sharing every branch it does not touch.
+ *
+ * @remarks Returns `values` itself when nothing is at the path. Arrays stay arrays, so the rows around the one cleared keep their indexes.
+ */
+export function withoutValueAt(values: unknown, path: string): unknown {
+	const [head, ...rest] = path.split('.');
+	if (head === undefined || values === null || typeof values !== 'object' || !Object.hasOwn(values, head)) {
+		return values;
+	}
+	const current: unknown = Reflect.get(values, head);
+	const next = rest.length === 0 ? undefined : withoutValueAt(current, rest.join('.'));
+	if (Object.is(next, current)) return values;
+	const copy: unknown = Array.isArray(values) ? [...values] : { ...values };
+	if (typeof copy === 'object' && copy !== null) Reflect.set(copy, head, next);
+	return copy;
+}
+
+/**
  * Build adapter default values from field-level defaults and merge them with
  * consumer-provided defaults using nested path semantics.
  *

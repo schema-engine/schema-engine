@@ -38,12 +38,16 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 		context,
 		metadata,
 		triggeredBy,
+		signal: outer,
 	}: ActionDispatchInput<TConfig, TBaseContext, TTrigger>): Promise<ActionDispatchResult[]> {
 		if (!actions?.length) return [];
 		const enhancedContext = metadata ? this.mergeMetadata(context, metadata) : context;
 		const results: ActionDispatchResult[] = [];
 		for (const [sequenceIndex, entry] of actions.entries()) {
+			if (outer?.aborted) break;
 			const controller = new AbortController();
+			const abortWithOuter = () => controller.abort(outer?.reason);
+			outer?.addEventListener('abort', abortWithOuter, { once: true });
 			const run = async (action: TConfig, groupIndex?: number): Promise<ActionDispatchResult | undefined> => {
 				const match = this.match(action, trigger);
 				if (!match.runs) return undefined;
@@ -94,7 +98,12 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 					cancellationRequested,
 				};
 			};
-			const groupResults = isGroup(entry) ? await Promise.all(entry.map(run)) : [await run(entry)];
+			let groupResults: Array<ActionDispatchResult | undefined>;
+			try {
+				groupResults = isGroup(entry) ? await Promise.all(entry.map(run)) : [await run(entry)];
+			} finally {
+				outer?.removeEventListener('abort', abortWithOuter);
+			}
 			const executed = groupResults.filter((result): result is ActionDispatchResult => result !== undefined);
 			results.push(...executed);
 			if (executed.some((result) => !result.success && result.shouldContinue === false)) break;

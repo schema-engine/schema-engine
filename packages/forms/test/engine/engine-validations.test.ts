@@ -87,13 +87,13 @@ describe('engine validation registry', () => {
 		];
 
 		const invalid = await validateFormValues({
-			elements,
+			steps: [{ elements }],
 			values: { postcode: 'nope' },
 			registry: engine.getValidationRegistry(),
 			debounceScope: createDebounceScope(),
 		});
 		const valid = await validateFormValues({
-			elements,
+			steps: [{ elements }],
 			values: { postcode: 'SW1A 1AA' },
 			registry: engine.getValidationRegistry(),
 			debounceScope: createDebounceScope(),

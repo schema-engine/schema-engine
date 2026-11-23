@@ -1,10 +1,11 @@
+import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import './form-input-otp.css';
 import { customElement, prop, state, refAll } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -41,6 +42,14 @@ export class SeInputOtp extends FormAssociatedElement {
 	protected field?: FieldContextValue = undefined;
 
 	@refAll('slot') slotInputs!: HTMLInputElement[];
+
+	/** True while the user has typed since `change` last fired, so leaving the group commits once. */
+	private uncommitted = false;
+
+	protected override onConnected(): void {
+		super.onConnected();
+		announceControlConnect(this);
+	}
 
 	get value(): string {
 		return this.slots.join('');
@@ -87,7 +96,17 @@ export class SeInputOtp extends FormAssociatedElement {
 			this.slotInputs[index + 1]?.focus();
 		}
 
-		emitControlChange(this, this.value);
+		this.uncommitted = true;
+		emitControlChange(this);
+	};
+
+	private readonly onGroupFocusOut = (event: Event) => {
+		const next = (event as FocusEvent).relatedTarget;
+		if (!this.uncommitted || (next instanceof Node && this.contains(next))) {
+			return;
+		}
+		this.uncommitted = false;
+		emitControlCommit(this);
 	};
 
 	private readonly onSlotKeydown = (event: Event) => {
@@ -104,7 +123,8 @@ export class SeInputOtp extends FormAssociatedElement {
 		const pasteEvent = event as ClipboardEvent;
 		pasteEvent.preventDefault();
 		this.fill(pasteEvent.clipboardData?.getData('text') ?? '');
-		emitControlChange(this, this.value);
+		this.uncommitted = false;
+		emitControlChange(this, { commit: true });
 	};
 
 	override render(): JsxRenderable {
@@ -112,7 +132,7 @@ export class SeInputOtp extends FormAssociatedElement {
 		const firstHalf = Math.ceil(length / 2);
 
 		return (
-			<fieldset class="se-otp" data-ref="group" {...fieldAria(this.field)}>
+			<fieldset class="se-otp" data-ref="group" on:focusout={this.onGroupFocusOut} {...fieldAria(this.field)}>
 				{Array.from({ length }, (_, index) => [
 					index === firstHalf ? (
 						<span class="se-otp__separator" aria-hidden="true">
@@ -148,12 +168,12 @@ export function FormInputOTP(config: InputOTPFieldProps) {
 			htmlFor={config.id}
 			hiddenLabel={!config.label}
 			required={isFieldRequired(config.rules) || isRenderedRequired(config)}
+			authoredRequired={isFieldRequired(config.rules)}
 			description={config.description}
 			grid={config.grid}
 			appearance={config.appearance}
 			class={config.className}
 			style={config.style}
-			validation={config}
 			defaultValue={config.defaultValue}
 			disabled={config.disabled}
 		>

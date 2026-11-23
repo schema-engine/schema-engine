@@ -22,22 +22,27 @@ Actions execute in response to form lifecycle triggers.
 
 ### Form Triggers
 
-- `form_mount` - Form initialization
-- `form_change` - Any field change
-- `form_submit` - Form submission initiated
+- `form_mount` - The form's runtime mounts, once
+- `form_change` - The form's values change
+- `form_submit` - The submit actions run, after validation passed
 
 ### Submit Lifecycle
 
-- `form_submit_start` - Submit process begins
+- `form_submit_start` - Submit process begins, after validation and before the submit actions
 - `form_submit_success` - Submit completed successfully, after the `onSubmit` callback resolved
 - `form_submit_error` - Submit failed: a submit action aborted, the `onSubmit` callback rejected, or a trigger failed
 - `form_submit_complete` - Submit finished (success or failure)
 
 ### Step Triggers
 
-- `step_change` - Navigation between steps
-- `step_enter` - Entering a step
-- `step_leave` - Leaving a step
+- `step_leave` - The current step is about to change
+- `step_change` - The current step changed
+- `step_enter` - A step became the current step
+
+They fire in that order and only when the current step changes: by Next, Back or a jump, by the move to
+the first step with an error after a failed or server-rejected submission, and by the move off a step that
+became skipped. A reset fires none. A step action cannot block a move, since the step's validation is the
+guard; if it fails, the failure is reported through `onActionResults`.
 
 ## Configuring Triggers
 
@@ -61,7 +66,7 @@ A step can declare its own `actions`. They are active while that step is the cur
 one: every trigger runs the form's `actions` first, then the current step's.
 
 - `step_leave` fires while the step being left is current, so it runs that step's actions,
-  whether the user moves on with Next, goes back with Previous, or jumps to another step.
+  whether the user moves on with Next, goes back with Back, or jumps to another step.
 - `step_change` and `step_enter` fire once the new step is current, so they run the entered
   step's actions. The first step is current on mount; it sees `step_enter` only when the
   user returns to it.

@@ -20,11 +20,13 @@ export async function mountField(element: Record<string, unknown>) {
 	createRoot(host).render(FormRenderer({ config: engine.validateForm(config), engine }));
 	await expect.poll(() => host.querySelector('se-field')).toBeTruthy();
 	const field = host.querySelector('se-field') as FormFieldElement;
-	await expect.poll(() => new FormController(field).ready).toBe(true);
+	await expect.poll(() => new FormController(field).container).toBeTruthy();
 	return { host, field };
 }
 
-/** A form controller scoped to a field host, like one an app constructs on its own element. */
-export function formOf(host: HTMLElement) {
-	return new FormController(host);
+/** The form container a host belongs to; throws when the host has none yet. */
+export function containerOf(host: HTMLElement) {
+	const { container } = new FormController(host);
+	if (!container) throw new Error('Expected a form container');
+	return container;
 }

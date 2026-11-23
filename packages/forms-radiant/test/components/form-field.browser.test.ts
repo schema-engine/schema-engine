@@ -3,42 +3,55 @@ import { createRoot } from '@ecopages/jsx/client';
 import { jsx } from '@ecopages/jsx/jsx-runtime';
 import { ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
 import { FormField, type FormFieldElement } from '@/elements/form-field';
-import { renderWithOwningFormEngine } from '@/contexts/form-engine-owner';
-import { createRadiantFormEngine } from '@/registries/builder-registry';
-
-import { formOf } from './mount-field';
 
 afterEach(() => document.body.replaceChildren());
 
-test('a FormField validate prop runs after the rules derived from its validation config', async () => {
+const config = { id: 'required-field', steps: [{ id: 'main', title: 'Main', elements: [] }] };
+
+function mountField(required: boolean) {
 	const host = document.createElement('div');
 	document.body.append(host);
 	const root = createRoot(host);
-	const config = { id: 'custom-validate', steps: [{ id: 'main', title: 'Main', elements: [] }] };
-	const field = renderWithOwningFormEngine(createRadiantFormEngine(), () =>
-		FormField({
-			name: 'email',
-			validation: { name: 'email', rules: [{ type: 'email', message: 'Enter an email' }] },
-			validate: (value) => !String(value).endsWith('@example.test') || 'No test addresses',
-			children: jsx('input', { name: 'email', 'data-rui-control': '', 'data-rui-control-type': 'text' }),
+	root.render(
+		jsx(ConfiguredRuiForm, {
+			config,
+			children: FormField({
+				name: 'email',
+				required,
+				children: jsx('input', { name: 'email', 'data-rui-control': '', 'data-rui-control-type': 'text' }),
+			}),
 		}),
 	);
-	root.render(jsx(ConfiguredRuiForm, { config, children: field }));
-	const element = host.querySelector('se-field') as FormFieldElement;
-	await expect.poll(() => formOf(element).ready).toBe(true);
-	const store = formOf(element).store!;
-	const errorFor = async (value: string) => {
-		store.setValue('email', value);
-		await store.validateField('email');
-		return store.getState().errors.email?.message;
-	};
+	return { host, root, field: () => host.querySelector<FormFieldElement>('se-field')! };
+}
 
+test('a field the config requires announces it and says so as an attribute for hydration', async () => {
+	const { host, root, field } = mountField(true);
 	try {
-		expect(await errorFor('not-an-email')).toBe('Enter an email');
-		expect(await errorFor('@example.test')).toBe('Enter an email');
-		expect(await errorFor('ada@example.test')).toBe('No test addresses');
-		expect(await errorFor('ada@example.com')).toBeUndefined();
+		await expect.poll(() => field().required).toBe(true);
+		expect(field().hasAttribute('data-se-required')).toBe(true);
+		await expect.poll(() => host.querySelector('input')?.getAttribute('aria-required')).toBe('true');
 	} finally {
 		root.unmount();
 	}
+});
+
+test('a field the config does not require announces nothing and carries no rules', async () => {
+	const { host, root, field } = mountField(false);
+	try {
+		await expect.poll(() => host.querySelector('input')?.getAttribute('aria-invalid')).toBe('false');
+		expect(field().required).toBe(false);
+		expect(field().hasAttribute('data-se-required')).toBe(false);
+		expect(host.querySelector('input')?.hasAttribute('aria-required')).toBe(false);
+	} finally {
+		root.unmount();
+	}
+});
+
+test('a field restores its required state from the attribute when the rules property did not survive', async () => {
+	const host = document.createElement('div');
+	host.innerHTML = `<rui-form><form data-ref="form" novalidate><se-field name="email" data-se-required><input name="email" data-rui-control /></se-field></form></rui-form>`;
+	document.body.append(host);
+	const field = host.querySelector<FormFieldElement>('se-field')!;
+	await expect.poll(() => field.required).toBe(true);
 });

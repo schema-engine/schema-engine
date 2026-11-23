@@ -1,4 +1,4 @@
-import type { ValidationElementTree } from '@/engine/value-validation';
+import type { FieldParticipation, ValidationStep } from '@/engine/value-validation';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import type { FieldArrayCommands } from './field-array';
 
@@ -223,6 +223,26 @@ export interface FormStateSnapshot {
 	readonly validating: Readonly<Record<string, true>>;
 	/** Whether no error from any source is recorded for a path that takes part. Cheap, and not a fresh check. */
 	readonly isValid: boolean;
+	/**
+	 * How many times the form was reset: it goes up by one on every {@link FormStateContainer.reset} and on nothing else.
+	 *
+	 * @remarks
+	 * It lets what lives around the container, such as a runtime's submission and step state, notice a reset
+	 * that no one told it about, since `reset` is the only way back and any caller may use it.
+	 */
+	readonly generation: number;
+	/**
+	 * What the form's constraints say, resolved in order against the values with whatever took no part absent.
+	 *
+	 * @remarks
+	 * `skippedSteps` lists the ids of the steps its constraints hide. `fields` has an entry for each rendered path that has a constraint,
+	 * is disabled by authoring or is held by a skipped step; `selectFieldState` folds the ancestors in. The same object comes back
+	 * while nothing in it changes, however much else does.
+	 */
+	readonly participation: {
+		readonly skippedSteps: readonly string[];
+		readonly fields: Readonly<Record<string, FieldParticipation>>;
+	};
 }
 
 /**
@@ -333,8 +353,12 @@ export interface FormStateContainer {
 
 /** What {@link createFormStateContainer} reads from a normalized form config. */
 export interface FormStateContainerConfig {
-	/** The steps whose elements make up the form: fields, rules and constraints. */
-	readonly steps: ReadonlyArray<{ readonly elements: ValidationElementTree }>;
+	/**
+	 * The steps whose elements make up the form: fields, rules and constraints.
+	 *
+	 * @remarks A step's own `constraints` decide whether it is skipped; a skipped step's fields take no part, as hidden fields do not.
+	 */
+	readonly steps: readonly ValidationStep[];
 	/** When a field validates before a check of it has failed; the config schema always fills it. */
 	readonly validationMode: FormValidationMode;
 	/** When a field validates once a check of it has run; the config schema always fills it. */

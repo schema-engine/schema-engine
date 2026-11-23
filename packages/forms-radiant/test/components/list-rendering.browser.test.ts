@@ -1,15 +1,16 @@
 import { afterEach, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createRoot } from '@ecopages/jsx/client';
-import { createInitialStepStates } from '@schema-engine/forms/engine';
 import { StepIndicatorsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StepIndicatorsElement } from '@/components/blocks/step-indicators';
 import type { SeFormArray } from '@/elements/inputs/form-array-elements';
 import { FormController } from '@/adapters/radiant/controller';
+import { containerOf } from './mount-field';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
-import { deriveInitialInstance, type FormMeta } from '@/lib/instance-view';
+import type { FormMeta } from '@/lib/instance-view';
+import { instanceAt } from '../adapters/test-instance';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -40,8 +41,8 @@ async function mountArray() {
 	await expect.poll(() => host.querySelectorAll('.se-form-array__item')).toHaveLength(3);
 	const arrayHost = host.querySelector('se-form-array') as SeFormArray;
 	const form = new FormController(arrayHost);
-	await expect.poll(() => form.ready).toBe(true);
-	return { host, form, arrayHost };
+	await expect.poll(() => form.container).toBeTruthy();
+	return { host, container: containerOf(arrayHost), arrayHost };
 }
 
 function rowsById(host: HTMLElement) {
@@ -58,8 +59,8 @@ function inputOf(row: HTMLElement) {
 }
 
 test('adding, removing and reordering array rows keeps the other rows, their values and focus', async () => {
-	const { host, form } = await mountArray();
-	const array = form.fieldArray('contacts');
+	const { host, container } = await mountArray();
+	const array = container.fieldArray('contacts');
 	const initial = rowsById(host);
 	const [idA, idB, idC] = [...initial.keys()];
 	const inputs = new Map([...initial].map(([id, row]) => [id, inputOf(row)]));
@@ -97,13 +98,13 @@ test('adding, removing and reordering array rows keeps the other rows, their val
 });
 
 test('adding a row does not touch the rows already rendered', async () => {
-	const { host, form } = await mountArray();
+	const { host, container } = await mountArray();
 	const records: MutationRecord[] = [];
 	const observer = new MutationObserver((batch) => records.push(...batch));
 	for (const row of rowsById(host).values()) {
 		observer.observe(row, { subtree: true, childList: true, attributes: true, characterData: true });
 	}
-	form.fieldArray('contacts').append('d');
+	container.fieldArray('contacts').append('d');
 	await expect.poll(() => host.querySelectorAll('.se-form-array__item')).toHaveLength(4);
 	await new Promise((resolve) => setTimeout(resolve, 50));
 	observer.disconnect();
@@ -129,7 +130,7 @@ test('existing rows follow a change to the array config', async () => {
 });
 
 test('a scalar array that gains named children names its fields by child', async () => {
-	const { host, form, arrayHost } = await mountArray();
+	const { host, container, arrayHost } = await mountArray();
 	Reflect.set(arrayHost, 'config', {
 		...arrayHost.config,
 		elements: [
@@ -150,16 +151,16 @@ test('a scalar array that gains named children names its fields by child', async
 	const input = host.querySelector<HTMLInputElement>('input[name="contacts.0.second"]')!;
 	input.value = 'typed';
 	input.dispatchEvent(new Event('input', { bubbles: true }));
-	await expect.poll(() => form.getValue('contacts.0.second')).toBe('typed');
+	await expect.poll(() => container.getValue('contacts.0.second')).toBe('typed');
 });
 
 test('typing into a row survives a sibling being added', async () => {
-	const { host, form } = await mountArray();
+	const { host, container } = await mountArray();
 	const first = inputOf([...rowsById(host).values()][0]!);
 	first.focus();
 	first.value = 'typed';
 	first.dispatchEvent(new Event('input', { bubbles: true }));
-	form.fieldArray('contacts').append('d');
+	container.fieldArray('contacts').append('d');
 	await expect.poll(() => host.querySelectorAll('.se-form-array__item')).toHaveLength(4);
 	expect(inputOf([...rowsById(host).values()][0]!)).toBe(first);
 	expect(first.value).toBe('typed');
@@ -168,18 +169,6 @@ test('typing into a row survives a sibling being added', async () => {
 
 function createMeta(titles: string[]): FormMeta {
 	return { id: 'wizard', steps: titles.map((title, index) => ({ id: `step-${index}`, title })) };
-}
-
-function instanceAt(meta: FormMeta, currentStep: number) {
-	return {
-		...deriveInitialInstance(meta),
-		currentStep,
-		stepStates: {
-			...createInitialStepStates(meta.steps.length),
-			completed: meta.steps.map((_, index) => index < currentStep),
-			visited: meta.steps.map((_, index) => index <= currentStep),
-		},
-	};
 }
 
 test('navigating a wizard keeps the step indicator nodes and only changes their state attributes', async () => {

@@ -140,10 +140,10 @@ describe('what carries the token', () => {
 		const { calls, request } = recording();
 		const engine = createFormEngine({ fetch: request, csrf: policy() });
 		const context = buildFormActionContext({
-			config: { id: 'signup', steps: [{}] },
+			config: { id: 'signup' },
 			values: {},
 			formState: { isValid: true, errors: {}, touched: {}, submitCount: 0 },
-			currentStep: 0,
+			step: { id: 'main', position: 0, total: 1 },
 			mountedAt: 0,
 			form: createMockBuilderContext({}).form,
 			fetch: engine.fetch,

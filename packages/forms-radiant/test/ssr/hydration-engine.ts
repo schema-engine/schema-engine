@@ -1,8 +1,7 @@
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
 import { EmailRuleSchema, type EmailRule, type ValidationRegistration } from '@schema-engine/forms/schemas/validation';
-import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
-import { PhoneInputElementRegistration } from '@/elements/inputs/form-phone-input.registration';
+import { schemaFormRegistrations } from '@/registrations';
 import { testAction } from '../adapters/test-actions';
 
 const emailForInputs: ValidationRegistration<EmailRule> = {
@@ -26,7 +25,9 @@ const emailForInputs: ValidationRegistration<EmailRule> = {
  */
 export function createHydrationEngine() {
 	return createFormEngine({
-		elements: [{ ...InputElementRegistration, validations: [emailForInputs] }, PhoneInputElementRegistration],
+		elements: schemaFormRegistrations.map((registration) =>
+			registration.$type === 'input' ? { ...registration, validations: [emailForInputs] } : registration,
+		),
 		actions: [testAction('submit', ['form_submit'], async () => ({ success: true }))],
 	});
 }

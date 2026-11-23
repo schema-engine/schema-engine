@@ -5,6 +5,7 @@
 
 import type { ContextType } from '@ecopages/radiant/context';
 import type { FormEngineRuntime } from '@schema-engine/forms/engine/form-engine';
+import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import { formEngineContext } from '../../src/components/provider';
 import { formInstanceContext, type FormInstanceContextValue } from '../../src/contexts/form-instance-context';
 
@@ -12,4 +13,6 @@ type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ?
 function assertType<_T extends true>(): void {}
 
 assertType<Equal<ContextType<typeof formInstanceContext>, FormInstanceContextValue | undefined>>();
-assertType<Equal<ContextType<typeof formEngineContext>, { engine?: FormEngineRuntime }>>();
+assertType<
+	Equal<ContextType<typeof formEngineContext>, { engine?: FormEngineRuntime; formatIssue?: FormIssueFormatter }>
+>();

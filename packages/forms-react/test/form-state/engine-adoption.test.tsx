@@ -86,7 +86,8 @@ function Field({ name }: { name: string }) {
 	);
 }
 function Controls() {
-	const { currentStep, goToNext } = useFormInstanceActions();
+	const { steps, current, next } = useFormInstanceActions();
+	const currentStep = steps.filter(({ skipped }) => !skipped).findIndex(({ id }) => id === current);
 	const { validate, formState } = useFormContext();
 	const { status, failures } = formState.submission;
 	return (
@@ -102,7 +103,7 @@ function Controls() {
 					)
 					.join(', ')}
 			</output>
-			<button type="button" onClick={goToNext}>
+			<button type="button" onClick={() => void next()}>
 				Next
 			</button>
 			<button type="submit">Submit</button>
@@ -291,15 +292,6 @@ test('submission errors name the failing action', async () => {
 	expect(screen.getByLabelText('submission errors')).toHaveTextContent('abort: Rejected');
 });
 
-function ManualSubmitTrigger() {
-	const { dispatchTrigger } = useFormInstanceActions();
-	return (
-		<button type="button" onClick={() => void dispatchTrigger('form_submit')}>
-			Dispatch submit
-		</button>
-	);
-}
-
 test('reports grouped action outcomes through the React renderer', async () => {
 	const results = vi.fn();
 	const formConfig: FormConfig = {
@@ -316,21 +308,12 @@ test('reports grouped action outcomes through the React renderer', async () => {
 	render(
 		<FormRenderer config={formConfig} engine={engine} onActionResults={results}>
 			<Controls />
-			<ManualSubmitTrigger />
 		</FormRenderer>,
 	);
 	await waitFor(() =>
 		expect(results).toHaveBeenCalledWith(
 			expect.arrayContaining([expect.objectContaining({ actionId: 'mounted' })]),
 			'form_mount',
-		),
-	);
-	results.mockClear();
-	await userEvent.click(screen.getByRole('button', { name: 'Dispatch submit' }));
-	await waitFor(() =>
-		expect(results).toHaveBeenCalledWith(
-			expect.arrayContaining([expect.objectContaining({ actionId: 'abort' })]),
-			'form_submit',
 		),
 	);
 	results.mockClear();
@@ -385,7 +368,7 @@ test('every context of a submission carries the submitted values: without exclud
 test('onSubmit is handed the fetch of the engine', async () => {
 	const submitted = vi.fn();
 	mount(
-		config,
+		{ ...config, steps: config.steps.slice(0, 1) },
 		<>
 			<Field name="address.street" />
 			<Controls />

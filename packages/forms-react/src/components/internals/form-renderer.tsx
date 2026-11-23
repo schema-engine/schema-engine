@@ -72,10 +72,10 @@ function FormElementsRenderer<
 	layout: LayoutTheme;
 	children?: React.ReactNode;
 }) {
-	const { currentStep } = useFormInstanceActions();
+	const { current } = useFormInstanceActions();
 	const engineContext = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
 	const recipe = engineContext ? getViewRecipe(engineContext.engine, config) : undefined;
-	const steps = getRenderableSteps(config, currentStep);
+	const steps = getRenderableSteps(config, current);
 
 	if (steps.length === 0) return null;
 

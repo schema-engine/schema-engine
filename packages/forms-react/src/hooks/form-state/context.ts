@@ -6,19 +6,20 @@ import type {
 	FormStateSnapshot,
 	FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
+import type { FormRuntime } from '@schema-engine/forms';
 import type { FieldRegistry } from './field-registry';
-import type { SubmissionStore } from './submission-store';
 
 /**
  * What a form instance provides to the hooks under it.
  *
- * @remarks The container is the only form state. The rest is what React adds around it: the issue text, the controls to focus and the submission state the container does not own.
+ * @remarks The container is the only form state. The rest is what React adds around it: the issue text, the controls to focus and the runtime that owns the submission and the steps.
  */
 export interface FormStateContextValue {
 	readonly container: FormStateContainer;
 	readonly formatIssue: FormIssueFormatter | undefined;
 	readonly fields: FieldRegistry;
-	readonly submission: SubmissionStore;
+	/** The lifecycle around the container: submission, steps and every action; its `container` is the one above. */
+	readonly runtime: FormRuntime;
 }
 
 export const FormStateContext = createContext<FormStateContextValue | null>(null);

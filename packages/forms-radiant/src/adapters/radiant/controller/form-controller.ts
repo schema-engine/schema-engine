@@ -1,175 +1,133 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
-import { FormStore, formContext } from '@ecopages/radiant-ui/form';
-import { getValueAtPath } from '@schema-engine/forms/lib/path-values';
-import { expandValues, flattenValues, readValue } from './values';
-import { writeValue, isWritingValue } from './write-value';
-import { getFieldArray } from './field-array';
-import type { FieldArrayValue, FormFieldValue } from '../../types';
+import { fromExternalStore, type Signal } from '@ecopages/signals';
+import type {
+	FormStateContainer,
+	FormStateIssue,
+	FormStateSnapshot,
+	FormSubmissionIssue,
+} from '@schema-engine/forms/state-container';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { describeIssue } from '@/lib/describe-issue';
 
 /**
- * Form operations scoped to the host's Radiant UI `formContext`.
+ * The form of the `se-form-instance` that contains a host: its container, a signal over its state, and its issue text.
  *
  * @remarks
- * Place the host inside `rui-form` (or pass `rui-form` itself). The controller
- * asks `formContext` on the host, then on ancestors, until a store answers. It
- * does not search descendants or the document. Reads are snapshots. `watchField`
- * and `watchForm` subscribe and return cleanup functions. `connect` waits for
- * context readiness and presentation updates and keeps existing watch
- * subscriptions, each on the store it subscribed to; call `disconnect` when a
- * manually managed host disconnects or moves to another form, which also ends
- * every watch subscription.
+ * The instance owns one {@link FormStateContainer} and provides it on its own context, so a host reads
+ * the form it belongs to and there is no global active form. Place the host inside the instance (or in
+ * the form a `FormRenderer` renders). Commands go through {@link FormController.container}, whose paths
+ * are dotted (`contacts.0.email`); state is followed with {@link FormController.select}. A new
+ * container replaces the old one when the instance's config or engine changes, so the controller
+ * resolves it from the context on each use and keeps no copy.
  */
 export class FormController {
-	private unsubscribeContext?: () => void;
-	private formStore?: FormStore;
-	private readonly subscriptions = new Set<() => void>();
-
 	constructor(readonly host: HTMLElement) {}
 
-	get ready(): boolean {
-		return this.store !== undefined;
+	/** The form's state container, once the instance has one. */
+	get container(): FormStateContainer | undefined {
+		return this.context()?.container;
 	}
 
-	/** Live Radiant UI store from `formContext`, once the form is ready. */
-	get store(): FormStore | undefined {
-		if (!this.formStore) {
-			const resolved = this.resolveStore();
-			if (resolved) this.formStore = resolved.store;
-		}
-		return this.formStore;
+	private context(): FormInstanceContextValue | undefined {
+		return this.resolve()?.context;
 	}
 
-	private requireStore(): FormStore {
-		const store = this.store;
-		if (!store) throw new Error('FormController requires a connected rui-form.');
-		return store;
-	}
-
-	private resolveStore(): { target: HTMLElement; store: FormStore } | undefined {
+	/** The nearest provider of the instance context at or above the host, and what it holds. */
+	private resolve(): { target: HTMLElement; context: FormInstanceContextValue } | undefined {
 		let current: Node | null = this.host;
 		while (current) {
 			if (current instanceof HTMLElement) {
-				const store = this.readStore(current);
-				if (store) return { target: current, store };
+				const context = this.read(current);
+				if (context) return { target: current, context };
 			}
 			current = current.parentNode;
 		}
 		return undefined;
 	}
 
-	private providerHost(): HTMLElement {
-		return this.resolveStore()?.target ?? this.host;
-	}
-
-	private readStore(target: HTMLElement): FormStore | undefined {
-		let store: FormStore | undefined;
+	private read(target: HTMLElement): FormInstanceContextValue | undefined {
+		let value: FormInstanceContextValue | undefined;
 		target.dispatchEvent(
-			new ContextSubscriptionRequestEvent(formContext, (context) => {
-				store = context.store;
+			new ContextSubscriptionRequestEvent(formInstanceContext, (context) => {
+				value = context;
 			}),
 		);
-		return store instanceof FormStore ? store : undefined;
+		return value;
 	}
 
-	connect(onChange: () => void = () => {}): void {
-		this.releaseContext();
-		const target = this.providerHost();
-		target.dispatchEvent(
+	/**
+	 * Follows the instance's context: `onContext` receives what the nearest provider holds now and each time it publishes again.
+	 *
+	 * @returns Stops following.
+	 */
+	private follow(onContext: (context: FormInstanceContextValue | undefined) => void): () => void {
+		let stop: (() => void) | undefined;
+		(this.resolve()?.target ?? this.host).dispatchEvent(
 			new ContextSubscriptionRequestEvent(
-				formContext,
+				formInstanceContext,
 				(context, unsubscribe) => {
-					this.unsubscribeContext = unsubscribe;
-					this.formStore = context.store instanceof FormStore ? context.store : undefined;
-					if (context.ready && this.formStore && !isWritingValue(this.formStore)) onChange();
+					if (unsubscribe) stop = unsubscribe;
+					onContext(context);
 				},
 				undefined,
 				true,
 				(unsubscribe) => {
-					this.unsubscribeContext = unsubscribe;
+					stop = unsubscribe;
 				},
 			),
 		);
+		return () => stop?.();
 	}
 
-	disconnect(): void {
-		this.releaseContext();
-		for (const unsubscribe of this.subscriptions) unsubscribe();
-		this.subscriptions.clear();
+	/** Calls `listener` when the form's container is replaced, and after each change of its state; returns the function that stops. */
+	private watchContainer(listener: () => void): () => void {
+		let current: FormStateContainer | undefined;
+		let unsubscribeContainer: (() => void) | undefined;
+		let first = true;
+		const stop = this.follow((context) => {
+			const next = context?.container;
+			const initial = first;
+			first = false;
+			if (next === current && !initial) return;
+			unsubscribeContainer?.();
+			current = next;
+			unsubscribeContainer = next?.subscribe(listener);
+			if (next && !initial) listener();
+		});
+		return () => {
+			stop();
+			unsubscribeContainer?.();
+		};
 	}
 
-	private releaseContext(): void {
-		this.unsubscribeContext?.();
-		this.unsubscribeContext = undefined;
-		this.formStore = undefined;
-	}
-
-	getValues(): Record<string, unknown> {
-		return expandValues(this.requireStore().getValues());
-	}
-
-	getValue(name: string): unknown {
-		return readValue(this.requireStore().getValues(), name);
-	}
-
-	setValue(name: string, value: unknown): void {
-		writeValue(this.requireStore(), name, value);
-	}
-
-	reset(values?: Record<string, unknown>): void {
-		this.requireStore().reset(values === undefined ? undefined : flattenValues(values));
-	}
-
-	get formState() {
-		return { ...this.requireStore().getState(), values: this.getValues() };
-	}
-
-	async trigger(names?: string | string[]): Promise<boolean> {
-		const store = this.requireStore();
-		if (names === undefined) return store.validateAll();
-		const results = await Promise.all(
-			(Array.isArray(names) ? names : [names]).map((name) => store.validateField(name)),
+	/**
+	 * A signal over a selector of the container's snapshot, `undefined` while the form has no container.
+	 *
+	 * @remarks
+	 * Selectors are pure functions of the snapshot, such as `selectFieldState` or
+	 * `(snapshot) => snapshot.rowIds['contacts']?.length ?? 0`. The signal notifies only when the
+	 * selected value changes. Create it once, as a field, and read it in an effect or a computed, which subscribe
+	 * it: an unsubscribed read answers with the container's server snapshot. It is total: before the container
+	 * exists (a `rui-form` or an engine that arrives late) and on the server it reads `undefined`, and it follows
+	 * the instance's container, so one that arrives or replaces the old reads and notifies from it.
+	 */
+	select<Selected>(selector: (snapshot: FormStateSnapshot) => Selected): Signal<Selected | undefined> {
+		return fromExternalStore<FormStateSnapshot | undefined, Selected | undefined>(
+			{
+				subscribe: (listener) => this.watchContainer(listener),
+				getSnapshot: () => this.container?.getSnapshot(),
+				getServerSnapshot: () => this.container?.getServerSnapshot(),
+			},
+			(snapshot) => (snapshot === undefined ? undefined : selector(snapshot)),
 		);
-		return results.every(Boolean);
 	}
 
-	field(name: string): FormFieldValue {
-		const store = this.requireStore();
-		return {
-			name,
-			get value() {
-				return readValue(store.getValues(), name);
-			},
-			get error() {
-				return store.getFieldError(name);
-			},
-			onChange: (value) => writeValue(store, name, value),
-			onBlur: () => {
-				void store.handleFieldBlur(name);
-			},
-		};
-	}
-
-	fieldArray(name: string): FieldArrayValue {
-		return getFieldArray(this.requireStore(), name);
-	}
-
-	watchField(name: string, listener: (value: unknown) => void): () => void {
-		return this.watchForm((values) => listener(getValueAtPath(values, name)));
-	}
-
-	/** The listener receives an initial snapshot and each subsequent store notification. */
-	watchForm(listener: (values: Record<string, unknown>) => void): () => void {
-		const store = this.requireStore();
-		const notify = () => {
-			if (!isWritingValue(store)) listener(expandValues(store.getValues()));
-		};
-		const unsubscribeStore = store.subscribe(notify);
-		const unsubscribe = () => {
-			unsubscribeStore();
-			this.subscriptions.delete(unsubscribe);
-		};
-		this.subscriptions.add(unsubscribe);
-		notify();
-		return unsubscribe;
+	/**
+	 * The text of an issue at `path` as the form shows it: the form's formatter, else the issue's own `message`.
+	 *
+	 * @remarks `undefined` when neither gives text, never the issue's `type`.
+	 */
+	formatIssue(issue: FormStateIssue | FormSubmissionIssue, { path }: { readonly path: string }): string | undefined {
+		return describeIssue(issue, path, this.context()?.formatIssue);
 	}
 }

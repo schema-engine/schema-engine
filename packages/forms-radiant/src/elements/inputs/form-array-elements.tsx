@@ -12,16 +12,15 @@ import { formEngineContext } from '@/components/provider';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { arrayItemScope, createArrayRowDefault, seedArrayRows, usesScalarArrayItem } from '@schema-engine/forms';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms/engine/form-engine';
-import { FormController } from '@/adapters/radiant/controller';
-import { isRenderedRequired, toFieldRules, withContainerState } from '@/lib/field-rules';
+import { selectError, type FormIssueFormatter, type FormStateContainer } from '@schema-engine/forms/state-container';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { describeIssue } from '@/lib/describe-issue';
+import { isRenderedRequired, withContainerState } from '@/lib/field-rules';
 import { isFieldRequired } from '@schema-engine/forms/schemas/validation/utils';
 import { RequiredMarker } from '../field-group';
-import { adoptFieldArrayIds } from '@/adapters/radiant/controller/field-array';
 import { getValueAtPath, setValueAtPath } from '@schema-engine/forms/lib/path-values';
-import { formContext, type FormContextValue } from '@ecopages/radiant-ui/form';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
 import { GRID_CLASS, GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
-import { readValue } from '@/adapters/radiant/controller/values';
 
 function TrashIcon() {
 	return (
@@ -191,48 +190,56 @@ export class SeFormArray extends RadiantElement {
 
 	@prop({ type: Object }) config!: ArrayElementsProps;
 
-	readonly form = new FormController(this);
 	@state private engine?: FormEngine;
-	private unregisterArrayField?: () => void;
-	private isArrayFieldRegistered = false;
-	private initialized = false;
+	private container?: FormStateContainer;
+	private unsubscribeContainer?: () => void;
+	private formatIssue?: FormIssueFormatter;
 	private preservedHydratedContainer = false;
 	private readonly rows = createState<readonly ArrayRow[]>([]);
 	private viewHoldsServerRows = false;
 
 	@state private fieldError?: string;
-	private formContextValue?: FormContextValue;
 
-	@onContextUpdate({ context: formContext, requestUpdate: false })
-	onFormContext(value: FormContextValue): void {
-		this.formContextValue = value;
-		this.fieldError = value.fields[this.config?.name ?? '']?.error;
-		this.describeGroup();
-		if (!value.ready || !this.config?.name) {
-			this.unregisterArrayField?.();
-			this.unregisterArrayField = undefined;
-			this.isArrayFieldRegistered = false;
-			return;
+	/**
+	 * Follows the form instance's container, which a new config or engine replaces.
+	 *
+	 * @remarks
+	 * The rows come from the container's `rowIds`, so they never get out of step with its values, and the
+	 * array's own error is the container's error at the array's path: no `rui-field` wraps the array to
+	 * present it, and `rui-form` ignores errors it has no control for.
+	 */
+	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
+	onFormInstance(value: FormInstanceContextValue | undefined): void {
+		this.formatIssue = value?.formatIssue;
+		if (value?.container !== this.container) {
+			this.unsubscribeContainer?.();
+			this.container = value?.container;
+			this.unsubscribeContainer = this.container?.subscribe(() => this.syncFromContainer());
 		}
-		this.scheduleSync(this.renderedIds().length ? this.renderedIds() : this.initialIds());
-		this.registerArrayField(value);
+		this.syncFromContainer();
 	}
 
 	/**
 	 * Follows the engine the enclosing renderer publishes, including one bound after this host connected.
 	 *
-	 * @remarks
-	 * The array registers with the form and seeds its rows only once it has an engine, so the
-	 * form context it already received is replayed when the engine arrives.
+	 * @remarks The rows carry the engine they render with, so an engine that arrives rebuilds them.
 	 */
 	@onContextUpdate({ context: formEngineContext, select: (context) => context?.engine, requestUpdate: false })
 	onRendererEngine(engine: FormEngine | undefined): void {
 		if (!engine || this.engine === engine) return;
 		this.engine = engine;
-		const value = this.formContextValue;
-		if (!value?.ready || !this.config?.name) return;
-		this.scheduleSync(this.renderedIds().length ? this.renderedIds() : this.initialIds());
-		this.registerArrayField(value);
+		this.syncFromContainer();
+	}
+
+	/** Takes the rows and the array's own error from the container's current snapshot. */
+	private syncFromContainer(): void {
+		const { container, config } = this;
+		if (!container || !config?.name) return;
+		const snapshot = container.getSnapshot();
+		const issue = selectError(snapshot, config.name);
+		this.fieldError = issue && describeIssue(issue, config.name, this.formatIssue);
+		this.describeGroup();
+		this.setRows(snapshot.rowIds[config.name] ?? []);
 	}
 
 	/**
@@ -247,38 +254,12 @@ export class SeFormArray extends RadiantElement {
 		else group.removeAttribute('aria-describedby');
 	}
 
-	/**
-	 * @remarks
-	 * Registering publishes `formContext` again, synchronously, so the flag is set before the call.
-	 */
-	private registerArrayField(value: FormContextValue): void {
-		if (this.isArrayFieldRegistered || !this.resolveEngine()) return;
-
-		const name = this.config.name;
-		this.isArrayFieldRegistered = true;
-		this.unregisterArrayField = value.actions.register({
-			name,
-			rules: this.arrayRules(),
-			getRules: () => this.arrayRules(),
-			defaultValue: this.initialArrayValue(),
-			getValue: () => {
-				const store = this.form.store;
-				return store ? readValue(store.values, name) : undefined;
-			},
-			setValue: () => {},
-		});
-	}
-
-	private arrayRules() {
-		return toFieldRules(this.config, this.resolveEngine()?.getValidationRegistry());
-	}
-
 	private initialArrayValue(): unknown[] | undefined {
 		return createInitialArrayValue(this.config, this.currentValues());
 	}
 
 	private currentValues(): Record<string, unknown> {
-		return this.form.ready ? this.form.getValues() : (this.config.initialFormValues ?? {});
+		return this.container?.getSnapshot().values ?? this.config.initialFormValues ?? {};
 	}
 
 	private rowInitialValues(): Record<string, unknown> {
@@ -297,19 +278,9 @@ export class SeFormArray extends RadiantElement {
 		return this.engine ?? (this.isConnected ? undefined : resolveFormEngine(this));
 	}
 
-	private get ids(): string[] {
-		if (!this.initialized && this.isConnected) {
-			const initialIds = this.initialIds();
-			if (initialIds.length) return initialIds;
-		}
-		if (this.form.ready) {
-			return this.form.fieldArray(this.config.name).fields.map(({ id }) => id);
-		}
-		return this.initialIds();
-	}
-
-	private initialIds(): string[] {
-		return (this.config.ssrInitialRows ?? []).map((_, index) => `seed-${index}`);
+	/** The ids the server rendered, until the container answers with its own, which are the same. */
+	private get ids(): readonly string[] {
+		return this.container?.getSnapshot().rowIds[this.config.name] ?? this.config.ssrRowIds ?? [];
 	}
 
 	/**
@@ -322,24 +293,6 @@ export class SeFormArray extends RadiantElement {
 		this.preservedHydratedContainer = this.slotted !== null;
 		this.viewHoldsServerRows = this.preservedHydratedContainer;
 		return this.preservedHydratedContainer;
-	}
-
-	private syncRows(initialIds: readonly string[]): void {
-		if (!this.form.ready || !this.config) return;
-		if (!this.initialized) {
-			this.initialized = true;
-			const array = this.form.fieldArray(this.config.name);
-			const currentIds = array.fields.map(({ id }) => id);
-			const count = Math.max(this.config.minItems ?? 0, initialIds.length) - currentIds.length;
-			if (count > 0) array.append(Array.from({ length: count }, () => this.emptyItem()));
-			const store = this.form.store;
-			const seededIds = array.fields.map(({ id }) => id);
-			if (store && initialIds.length === seededIds.length) {
-				adoptFieldArrayIds(store, this.config.name, initialIds);
-			}
-		}
-		const ids = this.ids;
-		this.setRows(ids);
 	}
 
 	private renderedIds(): string[] {
@@ -386,22 +339,14 @@ export class SeFormArray extends RadiantElement {
 
 	protected override onConnected(): void {
 		this.engine ??= resolveFormEngine(this);
-		const initialIds = this.initialIds();
-		this.setRows(initialIds);
-		if (this.form.ready) this.scheduleSync(initialIds);
-	}
-
-	private scheduleSync(initialIds: readonly string[]): void {
-		queueMicrotask(() => this.syncRows(initialIds));
+		this.setRows(this.ids);
 	}
 
 	override disconnectedCallback(): void {
 		this.engine = undefined;
-		this.form.disconnect();
-		this.unregisterArrayField?.();
-		this.unregisterArrayField = undefined;
-		this.isArrayFieldRegistered = false;
-		this.initialized = false;
+		this.unsubscribeContainer?.();
+		this.unsubscribeContainer = undefined;
+		this.container = undefined;
 		this.rows.set([]);
 		super.disconnectedCallback();
 	}
@@ -414,23 +359,23 @@ export class SeFormArray extends RadiantElement {
 	 */
 	@onEvent({ type: 'click', selector: '.se-form-array__add' })
 	onAdd(event: Event): void {
-		if (!this.ownsControl(event)) return;
+		if (!this.ownsControl(event) || !this.container) return;
 		const maxItems = this.config.maxItems;
 		if (maxItems && this.ids.length >= maxItems) {
 			return;
 		}
-		this.form.fieldArray(this.config.name).append(this.emptyItem());
+		this.container.fieldArray(this.config.name).append(this.emptyItem());
 	}
 
 	@onEvent({ type: 'click', selector: '.se-form-array__remove' })
 	onRemove(event: Event): void {
-		if (!this.ownsControl(event)) return;
+		if (!this.ownsControl(event) || !this.container) return;
 		const id = (event.target as Element).closest('[data-se-row-id]')?.getAttribute('data-se-row-id');
 		if (this.ids.length <= (this.config.minItems ?? 0)) {
 			return;
 		}
 		const index = this.ids.indexOf(id ?? '');
-		if (index >= 0) this.form.fieldArray(this.config.name).remove(index);
+		if (index >= 0) this.container.fieldArray(this.config.name).remove(index);
 	}
 
 	private ownsControl(event: Event): boolean {
@@ -467,7 +412,7 @@ export class SeFormArray extends RadiantElement {
  * `this.slotted`, which lets Radiant mark their position instead of serializing a second copy in a slotted template.
  */
 export function FormArrayElements(config: ArrayElementsProps) {
-	const { ssrInitialRows: _ssrInitialRows, initialFormValues, ...fieldConfig } = config;
+	const { ssrInitialRows: _ssrInitialRows, ssrRowIds, initialFormValues, ...fieldConfig } = config;
 	const engine = resolveFormEngine();
 	const fieldHost = mergeFieldGridHost(fieldConfig.grid, fieldConfig.style, engine?.getLayout().id);
 	const initialValues = structuredClone(initialFormValues ?? {});
@@ -476,18 +421,14 @@ export function FormArrayElements(config: ArrayElementsProps) {
 	const arrayConfig = {
 		...fieldConfig,
 		ssrInitialRows: initialRows ?? [],
+		ssrRowIds: ssrRowIds ?? [],
 		initialFormValues,
 	};
 	const children = engine
 		? renderArrayContent({
 				config: arrayConfig,
 				rows: createState<readonly ArrayRow[]>(
-					(initialRows ?? []).map((_, index) => ({
-						id: `seed-${index}`,
-						index,
-						config: arrayConfig,
-						engine,
-					})),
+					arrayConfig.ssrRowIds.map((id, index) => ({ id, index, config: arrayConfig, engine })),
 				),
 				initialValues,
 				renderValues: initialValues,
@@ -512,4 +453,10 @@ export function FormArrayElements(config: ArrayElementsProps) {
 			<SeFormArray config={arrayConfig}>{children}</SeFormArray>
 		</fieldset>
 	);
+}
+
+declare global {
+	interface HTMLElementTagNameMap {
+		'se-form-array': SeFormArray;
+	}
 }

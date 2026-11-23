@@ -17,9 +17,11 @@ export interface BuilderActionBaseContext {
 	formId: string;
 	/** Current form data (all fields) */
 	formData: Record<string, unknown>;
-	/** Current step index (for multi-step forms) */
+	/** The id of the current step. */
+	stepId: string;
+	/** The 0-based position of the current step among the steps that are not skipped. */
 	currentStep: number;
-	/** Total number of steps */
+	/** How many steps are not skipped. */
 	totalSteps: number;
 	/**
 	 * Whether no validation error is currently recorded.
@@ -59,7 +61,7 @@ export interface BuilderActionBaseContext {
 		 * Resolves to whether the values current at the call are valid, recording and showing no errors.
 		 *
 		 * @remarks
-		 * Covers every field of every step, unlike a step-scoped `validate`. Fields hidden or disabled, by their config or a constraint, take no part and are not checked (`resolveExcludedPaths`). Does not cancel a field validation
+		 * Covers every field of every step, unlike a step-scoped `validate`. Fields hidden or disabled, by their config or a constraint, and the fields of a skipped step take no part and are not checked (`resolveParticipation`). Does not cancel a field validation
 		 * that is pending, and a later edit does not change the answer. A debounced async rule waits out its delay.
 		 */
 		checkValidity: () => Promise<boolean>;

@@ -478,8 +478,10 @@ describe('validateFormConfig', () => {
 			],
 		};
 
-		expect(getRenderableSteps(config, 0).map((step) => step.id)).toEqual(['one', 'two']);
-		expect(getRenderableSteps({ ...config, view: { $type: 'wizard' } }, 1).map((step) => step.id)).toEqual(['two']);
+		expect(getRenderableSteps(config, 'one').map((step) => step.id)).toEqual(['one', 'two']);
+		expect(getRenderableSteps({ ...config, view: { $type: 'wizard' } }, 'two').map((step) => step.id)).toEqual([
+			'two',
+		]);
 	});
 
 	test('validates registered Zod elements through defineForm', () => {

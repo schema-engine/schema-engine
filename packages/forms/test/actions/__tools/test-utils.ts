@@ -12,6 +12,7 @@ export function createMockBuilderContext<TConfig = unknown>(
 	return {
 		config,
 		formId: 'test-form',
+		stepId: 'main',
 		currentStep: 0,
 		totalSteps: 1,
 		isValid: true,

@@ -6,7 +6,7 @@ import { formatStepLabel, type StepHeaderConfig } from '@schema-engine/forms/rec
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveInitialInstance } from '@/lib/instance-view';
+import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
 
 @customElement('se-step-header')
 export class StepHeaderElement extends RadiantElement {
@@ -25,10 +25,14 @@ export class StepHeaderElement extends RadiantElement {
 
 		const headerConfig = this.slotConfig;
 		if (!headerConfig) return null;
-		const stepIndex = meta.steps[instance.currentStep] ? instance.currentStep : 0;
-		const step = meta.steps[stepIndex];
+		const steps = deriveFormSteps(meta, instance);
+		const stepIndex = Math.max(
+			steps.findIndex(({ isActive }) => isActive),
+			0,
+		);
+		const step = meta.steps.find(({ id }) => id === instance.current) ?? meta.steps[0];
 		if (!step) return null;
-		const total = meta.steps.length;
+		const total = steps.length;
 
 		const title = step.title || (headerConfig.fallbackToFormTitle ? meta.title : undefined);
 		const description = step.description || meta.description;

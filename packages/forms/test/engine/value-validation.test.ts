@@ -11,9 +11,10 @@ import {
 	collectStepFieldPaths,
 	effectiveRulesFor,
 	isPathExcluded,
-	resolveExcludedPaths,
+	resolveParticipation,
 	validateFieldValue,
 	validateFormValues,
+	type ValidationElementTree,
 } from '@/engine/value-validation';
 
 /** The issue of a failed rule. */
@@ -77,7 +78,7 @@ describe('collectStepFieldPaths', () => {
 
 		expect(collectStepFieldPaths(step, values)).toEqual(['tags', 'tags.0', 'tags.1']);
 		await expect(
-			issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+			issuesOf({ steps: [{ elements: [element] }], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
 			'tags.0': [found('required', 'Tag is required')],
 		});
@@ -95,7 +96,7 @@ describe('collectStepFieldPaths', () => {
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['tags', 'tags.0']);
 		await expect(
-			issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+			issuesOf({ steps: [{ elements: [element] }], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
 			'tags.0': [found('required', 'Tag is required')],
 		});
@@ -120,7 +121,7 @@ describe('collectStepFieldPaths', () => {
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toContain('groups.0.tags.0');
 		await expect(
-			issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+			issuesOf({ steps: [{ elements: [element] }], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
 			'groups.0.tags.0': [found('required', 'Tag is required')],
 		});
@@ -148,7 +149,7 @@ describe('collectStepFieldPaths', () => {
 
 		expect(collectStepFieldPaths({ elements: [element] }, values)).toEqual(['groups', 'groups.0', 'groups.0.0']);
 		await expect(
-			issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() }),
+			issuesOf({ steps: [{ elements: [element] }], values, registry, debounceScope: createDebounceScope() }),
 		).resolves.toEqual({
 			'groups.0.0': [found('required', 'Tag is required')],
 		});
@@ -258,7 +259,7 @@ describe('validateFormValues', () => {
 
 	test('returns nested address errors and validates only requested names', async () => {
 		const errors = await issuesOf({
-			elements,
+			steps: [{ elements }],
 			values: { address: { street: '' }, email: '' },
 			registry,
 			debounceScope: createDebounceScope(),
@@ -280,7 +281,7 @@ describe('validateFormValues', () => {
 		});
 		const validate = (kind: string) =>
 			issuesOf({
-				elements: [{ $type: 'input', name: 'kind' }, company],
+				steps: [{ elements: [{ $type: 'input', name: 'kind' }, company] }],
 				values: { kind, company: { vat: '', office: { street: '' } } },
 				registry,
 				debounceScope: createDebounceScope(),
@@ -298,7 +299,7 @@ describe('validateFormValues', () => {
 			elements: [{ $type: 'input', name: 'vat' }],
 		});
 		const errors = await issuesOf({
-			elements: [company],
+			steps: [{ elements: [company] }],
 			values: { company: { vat: '' } },
 			registry,
 			debounceScope: createDebounceScope(),
@@ -314,7 +315,7 @@ describe('validateFormValues', () => {
 			rules: [{ type: 'minItems', value: 1, message: 'Select a language' }],
 		});
 		const errors = await issuesOf({
-			elements: [languages],
+			steps: [{ elements: [languages] }],
 			values: { languages: [] },
 			registry,
 			debounceScope: createDebounceScope(),
@@ -362,7 +363,7 @@ describe('validateFormValues', () => {
 			name: 'email',
 			rules: [{ type: 'required', message: 'Email is required' }],
 		});
-		const input = { elements: [field], values: {}, registry, debounceScope: createDebounceScope() };
+		const input = { steps: [{ elements: [field] }], values: {}, registry, debounceScope: createDebounceScope() };
 
 		expect(await issuesOf({ ...input, names: [] })).toEqual({});
 		expect(Object.keys(await issuesOf(input))).toEqual(['email']);
@@ -378,7 +379,7 @@ describe('validateFormValues', () => {
 			],
 		});
 		const errors = await issuesOf({
-			elements: [field],
+			steps: [{ elements: [field] }],
 			values: { code: 'ab' },
 			registry,
 			debounceScope: createDebounceScope(),
@@ -401,7 +402,7 @@ describe('validateFormValues', () => {
 			],
 		});
 		const input = {
-			elements: [contacts],
+			steps: [{ elements: [contacts] }],
 			values: { contacts: [{}] },
 			registry,
 			debounceScope: createDebounceScope(),
@@ -423,7 +424,7 @@ describe('validateFormValues', () => {
 			elements: [{ $type: 'input', name: 'email', rules: [{ type: 'required', message: 'Email is required' }] }],
 		});
 		const errors = await issuesOf({
-			elements: [contacts],
+			steps: [{ elements: [contacts] }],
 			values: { contacts: [{ email: 'ada@example.com' }, { name: 'Grace' }, { email: undefined }] },
 			registry,
 			debounceScope: createDebounceScope(),
@@ -447,7 +448,7 @@ describe('validateFormValues', () => {
 			],
 		});
 		const errors = await issuesOf({
-			elements: [contacts],
+			steps: [{ elements: [contacts] }],
 			values: { contacts: [{ phones: ['555'] }] },
 			registry,
 			debounceScope: createDebounceScope(),
@@ -457,7 +458,11 @@ describe('validateFormValues', () => {
 	});
 });
 
-describe('resolveExcludedPaths', () => {
+const resolveExcludedPaths = (elements: ValidationElementTree, values: Record<string, unknown>) => [
+	...resolveParticipation([{ elements }], values).excluded,
+];
+
+describe('resolveParticipation', () => {
 	const elements = normalizeElements([
 		{ $type: 'input', name: 'kind' },
 		{
@@ -511,7 +516,7 @@ describe('resolveExcludedPaths', () => {
 			{ $type: 'input', name: 'open', rules: [{ type: 'required' }] },
 		]);
 		const { issues } = await validateFormValues({
-			elements: required,
+			steps: [{ elements: required }],
 			values: { locked: '', open: '' },
 			registry,
 			debounceScope: createDebounceScope(),
@@ -559,7 +564,7 @@ describe('an array with one child', () => {
 			name: 'users',
 			elements: [{ $type: 'input', name: 'name', rules: [{ type: 'required', message: 'Name is required' }] }],
 		});
-		return issuesOf({ elements: [element], values, registry, debounceScope: createDebounceScope() });
+		return issuesOf({ steps: [{ elements: [element] }], values, registry, debounceScope: createDebounceScope() });
 	};
 
 	test('is validated at the field of each row when its rows are objects', async () => {

@@ -140,14 +140,6 @@
 			"types": "./dist/server-errors/index.d.ts",
 			"import": "./dist/server-errors/index.js"
 		},
-		"./constraints": {
-			"types": "./dist/constraints/index.d.ts",
-			"import": "./dist/constraints/index.js"
-		},
-		"./constraints/*": {
-			"types": "./dist/constraints/*.d.ts",
-			"import": "./dist/constraints/*.js"
-		},
 		"./recipes": {
 			"types": "./dist/recipes/index.d.ts",
 			"import": "./dist/recipes/index.js"

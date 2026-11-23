@@ -93,6 +93,32 @@ If you omit `view.$type` on a multi-step form, `validateForm` writes the engine'
 
 See [Registration Flow](/docs/examples/registration-flow) for a full wizard configuration.
 
+### Skipping steps and the stepper
+
+A step takes `constraints` (`show` or `hide`, the same logic as fields) on fields of **earlier** steps. A step its
+constraints hide is skipped: Next and Back pass over it, `goTo` refuses it, progress counts only the steps that are
+not skipped, and its fields take no part (they are not validated and are left out of the submitted values; the
+values are kept and come back if the step is shown again). The first step cannot have constraints:
+
+```typescript
+steps: [
+	{ id: 'contact', title: 'Contact', elements: [{ $type: 'input', name: 'hasCompany', label: 'Company?' }] },
+	{
+		id: 'company',
+		title: 'Company',
+		elements: [{ $type: 'input', name: 'companyName', label: 'Company name' }],
+		constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', action: 'show' }],
+	},
+	{ id: 'payment', title: 'Payment', elements: [] },
+];
+```
+
+The form's `navigation` setting decides how freely the stepper moves forward: `'linear'` (the default) reaches only
+steps already visited and validates every step on the way, landing on the first that fails; `'free'` reaches any step
+without validating. Going back is always allowed and Next validates in both. A block reads this from the view model:
+`steps` lists the steps that are not skipped (`index` and `total` count only those), and `navigation.canGoToStep(id)`
+and `navigation.goToStep(id)` take step ids.
+
 ## Style a recipe
 
 A copy-paste path from install to a styled card:

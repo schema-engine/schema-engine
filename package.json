@@ -87,9 +87,6 @@
 			"core-js-pure",
 			"esbuild",
 			"msw"
-		],
-		"patchedDependencies": {
-			"@ecopages/radiant-ui@0.4.3": "patches/@ecopages__radiant-ui@0.4.3.patch"
-		}
+		]
 	}
 }

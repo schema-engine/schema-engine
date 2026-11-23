@@ -1,9 +1,5 @@
 import type { FormFetch } from '../lib/form-fetch';
 import type { BuilderActionBaseContext, FormStateError } from '@/types';
-import { createDebounceScope } from '../lib/debounce';
-import { flattenStepElements } from '../lib/field-scope';
-import type { ValidationRegistry } from '../schemas/validation/validation-registry';
-import { validateFormValues } from './value-validation';
 
 /**
  * Renderer form state in the engine's shape.
@@ -30,15 +26,16 @@ export interface FormActionContextFormState {
 
 interface StepTiming {
 	mountedAt: number;
-	currentStep: number;
+	stepId: string;
 	stepStartTime: number;
 }
 
 interface BuildFormActionContextOptions<TForm extends BuilderActionBaseContext['form']> {
-	config: { id?: string; steps: readonly unknown[] };
+	config: { id?: string };
 	values: Record<string, unknown>;
 	formState: FormActionContextFormState;
-	currentStep: number;
+	/** The current step: its id, its position among the steps that are not skipped and how many there are. */
+	step: { id: string; position: number; total: number };
 	mountedAt: number;
 	form: TForm;
 	/** The engine's `fetch`, which the context hands to actions. */
@@ -50,15 +47,15 @@ const stepTimings = new WeakMap<object, StepTiming>();
 const countTouched = (touched: Readonly<Partial<Record<string, boolean>>>): number =>
 	Object.values(touched).filter((isTouched) => isTouched === true).length;
 
-function getStepStartTime(form: object, currentStep: number, mountedAt: number, now: number): number {
+function getStepStartTime(form: object, stepId: string, mountedAt: number, now: number): number {
 	const timing = stepTimings.get(form);
 	if (!timing || timing.mountedAt !== mountedAt) {
-		stepTimings.set(form, { mountedAt, currentStep, stepStartTime: mountedAt });
+		stepTimings.set(form, { mountedAt, stepId, stepStartTime: mountedAt });
 		return mountedAt;
 	}
 
-	if (timing.currentStep !== currentStep) {
-		timing.currentStep = currentStep;
+	if (timing.stepId !== stepId) {
+		timing.stepId = stepId;
 		timing.stepStartTime = now;
 	}
 
@@ -69,14 +66,14 @@ function getStepStartTime(form: object, currentStep: number, mountedAt: number, 
  * Builds the framework-neutral action context used by form action dispatch.
  *
  * @remarks
- * Step start times are kept per form instance and reset when its active step changes.
+ * Step start times are kept per form instance and reset when its current step changes.
  * `userInteractions` counts touched fields plus submissions.
  */
 export function buildFormActionContext<TForm extends BuilderActionBaseContext['form']>({
 	config,
 	values,
 	formState,
-	currentStep,
+	step,
 	mountedAt,
 	form,
 	fetch,
@@ -86,12 +83,13 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 	return {
 		formId: config.id || 'unnamed-form',
 		formData: values,
-		currentStep,
-		totalSteps: config.steps.length,
+		stepId: step.id,
+		currentStep: step.position,
+		totalSteps: step.total,
 		isValid: formState.isValid,
 		errors: formState.errors,
 		metadata: {
-			stepStartTime: getStepStartTime(form, currentStep, mountedAt, now),
+			stepStartTime: getStepStartTime(form, step.id, mountedAt, now),
 			totalFormTime: now - mountedAt,
 			userInteractions: countTouched(formState.touched) + formState.submitCount,
 		},
@@ -100,54 +98,22 @@ export function buildFormActionContext<TForm extends BuilderActionBaseContext['f
 	};
 }
 
-interface CheckFormValidityOptions {
-	steps: readonly { readonly elements?: readonly object[] }[];
-	values: Record<string, unknown>;
-	registry: ValidationRegistry;
-}
-
-/**
- * Whether `values` pass the validation of every field of every step that takes part in validation.
- *
- * @remarks
- * Fields hidden or disabled by their config or a constraint do not take part (`resolveExcludedPaths`), and
- * a warning never fails the check. A rule that cannot run rejects the call with a `FormValidationFailure`.
- * Silent: it records and shows no errors, though an async rule still makes its request. It validates under a debounce scope of
- * its own, so it never replaces a debounced check a field has pending in the
- * form's scope, at the cost of waiting out a debounced rule's delay instead of
- * joining that check. It copies `values` when called, so later edits do not
- * change the answer. Values `structuredClone` cannot copy reject the call.
- */
-export async function checkFormValidity({ steps, values, registry }: CheckFormValidityOptions): Promise<boolean> {
-	const { issues, failures, superseded } = await validateFormValues({
-		elements: flattenStepElements(steps),
-		values: structuredClone(values),
-		registry,
-		debounceScope: createDebounceScope(),
-	});
-	const failure = Object.values(failures).flat()[0];
-	if (failure) throw failure;
-	if (superseded.length > 0) return false;
-	return !Object.values(issues).some((found) => found.some((issue) => issue.severity === 'error'));
-}
-
 interface ActionScopes<TAction> {
 	actions?: readonly TAction[];
-	steps: readonly { actions?: readonly TAction[] }[];
+	steps: readonly { id: string; actions?: readonly TAction[] }[];
 }
 
 /**
- * Lists the actions a trigger dispatches while the step at `stepIndex` is active: the
- * form's `actions`, then that step's.
+ * Lists the actions a trigger dispatches while the step `stepId` is current: the form's `actions`,
+ * then that step's.
  *
  * @remarks
- * The step navigator dispatches `step_leave` while the step being left is active and
- * `step_change` and `step_enter` once the entered step is, so a step's actions see the
- * step triggers of navigation into and out of that step, plus every other trigger fired
- * while it is current.
+ * The runtime dispatches `step_leave` while the step being left is current and `step_change` and
+ * `step_enter` once the entered step is, so a step's actions see the step triggers of navigation
+ * into and out of that step, plus every other trigger fired while it is current.
  */
-export function collectStepActions<TAction>(config: ActionScopes<TAction>, stepIndex: number): TAction[] {
-	return [...(config.actions ?? []), ...(config.steps[stepIndex]?.actions ?? [])];
+export function collectStepActions<TAction>(config: ActionScopes<TAction>, stepId: string): TAction[] {
+	return [...(config.actions ?? []), ...(config.steps.find((step) => step.id === stepId)?.actions ?? [])];
 }
 
 /** Whether the form or any of its steps configures an action. */

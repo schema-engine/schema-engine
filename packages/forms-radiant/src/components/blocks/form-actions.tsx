@@ -29,7 +29,7 @@ export class FormActionsElement extends RadiantElement {
 	override render(): JsxRenderable {
 		if (!this.slotConfig) return null;
 		const { labels, align } = this.slotConfig;
-		const isSubmitting = this.instance?.isSubmitting ?? false;
+		const isSubmitting = this.instance?.submission.status === 'pending';
 		return (
 			<div classes={['se-form-actions', `se-form-actions--align-${align}`]}>
 				<RuiButton type="submit" prop:disabled={isSubmitting} aria-label={labels.submitAriaLabel}>

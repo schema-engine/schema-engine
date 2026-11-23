@@ -29,10 +29,13 @@ export function FormRenderer({
 			style={style}
 			engine={resolvedEngine}
 			defaultValues={props.defaultValues}
+			formatIssue={props.formatIssue}
 		>
 			<FormProvider
 				config={props.config}
 				defaultValues={props.defaultValues}
+				action={props.action}
+				method={props.method}
 				onSubmit={props.onSubmit}
 				onChange={props.onChange}
 				onAction={props.onAction}

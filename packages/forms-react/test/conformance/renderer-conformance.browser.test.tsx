@@ -9,6 +9,7 @@ import {
 	customArrayType,
 } from '../../../../test-utils/renderer-conformance';
 import { FormRenderer } from '@/components/internals/form-renderer';
+import { useFormStateContext, type FormStateContextValue } from '@/hooks/form-state/context';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import {
@@ -43,8 +44,13 @@ const CustomArrayRegistration = defineInput({
 	render: FormArrayElements as (props: Omit<ArrayElementsProps, '$type'>) => ReturnType<typeof FormArrayElements>,
 });
 
-/** @remarks The suite states `onSubmit(values)`: the second argument of this renderer, the server-error hand-back, is not part of the shared contract. */
 rendererConformance(async ({ config, onSubmit, ...props }) => {
+	const probed: Partial<FormStateContextValue> = {};
+	/** Reaches the form's container and runtime, as a component under the provider does. */
+	function Probe() {
+		Object.assign(probed, useFormStateContext());
+		return null;
+	}
 	const engine = createFormEngine({
 		elements: [
 			{ ...InputElementRegistration, appearanceAxes: conformanceInputAxes },
@@ -60,17 +66,16 @@ rendererConformance(async ({ config, onSubmit, ...props }) => {
 		layout: conformanceLayout,
 	});
 	const renderConfig = (next: typeof config) => (
-		<FormRenderer
-			{...props}
-			onSubmit={onSubmit && ((values) => onSubmit(values))}
-			config={engine.validateForm(next)}
-			engine={engine}
-		/>
+		<FormRenderer {...props} onSubmit={onSubmit} config={engine.validateForm(next)} engine={engine}>
+			<Probe />
+		</FormRenderer>
 	);
 	const view = render(renderConfig(config));
 	return {
 		host: view.container,
 		cleanup: view.unmount,
 		update: async (next) => view.rerender(renderConfig(next)),
+		container: () => probed.container,
+		submission: () => probed.runtime?.getSnapshot().submission,
 	};
 });

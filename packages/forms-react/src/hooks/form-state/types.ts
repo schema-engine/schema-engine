@@ -1,5 +1,12 @@
 import type { EngineOutputMaps } from '@schema-engine/forms/engine/form-engine';
-import type { FormActionTrigger, FormFetch, NormalizedFormConfig, SubmissionActionResult } from '@schema-engine/forms';
+import type {
+	FormActionTrigger,
+	FormSubmissionState as SubmissionState,
+	FormSubmitHelpers,
+	FormValues,
+	NormalizedFormConfig,
+	SubmissionActionResult,
+} from '@schema-engine/forms';
 import type { DeepReadonly } from '@schema-engine/forms/lib/normalized-form-config';
 import type { ElementConfig, FormActionConfig } from '@schema-engine/forms/schemas';
 import type { RequiredFlagSource } from '@/hooks/is-element-required';
@@ -7,15 +14,12 @@ import type {
 	FieldArrayValue,
 	FormIssueFormatter,
 	FormStateError,
-	FormStateErrorsInput,
 	FormStateIssue,
 	FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
 import type { ChangeEvent, CSSProperties, ReactNode, RefCallback } from 'react';
-import type { SubmissionState } from './submission-store';
 
-/** The nested values of a form, as the container holds them and a submission hands them over. */
-export type FormValues = Readonly<Record<string, unknown>>;
+export type { FormSubmitHelpers, FormValues };
 
 /**
  * What `useFormContext` returns: the commands over the form and a lazily tracked `formState`.
@@ -159,18 +163,6 @@ export interface ControlledFormField extends FormFieldElement {
 /** How a field is bound: left out it is uncontrolled, and `controlled: true` is for a component that takes `value` and `onChange`. */
 export interface FormFieldOptions {
 	controlled?: boolean;
-}
-
-/** What `onSubmit` is given besides the values that passed. */
-export interface FormSubmitHelpers {
-	/** Shows the server's answer to this submission, by path; `FORM_ROOT` stands for the form. */
-	setServerErrors: (errors: FormStateErrorsInput) => void;
-	/**
-	 * The engine's `fetch`: the request to send the values with.
-	 *
-	 * @remarks It applies the engine's CSRF policy to a same-origin unsafe request, so a submit callback adds no token itself.
-	 */
-	fetch: FormFetch;
 }
 
 export type { FieldArrayValue };

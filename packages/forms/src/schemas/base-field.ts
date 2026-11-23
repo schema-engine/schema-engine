@@ -73,6 +73,17 @@ export const ConstraintLogicSchema = z.object({
 });
 
 /**
+ * A step's constraint: the field constraint restricted to `show` and `hide`.
+ *
+ * @remarks
+ * A step a constraint hides is skipped. Enabling, disabling and requiring apply to a field, not a step.
+ */
+export const StepConstraintSchema = z.object({
+	...ConstraintLogicSchema.shape,
+	action: z.enum(['show', 'hide']),
+});
+
+/**
  * Base field configuration schema that all field types extend
  * This contains all common properties shared by all form fields
  */
@@ -111,3 +122,4 @@ export const BaseFieldSchema = z.object({
 export type BaseField = z.infer<typeof BaseFieldSchema>;
 export type BaseFieldInput = z.input<typeof BaseFieldSchema>;
 export type ConstraintLogic = z.infer<typeof ConstraintLogicSchema>;
+export type StepConstraint = z.infer<typeof StepConstraintSchema>;

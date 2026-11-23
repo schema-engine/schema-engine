@@ -5,8 +5,10 @@ import { FormInstance } from '@/components/form-instance';
 
 export function FormProvider<TFormData extends Record<string, unknown> = Record<string, unknown>>({
 	config,
-	defaultValues = {},
+	defaultValues,
 	onSubmit,
+	action,
+	method,
 	onChange,
 	onAction,
 	children,
@@ -21,7 +23,9 @@ export function FormProvider<TFormData extends Record<string, unknown> = Record<
 			defaultValues={defaultValues}
 			onChange={onChange as FormProviderProps['onChange']}
 			onAction={onAction as FormProviderProps['onAction']}
-			onSubmit={onSubmit as ((data: Record<string, unknown>) => void | Promise<void>) | undefined}
+			action={action}
+			method={method}
+			onSubmit={onSubmit as FormProviderProps['onSubmit']}
 		>
 			{children}
 		</FormInstance>

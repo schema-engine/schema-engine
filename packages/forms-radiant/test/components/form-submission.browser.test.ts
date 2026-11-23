@@ -133,7 +133,7 @@ test('the alert reports an error for a rejected submission and never reports suc
 	expect(events).toEqual(['start', 'complete:false']);
 });
 
-test('se-action-submit-complete carries the error of a rejected onSubmit', async () => {
+test('se-action-submit-complete carries the failure of a rejected onSubmit', async () => {
 	vi.spyOn(console, 'error').mockImplementation(() => {});
 	const failure = new Error('500');
 	const { form, submit } = await mount(async () => {
@@ -145,7 +145,10 @@ test('se-action-submit-complete carries the error of a rejected onSubmit', async
 	submit().click();
 
 	await expect.poll(() => details).toHaveLength(1);
-	expect(details[0]).toMatchObject({ succeeded: false, error: failure });
+	expect(details[0]).toMatchObject({
+		succeeded: false,
+		failures: [{ type: 'callbackFailed', source: 'submission', message: failure.message }],
+	});
 });
 
 test('start and complete events also fire when submit actions are configured', async () => {
@@ -187,4 +190,29 @@ test('a native submission navigates after the success and complete actions have 
 	form.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
 
 	await expect.poll(() => order).toEqual(['form_submit_success', 'form_submit_complete', 'native']);
+});
+
+test('a second submit while the first runs is dropped and does not lose the native post of the first', async () => {
+	order.length = 0;
+	const host = document.createElement('div');
+	document.body.append(host);
+	const config = {
+		id: 'native-twice',
+		view: { $type: 'card' },
+		steps: [{ id: 'main', title: 'Main', elements: [] }],
+		actions: [{ id: 'tracked', $type: 'track' }],
+	};
+	createRoot(host).render(FormRenderer({ config: engine.validateForm(config), engine }));
+	const form = await vi.waitFor(() => host.querySelector('rui-form')!);
+	form.setAttribute('method', 'post');
+	await expect.poll(() => form.querySelector('button[type="submit"]')).toBeTruthy();
+	const native = form.querySelector<HTMLFormElement>('form[data-ref="form"]')!;
+	native.submit = () => order.push('native');
+
+	native.requestSubmit();
+	native.requestSubmit();
+
+	await expect.poll(() => order).toEqual(['form_submit_success', 'form_submit_complete', 'native']);
+	await new Promise((resolve) => setTimeout(resolve, 100));
+	expect(order.filter((entry) => entry === 'native')).toHaveLength(1);
 });

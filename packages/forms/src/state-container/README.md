@@ -10,14 +10,15 @@ is `FormStateContainer`, its factory `createFormStateContainer` and its snapshot
 
 ## Ownership
 
-| Owns                                                           | Does not own                                                                                                              |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| The nested value tree and the defaults                         | Submission: `handleSubmit`, `isSubmitting`, `submitCount`, guards                                                         |
-| Field state: errors, warnings, touched, dirty, pending, checks | Control registration: a host bridges a control with `setValue`/`blur` and reports its native validity with `reportNative` |
-| Native facts, tied to the value they describe                  | Focus and native submit: the host supplies them                                                                           |
-| Row ids of field arrays                                        | Operational status (a service that is down): the runtime's (#336)                                                         |
-| Which paths take part in validation                            |                                                                                                                           |
-| Atomic updates: one command, one notification                  |                                                                                                                           |
+| Owns                                                           | Does not own                                                                                                                   |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| The nested value tree and the defaults                         | Submission state: `isSubmitting`, `submitCount`, guards (the runtime's); the container only captures what `submit()` validated |
+| Field state: errors, warnings, touched, dirty, pending, checks | Control registration: a host bridges a control with `setValue`/`blur` and reports its native validity with `reportNative`      |
+| Native facts, tied to the value they describe                  | Focus and native submit: the host supplies them                                                                                |
+| Row ids of field arrays                                        | Operational status (a service that is down): the runtime's                                                                     |
+| Which paths take part in validation, skipped steps included    | Wizard steps, the submission state and every action dispatch: the [runtime](../runtime/README.md)'s                            |
+| The reset, and the `generation` that counts it                 |                                                                                                                                |
+| Atomic updates: one command, one notification                  |                                                                                                                                |
 
 ## Paths and field state
 
@@ -128,18 +129,30 @@ path is a record of one. Nothing else carries a fact: not `setValue`, not `blur`
 
 ## Participation
 
-One rule decides which paths take part, from the config and the current values: `resolveExcludedPaths`
-in `engine/value-validation.ts`, which uses `evaluateConstraints`. A field a `show` or `hide` constraint
+One rule decides which paths take part, from the config and the current values: `resolveParticipation`
+in `engine/value-validation.ts`, which uses `evaluateConstraints`. A step its `show` or `hide` constraints
+hide is a **skipped step**, and excludes every field it holds. A field a `show` or `hide` constraint
 hides, and a field that is disabled, whether authored (`disabled`) or by a constraint (`disable`, `enable`),
 is excluded together with everything below it. An inactive wizard step is not excluded: it is not rendered.
+The config's steps carry their `id` and `constraints` for this.
 
 - No rule runs for an excluded path, and nothing recorded for it counts: not a rule error, native fact or
   server error, not for `validate`, `checkValidity` or `isValid`, and not in `errors`, `warnings` or
-  `validating`. Pending work for it is dropped.
+  `validating`. Pending work for it is dropped. The value is kept, and a submission leaves it out.
+- Steps and fields resolve in order, and the value of an excluded path is absent for every later constraint
+  that reads it, `require` included.
 - The container recomputes the exclusions when the values change. A path that becomes excluded loses what
   the checks recorded for it. A path that takes part again is re-validated when it was checked before (its
   check failed, or a recorded check decided it) and otherwise waits for its normal timing.
 - The rule is the engine's, not the container's: `validateFormValues` applies it too.
+
+## Reset generation
+
+`reset` is the only way back to the defaults, and any caller may use it, so what lives around the container
+cannot be told about it. The snapshot therefore carries `generation`: it starts at 0, is the same in the
+server snapshot, and goes up by one on every `reset` (with or without values, even on a pristine form) and on
+nothing else. The runtime watches it and, when it changes, revokes its command in flight and returns its
+submission and steps to the start.
 
 ## Server errors
 

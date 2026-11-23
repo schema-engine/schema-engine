@@ -6,7 +6,7 @@ import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/
 import type { FormMeta } from '@/lib/instance-view';
 import type { RecipeSlotContext } from '@/recipes/types';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
+import { deriveFormSteps, deriveInitialInstance, deriveNavigation } from '@/lib/instance-view';
 
 /**
  * @remarks
@@ -24,11 +24,11 @@ export class WizardActionsElement extends RadiantElement {
 	protected instance?: FormInstanceContextValue;
 
 	private readonly goPrevious = (): void => {
-		void this.instance?.goToPreviousStep();
+		void this.instance?.back();
 	};
 
 	private readonly goNext = (): void => {
-		void this.instance?.goToNextStep();
+		void this.instance?.next();
 	};
 
 	/**
@@ -44,22 +44,30 @@ export class WizardActionsElement extends RadiantElement {
 
 		if (!this.slotConfig) return null;
 		const { labels, variant, showStepCounter } = this.slotConfig;
-		const last = instance.currentStep >= instance.totalSteps - 1;
+		const { isFirstStep, isLastStep: last } = deriveNavigation(meta, instance);
 		const steps = deriveFormSteps(meta, instance);
+		const submitting = instance.submission.status === 'pending';
 		return (
 			<div classes={['se-wizard-actions', variant === 'minimal' && 'se-wizard-actions--minimal']}>
 				<RuiButton
 					type="button"
 					variant={variant === 'minimal' ? 'ghost' : 'outline'}
 					on:click={this.goPrevious}
-					prop:disabled={instance.currentStep === 0}
+					prop:disabled={isFirstStep}
 					aria-label={labels.previousAriaLabel}
 				>
 					{labels.previous}
 				</RuiButton>
 				{showStepCounter ? (
 					<span class="se-wizard-actions__counter" aria-live="polite">
-						{formatStepLabel(labels.stepCounter, instance.currentStep + 1, steps.length)}
+						{formatStepLabel(
+							labels.stepCounter,
+							Math.max(
+								steps.findIndex(({ isActive }) => isActive),
+								0,
+							) + 1,
+							steps.length,
+						)}
 					</span>
 				) : null}
 				<div class="se-wizard-actions__forward">
@@ -67,10 +75,10 @@ export class WizardActionsElement extends RadiantElement {
 						<RuiButton
 							key="submit"
 							type="submit"
-							prop:disabled={instance.isSubmitting}
+							prop:disabled={submitting}
 							aria-label={labels.submitAriaLabel}
 						>
-							{instance.isSubmitting ? labels.submitting : labels.submit}
+							{submitting ? labels.submitting : labels.submit}
 						</RuiButton>
 					) : (
 						<RuiButton key="next" type="button" on:click={this.goNext} aria-label={labels.nextAriaLabel}>

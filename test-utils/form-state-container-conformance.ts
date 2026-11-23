@@ -246,6 +246,38 @@ function custom(
 	});
 }
 
+/**
+ * A form of three steps: `hasCompany` decides the company step, whose `wantsInvoice` decides the payment
+ * step's `vat`, which is required.
+ */
+const stepsForm = (defaults: Record<string, unknown>): FormStateContainerOptions => {
+	const { config, ...rest } = custom([], defaults);
+	const input = (name: string, extra: Record<string, unknown> = {}) => element({ $type: 'input', name, ...extra });
+	return {
+		...rest,
+		config: {
+			...config,
+			steps: [
+				{ id: 'contact', elements: [input('hasCompany')] },
+				{
+					id: 'company',
+					constraints: [{ field: 'hasCompany', operator: 'equals', value: true, action: 'show' }],
+					elements: [input('wantsInvoice'), input('company', { rules: [{ type: 'required' }] })],
+				},
+				{
+					id: 'payment',
+					elements: [
+						input('vat', {
+							rules: [{ type: 'required' }],
+							constraints: [{ field: 'wantsInvoice', operator: 'equals', value: 'yes', action: 'show' }],
+						}),
+					],
+				},
+			],
+		},
+	};
+};
+
 /** Two fields in a business form: `company` is required and shown only for a business. */
 const businessForm = (defaults: Record<string, unknown> = { kind: 'person', company: '' }) =>
 	custom(
@@ -335,6 +367,39 @@ const cases: FormStateContainerCase[] = [
 			unsubscribe();
 			store.setValue('name', 'Hedy');
 			expect(listener).toHaveBeenCalledTimes(1);
+		},
+	},
+	{
+		rule: 'reset generation',
+		name: 'the snapshot counts resets in generation: it starts at the server snapshot, goes up by one on every reset and on nothing else',
+		async run(createStore) {
+			const store = createStore(fixture().options);
+			const start = store.getSnapshot().generation;
+			expect(store.getServerSnapshot().generation).toBe(start);
+			store.setValue('name', 'Grace');
+			store.blur('name');
+			await store.validate();
+			await store.submit();
+			expect(store.getSnapshot().generation).toBe(start);
+			store.reset();
+			expect(store.getSnapshot().generation).toBe(start + 1);
+			store.reset({ name: 'Hedy' });
+			expect(store.getSnapshot().generation).toBe(start + 2);
+			expect(store.getServerSnapshot().generation).toBe(start);
+		},
+	},
+	{
+		rule: 'reset generation',
+		name: 'a reset of a pristine form still notifies, since the generation changed',
+		run(createStore) {
+			const store = createStore(fixture().options);
+			const listener = vi.fn();
+			store.subscribe(listener);
+			const before = store.getSnapshot();
+			store.reset();
+			expect(listener).toHaveBeenCalledTimes(1);
+			expect(store.getSnapshot()).not.toBe(before);
+			expect(store.getSnapshot().values).toEqual(before.values);
 		},
 	},
 	{
@@ -448,7 +513,9 @@ const cases: FormStateContainerCase[] = [
 			expect(Object.keys(store.getSnapshot()).toSorted()).toEqual([
 				'dirty',
 				'errors',
+				'generation',
 				'isValid',
+				'participation',
 				'rowIds',
 				'touched',
 				'validating',
@@ -537,6 +604,9 @@ const cases: FormStateContainerCase[] = [
 				isTouched: false,
 				isDirty: false,
 				isValidating: false,
+				hidden: false,
+				disabled: false,
+				required: false,
 			});
 			store.setValue('name', 'Grace');
 			store.blur('name');
@@ -2105,6 +2175,40 @@ const cases: FormStateContainerCase[] = [
 			expect(store.getSnapshot().isValid).toBe(true);
 			expect(await store.validate()).toBe(true);
 			expect(await store.checkValidity()).toBe(true);
+		},
+	},
+	{
+		rule: 'participation',
+		name: 'a step its constraints hide is skipped: its fields take no part, its values are kept and the submitted values leave them out',
+		async run(createStore) {
+			const store = createStore(stepsForm({ hasCompany: false, wantsInvoice: 'no', company: '', vat: '' }));
+			expect(await store.validate()).toBe(true);
+			expect(await store.checkValidity()).toBe(true);
+			expect(errorsOf(store)).toEqual({});
+			const submitted = await store.submit();
+			expect(submitted.outcome).toBe('passed');
+			if (submitted.outcome === 'passed') expect(submitted.values).toEqual({ hasCompany: false });
+			expect(store.getSnapshot().values).toMatchObject({ wantsInvoice: 'no', company: '' });
+
+			store.setValue('hasCompany', true);
+			expect(await store.validate()).toBe(false);
+			expect(Object.keys(errorsOf(store))).toEqual(['company']);
+		},
+	},
+	{
+		rule: 'participation',
+		name: 'a value that takes no part is absent for the constraints after it, in order: a skipped step cannot keep a later field shown',
+		async run(createStore) {
+			const store = createStore(stepsForm({ hasCompany: false, wantsInvoice: 'yes', company: '', vat: '' }));
+			expect(await store.validate()).toBe(true);
+			expect(await store.checkValidity()).toBe(true);
+			store.setValue('hasCompany', true);
+			store.setValue('company', 'Acme');
+			expect(await store.validate()).toBe(false);
+			expect(Object.keys(errorsOf(store))).toEqual(['vat']);
+			store.setValue('hasCompany', false);
+			expect(errorsOf(store)).toEqual({});
+			expect(await store.validate()).toBe(true);
 		},
 	},
 	{

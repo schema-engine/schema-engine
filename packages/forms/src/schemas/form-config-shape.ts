@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { RendererStyleSchema } from './base-field';
+import { RendererStyleSchema, StepConstraintSchema } from './base-field';
 import { AppearanceConfigSchema, GridLayoutConfigSchema } from '@schema-engine/layout';
 
 /**
@@ -21,8 +21,13 @@ export function createFormStepSchema<TAppearance extends z.ZodMiniType = typeof 
 		description: z.optional(z.string()),
 		icon: z.optional(z.string()),
 		elements: z.array(parts.elements),
-		rules: z.optional(z.unknown()),
-		constraints: z.optional(z.array(z.unknown())),
+		constraints: z
+			.optional(z.array(StepConstraintSchema))
+			.check(
+				z.describe(
+					'Show or hide constraints on fields of earlier steps. A step they hide is skipped: it is passed over and its fields take no part. The first step has none.',
+				),
+			),
 		grid: z
 			.optional(z.lazy(() => GridLayoutConfigSchema))
 			.check(z.describe("Grid for this step's fields; replaces the form's grid for the step.")),
@@ -61,6 +66,13 @@ export function createFormConfigShape<TAppearance extends z.ZodMiniType = typeof
 		reValidateMode: z
 			._default(z.enum(['onSubmit', 'onChange', 'onBlur']), 'onChange')
 			.check(z.describe('When a field validates again once a check of it has run.')),
+		navigation: z
+			._default(z.enum(['linear', 'free']), 'linear')
+			.check(
+				z.describe(
+					"How freely the stepper moves forward: 'linear' reaches only visited steps and validates the steps on the way, 'free' reaches any step without validating.",
+				),
+			),
 		payload: z
 			.optional(z.record(z.string(), z.unknown()))
 			.check(
