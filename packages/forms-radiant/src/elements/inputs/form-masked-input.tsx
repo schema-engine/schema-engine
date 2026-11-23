@@ -4,7 +4,8 @@ import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-as
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, registerValueControl } from '@/lib/field-control';
+import { emitControlChange, emitControlCommit, registerValueControl } from '@/lib/field-control';
+import { announceControlConnect } from '@ecopages/radiant-ui/form';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
 import { FieldGroup } from '../field-group';
@@ -80,6 +81,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 	}
 
 	protected override onConnected(): void {
+		announceControlConnect(this);
 		void this.attachMask();
 		this.registerCleanupCallback(() => {
 			this.attachGeneration += 1;
@@ -145,7 +147,12 @@ export class SeMaskedInput extends FormAssociatedElement {
 		}
 
 		this.value = next;
-		emitControlChange(this, next);
+		emitControlChange(this);
+	};
+
+	private readonly onCommit = (event: Event) => {
+		event.stopPropagation();
+		emitControlCommit(this);
 	};
 
 	private applyValue() {
@@ -176,6 +183,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 					id={this.inputId || undefined}
 					{...fieldAria(this.field)}
 					data-ref="input"
+					on:change={this.onCommit}
 					class="rui-input se-masked__input"
 					type="text"
 					placeholder={getMaskedInputPlaceholder(this.mask, this.placeholder)}

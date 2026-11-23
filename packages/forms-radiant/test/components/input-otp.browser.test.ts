@@ -100,3 +100,39 @@ test('an incomplete code shows the configured message once the field blurs', asy
 
 	await expect.element(page.getByText('Finish the code')).toBeInTheDocument();
 });
+
+test('a typed character fires input, leaving the group fires change once, a paste fires both, and a programmatic write fires nothing', async () => {
+	const { field, slots } = await mountOtp();
+	const host = slots()[0]!.closest('se-input-otp')!;
+	const seen: string[] = [];
+	for (const type of ['input', 'change', 'rui-change']) {
+		host.addEventListener(type, (event) => {
+			if (event.target === host) seen.push(type);
+		});
+	}
+
+	containerOf(field).setValue('code', '123456');
+	await expect
+		.poll(() =>
+			slots()
+				.map((slot) => slot.value)
+				.join(''),
+		)
+		.toBe('123456');
+	expect(seen).toEqual([]);
+
+	await userEvent.clear(slots()[0]!);
+	seen.length = 0;
+	await userEvent.keyboard('7');
+	expect(seen).toEqual(['input']);
+	slots()[1]!.blur();
+	expect(seen).toEqual(['input', 'change']);
+
+	seen.length = 0;
+	slots()[0]!.dispatchEvent(
+		Object.assign(new Event('paste', { bubbles: true, cancelable: true }), {
+			clipboardData: { getData: () => '654321' },
+		}),
+	);
+	expect(seen).toEqual(['input', 'change']);
+});

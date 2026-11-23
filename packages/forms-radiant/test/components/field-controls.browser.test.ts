@@ -204,3 +204,86 @@ test('a field observes no mutations and leaves every custom control host free of
 		window.MutationObserver = NativeObserver;
 	}
 });
+
+/** Counts the `input` and `change` events a host dispatches on itself. */
+function watchEvents(host: Element) {
+	const seen: string[] = [];
+	for (const type of ['input', 'change', 'rui-change']) {
+		host.addEventListener(type, (event) => {
+			if (event.target === host) seen.push(type);
+		});
+	}
+	return seen;
+}
+
+test('a masked input fires input per typed character, change once on commit and nothing for a programmatic write', async () => {
+	const { host, field } = await mount(masked);
+	await expect.poll(() => host.querySelector('se-masked-input[data-ready]')).toBeTruthy();
+	const control = host.querySelector('se-masked-input')!;
+	const seen = watchEvents(control);
+
+	containerOf(field).setValue('zip', '99999');
+	await expect.poll(() => host.querySelector<HTMLInputElement>('se-masked-input input')!.value).toBe('999-99');
+	expect(seen).toEqual([]);
+
+	const input = host.querySelector<HTMLInputElement>('se-masked-input input')!;
+	await userEvent.clear(input);
+	seen.length = 0;
+	await userEvent.type(input, '123');
+	await userEvent.tab();
+
+	expect(seen.filter((type) => type === 'input')).toHaveLength(3);
+	expect(seen.filter((type) => type === 'change')).toHaveLength(1);
+	expect(seen).not.toContain('rui-change');
+});
+
+test('a drop zone fires input and change once for a pick and nothing for a reset', async () => {
+	const { host, field } = await mount({ $type: 'drop-zone', id: 'upload', name: 'upload', label: 'Upload' });
+	const seen = watchEvents(host.querySelector('se-drop-zone')!);
+	const input = host.querySelector<HTMLInputElement>('se-drop-zone input[type="file"]')!;
+	const transfer = new DataTransfer();
+	transfer.items.add(new File(['hello'], 'hello.txt', { type: 'text/plain' }));
+
+	input.files = transfer.files;
+	input.dispatchEvent(new Event('change', { bubbles: true }));
+	await expect.poll(() => seen).toEqual(['input', 'change']);
+
+	containerOf(field).reset();
+	await expect.poll(() => input.files?.length).toBe(0);
+	expect(seen).toEqual(['input', 'change']);
+});
+
+test('a phone input fires input per typed digit and change once on commit, and a programmatic write fires nothing', async () => {
+	const { host, field } = await mount(phone);
+	await expect.poll(() => host.querySelector('se-phone-input[data-ready]')).toBeTruthy();
+	const seen = watchEvents(host.querySelector('se-phone-input')!);
+	const number = host.querySelector<HTMLInputElement>('se-phone-input [data-ref="number"]')!;
+
+	containerOf(field).setValue('contact', '+14155550123');
+	await expect.poll(() => number.value).toBe('(415) 555-0123');
+	expect(seen).toEqual([]);
+
+	await userEvent.clear(number);
+	seen.length = 0;
+	await userEvent.type(number, '4155550');
+	await userEvent.tab();
+
+	expect(seen.filter((type) => type === 'input').length).toBeGreaterThan(0);
+	expect(seen.filter((type) => type === 'change')).toHaveLength(1);
+	expect(seen).not.toContain('rui-change');
+});
+
+test('a phone input takes its country from the select and fires input and change', async () => {
+	const { host, field } = await mount({ ...phone, defaultValue: '+14155550123' });
+	await expect.poll(() => host.querySelector('se-phone-input[data-ready]')).toBeTruthy();
+	const control = host.querySelector('se-phone-input')!;
+	const seen = watchEvents(control);
+	const select = control.querySelector('rui-select')!;
+
+	select.value = ['GB'];
+	select.dispatchEvent(new Event('change', { bubbles: true }));
+
+	await expect.poll(() => control.getAttribute('data-country')).toBe('GB');
+	expect(seen).toEqual(['input', 'change']);
+	expect(String(containerOf(field).getValue('contact'))).toMatch(/^\+44/);
+});

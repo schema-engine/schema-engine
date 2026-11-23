@@ -369,7 +369,7 @@ export class FormInstanceElement extends RadiantElement {
 	 * run (a validator threw, a service was down) is not a field error: the submission stops, is logged, counts as an attempt
 	 * and completes unsuccessfully with the failure as `detail.error`.
 	 */
-	private async submitForm(context: RuiFormSubmitContext<FormStateError>): Promise<void> {
+	private async submitForm(context: RuiFormSubmitContext): Promise<void> {
 		const { bound } = this;
 		if (!bound) return;
 		await bound.submission.run(async () => {
@@ -395,7 +395,7 @@ export class FormInstanceElement extends RadiantElement {
 				this.countAttempt();
 				host.dispatchEvent(new CustomEvent('se-action-submit-invalid', { bubbles: true, composed: true }));
 				const first = this.firstInvalidPath(container.getSnapshot().errors);
-				if (first !== undefined) context.focus(first);
+				if (first !== undefined) host.focusField([first]);
 				return;
 			}
 			if (result.outcome === 'passed') await this.completeSubmission(bound, result, context);

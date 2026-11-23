@@ -282,15 +282,15 @@ label and ARIA onto it declaratively: it reads `fieldContext` with
 `@contextSelector` and spreads `fieldAria(field)` from
 `@ecopages/radiant-ui/field` on the control it renders, so the field writes
 nothing on the host and observes no mutations. They submit through native `FormData`
-and fire a bubbling `rui-change`. The OTP keeps one entry per slot, so a
+and, like Radiant UI's own form controls, dispatch the native events: `input` on the host for each user change and `change` once when the change is committed (a paste, a pick, a drop, or focus leaving the control), never for a value set from code. Each host announces itself with `announceControlConnect` when it connects. The OTP keeps one entry per slot, so a
 character stays in its slot; its value is the slots joined, and an incomplete
 code is a shorter string. The `input-otp` field schema adds a default `pattern` rule that accepts an empty code or one with every slot filled and reports "Enter all N characters" (or the config's `incompleteMessage`) otherwise, unless the author wrote a `minLength`, `maxLength` or `pattern` rule, so `validateForm` output and headless `validateFormValues` carry it too. `drop-zone` is registered
 with its file input as the submitted control, and its host exposes the accepted
 files as `files`.
 
 The forms-radiant input views take no element-level `onChange`, `onBlur` or
-`onFocus`: observe values with `FormController.select` or the `rui-change`
-event.
+`onFocus`: observe values with `FormController.select` or the native `input` and
+`change` events (`rui-change` is only for non-form Radiant UI components such as tabs).
 
 Field schemas live beside each registration under `src/elements/` (for example `form-input.types.ts` next to `form-input.registration.ts`). Component props stay on the widget modules. Radiant does not ship `date` or `date-range` widgets; those `$type`s exist only in the shadcn registry today. Registry and Radiant schemas may diverge where capabilities differ.
 

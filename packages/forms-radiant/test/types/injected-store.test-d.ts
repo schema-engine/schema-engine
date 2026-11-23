@@ -24,5 +24,5 @@ export const store: Strict<FormStateStore<FormStateError>> = container;
 form.connect(container, { formatError: formatIssue });
 form.connect(container, {
 	formatError: (issue, field) => `${field.path}:${issue.source}:${issue.ruleId ?? issue.all.length}`,
-	submitHandler: ({ store: injected }) => void injected.getSnapshot().errors,
+	submitHandler: ({ submitNatively }) => submitNatively(),
 });

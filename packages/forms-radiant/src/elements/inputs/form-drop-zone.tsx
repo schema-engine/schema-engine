@@ -1,6 +1,6 @@
 import './form-drop-zone.css';
 import { customElement, onUpdated, prop, RadiantElement, state, ref } from '@ecopages/radiant';
-import { registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
+import { announceControlConnect, registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms/schemas';
 import { isRenderedRequired } from '@/lib/field-rules';
@@ -80,6 +80,10 @@ export class SeDropZone extends RadiantElement {
 
 	@ref('input') fileInput!: HTMLInputElement | null;
 
+	protected override onConnected(): void {
+		announceControlConnect(this);
+	}
+
 	private readonly onDragOver = (event: Event) => {
 		event.preventDefault();
 		if (!this.disabled) {
@@ -127,7 +131,7 @@ export class SeDropZone extends RadiantElement {
 		});
 
 		this.files = accepted.slice(0, this.maxFiles || accepted.length);
-		emitControlChange(this, this.files);
+		emitControlChange(this, { commit: true });
 	}
 
 	@onUpdated(['files'])
