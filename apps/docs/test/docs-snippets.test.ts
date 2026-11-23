@@ -37,7 +37,7 @@ const CHECKED_DOCS = [
 	'forms/builder',
 	'forms/form-state',
 	'forms/yaml',
-	'forms-react/getting-started',
+	'forms-react',
 ];
 
 interface AllowedFence {
@@ -53,6 +53,20 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		page: 'actions/concepts',
 		heading: 'Context',
 		reason: 'Shows the call the dispatcher makes inside itself, which is not a module.',
+	},
+	{
+		page: 'forms-react/api-reference',
+		heading: 'Engine factory',
+		reason: 'Imports the barrels the shadcn command copies into the app and a recipe of the app.',
+	},
+	{
+		page: 'forms-react/layouts',
+		heading: 'Default registry recipes',
+		reason: 'Imports the barrels the shadcn command copies into the app, which do not exist before it runs.',
+	},
+	{
+		page: 'forms-react/components',
+		reason: 'Imports the barrel the shadcn command copies into the app, which does not exist before it runs.',
 	},
 	{
 		page: 'forms-react/getting-started',
@@ -111,6 +125,10 @@ export const postalCode = {
 } as const;`,
 	'contact-card.ts': recipeConfigSource(allRecipes.find((recipe) => recipe.id === 'contact-card')!.demos),
 	'brand-frame.ts': "export { BrandFrameRecipe } from './brand-frame.radiant';",
+	'react-quick-start.react.tsx': readFileSync(
+		join(import.meta.dirname, '../src/lib/form-recipes/react-quick-start.react.tsx'),
+		'utf8',
+	),
 	'react-widgets.react.tsx': readFileSync(
 		join(import.meta.dirname, '../src/lib/form-recipes/react-widgets.react.tsx'),
 		'utf8',

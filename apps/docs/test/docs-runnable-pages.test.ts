@@ -3,6 +3,8 @@ import * as actionsPackage from '@schema-engine/actions';
 import * as registryPackage from '@schema-engine/registry';
 import * as registryYaml from '@schema-engine/registry/yaml';
 import * as z from 'zod/mini';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { codeBlocks, readPage, runTitledFiles, titledRunner } from './snippet-harness';
 import * as formsPackage from '@schema-engine/forms';
 import * as browserPackage from '@schema-engine/forms/browser';
@@ -188,5 +190,31 @@ describe('forms/actions', () => {
 		const options = Object.keys((browserPackage.AutoSaveActionRegistration.schema as { shape: object }).shape);
 		expect(Object.keys(draft).filter((key) => !options.includes(key))).toEqual([]);
 		expect(readPage(page)).not.toContain('debounceMs');
+	});
+});
+
+describe('forms-react/components', () => {
+	const registryRoot = join(import.meta.dirname, '../../../registry/shared/forms');
+
+	/** The `$type` of every registration the generated barrel lists, read from the source files it imports. */
+	function barrelTypes(): string[] {
+		const barrel = readFileSync(join(registryRoot, 'registrations.ts'), 'utf8');
+		const files = [...barrel.matchAll(/from '\.\/([^']+)\.registration'/g)].map((match) => match[1]!);
+		return files.map((file) => {
+			const registration = readFileSync(join(registryRoot, `${file}.registration.ts`), 'utf8');
+			const types = readFileSync(join(registryRoot, `${file}.types.ts`), 'utf8');
+			const type = /\$type: '([^']+)'/.exec(registration) ?? /\$type: z\.literal\('([^']+)'\)/.exec(types);
+			if (!type) throw new Error(`No $type found for ${file}`);
+			return type[1]!;
+		});
+	}
+
+	test('the table of elements equals the barrel the registry generates', () => {
+		const text = readPage('forms-react/components');
+		const table = text.slice(text.indexOf('## What the registry installs'), text.indexOf('## Own them'));
+		const listed = [...table.matchAll(/^\|\s*((?:`[^`]+`(?:,\s*)?)+)\s*\|/gm)].flatMap((row) =>
+			[...row[1]!.matchAll(/`([^`]+)`/g)].map((token) => token[1]!),
+		);
+		expect(listed.filter((type) => type !== '$type').toSorted()).toEqual(barrelTypes().toSorted());
 	});
 });

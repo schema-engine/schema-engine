@@ -1,34 +1,12 @@
 ---
-title: 'Advanced Usage'
-description: 'Constraints, consent-aware drafts, and analytics hooks.'
-order: 8
+title: 'Browser helpers'
+description: 'Consent-aware drafts and analytics events that run in the browser.'
+order: 9
 ---
 
-# Advanced Usage
+# Browser helpers
 
-## Conditional fields
-
-Put one or more constraint objects directly on an element. Each object names a
-source field, comparison, and effect:
-
-```ts
-{
-	$type: 'input',
-	id: 'other-reason',
-	name: 'otherReason',
-	label: 'Please specify',
-	constraints: [
-		{
-			field: 'reason',
-			operator: 'equals',
-			value: 'other',
-			$type: 'show',
-		},
-	],
-}
-```
-
-The operators, the effects and what a hidden field submits are on [Constraints](/docs/forms/constraints).
+These helpers live in `@schema-engine/forms/browser`. They run in the browser, and they are not tied to React. For conditional fields, see [Constraints](/docs/forms/constraints).
 
 ## Consent-aware drafts
 

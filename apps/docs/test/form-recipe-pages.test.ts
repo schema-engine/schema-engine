@@ -18,7 +18,7 @@ describe('the pages show the recipes they run', () => {
 		'checkout-wizard.ts': ['forms/wizard'],
 		'react-widgets.react.tsx': ['forms-react/widgets'],
 		'react-quick-start.react.tsx': ['forms-react/getting-started'],
-		'react-embed.react.tsx': ['forms/form-libraries'],
+		'settings-panel.react.tsx': ['forms-react/other-react-state'],
 		'react-typed-values.react.tsx': ['forms/form-state'],
 		'agent-tool.react.tsx': ['forms/agent-tool'],
 		'radiant-agent-tool.tsx': ['forms/agent-tool'],
@@ -49,7 +49,7 @@ describe('the pages show the recipes they run', () => {
 		const pages = readdirSync(docsRoot, { recursive: true }) as string[];
 		for (const page of pages.filter((name) => name.endsWith('.mdx'))) {
 			const text = readFileSync(join(docsRoot, page), 'utf8');
-			expect(text, page).not.toMatch(/rhfAdapter|react-hook-form/);
+			expect(text, page).not.toMatch(/rhfAdapter|react-hook-form|React Hook Form|Formik|TanStack Form/i);
 		}
 	});
 });

@@ -151,8 +151,8 @@ full; the docs pages are [Form state](../../apps/docs/src/content/docs/forms/for
 [Native validity](../../apps/docs/src/content/docs/forms/native-validity.mdx),
 [Server errors](../../apps/docs/src/content/docs/forms/server-errors.mdx),
 [CSRF](../../apps/docs/src/content/docs/forms/csrf.mdx) and
-[Form libraries](../../apps/docs/src/content/docs/forms/form-libraries.mdx), which says why there are no form
-library adapters.
+[Form state](../../apps/docs/src/content/docs/forms/form-state.mdx), which says why the engine owns the form
+state and has no form library adapters.
 
 A container of your own, or a store that must behave like this one, proves it with the conformance suite, which
 registers its cases with vitest (an optional peer dependency) and so is imported only from a test file:

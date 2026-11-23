@@ -53,8 +53,10 @@ Slot config is optional. The recipe fixes block identity; `view` only passes opt
 
 Single-step recipes render a submit-only actions bar below the fields (aligned with the `actions.align` slot config), so the form is submittable without wizard navigation:
 
-```typescript
-const formConfig: FormConfig = {
+```ts
+import type { FormConfig } from '@schema-engine/forms';
+
+export const formConfig: FormConfig = {
 	id: 'contact',
 	view: {
 		$type: 'card',
@@ -113,8 +115,12 @@ A copy-paste path from install to a styled card:
 1. Install the recipes and import the stylesheet as above.
 2. Pick the look in config. `size` is `compact`, `default` or `comfortable`; `surface` is `flat`, `outlined` or `elevated`:
 
-```typescript
-const config = engine.defineForm({
+```ts
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+export const config = engine.defineForm({
 	id: 'contact',
 	className: 'checkout-form',
 	view: { $type: 'card', shell: { appearance: { size: 'comfortable', surface: 'outlined' } } },
