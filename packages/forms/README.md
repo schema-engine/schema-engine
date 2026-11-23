@@ -570,6 +570,11 @@ consent clears drafts stored under that key or a custom auto-save `storageKey`.
 Hosts using the root plugin factories provide their own `AutoSaveStorage`
 adapter.
 
+## Agent tool (experimental)
+
+`@schema-engine/forms/agent-tool` registers a rendered form as a WebMCP tool, so a browser agent can fill it and, when
+you allow it, submit it. No other entry imports it. See the [agent tool guide](./src/agent-tool/README.md).
+
 ## Who owns visual chrome
 
 | Layer                                                           | Owns                                                                                                                                                                                                                                                              |
