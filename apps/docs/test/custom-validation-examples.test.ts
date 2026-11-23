@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { runInNewContext } from 'node:vm';
+import { runInNewContext, runInThisContext } from 'node:vm';
 import * as ts from 'typescript';
 import * as z from 'zod/mini';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -59,7 +59,11 @@ test('the documented IBAN rule accepts a valid IBAN and rejects a changed digit 
  * with an async rule cannot run there.
  */
 function runInThisRealm(code: string, exports: Record<string, unknown>, require: (name: string) => unknown): void {
-	new Function('exports', 'require', code)(exports, require);
+	const run = runInThisContext(`(function (exports, require) {${code}\n})`) as (
+		exports: Record<string, unknown>,
+		require: (name: string) => unknown,
+	) => void;
+	run(exports, require);
 }
 
 test('the documented username rule reports a taken name, and a failed request is not reported as taken', async () => {
