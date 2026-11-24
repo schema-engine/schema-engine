@@ -1,0 +1,53 @@
+name: Release
+
+# Manual only until 0.1.0 is on npm and each package has trusted publishing set up on npmjs.com.
+# Then add `push: branches: [main]` so the Version Packages PR opens and publishes on its own.
+on:
+    workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+    # With pending changesets it opens or refreshes the Version Packages PR (branch
+    # changeset-release/main); with none left, it publishes the versions not yet on npm.
+    release:
+        name: Release
+        if: github.ref_name == 'main'
+        permissions:
+            contents: write
+            id-token: write
+            pull-requests: write
+
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+              with:
+                  fetch-depth: 0
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v6
+
+            - name: Setup Node
+              uses: actions/setup-node@v5
+              with:
+                  node-version: '24'
+                  cache: 'pnpm'
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build the packages
+              run: pnpm build:lib
+
+            - name: Configure npm for OIDC trusted publishing
+              run: npm config delete //registry.npmjs.org/:_authToken --location=user || true
+
+            - name: Create the release PR or publish
+              uses: changesets/action@v2
+              with:
+                  github-token: ${{ github.token }}
+                  version-script: pnpm run version-packages
+                  publish-script: pnpm run release
+              env:
+                  NPM_CONFIG_PROVENANCE: true
