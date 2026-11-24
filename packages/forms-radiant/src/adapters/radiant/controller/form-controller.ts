@@ -26,7 +26,7 @@ export class FormController {
 
 	/** The form's state container, once the instance has one. */
 	get container(): FormStateContainer | undefined {
-		return this.context()?.container;
+		return this.context()?.runtime?.container;
 	}
 
 	private context(): FormInstanceContextValue | undefined {
@@ -86,7 +86,7 @@ export class FormController {
 		let unsubscribeContainer: (() => void) | undefined;
 		let first = true;
 		const stop = this.follow((context) => {
-			const next = context?.container;
+			const next = context?.runtime?.container;
 			const initial = first;
 			first = false;
 			if (next === current && !initial) return;

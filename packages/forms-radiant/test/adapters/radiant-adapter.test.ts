@@ -3,7 +3,7 @@ import { createFormRuntime } from '@schema-engine/forms';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { FormController } from '@/adapters/radiant/controller';
-import { createTestForm, provideTestContainer } from './test-form';
+import { createTestForm, provideTestRuntime } from './test-form';
 
 describe('FormController over the form instance container', () => {
 	test('hands over the runtime of the form now, and each runtime the instance replaces it with', () => {
@@ -14,7 +14,7 @@ describe('FormController over the form instance container', () => {
 		const element = document.createElement('div');
 		const host = document.createElement('div');
 		element.append(host);
-		const provider = provideTestContainer(element, first.container, undefined, first);
+		const provider = provideTestRuntime(element, first);
 		const seen: Array<unknown> = [];
 
 		const stop = new FormController(host).watchRuntime((runtime) => seen.push(runtime));
@@ -22,7 +22,7 @@ describe('FormController over the form instance container', () => {
 
 		provider.setContext({ ...provider.getContext(), runtime: first });
 		expect(seen).toEqual([first]);
-		provider.setContext({ ...provider.getContext(), container: second.container, runtime: second });
+		provider.setContext({ ...provider.getContext(), runtime: second });
 		expect(seen).toEqual([first, second]);
 
 		stop();
@@ -80,7 +80,7 @@ describe('FormController over the form instance container', () => {
 		const element = document.createElement('div');
 		const host = document.createElement('div');
 		element.append(host);
-		const provider = provideTestContainer(element, undefined);
+		const provider = provideTestRuntime(element, undefined);
 		const form = new FormController(host);
 		const title = form.select((snapshot) => snapshot.values['title']);
 		const listener = vi.fn();
@@ -88,8 +88,8 @@ describe('FormController over the form instance container', () => {
 		expect(title.get()).toBeUndefined();
 		const stop = title.subscribe(listener);
 		expect(title.get()).toBeUndefined();
-		const { container } = createTestForm({ title: 'Arrived' });
-		provider.setContext({ ...provider.getContext(), container });
+		const { runtime } = createTestForm({ title: 'Arrived' });
+		provider.setContext({ ...provider.getContext(), runtime });
 
 		expect(listener).toHaveBeenCalled();
 		expect(title.get()).toBe('Arrived');
@@ -112,7 +112,7 @@ describe('FormController over the form instance container', () => {
 		const element = document.createElement('div');
 		const host = document.createElement('div');
 		element.append(host);
-		const provider = provideTestContainer(element, first.container);
+		const provider = provideTestRuntime(element, first.runtime);
 		const form = new FormController(host);
 		const title = form.select((snapshot) => snapshot.values['title']);
 		const listener = vi.fn();
@@ -120,7 +120,7 @@ describe('FormController over the form instance container', () => {
 		expect(title.get()).toBe('First');
 		listener.mockClear();
 
-		provider.setContext({ ...provider.getContext(), container: second.container });
+		provider.setContext({ ...provider.getContext(), runtime: second.runtime });
 
 		expect(form.container).toBe(second.container);
 		expect(title.get()).toBe('Second');

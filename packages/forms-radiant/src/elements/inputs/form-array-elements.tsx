@@ -221,9 +221,10 @@ export class SeFormArray extends RadiantElement {
 	@onContextUpdate({ context: formInstanceContext, requestUpdate: false })
 	onFormInstance(value: FormInstanceContextValue | undefined): void {
 		this.formatIssue = value?.formatIssue;
-		if (value?.container !== this.container) {
+		const container = value?.runtime?.container;
+		if (container !== this.container) {
 			this.unsubscribeContainer?.();
-			this.container = value?.container;
+			this.container = container;
 			this.unsubscribeContainer = this.container?.subscribe(() => this.syncFromContainer());
 		}
 		this.syncFromContainer();

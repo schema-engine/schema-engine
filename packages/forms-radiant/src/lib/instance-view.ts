@@ -77,7 +77,6 @@ export function deriveInitialInstance(config: FormMeta): FormInstanceContextValu
 		back: async () => 'refused',
 		goTo: async () => 'refused',
 		submission: { status: 'idle', failures: [], submitCount: 0 },
-		container: undefined,
 		runtime: undefined,
 		formatIssue: undefined,
 	};

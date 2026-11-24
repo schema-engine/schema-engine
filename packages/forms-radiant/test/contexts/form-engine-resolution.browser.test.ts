@@ -1,7 +1,6 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
-import { createFormStateContainer } from '@schema-engine/forms/state-container';
 import { FormController } from '@/adapters/radiant/controller';
-import { provideTestContainer } from '../adapters/test-form';
+import { createTestRuntime, provideTestRuntime } from '../adapters/test-form';
 import { gtmPlugin } from '@schema-engine/forms';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { formEngineContext } from '@/components/provider';
@@ -296,12 +295,7 @@ describe('Radiant form engine resolution', () => {
 		});
 	});
 
-	const contactsContainer = (engine: ReturnType<typeof createArrayEngine>) =>
-		createFormStateContainer({
-			config: { steps: [{ elements: [] }], validationMode: 'onSubmit', reValidateMode: 'onChange' },
-			registry: engine.getValidationRegistry(),
-			defaults: { contacts: [{ email: 'person@example.test' }] },
-		});
+	const contactsRuntime = () => createTestRuntime({ contacts: [{ email: 'person@example.test' }] });
 
 	test('a form array renders its fields once the form container arrives', async () => {
 		const engine = createArrayEngine();
@@ -310,14 +304,14 @@ describe('Radiant form engine resolution', () => {
 		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
-		const formProvider = provideTestContainer(form, undefined);
+		const formProvider = provideTestRuntime(form, undefined);
 		form.append(array);
 		renderer.append(form);
 		document.body.append(renderer);
 		await vi.waitFor(() => {
 			expect(array.querySelector('.se-form-array__empty')).not.toBeNull();
 		});
-		formProvider.setContext({ ...formProvider.getContext(), container: contactsContainer(engine) });
+		formProvider.setContext({ ...formProvider.getContext(), runtime: contactsRuntime() });
 		await vi.waitFor(() => {
 			expect(array.querySelector('input')).not.toBeNull();
 		});
@@ -330,7 +324,7 @@ describe('Radiant form engine resolution', () => {
 		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
-		provideTestContainer(form, contactsContainer(engine));
+		provideTestRuntime(form, contactsRuntime());
 		form.append(array);
 		renderer.append(form);
 		document.body.append(renderer);
@@ -351,7 +345,7 @@ describe('Radiant form engine resolution', () => {
 		const form = document.createElement('div');
 		const array = document.createElement('se-form-array') as SeFormArray;
 		array.config = contactsArray(engine);
-		provideTestContainer(form, contactsContainer(engine));
+		provideTestRuntime(form, contactsRuntime());
 		renderer.engine = engine;
 		form.append(array);
 		renderer.append(form);
