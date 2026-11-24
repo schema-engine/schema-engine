@@ -2,7 +2,7 @@
 
 Coding standards for agents. Domain vocabulary: [CONTEXT.md](./CONTEXT.md). How to describe the project in the README, docs and talks: [ABOUT.md](./ABOUT.md).
 When behavior changes, update that folder's README and any parent index that lists it. Use CONTEXT.md terms consistently. Do not hand-edit package versions or `CHANGELOG.md` for release notes.
-Changesets are paused until 0.1.0 is published to npm: do not add them before then. After that release, user-facing public package changes need a changeset (`pnpm changeset`).
+Changesets are paused until 0.5.0 is published to npm: do not add them before then. After that release, user-facing public package changes need a changeset (`pnpm changeset`).
 
 ## Comments
 

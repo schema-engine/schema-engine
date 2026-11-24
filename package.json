@@ -44,6 +44,8 @@
 		"build:radiant-storybook": "NODE_OPTIONS='--max-old-space-size=4096' turbo run @schema-engine/forms-radiant#build-storybook",
 		"build:docs": "turbo run @schema-engine/docs#build",
 		"changeset": "changeset",
+		"version-packages": "changeset version && pnpm install --lockfile-only",
+		"release": "changeset publish",
 		"check-types:scripts": "pnpm --filter @schema-engine/scripts check-types",
 		"clean": "clear && pnpm dlx npkill -D -y && rm -rf pnpm-lock.yaml && pnpm install",
 		"commit": "better-commits",

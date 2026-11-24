@@ -1,8 +1,25 @@
 {
 	"name": "@schema-engine/actions",
 	"type": "module",
-	"version": "0.1.0",
+	"version": "0.5.0",
+	"description": "Registered actions that run from plain data: serializable workflows of sequential and parallel steps, checked before they run",
+	"keywords": [
+		"schema-engine",
+		"actions",
+		"workflow",
+		"json",
+		"serialization"
+	],
+	"author": "Andrea Zanenghi",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/andeeplus/schema-engine.git",
+		"directory": "packages/actions"
+	},
+	"engines": {
+		"node": "^24.22.0 || >=26.0.0"
+	},
 	"homepage": "https://schema-engine.com/docs/actions/overview",
 	"publishConfig": {
 		"access": "public"
@@ -36,10 +53,10 @@
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",
-		"@schema-engine/registry": "workspace:*"
+		"@schema-engine/registry": "workspace:^"
 	},
 	"devDependencies": {
-		"@schema-engine/scripts": "workspace:*",
+		"@schema-engine/scripts": "workspace:^",
 		"esbuild": "^0.27.0",
 		"tsc-alias": "^1.8.16",
 		"vitest": "^4.0.13",

@@ -1,0 +1,89 @@
+name: CI
+
+on:
+    pull_request:
+    workflow_dispatch:
+    push:
+        branches: [main]
+
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    checks:
+        name: Checks
+        runs-on: ubuntu-latest
+        timeout-minutes: 45
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: pnpm/action-setup@v6
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: '24'
+                  cache: 'pnpm'
+
+            - name: Install
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Chromium
+              run: pnpm exec playwright install --with-deps chromium
+
+            - name: Type-check the scripts
+              run: pnpm check-types:scripts
+
+            - name: Check the registry catalog
+              run: pnpm registry:check
+
+            - name: Format
+              run: pnpm format:check
+
+            - name: Build the packages
+              run: pnpm build:lib
+
+            # Type-aware lint reads the sibling packages' types from their dist, so it runs after the build.
+            - name: Lint
+              run: pnpm lint
+
+            - name: Type-check and test every package
+              run: pnpm turbo check-types test:all
+
+            - name: Build the docs
+              run: pnpm build:docs
+
+            - name: Docs end-to-end tests
+              run: pnpm test:e2e:docs
+
+    storybook:
+        name: Storybook
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: pnpm/action-setup@v6
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: '24'
+                  cache: 'pnpm'
+
+            - name: Install
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Chromium
+              run: pnpm exec playwright install --with-deps chromium
+
+            - name: Build the React Storybook
+              run: pnpm build:react-storybook
+
+            - name: Build the Radiant Storybook
+              run: pnpm build:radiant-storybook
+
+            - name: Radiant Storybook tests
+              run: pnpm turbo test:storybook --filter=@schema-engine/forms-radiant

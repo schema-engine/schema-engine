@@ -67,7 +67,10 @@ export const WithValidation: Story = {
 				name: 'phone',
 				label: 'Phone Number',
 				placeholder: '(202) 555-0123',
-				rules: [{ $type: 'required', message: 'Phone number is required' }],
+				rules: [
+					{ $type: 'required', message: 'Phone number is required' },
+					{ $type: 'phone', message: 'Enter a complete phone number' },
+				],
 			},
 			{ $type: 'submit', id: 'submit', name: 'submit', label: 'Submit' },
 		]),
@@ -78,8 +81,6 @@ export const WithValidation: Story = {
 		const input = queryDeep(canvasElement, '[data-ref="number"]') as HTMLInputElement | null;
 		await expect(input).toBeTruthy();
 		if (!input) return;
-		const field = queryDeep(canvasElement, 'se-field') as { rules?: { validate?: unknown } } | null;
-		await expect(typeof field?.rules?.validate).toBe('function');
 
 		await step('A country prefix alone is invalid', async () => {
 			await userEvent.click(input);

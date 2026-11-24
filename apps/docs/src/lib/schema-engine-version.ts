@@ -6,4 +6,4 @@
  * `src/`, so layouts cannot import package JSON files. Keep in sync with
  * `packages/forms/package.json` when bumping a release.
  */
-export const schemaEngineVersion = '0.1.0';
+export const schemaEngineVersion = '0.5.0';
