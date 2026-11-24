@@ -27,6 +27,28 @@ function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }): J
 	return jsx('style', { 'data-se-theme-css': themeId, children: css });
 }
 
+/**
+ * The participation a step's fields render with.
+ *
+ * @remarks
+ * A step that the values skip is hidden, so its fields are not in the markup of the participation the values give.
+ * The `se-form-step` host shows the step when it becomes current, and nothing renders its fields then, so a step
+ * that starts skipped would open empty. Its fields render as if the step were shown instead: the host keeps them
+ * hidden while the step is skipped, and the container's participation, not the markup, decides what takes part.
+ */
+function stepParticipation(
+	steps: NormalizedFormConfig['steps'],
+	step: NormalizedFormConfig['steps'][number],
+	values: Record<string, unknown>,
+	participation: ReturnType<typeof resolveParticipation>,
+) {
+	if (!participation.skippedSteps.includes(step.id)) return participation;
+	return resolveParticipation(
+		steps.map((candidate) => (candidate === step ? { ...candidate, constraints: undefined } : candidate)),
+		values,
+	);
+}
+
 export function RecipeRenderer({
 	config,
 	engine,
@@ -77,7 +99,12 @@ export function RecipeRenderer({
 								engine={engine}
 								initialValues={initialValues}
 								values={values}
-								constraintContext={{ values, initialValues, rowIds, participation }}
+								constraintContext={{
+									values,
+									initialValues,
+									rowIds,
+									participation: stepParticipation(config.steps, step, values, participation),
+								}}
 							/>
 						</div>
 					) : null}

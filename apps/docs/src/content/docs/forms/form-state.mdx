@@ -18,7 +18,7 @@ It is called a container, not a store, because `FormStore` is a class of Radiant
 
 These examples run without a renderer, so they register one placeholder field and a wizard recipe that renders nothing. An app registers its renderer's elements and recipes instead.
 
-```ts
+```ts title="engine.ts"
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
 

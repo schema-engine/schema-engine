@@ -1,10 +1,10 @@
 import { afterAll, afterEach, beforeAll, describe, expect, inject, test } from 'vitest';
 import { expect as pwExpect } from '@playwright/test';
 import { chromium, type Browser, type Page } from 'playwright';
-import { basicContactFormConfig } from '../../src/lib/form-configs/basic-contact';
+import { contactForm } from '../../src/lib/examples/contact-form/config';
 
 const baseUrl = inject('docsBaseUrl');
-const gettingStartedPath = '/docs/forms-react/getting-started';
+const recipePath = '/docs/examples/contact-form';
 
 /** Waits until React has hydrated the live demo form. */
 async function waitForReactFormHydration(page: Page): Promise<void> {
@@ -25,7 +25,7 @@ async function waitForReactFormHydration(page: Page): Promise<void> {
 	);
 }
 
-describe('Forms React docs live demo', () => {
+describe('React live demo of a forms recipe', () => {
 	let browser: Browser;
 	let page: Page;
 	const pageErrors: string[] = [];
@@ -45,8 +45,8 @@ describe('Forms React docs live demo', () => {
 		await browser?.close();
 	});
 
-	test('hydrates the getting-started embed and validates on submit', async () => {
-		await page.goto(`${baseUrl}${gettingStartedPath}`, { waitUntil: 'networkidle' });
+	test('hydrates the contact form demo and validates on submit', async () => {
+		await page.goto(`${baseUrl}${recipePath}`, { waitUntil: 'networkidle' });
 		await waitForReactFormHydration(page);
 
 		const submit = page.locator('.docs-react-form-demo button[type="submit"]');
@@ -61,7 +61,7 @@ describe('Forms React docs live demo', () => {
 	});
 
 	test('keeps a typed value in form state across a validation render', async () => {
-		await page.goto(`${baseUrl}${gettingStartedPath}`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}${recipePath}`, { waitUntil: 'networkidle' });
 		await waitForReactFormHydration(page);
 
 		const name = page.locator('.docs-react-form-demo input[name="name"]');
@@ -75,9 +75,9 @@ describe('Forms React docs live demo', () => {
 	});
 
 	test('ships the demo config serialized for client hydration', async () => {
-		await page.goto(`${baseUrl}${gettingStartedPath}`, { waitUntil: 'domcontentloaded' });
+		await page.goto(`${baseUrl}${recipePath}`, { waitUntil: 'domcontentloaded' });
 		const root = page.locator('.docs-react-form-demo[data-se-react-form-demo-root="true"]');
 		const serialized = await root.getAttribute('data-se-form-config');
-		expect(JSON.parse(serialized ?? 'null')).toEqual(basicContactFormConfig);
+		expect(JSON.parse(serialized ?? 'null')).toEqual(contactForm);
 	});
 });

@@ -1,5 +1,5 @@
 {
-	"name": "form-engine",
+	"name": "schema-engine",
 	"module": "index.ts",
 	"type": "module",
 	"packageManager": "pnpm@10.15.1",

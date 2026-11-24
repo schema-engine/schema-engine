@@ -26,38 +26,41 @@ type HomeFeedArticleData = {
 
 const EXPLORE_ARTICLES: HomeFeedArticleData[] = [
 	{
-		href: '/docs/schema-engine/introduction',
-		label: 'Get Started',
-		title: 'Schema-driven from day one',
+		href: '/docs/registry/overview',
+		label: 'Registry',
+		title: 'Register your own pieces',
 		description:
-			'Define forms in JSON, get Zod Mini validation, real components, and full type safety without writing the form by hand.',
-	},
-	{
-		href: '/docs/forms/overview',
-		label: 'Core',
-		title: 'Framework-agnostic engine',
-		description: 'The forms package is the headless core. Pluggable adapters, no opinions on UI.',
-	},
-	{
-		href: '/docs/forms-react/overview',
-		label: 'React',
-		title: 'Production-ready React layer',
-		description: 'Form-state-backed components, view recipes, and a strict builder pattern.',
+			'A component, an action or a rule is a registration: a $type, a schema for its configuration and metadata. A document names registrations by $type, and a registry resolves them.',
 	},
 	{
 		href: '/docs/actions/overview',
 		label: 'Actions',
-		title: 'Sequential action system',
-		description: 'Compose submit, reset, auto-save, GTM, and notifications as registered plugins.',
+		title: 'Workflows as data',
+		description:
+			'Actions run in sequence, a nested list runs in parallel and a failure can cancel the rest. The entries are JSON, so a server can send a workflow and parseActions checks it before anything runs.',
+	},
+	{
+		href: '/docs/forms/overview',
+		label: 'Forms',
+		title: 'The first domain',
+		description:
+			'Fields, rules, constraints, steps and the submit lifecycle. The engine owns the form state, so there is no form library to adapt.',
+	},
+	{
+		href: '/docs/schema-engine/packages',
+		label: 'Renderers',
+		title: 'React and Radiant',
+		description:
+			'One form config renders with Forms React, with widgets you write or copy, and with Forms Radiant, whose elements ship in the package.',
 	},
 ];
 
 const PATH_STEPS = [
-	'Read the introduction to understand the philosophy and the engine.',
-	'Install the packages you need and configure the React adapter.',
-	'Define your first form config and render it with FormRenderer.',
-	'Layer in actions, validation rules, and custom layouts.',
-	'Read the API reference for the package you are extending.',
+	'Read the introduction: the common language, and why it exists.',
+	'Run the quick start: a registry and a JSON workflow, with no UI.',
+	'Learn the registry and the actions.',
+	'Add Forms, then Forms React or Forms Radiant.',
+	'Copy a recipe from the examples and make it yours.',
 ];
 
 type HomePathCardData = {
@@ -69,22 +72,23 @@ type HomePathCardData = {
 const PATH_CARDS: HomePathCardData[] = [
 	{
 		href: '/docs/schema-engine/packages',
-		title: 'Install and configure',
-		description: 'Add forms and forms-react to your project and register the engine.',
+		title: 'Install what you need',
+		description: 'Pick the packages for a registry, actions, a form or a layout, and see what each one needs.',
 	},
 	{
-		href: '/docs/forms/builder',
-		title: 'Set up the form engine',
-		description: 'Construct your engine once with createFormEngine, then extend it as your app grows.',
+		href: '/docs/schema-engine/core-concepts',
+		title: 'Learn the vocabulary',
+		description: 'Document, $type, registration, registry, action, trigger and renderer, defined once.',
 	},
 	{
-		href: '/docs/examples/basic-form',
+		href: '/docs/examples/overview',
 		title: 'Explore the examples',
-		description: 'Basic, contact, registration, survey, and sequential-action forms — real configs you can copy.',
+		description:
+			'Tested recipes for a registry, a workflow and forms in React and Radiant, with the files to copy.',
 	},
 ];
 
-const HERO_PILLS = ['Framework Agnostic', 'Type Safe', 'Zero Boilerplate'];
+const HERO_PILLS = ['Registry', 'Serializable actions', 'React and Radiant', 'Type safe'];
 
 const PreviewChrome = ({
 	label,
@@ -115,11 +119,12 @@ const AGENT_LINKS = [
 ];
 
 const ECOSYSTEM_PACKAGES = [
+	'@schema-engine/registry',
+	'@schema-engine/actions',
 	'@schema-engine/forms',
 	'@schema-engine/forms-react',
+	'@schema-engine/forms-radiant',
 	'@schema-engine/layout',
-	'@schema-engine/actions',
-	'@schema-engine/registry',
 ];
 
 type HomeFooterLink = {
@@ -147,22 +152,36 @@ const HOME_FOOTER_COLUMNS: HomeFooterColumnData[] = [
 		title: 'Guides',
 		links: [
 			{ label: 'Introduction', href: '/docs/schema-engine/introduction' },
+			{ label: 'Quick start', href: '/docs/schema-engine/quick-start' },
+			{ label: 'Core concepts', href: '/docs/schema-engine/core-concepts' },
 			{ label: 'Packages', href: '/docs/schema-engine/packages' },
-			{ label: 'Forms', href: '/docs/forms/overview' },
-			{ label: 'Forms React', href: '/docs/forms-react/overview' },
 		],
 	},
 	{
 		title: 'Packages',
 		links: [
-			{ label: 'Actions', href: '/docs/actions/overview' },
 			{ label: 'Registry', href: '/docs/registry/overview' },
-			{ label: 'Examples', href: '/docs/examples/basic-form' },
+			{ label: 'Actions', href: '/docs/actions/overview' },
+			{ label: 'Forms', href: '/docs/forms/overview' },
+			{ label: 'Forms React', href: '/docs/forms-react/overview' },
+			{ label: 'Forms Radiant', href: '/docs/forms-radiant/overview' },
+			{ label: 'Layout', href: '/docs/layout/overview' },
+			{ label: 'Examples', href: '/docs/examples/overview' },
 		],
 	},
 	{
 		title: 'npm',
 		links: [
+			{
+				label: '@schema-engine/registry',
+				href: 'https://www.npmjs.com/package/@schema-engine/registry',
+				external: true,
+			},
+			{
+				label: '@schema-engine/actions',
+				href: 'https://www.npmjs.com/package/@schema-engine/actions',
+				external: true,
+			},
 			{
 				label: '@schema-engine/forms',
 				href: 'https://www.npmjs.com/package/@schema-engine/forms',
@@ -174,13 +193,13 @@ const HOME_FOOTER_COLUMNS: HomeFooterColumnData[] = [
 				external: true,
 			},
 			{
-				label: '@schema-engine/actions',
-				href: 'https://www.npmjs.com/package/@schema-engine/actions',
+				label: '@schema-engine/forms-radiant',
+				href: 'https://www.npmjs.com/package/@schema-engine/forms-radiant',
 				external: true,
 			},
 			{
-				label: '@schema-engine/registry',
-				href: 'https://www.npmjs.com/package/@schema-engine/registry',
+				label: '@schema-engine/layout',
+				href: 'https://www.npmjs.com/package/@schema-engine/layout',
 				external: true,
 			},
 		],
@@ -350,20 +369,21 @@ const HomeHero = () => (
 	<header class="home-header">
 		<div class="home-hero">
 			<h1 class="home-hero__title">
-				Schema-Driven
+				Declarative interfaces
 				<br />
-				<span>Developer Toolkit</span>
+				<span>with your own components and actions</span>
 			</h1>
 			<p class="home-hero__lede">
-				A framework-agnostic toolkit for building schema-driven interfaces. Define your UI in JSON, get
-				automatic Zod Mini validation and type safety. Use with React today, more adapters coming soon.
+				A common language for describing an interface or a process as JSON. Register your own components and
+				actions, send the document from a server to a client, and render it with React or Radiant. Any Standard
+				Schema library validates it.
 			</p>
 			<div class="home-hero__actions">
 				<RuiButton href="/docs/schema-engine/quick-start" size="lg">
-					Get Started
+					Get started
 				</RuiButton>
 				<RuiButton href="/docs/schema-engine/introduction" variant="outline" size="lg">
-					View Documentation
+					Read the introduction
 				</RuiButton>
 			</div>
 			<ul class="home-hero__pills">
@@ -469,7 +489,7 @@ export default eco.page({
 	metadata: () => ({
 		title: 'Schema Engine',
 		description:
-			'A framework-agnostic toolkit for building schema-driven interfaces. Define your UI in JSON, get automatic Zod Mini validation and type safety.',
+			'A common language for describing interfaces and processes as JSON, with your own components and actions: a registry, serializable workflows, forms, and React and Radiant renderers.',
 		url: '/',
 	}),
 	render: HomePage,

@@ -10,7 +10,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { copyRegistryDemo } from '../../scripts/copy-registry-demo';
 
 const docsRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const examplesPath = '/docs/examples/react-forms';
+const examplesPath = '/docs/forms-react/components';
 
 /** Output of the dev server, apart from the `dist` and `.eco` the production preview serves. */
 const DEV_DIST_DIR = 'dist-dev-smoke';
@@ -139,7 +139,7 @@ describe('docs dev server source boundary', () => {
 	}, 120_000);
 
 	test('the Radiant-styled demo kit still hydrates in dev', async () => {
-		await page.goto(`${baseUrl}/docs/forms-react/getting-started`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}/docs/examples/contact-form`, { waitUntil: 'networkidle' });
 		await page.waitForFunction(
 			() => {
 				const form = document.querySelector('.docs-react-form-demo form');
@@ -156,7 +156,7 @@ describe('docs dev server source boundary', () => {
 		expect(problems).toEqual([]);
 	}, 120_000);
 
-	test.each(['/docs/forms-react/layouts', '/docs/layout/recipes'])(
+	test.each(['/docs/forms-react/layouts', '/docs/examples/layout-recipes', '/docs/examples/contact-form'])(
 		'%s hydrates its form demos without a mismatch in dev',
 		async (pagePath) => {
 			await page.goto(`${baseUrl}${pagePath}`, { waitUntil: 'networkidle' });
@@ -174,17 +174,17 @@ describe('docs dev server source boundary', () => {
 	);
 
 	test('On this page lists page sections but not the headings inside a rendered form demo', async () => {
-		await page.goto(`${baseUrl}/docs/forms-react/getting-started`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}/docs/examples/registration-wizard`, { waitUntil: 'networkidle' });
 		await page.waitForSelector('.rui-toc__link');
 
 		const demoHeading = page.locator('[data-se-theme] h2').first();
-		expect(await demoHeading.textContent()).toBe('Your Information');
+		expect(await demoHeading.textContent()).toBe('Account');
 		expect(await demoHeading.getAttribute('id')).toBeNull();
 
 		const entries = await page.locator('.rui-toc__link').allTextContents();
-		expect(entries).toContain('Live example');
-		expect(entries).toContain('Your own widgets');
-		expect(entries).not.toContain('Your Information');
+		expect(entries).toContain('See it');
+		expect(entries).toContain('The config');
+		expect(entries).not.toContain('Account');
 		expect(problems).toEqual([]);
 	}, 120_000);
 });

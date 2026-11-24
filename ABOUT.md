@@ -20,6 +20,18 @@ Schema validators), and "Schema Engine" also names Prisma's migration engine.
 Open with the outcome: declarative, portable interfaces that each team extends
 with its own components and actions. Mention schemas as the mechanism, after that.
 
+## The message: a common language
+
+Lead with this, in this order, in the project's voice. It is the owner's reason for the project, and it is true of the code.
+
+1. **A common language.** Schema Engine describes an interface or a process as data that any renderer reads the same way. It is a small set of rules that anyone can use to describe their own interface, not a component kit.
+2. **Ownership.** The person who builds with it owns the result: their inputs, their decorative elements, their design system. It does not bend to a library or a framework.
+3. **The registry.** A collection of registrations that follow the same rules: a `$type`, a schema for the configuration and metadata. It is not limited to forms.
+4. **Actions as serializable workflows.** An action is defined once in code. Its entries are plain data, so an async workflow is a JSON array that can be stored, sent and replayed, and `parseActions` checks it before anything runs.
+5. **Rendering from serialized data.** A server can send a document to a client, the client checks it against the registrations, and a renderer draws it.
+
+Write "we" or the product's name, never "I". Forms is the first domain: the example that shows the rest, not the whole.
+
 ## The layers
 
 | Layer                | What it is                                                                                                            | Who owns it                            |
@@ -57,6 +69,8 @@ borrowing JSON Schema's "dialect" and "core vocabulary" terms;
 Use:
 
 - "Declarative interfaces, extended with your own components and actions."
+- "A common language for describing an interface or a process as data."
+- "A workflow is a JSON array: store it, send it, replay it."
 - "Each team brings its own vocabulary; the engine keeps the rules the same."
 - "Forms is the first domain."
 - "Forms are configured, not coded: the engine owns the form state, so there are no form library adapters."
@@ -65,4 +79,6 @@ Avoid:
 
 - "A new standard", "the standard for forms", or similar claims.
 - Leading with "schema" or "validation".
+- "Plugin" for an action, and a bare "registry" where the shadcn registry could be meant: say "action", "registry" for the code and "shadcn registry" for the copied React source.
+- "Form Engine" as the product name: the product is Schema Engine, and Forms is its first domain.
 - Describing blocks or page contents before they are designed.

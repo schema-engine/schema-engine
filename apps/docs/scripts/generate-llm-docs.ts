@@ -57,7 +57,7 @@ export async function generateLlmDocs(outputRoot = publicRoot, options: Generate
 
 		const lines: string[] = [
 			'# Schema Engine Documentation',
-			'> Build typed JSON-driven forms, React adapters, actions, and registries with Schema Engine.',
+			'> A common language for describing interfaces and processes as JSON: a registry, serializable actions, forms, and React and Radiant renderers.',
 			`> Start at ${absoluteUrl('/skill.txt', origin)} or ${absoluteUrl('/skill/SKILL.md', origin)}`,
 			'',
 			'## How to read the docs',

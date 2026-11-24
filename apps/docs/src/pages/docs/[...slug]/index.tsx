@@ -12,7 +12,7 @@ import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo
 import { ReactFormPreview } from '@/components/react-form-demo/react-form-preview.react';
 
 /** Sections whose pages embed React live demos. */
-const REACT_DEMO_SECTIONS = ['forms-react/', 'layout/'];
+const REACT_DEMO_SECTIONS = ['forms-react/', 'layout/', 'examples/'];
 
 /**
  * Single pages outside those sections that embed React live demos.
@@ -22,7 +22,7 @@ const REACT_DEMO_SECTIONS = ['forms-react/', 'layout/'];
  * code and stylesheets.
  */
 const REACT_DEMO_PAGES: Record<string, { shadcn: boolean }> = {
-	'examples/react-forms': { shadcn: true },
+	'forms-react/components': { shadcn: true },
 };
 
 /**

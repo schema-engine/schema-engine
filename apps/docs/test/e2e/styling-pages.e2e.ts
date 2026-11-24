@@ -9,7 +9,7 @@ const STYLING_PAGES = [
 	['/docs/layout/layout-themes', 'Layout themes'],
 	['/docs/layout/appearance-axes', 'Appearance axes'],
 	['/docs/layout/theming', 'Theming'],
-	['/docs/layout/recipes', 'Recipes'],
+	['/docs/examples/layout-recipes', 'Layout recipes'],
 	['/docs/registry/registries', 'Read-only and mutable registries'],
 ] as const;
 
@@ -62,8 +62,8 @@ describe('styling docs pages', () => {
 
 	test('the llms exports carry the new pages', async () => {
 		const index = await (await fetch(`${baseUrl}/llms.txt`)).text();
-		expect(index).toContain('/docs-llm/layout/recipes.md');
-		const markdown = await (await fetch(`${baseUrl}/docs-llm/layout/recipes.md`)).text();
+		expect(index).toContain('/docs-llm/examples/layout-recipes.md');
+		const markdown = await (await fetch(`${baseUrl}/docs-llm/examples/layout-recipes.md`)).text();
 		expect(markdown).toContain('A contact card with two half-width fields');
 	});
 
@@ -123,7 +123,7 @@ describe('styling docs pages', () => {
 		beforeAll(async () => {
 			pageErrors.length = 0;
 			await page.setViewportSize({ width: 1300, height: 900 });
-			await page.goto(`${baseUrl}/docs/layout/recipes`, { waitUntil: 'networkidle' });
+			await page.goto(`${baseUrl}/docs/examples/layout-recipes`, { waitUntil: 'networkidle' });
 			await page.waitForFunction(() => {
 				const form = document.querySelector('[data-recipe="brand-frame"] .docs-react-form-demo form');
 				return form !== null && Object.keys(form).some((key) => key.startsWith('__react'));
@@ -256,5 +256,40 @@ describe('styling docs pages', () => {
 		const input = page.locator('[data-recipe="acme-theme"] input').first();
 		expect(await input.evaluate((element) => element.getBoundingClientRect().height)).toBe(44);
 		await expectEveryTabCopies('acme-theme');
+	});
+});
+
+describe('the layout page recipe', () => {
+	test('its frame crosses the breakpoints of the theme when it is resized', async () => {
+		const browser = await chromium.launch();
+		try {
+			const page = await browser.newPage({ viewport: { width: 1300, height: 900 } });
+			await page.goto(`${baseUrl}/docs/examples/layout-page`, { waitUntil: 'networkidle' });
+			const frame = page.locator('iframe.layout-page-demo');
+			await pwExpect(frame).toBeVisible();
+			const inFrame = page.frameLocator('iframe.layout-page-demo');
+			await pwExpect(inFrame.locator('main')).toBeVisible();
+
+			const left = async (tag: string) => (await inFrame.locator(tag).boundingBox())!.x;
+			await frame.evaluate((element) => {
+				element.style.maxWidth = 'none';
+				element.style.width = '300px';
+			});
+			await pwExpect(inFrame.locator('nav')).toBeHidden();
+
+			await frame.evaluate((element) => {
+				element.style.width = '800px';
+			});
+			await pwExpect(inFrame.locator('nav')).toBeVisible();
+			expect(await left('nav')).toBeLessThan(await left('main'));
+			expect((await inFrame.locator('aside').boundingBox())!.x).toBe(await left('main'));
+
+			await frame.evaluate((element) => {
+				element.style.width = '1200px';
+			});
+			expect(await left('main')).toBeLessThan(await left('aside'));
+		} finally {
+			await browser.close();
+		}
 	});
 });

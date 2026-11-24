@@ -1,0 +1,262 @@
+---
+title: 'Submit, notify and reset'
+description: 'A newsletter signup whose config lists its actions: send the email, tell the visitor, clear the form, and say so when the request fails, with each action registered by hand.'
+order: 8
+---
+
+import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { RendererTabs } from '@/components/renderer-tabs';
+import { newsletter } from '@/lib/examples/submit-notify-reset/config';
+
+# Submit, notify and reset
+
+A form often does more than call `onSubmit`: it sends the values, tells the visitor how it went, and clears itself. This recipe is a newsletter signup that does those three things as actions listed in its config. The actions are data, so a server can send them with the form. Each one runs on the moment it names, `form_submit_success` after the request worked and `form_submit_error` after it failed, and they run in the order they are listed.
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started).
+
+## See it
+
+Submit an empty form to see the message. Enter an email and submit: the action sends it to a mock endpoint, a notification appears, and the field clears. The demos are styled for this site and send to a mock endpoint.
+
+<FormRecipeDemo config={newsletter} />
+
+## The config
+
+`actions` is part of the config. `submit` sends the values to `endpoint`, and by default answers `form_submit`. The two notifications and the reset name their `triggers`. If the request fails, the submit action stops the chain, `form_submit_error` runs, and the error notification tells the visitor. The values stay in the field, so they can try again. See [Actions in forms](/docs/forms/actions) for every trigger.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/**
+ * A newsletter signup that sends itself, tells the visitor how it went and clears itself.
+ *
+ * @remarks
+ * `actions` are plain data, so the server could send them with the rest of the config. Each entry runs on the
+ * triggers it names, in the order it is listed: `submit` answers `form_submit` by default, and the other entries
+ * run after it succeeded or failed. The values passed validation before any of them ran.
+ */
+export const newsletter: FormConfig = {
+	id: 'newsletter',
+	title: 'Get the monthly update',
+	steps: [
+		{
+			id: 'signup',
+			title: 'Get the monthly update',
+			elements: [
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [
+						{ $type: 'required', message: 'Enter your email' },
+						{ $type: 'email', message: 'Enter a valid email address' },
+					],
+				},
+				{ $type: 'submit', id: 'subscribe', name: 'subscribe', label: 'Subscribe' },
+			],
+		},
+	],
+	actions: [
+		{ id: 'send', $type: 'submit', endpoint: '/api/subscriptions', method: 'POST' },
+		{
+			id: 'thanks',
+			$type: 'show_notification',
+			message: 'You are subscribed. Look out for the next update.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+		{ id: 'clear', $type: 'reset', resetToDefaults: true, triggers: ['form_submit_success'] },
+		{
+			id: 'sorry',
+			$type: 'show_notification',
+			message: 'We could not subscribe you. Try again in a moment.',
+			variant: 'error',
+			triggers: ['form_submit_error'],
+		},
+	],
+};
+```
+
+## Register the actions
+
+An action runs only when the engine has its registration, and the config refers to it by `$type`. A config that names an action nobody registered is a config issue at its path, not a failure at submit time. This file registers the three the config uses:
+
+- `SubmitActionRegistration` sends the values with the engine's `fetch`, as form data, and expects JSON back.
+- `show_notification` is built with `notificationPlugin`. The package's own `NotificationActionRegistration` only logs, because the package cannot know how an app shows a message. The function you pass here is where an app calls its toast library: this recipe publishes the message on an `EventTarget` that the form's file listens to.
+- `ResetActionRegistration` clears the form. It lives in `@schema-engine/forms/browser`, because it uses browser storage.
+
+```ts title="actions.ts"
+import { SubmitActionRegistration, notificationPlugin } from '@schema-engine/forms';
+import { ResetActionRegistration } from '@schema-engine/forms/browser';
+
+/** What a `show_notification` action announces. */
+export interface Notice {
+	message: string;
+	variant: 'success' | 'error' | 'warning' | 'info';
+}
+
+/**
+ * Where notifications go. A real app hands them to its toast library here instead.
+ *
+ * @remarks
+ * `NotificationActionRegistration`, the package's own registration, only logs, because the package cannot know
+ * how an app shows a message. `notificationPlugin` takes the one function that does.
+ */
+export const notices = new EventTarget();
+
+const NotificationRegistration = notificationPlugin({
+	onNotification: (message, variant) => {
+		notices.dispatchEvent(new CustomEvent<Notice>('notice', { detail: { message, variant } }));
+	},
+});
+
+/**
+ * The actions the config names, each registered by hand: an action runs only when its engine has its registration.
+ *
+ * @remarks
+ * `submit` sends the values to `endpoint` with the engine's `fetch`, as form data, and expects JSON back.
+ * `show_notification` runs {@link notices}. `reset` clears the form, and lives in `@schema-engine/forms/browser`
+ * because it uses browser storage.
+ */
+export const actions = [SubmitActionRegistration, NotificationRegistration, ResetActionRegistration];
+```
+
+## The renderer
+
+Each tab builds an engine with the actions and renders the config. The status line shows the last notification: the React file reads it from `notices` in an effect, and the Radiant file has a `showNotices` function that does the same for the page it is on. React needs an input and a submit button as widgets, and Radiant ships them.
+
+<RendererTabs name="submit-notify-reset">
+<div data-renderer="react">
+
+```tsx title="widgets.react.tsx"
+import * as z from 'zod/mini';
+import { BaseFieldSchema, defineInput, defineStatic } from '@schema-engine/forms';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+
+const InputSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('input'),
+	inputType: z.optional(z.enum(['text', 'email'])),
+});
+
+function InputField(config: z.output<typeof InputSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<input {...fieldProps} type={config.inputType ?? 'text'} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const SubmitSchema = z.extend(BaseFieldSchema, { $type: z.literal('submit') });
+
+function SubmitButton(config: z.output<typeof SubmitSchema>) {
+	return <button type="submit">{config.label}</button>;
+}
+
+const input = defineInput({
+	$type: 'input',
+	schema: InputSchema,
+	render: InputField,
+	value: () => z.string(),
+	metadata: { name: 'Input', category: 'input' },
+});
+
+const submit = defineStatic({
+	$type: 'submit',
+	schema: SubmitSchema,
+	render: SubmitButton,
+	metadata: { name: 'Submit', category: 'action' },
+});
+
+export const elements = [input, submit];
+```
+
+```tsx title="submit-notify-reset.react.tsx"
+import { useEffect, useState } from 'react';
+import { createFormEngine } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { actions, notices, type Notice } from './actions';
+import { newsletter } from './config';
+import { elements } from './widgets.react';
+
+export const engine = createFormEngine({ elements, actions });
+
+/** The form, and a status line that shows what the notification actions announce. */
+export function Newsletter() {
+	const [message, setMessage] = useState('');
+	useEffect(() => {
+		const show = (event: Event) => setMessage((event as CustomEvent<Notice>).detail.message);
+		notices.addEventListener('notice', show);
+		return () => notices.removeEventListener('notice', show);
+	}, []);
+
+	return (
+		<>
+			<FormRenderer engine={engine} config={newsletter} />
+			<output>{message}</output>
+		</>
+	);
+}
+```
+
+</div>
+<div data-renderer="radiant">
+
+```tsx title="submit-notify-reset.radiant.tsx"
+import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { actions, notices, type Notice } from './actions';
+import { newsletter } from './config';
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, actions });
+
+/** The form, and a status line that {@link showNotices} fills. */
+export function Newsletter() {
+	return (
+		<>
+			<FormRenderer engine={engine} config={newsletter} />
+			<output data-notice />
+		</>
+	);
+}
+
+/** Shows what the notification actions announce in the status line under `root`, until the returned function runs. */
+export function showNotices(root: ParentNode): () => void {
+	const show = (event: Event) => {
+		const status = root.querySelector('[data-notice]');
+		if (status) status.textContent = (event as CustomEvent<Notice>).detail.message;
+	};
+	notices.addEventListener('notice', show);
+	return () => notices.removeEventListener('notice', show);
+}
+```
+
+</div>
+</RendererTabs>
+
+## What the tests check
+
+The recipe's tests render both files in a browser. An invalid email shows its message, sends nothing and notifies nobody. A valid email sends form data to `/api/subscriptions`, announces the success and clears the field. A 500 announces the error and keeps what was typed.
+
+## Take it further
+
+- Run more actions: [Actions in forms](/docs/forms/actions) lists auto-save, analytics events and how to write your own.
+- Show the server's answer on the fields instead: [Contact form](/docs/examples/contact-form) and [Server errors](/docs/forms/server-errors).
+- The action engine without a form: [A checkout workflow](/docs/examples/checkout-workflow).

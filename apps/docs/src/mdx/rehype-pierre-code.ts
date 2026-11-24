@@ -6,6 +6,7 @@ import { highlightCode, tokenStyle } from '../lib/pierre-highlight';
 const LANGUAGE_CLASS = /^language-(.+)$/;
 const BACKGROUND_VARIABLE = /^--shiki-(light|dark)-bg:/;
 const SHOW_LINE_NUMBERS = /(^|\s)showLineNumbers(\s|$)/;
+const TITLE = /(^|\s)title="([^"]+)"/;
 
 function isElement(node: Root | RootContent | ElementContent): node is Element {
 	return node.type === 'element';
@@ -64,6 +65,7 @@ function buildFigure(code: Element): Element {
 		.map((name) => LANGUAGE_CLASS.exec(name)?.[1])
 		.find(Boolean);
 	const source = textOf(code).replace(/\n$/, '');
+	const title = TITLE.exec(metaOf(code))?.[2];
 	const { lines, rootStyle } = highlightCode(source, language);
 	const backgrounds = rootStyle.split(';').filter((declaration) => BACKGROUND_VARIABLE.test(declaration.trim()));
 
@@ -88,6 +90,7 @@ function buildFigure(code: Element): Element {
 		properties: {
 			'data-rehype-pretty-code-figure': '',
 			...(SHOW_LINE_NUMBERS.test(metaOf(code)) ? { 'data-line-numbers': '' } : {}),
+			...(title ? { 'data-title': title } : {}),
 			style: [...backgrounds, `--line-digits:${String(lines.length).length}`].join(';'),
 		},
 		children: [
@@ -151,7 +154,8 @@ function visit(node: Root | RootContent | ElementContent): void {
  * clipboard handling lives in the base layout script. Lines are marked with `data-line`, which the stylesheet
  * selects alongside `.line`, because the MDX-to-JSX pass drops the class of an element it did not write. A fence with no
  * language, or one Pierre has no grammar for, is rendered as unhighlighted text. A fence whose meta holds
- * `showLineNumbers` gets `data-line-numbers` on its figure, which the stylesheet turns into a gutter.
+ * `showLineNumbers` gets `data-line-numbers` on its figure, which the stylesheet turns into a gutter. A fence whose meta holds
+ * `title="name.ts"` gets `data-title` on its figure, which the stylesheet draws as a file name above the code.
  */
 export const rehypePierreCode: Plugin<[], Root> = () => (tree) => {
 	visit(tree);

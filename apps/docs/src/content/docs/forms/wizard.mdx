@@ -54,6 +54,8 @@ One lock covers navigation and submission, so Next and submit cannot interleave:
 ## The snapshot
 
 ```ts
+import type { FormSubmissionIssue } from '@schema-engine/forms/state-container';
+
 interface FormRuntimeSnapshot {
 	submission: {
 		status: 'idle' | 'validating' | 'submitting' | 'success' | 'error';

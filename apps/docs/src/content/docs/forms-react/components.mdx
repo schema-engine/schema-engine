@@ -4,6 +4,10 @@ description: 'The field elements the shadcn registry installs, how to import and
 order: 4
 ---
 
+import { ShadcnFormDemoEmbed } from '@/components/react-form-demo/shadcn-form-demo-embed';
+import { FormConfigCode } from '@/components/form-config-code';
+import { shadcnContactFormConfig } from '@/lib/form-configs/shadcn-example';
+
 # Registry fields
 
 `@schema-engine/forms-react` ships no element registrations: the field implementations are code you own. You can write your own with [Writing a widget](/docs/forms-react/widgets), or, in a project that already uses shadcn, copy the ready-made ones the shadcn registry installs. This page covers the second path. The install, the CSS and the barrel imports are in [Installation and quick start](/docs/forms-react/getting-started#optional-start-from-the-shadcn-registry).
@@ -54,6 +58,29 @@ export const engine = createFormEngine({ elements: [...schemaFormRegistrations, 
 ```
 
 A later registration with the same `$type` replaces the earlier one without a warning. To write `myInput`, see [Writing a widget](/docs/forms-react/widgets).
+
+## See them
+
+This form renders with the registry's `input` field and `card` recipe, from the files `shadcn add` copies. Submit it empty to see the required messages. A valid submit shows the values under the form, and nothing is sent.
+
+<ShadcnFormDemoEmbed config={shadcnContactFormConfig} />
+
+<FormConfigCode config={shadcnContactFormConfig} rootName="shadcnContactFormConfig" />
+
+The engine registers the copied field and recipe like any app's would:
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
+import { CardRecipe } from '@/components/schema-engine/forms/recipes/registrations/card';
+
+const engine = createFormEngine({
+	elements: [InputElementRegistration],
+	recipes: [CardRecipe],
+});
+```
+
+The provider, the renderer and the copied field's hooks all import `@schema-engine/forms-react` from the one package, so they share one React context. A bundle that ends up with two copies of the package splits the context, and the field then throws a missing-provider error: keep one copy in your app. The [shadcn registry README](https://github.com/andeeplus/schema-engine/blob/main/registry/README.md) lists every item.
 
 ## Element configuration
 

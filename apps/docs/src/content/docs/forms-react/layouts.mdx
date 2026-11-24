@@ -21,9 +21,9 @@ Recipes compose a **shell** with optional **header**, **progress**, and **action
 | `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                                                                                                  |
 | `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()`                                                                                   |
 
-## Default registry recipes
+## Default shadcn registry recipes
 
-The [React Forms](/docs/examples/react-forms#copied-shadcn-source) page renders the registry's `card` recipe and `input` field live, from source copied into the docs app.
+[Registry fields](/docs/forms-react/components#see-them) renders the shadcn registry's `card` recipe and `input` field live.
 
 Install the recipes from the optional shadcn path of [Installation and quick start](/docs/forms-react/getting-started#optional-start-from-the-shadcn-registry), which also has the stylesheet imports. The recipe CSS lives in a file beside each component (`shells/hero-shell.css`, `blocks/form-actions.css` and the rest), every rule inside `:where()` so a class of yours wins, and the Tailwind classes left on the components are mostly your shadcn theme's colours and type, plus the few that override a shadcn `Button`. Without the import the shells and blocks render unstyled. The size axis also needs `controls.css`, unlayered, after the recipe styles (see [Appearance and the default styles](#appearance-and-the-default-styles)). Then add the generated recipe barrel when you construct the engine:
 
@@ -80,7 +80,7 @@ Wizard recipes require **at least two steps**. Set `view.$type` to a wizard reci
 
 If you omit `view.$type` on a multi-step form, `validateForm` writes the engine's default wizard recipe as `view` (`bare-controls` unless `createFormEngine({ defaultWizardRecipe })` names another wizard recipe). If that recipe is not registered, the form keeps no `view`, `validateForm` warns, and fields render without chrome.
 
-See [Registration Flow](/docs/examples/registration-flow) for a full wizard configuration.
+See the [Registration wizard](/docs/examples/registration-wizard) recipe for a full wizard in React and Radiant.
 
 ### Skipping steps and the stepper
 
@@ -150,13 +150,13 @@ The card shell sets no inline styles. Its class hooks are `se-card-shell`, `se-c
 
 ## Copy the default source
 
-Canonical source is `registry/shared/forms/recipes`. After `shadcn add`, files land under `@/components/schema-engine/forms/recipes`. Copy the files for each recipe you want. A recipe that has a stylesheet lists `recipes.css` with it; copy it together with every stylesheet it imports and import it as above. Every shell and block now ships a stylesheet, so when you copy only some recipes, delete the `@import` lines of `recipes.css` for the files you did not copy, or the stylesheet fails to resolve them. Each tab has a copy button.
+After `shadcn add`, the files land under `@/components/schema-engine/forms/recipes`. Copy the files for each recipe you want. A recipe that has a stylesheet lists `recipes.css` with it; copy it together with every stylesheet it imports and import it as above. Every shell and block now ships a stylesheet, so when you copy only some recipes, delete the `@import` lines of `recipes.css` for the files you did not copy, or the stylesheet fails to resolve them. Each tab has a copy button.
 
 <DefaultRecipeSources />
 
 ## Custom recipes
 
-A recipe is a registration: a spec bound to your components. [Recipes](/docs/layout/recipes#a-custom-recipe-shell-in-react-and-in-radiant) has a custom shell that renders live in React and in Radiant, with its CSS.
+A recipe is a registration: a spec bound to your components. [Layout recipes](/docs/examples/layout-recipes#a-custom-recipe-shell-in-react-and-in-radiant) has a custom shell that renders live in React and in Radiant, with its CSS.
 
 ```tsx
 import * as z from 'zod/mini';

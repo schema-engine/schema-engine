@@ -14,33 +14,6 @@ import {
 
 vi.setConfig({ testTimeout: 60_000 });
 
-/**
- * The docs whose `ts` and `tsx` fences must compile: a section id, or one page as `<section>/<page>`.
- *
- * @remarks
- * A section is turned on when its pages are rewritten, by replacing its page entries with the section id. A
- * section that still holds fences that cannot compile stays off, or lists the pages that are ready, so the list
- * is never left failing.
- */
-const CHECKED_DOCS = [
-	'layout',
-	'registry',
-	'schema-engine',
-	'actions',
-	'forms/overview',
-	'forms/getting-started',
-	'forms/core-concepts',
-	'forms/constraints',
-	'forms/validation',
-	'forms/validation-custom',
-	'forms/actions',
-	'forms/builder',
-	'forms/form-state',
-	'forms/yaml',
-	'forms-react',
-	'forms-radiant',
-];
-
 interface AllowedFence {
 	page: string;
 	/** The heading the fence sits under; every TypeScript fence under it on the page is allowed. Omitted, the whole page. */
@@ -58,11 +31,11 @@ const ALLOWED_FENCES: AllowedFence[] = [
 	{
 		page: 'forms-react/api-reference',
 		heading: 'Engine factory',
-		reason: 'Imports the barrels the shadcn command copies into the app and a recipe of the app.',
+		reason: "Imports the app's own list of widgets and its own recipe, which the page does not define.",
 	},
 	{
 		page: 'forms-react/layouts',
-		heading: 'Default registry recipes',
+		heading: 'Default shadcn registry recipes',
 		reason: 'Imports the barrels the shadcn command copies into the app, which do not exist before it runs.',
 	},
 	{
@@ -76,6 +49,10 @@ const ALLOWED_FENCES: AllowedFence[] = [
 	},
 	{
 		page: 'actions/api-reference',
+		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
+	},
+	{
+		page: 'forms/api-reference',
 		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
 	},
 	{
@@ -146,6 +123,8 @@ const CONTINUES: Record<string, string[]> = {
 	'forms/validation': ['forms/getting-started'],
 	'forms/builder': ['forms/getting-started'],
 	'forms/validation-custom': [],
+	'forms/csrf': ['forms/form-state'],
+	'forms/issue-text': ['forms/form-state'],
 };
 
 const appFor = (page: string): Record<string, string> => ({
@@ -153,41 +132,26 @@ const appFor = (page: string): Record<string, string> => ({
 	...Object.assign({}, ...(CONTINUES[page] ?? []).map(titledFiles)),
 });
 
-const isChecked = (page: string): boolean =>
-	CHECKED_DOCS.some((entry) => page === entry || page.startsWith(`${entry}/`));
-
 const isAllowed = (page: string, block: CodeBlock): boolean =>
 	ALLOWED_FENCES.some(
 		(entry) => entry.page === page && (entry.heading === undefined || entry.heading === block.heading),
 	);
 
 describe('docs snippets', () => {
-	test('every checked entry is a docs section or a page', () => {
-		const pages = docsPageIds();
-		for (const entry of CHECKED_DOCS) {
-			expect(
-				pages.some((page) => page === entry || page.startsWith(`${entry}/`)),
-				`${entry} is not a docs section or page`,
-			).toBe(true);
-		}
-	});
-
-	test('the TypeScript fences of the checked docs compile', () => {
-		const failures = docsPageIds()
-			.filter(isChecked)
-			.flatMap((page) =>
-				checkPageSnippets(page, readPage(page), appFor(page), (block) => isAllowed(page, block)).map(
-					(failure) =>
-						`${failure.page}, fence ${failure.fence} under "${failure.heading}": ${failure.messages.join(' ')}`,
-				),
-			);
+	test('the TypeScript fences of every docs page compile', () => {
+		const failures = docsPageIds().flatMap((page) =>
+			checkPageSnippets(page, readPage(page), appFor(page), (block) => isAllowed(page, block)).map(
+				(failure) =>
+					`${failure.page}, fence ${failure.fence} under "${failure.heading}": ${failure.messages.join(' ')}`,
+			),
+		);
 		expect(failures).toEqual([]);
 	});
 
-	test('every allowed fence exists in a checked page and would otherwise fail', () => {
+	test('every allowed fence exists on a page and would otherwise fail', () => {
 		for (const entry of ALLOWED_FENCES) {
 			expect(entry.reason.trim(), `${entry.page} under "${entry.heading}" needs a reason`).not.toBe('');
-			expect(isChecked(entry.page), `${entry.page} is not a checked page`).toBe(true);
+			expect(docsPageIds(), `${entry.page} is not a docs page`).toContain(entry.page);
 			const inScope = (heading: string) => entry.heading === undefined || heading === entry.heading;
 			const fences = parseCodeBlocks(readPage(entry.page)).filter(
 				(block) => isTypeScriptFence(block) && inScope(block.heading),

@@ -96,7 +96,7 @@ describe('snippet harness', () => {
 
 describe('styling recipes', () => {
 	test('every recipe is shown on a page', () => {
-		const shown = ['layout/recipes', 'layout/theming'].map(readPage).join('\n');
+		const shown = ['examples/layout-recipes', 'layout/theming'].map(readPage).join('\n');
 		for (const recipe of allRecipes) {
 			const name = `${recipe.id.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase())}Recipe`;
 			expect(shown, recipe.id).toContain(`recipe={${name}}`);

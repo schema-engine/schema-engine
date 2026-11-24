@@ -1,7 +1,17 @@
 # @schema-engine/forms
 
-Framework-agnostic form configuration, validation, actions, and view-recipe
-registration for Schema Engine.
+The forms domain of Schema Engine: elements, validation rules, constraints,
+steps, the form state and the submit lifecycle, with no renderer. A renderer
+draws a form: [`@schema-engine/forms-react`](../forms-react) or
+[`@schema-engine/forms-radiant`](../forms-radiant).
+
+## Install
+
+```sh
+pnpm add @schema-engine/forms zod
+```
+
+[Installation and quick start](../../apps/docs/src/content/docs/forms/getting-started.mdx) checks and submits a form with no renderer.
 
 First-party schemas are authored with Zod Mini's functional API and imported
 from `zod/mini`. Install the `zod` package when using the built-in schemas. The
@@ -355,9 +365,8 @@ only the axes it supports) into the normalized config. The inheritance walk is `
 (`lib/resolve-appearance.ts`); checking, merging and attribute helpers are in `@schema-engine/layout`.
 Renderers emit `data-se-<axis>` attributes and the token rules, which are part of the layout
 theme's one stylesheet and sit inside `:where()`, so an author's `className` wins. The
-built-in card shell no longer takes `maxWidth`, `padding` or `shadowSize`: it reads the semantic
-tokens `--se-space`, `--se-border-width`, `--se-shadow` and `--se-surface-background`, and maps
-`--se-space` to its own width. The wizard `actions` slot's former `appearance` key is now `variant`.
+built-in card shell reads the semantic tokens `--se-space`, `--se-border-width`, `--se-shadow` and
+`--se-surface-background`, and maps `--se-space` to its own width. The wizard `actions` slot takes a `variant`.
 
 ### Grid theme
 

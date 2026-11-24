@@ -6,8 +6,8 @@ order: 3
 
 import { FormConfigCode } from '@/components/form-config-code';
 import { FormRendererPreview } from '@/components/form-renderer';
-import { registrationDemoConfig } from '@/lib/form-configs/registration-flow';
-import { surveyDemoConfig } from '@/lib/form-configs/survey-form';
+import { registration } from '@/lib/examples/registration-wizard/config';
+import { survey } from '@/lib/examples/branching-survey/config';
 
 # Radiant layouts
 
@@ -26,24 +26,24 @@ Two Radiant details matter when you tune it:
 - The size hooks (`--se-space-compact`, `--se-control-height-compact` and their `comfortable` twins) work from `:root`, any ancestor of the form or the form's own `className`, as in React; the nearest setting wins and it reaches a pick on the card shell, a step or a field. Each hook falls back to a `--se-renderer-*` property that Radiant sets on each form from its theme (set by renderers, not by apps), so a form with no hook follows its theme, also one scoped to a wrapper, and an app-wide hook outranks it.
 - Radiant UI computes `--size-control-*` on `:root`, so a scoped `--rui-density` does not resize controls below it. [Theming](/docs/layout/theming#radiant-the-spacing-tokens-of-its-own-theme) has the wrapper rule.
 
-Each form carries an identical copy of the layout stylesheet by design; see [Layout stylesheet per form](/docs/forms-radiant/server-rendering#layout-stylesheet-per-form). [Styling and layout](/docs/layout/overview) lists which tool fits which job, and [Recipes](/docs/layout/recipes) has copy-paste configs with their CSS, rendered with these shells.
+Each form carries an identical copy of the layout stylesheet by design; see [Layout stylesheet per form](/docs/forms-radiant/server-rendering#layout-stylesheet-per-form). [Styling and layout](/docs/layout/overview) lists which tool fits which job, and [Layout recipes](/docs/examples/layout-recipes) has copy-paste configs with their CSS, rendered with these shells.
 
 ## Wizard shell
 
-The registration demo is a multi-step form with `view: { $type: 'wizard' }`, rendered with the canonical Radiant wizard shell and step navigation.
+The registration demo is a multi-step form with `view: { $type: 'wizard' }`, rendered with the canonical Radiant wizard shell and step navigation. The [Registration wizard](/docs/examples/registration-wizard) recipe has its files and tests.
 
-<FormRendererPreview config={registrationDemoConfig} />
+<FormRendererPreview config={registration} />
 
 Its config:
 
-<FormConfigCode config={registrationDemoConfig} />
+<FormConfigCode config={registration} />
 
 ## Survey wizard
 
-The survey demo uses the same `wizard` recipe and shows the Radiant field controls, including its select and radio group composition.
+The survey demo uses the same `wizard` recipe, with a step that is skipped unless the answer was poor, and shows the Radiant field controls, including its select. The [Branching survey](/docs/examples/branching-survey) recipe has its files and tests.
 
-<FormRendererPreview config={surveyDemoConfig} />
+<FormRendererPreview config={survey} />
 
 Its config:
 
-<FormConfigCode config={surveyDemoConfig} />
+<FormConfigCode config={survey} />

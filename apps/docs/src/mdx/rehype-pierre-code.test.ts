@@ -74,6 +74,14 @@ describe('rehypePierreCode', () => {
 		expect(other.properties).not.toHaveProperty('data-line-numbers');
 	});
 
+	test('names the figure after the file in the fence title, and only then', async () => {
+		const titled = await run(fence('a();', 'ts', 'showLineNumbers title="main.ts"'));
+		const plain = await run(fence('a();', 'ts'));
+
+		expect(titled.properties?.['data-title']).toBe('main.ts');
+		expect(plain.properties).not.toHaveProperty('data-title');
+	});
+
 	test('puts the copy button beside the pre, not inside it, and copies the background variables onto the figure', async () => {
 		const figure = await run(fence('a { color: red }', 'css'));
 		const [pre] = elements(figure);

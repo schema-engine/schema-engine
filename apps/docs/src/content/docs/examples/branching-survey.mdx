@@ -1,0 +1,348 @@
+---
+title: 'Branching survey'
+description: 'A three-step survey whose follow-up step is skipped unless the answer was poor, so Next passes over it and its fields are left out of what is sent, in React and in Radiant.'
+order: 7
+---
+
+import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { RendererTabs } from '@/components/renderer-tabs';
+import { survey } from '@/lib/examples/branching-survey/config';
+
+# Branching survey
+
+A survey should not ask a happy customer what went wrong. This recipe is a three-step support survey: how it went, what went wrong, and a last word. The middle step belongs only to a customer who answered "Poor". For anyone else the step is skipped: Next and Previous pass over it, it counts in no progress, its fields are not validated, and what was typed in it is left out of what is sent.
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started).
+
+## See it
+
+Choose "Great" and select Next: the survey goes to the last step. Go back, choose "Poor" and select Next: the follow-up step opens, and Next waits for its answers.
+
+<FormRecipeDemo config={survey} />
+
+## The config
+
+The branch is a step-level `constraints` entry. It reads `satisfaction`, a field of an earlier step, and shows the step only when it equals `poor`. A step takes the same constraints as a field, on fields of earlier steps: the first step cannot have one, because nothing comes before it ([Constraints](/docs/forms/constraints)). While the constraint hides the step, the values kept in its fields come back if the constraint holds again, but they take no part in validation or in what is submitted.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/**
+ * A support survey that asks a follow-up only of a customer who had a poor experience.
+ *
+ * @remarks
+ * The `problem` step has a constraint on a field of an earlier step. While it hides the step, Next and Previous
+ * pass over it, the step counts in no progress, its fields are not validated and its values are left out of the
+ * submission. The first step cannot carry a constraint, because nothing comes before it to depend on.
+ */
+export const survey: FormConfig = {
+	id: 'support-survey',
+	title: 'How did we do?',
+	view: { $type: 'wizard' },
+	steps: [
+		{
+			id: 'experience',
+			title: 'Your experience',
+			elements: [
+				{
+					$type: 'input',
+					id: 'name',
+					name: 'name',
+					label: 'Your name',
+					rules: [{ $type: 'required', message: 'Enter your name' }],
+				},
+				{
+					$type: 'select',
+					id: 'satisfaction',
+					name: 'satisfaction',
+					label: 'How was your support request?',
+					placeholder: 'Choose one',
+					options: [
+						{ value: 'great', label: 'Great' },
+						{ value: 'fine', label: 'Fine' },
+						{ value: 'poor', label: 'Poor' },
+					],
+					rules: [{ $type: 'required', message: 'Choose one' }],
+				},
+			],
+		},
+		{
+			id: 'problem',
+			title: 'What went wrong',
+			constraints: [{ field: 'satisfaction', operator: 'equals', value: 'poor', $type: 'show' }],
+			elements: [
+				{
+					$type: 'select',
+					id: 'reason',
+					name: 'reason',
+					label: 'What was the main problem?',
+					placeholder: 'Choose one',
+					options: [
+						{ value: 'slow', label: 'It took too long' },
+						{ value: 'unresolved', label: 'It was not solved' },
+						{ value: 'rude', label: 'The agent was unhelpful' },
+					],
+					rules: [{ $type: 'required', message: 'Choose the main problem' }],
+				},
+				{
+					$type: 'textarea',
+					id: 'details',
+					name: 'details',
+					label: 'Tell us what happened',
+					rows: 4,
+					rules: [{ $type: 'minLength', value: 20, message: 'Use at least 20 characters' }],
+				},
+			],
+		},
+		{
+			id: 'comments',
+			title: 'Anything else?',
+			elements: [{ $type: 'textarea', id: 'comments', name: 'comments', label: 'Comments', rows: 4 }],
+		},
+	],
+};
+```
+
+## The submit handler
+
+The values hold the fields of the steps the visitor saw. A visitor who answered "Great" sends `name`, `satisfaction` and `comments`, with no `reason` or `details`, even if they filled the follow-up step before changing their answer.
+
+```ts title="submit.ts"
+import type { FormSubmitHelpers, FormValues } from '@schema-engine/forms';
+
+/**
+ * Sends the answers as JSON. Any failure throws, which the form reports as a failed submission.
+ *
+ * @remarks
+ * The values hold the fields of the steps the visitor saw: the follow-up step's fields are absent when it was skipped.
+ */
+export async function sendAnswers(values: FormValues, { fetch }: FormSubmitHelpers): Promise<void> {
+	const response = await fetch('/api/surveys', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(values),
+	});
+	if (!response.ok) throw new Error(`The server answered ${response.status}.`);
+}
+```
+
+## The renderer
+
+Radiant ships the wizard recipe and the elements. React ships neither, so its tab has the widgets and a recipe of its own, the one of the [Registration wizard](/docs/examples/registration-wizard) with the submit button's label changed. `FormRenderer` calls `onSubmit` with the values once the last step passes, and the file calls `onSent` when `sendAnswers` returns.
+
+<RendererTabs name="branching-survey">
+<div data-renderer="react">
+
+```tsx title="widgets.react.tsx"
+import * as z from 'zod/mini';
+import { BaseFieldSchema, defineInput } from '@schema-engine/forms';
+import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+
+const InputSchema = z.extend(BaseFieldSchema, { $type: z.literal('input') });
+
+function InputField(config: z.output<typeof InputSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<input {...fieldProps} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const TextareaSchema = z.extend(BaseFieldSchema, { $type: z.literal('textarea'), rows: z.optional(z.number()) });
+
+function TextareaField(config: z.output<typeof TextareaSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<textarea {...fieldProps} rows={config.rows} defaultValue={fieldText(defaultValue)} />
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const SelectSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('select'),
+	options: z.array(z.object({ value: z.string(), label: z.string() })),
+});
+
+function SelectField(config: z.output<typeof SelectSchema>) {
+	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
+	return (
+		<div>
+			<label {...labelProps}>{config.label}</label>
+			<select {...fieldProps} defaultValue={fieldText(defaultValue)}>
+				<option value="">{config.placeholder}</option>
+				{config.options.map((option) => (
+					<option key={option.value} value={option.value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+			{errorProps && <p {...errorProps}>{error}</p>}
+		</div>
+	);
+}
+
+const input = defineInput({
+	$type: 'input',
+	schema: InputSchema,
+	render: InputField,
+	value: () => z.string(),
+	metadata: { name: 'Input', category: 'input' },
+});
+
+const textarea = defineInput({
+	$type: 'textarea',
+	schema: TextareaSchema,
+	render: TextareaField,
+	value: () => z.string(),
+	metadata: { name: 'Textarea', category: 'input' },
+});
+
+const select = defineInput({
+	$type: 'select',
+	schema: SelectSchema,
+	render: SelectField,
+	value: ({ options }) => z.enum(options.map((option) => option.value)),
+	metadata: { name: 'Select', category: 'input' },
+});
+
+export const elements = [input, textarea, select];
+```
+
+```tsx title="wizard.react.tsx"
+import { defineRecipeSpec } from '@schema-engine/forms/recipes';
+import { WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
+import { useViewContext } from '@schema-engine/forms-react/hooks';
+import { defineRecipe, type FormShellProps } from '@schema-engine/forms-react/primitives';
+
+const wizardSpec = defineRecipeSpec({
+	$type: 'wizard',
+	kind: 'wizard',
+	slotSchemas: { actions: WizardActionsConfigSchema },
+	metadata: { name: 'Wizard', category: 'wizard' },
+});
+
+/** The shell lays out what the recipe draws: the fields of the current step, then the controls. */
+function Shell({ slots }: FormShellProps) {
+	return (
+		<div>
+			{slots.content}
+			{slots.actions}
+		</div>
+	);
+}
+
+/**
+ * Previous, the step counter, and Next or the submit button.
+ *
+ * @remarks
+ * Next and Submit carry distinct keys so React replaces the button instead of turning Next into a submit button
+ * while its click is still being handled, which would submit the form on arriving at the last step.
+ */
+function Controls() {
+	const { navigation, form, steps, currentStepIndex } = useViewContext();
+	return (
+		<div>
+			<button type="button" onClick={navigation.goToPreviousStep} disabled={navigation.isFirstStep}>
+				Previous
+			</button>
+			<span aria-live="polite">
+				Step {currentStepIndex + 1} of {steps.length}
+			</span>
+			{navigation.isLastStep ? (
+				<button key="submit" type="submit">
+					{form.isSubmitting ? 'Sending' : 'Send answers'}
+				</button>
+			) : (
+				<button key="next" type="button" onClick={navigation.goToNextStep} disabled={!navigation.canGoNext}>
+					Next
+				</button>
+			)}
+		</div>
+	);
+}
+
+export const WizardRecipe = defineRecipe(wizardSpec, { shell: Shell, slots: { actions: Controls } });
+```
+
+```tsx title="branching-survey.react.tsx"
+import { createFormEngine } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { survey } from './config';
+import { sendAnswers } from './submit';
+import { elements } from './widgets.react';
+import { WizardRecipe } from './wizard.react';
+
+export const engine = createFormEngine({ elements, recipes: [WizardRecipe] });
+
+/** Renders the survey and calls `onSent` once the server has the answers. */
+export function Survey({ onSent }: { onSent: () => void }) {
+	return (
+		<FormRenderer
+			engine={engine}
+			config={survey}
+			onSubmit={async (values, helpers) => {
+				await sendAnswers(values, helpers);
+				onSent();
+			}}
+		/>
+	);
+}
+```
+
+</div>
+<div data-renderer="radiant">
+
+```tsx title="branching-survey.radiant.tsx"
+import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { survey } from './config';
+import { sendAnswers } from './submit';
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+/** Renders the survey and calls `onSent` once the server has the answers. */
+export function Survey({ onSent }: { onSent: () => void }) {
+	return (
+		<FormRenderer
+			engine={engine}
+			config={survey}
+			onSubmit={async (values, helpers) => {
+				await sendAnswers(values, helpers);
+				onSent();
+			}}
+		/>
+	);
+}
+```
+
+</div>
+</RendererTabs>
+
+## What the tests check
+
+The recipe's tests render both files in a browser. A good answer goes from the first step to the last and sends no follow-up fields. A poor answer opens the follow-up step, where Next names each failing rule. Changing the answer back after filling the follow-up step drops what was typed there from the submission. A failed send does not call `onSent`.
+
+## Take it further
+
+- Branch on a field inside a step instead: the ticket field of the [Contact form](/docs/examples/contact-form).
+- Let the visitor jump between steps: [Wizard and runtime](/docs/forms/wizard).
+- Show the answer to a failed send on the form: [Server errors](/docs/forms/server-errors).

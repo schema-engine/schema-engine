@@ -1,0 +1,230 @@
+---
+title: 'A design-system registry'
+description: 'Register a button, a badge and a callout with createRegistry, render a JSON document of them to HTML, report each bad node with its path and override one component.'
+order: 1
+---
+
+# A design-system registry
+
+A small design system is a good first registry: a handful of components, each with a schema for its configuration. A JSON document names them by `$type`, so a server, a CMS or an editor can build a page without importing a line of your code. This recipe has no framework and no forms. It registers three components, validates and renders a document of them to HTML strings, and overrides one component without touching the others.
+
+## Install
+
+```bash
+pnpm add @schema-engine/registry zod
+```
+
+Copy the files below into one folder. `main.ts` is the entry that prints the output at the end.
+
+## The components
+
+A component is a registration: its `$type`, a Standard Schema for its configuration, metadata, and a `render` that turns a validated configuration into HTML. `Component` adds `render` to `BaseRegistration`. The schemas, not the types, decide what a document may hold. The button's `href` accepts a path or an http(s) URL, so a document cannot ship a `javascript:` link, and `escape` keeps text out of the markup.
+
+```ts title="components.ts"
+import * as z from 'zod/mini';
+import type { BaseRegistration } from '@schema-engine/registry';
+
+z.config(z.locales.en());
+
+/** A registration of the design system: the schema of its config, and how it draws itself as HTML. */
+export interface Component extends BaseRegistration {
+	render(config: unknown): string;
+}
+
+/** Escapes the characters that end a text or an attribute value in HTML. */
+export const escape = (text: string) => text.replace(/[&<>"]/g, (character) => `&#${character.charCodeAt(0)};`);
+
+/** A link target the design system accepts: a path on this site or an http(s) URL, never `javascript:`. */
+export const hrefSchema = z.string().check(z.regex(/^(\/|https?:\/\/)/, 'Use a path or an http(s) URL'));
+
+const buttonSchema = z.object({
+	$type: z.literal('button'),
+	label: z.string(),
+	href: z.optional(hrefSchema),
+	variant: z.optional(z.enum(['primary', 'secondary'])),
+});
+
+export const button: Component = {
+	$type: 'button',
+	schema: buttonSchema,
+	metadata: { name: 'Button', description: 'An action. With an href it is a link.', tags: ['action'] },
+	render({ label, href, variant = 'primary' }: z.output<typeof buttonSchema>) {
+		return href === undefined
+			? `<button type="button" class="button button-${variant}">${escape(label)}</button>`
+			: `<a class="button button-${variant}" href="${escape(href)}">${escape(label)}</a>`;
+	},
+};
+
+const badgeSchema = z.object({
+	$type: z.literal('badge'),
+	label: z.string(),
+	tone: z.optional(z.enum(['info', 'success', 'danger'])),
+});
+
+export const badge: Component = {
+	$type: 'badge',
+	schema: badgeSchema,
+	metadata: { name: 'Badge', description: 'A short status label.', tags: ['status'] },
+	render({ label, tone = 'info' }: z.output<typeof badgeSchema>) {
+		return `<span class="badge badge-${tone}">${escape(label)}</span>`;
+	},
+};
+
+const calloutSchema = z.object({
+	$type: z.literal('callout'),
+	title: z.string(),
+	text: z.optional(z.string()),
+	tone: z.optional(z.enum(['info', 'success', 'danger'])),
+});
+
+export const callout: Component = {
+	$type: 'callout',
+	schema: calloutSchema,
+	metadata: { name: 'Callout', description: 'A message that stands out from the page.', tags: ['status'] },
+	render({ title, text, tone = 'info' }: z.output<typeof calloutSchema>) {
+		const body = text === undefined ? '' : ` <span>${escape(text)}</span>`;
+		return `<aside class="callout callout-${tone}"><strong>${escape(title)}</strong>${body}</aside>`;
+	},
+};
+
+/** The components the design system ships. */
+export const defaults: readonly Component[] = [button, badge, callout];
+```
+
+## The registry and the render step
+
+`createDesignSystem` builds a read-only registry from the defaults followed by any overrides. A later registration with the same `$type` replaces the earlier one and keeps its position, so `[...defaults, mine]` is how you override.
+
+`renderDocument` looks each node up by `$type`, validates it with the registration's schema and renders it. A node that fails does not stop the others: its issues are collected, and each path starts with the node's index in the document.
+
+```ts title="design-system.ts"
+import { createRegistry, safeParseStandardSchema, type StandardSchemaIssue } from '@schema-engine/registry';
+import { defaults, type Component } from './components';
+
+/**
+ * The design system's registry. Registrations after the defaults override a default with the same `$type`:
+ * the last one wins and keeps the first one's position.
+ */
+export function createDesignSystem(overrides: readonly Component[] = []) {
+	return createRegistry('Component', [...defaults, ...overrides]);
+}
+
+export type DesignSystem = ReturnType<typeof createDesignSystem>;
+
+/** What rendering a document gives: the HTML of every valid node, and an issue for each node that is not. */
+export interface Rendered {
+	html: string[];
+	issues: StandardSchemaIssue[];
+}
+
+/**
+ * Renders a document, a list of nodes that each name a component by `$type`.
+ *
+ * @remarks
+ * A node that cannot be rendered does not stop the others. Its issues carry a path that starts with its index in
+ * the document, so the caller can say which node to fix.
+ */
+export function renderDocument(system: DesignSystem, document: unknown): Rendered {
+	if (!Array.isArray(document)) {
+		return { html: [], issues: [{ message: 'A document is a list of nodes.', path: [] }] };
+	}
+	const html: string[] = [];
+	const issues: StandardSchemaIssue[] = [];
+	document.forEach((node: unknown, index) => {
+		const type = typeof node === 'object' && node !== null && '$type' in node ? node.$type : undefined;
+		if (typeof type !== 'string') {
+			issues.push({ message: 'A node is an object with a string $type.', path: [index] });
+			return;
+		}
+		const component = system.get(type);
+		if (!component) {
+			issues.push({ message: `No component is registered for $type '${type}'.`, path: [index, '$type'] });
+			return;
+		}
+		const parsed = safeParseStandardSchema(component.schema, node);
+		if (parsed.success) html.push(component.render(parsed.data));
+		else issues.push(...parsed.error.issues.map((issue) => ({ ...issue, path: [index, ...(issue.path ?? [])] })));
+	});
+	return { html, issues };
+}
+```
+
+## An override
+
+The brand button replaces the default one. It has its own schema (a link, no variant) and its own markup, and it reuses `hrefSchema` and `escape`, so replacing a component does not drop its safety rules.
+
+```ts title="brand-button.ts"
+import * as z from 'zod/mini';
+import { escape, hrefSchema, type Component } from './components';
+
+const brandButtonSchema = z.object({
+	$type: z.literal('button'),
+	label: z.string(),
+	href: hrefSchema,
+});
+
+/** Replaces the default button: a brand button is always a link and has no variant. */
+export const brandButton: Component = {
+	$type: 'button',
+	schema: brandButtonSchema,
+	metadata: { name: 'Brand button', description: 'A link in the brand colours.' },
+	render({ label, href }: z.output<typeof brandButtonSchema>) {
+		return `<a class="brand-button" href="${escape(href)}">${escape(label)}</a>`;
+	},
+};
+```
+
+## Run it
+
+`main.ts` renders one document with the default system and with the brand system. The document has a valid callout, badge and link, a link to `javascript:alert(1)`, and a `chip` nobody registered.
+
+```ts title="main.ts"
+import { brandButton } from './brand-button';
+import { createDesignSystem, renderDocument } from './design-system';
+
+const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
+	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
+
+const document = [
+	{ $type: 'callout', tone: 'success', title: 'Order 1042 confirmed', text: 'Thanks for shopping with us.' },
+	{ $type: 'badge', label: 'Paid', tone: 'success' },
+	{ $type: 'button', label: 'View order', href: '/orders/1042' },
+	{ $type: 'button', label: 'Cancel order', href: 'javascript:alert(1)' },
+	{ $type: 'chip', label: 'Shipping soon' },
+];
+
+const defaultSystem = createDesignSystem();
+const brandSystem = createDesignSystem([brandButton]);
+
+for (const [name, system] of [
+	['default', defaultSystem],
+	['brand', brandSystem],
+] as const) {
+	const { html, issues } = renderDocument(system, document);
+	for (const line of html) console.log(`${name} ${line}`);
+	for (const issue of issues) console.log(`${name} issue ${where(issue.path)}: ${issue.message}`);
+}
+```
+
+```text
+default <aside class="callout callout-success"><strong>Order 1042 confirmed</strong> <span>Thanks for shopping with us.</span></aside>
+default <span class="badge badge-success">Paid</span>
+default <a class="button button-primary" href="/orders/1042">View order</a>
+default issue 3.href: Use a path or an http(s) URL
+default issue 4.$type: No component is registered for $type 'chip'.
+brand <aside class="callout callout-success"><strong>Order 1042 confirmed</strong> <span>Thanks for shopping with us.</span></aside>
+brand <span class="badge badge-success">Paid</span>
+brand <a class="brand-button" href="/orders/1042">View order</a>
+brand issue 3.href: Use a path or an http(s) URL
+brand issue 4.$type: No component is registered for $type 'chip'.
+```
+
+- **The same nodes render with both systems,** except the button: with `brandButton` registered, `button` resolves to the override and the other two components are untouched.
+- **A bad node is reported where it is.** `3.href` is the `href` of the fourth node, and `4.$type` is the `$type` of the fifth. The valid nodes still render.
+- **Nothing is global.** The registry is a value you pass to `renderDocument`, so two systems live side by side and a test builds its own.
+
+## Take it further
+
+- Send the document from a server: [Render a server-sent document](/docs/examples/server-sent-document).
+- Walk a tree of nodes with children: [Resolve a document](/docs/registry/resolve-a-document).
+- Add registrations at runtime: [Read-only and mutable registries](/docs/registry/registries).

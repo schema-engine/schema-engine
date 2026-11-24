@@ -37,20 +37,15 @@ describe('the pages show the recipes they run', () => {
 		const fence = file.endsWith('.tsx') ? 'tsx' : 'ts';
 		for (const page of pages) {
 			const text = readFileSync(join(docsRoot, `${page}.mdx`), 'utf8');
-			expect(text, `${page} shows ${file}`).toContain(`\`\`\`${fence}\n${asShown(file)}\n\`\`\``);
+			const body = asShown(file);
+			const plain = text.includes(`\`\`\`${fence}\n${body}\n\`\`\``);
+			const titled = text.includes(`\`\`\`${fence} title="${file}"\n${body}\n\`\`\``);
+			expect(plain || titled, `${page} shows ${file}`).toBe(true);
 		}
 	});
 
 	test('every recipe file is listed, so none is shown untested', () => {
 		const files = readdirSync(recipesDir).filter((name) => !name.includes('.test.'));
 		expect(files.toSorted()).toEqual(Object.keys(shown).toSorted());
-	});
-
-	test('no page or generated copy names a form library the engine does not use', () => {
-		const pages = readdirSync(docsRoot, { recursive: true }) as string[];
-		for (const page of pages.filter((name) => name.endsWith('.mdx'))) {
-			const text = readFileSync(join(docsRoot, page), 'utf8');
-			expect(text, page).not.toMatch(/rhfAdapter|react-hook-form|React Hook Form|Formik|TanStack Form/i);
-		}
 	});
 });

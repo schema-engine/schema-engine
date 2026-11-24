@@ -1,0 +1,208 @@
+---
+title: 'A layout page'
+description: 'Lay out a page with no form: a theme, a drawn areas template that changes at two breakpoints, and items placed with getGridItemVariables on a host you build, with @schema-engine/layout alone.'
+order: 11
+---
+
+import { LayoutPageDemo } from '@/components/layout-page-demo';
+
+# A layout page
+
+`@schema-engine/layout` places items in a container and knows nothing about forms. This recipe uses it alone, to lay out a dashboard: a header, a navigation, a main area, an aside and a footer. On a phone the page is one column and the navigation is hidden. From `md` it has two columns with the navigation beside the content. From `lg` it has three. No form, no renderer and no framework is involved: the host is about forty lines.
+
+The recipe's `Page` shape, with its regions and their areas, is its own. The layout package defines the grid, the placement and the appearance vocabulary, and nothing about what a page is.
+
+## Install
+
+```bash
+pnpm add @schema-engine/layout zod
+```
+
+`zod` is a peer dependency: the grid and appearance schemas use `zod/mini`. Copy the files below into one folder.
+
+## See it
+
+Drag the bottom-right corner of the frame to change its width. Its breakpoints are the theme's: `md` at 48rem and `lg` at 70rem.
+
+<LayoutPageDemo />
+
+## The theme
+
+A theme compiles a vocabulary into one id and one stylesheet. This one moves the `md` and `lg` breakpoints and widens the default gap. The stylesheet, `theme.css`, goes into the page once, and its rules apply only to elements that carry the theme's id.
+
+```ts title="theme.ts"
+import { createLayoutTheme } from '@schema-engine/layout';
+
+/**
+ * The vocabulary of the page: where the grid changes and how far its cells are apart.
+ *
+ * @remarks
+ * The theme has one id and one stylesheet, `theme.css`. Add the stylesheet to the page once: its rules are scoped by
+ * `[data-se-theme="<id>"]`, so they apply only to what carries the id.
+ */
+export const theme = createLayoutTheme({
+	grid: { breakpoints: { md: '48rem', lg: '70rem' }, gap: { default: '1.25rem' } },
+});
+```
+
+## The page
+
+The page is plain data. `grid.areas` draws the layout as rows of area names, one template for each breakpoint from `default` up, and a region claims an area by name. The navigation is not in the narrowest template, because it is hidden there and shows from `md`: a region hidden at a breakpoint need not be in that breakpoint's template. `placementOf` turns a region into the `grid` config of an item, with the breakpoint it shows from.
+
+```ts title="page.ts"
+import type { AppearanceSelection, ElementGridConfig, GridLayoutConfig } from '@schema-engine/layout';
+
+/** One part of the page: the area of the grid it fills, the element it is, and the markup inside it. */
+export interface Region {
+	area: string;
+	tag: 'header' | 'nav' | 'main' | 'aside' | 'footer';
+	/** Markup the host trusts: it is written as is. */
+	html: string;
+	/** Named appearance, for example `{ surface: 'outlined' }`. */
+	appearance?: AppearanceSelection;
+	/** The first breakpoint at which the region shows, when it is hidden below it. */
+	showFrom?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+}
+
+export interface Page {
+	grid: GridLayoutConfig;
+	appearance?: AppearanceSelection;
+	regions: Region[];
+}
+
+/**
+ * A dashboard that is one column on a phone, two from `md` and three from `lg`.
+ *
+ * @remarks
+ * Each template draws the page as rows of area names. The navigation is not in the narrowest template, because it is
+ * hidden there and shows from `md`.
+ */
+export const dashboard: Page = {
+	grid: {
+		areas: {
+			default: ['header', 'main', 'aside', 'footer'],
+			md: ['header header', 'nav main', 'nav aside', 'footer footer'],
+			lg: ['header header header', 'nav main aside', 'footer footer footer'],
+		},
+	},
+	appearance: { size: 'comfortable' },
+	regions: [
+		{ area: 'header', tag: 'header', html: '<h1>Team dashboard</h1>' },
+		{
+			area: 'nav',
+			tag: 'nav',
+			html: '<a href="/overview">Overview</a> <a href="/people">People</a>',
+			showFrom: 'md',
+		},
+		{ area: 'main', tag: 'main', html: '<h2>This week</h2><p>12 pull requests merged.</p>' },
+		{
+			area: 'aside',
+			tag: 'aside',
+			html: '<h2>On call</h2><p>Ada Lovelace</p>',
+			appearance: { surface: 'outlined' },
+		},
+		{ area: 'footer', tag: 'footer', html: '<small>Updated every morning</small>' },
+	],
+};
+
+/** The placement of a region: its area, and the breakpoint it shows from. */
+export function placementOf({ area, showFrom }: Region): ElementGridConfig {
+	return showFrom === undefined
+		? { area }
+		: { area, responsive: { default: { hidden: true }, [showFrom]: { hidden: false } } };
+}
+```
+
+## The host
+
+A host does three things. It puts the neutral classes `se-grid` and `se-grid-item` and the theme id on its elements. It writes the custom properties that place them, with `getGridVariables` for the container and `getGridItemVariables` for each item. And it adds `theme.css` to the page once. `getAppearanceAttributes` turns a named appearance, such as `surface: 'outlined'`, into the `data-se-*` attributes the theme's token rules read.
+
+The grid is checked first: `GridLayoutConfigSchema` checks the names, and `areaTemplateIssues` checks what CSS would drop, a template whose rows differ in length or whose area is not a rectangle. Either throws here and does not become a layout that silently breaks. The custom property that holds a template quotes its area names, so the `style` attribute escapes the quotes.
+
+```ts title="host.ts"
+import {
+	GRID_CLASS,
+	GRID_ITEM_CLASS,
+	GridLayoutConfigSchema,
+	areaTemplateIssues,
+	getAppearanceAttributes,
+	getGridItemVariables,
+	getGridVariables,
+	type AppearanceSelection,
+	type CssVariables,
+} from '@schema-engine/layout';
+import { placementOf, type Page } from './page';
+import { theme } from './theme';
+
+/** The value of a `style` attribute. A drawn template quotes its area names, so the quotes are escaped. */
+const style = (variables: CssVariables) =>
+	Object.entries(variables)
+		.map(([name, value]) => `${name}:${value}`)
+		.join(';')
+		.replaceAll('"', '&quot;');
+
+const attributes = (appearance?: AppearanceSelection) =>
+	Object.entries(getAppearanceAttributes(appearance))
+		.map(([name, value]) => ` ${name}="${value}"`)
+		.join('');
+
+/**
+ * Lays a page out and returns its markup: a container that carries the grid, and one item for each region.
+ *
+ * @remarks
+ * A host does three things: it puts the grid and item classes and the theme id on its elements, writes the custom
+ * properties that place them, and adds `theme.css` to the page once. The grid is checked first: the schema checks the
+ * names, and `areaTemplateIssues` checks what CSS would drop, a template whose rows differ in length or whose area is
+ * not a rectangle. Either throws here and not as a layout that silently breaks.
+ */
+export function renderPage(page: Page): string {
+	const grid = GridLayoutConfigSchema.safeParse(page.grid);
+	const issues = grid.success ? areaTemplateIssues(grid.data) : grid.error.issues;
+	if (!grid.success || issues.length > 0) {
+		throw new Error(issues.map((issue) => `${issue.path?.join('.')}: ${issue.message}`).join('\n'));
+	}
+	const items = page.regions.map((region) => ({ grid: placementOf(region) }));
+	const regions = page.regions.map(
+		(region, index) =>
+			`<${region.tag} class="${GRID_ITEM_CLASS}" data-se-theme="${theme.id}"${attributes(region.appearance)} style="${style(getGridItemVariables(items[index]!.grid))}">${region.html}</${region.tag}>`,
+	);
+	return [
+		`<div class="${GRID_CLASS}" data-se-theme="${theme.id}"${attributes(page.appearance)} style="${style(getGridVariables(grid.data, theme.grid, items))}">`,
+		...regions,
+		'</div>',
+	].join('\n');
+}
+```
+
+## Run it
+
+`main.ts` prints the markup of the dashboard:
+
+```ts title="main.ts"
+import { renderPage } from './host';
+import { dashboard } from './page';
+
+console.log(renderPage(dashboard));
+```
+
+```text
+<div class="se-grid" data-se-theme="l168y9hq" data-se-size="comfortable" style="--se-grid-areas:&quot;header&quot; &quot;main&quot; &quot;aside&quot; &quot;footer&quot;;--se-grid-template:repeat(1, minmax(0, 1fr));--se-grid-areas-md:&quot;header header&quot; &quot;nav main&quot; &quot;nav aside&quot; &quot;footer footer&quot;;--se-grid-template-md:repeat(2, minmax(0, 1fr));--se-grid-areas-lg:&quot;header header header&quot; &quot;nav main aside&quot; &quot;footer footer footer&quot;;--se-grid-template-lg:repeat(3, minmax(0, 1fr))">
+<header class="se-grid-item" data-se-theme="l168y9hq" style="--se-item-grid-column:header;--se-item-grid-row:header"><h1>Team dashboard</h1></header>
+<nav class="se-grid-item" data-se-theme="l168y9hq" style="--se-item-grid-column:nav;--se-item-grid-row:nav;--se-item-display:none;--se-item-display-md:var(--se-item-display-mode, block)"><a href="/overview">Overview</a> <a href="/people">People</a></nav>
+<main class="se-grid-item" data-se-theme="l168y9hq" style="--se-item-grid-column:main;--se-item-grid-row:main"><h2>This week</h2><p>12 pull requests merged.</p></main>
+<aside class="se-grid-item" data-se-theme="l168y9hq" data-se-surface="outlined" style="--se-item-grid-column:aside;--se-item-grid-row:aside"><h2>On call</h2><p>Ada Lovelace</p></aside>
+<footer class="se-grid-item" data-se-theme="l168y9hq" style="--se-item-grid-column:footer;--se-item-grid-row:footer"><small>Updated every morning</small></footer>
+</div>
+```
+
+The container carries the drawn template of each breakpoint as `--se-grid-areas`, `--se-grid-areas-md` and `--se-grid-areas-lg`, with the track count each draws. Each item carries the area it claims, and the navigation also carries `--se-item-display:none` with a `--se-item-display-md` that shows it again.
+
+## What the tests check
+
+The unit test builds the markup from the recipe's own files: the theme and the template reach the container, each region claims its area, and a template that is not a rectangle throws. The browser test mounts the page with `theme.css` at three viewport widths and measures it. On a phone the navigation is hidden and the regions stack. At `md` the navigation sits beside main with the aside under it. At `lg` main and the aside sit side by side.
+
+## Take it further
+
+- Compile a theme of your own, with a host axis: [Layout themes](/docs/layout/layout-themes) and [Appearance axes](/docs/layout/appearance-axes).
+- The placement names (`width`, `offset`, `areas`, raw lines): [Grid and placement](/docs/layout/grid-and-placement).
+- Use the same theme in a form: [Layout recipes](/docs/examples/layout-recipes).
