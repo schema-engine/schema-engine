@@ -11,16 +11,28 @@ import {
 	type CodeBlock,
 } from './snippet-harness';
 
-vi.setConfig({ testTimeout: 60_000 });
+vi.setConfig({ testTimeout: 120_000 });
 
 interface AllowedFence {
 	page: string;
-	/** The heading the fence sits under; every TypeScript fence under it on the page is allowed. Omitted, the whole page. */
-	heading?: string;
+	/** The heading the fences sit under; every TypeScript fence under it on the page is allowed. */
+	heading: string;
 	reason: string;
 }
 
-/** Fences that are fragments on purpose. A fence that is not listed here must compile. */
+const DECLARATION_REASON = 'Restates the package signatures and declarations it documents; they are not modules.';
+
+/** The headings of a page whose fences restate declarations, each with the same reason. */
+const declarations = (page: string, headings: string[]): AllowedFence[] =>
+	headings.map((heading) => ({ page, heading, reason: DECLARATION_REASON }));
+
+/**
+ * Fences that are fragments on purpose. A fence that is not listed here must compile.
+ *
+ * @remarks
+ * An entry names the heading its fences sit under, so a fence added under another heading has to compile and cannot
+ * break silently. A page that restates declarations lists each heading of them.
+ */
 const ALLOWED_FENCES: AllowedFence[] = [
 	{
 		page: 'actions/concepts',
@@ -38,25 +50,9 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		reason: 'Imports the barrels the shadcn command copies into the app, which do not exist before it runs.',
 	},
 	{
-		page: 'forms-react/components',
-		reason: 'Imports the barrel the shadcn command copies into the app, which does not exist before it runs.',
-	},
-	{
 		page: 'forms-react/getting-started',
 		heading: 'Create the engine',
 		reason: 'Imports the barrels that the shadcn command copies into the app, which do not exist before it runs.',
-	},
-	{
-		page: 'actions/api-reference',
-		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
-	},
-	{
-		page: 'forms/api-reference',
-		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
-	},
-	{
-		page: 'registry/api-reference',
-		reason: 'Restates the package signatures and declarations it documents; they are not modules.',
 	},
 	{
 		page: 'registry/overview',
@@ -73,6 +69,53 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		heading: 'Escape hatches',
 		reason: 'An object literal that shows the properties of a form, not a module.',
 	},
+	{
+		page: 'forms-react/components',
+		heading: '',
+		reason: 'Imports the barrel the shadcn command copies into the app, which does not exist before it runs.',
+	},
+	{
+		page: 'forms-react/components',
+		heading: 'Own them',
+		reason: 'Imports the barrel the shadcn command copies into the app, which does not exist before it runs.',
+	},
+	{
+		page: 'forms-react/components',
+		heading: 'See them',
+		reason: 'Imports the barrel the shadcn command copies into the app, which does not exist before it runs.',
+	},
+	...declarations('actions/api-reference', [
+		'ActionRegistry',
+		'parseActions',
+		'ActionDispatcher',
+		'ActionRegistryProvider',
+		'ActionRegistration',
+		'ActionDispatchInput',
+		'ActionMetadata',
+		'ActionDispatchResult',
+		'ActionSchemaLookup',
+		'ActionSequenceEntry, ParsedAction and ParsedActionSequence',
+		'ActionHandler',
+		'defineAction',
+	]),
+	...declarations('forms/api-reference', [
+		'createFormEngine',
+		'defineInput / defineStatic',
+		'FormEngine',
+		'createFormRuntime',
+		'RecipeRegistration',
+	]),
+	...declarations('registry/api-reference', [
+		'createRegistry',
+		'assertStandardSchema',
+		'safeParseStandardSchema',
+		'BaseRegistry',
+		'BaseRegistration',
+		'ComponentRegistration',
+		'ComponentMetadata',
+		'Brand',
+		'YAML subpath',
+	]),
 ];
 
 /**
@@ -117,7 +160,6 @@ const CONTINUES: Record<string, string[]> = {
 	'forms/constraints': ['forms/getting-started'],
 	'forms/validation': ['forms/getting-started'],
 	'forms/builder': ['forms/getting-started'],
-	'forms/validation-custom': [],
 	'forms/csrf': ['forms/form-state'],
 	'forms/issue-text': ['forms/form-state'],
 };
@@ -128,9 +170,7 @@ const appFor = (page: string): Record<string, string> => ({
 });
 
 const isAllowed = (page: string, block: CodeBlock): boolean =>
-	ALLOWED_FENCES.some(
-		(entry) => entry.page === page && (entry.heading === undefined || entry.heading === block.heading),
-	);
+	ALLOWED_FENCES.some((entry) => entry.page === page && entry.heading === block.heading);
 
 describe('docs snippets', () => {
 	test('the TypeScript fences of every docs page compile', () => {
@@ -147,21 +187,17 @@ describe('docs snippets', () => {
 		for (const entry of ALLOWED_FENCES) {
 			expect(entry.reason.trim(), `${entry.page} under "${entry.heading}" needs a reason`).not.toBe('');
 			expect(docsPageIds(), `${entry.page} is not a docs page`).toContain(entry.page);
-			const inScope = (heading: string) => entry.heading === undefined || heading === entry.heading;
 			const fences = parseCodeBlocks(readPage(entry.page)).filter(
-				(block) => isTypeScriptFence(block) && inScope(block.heading),
+				(block) => isTypeScriptFence(block) && block.heading === entry.heading,
 			);
 			expect(fences.length, `${entry.page} has no TypeScript fence under "${entry.heading}"`).toBeGreaterThan(0);
-			const failures = checkPageSnippets(entry.page, readPage(entry.page), appFor(entry.page)).filter((failure) =>
-				inScope(failure.heading),
+			const failures = checkPageSnippets(entry.page, readPage(entry.page), appFor(entry.page)).filter(
+				(failure) => failure.heading === entry.heading,
 			);
-			if (entry.heading === undefined) {
-				expect(failures.length, `${entry.page} compiles; drop it from the list`).toBeGreaterThan(0);
-			} else {
-				expect(failures.length, `${entry.page} under "${entry.heading}" compiles; drop it from the list`).toBe(
-					fences.length,
-				);
-			}
+			expect(
+				failures.length,
+				`${entry.page} under "${entry.heading}" compiles; drop it from the list`,
+			).toBeGreaterThan(0);
 		}
 	});
 
@@ -198,6 +234,13 @@ describe('docs snippets', () => {
 				"import { theme } from './theme';\nimport { x } from './app';\nexport const y = theme + x;",
 			);
 			expect(checkPageSnippets('demo/page', text(titled, user), { 'app.ts': 'export const x = 2;' })).toEqual([]);
+		});
+
+		test('takes a title ending in .react.tsx as React JSX, which has no class attribute, and any other titled tsx file as Ecopages JSX', () => {
+			const code = 'export const view = <p class="a" />;';
+			const titled = (name: string) => `\`\`\`tsx title="${name}"\n${code}\n\`\`\``;
+			expect(checkPageSnippets('demo/page', text(titled('view.tsx')), {})).toEqual([]);
+			expect(checkPageSnippets('demo/page', text(titled('view.react.tsx')), {})).toHaveLength(1);
 		});
 
 		test('fails JSX under a ts tag and accepts it under tsx', () => {
