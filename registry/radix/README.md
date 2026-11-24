@@ -3,7 +3,7 @@
 Radix UI port of the Schema Engine shadcn form registry.
 
 ```sh
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form-radix
+pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form-radix
 ```
 
 Source: `registry/radix/primitives/` overrides only the combobox (Popover + Command); the phone input, drop zone, and

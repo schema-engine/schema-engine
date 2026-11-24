@@ -8,7 +8,7 @@
  */
 import { getDocsLlmUrlFromPathname } from './docs-llm-url';
 
-export const SITE_GITHUB = 'https://github.com/andeeplus/schema-engine';
+export const SITE_GITHUB = 'https://github.com/schema-engine/schema-engine';
 export const DEFAULT_OG_IMAGE_PATH = '/assets/images/default-og.png';
 export const SITE_NAME = 'Schema Engine';
 export const DEFAULT_SITE_ORIGIN = 'https://schema-engine.com';

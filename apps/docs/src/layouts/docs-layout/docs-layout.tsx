@@ -98,7 +98,7 @@ const DocsSiteHeader = () => (
 		</div>
 		<nav class="rui-sidebar-provider__site-header-nav" aria-label="Site">
 			<RuiButton
-				href="https://github.com/andeeplus/schema-engine"
+				href="https://github.com/schema-engine/schema-engine"
 				target="_blank"
 				rel="noopener noreferrer"
 				variant="ghost"

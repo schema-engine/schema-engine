@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { catalog, validateCatalog } from '../../../../scripts/generate-schema-engine-registry.ts';
 
-const github = 'andeeplus/schema-engine';
+const github = 'schema-engine/schema-engine';
 
 const AGGREGATES = [
 	{ name: 'schema-form', depPrefix: `${github}/schema-engine-form-` },

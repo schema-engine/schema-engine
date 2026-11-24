@@ -335,9 +335,9 @@ const HomeSidebarSection = ({ label, children }: { label: string; children: JsxR
 const HomeSidebar = () => (
 	<aside class="home-sidebar">
 		<HomeSidebarSection label="Repository">
-			<a href="https://github.com/andeeplus/schema-engine" class="home-sidebar__value home-sidebar__link">
+			<a href="https://github.com/schema-engine/schema-engine" class="home-sidebar__value home-sidebar__link">
 				<HomeGitHubIcon />
-				andeeplus/schema-engine
+				schema-engine/schema-engine
 			</a>
 		</HomeSidebarSection>
 		<HomeSidebarSection label="License">

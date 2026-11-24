@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "schema-engine",
-  "homepage": "https://github.com/andeeplus/schema-engine",
+  "homepage": "https://github.com/schema-engine/schema-engine",
   "items": [
     {
       "name": "schema-engine-form-utils",
@@ -243,7 +243,7 @@
       "description": "Schema Engine submit-button form element.",
       "registryDependencies": [
         "button",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -275,7 +275,7 @@
       "title": "Fieldset",
       "description": "Schema Engine fieldset form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -308,8 +308,8 @@
       "description": "Schema Engine array-elements form element.",
       "registryDependencies": [
         "button",
-        "andeeplus/schema-engine/schema-engine-form-utils",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-utils",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "lucide-react",
@@ -342,8 +342,8 @@
       "title": "Phone input",
       "description": "Schema Engine phone-input form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-phone-primitive",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-phone-primitive",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "react-phone-number-input",
@@ -382,8 +382,8 @@
       "title": "Masked input",
       "description": "Schema Engine masked-input form element for IBAN, cards, and other patterned values.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-masked-input-primitive",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-masked-input-primitive",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -416,7 +416,7 @@
       "description": "Schema Engine textarea form element.",
       "registryDependencies": [
         "textarea",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -449,7 +449,7 @@
       "description": "Schema Engine checkbox form element.",
       "registryDependencies": [
         "checkbox",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -482,7 +482,7 @@
       "description": "Schema Engine input-otp form element.",
       "registryDependencies": [
         "input-otp",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -514,8 +514,8 @@
       "title": "Drop zone",
       "description": "Schema Engine drop-zone form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-dropzone-primitive",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-dropzone-primitive",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -549,7 +549,7 @@
       "registryDependencies": [
         "label",
         "checkbox",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -581,8 +581,8 @@
       "title": "Number",
       "description": "Schema Engine number form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-number-field-primitive",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-number-field-primitive",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -615,7 +615,7 @@
       "description": "Schema Engine switch form element.",
       "registryDependencies": [
         "switch",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -648,7 +648,7 @@
       "description": "Schema Engine select form element. Supports multiple selection with chips.",
       "registryDependencies": [
         "select",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "lucide-react",
@@ -683,7 +683,7 @@
       "registryDependencies": [
         "label",
         "radio-group",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -715,8 +715,8 @@
       "title": "Combobox",
       "description": "Schema Engine combobox form element. Use multiple for chips-based multi-select.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-combobox-primitive",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-combobox-primitive",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -749,7 +749,7 @@
       "description": "Schema Engine slider form element.",
       "registryDependencies": [
         "slider",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -782,7 +782,7 @@
       "description": "Schema Engine input form element.",
       "registryDependencies": [
         "input",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -814,8 +814,8 @@
       "title": "Date",
       "description": "Schema Engine date form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "date-fns",
@@ -849,8 +849,8 @@
       "title": "Date range",
       "description": "Schema Engine date-range form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "date-fns",
@@ -885,34 +885,34 @@
       "description": "All Base UI Schema Engine form elements and the generated registration barrel.",
       "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createFormEngine({ elements: [...] }).",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-utils",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive",
-        "andeeplus/schema-engine/schema-engine-form-combobox-primitive",
-        "andeeplus/schema-engine/schema-engine-form-phone-primitive",
-        "andeeplus/schema-engine/schema-engine-form-dropzone-primitive",
-        "andeeplus/schema-engine/schema-engine-form-masked-input-primitive",
-        "andeeplus/schema-engine/schema-engine-form-number-field-primitive",
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive",
-        "andeeplus/schema-engine/schema-engine-form-submission-alert",
-        "andeeplus/schema-engine/schema-engine-form-submit-button",
-        "andeeplus/schema-engine/schema-engine-form-fieldset",
-        "andeeplus/schema-engine/schema-engine-form-array-elements",
-        "andeeplus/schema-engine/schema-engine-form-phone-input",
-        "andeeplus/schema-engine/schema-engine-form-masked-input",
-        "andeeplus/schema-engine/schema-engine-form-textarea",
-        "andeeplus/schema-engine/schema-engine-form-checkbox",
-        "andeeplus/schema-engine/schema-engine-form-input-otp",
-        "andeeplus/schema-engine/schema-engine-form-drop-zone",
-        "andeeplus/schema-engine/schema-engine-form-checkbox-group",
-        "andeeplus/schema-engine/schema-engine-form-number",
-        "andeeplus/schema-engine/schema-engine-form-switch",
-        "andeeplus/schema-engine/schema-engine-form-select",
-        "andeeplus/schema-engine/schema-engine-form-radio",
-        "andeeplus/schema-engine/schema-engine-form-combobox",
-        "andeeplus/schema-engine/schema-engine-form-slider",
-        "andeeplus/schema-engine/schema-engine-form-input",
-        "andeeplus/schema-engine/schema-engine-form-date",
-        "andeeplus/schema-engine/schema-engine-form-date-range"
+        "schema-engine/schema-engine/schema-engine-form-utils",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive",
+        "schema-engine/schema-engine/schema-engine-form-combobox-primitive",
+        "schema-engine/schema-engine/schema-engine-form-phone-primitive",
+        "schema-engine/schema-engine/schema-engine-form-dropzone-primitive",
+        "schema-engine/schema-engine/schema-engine-form-masked-input-primitive",
+        "schema-engine/schema-engine/schema-engine-form-number-field-primitive",
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive",
+        "schema-engine/schema-engine/schema-engine-form-submission-alert",
+        "schema-engine/schema-engine/schema-engine-form-submit-button",
+        "schema-engine/schema-engine/schema-engine-form-fieldset",
+        "schema-engine/schema-engine/schema-engine-form-array-elements",
+        "schema-engine/schema-engine/schema-engine-form-phone-input",
+        "schema-engine/schema-engine/schema-engine-form-masked-input",
+        "schema-engine/schema-engine/schema-engine-form-textarea",
+        "schema-engine/schema-engine/schema-engine-form-checkbox",
+        "schema-engine/schema-engine/schema-engine-form-input-otp",
+        "schema-engine/schema-engine/schema-engine-form-drop-zone",
+        "schema-engine/schema-engine/schema-engine-form-checkbox-group",
+        "schema-engine/schema-engine/schema-engine-form-number",
+        "schema-engine/schema-engine/schema-engine-form-switch",
+        "schema-engine/schema-engine/schema-engine-form-select",
+        "schema-engine/schema-engine/schema-engine-form-radio",
+        "schema-engine/schema-engine/schema-engine-form-combobox",
+        "schema-engine/schema-engine/schema-engine-form-slider",
+        "schema-engine/schema-engine/schema-engine-form-input",
+        "schema-engine/schema-engine/schema-engine-form-date",
+        "schema-engine/schema-engine/schema-engine-form-date-range"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -958,8 +958,8 @@
         "button",
         "badge",
         "separator",
-        "andeeplus/schema-engine/schema-engine-form-utils",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive"
+        "schema-engine/schema-engine/schema-engine-form-utils",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1369,7 +1369,7 @@
       "description": "Schema Engine submit-button form element.",
       "registryDependencies": [
         "button",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1401,7 +1401,7 @@
       "title": "Fieldset",
       "description": "Schema Engine fieldset form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1434,8 +1434,8 @@
       "description": "Schema Engine array-elements form element.",
       "registryDependencies": [
         "button",
-        "andeeplus/schema-engine/schema-engine-form-utils-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-utils-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "lucide-react",
@@ -1468,8 +1468,8 @@
       "title": "Phone input",
       "description": "Schema Engine phone-input form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-phone-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-phone-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "react-phone-number-input",
@@ -1508,8 +1508,8 @@
       "title": "Masked input",
       "description": "Schema Engine masked-input form element for IBAN, cards, and other patterned values.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-masked-input-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-masked-input-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1542,7 +1542,7 @@
       "description": "Schema Engine textarea form element.",
       "registryDependencies": [
         "textarea",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1575,7 +1575,7 @@
       "description": "Schema Engine checkbox form element.",
       "registryDependencies": [
         "checkbox",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1608,7 +1608,7 @@
       "description": "Schema Engine input-otp form element.",
       "registryDependencies": [
         "input-otp",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1640,8 +1640,8 @@
       "title": "Drop zone",
       "description": "Schema Engine drop-zone form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-dropzone-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-dropzone-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1675,7 +1675,7 @@
       "registryDependencies": [
         "label",
         "checkbox",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1707,8 +1707,8 @@
       "title": "Number",
       "description": "Schema Engine number form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-number-field-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-number-field-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1741,7 +1741,7 @@
       "description": "Schema Engine switch form element.",
       "registryDependencies": [
         "switch",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1774,7 +1774,7 @@
       "description": "Schema Engine select form element. Supports multiple selection with chips.",
       "registryDependencies": [
         "select",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "lucide-react",
@@ -1809,7 +1809,7 @@
       "registryDependencies": [
         "label",
         "radio-group",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1841,8 +1841,8 @@
       "title": "Combobox",
       "description": "Schema Engine combobox form element. Use multiple for chips-based multi-select.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-combobox-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-combobox-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1875,7 +1875,7 @@
       "description": "Schema Engine slider form element.",
       "registryDependencies": [
         "slider",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1908,7 +1908,7 @@
       "description": "Schema Engine input form element.",
       "registryDependencies": [
         "input",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -1940,8 +1940,8 @@
       "title": "Date",
       "description": "Schema Engine date form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "date-fns",
@@ -1975,8 +1975,8 @@
       "title": "Date range",
       "description": "Schema Engine date-range form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "date-fns",
@@ -2011,34 +2011,34 @@
       "description": "All Radix UI Schema Engine form elements and the generated registration barrel.",
       "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createFormEngine({ elements: [...] }).",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-utils-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-combobox-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-phone-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-dropzone-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-masked-input-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-number-field-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-radix",
-        "andeeplus/schema-engine/schema-engine-form-submission-alert-radix",
-        "andeeplus/schema-engine/schema-engine-form-submit-button-radix",
-        "andeeplus/schema-engine/schema-engine-form-fieldset-radix",
-        "andeeplus/schema-engine/schema-engine-form-array-elements-radix",
-        "andeeplus/schema-engine/schema-engine-form-phone-input-radix",
-        "andeeplus/schema-engine/schema-engine-form-masked-input-radix",
-        "andeeplus/schema-engine/schema-engine-form-textarea-radix",
-        "andeeplus/schema-engine/schema-engine-form-checkbox-radix",
-        "andeeplus/schema-engine/schema-engine-form-input-otp-radix",
-        "andeeplus/schema-engine/schema-engine-form-drop-zone-radix",
-        "andeeplus/schema-engine/schema-engine-form-checkbox-group-radix",
-        "andeeplus/schema-engine/schema-engine-form-number-radix",
-        "andeeplus/schema-engine/schema-engine-form-switch-radix",
-        "andeeplus/schema-engine/schema-engine-form-select-radix",
-        "andeeplus/schema-engine/schema-engine-form-radio-radix",
-        "andeeplus/schema-engine/schema-engine-form-combobox-radix",
-        "andeeplus/schema-engine/schema-engine-form-slider-radix",
-        "andeeplus/schema-engine/schema-engine-form-input-radix",
-        "andeeplus/schema-engine/schema-engine-form-date-radix",
-        "andeeplus/schema-engine/schema-engine-form-date-range-radix"
+        "schema-engine/schema-engine/schema-engine-form-utils-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-combobox-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-phone-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-dropzone-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-masked-input-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-number-field-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive-radix",
+        "schema-engine/schema-engine/schema-engine-form-submission-alert-radix",
+        "schema-engine/schema-engine/schema-engine-form-submit-button-radix",
+        "schema-engine/schema-engine/schema-engine-form-fieldset-radix",
+        "schema-engine/schema-engine/schema-engine-form-array-elements-radix",
+        "schema-engine/schema-engine/schema-engine-form-phone-input-radix",
+        "schema-engine/schema-engine/schema-engine-form-masked-input-radix",
+        "schema-engine/schema-engine/schema-engine-form-textarea-radix",
+        "schema-engine/schema-engine/schema-engine-form-checkbox-radix",
+        "schema-engine/schema-engine/schema-engine-form-input-otp-radix",
+        "schema-engine/schema-engine/schema-engine-form-drop-zone-radix",
+        "schema-engine/schema-engine/schema-engine-form-checkbox-group-radix",
+        "schema-engine/schema-engine/schema-engine-form-number-radix",
+        "schema-engine/schema-engine/schema-engine-form-switch-radix",
+        "schema-engine/schema-engine/schema-engine-form-select-radix",
+        "schema-engine/schema-engine/schema-engine-form-radio-radix",
+        "schema-engine/schema-engine/schema-engine-form-combobox-radix",
+        "schema-engine/schema-engine/schema-engine-form-slider-radix",
+        "schema-engine/schema-engine/schema-engine-form-input-radix",
+        "schema-engine/schema-engine/schema-engine-form-date-radix",
+        "schema-engine/schema-engine/schema-engine-form-date-range-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2084,8 +2084,8 @@
         "button",
         "badge",
         "separator",
-        "andeeplus/schema-engine/schema-engine-form-utils-radix",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-radix"
+        "schema-engine/schema-engine/schema-engine-form-utils-radix",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-radix"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2493,7 +2493,7 @@
       "description": "Schema Engine submit-button form element.",
       "registryDependencies": [
         "button",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2525,7 +2525,7 @@
       "title": "Fieldset",
       "description": "Schema Engine fieldset form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2558,8 +2558,8 @@
       "description": "Schema Engine array-elements form element.",
       "registryDependencies": [
         "button",
-        "andeeplus/schema-engine/schema-engine-form-utils-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-utils-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "lucide-react",
@@ -2592,8 +2592,8 @@
       "title": "Phone input",
       "description": "Schema Engine phone-input form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-phone-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-phone-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "react-phone-number-input",
@@ -2632,8 +2632,8 @@
       "title": "Masked input",
       "description": "Schema Engine masked-input form element for IBAN, cards, and other patterned values.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-masked-input-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-masked-input-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2666,7 +2666,7 @@
       "description": "Schema Engine textarea form element.",
       "registryDependencies": [
         "textarea",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2699,7 +2699,7 @@
       "description": "Schema Engine checkbox form element.",
       "registryDependencies": [
         "checkbox",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2732,7 +2732,7 @@
       "description": "Schema Engine input-otp form element.",
       "registryDependencies": [
         "input-otp",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2764,8 +2764,8 @@
       "title": "Drop zone",
       "description": "Schema Engine drop-zone form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-dropzone-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-dropzone-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2799,7 +2799,7 @@
       "registryDependencies": [
         "label",
         "checkbox",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2831,8 +2831,8 @@
       "title": "Number",
       "description": "Schema Engine number form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-number-field-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-number-field-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2865,7 +2865,7 @@
       "description": "Schema Engine switch form element.",
       "registryDependencies": [
         "switch",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2898,7 +2898,7 @@
       "description": "Schema Engine select form element. Supports multiple selection with chips.",
       "registryDependencies": [
         "select",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "lucide-react",
@@ -2933,7 +2933,7 @@
       "registryDependencies": [
         "label",
         "radio-group",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2965,8 +2965,8 @@
       "title": "Combobox",
       "description": "Schema Engine combobox form element. Use multiple for chips-based multi-select.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-combobox-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-combobox-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -2999,7 +2999,7 @@
       "description": "Schema Engine slider form element.",
       "registryDependencies": [
         "slider",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -3032,7 +3032,7 @@
       "description": "Schema Engine input form element.",
       "registryDependencies": [
         "input",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -3064,8 +3064,8 @@
       "title": "Date",
       "description": "Schema Engine date form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "date-fns",
@@ -3099,8 +3099,8 @@
       "title": "Date range",
       "description": "Schema Engine date-range form element.",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "date-fns",
@@ -3135,34 +3135,34 @@
       "description": "All React Aria Schema Engine form elements and the generated registration barrel.",
       "docs": "Import schemaFormRegistrations from @/components/schema-engine/forms/registrations and pass them to createFormEngine({ elements: [...] }).",
       "registryDependencies": [
-        "andeeplus/schema-engine/schema-engine-form-utils-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-combobox-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-phone-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-dropzone-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-masked-input-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-number-field-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-date-picker-primitive-aria",
-        "andeeplus/schema-engine/schema-engine-form-submission-alert-aria",
-        "andeeplus/schema-engine/schema-engine-form-submit-button-aria",
-        "andeeplus/schema-engine/schema-engine-form-fieldset-aria",
-        "andeeplus/schema-engine/schema-engine-form-array-elements-aria",
-        "andeeplus/schema-engine/schema-engine-form-phone-input-aria",
-        "andeeplus/schema-engine/schema-engine-form-masked-input-aria",
-        "andeeplus/schema-engine/schema-engine-form-textarea-aria",
-        "andeeplus/schema-engine/schema-engine-form-checkbox-aria",
-        "andeeplus/schema-engine/schema-engine-form-input-otp-aria",
-        "andeeplus/schema-engine/schema-engine-form-drop-zone-aria",
-        "andeeplus/schema-engine/schema-engine-form-checkbox-group-aria",
-        "andeeplus/schema-engine/schema-engine-form-number-aria",
-        "andeeplus/schema-engine/schema-engine-form-switch-aria",
-        "andeeplus/schema-engine/schema-engine-form-select-aria",
-        "andeeplus/schema-engine/schema-engine-form-radio-aria",
-        "andeeplus/schema-engine/schema-engine-form-combobox-aria",
-        "andeeplus/schema-engine/schema-engine-form-slider-aria",
-        "andeeplus/schema-engine/schema-engine-form-input-aria",
-        "andeeplus/schema-engine/schema-engine-form-date-aria",
-        "andeeplus/schema-engine/schema-engine-form-date-range-aria"
+        "schema-engine/schema-engine/schema-engine-form-utils-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-combobox-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-phone-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-dropzone-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-masked-input-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-number-field-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-date-picker-primitive-aria",
+        "schema-engine/schema-engine/schema-engine-form-submission-alert-aria",
+        "schema-engine/schema-engine/schema-engine-form-submit-button-aria",
+        "schema-engine/schema-engine/schema-engine-form-fieldset-aria",
+        "schema-engine/schema-engine/schema-engine-form-array-elements-aria",
+        "schema-engine/schema-engine/schema-engine-form-phone-input-aria",
+        "schema-engine/schema-engine/schema-engine-form-masked-input-aria",
+        "schema-engine/schema-engine/schema-engine-form-textarea-aria",
+        "schema-engine/schema-engine/schema-engine-form-checkbox-aria",
+        "schema-engine/schema-engine/schema-engine-form-input-otp-aria",
+        "schema-engine/schema-engine/schema-engine-form-drop-zone-aria",
+        "schema-engine/schema-engine/schema-engine-form-checkbox-group-aria",
+        "schema-engine/schema-engine/schema-engine-form-number-aria",
+        "schema-engine/schema-engine/schema-engine-form-switch-aria",
+        "schema-engine/schema-engine/schema-engine-form-select-aria",
+        "schema-engine/schema-engine/schema-engine-form-radio-aria",
+        "schema-engine/schema-engine/schema-engine-form-combobox-aria",
+        "schema-engine/schema-engine/schema-engine-form-slider-aria",
+        "schema-engine/schema-engine/schema-engine-form-input-aria",
+        "schema-engine/schema-engine/schema-engine-form-date-aria",
+        "schema-engine/schema-engine/schema-engine-form-date-range-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
@@ -3208,8 +3208,8 @@
         "button",
         "badge",
         "separator",
-        "andeeplus/schema-engine/schema-engine-form-utils-aria",
-        "andeeplus/schema-engine/schema-engine-form-field-primitive-aria"
+        "schema-engine/schema-engine/schema-engine-form-utils-aria",
+        "schema-engine/schema-engine/schema-engine-form-field-primitive-aria"
       ],
       "dependencies": [
         "@schema-engine/forms-react",
