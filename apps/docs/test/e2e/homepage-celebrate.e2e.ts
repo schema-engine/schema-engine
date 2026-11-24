@@ -23,6 +23,19 @@ async function submitValidForm(page: Page): Promise<void> {
 	await demo.locator('button[type="submit"]').click();
 }
 
+/**
+ * Expects the form to be reset and its pending alert gone while the confetti is still falling.
+ *
+ * @remarks
+ * The confetti takes about three seconds to fall, so a one second budget fails when `celebrate` holds back the reset
+ * and the end of the submission until the animation is over.
+ */
+async function expectSettled(page: Page): Promise<void> {
+	const demo = page.locator('.docs-form-renderer-preview');
+	await pwExpect(demo.locator('input[name="email"]')).toHaveValue('', { timeout: 1000 });
+	await pwExpect(demo.locator('se-submission-alert rui-alert')).toHaveCount(0, { timeout: 1000 });
+}
+
 test('a valid submit of the homepage form shows a toast and loads the confetti only then', async () => {
 	const browser = await chromium.launch();
 	try {
@@ -35,7 +48,7 @@ test('a valid submit of the homepage form shows a toast and loads the confetti o
 		await pwExpect(page.getByRole('status').getByText(TOAST, { exact: true })).toBeVisible();
 		await pwExpect(page.locator('canvas')).toHaveCount(1);
 		expect(confettiRequests).toHaveLength(1);
-		await pwExpect(page.locator('.docs-form-renderer-preview input[name="email"]')).toHaveValue('');
+		await expectSettled(page);
 	} finally {
 		await browser.close();
 	}
@@ -50,7 +63,7 @@ test('under reduced motion the homepage form shows the toast and never downloads
 
 		await submitValidForm(page);
 		await pwExpect(page.getByRole('status').getByText(TOAST, { exact: true })).toBeVisible();
-		await pwExpect(page.locator('.docs-form-renderer-preview input[name="email"]')).toHaveValue('');
+		await expectSettled(page);
 		await page.waitForLoadState('networkidle');
 		expect(confettiRequests).toEqual([]);
 		await pwExpect(page.locator('canvas')).toHaveCount(0);
