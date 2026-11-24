@@ -1,16 +1,14 @@
 ---
 title: 'Browser helpers'
 description: 'Consent-aware drafts and analytics events that run in the browser.'
-order: 9
+order: 14
 ---
 
 # Browser helpers
 
-These helpers live in `@schema-engine/forms/browser`. They run in the browser, and they are not tied to React. For conditional fields, see [Constraints](/docs/forms/constraints).
+These helpers live in `@schema-engine/forms/browser`. They run in the browser and are not tied to a renderer. The browser actions of [Actions in forms](/docs/forms/actions) use them.
 
 ## Consent-aware drafts
-
-Import the browser helper from `@schema-engine/forms/browser`:
 
 ```ts
 import { GDPRConsent } from '@schema-engine/forms/browser';
@@ -21,9 +19,9 @@ const draft = GDPRConsent.loadDraft('contact');
 ```
 
 Grant consent before saving a draft. Drafts use the `autosave_<formId>` key shared with the auto-save and reset
-actions. `GDPRConsent.revokeConsent()` clears drafts that the browser auto-save adapter
+actions. `GDPRConsent.revokeConsent()` clears drafts that the browser auto-save action
 or `GDPRConsent.saveDraft` wrote, under either the default key or a custom `storageKey`. Consent is browser storage
-state; applications provide their own React subscriptions, disclosure, and
+state; applications provide their own subscriptions, disclosure and
 retention policy.
 
 ## Analytics
