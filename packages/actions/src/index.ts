@@ -14,7 +14,7 @@
  * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>([
  *   {
  *     $type: 'log',
- *     schema: z.object({ id: z.string(), $type: z.literal('log'), message: z.string() }),
+ *     schema: z.object({ message: z.string() }),
  *     metadata: { name: 'Log', defaultTriggers: ['change'] },
  *     execute: async (ctx) => {
  *       logger.info(ctx.config.message, ctx);

@@ -4,20 +4,14 @@ Code that runs on a form event. The runtime runs a form's actions with the dispa
 
 ## An action
 
-An action is a registration, `{ $type, schema, metadata, execute }`, and an instance in the config, `{ $type, id, ...config, triggers? }`. `schema` is any Standard Schema and describes the instance. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the form's context, with the instance as `config`, and returns `{ success, message?, error?, data?, shouldContinue? }`; `shouldContinue: false` stops the sequence. Type it with `BuilderActionRegistration`, and register it in `createFormEngine({ actions })`. The engine checks the `actions` of a form and of a step against the registered schemas when it validates the form (`defineForm`, `validateForm`): a bad action is a config issue whose path is the owner's `actions`, the index of the entry (and of the member, in a group), then the path the action's schema reported, and only checked actions reach the dispatcher.
+An action is a registration, `{ $type, schema, metadata, execute }`, and an instance in the config, `{ $type, id, ...config, triggers? }`. `schema` is any Standard Schema and describes the action's own arguments: the engine checks `id`, `$type`, `enabled` and `triggers` (a form trigger name) itself, so a schema never lists them. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the form's context, with the instance as `config`, and returns `{ success, message?, error?, data?, shouldContinue? }`; `shouldContinue: false` stops the sequence. Type it with `BuilderActionRegistration`, and register it in `createFormEngine({ actions })`. The engine checks the `actions` of a form and of a step against the registered schemas when it validates the form (`defineForm`, `validateForm`): a bad action is a config issue whose path is the owner's `actions`, the index of the entry (and of the member, in a group), then the path the action's schema reported, and only checked actions reach the dispatcher.
 
 ```ts title="forms/notify-action.ts"
 import * as z from 'zod/mini';
 import { createFormEngine, type BuilderActionRegistration } from '@schema-engine/forms';
 import { textRegistration } from './engine';
 
-const NotifyActionSchema = z.object({
-	$type: z.literal('notify'),
-	id: z.string(),
-	channel: z.string(),
-	enabled: z._default(z.boolean(), true),
-	triggers: z.optional(z.array(z.string())),
-});
+const NotifyActionSchema = z.object({ channel: z.string() });
 
 export const notifyAction: BuilderActionRegistration<'notify', typeof NotifyActionSchema> = {
 	$type: 'notify',

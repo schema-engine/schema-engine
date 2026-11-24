@@ -2,13 +2,7 @@ import * as z from 'zod/mini';
 import { createFormEngine, type BuilderActionRegistration } from '@schema-engine/forms';
 import { textRegistration } from './engine';
 
-const NotifyActionSchema = z.object({
-	$type: z.literal('notify'),
-	id: z.string(),
-	channel: z.string(),
-	enabled: z._default(z.boolean(), true),
-	triggers: z.optional(z.array(z.string())),
-});
+const NotifyActionSchema = z.object({ channel: z.string() });
 
 export const notifyAction: BuilderActionRegistration<'notify', typeof NotifyActionSchema> = {
 	$type: 'notify',

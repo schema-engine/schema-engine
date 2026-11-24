@@ -1,4 +1,5 @@
 import { parseActions, type ParsedActionSequence } from '@schema-engine/actions';
+import { FormActionTriggerSchema } from '@/actions/triggers';
 import type { FormTaggedConfig } from '@/schemas/form-config';
 import type { FormValidationIssue, Path } from './issues';
 import type { ValidateFormOptions } from './options';
@@ -16,7 +17,7 @@ export function parseOwnerActions(
 	ownerPath: Path,
 ): { issues: FormValidationIssue[]; items?: ParsedActionSequence } {
 	if (!items) return { issues: [] };
-	const result = parseActions(options, items);
+	const result = parseActions(options, items, { triggers: FormActionTriggerSchema.options });
 	if (!result.success) return { issues: fromSchemaIssues(result.issues, [...ownerPath, 'actions']) };
 	return { issues: [], items: result.data };
 }

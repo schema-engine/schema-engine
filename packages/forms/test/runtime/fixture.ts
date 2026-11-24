@@ -21,7 +21,7 @@ export function createFixture() {
 	const slow = new Set<string>();
 	const probe = {
 		$type: 'probe',
-		schema: z.looseObject({ $type: z.literal('probe'), id: z.string() }),
+		schema: z.looseObject({}),
 		metadata: { name: 'Probe' },
 		execute: async (context: { trigger: string; stepId: string; currentStep: number; totalSteps: number }) => {
 			seen.push({

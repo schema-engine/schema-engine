@@ -18,27 +18,16 @@ describe('AutoSavePlugin', () => {
 
 	describe('Schema Validation', () => {
 		test('should validate valid auto-save action', () => {
-			const validAction = {
-				id: 'test-autosave',
-				$type: 'auto_save',
-				enabled: true,
-			};
+			const validAction = {};
 
 			expect(AutoSaveActionSchema.parse(validAction)).toEqual({
-				id: 'test-autosave',
-				$type: 'auto_save',
-				enabled: true,
 				includeSensitive: false,
 			});
 		});
 
 		test('should validate auto-save action with all optional fields', () => {
 			const fullAction = {
-				id: 'test-autosave',
-				$type: 'auto_save',
 				description: 'Auto-save form data',
-				enabled: true,
-				triggers: ['form_change'],
 				storageKey: 'custom_key',
 				includeSensitive: true,
 			};
@@ -46,41 +35,8 @@ describe('AutoSavePlugin', () => {
 			expect(AutoSaveActionSchema.parse(fullAction)).toEqual(fullAction);
 		});
 
-		test('should reject invalid type', () => {
-			const invalidAction = {
-				id: 'test-autosave',
-				type: 'invalid_type',
-				enabled: true,
-			};
-
-			expect(() => AutoSaveActionSchema.parse(invalidAction)).toThrow();
-		});
-
-		test('should require ID', () => {
-			const invalidAction = {
-				$type: 'auto_save',
-				enabled: true,
-			};
-
-			expect(() => AutoSaveActionSchema.parse(invalidAction)).toThrow();
-		});
-
-		test('should default enabled to true', () => {
-			const action = {
-				id: 'test-autosave',
-				$type: 'auto_save',
-			};
-
-			const parsed = AutoSaveActionSchema.parse(action);
-			expect(parsed.enabled).toBe(true);
-		});
-
 		test('should default includeSensitive to false', () => {
-			const action = {
-				id: 'test-autosave',
-				$type: 'auto_save',
-				enabled: true,
-			};
+			const action = {};
 
 			const parsed = AutoSaveActionSchema.parse(action);
 			expect(parsed.includeSensitive).toBe(false);

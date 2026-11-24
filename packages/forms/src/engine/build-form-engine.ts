@@ -15,6 +15,7 @@ import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { declaresChildren, withExportedChildren } from '@/lib/element-children';
 import { withExportedRules } from '@/lib/exported-rules';
+import { withActionEnvelope } from '@/lib/exported-action-envelope';
 import {
 	assertAxesNotReserved,
 	createAppearanceSchema,
@@ -153,6 +154,8 @@ function toExportRegistrations(
 				layout.appearance,
 				(registration as AnyRecipeRegistration).appearanceAxes,
 			);
+		} else {
+			exported.exportSchema = withActionEnvelope(registration.schema, registration.$type);
 		}
 		return exported;
 	});
@@ -339,6 +342,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	for (const [componentType, exported] of [
 		[ComponentType.Element, exportedElements],
 		[ComponentType.Recipe, exportedRecipes],
+		[ComponentType.Action, exportedActions],
 	] as const) {
 		for (const item of exported) {
 			if (item.exportSchema !== item.schema && isZodType(item.exportSchema)) {
@@ -361,7 +365,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 
 	const elementsUnion = createElementsUnion(exportedElements, layout);
 	const formConfigSchema = createFormConfigSchema(elementsUnion, exportedRecipes, exportedActions, layout);
-	const actionConfigValidators = createActionConfigValidatorMap(actionRegistry.all());
+	const actionConfigValidators = createActionConfigValidatorMap(exportedActions);
 	const schemaArtifacts = createFormEngineSchemaArtifacts(
 		metadataCatalog,
 		formConfigSchema,

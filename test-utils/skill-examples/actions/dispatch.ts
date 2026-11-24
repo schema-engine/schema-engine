@@ -19,13 +19,7 @@ interface NotifyConfig extends ActionConfigBase<'notify'> {
 
 const notify: ActionRegistration<NotifyConfig, Context, Trigger> = {
 	$type: 'notify',
-	schema: z.object({
-		$type: z.literal('notify'),
-		id: z.string(),
-		channel: z.string(),
-		enabled: z.optional(z.boolean()),
-		triggers: z.optional(z.array(z.string())),
-	}),
+	schema: z.object({ channel: z.string() }),
 	metadata: { name: 'Notify', defaultTriggers: ['save'] },
 	execute: async ({ config, sent, signal }) => {
 		if (signal.aborted) return { success: false, error: 'Cancelled' };

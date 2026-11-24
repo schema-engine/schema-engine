@@ -4,8 +4,7 @@ import type { BuilderActionRuntimeContext, FormActionTrigger } from '@schema-eng
 /** The parts of an action result the submission lifecycle reads. */
 type TestActionResult = { success: boolean; shouldContinue?: boolean };
 
-const testActionSchema = <TType extends string>($type: TType) =>
-	z.object({ $type: z.literal($type), id: z.string(), endpoint: z.optional(z.string()) });
+const testActionSchema = () => z.object({ endpoint: z.optional(z.string()) });
 
 export type TestActionContext = BuilderActionRuntimeContext<{ id: string; endpoint?: string }>;
 
@@ -20,7 +19,7 @@ export function testAction<const TType extends string>(
 ) {
 	return {
 		$type,
-		schema: testActionSchema($type),
+		schema: testActionSchema(),
 		metadata: { name: $type, defaultTriggers },
 		execute,
 	};

@@ -26,7 +26,7 @@ const engine = createFormEngine({
 	actions: [
 		{
 			$type: 'probe',
-			schema: z.object({ $type: z.literal('probe'), id: z.string(), triggers: z.optional(z.array(z.string())) }),
+			schema: z.object({}),
 			metadata: { name: 'Probe', category: 'test' },
 			execute: async (context: BuilderActionRuntimeContext) => {
 				handled.push((context.config as { id: string }).id);

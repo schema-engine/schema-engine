@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { FormActionConfigSchema, type FormActionConfig } from '../actions/types';
+import type { FormActionConfig } from '../actions/types';
 import { createFormConfigShape, createFormStepSchema, TypedConfigEnvelopeSchema } from './form-config-shape';
 import type { ElementConfig } from './field-config';
 
@@ -35,7 +35,7 @@ export const FormStepSchema = createFormStepSchema({
 	 * @remarks The owning engine selects and validates their types by `$type`.
 	 */
 	elements: z.any(),
-	actions: FormActionConfigSchema,
+	actions: TypedConfigEnvelopeSchema,
 });
 
 /** Complete form configuration schema. */
@@ -46,7 +46,7 @@ export const FormConfigSchema = createFormConfigShape({
 	 */
 	elements: z.any(),
 	view: FormViewConfigSchema,
-	actions: FormActionConfigSchema,
+	actions: TypedConfigEnvelopeSchema,
 });
 
 /**

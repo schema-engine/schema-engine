@@ -65,7 +65,7 @@ export const components = createRegistry('Component', [badge, callout]);
 
 ## 2. Register an async action
 
-An action is registered behaviour. Its context is whatever the caller hands to a dispatch: here a mailer, so the action does not reach for a global. A shared `actionBase` keeps `id`, `enabled` and `triggers` in every schema, because `parseActions` returns what the schema returns and the dispatcher reads `enabled` and `triggers` from it.
+An action is registered behaviour. Its context is whatever the caller hands to a dispatch: here a mailer, so the action does not reach for a global. The schema lists the action's own arguments: `parseActions` checks `id`, `$type`, `enabled` and `triggers` itself.
 
 ```ts title="actions.ts"
 import * as z from 'zod/mini';
@@ -86,19 +86,11 @@ interface SendEmailConfig extends ActionConfigBase<'sendEmail'> {
 	subject: string;
 }
 
-const actionBase = {
-	id: z.string(),
-	enabled: z.optional(z.boolean()),
-	triggers: z.optional(z.array(z.string())),
-};
-
 const defineShopAction = defineAction<ShopContext, ShopTrigger>();
 
 const sendEmail = defineShopAction<SendEmailConfig>({
 	$type: 'sendEmail',
 	schema: z.object({
-		...actionBase,
-		$type: z.literal('sendEmail'),
 		to: z.email(),
 		subject: z.string(),
 	}),

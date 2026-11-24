@@ -30,11 +30,7 @@ interface LogConfig extends ActionConfigBase<'log'> {
 export const log: ActionRegistration<LogConfig, { userId: string }, 'submit' | 'change'> = {
 	$type: 'log',
 	schema: z.object({
-		id: z.string(),
-		$type: z.literal('log'),
 		message: z.string(),
-		enabled: z.optional(z.boolean()),
-		triggers: z.optional(z.array(z.string())),
 	}),
 	metadata: { name: 'Log message', defaultTriggers: ['submit'] },
 	execute: ({ config, trigger, userId }) => {
@@ -44,7 +40,7 @@ export const log: ActionRegistration<LogConfig, { userId: string }, 'submit' | '
 };
 ```
 
-The schema is the contract of a workflow entry. `schema` is a plain Standard Schema value, so its type does not tie to `LogConfig`: the config type is what you claim the schema returns.
+The schema lists the action's own arguments and nothing else: `parseActions` checks `id`, `$type`, `enabled` and `triggers` itself. `schema` is a plain Standard Schema value, so its type does not tie to `LogConfig`: the config type is `ActionConfigBase` plus what you claim the schema returns.
 
 ## Action entry
 
@@ -57,7 +53,7 @@ An action entry is one object in a workflow, validated against the schema of the
 | `enabled`  | `false` skips the entry. Omitted or `true` runs it                                   |
 | `triggers` | The triggers this entry answers. Omitted, the registration's `defaultTriggers` apply |
 
-The registration's schema must keep `enabled` and `triggers` for the entry to honour them, because the parse returns what the schema returns.
+`parseActions` checks these four keys itself, so a registration's schema never lists them. `triggers` may be checked against a list of names the domain accepts, passed as `{ triggers }` to `parseActions`.
 
 ## Trigger matching
 

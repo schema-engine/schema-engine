@@ -95,16 +95,10 @@ describe('GTMPlugin', () => {
 	describe('Schema Validation', () => {
 		test('should validate valid GTM event action', () => {
 			const validAction = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
 				eventName: 'form_start',
 			};
 
 			expect(GTMEventActionSchema.parse(validAction)).toEqual({
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
 				eventName: 'form_start',
 				includeFormData: false,
 				eventData: {},
@@ -113,17 +107,13 @@ describe('GTMPlugin', () => {
 
 		test('should validate GTM action with all optional fields', () => {
 			const fullAction = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
 				description: 'Track form submission',
-				enabled: true,
 				eventName: 'form_submit',
 				eventData: {
 					category: 'engagement',
 					source: 'newsletter',
 				},
 				includeFormData: ['email', 'userType'],
-				triggers: ['form_submit', 'step_leave'],
 			};
 
 			expect(GTMEventActionSchema.parse(fullAction)).toEqual(fullAction);
@@ -131,37 +121,14 @@ describe('GTMPlugin', () => {
 
 		test('should reject empty event name', () => {
 			const invalidAction = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
 				eventName: '',
 			};
 
 			expect(() => GTMEventActionSchema.parse(invalidAction)).toThrow('Event name cannot be empty');
 		});
 
-		test('should reject invalid type', () => {
-			const invalidAction = {
-				id: 'test-gtm',
-				type: 'invalid_type',
-				enabled: true,
-				eventName: 'form_start',
-			};
-
-			expect(() => GTMEventActionSchema.parse(invalidAction)).toThrow();
-		});
-
-		test.each(['step_submit', 'step_view'])('rejects the %s trigger, which no renderer dispatches', (trigger) => {
-			const action = { id: 'test-gtm', $type: 'gtm_event', eventName: 'step', triggers: [trigger] };
-
-			expect(GTMEventActionSchema.safeParse(action).success).toBe(false);
-		});
-
 		test('should default includeFormData to false', () => {
 			const action = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
 				eventName: 'form_start',
 			};
 
@@ -171,9 +138,6 @@ describe('GTMPlugin', () => {
 
 		test('should default eventData to empty object', () => {
 			const action = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
 				eventName: 'form_start',
 			};
 
@@ -183,9 +147,6 @@ describe('GTMPlugin', () => {
 
 		test('should accept boolean includeFormData', () => {
 			const action = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
 				eventName: 'form_start',
 				includeFormData: true,
 			};
@@ -196,9 +157,6 @@ describe('GTMPlugin', () => {
 
 		test('should accept array includeFormData', () => {
 			const action = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
 				eventName: 'form_start',
 				includeFormData: ['name', 'email'],
 			};
@@ -209,35 +167,11 @@ describe('GTMPlugin', () => {
 
 		test('should reject empty field names in includeFormData array', () => {
 			const invalidAction = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
 				eventName: 'form_start',
 				includeFormData: ['name', ''],
 			};
 
 			expect(() => GTMEventActionSchema.parse(invalidAction)).toThrow('Field name cannot be empty');
-		});
-
-		test('should validate trigger enum values', () => {
-			const validAction = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
-				eventName: 'form_mount',
-				triggers: ['form_mount', 'step_change'],
-			};
-
-			expect(GTMEventActionSchema.parse(validAction).triggers).toEqual(['form_mount', 'step_change']);
-			const invalidAction = {
-				id: 'test-gtm',
-				$type: 'gtm_event',
-				enabled: true,
-				eventName: 'form_start',
-				triggers: ['invalid_trigger'],
-			};
-
-			expect(() => GTMEventActionSchema.parse(invalidAction)).toThrow();
 		});
 	});
 

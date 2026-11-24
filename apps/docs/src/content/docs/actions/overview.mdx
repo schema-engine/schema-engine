@@ -49,12 +49,6 @@ export interface TicketContext {
 
 export type TicketTrigger = 'created' | 'escalated';
 
-const actionBase = {
-	id: z.string(),
-	enabled: z.optional(z.boolean()),
-	triggers: z.optional(z.array(z.string())),
-};
-
 interface AssignConfig extends ActionConfigBase<'assign'> {
 	ticketId: string;
 	assignee: string;
@@ -68,8 +62,6 @@ interface NotifyConfig extends ActionConfigBase<'notify'> {
 const assign: ActionRegistration<AssignConfig, TicketContext, TicketTrigger> = {
 	$type: 'assign',
 	schema: z.object({
-		...actionBase,
-		$type: z.literal('assign'),
 		ticketId: z.string(),
 		assignee: z.string(),
 	}),
@@ -83,8 +75,6 @@ const assign: ActionRegistration<AssignConfig, TicketContext, TicketTrigger> = {
 const notify: ActionRegistration<NotifyConfig, TicketContext, TicketTrigger> = {
 	$type: 'notify',
 	schema: z.object({
-		...actionBase,
-		$type: z.literal('notify'),
 		channel: z.string(),
 		text: z.string(),
 	}),

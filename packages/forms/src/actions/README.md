@@ -194,16 +194,11 @@ uses Zod Mini in this example; any Standard Schema implementation is valid.
 
 ```typescript
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@schema-engine/forms';
+import type { BuilderActionConfig, BuilderActionRuntimeContext, BuilderActionRegistration } from '@schema-engine/forms';
 
-const ActionSchema = z.object({
-	id: z.string(),
-	$type: z.literal('log_message'),
-	message: z.string(),
-	triggers: z.optional(z.array(z.string())),
-});
+const ActionSchema = z.object({ message: z.string() });
 
-type Action = z.infer<typeof ActionSchema>;
+type Action = BuilderActionConfig<'log_message', typeof ActionSchema>;
 
 const logMessage: BuilderActionRegistration<'log_message', typeof ActionSchema> = {
 	$type: 'log_message',

@@ -1,12 +1,14 @@
 import type { BaseRegistration, RegistrationMetadata } from '@schema-engine/registry';
 
 /**
- * Action Configuration Base
- *
- * Base interface for action configurations.
- * All action configs must have an id, type, and enabled flag.
+ * The keys every action entry carries, owned by the engine.
  *
  * @template TType - The action type identifier
+ *
+ * @remarks
+ * {@link parseActions} checks these keys itself and hands only the rest to the registration's schema. A
+ * registration's config type is this interface plus the output of its schema, which lists the action's own
+ * arguments and none of these keys: `ActionConfigBase<'post'> & { endpoint: string }`.
  */
 export interface ActionConfigBase<TType extends string = string> {
 	/** Unique identifier for this action instance */
@@ -156,7 +158,8 @@ export interface ActionMetadata<TTrigger = string> extends RegistrationMetadata 
  * Action Registration
  *
  * Configuration object for registering actions in an action registry.
- * Used to define action behavior, validation, and metadata.
+ * Used to define action behavior, validation, and metadata. The schema describes the action's own
+ * arguments; {@link ActionConfigBase} keys are checked by {@link parseActions}.
  *
  * @template TConfig - Action configuration type
  * @template TBaseContext - Caller-provided base context data
@@ -169,8 +172,6 @@ export interface ActionMetadata<TTrigger = string> extends RegistrationMetadata 
  * const logAction: ActionRegistration<LogActionConfig, AppContext, AppTrigger> = {
  *   $type: 'log',
  *   schema: z.object({
- *     id: z.string(),
- *     $type: z.literal('log'),
  *     level: z.enum(['info', 'warn', 'error']),
  *     message: z.string(),
  *   }),

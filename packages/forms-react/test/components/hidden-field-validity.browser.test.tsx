@@ -13,7 +13,7 @@ test('checkValidity agrees with a submission about a field a constraint hides', 
 	let submissions = 0;
 	const probe = {
 		$type: 'probe',
-		schema: z.object({ id: z.string(), $type: z.literal('probe'), triggers: z.optional(z.array(z.string())) }),
+		schema: z.object({}),
 		metadata: { name: 'Probe' },
 		execute: async (context: { form: { checkValidity: () => Promise<boolean> } }) => {
 			checks.push(context.form.checkValidity());

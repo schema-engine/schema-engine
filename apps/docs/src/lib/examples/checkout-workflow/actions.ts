@@ -30,12 +30,6 @@ function delay(ms: number, signal: AbortSignal): Promise<void> {
 
 const define = defineAction<CheckoutContext, CheckoutTrigger>();
 
-const entry = {
-	id: z.string(),
-	enabled: z.optional(z.boolean()),
-	triggers: z.optional(z.array(z.string())),
-};
-
 interface ReserveStockConfig extends ActionConfigBase<'reserveStock'> {
 	sku: string;
 	quantity: number;
@@ -44,8 +38,6 @@ interface ReserveStockConfig extends ActionConfigBase<'reserveStock'> {
 const reserveStock = define<ReserveStockConfig>({
 	$type: 'reserveStock',
 	schema: z.object({
-		...entry,
-		$type: z.literal('reserveStock'),
 		sku: z.string(),
 		quantity: z.number().check(z.int(), z.positive()),
 	}),
@@ -66,7 +58,7 @@ interface ChargeCardConfig extends ActionConfigBase<'chargeCard'> {
 
 const chargeCard = define<ChargeCardConfig>({
 	$type: 'chargeCard',
-	schema: z.object({ ...entry, $type: z.literal('chargeCard'), amount: z.number().check(z.positive()) }),
+	schema: z.object({ amount: z.number().check(z.positive()) }),
 	metadata: { name: 'Charge the card', defaultTriggers: ['submit'] },
 	execute: async ({ config, cardLimit, signal }) => {
 		await delay(10, signal);
@@ -81,7 +73,7 @@ type NotifyWarehouseConfig = ActionConfigBase<'notifyWarehouse'>;
 
 const notifyWarehouse = define<NotifyWarehouseConfig>({
 	$type: 'notifyWarehouse',
-	schema: z.object({ ...entry, $type: z.literal('notifyWarehouse') }),
+	schema: z.object({}),
 	metadata: { name: 'Notify the warehouse', defaultTriggers: ['submit'] },
 	execute: async ({ sent, signal }) => {
 		await delay(50, signal);
@@ -96,7 +88,7 @@ interface TrackPurchaseConfig extends ActionConfigBase<'trackPurchase'> {
 
 const trackPurchase = define<TrackPurchaseConfig>({
 	$type: 'trackPurchase',
-	schema: z.object({ ...entry, $type: z.literal('trackPurchase'), event: z.string() }),
+	schema: z.object({ event: z.string() }),
 	metadata: { name: 'Track the purchase', defaultTriggers: ['change', 'submit'] },
 	execute: async ({ config, sent, signal }) => {
 		await delay(50, signal);
@@ -111,7 +103,7 @@ interface SendReceiptConfig extends ActionConfigBase<'sendReceipt'> {
 
 const sendReceipt = define<SendReceiptConfig>({
 	$type: 'sendReceipt',
-	schema: z.object({ ...entry, $type: z.literal('sendReceipt'), to: z.email() }),
+	schema: z.object({ to: z.email() }),
 	metadata: { name: 'Send the receipt', defaultTriggers: ['submit'] },
 	execute: async ({ config, sent }) => {
 		sent.push(`receipt:${config.to}`);

@@ -54,14 +54,10 @@ type ExampleDefinition = {
 };
 
 const demoSchema = z.strictObject({
-	id: z.string(),
-	$type: z.literal('work'),
 	label: z.string(),
 	result: z.optional(z.string()),
 	fail: z.optional(z.boolean()),
 	shouldContinue: z.optional(z.boolean()),
-	enabled: z.optional(z.boolean()),
-	triggers: z.optional(z.array(z.string())),
 });
 
 const work = (

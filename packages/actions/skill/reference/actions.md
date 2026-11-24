@@ -28,13 +28,7 @@ interface NotifyConfig extends ActionConfigBase<'notify'> {
 
 const notify: ActionRegistration<NotifyConfig, Context, Trigger> = {
 	$type: 'notify',
-	schema: z.object({
-		$type: z.literal('notify'),
-		id: z.string(),
-		channel: z.string(),
-		enabled: z.optional(z.boolean()),
-		triggers: z.optional(z.array(z.string())),
-	}),
+	schema: z.object({ channel: z.string() }),
 	metadata: { name: 'Notify', defaultTriggers: ['save'] },
 	execute: async ({ config, sent, signal }) => {
 		if (signal.aborted) return { success: false, error: 'Cancelled' };
@@ -59,7 +53,7 @@ export async function run(input: unknown, sent: string[]) {
 
 ## An action
 
-A registration is `{ $type, schema, metadata, execute }`; an instance is `{ $type, id, ...config, enabled?, triggers? }`. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the base context you pass to `dispatch` plus `config` (the instance), `trigger` and an abort `signal`, and returns `{ success, message?, error?, data?, shouldContinue? }`. `ActionRegistry` is built once from a list, like any registry (`registry.md`). A domain that registers at runtime implements `ActionRegistryProvider` instead.
+A registration is `{ $type, schema, metadata, execute }`; an instance is `{ $type, id, ...config, enabled?, triggers? }`. `schema` describes the action's own arguments: `parseActions` checks `id`, `$type`, `enabled` and `triggers` itself, so a schema never lists them. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the base context you pass to `dispatch` plus `config` (the instance), `trigger` and an abort `signal`, and returns `{ success, message?, error?, data?, shouldContinue? }`. `ActionRegistry` is built once from a list, like any registry (`registry.md`). A domain that registers at runtime implements `ActionRegistryProvider` instead.
 
 ## parseActions
 

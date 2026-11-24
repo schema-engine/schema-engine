@@ -74,13 +74,7 @@ interface LogActionConfig extends ActionConfigBase<'log'> {
 
 const logAction: ActionRegistration<LogActionConfig, BaseContext, MyTrigger> = {
 	$type: 'log',
-	schema: z.strictObject({
-		id: z.string(),
-		$type: z.literal('log'),
-		message: z.string(),
-		enabled: z.optional(z.boolean()),
-		triggers: z.optional(z.array(z.string())),
-	}),
+	schema: z.strictObject({ message: z.string() }),
 	metadata: {
 		name: 'Log Action',
 		description: 'Logs a message',
@@ -206,15 +200,16 @@ It is built on `createRegistry` from `@schema-engine/registry` and has no `regis
 function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
 	registry: { getAction(type: string): { schema: StandardSchemaV1 } | undefined },
 	input: unknown,
+	options?: { triggers?: readonly string[] },
 ): ParseActionsResult<TConfig>;
 
 type ParseActionsResult<TConfig> =
 	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: StandardSchemaIssue[] };
 ```
 
-`input` is the sequence as it arrived, entries and inner arrays for parallel groups. Each entry is validated with the schema of the registration its `$type` names, and `data` holds what the schema returned, so defaults and transforms apply. Every entry is checked, so a sequence with two bad entries reports both.
+`input` is the sequence as it arrived, entries and inner arrays for parallel groups. The engine checks the keys every entry carries: `id` (a non-empty string), `$type` (a registered one), `enabled` and `triggers`, which `options.triggers` limits to a list of names when given. The other keys go to the schema of the registration the `$type` names, which lists the action's own arguments only. `data` holds the base keys merged with what the schema returned, so defaults and transforms apply. Every entry is checked, so a sequence with two bad entries reports both.
 
-An issue is a Standard Schema issue whose `path` is the index of the entry, the index inside a group when the entry is one, then the path the schema reported: `[1, 0, 'endpoint']` is the `endpoint` of the first action of the group at index 1. An entry that has no string `$type`, and a `$type` no registration answers, are issues at `$type`; the second says to register the type.
+An issue is a Standard Schema issue whose `path` is the index of the entry, the index inside a group when the entry is one, then the path the schema reported: `[1, 0, 'endpoint']` is the `endpoint` of the first action of the group at index 1. An entry that has no string `$type`, and a `$type` no registration answers, are issues at `$type`; the second says to register the type. An empty group is an issue at its index.
 
 `ParsedAction` is the entry type of `data`. Its brand exists in the type only, and `parseActions` is the one function that produces it. `TConfig` is the caller's claim about what the registered schemas return; the parse checks the schemas and not that claim.
 

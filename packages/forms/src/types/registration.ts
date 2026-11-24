@@ -125,6 +125,17 @@ export type RecipeRegistration<
 >;
 
 /**
+ * The config of a form action: the keys the engine owns plus the output of the registration's schema.
+ *
+ * @template TType - The action type identifier
+ * @template TSchema - The registration's schema, which lists the action's own arguments only
+ */
+export type BuilderActionConfig<
+	TType extends string = string,
+	TSchema extends StandardSchemaV1 = StandardSchemaV1,
+> = ActionConfigBase<TType> & StandardSchemaV1.InferOutput<TSchema>;
+
+/**
  * Action registration object for forms.
  *
  * This extends the base ActionRegistration from @schema-engine/actions,
@@ -139,11 +150,7 @@ export type BuilderActionRegistration<
 	TType extends string = string,
 	TSchema extends StandardSchemaV1 = StandardSchemaV1,
 > = Omit<
-	ActionRegistration<
-		StandardSchemaV1.InferOutput<TSchema> & ActionConfigBase<TType>,
-		BuilderActionBaseContext,
-		FormActionTrigger
-	>,
+	ActionRegistration<BuilderActionConfig<TType, TSchema>, BuilderActionBaseContext, FormActionTrigger>,
 	'schema' | '$type'
 > & {
 	$type: TType;

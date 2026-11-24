@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
-import { FormActionTriggerSchema } from '../triggers';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '@/types';
 import { getAutoSaveDraftStorageKey, type AutoSaveStorage } from './auto-save.plugin';
 
 /**
@@ -17,17 +16,12 @@ export interface FormResetPluginConfig {
 
 /** Schema for the `reset` action configuration. */
 export const FormResetActionSchema = z.object({
-	id: z.string().check(z.minLength(1, 'Action ID cannot be empty')),
-	$type: z.literal('reset'),
 	description: z.optional(z.string()),
-	enabled: z._default(z.boolean(), true),
-	/** Custom triggers that override the default triggers for this action */
-	triggers: z.optional(z.array(FormActionTriggerSchema)),
 	confirmMessage: z.optional(z.string()),
 	resetToDefaults: z._default(z.boolean(), true),
 });
 
-export type FormResetAction = z.infer<typeof FormResetActionSchema>;
+export type FormResetAction = BuilderActionConfig<'reset', typeof FormResetActionSchema>;
 
 /**
  * Default form reset implementation using the form container methods

@@ -32,7 +32,7 @@ function setup(
 		actions: [
 			{
 				$type: 'record',
-				schema: z.looseObject({ $type: z.literal('record'), id: z.string() }),
+				schema: z.looseObject({}),
 				metadata: { name: 'Record' },
 				execute: async (context: Seen) => {
 					seen.push(context);
@@ -184,7 +184,7 @@ describe('the submit lifecycle', () => {
 			actions: [
 				{
 					$type: 'record',
-					schema: z.looseObject({ $type: z.literal('record'), id: z.string() }),
+					schema: z.looseObject({}),
 					metadata: { name: 'Record' },
 					execute: async (context: Seen) => {
 						seen.push(context.config.id);
@@ -237,7 +237,7 @@ describe('mounting', () => {
 			actions: [
 				{
 					$type: 'record',
-					schema: z.looseObject({ $type: z.literal('record'), id: z.string() }),
+					schema: z.looseObject({}),
 					metadata: { name: 'Record' },
 					execute: async (context: Seen) => {
 						seen.push(`${context.config.id}:${context.trigger}`);
