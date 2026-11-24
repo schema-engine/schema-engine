@@ -12,7 +12,7 @@ import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine
 export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 ```
 
-`FormRenderer({ engine, config, onSubmit })` renders the form, and the same config as React works. Rendered on the server, the engine is not serialized into the markup, so the app assigns it to each `se-form-renderer`, before or after the renderer upgrades, and the hosts below follow it when it arrives or changes. A client-side router that swaps in a parsed page does not upgrade it first: bind in the router's `eco:before-swap` event, on `event.detail.newDocument`.
+`FormRenderer({ engine, config, onSubmit })` renders the form, and the same config as React works. Its other props are `onChange`, `onAction`, `onActionResults(results, trigger)` (as in React; the same results reach the bubbling `se-action-results` event), `navigate(url)` (where a submit action's `redirectUrl` takes the page, `location.assign` by default) and `formatIssue`. Rendered on the server, the engine is not serialized into the markup, so the app assigns it to each `se-form-renderer`, before or after the renderer upgrades, and the hosts below follow it when it arrives or changes. A client-side router that swaps in a parsed page does not upgrade it first: bind in the router's `eco:before-swap` event, on `event.detail.newDocument`.
 
 ```ts title="radiant/bind-engine.ts"
 import type { FormRendererElement } from '@schema-engine/forms-radiant';

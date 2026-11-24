@@ -27,12 +27,12 @@ It uses WebMCP's imperative API (`document.modelContext.registerTool(tool, { sig
 
 `registerFormAgentTool(runtime, options)` takes the form's runtime, which the binding hands over, and returns the function that unregisters the tool. Register while the form is rendered and unregister when it goes.
 
-| Option        | Meaning                                                                                                                                     |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | The tool's name. Unique on the page: the browser rejects a duplicate.                                                                       |
-| `description` | What the tool does, for the agent.                                                                                                          |
+| Option        | Meaning                                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | The tool's name. Unique on the page: the browser rejects a duplicate.                                                                                    |
+| `description` | What the tool does, for the agent.                                                                                                                       |
 | `formatIssue` | Optional. The form's own issue formatter, which the bindings give you. Without it the engine's, then an issue's `message`, then its `type` and `params`. |
-| `autoSubmit`  | Optional, `false` by default. See [When to submit](#when-to-submit).                                                                        |
+| `autoSubmit`  | Optional, `false` by default. See [When to submit](#when-to-submit).                                                                                     |
 
 ### React
 
