@@ -3,7 +3,7 @@
 	"tasks": {
 		"build:lib": {
 			"dependsOn": ["^build:lib"],
-			"outputs": ["dist/**"]
+			"outputs": ["dist/**", "skill/SKILL.md"]
 		},
 		"build": {
 			"dependsOn": ["^build", "^build:lib"],
