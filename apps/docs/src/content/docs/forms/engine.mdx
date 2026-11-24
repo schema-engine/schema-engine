@@ -136,9 +136,9 @@ Field paths are a render-time scope, not a copy of each child's config. A render
 
 Choose how you author a form based on where the data lives:
 
-| Mode                       | Use when                                          | API                                                                |
-| -------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
-| **TypeScript in your app** | The form is hardcoded next to a known engine      | `engine.defineForm({ ... })`, typed from your registrations        |
+| Mode                       | Use when                                          | API                                                               |
+| -------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
+| **TypeScript in your app** | The form is hardcoded next to a known engine      | `engine.defineForm({ ... })`, typed from your registrations       |
 | **Portable JSON**          | CMS, API, storage, or shared files across systems | Plain `FormConfig` (or raw JSON) + `engine.validateForm(unknown)` |
 
 ```ts

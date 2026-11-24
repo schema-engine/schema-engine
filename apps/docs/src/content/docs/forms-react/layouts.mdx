@@ -91,7 +91,11 @@ values are kept and come back if the step is shown again). The first step cannot
 
 ```typescript
 steps: [
-	{ id: 'contact', title: 'Contact', elements: [{ $type: 'checkbox', name: 'hasCompany', label: 'Buying for a company' }] },
+	{
+		id: 'contact',
+		title: 'Contact',
+		elements: [{ $type: 'checkbox', name: 'hasCompany', label: 'Buying for a company' }],
+	},
 	{
 		id: 'company',
 		title: 'Company',

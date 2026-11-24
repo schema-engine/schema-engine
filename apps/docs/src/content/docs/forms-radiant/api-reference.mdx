@@ -31,30 +31,30 @@ It takes the options of `createFormEngine` and returns the same engine type. It 
 
 A view that renders a form with Radiant elements. It validates the config with the engine, so a plain config object or a normalized one both work.
 
-| Prop               | Meaning                                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `engine`           | The form engine. A form that only renders on the client passes it here. See [Server rendering](/docs/forms-radiant/server-rendering) for the rest |
-| `config`           | A form config, or the result of `engine.defineForm` or `engine.validateForm`                                                                      |
-| `defaultValues`    | Values the form starts from, typed from the config                                                                                                |
-| `onSubmit`         | Called with the values that passed validation, and `{ setServerErrors, fetch }`. Typed from the config                                            |
-| `onChange`         | Called with the form's values when they change, never for a touch or an error                                                                     |
-| `onAction`         | Called with each submit action that succeeded. Typed by the engine's actions                                                                      |
-| `onActionResults`  | Called with the results of every trigger that ran actions, as in React. The same results reach the `se-action-results` event                      |
+| Prop               | Meaning                                                                                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine`           | The form engine. A form that only renders on the client passes it here. See [Server rendering](/docs/forms-radiant/server-rendering) for the rest     |
+| `config`           | A form config, or the result of `engine.defineForm` or `engine.validateForm`                                                                          |
+| `defaultValues`    | Values the form starts from, typed from the config                                                                                                    |
+| `onSubmit`         | Called with the values that passed validation, and `{ setServerErrors, fetch }`. Typed from the config                                                |
+| `onChange`         | Called with the form's values when they change, never for a touch or an error                                                                         |
+| `onAction`         | Called with each submit action that succeeded. Typed by the engine's actions                                                                          |
+| `onActionResults`  | Called with the results of every trigger that ran actions, as in React. The same results reach the `se-action-results` event                          |
 | `navigate`         | Takes the page to the `redirectUrl` a submit action set, once the whole submission succeeded. `location.assign` by default; it replaces a native post |
-| `formatIssue`      | Words an issue for this renderer's forms. It wins over the engine's                                                                               |
-| `action`, `method` | A native post target. A form with them and no `onSubmit` posts natively after validation passes                                                   |
-| `class`, `style`   | Styling for the host element                                                                                                                      |
+| `formatIssue`      | Words an issue for this renderer's forms. It wins over the engine's                                                                                   |
+| `action`, `method` | A native post target. A form with them and no `onSubmit` posts natively after validation passes                                                       |
+| `class`, `style`   | Styling for the host element                                                                                                                          |
 
 ### Events
 
 A form announces what its actions and its submission did as bubbling, composed events on its `rui-form`, so a page with no `FormRenderer` callback, such as a form rendered on the server, can listen to them.
 
-| Event                      | `detail`                                                      |
-| -------------------------- | ------------------------------------------------------------- |
-| `se-action-results`        | `{ trigger, results }` of every trigger that ran actions      |
-| `se-action-submit-start`   | none: validation passed and the submit actions are about to run |
-| `se-action-submit-invalid` | `{ failures }`: empty when the fields have errors             |
-| `se-action-submit-complete`| `{ succeeded, results, failures }` of the submit actions      |
+| Event                       | `detail`                                                        |
+| --------------------------- | --------------------------------------------------------------- |
+| `se-action-results`         | `{ trigger, results }` of every trigger that ran actions        |
+| `se-action-submit-start`    | none: validation passed and the submit actions are about to run |
+| `se-action-submit-invalid`  | `{ failures }`: empty when the fields have errors               |
+| `se-action-submit-complete` | `{ succeeded, results, failures }` of the submit actions        |
 
 `FormRendererElement` is the `se-form-renderer` custom element behind it. Assign `engine` to it, as a property, to bind a server-rendered form. `FormInstance` and `FormElement` are the views for one form and one field.
 

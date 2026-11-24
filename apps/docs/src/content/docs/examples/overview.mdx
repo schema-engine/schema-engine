@@ -26,14 +26,14 @@ Examples by domain, with what each shows and the install line it needs.
 
 ### Registry
 
-| Example                                                                 | Shows                                                                           | Install                                |
+| Example                                                              | Shows                                                                           | Install                                |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- |
 | [A design-system registry](/docs/examples/design-system-registry)    | Components with schemas, a document rendered to HTML, and an override that wins | `pnpm add @schema-engine/registry zod` |
 | [Render a server-sent document](/docs/examples/server-sent-document) | A route handler, a client that renders what it knows and reports what it cannot | `pnpm add @schema-engine/registry zod` |
 
 ### Actions
 
-| Example                                                              | Shows                                                                             | Install                               |
+| Example                                                           | Shows                                                                             | Install                               |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------- |
 | [A checkout workflow](/docs/examples/checkout-workflow)           | A JSON workflow with a parallel group, and a declined card that cancels the group | `pnpm add @schema-engine/actions zod` |
 | [A server-driven workflow](/docs/examples/server-driven-workflow) | A workflow fetched from an endpoint, checked, and run by `submit` and `change`    | `pnpm add @schema-engine/actions zod` |
@@ -45,7 +45,7 @@ Each forms example has React and Radiant tabs and the same two install lines, on
 - React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`
 - Radiant: `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod`
 
-| Example                                                           | Shows                                                                                                           |
+| Example                                                        | Shows                                                                                                           |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | [Contact form](/docs/examples/contact-form)                    | Rules with messages, a field shown only for a support request, a JSON submit and a 422 on its field             |
 | [Registration wizard](/docs/examples/registration-wizard)      | Two steps, Next that validates the step it leaves, and a taken email that sends the visitor back                |
@@ -55,7 +55,7 @@ Each forms example has React and Radiant tabs and the same two install lines, on
 
 ### Layout
 
-| Example                                        | Shows                                                                                          | Install                              |
+| Example                                     | Shows                                                                                          | Install                              |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------ |
 | [A layout page](/docs/examples/layout-page) | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name | `pnpm add @schema-engine/layout zod` |
 
@@ -74,7 +74,7 @@ export function Layouted({ config }: { config: FormConfig }) {
 
 In React, create the engine with the widgets you wrote or, optionally, with the fields you copied from the shadcn registry, as [Forms React](/docs/forms-react/getting-started) shows, and render `FormRenderer` with the same `config`. Every CSS file is scoped by the class its config puts on the form with `className`, so it applies only once pasted with that config. The demos use Radiant-styled widgets, not the shadcn registry components, so fallbacks such as the card's maximum width and shadow differ from a registry install.
 
-| Example                                                  | Shows                                                                                           |
+| Example                                               | Shows                                                                                           |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | [A contact card](/docs/examples/contact-card)         | A single-step card with two half-width fields and the CSS that sets its measure                 |
 | [An address fieldset](/docs/examples/address-form)    | A fieldset that lays its children out on a grid of its own                                      |

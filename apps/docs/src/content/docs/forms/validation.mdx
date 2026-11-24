@@ -59,7 +59,7 @@ The property is `rules`, not `validation`. Every rule accepts three optional key
 
 | Key        | Meaning                                                                                                                        |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `message`  | The text to show when the rule fails. Without one the issue has no text of its own, and the formatter words it (see below)    |
+| `message`  | The text to show when the rule fails. Without one the issue has no text of its own, and the formatter words it (see below)     |
 | `id`       | An identifier for the rule, to tell two rules of one `$type` apart                                                             |
 | `severity` | `'error'` (default) blocks the submission. `'warning'` reports advice that never blocks, with the shape and timing of an error |
 
@@ -188,16 +188,16 @@ const emailRules = [
 const confirmRules = [ValidationPresets.relate.matches('password', 'Passwords must match')];
 ```
 
-| Group     | Presets                                                                                                         |
-| --------- | --------------------------------------------------------------------------------------------------------------- |
+| Group     | Presets                                                                                                           |
+| --------- | ----------------------------------------------------------------------------------------------------------------- |
 | `string`  | `required`, `email`, `url`, `uuid`, `uuidv4`, `cuid`, `cuid2`, `ulid`, `hex`, `minLength`, `maxLength`, `pattern` |
-| `number`  | `required`, `min`, `max`                                                                                        |
-| `boolean` | `required`                                                                                                      |
-| `array`   | `required`, `minItems`, `maxItems`, `nonEmpty` (`minItems(1)`)                                                  |
-| `network` | `ipv4`, `ipv6`                                                                                                  |
-| `date`    | `datetime`, `date`, `time`                                                                                      |
-| `relate`  | `matches` (equal), `after`, `before` (dates), `atLeastOneOf`, `mutuallyExclusive`, `allOrNone`                  |
-| `custom`  | `async(url, options?)`: the [built-in async rule](/docs/forms/validation-custom#the-built-in-async-rule)         |
+| `number`  | `required`, `min`, `max`                                                                                          |
+| `boolean` | `required`                                                                                                        |
+| `array`   | `required`, `minItems`, `maxItems`, `nonEmpty` (`minItems(1)`)                                                    |
+| `network` | `ipv4`, `ipv6`                                                                                                    |
+| `date`    | `datetime`, `date`, `time`                                                                                        |
+| `relate`  | `matches` (equal), `after`, `before` (dates), `atLeastOneOf`, `mutuallyExclusive`, `allOrNone`                    |
+| `custom`  | `async(url, options?)`: the [built-in async rule](/docs/forms/validation-custom#the-built-in-async-rule)          |
 
 A preset takes the rule's value first, then the message: `minLength(8, 'At least 8 characters')`. The `relate` presets take the field to compare with, or a list of fields, resolved as in [Cross-field rules](#cross-field-rules).
 
