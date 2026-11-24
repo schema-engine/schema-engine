@@ -1,9 +1,9 @@
-import type { FormValues } from '@schema-engine/forms';
+import type { FormConfig, FormValues } from '@schema-engine/forms';
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 
 export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
-export const contactForm = engine.defineForm({
+export const contactConfig: FormConfig = {
 	id: 'contact',
 	steps: [
 		{
@@ -32,8 +32,8 @@ export const contactForm = engine.defineForm({
 			],
 		},
 	],
-});
+};
 
 export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => void }) {
-	return <FormRenderer engine={engine} config={contactForm} onSubmit={onSubmit} />;
+	return <FormRenderer engine={engine} config={contactConfig} onSubmit={onSubmit} />;
 }

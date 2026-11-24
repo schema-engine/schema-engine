@@ -1,7 +1,7 @@
 ---
 title: 'Server rendering and engine binding'
-description: 'Render Radiant forms on the server, assign the engine in the browser, and know what each form costs in stylesheet.'
-order: 3
+description: 'Render Radiant forms on the server, assign the engine in the browser, and know that each form carries its layout stylesheet.'
+order: 5
 ---
 
 # Server rendering and engine binding
@@ -52,18 +52,13 @@ document.addEventListener('eco:before-swap', (event) => {
 A form that is only rendered on the client passes `engine` to
 `FormRenderer` and needs none of this.
 
-### Layout stylesheet per form
+## Layout stylesheet per form
 
 Radiant has no head hoisting, so each form carries an identical, self-contained copy of its layout
 theme's stylesheet (`<style data-se-theme-css="<id>">`, about 11 kB raw for the default theme). Every form is
 therefore styled before hydration, whatever the render order, streaming, caching or removal of the other forms, and
 compression makes the repeated copies cheap on the wire. React hoists the equal stylesheets of its forms to one
 element instead; the stylesheet content is the same.
-
-On a page with very many Radiant forms, WebKit spends more time styling, because every form brings its own copy.
-In a one-off headless run with one small form per copy, WebKit needed about 37 ms for 25 forms and 390 ms for
-100, against 3 and 11 ms with one copy, while Chromium and Firefox stayed under 17 ms for 100. For the usual page
-with one form, or a few, the cost is negligible.
 
 A host that also wants the rules in its own head can serve the theme's `css`; the forms keep their copies, which hold
 the same rules:

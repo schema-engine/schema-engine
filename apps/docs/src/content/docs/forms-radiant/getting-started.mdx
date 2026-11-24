@@ -5,13 +5,13 @@ order: 2
 ---
 
 import { FormRendererPreview } from '@/components/form-renderer';
-import { contactFormConfig } from '@/lib/form-configs/homepage-contact';
+import { contactConfig } from '@/lib/guide-sources/radiant-quick-start';
 
 # Installation and quick start
 
 `@schema-engine/forms-radiant` renders a form config with Radiant, the Ecopages custom-element library, and ships its elements in the package: there is no copy step. This page installs it, sets up JSX and the styles, and renders a form that submits.
 
-<FormRendererPreview config={contactFormConfig} />
+<FormRendererPreview config={contactConfig} />
 
 ## 1. Install
 
@@ -53,12 +53,12 @@ Import one theme, never two. Dark mode is a `dark` class on an ancestor, usually
 One file holds the engine, the form config and a component that renders it. `createRadiantFormEngine` registers the elements of the package and binds the canonical view recipes:
 
 ```tsx title="radiant-quick-start.tsx"
-import type { FormValues } from '@schema-engine/forms';
+import type { FormConfig, FormValues } from '@schema-engine/forms';
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 
 export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
-export const contactForm = engine.defineForm({
+export const contactConfig: FormConfig = {
 	id: 'contact',
 	steps: [
 		{
@@ -87,31 +87,41 @@ export const contactForm = engine.defineForm({
 			],
 		},
 	],
-});
+};
 
 export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => void }) {
-	return <FormRenderer engine={engine} config={contactForm} onSubmit={onSubmit} />;
+	return <FormRenderer engine={engine} config={contactConfig} onSubmit={onSubmit} />;
 }
 ```
 
-`FormRenderer` validates the config, renders it and calls `onSubmit` with the values that passed validation. The values are `FormValues` for a config loaded from JSON. With `engine.defineForm()` of a literal config, `onSubmit`, `onAction` and `defaultValues` take their types from the config, and with `engine.validateForm(json, { values })` from the output of your schema. See [Authoring modes](/docs/forms/engine#author-a-form-config) and [Submitted values](/docs/forms/form-state#submitted-values).
+`FormRenderer` validates the config, renders it and calls `onSubmit` with the values that passed validation. The values are `FormValues` for a plain config or one loaded from JSON. With `engine.defineForm()` of a literal config, `onSubmit`, `onAction` and `defaultValues` take their types from the config, and with `engine.validateForm(json, { values })` from the output of your schema. See [Authoring modes](/docs/forms/engine#author-a-form-config) and [Submitted values](/docs/forms/form-state#submitted-values).
 
 ## Override a registration
 
-A later registration with the same `$type` replaces an earlier one, so a replacement goes after the barrel:
+A later registration with the same `$type` replaces an earlier one, so a replacement goes after the barrel. `FormField` is the field host that connects the control to the form's state, so a replacement renders inside one (see [Form controls](/docs/forms-radiant/form-controls)):
 
 ```tsx
 import * as z from 'zod/mini';
+import { RuiFieldError } from '@ecopages/radiant-ui/field';
+import { RuiInput } from '@ecopages/radiant-ui/input';
+import { RuiLabel } from '@ecopages/radiant-ui/label';
 import { defineInput } from '@schema-engine/forms';
 import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { InputElementRegistration } from '@schema-engine/forms-radiant/registrations';
+import { FormField } from '@schema-engine/forms-radiant/primitives';
 
 const myInput = defineInput({
 	$type: 'input',
 	schema: InputElementRegistration.schema,
 	value: () => z.string(),
 	metadata: InputElementRegistration.metadata,
-	render: (config) => <input name={config.name} placeholder={config.placeholder} />,
+	render: (config) => (
+		<FormField name={config.name}>
+			<RuiLabel>{config.label}</RuiLabel>
+			<RuiInput name={config.name} placeholder={config.placeholder} />
+			<RuiFieldError />
+		</FormField>
+	),
 });
 
 export const engine = createRadiantFormEngine({ elements: [...schemaFormRegistrations, myInput] });
@@ -129,4 +139,4 @@ The form's state is the engine's [container](/docs/forms/form-state), which `rui
 - [Form controls](/docs/forms-radiant/form-controls): native events, `rui-form` and custom controls.
 - [Layouts](/docs/forms-radiant/layouts): shells, wizard and appearance.
 - [API reference](/docs/forms-radiant/api-reference): every export.
-- [Styling and layout](/docs/layout/overview): widths, areas, appearance axes, theming and recipes.
+- [Layout](/docs/layout/overview): widths, areas, appearance axes, theming and recipes.
