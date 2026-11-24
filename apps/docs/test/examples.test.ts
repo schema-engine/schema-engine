@@ -82,6 +82,12 @@ describe('the example format checker', () => {
 	const problems = (changed: Partial<Example>, text: string | null = goodPage, list = goodOverview) =>
 		checkExample({ ...example, ...changed }, text ?? undefined, list);
 
+	const importing = (specifier: string) => ({
+		files: [{ name: 'main.ts', source: `import { x } from '${specifier}';\n` }, example.files[2]!],
+	});
+	const importProblems = (specifier: string) =>
+		problems(importing(specifier), goodPage).filter((problem) => problem.includes('imports'));
+
 	test('accepts an example that has a page, a test, an install line and an overview entry', () => {
 		expect(problems({})).toEqual([]);
 	});
@@ -101,11 +107,6 @@ describe('the example format checker', () => {
 	});
 
 	test('resolves a relative import to a file by its exact name, not by the start of it', () => {
-		const importing = (specifier: string) => ({
-			files: [{ name: 'main.ts', source: `import { x } from '${specifier}';\n` }, example.files[2]!],
-		});
-		const importProblems = (specifier: string) =>
-			problems(importing(specifier), goodPage).filter((problem) => problem.includes('imports'));
 		expect(importProblems('./view.react')).toEqual([]);
 		expect(importProblems('./view')).toEqual(['main.ts imports ./view, which is not a file of this example']);
 	});

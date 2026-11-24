@@ -75,10 +75,10 @@ describe('no unused library is named', () => {
 	});
 });
 
-describe('the public folder', () => {
-	/** The tracked files of `src/public` that are not an asset or a favicon, and so may be generated docs text. */
-	const strays = (tracked: string[]) => tracked.filter((file) => !/^(assets|favicon)\//.test(file));
+/** The tracked files of `src/public` that are not an asset or a favicon, and so may be generated docs text. */
+const strays = (tracked: string[]) => tracked.filter((file) => !/^(assets|favicon)\//.test(file));
 
+describe('the public folder', () => {
 	test('holds only assets and favicons in git, so no generated docs text is served stale', () => {
 		const tracked = execFileSync('git', ['ls-files', '-z', '--', '.'], {
 			cwd: join(import.meta.dirname, '../src/public'),
