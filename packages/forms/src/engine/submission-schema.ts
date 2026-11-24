@@ -2,7 +2,7 @@ import type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/sp
 import * as z from 'zod/mini';
 import { frozenCopy } from '@/lib/frozen-copy';
 import { isPlainObject } from '@/lib/is-plain-object';
-import { buildSubmissionShape, type ShapeStep, type SubmissionShape } from '@/lib/submission-shape';
+import { buildSubmissionShape, type ShapeElement, type ShapeStep, type SubmissionShape } from '@/lib/submission-shape';
 import { isZodType } from '@/lib/zod-json-schema';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
@@ -61,9 +61,15 @@ type Node =
 			readonly name: string;
 			readonly schema: StandardSchemaV1;
 			readonly required: boolean;
+			readonly description?: string;
 	  }
-	| { readonly kind: 'object'; readonly fields: ReadonlyArray<readonly [string, Node]>; readonly required: boolean }
-	| { readonly kind: 'array'; readonly row: Node; readonly required: boolean }
+	| {
+			readonly kind: 'object';
+			readonly fields: ReadonlyArray<readonly [string, Node]>;
+			readonly required: boolean;
+			readonly description?: string;
+	  }
+	| { readonly kind: 'array'; readonly row: Node; readonly required: boolean; readonly description?: string }
 	| { readonly kind: 'any' };
 
 const isEmpty = (value: unknown): boolean => value === undefined || value === '' || value === null;
@@ -87,22 +93,40 @@ function requiredOf(shape: SubmissionShape, source: SubmissionSchemaSource, insi
 	return ruled || inside;
 }
 
+/** What the JSON Schema says about a field: its label, then its help text. */
+function describeElement(element: ShapeElement | undefined): { description?: string } {
+	const { label, description } = (element ?? {}) as { label?: unknown; description?: unknown };
+	const parts = [label, description].filter((part): part is string => typeof part === 'string' && part !== '');
+	return parts.length > 0 ? { description: parts.join(': ') } : {};
+}
+
 function leafOf(shape: Extract<SubmissionShape, { kind: 'field' }>, source: SubmissionSchemaSource): Node {
 	const { element } = shape;
 	const registration = element.$type ? source.getElement(element.$type) : undefined;
 	const schema = registration && 'value' in registration ? registration.value?.(element as never) : undefined;
 	if (schema === undefined) return { kind: 'any' };
-	return { kind: 'leaf', name: element.name ?? '', schema, required: requiredOf(shape, source) };
+	return {
+		kind: 'leaf',
+		name: element.name ?? '',
+		schema,
+		required: requiredOf(shape, source),
+		...describeElement(element),
+	};
 }
 
 function nodeOf(shape: SubmissionShape, source: SubmissionSchemaSource): Node {
 	if (shape.kind === 'field') return leafOf(shape, source);
 	if (shape.kind === 'array') {
-		return { kind: 'array', row: nodeOf(shape.row, source), required: requiredOf(shape, source) };
+		return {
+			kind: 'array',
+			row: nodeOf(shape.row, source),
+			required: requiredOf(shape, source),
+			...describeElement(shape.element),
+		};
 	}
 	const fields = Object.entries(shape.fields).map(([key, child]) => [key, nodeOf(child, source)] as const);
 	const inside = fields.some(([, child]) => isRequired(child));
-	return { kind: 'object', fields, required: requiredOf(shape, source, inside) };
+	return { kind: 'object', fields, required: requiredOf(shape, source, inside), ...describeElement(shape.element) };
 }
 
 function validateLeaf(schema: StandardSchemaV1, value: unknown): StandardSchemaV1.Result<unknown> {
@@ -220,6 +244,11 @@ function leafJsonSchema(
 }
 
 function toJsonSchema(node: Node, io: 'input' | 'output', options: StandardJSONSchemaV1.Options): JSONSchemaObject {
+	const schema = nodeJsonSchema(node, io, options);
+	return node.kind !== 'any' && node.description ? { ...schema, description: node.description } : schema;
+}
+
+function nodeJsonSchema(node: Node, io: 'input' | 'output', options: StandardJSONSchemaV1.Options): JSONSchemaObject {
 	switch (node.kind) {
 		case 'any':
 			return {};
@@ -251,7 +280,7 @@ function toJsonSchema(node: Node, io: 'input' | 'output', options: StandardJSONS
  * become objects, `containerKind: 'array'` becomes an array, a one-child row is a list of values (unless its child is a container of its own, which makes the rows objects) and the `payload`
  * keys are added as they are. A named element that declares no value (a static one) is carried as it is, so the keys of the schema are exactly the shape's. An optional
  * leaf field accepts its empty value (`''` or `null`) as well as its declared one, because a submission keeps what the
- * user cleared; a required field is held to its declaration. A value schema is read once, when this is called.
+ * user cleared; a required field is held to its declaration. Its JSON Schema describes each field by its label, then its help text. A value schema is read once, when this is called.
  */
 export function createSubmissionSchema(
 	config: SubmissionSchemaConfig,

@@ -31,9 +31,7 @@ It uses WebMCP's imperative API (`document.modelContext.registerTool(tool, { sig
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`        | The tool's name. Unique on the page: the browser rejects a duplicate.                                                                       |
 | `description` | What the tool does, for the agent.                                                                                                          |
-| `engine`      | The engine the form was built with. Its `submissionSchema(config)` is the tool's input schema.                                              |
-| `config`      | The normalized config the runtime was created from.                                                                                         |
-| `formatIssue` | Optional. The form's own issue formatter, which the bindings give you. Without it the engine's, then an issue's `message`, then its `type`. |
+| `formatIssue` | Optional. The form's own issue formatter, which the bindings give you. Without it the engine's, then an issue's `message`, then its `type` and `params`. |
 | `autoSubmit`  | Optional, `false` by default. See [When to submit](#when-to-submit).                                                                        |
 
 ### React
@@ -72,8 +70,6 @@ function FeedbackAgentTool() {
 			registerFormAgentTool(runtime, {
 				name: 'send_feedback',
 				description: 'Fill in the feedback form: the name of the sender and a rating from 1 to 5.',
-				engine,
-				config: feedback,
 				formatIssue,
 			}),
 		[runtime, formatIssue],
@@ -126,8 +122,6 @@ class FeedbackAgentTool extends HTMLElement {
 				? registerFormAgentTool(runtime, {
 						name: 'send_feedback',
 						description: 'Fill in the feedback form: the name of the sender and a comment.',
-						engine,
-						config: feedback,
 						formatIssue: (issue, field) => this.form.formatIssue(issue, field),
 					})
 				: undefined;

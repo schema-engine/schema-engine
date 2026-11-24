@@ -24,8 +24,6 @@ class FeedbackAgentTool extends HTMLElement {
 				? registerFormAgentTool(runtime, {
 						name: 'send_feedback',
 						description: 'Fill in the feedback form: the name of the sender and a comment.',
-						engine,
-						config: feedback,
 						formatIssue: (issue, field) => this.form.formatIssue(issue, field),
 					})
 				: undefined;

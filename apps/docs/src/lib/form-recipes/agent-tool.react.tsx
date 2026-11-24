@@ -30,8 +30,6 @@ function FeedbackAgentTool() {
 			registerFormAgentTool(runtime, {
 				name: 'send_feedback',
 				description: 'Fill in the feedback form: the name of the sender and a rating from 1 to 5.',
-				engine,
-				config: feedback,
 				formatIssue,
 			}),
 		[runtime, formatIssue],

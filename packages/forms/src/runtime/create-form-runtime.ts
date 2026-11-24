@@ -700,6 +700,9 @@ export function createFormRuntime<TAction extends FormActionConfig, TValues exte
 
 	return {
 		container,
+		config,
+		submissionSchema: derivedSchema,
+		formatIssue: engine.getIssueFormatter(),
 		mount() {
 			mounted = true;
 			if (lifecycleAbort.signal.aborted) lifecycleAbort = new AbortController();

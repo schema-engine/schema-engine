@@ -176,4 +176,4 @@ Save your copy as `container-conformance.test.ts`; the `.suite` name only keeps 
 
 ## Agent tool (experimental)
 
-`registerFormAgentTool(runtime, { name, description, engine, config })` from `@schema-engine/forms/agent-tool` offers a rendered form to a browser agent as a WebMCP tool: the tool's input is the engine's `submissionSchema(config)`, and calling it fills the form and, with `autoSubmit: true`, submits it. It returns the function that unregisters the tool. WebMCP is an origin trial and the API may change, so nothing else in the package imports it.
+`registerFormAgentTool(runtime, { name, description })` from `@schema-engine/forms/agent-tool` offers a rendered form to a browser agent as a WebMCP tool: the tool's input is the runtime's `submissionSchema`, and calling it fills the form and, with `autoSubmit: true`, submits it. It returns the function that unregisters the tool. WebMCP is an origin trial and the API may change, so nothing else in the package imports it.
