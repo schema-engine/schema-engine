@@ -55,7 +55,33 @@ Each forms recipe has React and Radiant tabs and the same two install lines, one
 
 ### Layout
 
-| Recipe                                          | Shows                                                                                             | Install                                   |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| [Layout recipes](/docs/examples/layout-recipes) | Form configs with the CSS they need, rendered live in React and Radiant (the `RecipeDemo` format) | Set up a renderer first, as the page says |
-| [A layout page](/docs/examples/layout-page)     | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name    | `pnpm add @schema-engine/layout zod`      |
+| Recipe                                      | Shows                                                                                          | Install                              |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------ |
+| [A layout page](/docs/examples/layout-page) | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name | `pnpm add @schema-engine/layout zod` |
+
+The layout examples below style a form. Each is a form config with the CSS or the theme it needs, rendered live, and they share the two install lines of the forms examples. Set your app up as the getting-started page of your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), copy the files into one folder, and render the config:
+
+```tsx
+import { FormRenderer, createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import type { FormConfig } from '@schema-engine/forms';
+
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+export function Layouted({ config }: { config: FormConfig }) {
+	return <FormRenderer engine={engine} config={config} onSubmit={(data) => console.log(data)} />;
+}
+```
+
+In React, create the engine with the widgets you wrote or, optionally, with the fields you copied from the shadcn registry, as [Forms React](/docs/forms-react/getting-started) shows, and render `FormRenderer` with the same `config`. Every CSS file is scoped by the class its config puts on the form with `className`, so it applies only once pasted with that config. The demos use Radiant-styled widgets, not the shadcn registry components, so fallbacks such as the card's maximum width and shadow differ from a registry install.
+
+| Recipe                                                | Shows                                                                                           |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [A contact card](/docs/examples/contact-card)         | A single-step card with two half-width fields and the CSS that sets its measure                 |
+| [An address fieldset](/docs/examples/address-form)    | A fieldset that lays its children out on a grid of its own                                      |
+| [A card wizard](/docs/examples/checkout-wizard)       | A wizard whose steps each draw their own areas                                                  |
+| [A drawn layout](/docs/examples/drawn-layout)         | Five fields drawn as areas that change at a breakpoint                                          |
+| [A brand theme](/docs/examples/brand-theme)           | A host `tone` axis added with `defineAxis`, compiled into a theme and picked on a form          |
+| [Two engines, one theme](/docs/examples/shared-theme) | One compiled theme passed to two engines, each form picking its own tone                        |
+| [Overriding size tokens](/docs/examples/tight-size)   | The two hooks the compact size reads and the measure it sets                                    |
+| [A custom recipe shell](/docs/examples/brand-frame)   | A single-step recipe shell bound to React and to Radiant, with one shared stylesheet            |
+| [A complete theme file](/docs/examples/acme-theme)    | One stylesheet for every form that carries a class: rhythm, size hooks, colour roles and tokens |

@@ -3,14 +3,8 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { checkExample, examplePagesRoot, importsOf, packageOf, readExamples, type Example } from './example-format';
 
-/**
- * Pages of Examples that are not a folder of `src/lib/examples`.
- *
- * @remarks
- * `overview` explains the format. A page that shows `RecipeDemo` tabs keeps its files in `src/lib/recipes`, and
- * `test/styling-docs.test.ts` holds it to the same rules.
- */
-const OTHER_PAGES = ['overview', 'layout-recipes'];
+/** Pages of Examples that are not a folder of `src/lib/examples`: `overview` explains the format. */
+const OTHER_PAGES = ['overview'];
 
 const page = (id: string): string | undefined => {
 	try {

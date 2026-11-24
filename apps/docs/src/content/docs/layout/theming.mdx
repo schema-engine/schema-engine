@@ -4,9 +4,6 @@ description: 'The CSS custom properties and gap tokens a host overrides, where t
 order: 5
 ---
 
-import { RecipeDemo } from '@/components/recipe-demo';
-import { acmeThemeRecipe } from '@/lib/recipes/catalog';
-
 # Theming
 
 Theming is CSS: you set custom properties, and the grid, the appearance axes and the recipes read them. The vocabulary (which names exist) belongs to the [layout theme](/docs/layout/layout-themes); the values belong to your stylesheet.
@@ -66,6 +63,4 @@ See [Forms React getting started](/docs/forms-react/getting-started) for the two
 
 ## A complete theme file
 
-This file themes every form that carries `className: 'acme'`: rhythm, the size hooks, the colour roles and the literal tokens of two axis values. The form below picks `size: comfortable` and `surface: outlined`, so it exercises all four groups. Give each form that should use it `className: 'acme'`. The gap tokens, colour roles and size hooks also work from `:root`. The rules in the last two blocks target the elements that carry the picks.
-
-<RecipeDemo recipe={acmeThemeRecipe} />
+The [Acme theme example](/docs/examples/acme-theme) is a complete theme file with a live demo. It themes every form that carries `className: 'acme'`: rhythm, the size hooks, the colour roles and the literal tokens of two axis values. Its form picks `size: comfortable` and `surface: outlined`, so it exercises all four groups. Give each form that should use it `className: 'acme'`. The gap tokens, colour roles and size hooks also work from `:root`. The rules in the last two blocks target the elements that carry the picks.

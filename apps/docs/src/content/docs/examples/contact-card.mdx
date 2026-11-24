@@ -1,0 +1,99 @@
+---
+title: 'A contact card'
+description: 'A single-step card form with two half-width fields and the CSS that sets its readable measure.'
+order: 12
+---
+
+import { FormExampleDemo } from '@/components/form-example-demo';
+import { contactCard } from '@/lib/examples/contact-card/config';
+import '@/lib/examples/contact-card/contact-card.css';
+
+# A contact card
+
+A single-step form on the `card` recipe. `grid.width: half` puts the two names on one row; the email and message fill the row because they set no width. The CSS sets the card's width, the readable measure `--se-measure`, on the form's own class.
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Set your app up as the getting-started page of your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), then copy the files below into one folder.
+
+## See it
+
+<FormExampleDemo config={contactCard} />
+
+## The config
+
+The config is data: it names the layout it wants, and the CSS and the theme below decide how it looks.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/** Single-step contact card with two half-width fields. */
+export const contactCard: FormConfig = {
+	id: 'contact-card',
+	title: 'Contact us',
+	description: 'We reply within one working day.',
+	className: 'contact-card',
+	view: { $type: 'card' },
+	steps: [
+		{
+			id: 'details',
+			title: 'Your details',
+			elements: [
+				{
+					$type: 'input',
+					id: 'first',
+					name: 'first',
+					label: 'First name',
+					grid: { width: 'half' },
+					rules: [{ $type: 'required', message: 'First name is required' }],
+				},
+				{
+					$type: 'input',
+					id: 'last',
+					name: 'last',
+					label: 'Last name',
+					grid: { width: 'half' },
+					rules: [{ $type: 'required', message: 'Last name is required' }],
+				},
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [
+						{ $type: 'required', message: 'Email is required' },
+						{ $type: 'email', message: 'Enter a valid email' },
+					],
+				},
+				{ $type: 'textarea', id: 'message', name: 'message', label: 'Message', rows: 4 },
+			],
+		},
+	],
+};
+```
+
+## The CSS
+
+```css title="contact-card.css"
+/* The card's width is the readable measure, --se-measure. Set it on the form's own class. */
+.contact-card {
+	--se-measure: 36rem;
+}
+```
+
+## What the tests check
+
+The test checks that the config is valid in a Radiant engine, that the two names are the half-width pair and the other fields set no width, and that the CSS styles the class the config puts on the form and no other.

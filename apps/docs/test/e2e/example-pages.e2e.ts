@@ -265,7 +265,7 @@ describe('the forms example pages', () => {
 		};
 		expect(await sheets(contactPath)).toEqual([]);
 		expect(await sheets('/docs/forms-react/getting-started')).toEqual([]);
-		expect(await sheets('/docs/examples/layout-recipes')).toEqual([]);
+		expect(await sheets('/docs/examples/contact-card')).toEqual([]);
 		expect((await sheets(shadcnPath)).length).toBe(2);
 
 		const requested: string[] = [];

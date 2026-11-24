@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
-import { allRecipes, recipeConfigSource } from '../src/lib/recipes/catalog';
 import {
 	checkPageSnippets,
 	docsPageIds,
@@ -76,18 +75,12 @@ const ALLOWED_FENCES: AllowedFence[] = [
 	},
 ];
 
-const recipeFiles = Object.fromEntries(
-	allRecipes.flatMap((recipe) =>
-		recipe.files.filter((file) => file.lang !== 'css').map((file) => [file.label, file.source] as const),
-	),
-);
-
 /**
  * The files a page tells the reader to have, as `./<name>` modules.
  *
  * @remarks
- * `registrations` and `engine` are the Radiant setup of the Forms Radiant getting started page; the rest are the
- * recipe tabs the layout recipes page asks the reader to copy.
+ * `registrations` and `engine` are the Radiant setup of the Forms Radiant getting started page; the others are files
+ * of a layout example that a guide page imports.
  */
 const APP: Record<string, string> = {
 	'registrations.ts': "export { schemaFormRegistrations as elements } from '@schema-engine/forms-radiant';",
@@ -101,8 +94,11 @@ export const postalCode = {
 	category: 'string',
 	handler: () => z.string(),
 } as const;`,
-	'contact-card.ts': recipeConfigSource(allRecipes.find((recipe) => recipe.id === 'contact-card')!.demos),
 	'brand-frame.ts': "export { BrandFrameRecipe } from './brand-frame.radiant';",
+	'brand-frame.radiant.tsx': readFileSync(
+		join(import.meta.dirname, '../src/lib/examples/brand-frame/brand-frame.radiant.tsx'),
+		'utf8',
+	),
 	'react-quick-start.react.tsx': readFileSync(
 		join(import.meta.dirname, '../src/lib/guide-sources/react-quick-start.react.tsx'),
 		'utf8',
@@ -111,7 +107,6 @@ export const postalCode = {
 		join(import.meta.dirname, '../src/lib/guide-sources/react-widgets.react.tsx'),
 		'utf8',
 	),
-	...recipeFiles,
 };
 
 /** The pages whose titled files a page imports without defining them: it continues from them. */

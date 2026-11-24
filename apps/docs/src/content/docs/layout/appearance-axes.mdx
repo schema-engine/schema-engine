@@ -205,7 +205,7 @@ export const config = engine.defineForm({
 });
 ```
 
-The renderer writes `data-se-tone="brand"` on the form, and the theme's stylesheet sets the colour roles below it (`--primary`, `--on-primary`, and the container roles). Radiant UI components read those roles, and shadcn components read `--primary` and `--primary-foreground`, so a button inside recolors with no further CSS. The [brand theme recipe](/docs/examples/layout-recipes#a-brand-theme-with-a-host-tone-axis) is this axis, live.
+The renderer writes `data-se-tone="brand"` on the form, and the theme's stylesheet sets the colour roles below it (`--primary`, `--on-primary`, and the container roles). Radiant UI components read those roles, and shadcn components read `--primary` and `--primary-foreground`, so a button inside recolors with no further CSS. The [brand theme example](/docs/examples/brand-theme) is this axis, live.
 
 Tokens are custom properties and inherit. Pick tone on the form and it reaches every field, until a nested form picks a value that declares the same tokens. Keep the axis list inline in `createLayoutTheme` or `as const`, so typed `defineForm` narrows the picks.
 
@@ -230,7 +230,7 @@ const size = defineAxis({
 export const theme = createLayoutTheme({ appearance: [...builtInAxes, size] });
 ```
 
-This replaces every token of `size`, so the card width (`--se-measure`) and control height (`--se-control-height`) of the built-in axis are gone. To retune only the numbers, set the hooks and token overrides in CSS instead; see [Overriding size tokens](/docs/examples/layout-recipes#overriding-size-tokens) and [Theming](/docs/layout/theming).
+This replaces every token of `size`, so the card width (`--se-measure`) and control height (`--se-control-height`) of the built-in axis are gone. To retune only the numbers, set the hooks and token overrides in CSS instead; see [Overriding size tokens](/docs/examples/tight-size) and [Theming](/docs/layout/theming).
 
 ## Style the attributes in CSS
 

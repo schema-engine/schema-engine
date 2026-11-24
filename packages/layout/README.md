@@ -213,7 +213,7 @@ Left internal on purpose: `compileAppearance`, `getAppearanceCss`, `resolveGridT
 
 ## Documentation
 
-Guides with copy-paste recipes: [Overview and quick start](../../apps/docs/src/content/docs/layout/overview.mdx), [Grid and placement](../../apps/docs/src/content/docs/layout/grid-and-placement.mdx), [Layout themes](../../apps/docs/src/content/docs/layout/layout-themes.mdx), [Appearance axes](../../apps/docs/src/content/docs/layout/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/layout/theming.mdx) and [Recipes](../../apps/docs/src/content/docs/examples/layout-recipes.mdx).
+Guides with copy-paste recipes: [Overview and quick start](../../apps/docs/src/content/docs/layout/overview.mdx), [Grid and placement](../../apps/docs/src/content/docs/layout/grid-and-placement.mdx), [Layout themes](../../apps/docs/src/content/docs/layout/layout-themes.mdx), [Appearance axes](../../apps/docs/src/content/docs/layout/appearance-axes.mdx), [Theming](../../apps/docs/src/content/docs/layout/theming.mdx) and [Layout examples](../../apps/docs/src/content/docs/examples/overview.mdx).
 
 ## Agent skill
 

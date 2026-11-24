@@ -12,10 +12,6 @@ import * as z from 'zod/mini';
 import * as reactJsxRuntime from 'react/jsx-runtime';
 import * as reactPrimitives from '@schema-engine/forms-react/primitives';
 import { BaseFieldSchema } from '@schema-engine/forms';
-import { docsReactFormEngine } from '../src/components/react-form-demo/demo-engine';
-import { demoFormRegistrations } from '../src/components/react-form-demo/demo-registrations.react';
-import { docsEngines } from '../src/lib/form-engine-setup';
-import { allRecipes, recipeConfigSource, recipeYamlSources, type Recipe } from '../src/lib/recipes/catalog';
 import { slugifyHeadingText } from '../src/mdx/rehype-heading-ids';
 import { anyValue } from './any-value';
 import { docsRoot, readPage, run, tsBlock, typecheck } from './snippet-harness';
@@ -35,8 +31,6 @@ const packages = {
 	'react/jsx-runtime': reactJsxRuntime,
 };
 
-const files = (recipe: Recipe) => Object.fromEntries(recipe.files.map((file) => [file.label, file.source]));
-const byId = (id: string): Recipe => allRecipes.find((recipe) => recipe.id === id)!;
 const mood = (values: Record<string, Record<string, string>>, fallback = 'a') =>
 	layout.defineAxis({ $type: 'mood', metadata: { name: 'Mood' }, default: fallback, values });
 const stepsForm = (stepGrid?: Record<string, unknown>) => ({
@@ -91,108 +85,6 @@ describe('snippet harness', () => {
 		});
 		expect(result['bad.ts']).toEqual(["Type 'string' is not assignable to type 'number'."]);
 		expect(result['other.ts']).toEqual([]);
-	});
-});
-
-describe('styling recipes', () => {
-	test('every recipe is shown on a page', () => {
-		const shown = ['examples/layout-recipes', 'layout/theming'].map(readPage).join('\n');
-		for (const recipe of allRecipes) {
-			const name = `${recipe.id.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase())}Recipe`;
-			expect(shown, recipe.id).toContain(`recipe={${name}}`);
-		}
-	});
-
-	test.each(allRecipes.flatMap((recipe) => recipe.demos.map((demo) => [recipe.id, demo] as const)))(
-		'the %s demo config validates in the engine its demo renders with',
-		(_id, demo) => {
-			const engine = demo.renderer === 'react' ? docsReactFormEngine : docsEngines[demo.engine ?? 'default'];
-			expect(() => engine.validateForm(demo.config)).not.toThrow();
-		},
-	);
-
-	test('the config tab of every recipe type-checks on its own', () => {
-		const sources = Object.fromEntries(
-			allRecipes.map((recipe) => [`${recipe.id}.config.ts`, recipeConfigSource(recipe.demos)]),
-		);
-		expect(typecheck(sources)).toEqual(Object.fromEntries(Object.keys(sources).map((name) => [name, []])));
-	});
-
-	test('every recipe file imports only packages and the files of its own recipe', () => {
-		for (const recipe of allRecipes) {
-			for (const file of recipe.files) {
-				const imports = [...file.source.matchAll(/from '([^']+)'/g)].map((match) => match[1]!);
-				for (const specifier of imports) {
-					const known =
-						/^(@schema-engine\/|@ecopages\/|zod\/mini$)/.test(specifier) || specifier.startsWith('./');
-					expect(known, `${file.label} imports ${specifier}`).toBe(true);
-					if (specifier.startsWith('./')) {
-						expect(
-							recipe.files.map((other) => other.label),
-							`${file.label} imports ${specifier}`,
-						).toContain(`${specifier.slice(2)}.ts`);
-					}
-				}
-			}
-		}
-	});
-
-	test('the YAML tab of every recipe reads back as the config', () => {
-		for (const recipe of allRecipes) {
-			for (const demo of recipe.demos) {
-				const engine = demo.renderer === 'react' ? docsReactFormEngine : docsEngines[demo.engine ?? 'default'];
-				const yaml = recipeYamlSources([demo])[0]!;
-				const parsed = registryYaml.parseYaml(yaml.source, (value) => engine.safeValidateForm(value), {
-					filename: yaml.label,
-				});
-				expect(parsed, recipe.id).toEqual(engine.validateForm(demo.config));
-			}
-		}
-	});
-
-	test('recipes run in an app built as the getting-started page says', () => {
-		const theme = run(files(byId('brand-theme'))['brand-theme.ts']!, packages) as {
-			brandTheme: layout.LayoutTheme;
-		};
-		const engines = run(files(byId('shared-theme'))['engines.ts']!, { ...packages, './brand-theme': theme }) as {
-			checkoutEngine: forms.FormEngine;
-			profileEngine: forms.FormEngine;
-		};
-		expect(engines.checkoutEngine.getLayout()).toBe(engines.profileEngine.getLayout());
-		expect(engines.checkoutEngine.getLayout().id).toBe(docsEngines.default.getLayout().id);
-
-		const plain = radiant.createRadiantFormEngine({ elements: radiant.schemaFormRegistrations });
-		const themed = radiant.createRadiantFormEngine({
-			elements: radiant.schemaFormRegistrations,
-			layout: theme.brandTheme,
-		});
-		const radiantFrame = run(files(byId('brand-frame'))['brand-frame.radiant.tsx']!, packages) as {
-			BrandFrameRecipe: forms.RecipeRegistrationConstraint;
-		};
-		const framed = radiant.createRadiantFormEngine({
-			elements: radiant.schemaFormRegistrations,
-			recipes: [radiantFrame.BrandFrameRecipe],
-		});
-		const reactFrame = run(files(byId('brand-frame'))['brand-frame.react.tsx']!, packages) as {
-			BrandFrameRecipe: forms.RecipeRegistrationConstraint;
-		};
-		const reactFramed = forms.createFormEngine({
-			elements: demoFormRegistrations,
-			recipes: [reactFrame.BrandFrameRecipe],
-		});
-
-		for (const recipe of allRecipes) {
-			const engine = ['brand-theme', 'shared-theme'].includes(recipe.id)
-				? themed
-				: recipe.id === 'brand-frame'
-					? framed
-					: plain;
-			for (const demo of recipe.demos) {
-				expect(() => engine.validateForm(demo.config), recipe.id).not.toThrow();
-			}
-		}
-		expect(() => reactFramed.validateForm(byId('brand-frame').demos[0]!.config)).not.toThrow();
-		expect(() => plain.validateForm(byId('brand-theme').demos[0]!.config)).toThrow(/Unknown axis 'tone'/);
 	});
 });
 

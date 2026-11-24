@@ -65,7 +65,7 @@ test('the built docs shell defines the Radiant UI and docs custom elements it re
 	const browser = await chromium.launch();
 	try {
 		const page = await browser.newPage();
-		await page.goto(`${baseUrl}/docs/examples/layout-recipes`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}/docs/forms-react/layouts`, { waitUntil: 'networkidle' });
 
 		const undefinedTags = await page.evaluate(() =>
 			[
