@@ -7,7 +7,7 @@ import { FormRenderer } from '@/components/internals/form-renderer';
 import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 
-const redirectSchema = z.looseObject({});
+const redirectSchema = z.object({});
 
 const redirectAction: BuilderActionRegistration<'redirect', typeof redirectSchema> = {
 	$type: 'redirect',

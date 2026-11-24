@@ -12,7 +12,7 @@ import { SubmitButtonElementRegistration } from '@/components/schema-engine/form
 import { WizardRecipe } from '@/components/schema-engine/forms/recipes/registrations/wizard';
 import { FormRenderer } from '@/components/internals/form-renderer';
 
-const actionSchema = z.looseObject({});
+const actionSchema = z.object({});
 
 function createEngine(onAction?: () => void) {
 	const recordChange: BuilderActionRegistration<'record-change', typeof actionSchema> = {

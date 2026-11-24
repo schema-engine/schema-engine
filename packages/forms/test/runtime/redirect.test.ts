@@ -23,7 +23,7 @@ function setup(answers: Answer[], options: { onSubmit?: () => void; navigate?: (
 		actions: [
 			{
 				$type: 'go',
-				schema: z.looseObject({}),
+				schema: z.object({}),
 				metadata: { name: 'Go', defaultTriggers: ['form_submit'] },
 				execute: async () => queue.shift() ?? { success: true },
 			},

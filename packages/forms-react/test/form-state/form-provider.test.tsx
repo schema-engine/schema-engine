@@ -31,7 +31,7 @@ const testEngine = createFormEngine({
 	actions: [
 		{
 			$type: 'submit',
-			schema: z.looseObject({}),
+			schema: z.object({}),
 			metadata: { name: 'Submit' },
 			execute: async (context: BuilderActionBaseContext & { trigger: string }) => {
 				const run = { trigger: context.trigger, context };
