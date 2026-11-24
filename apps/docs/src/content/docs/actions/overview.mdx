@@ -30,7 +30,7 @@ pnpm add @schema-engine/actions zod
 
 ### 1. Define a context and two actions
 
-The context is what the caller hands to every dispatch: here an API for support tickets, so no action reaches for a global. The first action is async. Each schema declares `id`, `enabled` and `triggers`, because `parseActions` returns what the schema returns and the dispatcher reads `enabled` and `triggers` from it.
+The context is what the caller hands to every dispatch: here an API for support tickets, so no action reaches for a global. The first action is async. Each schema lists the action's own arguments only: `parseActions` checks `id`, `$type`, `enabled` and `triggers` itself.
 
 ```ts title="actions.ts"
 import * as z from 'zod/mini';
