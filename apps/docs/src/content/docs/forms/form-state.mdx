@@ -8,11 +8,9 @@ order: 7
 
 Every rendered form has one **form state container**. It holds the nested values, the errors and warnings of each field, the touched, dirty and pending marks, the row ids of field arrays and what the browser reports about each control. React and Radiant both read it, so a form validates, resets and submits the same way in either. Nothing else keeps form state: there is no form library underneath.
 
-The engine owns the form state because forms are configured, not coded: no form library API reaches the user, so there is nothing for an adapter to expose. An adapter would also give the same config a different meaning in each library, while one engine-owned container gives it a single meaning in every renderer.
-
 The container is not tied to a renderer. A rendered form creates it through its [runtime](/docs/forms/wizard); build one yourself to test a form without a DOM, to render on a server or to write a binding.
 
-It is called a container, not a store, because `FormStore` is a class of Radiant UI. The interface is `FormStateContainer`, the factory `createFormStateContainer` and the snapshot `FormStateSnapshot`, all from `@schema-engine/forms/state-container`.
+The interface is `FormStateContainer`, the factory `createFormStateContainer` and the snapshot `FormStateSnapshot`, all from `@schema-engine/forms/state-container`.
 
 ## An engine to run it
 
@@ -26,8 +24,7 @@ import { createFormEngine, defineInput } from '@schema-engine/forms';
  * A field with no rendering, so the examples run without a renderer.
  *
  * @remarks
- * An app registers its renderer's elements and recipes instead: the Radiant ones from `@schema-engine/forms-radiant`,
- * or the React ones copied from the registry.
+ * An app registers its renderer's elements and recipes instead.
  */
 export const textInput = defineInput({
 	$type: 'input',
@@ -165,7 +162,7 @@ Three reads answer "is the form valid", and they differ on purpose.
 | Read                               | Answers                                                                                                                                                                                                                                                                                                           |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `snapshot.isValid`                 | Whether no error is recorded right now for a path that takes part. It validates nothing, so a pristine form with an empty required field is `true`.                                                                                                                                                               |
-| `await container.validate(paths?)` | Validates the paths (the whole form when omitted), records and shows the errors, and resolves `{ outcome }`: `'passed'` only when no error remains and the check was still current when it finished, otherwise `'invalid'` or `'overtaken'`. It rejects with a `FormValidationFailure` when a rule could not run. |
+| `await container.validate(paths?)` | Validates the paths (the whole form when omitted), records and shows the errors, and resolves `{ outcome }`: `'passed'` only when no error remains and the check was still current when it finished, otherwise `'invalid'` or `'overtaken'`. It rejects with a `FormValidationFailure` (from `@schema-engine/forms`) when a rule could not run. |
 | `await container.checkValidity()`  | Validates the values current at the call and resolves whether the form passes. It records and shows nothing, and its answer may be out of date when it resolves.                                                                                                                                                  |
 
 The example above shows all three: after `setValue('password', 'short')` the recorded state is still valid, `checkValidity()` is `false` and leaves it so, and `validate()` resolves `{ outcome: 'invalid' }` and records the `minLength` error.
@@ -203,7 +200,7 @@ Send the values with the `fetch` of `onSubmit`'s second argument, which applies 
 
 ## Submitted values
 
-The type of the values a form submits comes from the form config, and the runtime checks that it is true. The example uses the engine of [Writing a widget](/docs/forms-react/widgets).
+The type of the values a form submits comes from the form config, and the runtime checks that it is true. The example below is a React renderer's: it uses the engine of [Writing a widget](/docs/forms-react/widgets), and a Radiant form gets the same types.
 
 **Each input declares the value its control writes.** `defineInput({ $type, schema, metadata, render, value })` takes `value`, a function of the configured element that returns any Standard Schema: a select's `options` become an enum (a list of it with `multiple`), a rating's `max` a bound. A container (a schema that declares `elements`, with an optional `containerKind`) declares none, since its value is its children's; a static element has none. Every input of the Radiant and registry packages declares its own.
 
@@ -264,7 +261,7 @@ export function LoadedProfile({
 
 `onChange`, `useWatch` and live reads stay `FormValues`: live values hold excluded and unfinished data. `defaultValues` take `DefaultValuesOf` (exported by `@schema-engine/forms`): the values type with every key optional at every depth and an empty value allowed in place of any leaf field. The rows of a list are as the values type has them: an optional scalar row may be empty, and the rows of a field whose declared value is a list (a checkbox group) may not.
 
-The type of a choice field (select, combobox, radio, checkbox group) is the union its declaration returns, such as `string | number | Array<string | number>` for a select, not the literal values of its `options`: a registration declares one value type for every configuration, and a function of the config cannot be read back at the type level. The runtime check is exact; narrow it in the application, as the recipe above does for `stars`.
+The type of a choice field (select, combobox, radio, checkbox group) is the union its declaration returns, such as `string | number | Array<string | number>` for a select, not the literal values of its `options`: a registration declares one value type for every configuration, and a function of the config cannot be read back at the type level. The runtime check is exact; narrow it in the application, as the example above does for `stars`.
 
 ## Reset
 

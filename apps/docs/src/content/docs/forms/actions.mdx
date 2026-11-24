@@ -110,24 +110,24 @@ export const contact = engine.defineForm({
 | `$type`             | Options                                                                                                     | Default triggers (when `triggers` is omitted) |
 | ------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `submit`            | `endpoint` (required), `method` (`POST`, `PUT`, `PATCH`), `successMessage`, `errorMessage`, `redirectUrl`   | `form_submit`                                 |
-| `show_notification` | `message` (required), `variant` (`success`, `error`, `warning`, `info`), `duration` in ms (0 keeps it open) | the registration's `defaultTriggers`          |
-| `auto_save`         | `storageKey`, `includeSensitive`                                                                            | the registration's `defaultTriggers`          |
-| `gtm_event`         | `eventName` (required), `eventData`, `includeFormData`                                                      | the registration's `defaultTriggers`          |
-| `reset`             | `confirmMessage`, `resetToDefaults`                                                                         | the registration's `defaultTriggers`          |
+| `show_notification` | `message` (required), `variant` (`success`, `error`, `warning`, `info`), `duration` in ms (0 keeps it open) | `form_submit_success`, `form_submit_error`    |
+| `auto_save`         | `storageKey`, `includeSensitive`                                                                            | `form_change`                                 |
+| `gtm_event`         | `eventName` (required), `eventData`, `includeFormData`                                                      | `form_submit`, `form_submit_success`          |
+| `reset`             | `confirmMessage`, `resetToDefaults`                                                                         | `form_submit_success`                         |
 
 Every entry also takes `id`, `description`, `enabled` and `triggers`. The engine checks `id`, `enabled` and `triggers` itself, so a registration's schema lists an action's own options only.
 
-The `submit` action returns its `redirectUrl` in its result. Once the whole submission succeeded (every submit action and `onSubmit`), the runtime calls `navigate` with the last `redirectUrl` a successful submit action set. It defaults to `location.assign` in a browser and does nothing on a server; pass `navigate` to `FormRenderer` to use your router instead. Auto-save writes the form's values to browser storage on each trigger it answers, with `form_change` here. It does not debounce: it runs on every change.
+The `submit` action returns its `redirectUrl` in its result. Once the whole submission succeeded (every submit action and `onSubmit`), the runtime calls `navigate` with the last `redirectUrl` a successful submit action set. It defaults to `location.assign` in a browser and does nothing on a server; pass `navigate` to the renderer to use your router instead. Auto-save writes the form's values to browser storage on each trigger it answers, with `form_change` here. It does not debounce: it runs on every change.
 
 ## Triggers
 
-### Form Triggers
+### Form triggers
 
 - `form_mount` - The form's runtime mounts, once
 - `form_change` - The form's values change
 - `form_submit` - The submit actions run, after validation passed
 
-### Submit Lifecycle
+### Submit lifecycle
 
 - `form_submit_start` - Submit process begins, as the submission status becomes `submitting`: after validation passed and before the submit actions. An invalid or overtaken submission never starts, so it runs none of the submit triggers
 - `form_submit_success` - Submit completed successfully, after the `onSubmit` callback resolved
@@ -136,7 +136,7 @@ The `submit` action returns its `redirectUrl` in its result. Once the whole subm
 
 The order, with validation before them and the `onSubmit` callback inside, is in [Form state](/docs/forms/form-state#submit).
 
-### Step Triggers
+### Step triggers
 
 - `step_leave` - The current step is about to change
 - `step_change` - The current step changed

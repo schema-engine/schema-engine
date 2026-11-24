@@ -87,21 +87,15 @@ test('the documented stringify example writes the language-server header', () =>
 	);
 });
 
-test('the documented merge-key example validates', () => {
-	const block = /```yaml\n(\s*defaults: &input[\s\S]*?)\n\s*```/.exec(page)?.[1];
+test('the documented merge-key example is a valid form that shares the first field with the second', () => {
+	const block = /```yaml\n(id: contact[\s\S]*?&input[\s\S]*?)\n```/.exec(page)?.[1];
 	if (!block) throw new Error('Missing the merge key example');
-	const indent = /^\s*/.exec(block)?.[0].length ?? 0;
-	const text = block
-		.split('\n')
-		.map((line) => line.slice(indent))
-		.join('\n');
 
-	const result = registryYaml.safeParseYaml(`id: merged\n${text}\n`, (value) => {
-		const { defaults: _defaults, ...form } = value as Record<string, unknown>;
-		return engine.safeValidateForm(form);
-	});
+	const result = registryYaml.safeParseYaml(`${block}\n`, (value) => engine.safeValidateForm(value));
 
-	expect(result, JSON.stringify(result)).toMatchObject({ success: true });
+	if (!result.success) throw new Error(JSON.stringify(result));
+	const [, second] = result.data.steps[0]?.elements ?? [];
+	expect(second).toMatchObject({ $type: 'input', grid: { width: 'half' }, id: 'nickname' });
 });
 
 test('the documented schema generator input exists on the engine', () => {

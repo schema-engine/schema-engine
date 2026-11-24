@@ -5,8 +5,7 @@ import { createFormEngine, defineInput } from '@schema-engine/forms';
  * A field with no rendering, so the examples run without a renderer.
  *
  * @remarks
- * An app registers its renderer's elements and recipes instead: the Radiant ones from `@schema-engine/forms-radiant`,
- * or the React ones copied from the registry.
+ * An app registers its renderer's elements and recipes instead.
  */
 export const textInput = defineInput({
 	$type: 'input',
