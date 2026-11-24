@@ -37,8 +37,8 @@ describe('the laid out page', () => {
 	});
 
 	test('puts the navigation beside main and the aside under it from md', async () => {
-		await browserPage.viewport(800, 900);
-		const { box, shown, cleanup } = mount(800);
+		await browserPage.viewport(500, 900);
+		const { box, shown, cleanup } = mount(500);
 
 		expect(shown('nav')).toBe(true);
 		expect(box('nav').left).toBeLessThan(box('main').left);
@@ -49,8 +49,8 @@ describe('the laid out page', () => {
 	});
 
 	test('puts main and the aside side by side from lg', async () => {
-		await browserPage.viewport(1200, 900);
-		const { box, cleanup } = mount(1200);
+		await browserPage.viewport(700, 900);
+		const { box, cleanup } = mount(700);
 
 		expect(box('nav').left).toBeLessThan(box('main').left);
 		expect(box('main').left).toBeLessThan(box('aside').left);

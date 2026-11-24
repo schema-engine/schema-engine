@@ -8,5 +8,5 @@ import { createLayoutTheme } from '@schema-engine/layout';
  * `[data-se-theme="<id>"]`, so they apply only to what carries the id.
  */
 export const theme = createLayoutTheme({
-	grid: { breakpoints: { md: '48rem', lg: '70rem' }, gap: { default: '1.25rem' } },
+	grid: { breakpoints: { sm: '20rem', md: '30rem', lg: '40rem' }, gap: { default: '1.25rem' } },
 });

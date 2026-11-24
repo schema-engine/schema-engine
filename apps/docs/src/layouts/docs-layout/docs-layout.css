@@ -10,6 +10,12 @@
 	@apply h-svh min-h-svh min-w-0;
 	--rui-sidebar-background: var(--color-background);
 
+	/**
+	 * Radiant UI's docs layout holds its header and its body to `--container-7xl`; this points it at the site
+	 * container, so a wider site container reaches both.
+	 */
+	--container-7xl: var(--site-container);
+
 	.rui-sidebar-provider__site-header-inner {
 		@apply gap-2 px-4 md:gap-4 md:px-8;
 	}

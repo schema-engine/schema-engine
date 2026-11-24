@@ -30,7 +30,7 @@ describe('the forms example pages', () => {
 
 	beforeAll(async () => {
 		browser = await chromium.launch();
-		page = await browser.newPage();
+		page = await browser.newPage({ viewport: { width: 1700, height: 900 } });
 		page.on('pageerror', (error) => problems.push(error.message));
 		page.on('console', (message) => {
 			if (message.type() === 'error') problems.push(`console: ${message.text()}`);
@@ -184,7 +184,7 @@ describe('the forms example pages', () => {
 
 	test('the renderer tabs show one renderer at a time, with the files of that renderer', async () => {
 		await page.goto(`${baseUrl}${contactPath}`, { waitUntil: 'networkidle' });
-		const tabs = page.locator('.renderer-tabs');
+		const tabs = page.locator('.renderer-tabs:not([data-side-by-side])');
 		const reactPanel = tabs.locator('[data-renderer="react"]');
 		const radiantPanel = tabs.locator('[data-renderer="radiant"]');
 
@@ -198,6 +198,31 @@ describe('the forms example pages', () => {
 		await pwExpect(reactPanel).toBeHidden();
 		await pwExpect(radiantPanel).toContainText('createRadiantFormEngine');
 		await pwExpect(radiantPanel.locator('figure[data-title="contact-form.radiant.tsx"]')).toBeVisible();
+	});
+
+	test('the demos sit side by side when the column has room for two forms, and behind tabs when it has not', async () => {
+		await page.goto(`${baseUrl}${contactPath}`, { waitUntil: 'networkidle' });
+		const demo = page.locator('[data-example="contact"]');
+		const tabs = demo.locator('.renderer-tabs');
+		const react = demo.locator('[data-renderer="react"]');
+		const radiant = demo.locator('[data-renderer="radiant"]');
+
+		await pwExpect(react).toBeVisible();
+		await pwExpect(radiant).toBeVisible();
+		await pwExpect(tabs.locator('.renderer-tabs__list')).toBeHidden();
+		const [left, right] = [await react.boundingBox(), await radiant.boundingBox()];
+		expect(right!.x).toBeGreaterThan(left!.x + left!.width - 1);
+		expect(left!.y).toBe(right!.y);
+		expect(left!.width).toBeGreaterThanOrEqual(384);
+
+		await page.setViewportSize({ width: 1300, height: 900 });
+		await pwExpect(tabs.locator('.renderer-tabs__list')).toBeVisible();
+		await pwExpect(react).toBeVisible();
+		await pwExpect(radiant).toBeHidden();
+		await tabs.getByRole('radio', { name: 'Radiant' }).check();
+		await pwExpect(radiant).toBeVisible();
+		await pwExpect(react).toBeHidden();
+		await page.setViewportSize({ width: 1700, height: 900 });
 	});
 
 	test('navigating between docs pages hydrates the demos of the page that arrives', async () => {

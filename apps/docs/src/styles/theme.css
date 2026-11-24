@@ -4,6 +4,12 @@
 	--font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
 	--font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	--font-serif: 'IBM Plex Serif', ui-serif, Georgia, serif;
+
+	/**
+	 * The width of the page container on a desktop: the site header and the docs body (sidebar, content and table of
+	 * contents) are both held to it.
+	 */
+	--site-container: 92rem;
 }
 
 @theme {

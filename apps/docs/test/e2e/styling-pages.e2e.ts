@@ -156,7 +156,7 @@ describe('styling docs pages', () => {
 });
 
 describe('the layout page example', () => {
-	test('its frame crosses the breakpoints of the theme when it is resized', async () => {
+	test('its frame is in the three-column layout on a desktop, and crosses the breakpoints of the theme when it is dragged narrower', async () => {
 		const browser = await chromium.launch();
 		try {
 			const page = await browser.newPage({ viewport: { width: 1300, height: 900 } });
@@ -167,23 +167,20 @@ describe('the layout page example', () => {
 			await pwExpect(inFrame.locator('main')).toBeVisible();
 
 			const left = async (tag: string) => (await inFrame.locator(tag).boundingBox())!.x;
+			await pwExpect(inFrame.locator('nav')).toBeVisible();
+			expect(await left('nav')).toBeLessThan(await left('main'));
+			expect(await left('main')).toBeLessThan(await left('aside'));
+
 			await frame.evaluate((element) => {
-				element.style.maxWidth = 'none';
+				element.style.width = '520px';
+			});
+			await pwExpect.poll(async () => (await inFrame.locator('aside').boundingBox())!.x).toBe(await left('main'));
+			expect(await left('nav')).toBeLessThan(await left('main'));
+
+			await frame.evaluate((element) => {
 				element.style.width = '300px';
 			});
 			await pwExpect(inFrame.locator('nav')).toBeHidden();
-
-			await frame.evaluate((element) => {
-				element.style.width = '800px';
-			});
-			await pwExpect(inFrame.locator('nav')).toBeVisible();
-			expect(await left('nav')).toBeLessThan(await left('main'));
-			expect((await inFrame.locator('aside').boundingBox())!.x).toBe(await left('main'));
-
-			await frame.evaluate((element) => {
-				element.style.width = '1200px';
-			});
-			expect(await left('main')).toBeLessThan(await left('aside'));
 		} finally {
 			await browser.close();
 		}
