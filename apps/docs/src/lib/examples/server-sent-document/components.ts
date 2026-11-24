@@ -1,10 +1,10 @@
 import * as z from 'zod/mini';
-import type { BaseRegistration } from '@schema-engine/registry';
+import type { ComponentRegistration } from '@schema-engine/registry';
 
 z.config(z.locales.en());
 
-/** A registration of the design system: the schema of its config, and how it draws itself as HTML. */
-export interface Component extends BaseRegistration {
+/** A registration of the design system: a `ComponentRegistration` whose `render` draws the component as HTML. */
+export interface Component extends ComponentRegistration {
 	render(config: unknown): string;
 }
 

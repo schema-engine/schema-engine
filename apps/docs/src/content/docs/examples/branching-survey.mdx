@@ -10,7 +10,7 @@ import { survey } from '@/lib/examples/branching-survey/config';
 
 # Branching survey
 
-A survey should not ask a happy customer what went wrong. This recipe is a three-step support survey: how it went, what went wrong, and a last word. The middle step belongs only to a customer who answered "Poor". For anyone else the step is skipped: Next and Previous pass over it, it counts in no progress, its fields are not validated, and what was typed in it is left out of what is sent.
+A survey should not ask a happy customer what went wrong. This example is a three-step support survey: how it went, what went wrong, and a last word. The middle step belongs only to a customer who answered "Poor". For anyone else the step is skipped: Next and Previous pass over it, it counts in no progress, its fields are not validated, and what was typed in it is left out of what is sent.
 
 ## Install
 
@@ -26,7 +26,7 @@ For Radiant:
 pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started).
+Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started). React needs `"jsx": "react-jsx"` in `tsconfig.json`.
 
 ## See it
 
@@ -339,7 +339,7 @@ export function Survey({ onSent }: { onSent: () => void }) {
 
 ## What the tests check
 
-The recipe's tests render both files in a browser. A good answer goes from the first step to the last and sends no follow-up fields. A poor answer opens the follow-up step, where Next names each failing rule. Changing the answer back after filling the follow-up step drops what was typed there from the submission. A failed send does not call `onSent`.
+The example's tests render both files in a browser. A good answer goes from the first step to the last and sends no follow-up fields. A poor answer opens the follow-up step, where Next names each failing rule. Changing the answer back after filling the follow-up step drops what was typed there from the submission. A failed send does not call `onSent`.
 
 ## Take it further
 

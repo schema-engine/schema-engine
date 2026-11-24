@@ -8,9 +8,9 @@ import { LayoutPageDemo } from '@/components/layout-page-demo';
 
 # A layout page
 
-`@schema-engine/layout` places items in a container and knows nothing about forms. This recipe uses it alone, to lay out a dashboard: a header, a navigation, a main area, an aside and a footer. On a phone the page is one column and the navigation is hidden. From `md` it has two columns with the navigation beside the content. From `lg` it has three. No form, no renderer and no framework is involved: the host is about forty lines.
+`@schema-engine/layout` places items in a container and knows nothing about forms. This example uses it alone, to lay out a dashboard: a header, a navigation, a main area, an aside and a footer. On a phone the page is one column and the navigation is hidden. From `md` it has two columns with the navigation beside the content. From `lg` it has three. No form, no renderer and no framework is involved: the host is about forty lines.
 
-The recipe's `Page` shape, with its regions and their areas, is its own. The layout package defines the grid, the placement and the appearance vocabulary, and nothing about what a page is.
+The example's `Page` shape, with its regions and their areas, is its own. The layout package defines the grid, the placement and the appearance vocabulary, and nothing about what a page is.
 
 ## Install
 
@@ -199,7 +199,7 @@ The container carries the drawn template of each breakpoint as `--se-grid-areas`
 
 ## What the tests check
 
-The unit test builds the markup from the recipe's own files: the theme and the template reach the container, each region claims its area, and a template that is not a rectangle throws. The browser test mounts the page with `theme.css` at three viewport widths and measures it. On a phone the navigation is hidden and the regions stack. At `md` the navigation sits beside main with the aside under it. At `lg` main and the aside sit side by side.
+The unit test builds the markup from the example's own files: the theme and the template reach the container, each region claims its area, and a template that is not a rectangle throws. The browser test mounts the page with `theme.css` at three viewport widths and measures it. On a phone the navigation is hidden and the regions stack. At `md` the navigation sits beside main with the aside under it. At `lg` main and the aside sit side by side.
 
 ## Take it further
 

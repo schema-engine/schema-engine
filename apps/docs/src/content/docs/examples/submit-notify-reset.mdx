@@ -10,7 +10,7 @@ import { newsletter } from '@/lib/examples/submit-notify-reset/config';
 
 # Submit, notify and reset
 
-A form often does more than call `onSubmit`: it sends the values, tells the visitor how it went, and clears itself. This recipe is a newsletter signup that does those three things as actions listed in its config. The actions are data, so a server can send them with the form. Each one runs on the moment it names, `form_submit_success` after the request worked and `form_submit_error` after it failed, and they run in the order they are listed.
+A form often does more than call `onSubmit`: it sends the values, tells the visitor how it went, and clears itself. This example is a newsletter signup that does those three things as actions listed in its config. The actions are data, so a server can send them with the form. Each one runs on the moment it names, `form_submit_success` after the request worked and `form_submit_error` after it failed, and they run in the order they are listed.
 
 ## Install
 
@@ -26,7 +26,7 @@ For Radiant:
 pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started).
+Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started). React needs `"jsx": "react-jsx"` in `tsconfig.json`.
 
 ## See it
 
@@ -253,7 +253,7 @@ export function showNotices(root: ParentNode): () => void {
 
 ## What the tests check
 
-The recipe's tests render both files in a browser. An invalid email shows its message, sends nothing and notifies nobody. A valid email sends form data to `/api/subscriptions`, announces the success and clears the field. A 500 announces the error and keeps what was typed.
+The example's tests render both files in a browser. An invalid email shows its message, sends nothing and notifies nobody. A valid email sends form data to `/api/subscriptions`, announces the success and clears the field. A 500 announces the error and keeps what was typed.
 
 ## Take it further
 

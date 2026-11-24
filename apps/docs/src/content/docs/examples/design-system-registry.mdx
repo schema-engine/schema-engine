@@ -6,7 +6,7 @@ order: 1
 
 # A design-system registry
 
-A small design system is a good first registry: a handful of components, each with a schema for its configuration. A JSON document names them by `$type`, so a server, a CMS or an editor can build a page without importing a line of your code. This recipe has no framework and no forms. It registers three components, validates and renders a document of them to HTML strings, and overrides one component without touching the others.
+A small design system is a good first registry: a handful of components, each with a schema for its configuration. A JSON document names them by `$type`, so a server, a CMS or an editor can build a page without importing a line of your code. This example has no framework and no forms. It registers three components, validates and renders a document of them to HTML strings, and overrides one component without touching the others.
 
 ## Install
 
@@ -18,16 +18,16 @@ Copy the files below into one folder. `main.ts` is the entry that prints the out
 
 ## The components
 
-A component is a registration: its `$type`, a Standard Schema for its configuration, metadata, and a `render` that turns a validated configuration into HTML. `Component` adds `render` to `BaseRegistration`. The schemas, not the types, decide what a document may hold. The button's `href` accepts a path or an http(s) URL, so a document cannot ship a `javascript:` link, and `escape` keeps text out of the markup.
+A component is a registration: its `$type`, a Standard Schema for its configuration, metadata, and a `render` that turns a validated configuration into HTML. `Component` is the package's `ComponentRegistration` with a `render` that returns a string. The schemas, not the types, decide what a document may hold. The button's `href` accepts a path or an http(s) URL, so a document cannot ship a `javascript:` link, and `escape` keeps text out of the markup.
 
 ```ts title="components.ts"
 import * as z from 'zod/mini';
-import type { BaseRegistration } from '@schema-engine/registry';
+import type { ComponentRegistration } from '@schema-engine/registry';
 
 z.config(z.locales.en());
 
-/** A registration of the design system: the schema of its config, and how it draws itself as HTML. */
-export interface Component extends BaseRegistration {
+/** A registration of the design system: a `ComponentRegistration` whose `render` draws the component as HTML. */
+export interface Component extends ComponentRegistration {
 	render(config: unknown): string;
 }
 

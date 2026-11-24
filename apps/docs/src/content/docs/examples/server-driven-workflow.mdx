@@ -281,7 +281,7 @@ next release
 ```
 
 - **`change` runs one entry.** `track-cart` is the only entry whose `triggers` include `change`. The reservation, the card and the receipt do not run while the customer is still editing the cart.
-- **`submit` runs the checkout.** Its entries run in order, and the group runs together, as in the checkout recipe.
+- **`submit` runs the checkout.** Its entries run in order, and the group runs together, as in the checkout example.
 - **The next release is refused with paths.** `0.$type` is the first entry, whose action this client does not have, and `1.quantity` is the second entry's bad value. Nothing from that workflow runs, not even the entry that is valid.
 
 ## Take it further

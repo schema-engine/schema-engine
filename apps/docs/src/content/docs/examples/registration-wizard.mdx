@@ -10,7 +10,7 @@ import { registration } from '@/lib/examples/registration-wizard/config';
 
 # Registration wizard
 
-A long form is easier to finish in steps. A wizard shows one step at a time, checks a step before it lets the visitor leave it, and keeps what they typed when they go back. This recipe is a two-step sign-up: an account step with an email and a password, and a profile step with a name and a role. When the server says the email is already taken, the wizard takes the visitor back to the step that holds it, because an error on a step they cannot see would be invisible.
+A long form is easier to finish in steps. A wizard shows one step at a time, checks a step before it lets the visitor leave it, and keeps what they typed when they go back. This example is a two-step sign-up: an account step with an email and a password, and a profile step with a name and a role. When the server says the email is already taken, the wizard takes the visitor back to the step that holds it, because an error on a step they cannot see would be invisible.
 
 ## Install
 
@@ -26,7 +26,7 @@ For Radiant:
 pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started).
+Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started). React needs `"jsx": "react-jsx"` in `tsconfig.json`.
 
 ## See it
 
@@ -321,7 +321,7 @@ export function RegistrationWizard({ onRegistered }: { onRegistered: () => void 
 
 ## What the tests check
 
-The recipe's tests render both files in a browser. Next stays on the account step while its rules fail and names each one, including the 12-character password rule. Previous keeps what was typed. The last step submits the values of both steps and calls `onRegistered`. A 409 moves the wizard back to the account step and shows the message on the email field.
+The example's tests render both files in a browser. Next stays on the account step while its rules fail and names each one, including the 12-character password rule. Previous keeps what was typed. The last step submits the values of both steps and calls `onRegistered`. A 409 moves the wizard back to the account step and shows the message on the email field.
 
 ## Take it further
 
