@@ -57,7 +57,7 @@ To make a region denser, set the tokens on the wrapper too:
 The recipe styles and the controls styles are two imports with different jobs:
 
 - `recipes.css` is imported into the `components` layer, so your Tailwind utilities and classes sit above it. Its rules are `:where()`, so any class beats them.
-- `controls.css` is imported **unlayered**, after `recipes.css`, because a shadcn control sets its height with a Tailwind utility that outranks every layered rule. It lets `--se-control-height` set the height of controls that carry `data-se-control`, and gives a field that carries a `size` pick the font size `--se-font-size`. While a size is picked, a Tailwind height utility you pass to a control and a text utility you pass to a field lose to it; with no pick, or `default`, they keep their size. An unlayered class of yours always wins.
+- `controls.css` is imported **unlayered**, after `recipes.css`; [Import the styles](/docs/forms-react/getting-started#import-the-styles) says why. It lets `--se-control-height` set the height of controls that carry `data-se-control`, and gives a field that carries a `size` pick the font size `--se-font-size`. While a size is picked, a Tailwind height utility you pass to a control and a text utility you pass to a field lose to it; with no pick, or `default`, they keep their size. An unlayered class of yours always wins.
 
 See [Forms React getting started](/docs/forms-react/getting-started) for the two import lines.
 

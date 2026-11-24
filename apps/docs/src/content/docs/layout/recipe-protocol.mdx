@@ -47,7 +47,7 @@ const HeroShell = (content: string) => `<section class="hero">${content}</sectio
 export const registry = createRecipeRegistry(sectionProtocol, [bindRecipe(hero, { shell: HeroShell })]);
 ```
 
-`render` is whatever your renderers need. This package never reads it.
+The second argument of `bindRecipe` is the render payload, here `{ shell: HeroShell }`. It is whatever your renderers need, and this package never reads it.
 
 - `slots` is ordered: a spec lists the slots it declares in that order. A slot or kind outside the protocol is a type error in `defineProtocolRecipeSpec` (including `slotDefaults` and `appearanceAxes` keys) and a thrown error for a hand-written registration.
 - A rule's `check` returns the problem, or `undefined`. A failure reads `Recipe 'hero' breaks rule 'section-needs-content': ...`.
@@ -57,4 +57,4 @@ export const registry = createRecipeRegistry(sectionProtocol, [bindRecipe(hero, 
 - `resolveRecipeView(recipe, view, scope)` resolves the view a document selects, for a winning registration: the recipe defaults laid under the author's slot config, each slot's `appearance` (the scope's inherited picks for the axes the slot declares, the slot's own pick winning, invalid picks reported at `[slot, 'appearance', axis]`), the schema parse, and any key the recipe does not declare. It returns `{ issues, view }`, or `{ issues, schemaIssues }` when the schema rejects the view, so the domain formats schema issues its own way. Each of `issues` is a `LayoutIssue`, `{ message, path }`, with a path relative to the view that the domain lays under the view's own location. It does not change the view it is given. What needs the whole document (a kind that wants a number of steps, a default recipe) stays with the domain.
 - `mergeSlotDefaults(view, slotDefaults)` lays a view's slot config over the recipe defaults, deep for plain objects. `readSlotConfig(viewConfig, slot, schema)` reads one slot of a resolved view, and `RecipeViewModel` is the part of a renderer's view model that every domain shares.
 
-The render payload is opaque here: `bindRecipe(spec, render)` stores whatever a domain's renderers need. Forms declares its protocol in `@schema-engine/forms/recipes`, and the built-in form recipes stay there.
+Forms declares its protocol in `@schema-engine/forms/recipes`, and the built-in form recipes stay there.
