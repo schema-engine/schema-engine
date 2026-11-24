@@ -56,14 +56,14 @@ const result = engine.safeValidateForm({
 
 ## Documentation
 
-- [Forms](https://schema-engine.ecopages.app/docs/forms/overview): what a form can do.
-- [Installation and quick start](https://schema-engine.ecopages.app/docs/forms/getting-started): register elements, check JSON and submit with no renderer.
-- [Engine and registrations](https://schema-engine.ecopages.app/docs/forms/engine): the engine, custom fields and configuration errors.
-- [Validation](https://schema-engine.ecopages.app/docs/forms/validation) and [custom and async rules](https://schema-engine.ecopages.app/docs/forms/validation-custom).
-- [Form state](https://schema-engine.ecopages.app/docs/forms/form-state), [Wizard and runtime](https://schema-engine.ecopages.app/docs/forms/wizard) and [Actions in forms](https://schema-engine.ecopages.app/docs/forms/actions).
-- [Issue text](https://schema-engine.ecopages.app/docs/forms/issue-text), [Server errors](https://schema-engine.ecopages.app/docs/forms/server-errors) and [CSRF](https://schema-engine.ecopages.app/docs/forms/csrf).
-- [Agent tools](https://schema-engine.ecopages.app/docs/forms/agent-tool) and [API reference](https://schema-engine.ecopages.app/docs/forms/api-reference).
-- [For AI agents](https://schema-engine.ecopages.app/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
+- [Forms](https://schema-engine.com/docs/forms/overview): what a form can do.
+- [Installation and quick start](https://schema-engine.com/docs/forms/getting-started): register elements, check JSON and submit with no renderer.
+- [Engine and registrations](https://schema-engine.com/docs/forms/engine): the engine, custom fields and configuration errors.
+- [Validation](https://schema-engine.com/docs/forms/validation) and [custom and async rules](https://schema-engine.com/docs/forms/validation-custom).
+- [Form state](https://schema-engine.com/docs/forms/form-state), [Wizard and runtime](https://schema-engine.com/docs/forms/wizard) and [Actions in forms](https://schema-engine.com/docs/forms/actions).
+- [Issue text](https://schema-engine.com/docs/forms/issue-text), [Server errors](https://schema-engine.com/docs/forms/server-errors) and [CSRF](https://schema-engine.com/docs/forms/csrf).
+- [Agent tools](https://schema-engine.com/docs/forms/agent-tool) and [API reference](https://schema-engine.com/docs/forms/api-reference).
+- [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License
 

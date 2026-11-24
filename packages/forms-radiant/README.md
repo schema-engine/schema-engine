@@ -62,13 +62,13 @@ export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => vo
 
 ## Documentation
 
-- [Forms Radiant](https://schema-engine.ecopages.app/docs/forms-radiant/overview): the elements, the engine factory and the controllers.
-- [Installation and quick start](https://schema-engine.ecopages.app/docs/forms-radiant/getting-started): the peers, the JSX setting and a form that submits.
-- [Layouts](https://schema-engine.ecopages.app/docs/forms-radiant/layouts): shells, wizard and appearance.
-- [Form controls](https://schema-engine.ecopages.app/docs/forms-radiant/form-controls): native events and custom controls.
-- [Server rendering and engine binding](https://schema-engine.ecopages.app/docs/forms-radiant/server-rendering): assign the engine to server-rendered forms.
-- [API reference](https://schema-engine.ecopages.app/docs/forms-radiant/api-reference).
-- [For AI agents](https://schema-engine.ecopages.app/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
+- [Forms Radiant](https://schema-engine.com/docs/forms-radiant/overview): the elements, the engine factory and the controllers.
+- [Installation and quick start](https://schema-engine.com/docs/forms-radiant/getting-started): the peers, the JSX setting and a form that submits.
+- [Layouts](https://schema-engine.com/docs/forms-radiant/layouts): shells, wizard and appearance.
+- [Form controls](https://schema-engine.com/docs/forms-radiant/form-controls): native events and custom controls.
+- [Server rendering and engine binding](https://schema-engine.com/docs/forms-radiant/server-rendering): assign the engine to server-rendered forms.
+- [API reference](https://schema-engine.com/docs/forms-radiant/api-reference).
+- [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License
 
