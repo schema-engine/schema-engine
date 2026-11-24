@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -68,5 +69,30 @@ describe('no unused library is named', () => {
 		expect(SHADCN.test('Run `pnpm dlx shadcn@latest add`.')).toBe(true);
 		expect(SHADCN.test("import { Button } from '@/components/ui/button';")).toBe(true);
 		expect(SHADCN.test("import { Demo } from '@/components/recipe-demo';")).toBe(false);
+	});
+});
+
+describe('the public folder', () => {
+	/** The tracked files of `src/public` that are not an asset or a favicon, and so may be generated docs text. */
+	const strays = (tracked: string[]) => tracked.filter((file) => !/^(assets|favicon)\//.test(file));
+
+	test('holds only assets and favicons in git, so no generated docs text is served stale', () => {
+		const tracked = execFileSync('git', ['ls-files', '-z', '--', '.'], {
+			cwd: join(import.meta.dirname, '../src/public'),
+			encoding: 'utf8',
+		})
+			.split('\0')
+			.filter(Boolean);
+		expect(tracked.length).toBeGreaterThan(0);
+		expect(strays(tracked)).toEqual([]);
+	});
+
+	test('the check names a generated docs file that was committed', () => {
+		expect(strays(['assets/fonts/a.woff2', 'favicon/icon.svg'])).toEqual([]);
+		expect(strays(['llms-content/forms/overview.md', 'llms.txt', 'skill/SKILL.md'])).toEqual([
+			'llms-content/forms/overview.md',
+			'llms.txt',
+			'skill/SKILL.md',
+		]);
 	});
 });
