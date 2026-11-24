@@ -242,9 +242,14 @@ export const ControllerOperations: Story = {
 			await waitFor(async () => expect(names().map((input) => input.value)).toEqual(['Updated Alice']));
 			await userEvent.click(canvas.getByRole('button', { name: /save contacts/i }));
 			await waitFor(() =>
-				expect(args.onSubmit).toHaveBeenCalledWith({
-					emergencyContacts: [{ contactName: 'Updated Alice', contactPhone: '111', relationship: 'Friend' }],
-				}),
+				expect(args.onSubmit).toHaveBeenCalledWith(
+					{
+						emergencyContacts: [
+							{ contactName: 'Updated Alice', contactPhone: '111', relationship: 'Friend' },
+						],
+					},
+					expect.anything(),
+				),
 			);
 		});
 		await step('Watch cleanup stops notifications', async () => {
