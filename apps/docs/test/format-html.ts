@@ -15,10 +15,16 @@ const OUTPUT_WIDTH = 100;
  * 100 characters of the code font at the widest layout. Prettier would format a fence at 120, so a page puts a
  * `prettier-ignore` comment above each `html` output fence, and leaves the formatting to this function and to the
  * test that compares the two.
+ *
+ * @remarks
+ * Whitespace sensitivity is off: with it on, Prettier keeps inline elements glued by breaking inside their tags
+ * (`</span\n><span`), which reads as a typo in a docs block. The output blocks show markup, not text layout.
  */
 export async function formatHtml(html: string): Promise<string> {
 	const config = await resolveConfig(new URL('./output.html', import.meta.url).pathname);
-	return (await format(html, { ...config, parser: 'html', printWidth: OUTPUT_WIDTH })).trimEnd();
+	return (
+		await format(html, { ...config, parser: 'html', printWidth: OUTPUT_WIDTH, htmlWhitespaceSensitivity: 'ignore' })
+	).trimEnd();
 }
 
 /** One block of what a program printed, as a docs page fences it: markup in `html`, anything else in `text`. */
