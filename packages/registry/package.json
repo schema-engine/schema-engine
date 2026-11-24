@@ -1,7 +1,7 @@
 {
 	"name": "@schema-engine/registry",
 	"type": "module",
-	"version": "0.1.0",
+	"version": "0.5.0",
 	"description": "The registration contract and registries of Schema Engine: documents name registrations by $type, and each registration validates its own configuration",
 	"keywords": [
 		"schema-engine",

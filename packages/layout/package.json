@@ -1,7 +1,7 @@
 {
 	"name": "@schema-engine/layout",
 	"type": "module",
-	"version": "0.1.0",
+	"version": "0.5.0",
 	"description": "Domain-neutral layout for Schema Engine: a named grid, appearance axes and a theme compiler",
 	"keywords": [
 		"schema-engine",
