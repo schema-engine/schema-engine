@@ -1,11 +1,12 @@
 import { useMemo, useSyncExternalStore } from 'react';
-import type {
-	FormIssueFormatter,
-	FormStateIssue,
-	FormStateSnapshot,
-	FormSubmissionIssue,
+import {
+	issueText,
+	type FormIssueFormatter,
+	type FormStateIssue,
+	type FormStateSnapshot,
+	type FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
-import { formatIssueText, useFormStateContext, type FormStateContextValue } from './context';
+import { useFormStateContext, type FormStateContextValue } from './context';
 import type { FormContextValue } from './types';
 
 type FormStateKey = keyof FormContextValue['formState'];
@@ -20,7 +21,7 @@ function createTexts(formatIssue: FormIssueFormatter | undefined) {
 		if (!texts) {
 			texts = Object.fromEntries(
 				Object.entries(errors).map(([path, error]) => {
-					const message = formatIssueText(error, path, formatIssue);
+					const message = issueText(error, path, formatIssue);
 					return [path, message === undefined ? {} : { message }];
 				}),
 			);
@@ -127,8 +128,7 @@ export function useFormContext(): FormContextValue {
 			validate: (name) => container.validate(typeof name === 'string' ? [name] : name),
 			reset: (values) => container.reset(values),
 			setFocus: (name) => fields.focus(name),
-			formatIssue: (issue: FormStateIssue | FormSubmissionIssue, { path }) =>
-				formatIssueText(issue, path, formatIssue),
+			formatIssue: (issue: FormStateIssue | FormSubmissionIssue, { path }) => issueText(issue, path, formatIssue),
 			clearSubmission: () => runtime.clearSubmission(),
 			formState: tracked.formState,
 		}),

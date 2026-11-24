@@ -21,12 +21,12 @@ import {
 	setValueAtPath,
 } from '@schema-engine/forms';
 import {
+	issueText,
 	selectFieldState,
 	type FormIssueFormatter,
 	type FormStateContainer,
 } from '@schema-engine/forms/state-container';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { describeIssue } from '@/lib/describe-issue';
 import { isRenderedRequired, withContainerState } from '@/lib/field-rules';
 import { RequiredMarker } from '../field-group';
 import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
@@ -247,7 +247,7 @@ export class SeFormArray extends RadiantElement {
 		if (!container || !config?.name) return;
 		const snapshot = container.getSnapshot();
 		const issue = selectFieldState(snapshot, config.name).error;
-		this.fieldError = issue && describeIssue(issue, config.name, this.formatIssue);
+		this.fieldError = issue && issueText(issue, config.name, this.formatIssue);
 		this.describeGroup();
 		this.setRows(snapshot.rowIds[config.name] ?? []);
 	}
