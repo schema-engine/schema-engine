@@ -7,7 +7,7 @@ const pagePath = '/docs/forms/engine';
 test('built docs HTML carries SEO links, heading ids and copy buttons', async () => {
 	const html = await (await fetch(`${baseUrl}${pagePath}`)).text();
 
-	expect(html).toMatch(/<link rel="canonical" href="https?:\/\/[^"]+\/docs\/forms\/builder">/);
+	expect(html).toMatch(/<link rel="canonical" href="https?:\/\/[^"]+\/docs\/forms\/engine">/);
 	expect(html).toContain('rel="alternate" type="text/markdown"');
 	expect(html).toContain('/docs-llm/forms/engine.md');
 	expect(html).toContain('property="og:image"');
