@@ -1,14 +1,14 @@
 ---
 title: 'A checkout workflow'
 description: 'A checkout as a JSON workflow: async actions in sequence and in a parallel group, and a declined card that cancels the rest of its group through the signal.'
-order: 3
+order: 2
 ---
 
 # A checkout workflow
 
 A checkout is a workflow: reserve the stock, charge the card, tell the warehouse, track the purchase, send a receipt. Some steps depend on the one before, and some can run together. Some can fail, and a failure has to stop the steps that are still running. This example writes the five steps as actions, expresses the order of a purchase as a JSON array, and runs it. A declined card cancels the other members of its group through their `signal`.
 
-The workflow is data, so a server can build it, a CMS can store it and a log can replay it. [A server-driven workflow](/docs/examples/server-driven-workflow) fetches it from an endpoint.
+The workflow is data, so a server can build it, a CMS can store it and a log can replay it. [Serialized workflows](/docs/actions/serialized-workflows) shows how the text of a workflow is checked with `parseActions` before it runs.
 
 ## Install
 
@@ -304,5 +304,5 @@ The package logs a warning to the console for each failed action. The example's 
 ## Take it further
 
 - Run only some entries on some moments: [Serialized workflows](/docs/actions/serialized-workflows#triggers-are-entry-points).
-- Fetch the workflow instead of building it: [A server-driven workflow](/docs/examples/server-driven-workflow).
+- Receive the workflow as text and check it with `parseActions` before it runs: [Serialized workflows](/docs/actions/serialized-workflows).
 - Cancel a whole dispatch from outside: [Sequences, parallel groups, cancellation](/docs/actions/sequences-and-cancellation).

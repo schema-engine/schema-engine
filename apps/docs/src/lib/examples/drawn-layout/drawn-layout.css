@@ -1,4 +1,0 @@
-/* Areas and widths come from the config; the only CSS is the rhythm between the cells. */
-.drawn-layout {
-	--se-grid-gap-default: 0.75rem;
-}

@@ -63,4 +63,35 @@ See [Forms React getting started](/docs/forms-react/getting-started) for the two
 
 ## A complete theme file
 
-The [Acme theme example](/docs/examples/acme-theme) is a complete theme file with a live demo. It themes every form that carries `className: 'acme'`: rhythm, the size hooks, the colour roles and the literal tokens of two axis values. Its form picks `size: comfortable` and `surface: outlined`, so it exercises all four groups. Give each form that should use it `className: 'acme'`. The gap tokens, colour roles and size hooks also work from `:root`. The rules in the last two blocks target the elements that carry the picks.
+One stylesheet can theme every form that carries `className: 'acme'`: rhythm, the size hooks, the colour roles and the literal tokens of two axis values. The forms pick `size: comfortable` and `surface: outlined`, so the file exercises all four groups. The gap tokens, colour roles and size hooks also work from `:root`. The rules in the last two blocks target the elements that carry the picks.
+
+```css
+.acme {
+	/* 1. Rhythm: the gap tokens every grid reads. */
+	--se-grid-gap-compact: 0.5rem;
+	--se-grid-gap-default: 1rem;
+	--se-grid-gap-loose: 1.75rem;
+	--se-grid-gap-wide: 2.5rem;
+
+	/* 2. The hooks the built-in size axis reads. */
+	--se-space-compact: 0.75rem;
+	--se-space-comfortable: 2.25rem;
+	--se-control-height-compact: 2rem;
+	--se-control-height-comfortable: 2.75rem;
+
+	/* 3. Colour roles of your design system: Radiant UI and shadcn components read them. */
+	--primary: #4f46e5;
+	--on-primary: #ffffff;
+}
+
+/* 4. Literal tokens of an axis value: set them on the element that carries the pick. */
+.acme [data-se-size='comfortable'] {
+	--se-measure: 36rem;
+}
+
+.acme [data-se-surface='outlined'] {
+	--se-border-width: 2px;
+}
+```
+
+The [themed form example](/docs/examples/theming) is a smaller file of the same kind with a live demo, and it builds the colour roles from a host axis instead of setting them in the stylesheet.

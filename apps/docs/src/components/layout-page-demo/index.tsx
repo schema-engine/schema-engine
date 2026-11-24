@@ -10,7 +10,7 @@ const FRAME_STYLE = `body{margin:1rem;font-family:system-ui,sans-serif}.se-grid-
 const frame = `<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><style>${theme.css}</style><style>${FRAME_STYLE}</style>${renderPage(dashboard)}`;
 
 /**
- * The page of the layout page recipe, in a frame whose width the reader can drag.
+ * The page of the layout page example, in a frame whose width the reader can drag.
  *
  * @remarks
  * The theme's breakpoints are media queries of the viewport, so the page sits in an iframe: its viewport is the

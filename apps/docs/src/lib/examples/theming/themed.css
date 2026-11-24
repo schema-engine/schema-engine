@@ -1,0 +1,23 @@
+/*
+ * One stylesheet for every form that carries `className: 'themed'`. The tone axis of theme.ts decides what
+ * `--primary` is; this file decides how the form is spaced and how tight its compact size is.
+ */
+.themed {
+	/* Rhythm: the gap token every grid of the form reads. */
+	--se-grid-gap-default: 1.25rem;
+
+	/* The hooks the built-in compact size reads. */
+	--se-space-compact: 0.75rem;
+	--se-control-height-compact: 1.75rem;
+}
+
+/* --se-measure is a literal value of the size pick: win on the element that carries it. */
+.themed [data-se-size='compact'] {
+	--se-measure: 30rem;
+}
+
+/* The renderer writes data-se-tone on the form element, and the tone axis sets --primary below it: this file only reads it. */
+.themed[data-se-tone='brand'] {
+	padding-inline-start: 1rem;
+	border-inline-start: 0.25rem solid var(--primary);
+}

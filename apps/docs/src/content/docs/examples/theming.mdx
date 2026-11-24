@@ -1,0 +1,167 @@
+---
+title: 'A themed form'
+description: 'One compiled theme with a host tone axis, shared by every engine, and one stylesheet that sets the rhythm and the compact size of a form that carries its class.'
+order: 9
+---
+
+import { FormExampleDemo } from '@/components/form-example-demo';
+import { themedForm } from '@/lib/examples/theming/config';
+import '@/lib/examples/theming/themed.css';
+
+# A themed form
+
+A form is themed in two places. The **theme** is code: it compiles the vocabulary of appearance, here the built-in `size` and `surface` axes plus a host `tone` axis added with `defineAxis`, into one id and one stylesheet. Every engine receives that one object as `layout`, so a React form and a Radiant form carry the same `data-se-theme`. The **stylesheet** is CSS scoped by the class the config puts on the form: it sets the rhythm between fields, the two hooks the compact size reads and the measure it sets, and it reads the colour roles the tone axis sets.
+
+The config only names what it wants: `tone: 'brand'`, `size: 'compact'` and `surface: 'outlined'`. What each name means is decided by the theme and the stylesheet, so a different theme changes the look without touching the config.
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Set your app up as the getting-started page of your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), then copy the files below into one folder.
+
+## See it
+
+<FormExampleDemo config={themedForm} />
+
+## The theme
+
+The built-in axes are `size` and `surface`. A host adds its own with `defineAxis`: here `tone`, whose values set the colour roles that Radiant UI (`--primary`, `--on-primary`) and shadcn (`--primary`, `--primary-foreground`) components read. `createLayoutTheme` compiles the axes into the theme every engine receives.
+
+```ts title="theme.ts"
+import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
+
+/**
+ * A host axis. Each value is a set of tokens: the colour roles Radiant UI (`--primary`, `--on-primary`) and a
+ * shadcn theme (`--primary`, `--primary-foreground`) read.
+ */
+export const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone', description: 'Accent colour of a form' },
+	default: 'neutral',
+	values: {
+		neutral: {},
+		brand: {
+			'--primary': '#c2410c',
+			'--on-primary': '#ffffff',
+			'--primary-foreground': '#ffffff',
+			'--primary-container': '#ffedd5',
+			'--on-primary-container': '#7c2d12',
+		},
+		forest: {
+			'--primary': '#15803d',
+			'--on-primary': '#ffffff',
+			'--primary-foreground': '#ffffff',
+			'--primary-container': '#dcfce7',
+			'--on-primary-container': '#14532d',
+		},
+	},
+});
+
+/** The compiled theme: the built-in `size` and `surface` axes plus `tone`. Pass it to every engine as `layout`. */
+export const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
+```
+
+## The config
+
+The config is data. `appearance: { tone: 'brand' }` on the form reaches every field, the card shell picks `size` and `surface` for itself, and `className` is the class the stylesheet is scoped by. Two `half` fields share a row.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/**
+ * A form that picks values of three axes and carries the class its stylesheet is scoped by.
+ *
+ * @remarks
+ * The config only names what it wants: `tone` is the host axis of `theme.ts`, `size` and `surface` are built in. What
+ * each name means is decided by the theme and by `themed.css`, so the same config looks different under another theme.
+ */
+export const themedForm: FormConfig = {
+	id: 'themed',
+	title: 'Create an account',
+	className: 'themed',
+	appearance: { tone: 'brand' },
+	view: { $type: 'card', shell: { appearance: { size: 'compact', surface: 'outlined' } } },
+	steps: [
+		{
+			id: 'account',
+			title: 'Account',
+			elements: [
+				{ $type: 'input', id: 'first', name: 'first', label: 'First name', grid: { width: 'half' } },
+				{ $type: 'input', id: 'last', name: 'last', label: 'Last name', grid: { width: 'half' } },
+				{ $type: 'input', id: 'email', name: 'email', label: 'Email', inputType: 'email' },
+				{ $type: 'submit', id: 'create', name: 'create', label: 'Create account' },
+			],
+		},
+	],
+};
+```
+
+## The engine
+
+Pass the compiled theme as `layout`. An engine that is not built on it rejects the form with `Unknown axis 'tone'`. Give every other engine the same object, whatever its renderer: a React engine takes it as `createFormEngine({ elements, layout: theme })`. How each renderer emits the shared stylesheet is in [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines).
+
+```ts title="engine.ts"
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { theme } from './theme';
+
+/**
+ * A Radiant engine built on the compiled theme.
+ *
+ * @remarks
+ * Compile the theme once and pass the same object as `layout` to every engine, whatever its renderer: each form then
+ * carries one `data-se-theme` and the same stylesheet. A React engine takes it the same way, as
+ * `createFormEngine({ elements, layout: theme })`.
+ */
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, layout: theme });
+```
+
+## The stylesheet
+
+The stylesheet is scoped by the class of the config. Three kinds of setting meet in it. The gap token and the two hooks of the compact size are custom properties, so they work on the form's class, or on `:root` or a wrapper for every form below it. `--se-measure` has a literal value on the element that carries the size pick, so a rule that targets that element, with the specificity of a class, overrides it. The last rule keys on the `data-se-tone` attribute the renderer writes on the form and reads the colour role the axis sets.
+
+```css title="themed.css"
+/*
+ * One stylesheet for every form that carries `className: 'themed'`. The tone axis of theme.ts decides what
+ * `--primary` is; this file decides how the form is spaced and how tight its compact size is.
+ */
+.themed {
+	/* Rhythm: the gap token every grid of the form reads. */
+	--se-grid-gap-default: 1.25rem;
+
+	/* The hooks the built-in compact size reads. */
+	--se-space-compact: 0.75rem;
+	--se-control-height-compact: 1.75rem;
+}
+
+/* --se-measure is a literal value of the size pick: win on the element that carries it. */
+.themed [data-se-size='compact'] {
+	--se-measure: 30rem;
+}
+
+/* The renderer writes data-se-tone on the form element, and the tone axis sets --primary below it: this file only reads it. */
+.themed[data-se-tone='brand'] {
+	padding-inline-start: 1rem;
+	border-inline-start: 0.25rem solid var(--primary);
+}
+```
+
+## What the tests check
+
+The test checks that the theme adds `tone` to the built-in axes, that the form is valid in an engine built on the theme and fails with `Unknown axis 'tone'` in one that is not, and that two engines passed the theme hold the very same object. It also checks that every rule of the stylesheet is scoped by the class of the config, that the hooks it sets are the ones the compact size reads, and that it reads `--primary` without setting it.
+
+## Take it further
+
+- Add values to a host axis, or replace a built-in one: [Appearance axes](/docs/layout/appearance-axes).
+- Every token a host can override, and where to set it: [Theming](/docs/layout/theming).
+- Compile a theme with your own breakpoints and gaps: [Layout themes](/docs/layout/layout-themes).

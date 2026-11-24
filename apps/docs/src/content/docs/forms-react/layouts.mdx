@@ -80,7 +80,7 @@ Wizard recipes require **at least two steps**. Set `view.$type` to a wizard reci
 
 If you omit `view.$type` on a multi-step form, `validateForm` writes the engine's default wizard recipe as `view` (`bare-controls` unless `createFormEngine({ defaultWizardRecipe })` names another wizard recipe). If that recipe is not registered, the form keeps no `view`, `validateForm` warns, and fields render without chrome.
 
-See the [Registration wizard](/docs/examples/registration-wizard) recipe for a full wizard in React and Radiant.
+See the [Registration wizard](/docs/examples/registration-wizard) example for a full wizard in React and Radiant.
 
 ### Skipping steps and the stepper
 
@@ -158,7 +158,7 @@ After `shadcn add`, the files land under `@/components/schema-engine/forms/recip
 
 ## Custom recipes
 
-A recipe is a registration: a spec bound to your components. [A custom recipe shell](/docs/examples/brand-frame) has a custom shell that renders live in React and in Radiant, with its CSS.
+A recipe is a registration: a spec bound to your components. This one binds a custom shell:
 
 ```tsx
 import * as z from 'zod/mini';

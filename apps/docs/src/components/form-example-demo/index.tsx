@@ -3,7 +3,6 @@ import type { JsxRenderable } from '@ecopages/jsx';
 import type { FormConfig } from '@schema-engine/forms';
 import { FormRendererPreview } from '@/components/form-renderer';
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
-import type { DocsEngineName } from '@/lib/form-engine-setup';
 import './form-example-demo.css';
 
 type Renderer = 'react' | 'radiant';
@@ -12,8 +11,6 @@ interface FormExampleDemoProps {
 	config: FormConfig;
 	/** The renderers that show the config, side by side. Both, by default. */
 	renderers?: readonly Renderer[];
-	/** The docs Radiant engine that renders the config. The docs engine, by default. */
-	engine?: DocsEngineName;
 	/** The label above the demo. Without it, the renderer's name when two renderers are shown. */
 	caption?: string;
 }
@@ -35,7 +32,7 @@ const label = (renderer: Renderer, renderers: readonly Renderer[], caption: stri
  * that needs an element or an engine the React demo kit lacks is shown in `renderers={['radiant']}` only.
  */
 export const FormExampleDemo = eco.component<FormExampleDemoProps, JsxRenderable>({
-	render: ({ config, renderers = ['react', 'radiant'], engine, caption }) => (
+	render: ({ config, renderers = ['react', 'radiant'], caption }) => (
 		<div class="example-demo not-prose unstyled" data-example={config.id}>
 			<div class="example-demo__demos">
 				{renderers.map((renderer) => (
@@ -46,7 +43,7 @@ export const FormExampleDemo = eco.component<FormExampleDemoProps, JsxRenderable
 						{renderer === 'react' ? (
 							<ReactFormDemoEmbed config={config} />
 						) : (
-							<FormRendererPreview config={config} engine={engine} />
+							<FormRendererPreview config={config} />
 						)}
 					</figure>
 				))}

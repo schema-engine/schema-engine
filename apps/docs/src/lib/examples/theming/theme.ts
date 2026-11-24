@@ -28,4 +28,4 @@ export const tone = defineAxis({
 });
 
 /** The compiled theme: the built-in `size` and `surface` axes plus `tone`. Pass it to every engine as `layout`. */
-export const brandTheme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
+export const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });

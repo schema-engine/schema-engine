@@ -20,9 +20,7 @@ const SHADCN_PAGES: Record<string, string> = {
 	'layout/theming': 'The colour roles the React registry controls read.',
 	'layout/appearance-axes': 'What the React registry controls read of the size and tone axes.',
 	'examples/overview': 'The React path of the layout examples starts from the shadcn registry.',
-	'examples/brand-theme': 'The colour roles a shadcn theme reads, which the tone axis sets.',
-	'examples/shared-theme': 'The colour roles a shadcn theme reads, which the tone axis of its theme file sets.',
-	'examples/acme-theme': 'The colour roles Radiant UI and shadcn components read, which the theme file sets.',
+	'examples/theming': 'The colour roles a shadcn theme reads, which the tone axis sets.',
 };
 
 /** What the docs app's own MDX imports look like: `import { X } from '@/components/x'`. They are not prose. */

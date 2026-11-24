@@ -8,14 +8,6 @@ const answer = (response: () => Response) => async () => response();
 /** The client talking to the route handler, without a network. */
 const server: typeof fetch = async (url, init) => GET(new Request(url, init));
 
-describe('the design system files', () => {
-	test.each(['components.ts', 'design-system.ts'])('%s is the file of the design system example', (file) => {
-		const own = readFileSync(join(import.meta.dirname, file), 'utf8');
-		const original = readFileSync(join(import.meta.dirname, '../design-system-registry', file), 'utf8');
-		expect(own).toBe(original);
-	});
-});
-
 describe('loadDocument', () => {
 	test('renders the nodes it knows and reports the ones it does not, each with its path', async () => {
 		const result = await loadDocument('https://shop.example/orders/1043', server);

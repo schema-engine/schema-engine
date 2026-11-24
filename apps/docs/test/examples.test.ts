@@ -26,7 +26,7 @@ describe('the Examples', () => {
 		},
 	);
 
-	test.each(['design-system-registry', 'server-sent-document', 'checkout-workflow', 'server-driven-workflow'])(
+	test.each(['server-sent-document', 'checkout-workflow'])(
 		'%s imports no UI framework and no forms package',
 		(id) => {
 			const example = examples.find((candidate) => candidate.id === id);

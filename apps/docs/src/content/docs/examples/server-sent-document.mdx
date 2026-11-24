@@ -1,14 +1,12 @@
 ---
 title: 'Render a server-sent document'
 description: 'A route handler answers with a JSON document, and the client renders the nodes it knows through a registry and reports the ones it cannot, with their paths.'
-order: 2
+order: 1
 ---
 
 # Render a server-sent document
 
-A server describes a page as data, and the client turns it into HTML. The server can ship a new layout without a client release, and the client does not trust what arrives: every node is checked against its registration. This example is the full round trip. A route handler answers with a JSON document, the client fetches it, renders the nodes it has a component for, and reports the nodes it does not, with their paths. The server in the recipe is newer than the client on purpose, so you see what the client does with a component it has never heard of.
-
-It uses the registry of [A design-system registry](/docs/examples/design-system-registry). `components.ts` and `design-system.ts` below are the same files, so copy them from either page.
+A server describes a page as data, and the client turns it into HTML. The server can ship a new layout without a client release, and the client does not trust what arrives: every node is checked against its registration. This example is the full round trip. A route handler answers with a JSON document, the client fetches it, renders the nodes it has a component for, and reports the nodes it does not, with their paths. The server in this example is newer than the client on purpose, so you see what the client does with a component it has never heard of.
 
 ## Install
 
@@ -103,7 +101,7 @@ export async function loadDocument(url: string, request: typeof fetch = fetch): 
 
 ## The registry
 
-The client resolves nodes through the design system's registry. These two files are the ones from [A design-system registry](/docs/examples/design-system-registry), unchanged.
+The client resolves nodes through the design system's registry: `components.ts` defines the components with the schema of their configuration, and `design-system.ts` builds the registry from them and renders a document.
 
 ```ts title="components.ts"
 import * as z from 'zod/mini';
@@ -265,4 +263,4 @@ The test of this example runs the same route handler against the client, then re
 
 - Show a fallback in place of each issue: the paths say which nodes failed.
 - Validate what a document may contain on the server too: build it from the same registry, so a document the client would reject never leaves the server.
-- Send workflows the same way: [A server-driven workflow](/docs/examples/server-driven-workflow).
+- Send workflows the same way, checked with `parseActions`: [Serialized workflows](/docs/actions/serialized-workflows).
