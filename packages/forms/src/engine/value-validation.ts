@@ -383,8 +383,17 @@ export function foldFieldParticipation(
  * are all read in one ordered pass, against the values with whatever was excluded before absent, so a field
  * cannot stay shown or required because of an answer nobody can give. A constraint that reads a field
  * resolved later sees its value as held. A field inside an excluded container still gets its own state, read against the values from before the container was excluded. An inactive wizard step is not excluded: it is only not rendered.
+ *
+ * `shownStep` resolves that step as if its constraints held, so its fields get their own states: a renderer that
+ * authors every step's fields once, and lets the step's host hide a skipped step, reads those states for the markup
+ * of that step only. The result is no verdict on what takes part: the steps after it read the held values of the
+ * step, so only that step's fields are meaningful.
  */
-export function resolveParticipation(steps: readonly ValidationStep[], values: Record<string, unknown>): Participation {
+export function resolveParticipation(
+	steps: readonly ValidationStep[],
+	values: Record<string, unknown>,
+	{ shownStep }: { shownStep?: string } = {},
+): Participation {
 	let visible = values;
 	const excluded: string[] = [];
 	const skippedSteps: string[] = [];
@@ -399,6 +408,7 @@ export function resolveParticipation(steps: readonly ValidationStep[], values: R
 	for (const step of steps) {
 		if (
 			step.constraints?.length &&
+			step.id !== shownStep &&
 			!evaluateConstraints({ constraints: step.constraints, values: visible }).shouldShow
 		) {
 			if (step.id !== undefined) skippedSteps.push(step.id);

@@ -56,6 +56,30 @@ describe('resolveParticipation', () => {
 		expect(resolveParticipation(steps, { x: 'go' }).skippedSteps).toEqual([]);
 	});
 
+	test('shownStep resolves a skipped step as shown, so its fields get their own states', () => {
+		const steps: ValidationStep[] = [
+			{ id: 'a', elements: [input('x')] },
+			{
+				id: 'b',
+				constraints: [when('x', 'on', 'show')],
+				elements: [input('y'), input('z', { constraints: [when('y', 'open', 'show')] })],
+			},
+		];
+		const values = { x: 'off', y: 'closed', z: '' };
+
+		expect(resolveParticipation(steps, values).fields).toMatchObject({
+			y: { hidden: true },
+			z: { hidden: true },
+		});
+		const shown = resolveParticipation(steps, values, { shownStep: 'b' });
+		expect(shown.skippedSteps).toEqual([]);
+		expect(shown.fields.y).toBeUndefined();
+		expect(shown.fields.z).toMatchObject({ hidden: true });
+		expect(resolveParticipation(steps, { ...values, y: 'open' }, { shownStep: 'b' }).fields.z).toMatchObject({
+			hidden: false,
+		});
+	});
+
 	test('the value of a skipped step is absent for a later field constraint', () => {
 		const held = { hasCompany: false, wantsInvoice: 'yes', vat: '' };
 		const result = resolveParticipation(wizard(), held);

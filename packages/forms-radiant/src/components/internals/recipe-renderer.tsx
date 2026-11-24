@@ -15,6 +15,10 @@ import { FormElements } from './form-elements';
 import { collectFormInitialValues } from '@/adapters/radiant/rui-form-shell';
 import { FormStep } from '@/components/form-step';
 
+function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
+	return jsx('style', { 'data-se-theme-css': themeId, children: css });
+}
+
 /**
  * Authors every step's fields once, inside the recipe chrome.
  *
@@ -22,33 +26,11 @@ import { FormStep } from '@/components/form-step';
  * View-owned shell: no per-step filtering and no slot projection. The
  * `se-form-step` hosts bind their own `hidden` attribute to the instance's
  * step state, so SSR emits the whole form and step switching is pure DOM.
- */
-function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
-	return jsx('style', { 'data-se-theme-css': themeId, children: css });
-}
-
-/**
- * The participation a step's fields render with.
  *
- * @remarks
- * A step that the values skip is hidden, so its fields are not in the markup of the participation the values give.
- * The `se-form-step` host shows the step when it becomes current, and nothing renders its fields then, so a step
- * that starts skipped would open empty. Its fields render as if the step were shown instead: the host keeps them
- * hidden while the step is skipped, and the container's participation, not the markup, decides what takes part.
+ * A step is hidden when its constraints skip it, and in a wizard when it is not the current one. The fields of a
+ * skipped step are authored with the participation of the step as if it were shown, so they are in the markup when
+ * the step opens; the step's host hides them, and the container's participation decides what takes part.
  */
-function stepParticipation(
-	steps: NormalizedFormConfig['steps'],
-	step: NormalizedFormConfig['steps'][number],
-	values: Record<string, unknown>,
-	participation: ReturnType<typeof resolveParticipation>,
-) {
-	if (!participation.skippedSteps.includes(step.id)) return participation;
-	return resolveParticipation(
-		steps.map((candidate) => (candidate === step ? { ...candidate, constraints: undefined } : candidate)),
-		values,
-	);
-}
-
 export function RecipeRenderer({
 	config,
 	engine,
@@ -83,7 +65,7 @@ export function RecipeRenderer({
 				<FormStep
 					key={step.id}
 					stepId={step.id}
-					hidden={isWizard && index !== 0}
+					hidden={participation.skippedSteps.includes(step.id) || (isWizard && index !== 0)}
 					class={step.className}
 					style={step.style}
 					appearance={step.appearance}
@@ -103,7 +85,9 @@ export function RecipeRenderer({
 									values,
 									initialValues,
 									rowIds,
-									participation: stepParticipation(config.steps, step, values, participation),
+									participation: participation.skippedSteps.includes(step.id)
+										? resolveParticipation(config.steps, values, { shownStep: step.id })
+										: participation,
 								}}
 							/>
 						</div>
