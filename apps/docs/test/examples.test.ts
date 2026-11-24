@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { checkRecipe, examplePagesRoot, importsOf, packageOf, readRecipes, type Recipe } from './recipe-format';
+import { checkExample, examplePagesRoot, importsOf, packageOf, readExamples, type Example } from './example-format';
 
 /**
  * Pages of Examples that are not a folder of `src/lib/examples`.
@@ -22,18 +22,21 @@ const page = (id: string): string | undefined => {
 
 const overview = page('overview') ?? '';
 
-describe('the recipes of Examples', () => {
-	const recipes = readRecipes();
+describe('the Examples', () => {
+	const examples = readExamples();
 
-	test.each(recipes.map((recipe) => [recipe.id, recipe] as const))('%s follows the recipe format', (_id, recipe) => {
-		expect(checkRecipe(recipe, page(recipe.id), overview)).toEqual([]);
-	});
+	test.each(examples.map((example) => [example.id, example] as const))(
+		'%s follows the example format',
+		(_id, example) => {
+			expect(checkExample(example, page(example.id), overview)).toEqual([]);
+		},
+	);
 
 	test.each(['design-system-registry', 'server-sent-document', 'checkout-workflow', 'server-driven-workflow'])(
 		'%s imports no UI framework and no forms package',
 		(id) => {
-			const recipe = recipes.find((candidate) => candidate.id === id);
-			const packages = recipe?.files.flatMap((file) => importsOf(file.source).map(packageOf)) ?? [];
+			const example = examples.find((candidate) => candidate.id === id);
+			const packages = example?.files.flatMap((file) => importsOf(file.source).map(packageOf)) ?? [];
 			expect(packages.length).toBeGreaterThan(0);
 			expect(
 				packages.filter((name) => /^(react|react-dom|@ecopages\/.+|@schema-engine\/forms.*)$/.test(name)),
@@ -41,8 +44,8 @@ describe('the recipes of Examples', () => {
 		},
 	);
 
-	test('every page of Examples is a recipe or is listed as another kind of page', () => {
-		const ids = new Set(recipes.map((recipe) => recipe.id));
+	test('every page of Examples is an example or is listed as another kind of page', () => {
+		const ids = new Set(examples.map((example) => example.id));
 		const pages = readdirSync(examplePagesRoot)
 			.filter((file) => file.endsWith('.mdx'))
 			.map((file) => file.replace(/\.mdx$/, ''));
@@ -57,9 +60,9 @@ const imports = (specifier: string) => ({
 	files: [{ name: 'main.ts', source: `import { x } from '${specifier}';\n` }],
 });
 
-describe('the recipe format checker', () => {
+describe('the example format checker', () => {
 	const install = 'pnpm add @schema-engine/registry zod';
-	const recipe: Recipe = {
+	const example: Example = {
 		id: 'demo',
 		files: [
 			{ name: 'main.ts', source: "import { greet } from './greet';\nexport const message = greet('Ada');\n" },
@@ -77,15 +80,15 @@ describe('the recipe format checker', () => {
 	const goodPage = [
 		'## Install',
 		`\`\`\`bash\n${install}\n\`\`\``,
-		shown('main.ts', 'ts', recipe.files[0]!.source.trimEnd()),
-		shown('greet.ts', 'ts', recipe.files[1]!.source.trimEnd()),
+		shown('main.ts', 'ts', example.files[0]!.source.trimEnd()),
+		shown('greet.ts', 'ts', example.files[1]!.source.trimEnd()),
 		shown('view.react.tsx', 'tsx', 'export const View = () => <p />;'),
 	].join('\n\n');
 	const goodOverview = `| [Demo](/docs/examples/demo) | Shows a thing | \`${install}\` |`;
-	const problems = (changed: Partial<Recipe>, text: string | null = goodPage, list = goodOverview) =>
-		checkRecipe({ ...recipe, ...changed }, text ?? undefined, list);
+	const problems = (changed: Partial<Example>, text: string | null = goodPage, list = goodOverview) =>
+		checkExample({ ...example, ...changed }, text ?? undefined, list);
 
-	test('accepts a recipe that has a page, a test, an install line and an overview entry', () => {
+	test('accepts an example that has a page, a test, an install line and an overview entry', () => {
 		expect(problems({})).toEqual([]);
 	});
 
@@ -96,7 +99,7 @@ describe('the recipe format checker', () => {
 		expect(problems({}, null)).toEqual(['has no page examples/demo.mdx']);
 	});
 
-	test('fails a file that imports another recipe, an app alias or a file that is not its own', () => {
+	test('fails a file that imports another example, an app alias or a file that is not its own', () => {
 		for (const specifier of ['../other/main', '@/lib/x', './missing']) {
 			const [first] = problems(imports(specifier), goodPage);
 			expect(first, specifier).toContain(`main.ts imports ${specifier}`);
@@ -105,12 +108,12 @@ describe('the recipe format checker', () => {
 
 	test('resolves a relative import to a file by its exact name, not by the start of it', () => {
 		const importing = (specifier: string) => ({
-			files: [{ name: 'main.ts', source: `import { x } from '${specifier}';\n` }, recipe.files[2]!],
+			files: [{ name: 'main.ts', source: `import { x } from '${specifier}';\n` }, example.files[2]!],
 		});
 		const importProblems = (specifier: string) =>
 			problems(importing(specifier), goodPage).filter((problem) => problem.includes('imports'));
 		expect(importProblems('./view.react')).toEqual([]);
-		expect(importProblems('./view')).toEqual(['main.ts imports ./view, which is not a file of this recipe']);
+		expect(importProblems('./view')).toEqual(['main.ts imports ./view, which is not a file of this example']);
 	});
 
 	test('reads an import in either quote style', () => {
@@ -133,7 +136,7 @@ describe('the recipe format checker', () => {
 		]);
 	});
 
-	test('fails a page whose install line misses a package, and an overview that does not list the recipe', () => {
+	test('fails a page whose install line misses a package, and an overview that does not list the example', () => {
 		const withoutZod = goodPage.replace(install, 'pnpm add @schema-engine/registry');
 		expect(problems({}, withoutZod, goodOverview.replace(install, 'pnpm add @schema-engine/registry'))).toEqual([
 			'the install line lacks zod',

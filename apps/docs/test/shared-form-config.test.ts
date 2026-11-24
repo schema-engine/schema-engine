@@ -4,7 +4,7 @@ import { contactForm } from '../src/lib/examples/contact-form/config';
 import { registration } from '../src/lib/examples/registration-wizard/config';
 import { formEngine } from '../src/lib/form-engine-setup';
 
-describe('the configs of the forms recipes', () => {
+describe('the configs of the forms examples', () => {
 	test.each([
 		['contact form', contactForm],
 		['registration wizard', registration],

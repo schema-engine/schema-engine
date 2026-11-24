@@ -4,7 +4,7 @@ description: 'A newsletter signup whose config lists its actions: send the email
 order: 8
 ---
 
-import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { FormExampleDemo } from '@/components/form-example-demo';
 import { RendererTabs } from '@/components/renderer-tabs';
 import { newsletter } from '@/lib/examples/submit-notify-reset/config';
 
@@ -30,9 +30,9 @@ Copy the files below into one folder. Radiant also needs its JSX setup and style
 
 ## See it
 
-Submit an empty form to see the message. Enter an email and submit: the action sends it to a mock endpoint, a notification appears, and the field clears. The demos are styled for this site and send to a mock endpoint.
+Submit an empty form to see the message. Enter an email and submit: the action sends it to a mock endpoint, a notification appears, and the field clears.
 
-<FormRecipeDemo config={newsletter} />
+<FormExampleDemo config={newsletter} />
 
 ## The config
 

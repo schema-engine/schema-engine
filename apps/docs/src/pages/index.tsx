@@ -60,7 +60,7 @@ const PATH_STEPS = [
 	'Run the quick start: a registry and a JSON workflow, with no UI.',
 	'Learn the registry and the actions.',
 	'Add Forms, then Forms React or Forms Radiant.',
-	'Copy a recipe from the examples and make it yours.',
+	'Copy an example and make it yours.',
 ];
 
 type HomePathCardData = {
@@ -84,7 +84,7 @@ const PATH_CARDS: HomePathCardData[] = [
 		href: '/docs/examples/overview',
 		title: 'Explore the examples',
 		description:
-			'Tested recipes for a registry, a workflow and forms in React and Radiant, with the files to copy.',
+			'Tested examples for a registry, a workflow and forms in React and Radiant, with the files to copy.',
 	},
 ];
 

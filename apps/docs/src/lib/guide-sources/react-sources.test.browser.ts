@@ -160,7 +160,7 @@ describe('the agent tool', () => {
 });
 
 describe('the React quick start', () => {
-	test('renders with no recipe, blocks an invalid submit and shows the submitted values', async () => {
+	test('renders with no view recipe, blocks an invalid submit and shows the submitted values', async () => {
 		const host = await mount(createElement(ContactForm));
 		await userEvent.click(host.querySelector<HTMLButtonElement>('button[type="submit"]')!);
 		await expect.poll(() => host.textContent).toContain('Enter your name');

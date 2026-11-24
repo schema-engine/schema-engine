@@ -10,7 +10,7 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
  *
  * @remarks
  * On a cold Vite cache, a dependency first reached while a test file loads is optimized mid-run, and Vite
- * reloads the page ("Vite unexpectedly reloaded a test"). The form recipe tests render React and Radiant forms,
+ * reloads the page ("Vite unexpectedly reloaded a test"). The guide source and example tests render React and Radiant forms,
  * which reach these through the built packages.
  */
 const browserOptimizedDeps = [

@@ -123,7 +123,7 @@ The [documentation app](./apps/docs) reads in this order:
 - **[Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and **[Actions](./apps/docs/src/content/docs/actions/overview.mdx)**
 - **[Forms](./apps/docs/src/content/docs/forms/overview.mdx)**, **[Forms React](./apps/docs/src/content/docs/forms-react/overview.mdx)** and **[Forms Radiant](./apps/docs/src/content/docs/forms-radiant/overview.mdx)**
 - **[Layout](./apps/docs/src/content/docs/layout/overview.mdx)**: grid, appearance axes and theming
-- **[Examples](./apps/docs/src/content/docs/examples/overview.mdx)**: tested recipes with the files to copy
+- **[Examples](./apps/docs/src/content/docs/examples/overview.mdx)**: tested examples with the files to copy
 - **[shadcn registry sources](./registry/README.md)**: the optional React fields and recipes for Forms React
 - **[Contributing](./CONTRIBUTING.md)**: the pre-commit hook and how to run its checks locally
 

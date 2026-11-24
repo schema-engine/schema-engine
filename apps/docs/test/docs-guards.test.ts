@@ -68,7 +68,7 @@ describe('no unused library is named', () => {
 		}
 		expect(SHADCN.test('Run `pnpm dlx shadcn@latest add`.')).toBe(true);
 		expect(SHADCN.test("import { Button } from '@/components/ui/button';")).toBe(true);
-		expect(SHADCN.test("import { Demo } from '@/components/recipe-demo';")).toBe(false);
+		expect(SHADCN.test("import { Demo } from '@/components/form-example-demo';")).toBe(false);
 	});
 });
 

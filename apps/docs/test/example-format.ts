@@ -2,31 +2,31 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { shownExactly } from './shown-exactly';
 
-/** One folder per recipe, each holding the files the recipe's page shows and the tests that run them. */
+/** One folder per example, each holding the files the example's page shows and the tests that run them. */
 export const examplesRoot = join(import.meta.dirname, '../src/lib/examples');
 
-/** The example pages, one per recipe folder, plus the overview and the pages that use another format. */
+/** The example pages, one per example folder, plus the overview and the pages that use another format. */
 export const examplePagesRoot = join(import.meta.dirname, '../src/content/docs/examples');
 
-export interface RecipeFile {
+export interface ExampleFile {
 	name: string;
 	source: string;
 }
 
-export interface Recipe {
+export interface Example {
 	id: string;
 	/** The files a reader copies: every file of the folder that is not a test. */
-	files: RecipeFile[];
+	files: ExampleFile[];
 	/** The test files of the folder. */
-	tests: RecipeFile[];
+	tests: ExampleFile[];
 }
 
 const TEST_FILE = /\.test(\.browser)?\.tsx?$/;
 const PACKAGE_SPECIFIER = /^(@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*(\/.*)?$/;
 const RELATIVE_SPECIFIER = /^\.\/[\w.-]+$/;
 
-/** Reads every folder of `root` as a recipe, in id order. */
-export function readRecipes(root = examplesRoot): Recipe[] {
+/** Reads every folder of `root` as an example, in id order. */
+export function readExamples(root = examplesRoot): Example[] {
 	if (!existsSync(root)) return [];
 	return readdirSync(root, { withFileTypes: true })
 		.filter((entry) => entry.isDirectory())
@@ -62,7 +62,7 @@ export function packageOf(specifier: string): string {
  * The `pnpm add` commands of the page's Install section.
  *
  * @remarks
- * A recipe that runs in two renderers has one command for each, because their peers differ.
+ * A example that runs in two renderers has one command for each, because their peers differ.
  */
 export function installLines(page: string): string[] {
 	const section = page.split(/^## /m).find((part) => /^Install\b/.test(part)) ?? '';
@@ -70,43 +70,43 @@ export function installLines(page: string): string[] {
 }
 
 /**
- * Everything that makes a recipe fail the format: a file the page does not show word for word, an import that is
+ * Everything that makes an example fail the format: a file the page does not show word for word, an import that is
  * neither a package nor a sibling, a folder without a test that runs its files, a page without the install line its
- * files need, or a recipe the overview does not list.
+ * files need, or an example the overview does not list.
  */
-export function checkRecipe(recipe: Recipe, page: string | undefined, overview: string): string[] {
+export function checkExample(example: Example, page: string | undefined, overview: string): string[] {
 	const problems: string[] = [];
-	const names = recipe.files.map((file) => file.name);
-	if (recipe.files.length === 0) problems.push('has no files');
+	const names = example.files.map((file) => file.name);
+	if (example.files.length === 0) problems.push('has no files');
 
-	for (const file of recipe.files) {
+	for (const file of example.files) {
 		for (const specifier of importsOf(file.source)) {
 			if (PACKAGE_SPECIFIER.test(specifier)) continue;
 			if (!RELATIVE_SPECIFIER.test(specifier)) {
 				problems.push(`${file.name} imports ${specifier}, which is not a package or a file of its own folder`);
 			} else if (!namesFile(specifier, names)) {
-				problems.push(`${file.name} imports ${specifier}, which is not a file of this recipe`);
+				problems.push(`${file.name} imports ${specifier}, which is not a file of this example`);
 			}
 		}
 	}
 
-	if (!recipe.tests.some((test) => importsOf(test.source).some((specifier) => RELATIVE_SPECIFIER.test(specifier)))) {
+	if (!example.tests.some((test) => importsOf(test.source).some((specifier) => RELATIVE_SPECIFIER.test(specifier)))) {
 		problems.push('has no test that imports its files');
 	}
 
 	if (page === undefined) {
-		problems.push(`has no page examples/${recipe.id}.mdx`);
+		problems.push(`has no page examples/${example.id}.mdx`);
 		return problems;
 	}
 
-	problems.push(...shownExactly(recipe.files, page));
+	problems.push(...shownExactly(example.files, page));
 
 	const installs = installLines(page);
 	if (installs.length === 0) {
 		problems.push('the page has no "Install" section with a pnpm add command');
 	} else {
 		const installed = new Set(installs.flatMap((install) => install.split(/\s+/)));
-		const imported = new Set(recipe.files.flatMap((file) => importsOf(file.source).map(packageOf)));
+		const imported = new Set(example.files.flatMap((file) => importsOf(file.source).map(packageOf)));
 		for (const name of [...imported].filter((specifier) => PACKAGE_SPECIFIER.test(specifier))) {
 			if (!installed.has(name)) problems.push(`the install line lacks ${name}`);
 		}
@@ -114,7 +114,7 @@ export function checkRecipe(recipe: Recipe, page: string | undefined, overview: 
 			problems.push('the overview does not list its install line');
 		}
 	}
-	if (!overview.includes(`](/docs/examples/${recipe.id})`)) problems.push('the overview does not link to the page');
+	if (!overview.includes(`](/docs/examples/${example.id})`)) problems.push('the overview does not link to the page');
 
 	return problems;
 }

@@ -4,7 +4,7 @@ description: 'A three-step survey whose follow-up step is skipped unless the ans
 order: 7
 ---
 
-import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { FormExampleDemo } from '@/components/form-example-demo';
 import { RendererTabs } from '@/components/renderer-tabs';
 import { survey } from '@/lib/examples/branching-survey/config';
 
@@ -32,7 +32,7 @@ Copy the files below into one folder. Radiant also needs its JSX setup and style
 
 Choose "Great" and select Next: the survey goes to the last step. Go back, choose "Poor" and select Next: the follow-up step opens, and Next waits for its answers.
 
-<FormRecipeDemo config={survey} />
+<FormExampleDemo config={survey} />
 
 ## The config
 

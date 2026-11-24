@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { createFormEngine, createFormRuntime } from '@schema-engine/forms';
 import { createFormStateContainer, FORM_ROOT } from '@schema-engine/forms/state-container';
-import { container, fillIn } from '../src/lib/form-recipes/container';
-import { bareControls, engine, textInput } from '../src/lib/form-recipes/engine';
-import { engine as localized, formatIssue } from '../src/lib/form-recipes/format-issue';
-import { walkThrough as nativeFacts } from '../src/lib/form-recipes/native-facts';
-import { submitToJsonApi, submitToProblemDetails } from '../src/lib/form-recipes/server-errors';
-import { createCheckout, walkThrough as wizard } from '../src/lib/form-recipes/checkout-wizard';
-import { hydrateOnClient, renderOnServer } from '../src/lib/form-recipes/hydration';
+import { container, fillIn } from '../src/lib/guide-sources/container';
+import { bareControls, engine, textInput } from '../src/lib/guide-sources/engine';
+import { engine as localized, formatIssue } from '../src/lib/guide-sources/format-issue';
+import { walkThrough as nativeFacts } from '../src/lib/guide-sources/native-facts';
+import { submitToJsonApi, submitToProblemDetails } from '../src/lib/guide-sources/server-errors';
+import { createCheckout, walkThrough as wizard } from '../src/lib/guide-sources/checkout-wizard';
+import { hydrateOnClient, renderOnServer } from '../src/lib/guide-sources/hydration';
 
 describe('the form state page', () => {
 	test('isValid counts recorded errors only; checkValidity validates without recording; validate records', async () => {

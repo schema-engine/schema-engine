@@ -23,7 +23,7 @@ async function waitForHydration(page: Page, count = 1): Promise<void> {
 	);
 }
 
-describe('the forms recipe pages', () => {
+describe('the forms example pages', () => {
 	let browser: Browser;
 	let page: Page;
 	const problems: string[] = [];
@@ -228,7 +228,7 @@ describe('the forms recipe pages', () => {
 		);
 	});
 
-	test('the Radiant demo of a recipe validates on submit', async () => {
+	test('the Radiant demo of an example validates on submit', async () => {
 		await page.goto(`${baseUrl}${contactPath}`, { waitUntil: 'networkidle' });
 		const radiantForm = page.locator('.docs-form-renderer-preview form').first();
 		await pwExpect(radiantForm).toBeVisible();

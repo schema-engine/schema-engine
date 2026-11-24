@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 describe('the action registrations', () => {
-	test('are the file of the checkout workflow recipe', () => {
+	test('are the file of the checkout workflow example', () => {
 		const own = readFileSync(join(import.meta.dirname, 'actions.ts'), 'utf8');
 		expect(own).toBe(readFileSync(join(import.meta.dirname, '../checkout-workflow/actions.ts'), 'utf8'));
 	});

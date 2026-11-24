@@ -4,7 +4,7 @@ description: 'Fetch a form config from an endpoint, check it with safeValidateFo
 order: 9
 ---
 
-import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { FormExampleDemo } from '@/components/form-example-demo';
 import { RendererTabs } from '@/components/renderer-tabs';
 import { signupForm } from '@/lib/examples/server-driven-form/server';
 
@@ -30,9 +30,9 @@ Copy the files below into one folder. Radiant also needs its JSX setup and style
 
 ## See it
 
-The demos render the config the server sends, styled for this site. They do not call a server: the files below do, and the recipe's tests run them against the handlers of `server.ts`.
+The demos render the config the server sends. The files below call the server, and the example's tests run them against the handlers of `server.ts`.
 
-<FormRecipeDemo config={signupForm} />
+<FormExampleDemo config={signupForm} />
 
 ## The server
 

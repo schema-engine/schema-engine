@@ -5,7 +5,7 @@ import { FormRendererPreview } from '@/components/form-renderer';
 import { ReactFormDemoEmbed } from '@/components/react-form-demo/react-form-demo-embed';
 import { highlightToHtml } from '@/lib/pierre-highlight';
 import { recipeConfigSource, recipeYamlSources, type Recipe } from '@/lib/recipes/catalog';
-import './recipe-demo.css';
+import '@/components/form-example-demo/form-example-demo.css';
 import '@/lib/recipes/acme-theme.css';
 import '@/lib/recipes/address-form.css';
 import '@/lib/recipes/brand-frame.css';
@@ -36,11 +36,13 @@ export const RecipeDemo = eco.component<{ recipe: Recipe }, JsxRenderable>({
 			...recipeYamlSources(recipe.demos).map((file) => tab(file.id, file.label, 'yaml', file.source)),
 		];
 		return (
-			<div class="recipe-demo not-prose unstyled" data-recipe={recipe.id}>
-				<div class="recipe-demo__demos">
+			<div class="example-demo not-prose unstyled" data-example={recipe.id}>
+				<div class="example-demo__demos">
 					{recipe.demos.map((demo) => (
-						<figure class="recipe-demo__demo" data-renderer={demo.renderer}>
-							{demo.caption ? <figcaption class="recipe-demo__caption">{demo.caption}</figcaption> : null}
+						<figure class="example-demo__demo" data-renderer={demo.renderer}>
+							{demo.caption ? (
+								<figcaption class="example-demo__caption">{demo.caption}</figcaption>
+							) : null}
 							{demo.renderer === 'react' ? (
 								<ReactFormDemoEmbed config={demo.config} />
 							) : (

@@ -104,11 +104,11 @@ export const postalCode = {
 	'contact-card.ts': recipeConfigSource(allRecipes.find((recipe) => recipe.id === 'contact-card')!.demos),
 	'brand-frame.ts': "export { BrandFrameRecipe } from './brand-frame.radiant';",
 	'react-quick-start.react.tsx': readFileSync(
-		join(import.meta.dirname, '../src/lib/form-recipes/react-quick-start.react.tsx'),
+		join(import.meta.dirname, '../src/lib/guide-sources/react-quick-start.react.tsx'),
 		'utf8',
 	),
 	'react-widgets.react.tsx': readFileSync(
-		join(import.meta.dirname, '../src/lib/form-recipes/react-widgets.react.tsx'),
+		join(import.meta.dirname, '../src/lib/guide-sources/react-widgets.react.tsx'),
 		'utf8',
 	),
 	...recipeFiles,

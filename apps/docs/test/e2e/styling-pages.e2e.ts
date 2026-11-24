@@ -80,7 +80,7 @@ describe('styling docs pages', () => {
 			([id, fields, which]) =>
 				fields!.map((name) => {
 					const input = document.querySelector(
-						`[data-recipe="${id}"] [data-renderer="${which}"] input[name$="${name}"]`,
+						`[data-example="${id}"] [data-renderer="${which}"] input[name$="${name}"]`,
 					)!;
 					const { x, y, width } = input.getBoundingClientRect();
 					return { x, y, width };
@@ -97,7 +97,7 @@ describe('styling docs pages', () => {
 	 * (`highlightCode` in `src/lib/pierre-highlight.ts`), so that newline is removed before comparing.
 	 */
 	async function expectEveryTabCopies(id: string): Promise<void> {
-		const tabsHost = page.locator(`[data-recipe="${id}"] radiant-code-tabs`);
+		const tabsHost = page.locator(`[data-example="${id}"] radiant-code-tabs`);
 		await tabsHost.scrollIntoViewIfNeeded();
 		const tabs = tabsHost.getByRole('tab');
 		const count = await tabs.count();
@@ -125,15 +125,15 @@ describe('styling docs pages', () => {
 			await page.setViewportSize({ width: 1300, height: 900 });
 			await page.goto(`${baseUrl}/docs/examples/layout-recipes`, { waitUntil: 'networkidle' });
 			await page.waitForFunction(() => {
-				const form = document.querySelector('[data-recipe="brand-frame"] .docs-react-form-demo form');
+				const form = document.querySelector('[data-example="brand-frame"] .docs-react-form-demo form');
 				return form !== null && Object.keys(form).some((key) => key.startsWith('__react'));
 			});
 		});
 
 		test('shows every recipe with a rendered demo', async () => {
-			expect(await page.locator('[data-recipe]').count()).toBe(RECIPE_IDS.length);
+			expect(await page.locator('[data-example]').count()).toBe(RECIPE_IDS.length);
 			for (const id of RECIPE_IDS) {
-				const demos = page.locator(`[data-recipe="${id}"] .recipe-demo__demo`);
+				const demos = page.locator(`[data-example="${id}"] .example-demo__demo`);
 				const count = await demos.count();
 				expect(count, id).toBeGreaterThan(0);
 				for (let index = 0; index < count; index += 1) {
@@ -177,7 +177,7 @@ describe('styling docs pages', () => {
 		});
 
 		test('the tone axis writes its attribute and sets the colour roles', async () => {
-			const form = page.locator('[data-recipe="brand-theme"] rui-form.brand-form');
+			const form = page.locator('[data-example="brand-theme"] rui-form.brand-form');
 			await pwExpect(form).toHaveAttribute('data-se-tone', 'brand');
 			expect(
 				await form.evaluate((element) => getComputedStyle(element).getPropertyValue('--primary').trim()),
@@ -185,7 +185,7 @@ describe('styling docs pages', () => {
 		});
 
 		test('two engines on one theme share its id and each picks its own tone', async () => {
-			const forms = page.locator('[data-recipe="shared-theme"] rui-form');
+			const forms = page.locator('[data-example="shared-theme"] rui-form');
 			const themes = await forms.evaluateAll((elements) =>
 				elements.map((element) => element.getAttribute('data-se-theme')),
 			);
@@ -200,7 +200,7 @@ describe('styling docs pages', () => {
 			['radiant', '.card-shell__section'],
 			['react', '.se-demo-shell__card'],
 		])('%s: size hooks set on the form class reach the compact card and its controls', async (renderer, card) => {
-			const demo = page.locator(`[data-recipe="tight-size"] [data-renderer="${renderer}"]`);
+			const demo = page.locator(`[data-example="tight-size"] [data-renderer="${renderer}"]`);
 			expect(
 				await demo
 					.locator(card)
@@ -217,7 +217,7 @@ describe('styling docs pages', () => {
 
 		test('the custom recipe frames both renderers', async () => {
 			for (const renderer of ['react', 'radiant']) {
-				const demo = page.locator(`[data-recipe="brand-frame"] [data-renderer="${renderer}"]`);
+				const demo = page.locator(`[data-example="brand-frame"] [data-renderer="${renderer}"]`);
 				await pwExpect(demo.locator('.brand-frame__label')).toHaveText('Newsletter');
 			}
 		});
@@ -227,7 +227,7 @@ describe('styling docs pages', () => {
 		});
 
 		test('the config tab is the config the demo renders', async () => {
-			const root = page.locator('[data-recipe="contact-card"]');
+			const root = page.locator('[data-example="contact-card"]');
 			const rendered = JSON.parse(
 				(await root.locator('se-form-instance').first().getAttribute('config')) ?? '{}',
 			) as { id: string; steps: Array<{ elements: Array<{ id: string }> }> };
@@ -247,13 +247,13 @@ describe('styling docs pages', () => {
 
 	test('the theming page renders its theme file demo', async () => {
 		await page.goto(`${baseUrl}/docs/layout/theming`, { waitUntil: 'networkidle' });
-		const form = page.locator('[data-recipe="acme-theme"] rui-form.acme');
+		const form = page.locator('[data-example="acme-theme"] rui-form.acme');
 		await pwExpect(form).toBeVisible();
-		await pwExpect(page.locator('[data-recipe="acme-theme"] [data-se-size="comfortable"]').first()).toBeAttached();
+		await pwExpect(page.locator('[data-example="acme-theme"] [data-se-size="comfortable"]').first()).toBeAttached();
 		expect(await form.evaluate((element) => getComputedStyle(element).getPropertyValue('--primary').trim())).toBe(
 			'#4f46e5',
 		);
-		const input = page.locator('[data-recipe="acme-theme"] input').first();
+		const input = page.locator('[data-example="acme-theme"] input').first();
 		expect(await input.evaluate((element) => element.getBoundingClientRect().height)).toBe(44);
 		await expectEveryTabCopies('acme-theme');
 	});
