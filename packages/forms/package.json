@@ -15,7 +15,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/andeeplus/schema-engine.git",
+		"url": "git+https://github.com/schema-engine/schema-engine.git",
 		"directory": "packages/forms"
 	},
 	"engines": {

@@ -10,19 +10,19 @@ The generated root `registry.json` lists all three ports and resolves each sourc
 ## Base UI (default)
 
 ```sh
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form
+pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form
 ```
 
 ## Radix UI
 
 ```sh
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form-radix
+pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form-radix
 ```
 
 ## React Aria
 
 ```sh
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form-aria
+pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form-aria
 ```
 
 Every form element is also available as an individual item (for example `schema-engine-form-input-radix`). Default visual recipes are a separate aggregate: `schema-engine-form-recipes`, `schema-engine-form-recipes-radix`, or `schema-engine-form-recipes-aria`. Installed Schema Engine source lives under `components/schema-engine/forms`; Schema Engine-owned primitives install under `components/ui/schema-engine/components`.

@@ -3,7 +3,7 @@
 React Aria port of the Schema Engine shadcn form registry.
 
 ```sh
-pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form-aria
+pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form-aria
 ```
 
 Source: `registry/aria/primitives/` overrides the combobox, phone input, and drop zone primitives with
