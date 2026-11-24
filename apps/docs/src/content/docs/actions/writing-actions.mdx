@@ -34,10 +34,6 @@ interface WebhookConfig extends ActionConfigBase<'webhook'> {
 export const webhook = defineAppAction<WebhookConfig>({
 	$type: 'webhook',
 	schema: z.object({
-		id: z.string(),
-		$type: z.literal('webhook'),
-		enabled: z.optional(z.boolean()),
-		triggers: z.optional(z.array(z.string())),
 		url: z.url(),
 		payload: z.record(z.string(), z.string()),
 	}),
@@ -65,7 +61,7 @@ There are two layers. `TBaseContext` is what callers pass to `dispatch()`. The h
 
 ## Register actions at runtime
 
-`ActionRegistry` is built once from a list and cannot change. To register actions at runtime, implement `ActionRegistryProvider` on a store of your own. `parseActions` and `ActionDispatcher` need only `getAction`:
+`ActionRegistry` is built once from a list and cannot change. To register actions at runtime, implement `ActionRegistryProvider` on a store of your own. `parseActions` needs only `getAction`; `ActionDispatcher` also needs `getActionTypes`:
 
 ```ts
 import type { ActionConfigBase, ActionRegistration, ActionRegistryProvider } from '@schema-engine/actions';

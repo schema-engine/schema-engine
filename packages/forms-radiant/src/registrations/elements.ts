@@ -1,0 +1,19 @@
+/** Each element registration of the package by name; `schemaFormRegistrations` lists them all and is exported from the package root. */
+export { InputElementRegistration } from '@/elements/inputs/form-input.registration';
+export { TextareaElementRegistration } from '@/elements/inputs/form-textarea.registration';
+export { NumberElementRegistration } from '@/elements/inputs/form-number.registration';
+export { SelectElementRegistration } from '@/elements/inputs/form-select.registration';
+export { CheckboxElementRegistration } from '@/elements/inputs/form-checkbox.registration';
+export { CheckboxGroupElementRegistration } from '@/elements/inputs/form-checkbox-group.registration';
+export { SwitchElementRegistration } from '@/elements/inputs/form-switch.registration';
+export { RadioElementRegistration } from '@/elements/inputs/form-radio.registration';
+export { SliderElementRegistration } from '@/elements/inputs/form-slider.registration';
+export { ComboboxElementRegistration } from '@/elements/inputs/form-combobox.registration';
+export { DropZoneElementRegistration } from '@/elements/inputs/form-drop-zone.registration';
+export { FieldSetRegistration } from '@/elements/inputs/form-fieldset.registration';
+export { InputOTPElementRegistration } from '@/elements/inputs/form-input-otp.registration';
+export { PhoneInputElementRegistration } from '@/elements/inputs/form-phone-input.registration';
+export { MaskedInputElementRegistration } from '@/elements/inputs/form-masked-input.registration';
+export { ArrayElementRegistration } from '@/elements/inputs/form-array-elements.registration';
+export { SubmitButtonElementRegistration } from '@/elements/actions/submit-button.registration';
+export { SubmissionAlertElementRegistration } from '@/elements/content/form-submission-alert.registration';

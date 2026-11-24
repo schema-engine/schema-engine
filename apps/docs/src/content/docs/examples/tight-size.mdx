@@ -1,0 +1,78 @@
+---
+title: 'Overriding size tokens'
+description: 'Tightening the compact size with the two hooks it reads and the measure it sets.'
+order: 18
+---
+
+import { FormExampleDemo } from '@/components/form-example-demo';
+import { tightForm } from '@/lib/examples/tight-size/config';
+import '@/lib/examples/tight-size/tight-size.css';
+
+# Overriding size tokens
+
+`size: compact` reads two hooks, `--se-space-compact` and `--se-control-height-compact`, so tighten them on the form's class, or on `:root` or a wrapper for every form below it: the pick on the card shell, a step or a field inherits them. `--se-measure` has a literal value on the element that carries the pick, so override it with a rule that targets that element and has the specificity of a class. The form picks `compact` on the card shell.
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Set your app up as the getting-started page of your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), then copy the files below into one folder.
+
+## See it
+
+<FormExampleDemo config={tightForm} />
+
+## The config
+
+The config is data: it names the layout it wants, and the CSS and the theme below decide how it looks.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/** Overriding the `size` axis hooks and tokens. */
+export const tightForm: FormConfig = {
+	id: 'tight-size',
+	title: 'Compact form',
+	className: 'tight-form',
+	view: { $type: 'card', shell: { appearance: { size: 'compact' } } },
+	steps: [
+		{
+			id: 'details',
+			title: 'Details',
+			elements: [
+				{ $type: 'input', id: 'name', name: 'name', label: 'Name' },
+				{ $type: 'input', id: 'email', name: 'email', label: 'Email', inputType: 'email' },
+			],
+		},
+	],
+};
+```
+
+## The CSS
+
+```css title="tight-size.css"
+/* The compact hooks: set them on the form's own class, or on :root or an ancestor. The pick on the card shell, a step or a field inherits them. */
+.tight-form {
+	--se-space-compact: 0.5rem;
+	--se-control-height-compact: 1.5rem;
+}
+
+/* --se-measure is a literal value of the pick: win on the element that carries it. */
+.tight-form [data-se-size='compact'] {
+	--se-measure: 28rem;
+}
+```
+
+## What the tests check
+
+The test checks that the config is valid in a Radiant engine, that the hooks the CSS sets are the ones the compact size reads, and that the CSS styles the class the config puts on the form and no other.

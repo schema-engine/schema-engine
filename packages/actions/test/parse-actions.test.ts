@@ -12,8 +12,6 @@ interface PostConfig extends ActionConfigBase<'post'> {
 const post: ActionRegistration<PostConfig> = {
 	$type: 'post',
 	schema: z.object({
-		id: z.string(),
-		$type: z.literal('post'),
 		endpoint: z.string(),
 		retries: z._default(z.number(), 2),
 	}),
@@ -112,6 +110,62 @@ describe('parseActions', () => {
 			success: false,
 			issues: [{ path: [], message: 'Actions must be an array.' }],
 		});
+	});
+
+	test('checks the keys every entry carries itself, whatever the schema says', () => {
+		const result = parseActions(registry, [
+			{ id: '', $type: 'post', endpoint: '/a' },
+			{ $type: 'post', endpoint: '/b' },
+			{ id: 'c', $type: 'post', endpoint: '/c', enabled: 'yes', triggers: 'submit' },
+			{ id: 'd', $type: 'post', endpoint: '/d', triggers: ['submit', 3] },
+		]);
+
+		expect(result.success).toBe(false);
+		if (result.success) return;
+		expect(result.issues.map((issue) => issue.path)).toEqual([
+			[0, 'id'],
+			[1, 'id'],
+			[2, 'enabled'],
+			[2, 'triggers'],
+			[3, 'triggers', 1],
+		]);
+	});
+
+	test('checks triggers against the domain list when given, and any string otherwise', () => {
+		const entries = [{ id: 'a', $type: 'post', endpoint: '/a', triggers: ['submit', 'launch'] }];
+
+		expect(parseActions(registry, entries).success).toBe(true);
+		const result = parseActions(registry, entries, { triggers: ['change', 'submit'] });
+		expect(result).toMatchObject({ success: false, issues: [{ path: [0, 'triggers', 1] }] });
+		expect(parseActions(registry, entries, { triggers: ['submit', 'launch'] }).success).toBe(true);
+	});
+
+	test('keeps the base keys beside what the schema returned, and does not add the ones left out', () => {
+		const result = parseActions(registry, [
+			{ id: 'a', $type: 'post', endpoint: '/a', enabled: false, triggers: ['submit'] },
+			{ id: 'b', $type: 'post', endpoint: '/b' },
+		]);
+
+		expect(result).toEqual({
+			success: true,
+			data: [
+				{ id: 'a', $type: 'post', endpoint: '/a', retries: 2, enabled: false, triggers: ['submit'] },
+				{ id: 'b', $type: 'post', endpoint: '/b', retries: 2 },
+			],
+		});
+	});
+
+	test('does not pass the base keys to the schema, so a strict schema lists only the own arguments', () => {
+		const strict = new ActionRegistry([{ ...post, schema: z.strictObject({ endpoint: z.string() }) }]);
+
+		expect(parseActions(strict, [{ id: 'a', $type: 'post', endpoint: '/a', triggers: ['submit'] }]).success).toBe(
+			true,
+		);
+		expect(parseActions(strict, [{ id: 'a', $type: 'post', endpoint: '/a', extra: 1 }]).success).toBe(false);
+	});
+
+	test('rejects an empty group', () => {
+		expect(parseActions(registry, [[]])).toMatchObject({ success: false, issues: [{ path: [0] }] });
 	});
 
 	test('an empty sequence parses to an empty sequence', () => {

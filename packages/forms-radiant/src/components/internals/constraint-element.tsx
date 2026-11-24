@@ -33,7 +33,7 @@ export class ConstraintElement extends RadiantElement {
 
 	@onContextUpdate({
 		context: formInstanceContext,
-		select: (instance: FormInstanceContextValue | undefined) => instance?.container,
+		select: (instance: FormInstanceContextValue | undefined) => instance?.runtime?.container,
 		requestUpdate: false,
 	})
 	onContainer(container: FormStateContainer | undefined): void {

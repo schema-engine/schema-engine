@@ -1,51 +1,51 @@
 ---
 title: 'Overview'
-description: 'What an example is: a tested recipe you copy into an app, with the files it runs, the install line it needs and a live demo where it renders UI.'
+description: 'What an example is: a tested example you copy into an app, with the files it runs, the install line it needs and a live demo where it renders UI.'
 order: 0
 ---
 
 # Examples
 
-An example is a recipe: one use case, written as files you can copy into an app and run. Each recipe page shows every file word for word, and a test runs the same files, so a snippet cannot drift from the code that works.
+An example is one use case, written as files you can copy into an app and run. Each example page shows every file word for word, and a test runs the same files, so a snippet cannot drift from the code that works.
 
-## What a recipe holds
+## What an example holds
 
-- **The files.** Each is a module that imports only packages and its sibling files (`./engine`). It imports nothing else, so it runs where you paste it.
-- **The page.** It states the install line, then shows every file under its name. A recipe that renders UI has a live demo, and a forms recipe shows its React and Radiant files in tabs side by side.
-- **The test.** It runs the files, including the failure paths, in a unit or browser test. A recipe that is not tested, or whose page differs from its files, fails a test.
+- **The files.** Each is a module that imports only packages and its sibling files (`./config`). It imports nothing else, so it runs where you paste it.
+- **The page.** It states the install line, then shows every file under its name. An example that renders UI has a live demo, and a forms example shows its React and Radiant files in tabs side by side.
+- **The test.** It runs the files, including the failure paths, in a unit or browser test. An example that is not tested, or whose page differs from its files, fails a test.
 
-## Copy a recipe
+## Copy an example
 
-1. Run the install line at the top of the recipe's page.
+1. Run the install line at the top of the example's page.
 2. Create one folder and copy every file of the page into it under the name above the code. The files import each other as `./name`, so they keep working side by side.
 3. Run the entry the page names, or render the component it exports.
 
-## Recipes
+## Examples by domain
 
-Recipes by domain, with what each shows and the install line it needs.
+Examples by domain, with what each shows and the install line it needs.
 
 ### Registry
 
-| Recipe                                                               | Shows                                                                           | Install                                |
+| Example                                                              | Shows                                                                           | Install                                |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- |
 | [A design-system registry](/docs/examples/design-system-registry)    | Components with schemas, a document rendered to HTML, and an override that wins | `pnpm add @schema-engine/registry zod` |
 | [Render a server-sent document](/docs/examples/server-sent-document) | A route handler, a client that renders what it knows and reports what it cannot | `pnpm add @schema-engine/registry zod` |
 
 ### Actions
 
-| Recipe                                                            | Shows                                                                             | Install                               |
+| Example                                                           | Shows                                                                             | Install                               |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------- |
 | [A checkout workflow](/docs/examples/checkout-workflow)           | A JSON workflow with a parallel group, and a declined card that cancels the group | `pnpm add @schema-engine/actions zod` |
 | [A server-driven workflow](/docs/examples/server-driven-workflow) | A workflow fetched from an endpoint, checked, and run by `submit` and `change`    | `pnpm add @schema-engine/actions zod` |
 
 ### Forms
 
-Each forms recipe has React and Radiant tabs and the same two install lines, one for each renderer:
+Each forms example has React and Radiant tabs and the same two install lines, one for each renderer:
 
 - React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`
 - Radiant: `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod`
 
-| Recipe                                                         | Shows                                                                                                           |
+| Example                                                        | Shows                                                                                                           |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | [Contact form](/docs/examples/contact-form)                    | Rules with messages, a field shown only for a support request, a JSON submit and a 422 on its field             |
 | [Registration wizard](/docs/examples/registration-wizard)      | Two steps, Next that validates the step it leaves, and a taken email that sends the visitor back                |
@@ -55,7 +55,33 @@ Each forms recipe has React and Radiant tabs and the same two install lines, one
 
 ### Layout
 
-| Recipe                                          | Shows                                                                                             | Install                                   |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| [Layout recipes](/docs/examples/layout-recipes) | Form configs with the CSS they need, rendered live in React and Radiant (the `RecipeDemo` format) | Set up a renderer first, as the page says |
-| [A layout page](/docs/examples/layout-page)     | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name    | `pnpm add @schema-engine/layout zod`      |
+| Example                                     | Shows                                                                                          | Install                              |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------ |
+| [A layout page](/docs/examples/layout-page) | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name | `pnpm add @schema-engine/layout zod` |
+
+The layout examples below style a form. Each is a form config with the CSS or the theme it needs, rendered live, and they share the two install lines of the forms examples. Set your app up as the getting-started page of your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), copy the files into one folder, and render the config:
+
+```tsx
+import { FormRenderer, createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import type { FormConfig } from '@schema-engine/forms';
+
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+export function Layouted({ config }: { config: FormConfig }) {
+	return <FormRenderer engine={engine} config={config} onSubmit={(data) => console.log(data)} />;
+}
+```
+
+In React, create the engine with the widgets you wrote or, optionally, with the fields you copied from the shadcn registry, as [Forms React](/docs/forms-react/getting-started) shows, and render `FormRenderer` with the same `config`. Every CSS file is scoped by the class its config puts on the form with `className`, so it applies only once pasted with that config. The demos use Radiant-styled widgets, not the shadcn registry components, so fallbacks such as the card's maximum width and shadow differ from a registry install.
+
+| Example                                               | Shows                                                                                           |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [A contact card](/docs/examples/contact-card)         | A single-step card with two half-width fields and the CSS that sets its measure                 |
+| [An address fieldset](/docs/examples/address-form)    | A fieldset that lays its children out on a grid of its own                                      |
+| [A card wizard](/docs/examples/checkout-wizard)       | A wizard whose steps each draw their own areas                                                  |
+| [A drawn layout](/docs/examples/drawn-layout)         | Five fields drawn as areas that change at a breakpoint                                          |
+| [A brand theme](/docs/examples/brand-theme)           | A host `tone` axis added with `defineAxis`, compiled into a theme and picked on a form          |
+| [Two engines, one theme](/docs/examples/shared-theme) | One compiled theme passed to two engines, each form picking its own tone                        |
+| [Overriding size tokens](/docs/examples/tight-size)   | The two hooks the compact size reads and the measure it sets                                    |
+| [A custom recipe shell](/docs/examples/brand-frame)   | A single-step recipe shell bound to React and to Radiant, with one shared stylesheet            |
+| [A complete theme file](/docs/examples/acme-theme)    | One stylesheet for every form that carries a class: rhythm, size hooks, colour roles and tokens |

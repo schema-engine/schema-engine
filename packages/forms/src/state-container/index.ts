@@ -9,6 +9,7 @@ export { createFormStateContainer } from './create-form-state-container';
 export { toFieldArrayValue } from './field-array';
 export { toHydration } from './hydration';
 export type { FieldArrayCommands, FieldArrayValue } from './field-array';
+export { issueText } from './issue-text';
 export { selectFieldState, selectValue } from './selectors';
 export type { FormFieldState } from './selectors';
 export { FORM_ROOT } from './types';

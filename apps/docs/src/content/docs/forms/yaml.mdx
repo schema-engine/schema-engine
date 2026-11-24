@@ -1,10 +1,10 @@
 ---
-title: 'YAML Forms'
+title: 'YAML forms'
 description: 'Author forms in YAML, with errors that point at the file and line and editor autocomplete.'
-order: 18
+order: 15
 ---
 
-# YAML Forms
+# YAML forms
 
 A form config is plain data, so it can live in a `.form.yaml` file that people without TypeScript can edit.
 The `@schema-engine/registry/yaml` subpath parses the file, hands the value to your engine to validate, and
@@ -116,19 +116,22 @@ export const text = stringifyYaml(form, { schemaUrl: './contact.schema.json' });
 
 ## Caveats
 
-The YAML rules are the ones in [Serialized documents](/docs/schema-engine/serialized-documents#caveats): YAML 1.2, quoting of values such as `1.10`, one document per file, no tags and no loader. Anchors and merge keys let a form share a field's defaults:
+The YAML rules are the ones in [Serialized documents](/docs/schema-engine/serialized-documents#caveats): YAML 1.2, quoting of values such as `1.10`, one document per file, no tags and no loader. Anchors and merge keys let a field share another's options:
 
 ```yaml
-defaults: &input
-    $type: input
-    grid: { width: half }
+id: contact
 steps:
     - id: details
       title: Details
       elements:
-          - <<: *input
+          - &input
+            $type: input
             id: name
             name: name
+            grid: { width: half }
+          - <<: *input
+            id: nickname
+            name: nickname
 ```
 
 An issue inside merged values points at the map that merges them, and a merge source that is not a map (`<<: 5`) is reported at line 1, column 1.

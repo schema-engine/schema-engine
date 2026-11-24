@@ -74,11 +74,7 @@ const transformedElement = defineInput({
 });
 const transformedAction = {
 	$type: 'count' as const,
-	schema: z.object({
-		$type: z.literal('count'),
-		id: z.string(),
-		count: z._default(z.pipe(z.string(), z.transform(Number)), 0),
-	}),
+	schema: z.object({ count: z._default(z.pipe(z.string(), z.transform(Number)), 0) }),
 	metadata: { name: 'Count' },
 	execute: async () => ({ success: true }),
 };

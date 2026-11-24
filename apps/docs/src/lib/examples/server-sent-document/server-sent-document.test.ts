@@ -9,7 +9,7 @@ const answer = (response: () => Response) => async () => response();
 const server: typeof fetch = async (url, init) => GET(new Request(url, init));
 
 describe('the design system files', () => {
-	test.each(['components.ts', 'design-system.ts'])('%s is the file of the design system recipe', (file) => {
+	test.each(['components.ts', 'design-system.ts'])('%s is the file of the design system example', (file) => {
 		const own = readFileSync(join(import.meta.dirname, file), 'utf8');
 		const original = readFileSync(join(import.meta.dirname, '../design-system-registry', file), 'utf8');
 		expect(own).toBe(original);

@@ -64,7 +64,7 @@ export const engine = createFormEngine({
 
 ## 3. Check a form loaded as JSON
 
-A form config is data, so it can come from a file or a server. `engine.validateForm` checks it and returns a frozen `NormalizedFormConfig`, or throws a `FormValidationError`. `engine.safeValidateForm` returns `{ success, data }` or `{ success: false, issues }` instead. Each issue has a `message` and the `path` of the config key it is about. See [Form configuration errors](/docs/forms/core-concepts#form-configuration-errors).
+A form config is data, so it can come from a file or a server. `engine.validateForm` checks it and returns a frozen `NormalizedFormConfig`, or throws a `FormValidationError`. `engine.safeValidateForm` returns `{ success, data }` or `{ success: false, issues }` instead. Each issue has a `message` and the `path` of the config key it is about. See [Form configuration errors](/docs/forms/engine#form-configuration-errors).
 
 ```ts title="contact.ts"
 import { engine } from './engine';
@@ -167,7 +167,7 @@ The first submit finds the required fields empty, so the outcome is `invalid` an
 
 ## Where to go next
 
-- [Core concepts](/docs/forms/core-concepts): authoring modes, configuration errors, view recipes.
+- [Engine and registrations](/docs/forms/engine): authoring modes, configuration errors, view recipes.
 - [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview): draw this form.
 - [Validation](/docs/forms/validation): the 27 rules and your own.
 - [Actions](/docs/forms/actions): the actions a form ships.

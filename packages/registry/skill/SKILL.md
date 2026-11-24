@@ -40,14 +40,14 @@ Outcomes use one vocabulary: a check or a submission ends `passed`, `invalid` or
 | `@schema-engine/actions`       | Actions: `parseActions`, and a dispatcher that runs a sequence with parallel groups, cancellation and results                             |
 | `@schema-engine/layout`        | Domain-neutral grid, appearance axes, layout themes and the recipe protocol                                                               |
 | `@schema-engine/forms`         | The forms engine: config, validation, constraints, the container, the runtime                                                             |
-| `@schema-engine/forms-react`   | React renderer: `FormRenderer` and the hooks. Widgets are copied into the app from the shadcn registry                                    |
+| `@schema-engine/forms-react`   | React renderer: `FormRenderer` and the hooks. You write the widgets; ready-made ones come from the optional shadcn registry               |
 | `@schema-engine/forms-radiant` | Radiant renderer: `se-form-instance`, `FormController`, widgets and recipes in the package                                                |
 
 A symbol has one import path. `@schema-engine/forms` has these entries: `.` (the engine, the runtime and the types), `/state-container` (the container and its selectors), `/csrf`, `/server-errors`, `/recipes`, `/recipes/built-in`, `/browser` (browser-side actions such as auto-save), `/testing` (conformance suites; they need vitest) and `/agent-tool` (experimental).
 
 ## To do X, read Y
 
-Each package ships its own references in its `skill/reference/` folder, so a reference is `node_modules/@schema-engine/<package>/skill/reference/<file>`. Read the rows of the packages the project depends on and skip the others: a package that is not installed has no file. This router is `skill/SKILL.md` of `@schema-engine/registry`, a dependency of every other package; if your package manager does not link it at the top level, add it with the package you use. The deployed site serves the latest version of the router and of every reference at `/skill/`, with the references flat at `/skill/reference/<file>`.
+Each package ships this router as its own `skill/SKILL.md` and its references in its `skill/reference/` folder, so a reference is `node_modules/@schema-engine/<package>/skill/reference/<file>`, and any installed package has the router. Read the rows of the packages the project depends on and skip the others: a package that is not installed has no file. The deployed site serves the latest version of the router and of every reference at `/skill/`, with the references flat at `/skill/reference/<file>`.
 
 | To do                                                                        | Package                        | Reference                            |
 | ---------------------------------------------------------------------------- | ------------------------------ | ------------------------------------ |

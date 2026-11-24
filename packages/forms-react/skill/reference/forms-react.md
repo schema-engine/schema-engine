@@ -1,10 +1,10 @@
 # @schema-engine/forms-react
 
-The React renderer and its hooks. The package renders a normalized form; the field widgets are your code, copied from the shadcn registry or written by you (`forms-react-widgets.md`).
+The React renderer and its hooks. The package renders a normalized form; the field widgets are your code, written by you (`forms-react-widgets.md`) or optionally copied from the shadcn registry.
 
 ## Setup
 
-Install `@schema-engine/forms-react` and `@schema-engine/forms`, then copy the widgets and the default recipes into the project with `pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes`, and import `recipes/recipes.css` once after Tailwind. The copied `@/components/schema-engine/forms/registrations` barrel is the list to pass as `elements`. Build the engine once and reuse it.
+Install `@schema-engine/forms-react`, `@schema-engine/forms`, `@schema-engine/layout`, `react`, `react-dom` and `zod`. Write your widgets with `useFormField` (`forms-react-widgets.md`) and pass them as `elements`. Build the engine once and reuse it. Optionally, a project that uses shadcn can copy ready-made widgets and recipes with `pnpm dlx shadcn@latest add andeeplus/schema-engine/schema-form andeeplus/schema-engine/schema-engine-form-recipes`: its generated `registrations` barrel is then the list to pass as `elements`, and `recipes/recipes.css` is imported once after Tailwind.
 
 ```ts title="react/engine.ts"
 import { createFormEngine } from '@schema-engine/forms';
@@ -16,7 +16,7 @@ export const engine = createFormEngine({ elements: [textFieldRegistration, ratin
 
 ## Rendering
 
-`FormRenderer` takes the form and renders it. A plain config is validated at that boundary; pass `engine.defineForm(...)` when you want the typed, normalized one. The engine comes from the `engine` prop or from an enclosing `FormEngineProvider`. Its other props are `defaultValues`, `onSubmit(values, helpers)`, `onChange(values)`, `onAction`, `onActionResults`, `formatIssue`, `className`, `style` and `children`, which render inside the form so they can use the hooks.
+`FormRenderer` takes the form and renders it. A plain config is validated at that boundary; pass `engine.defineForm(...)` when you want the typed, normalized one. The engine comes from the `engine` prop or from an enclosing `FormEngineProvider`. Its other props are `defaultValues`, `onSubmit(values, helpers)`, `onChange(values)`, `onAction`, `onActionResults`, `navigate` (where a submit action's `redirectUrl` takes the page, `location.assign` by default), `formatIssue`, `className`, `style` and `children`, which render inside the form so they can use the hooks.
 
 ```tsx title="react/profile-form.tsx"
 import type { FormSubmitHelpers, FormValues } from '@schema-engine/forms';

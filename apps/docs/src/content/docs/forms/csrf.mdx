@@ -1,14 +1,14 @@
 ---
 title: 'CSRF'
 description: "Send your framework's CSRF token with every request the engine makes and every native form post."
-order: 12
+order: 13
 ---
 
 # CSRF
 
 `createFormEngine({ csrf })` takes a policy that reads your CSRF token. The engine then sends it with the requests it makes and with a native form post. It is off unless you configure it.
 
-```ts
+```ts title="csrf.ts"
 import { createFormEngine } from '@schema-engine/forms';
 import { csrf } from '@schema-engine/forms/csrf';
 import { textInput } from './engine';

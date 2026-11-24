@@ -23,77 +23,32 @@ describe('ResetPlugin', () => {
 
 	describe('Schema Validation', () => {
 		test('should validate valid reset action', () => {
-			const validAction = {
-				id: 'test-reset',
-				$type: 'reset',
-				enabled: true,
-			};
+			const validAction = {};
 
 			expect(FormResetActionSchema.parse(validAction)).toEqual({
-				id: 'test-reset',
-				$type: 'reset',
-				enabled: true,
 				resetToDefaults: true,
 			});
 		});
 
 		test('should validate reset action with all optional fields', () => {
 			const validAction = {
-				id: 'test-reset',
-				$type: 'reset',
 				description: 'Reset form to initial state',
-				enabled: true,
-				triggers: ['form_submit_error'],
 				confirmMessage: 'Are you sure you want to reset?',
 				resetToDefaults: false,
 			};
 
 			expect(FormResetActionSchema.parse(validAction)).toEqual({
-				id: 'test-reset',
-				$type: 'reset',
 				description: 'Reset form to initial state',
-				enabled: true,
-				triggers: ['form_submit_error'],
 				confirmMessage: 'Are you sure you want to reset?',
 				resetToDefaults: false,
 			});
-			const invalidAction = {
-				id: 'test-reset',
-				$type: 'invalid',
-				enabled: true,
-			};
-
-			expect(() => FormResetActionSchema.parse(invalidAction)).toThrow();
-		});
-
-		test('should require ID', () => {
-			const invalidAction = {
-				$type: 'reset',
-				enabled: true,
-			};
-
-			expect(() => FormResetActionSchema.parse(invalidAction)).toThrow();
 		});
 
 		test('should default resetToDefaults to true', () => {
-			const action = {
-				id: 'test-reset',
-				$type: 'reset',
-				enabled: true,
-			};
+			const action = {};
 
 			const parsed = FormResetActionSchema.parse(action);
 			expect(parsed.resetToDefaults).toBe(true);
-		});
-
-		test('should default enabled to true', () => {
-			const action = {
-				id: 'test-reset',
-				$type: 'reset',
-			};
-
-			const parsed = FormResetActionSchema.parse(action);
-			expect(parsed.enabled).toBe(true);
 		});
 	});
 

@@ -1,4 +1,4 @@
-import type { FormValues } from '@schema-engine/forms';
+import type { FormActionTrigger, FormValues, SubmissionActionResult } from '@schema-engine/forms';
 import type { FormAction, FormSubmitContext } from '@/adapters/types';
 
 /** The callbacks of an application's `FormRenderer`, as a form instance calls them. */
@@ -6,6 +6,8 @@ export interface InstanceCallbacks<TValues extends FormValues = FormValues> {
 	onSubmit?: (data: TValues, context: FormSubmitContext) => void | Promise<void>;
 	onChange?: (data: FormValues) => void;
 	onAction?: (action: FormAction, data: TValues) => void | Promise<void>;
+	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
+	navigate?: (url: string) => void;
 }
 
 const callbacks = new WeakMap<Element, InstanceCallbacks>();

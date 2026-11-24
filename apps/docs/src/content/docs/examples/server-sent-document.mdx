@@ -6,7 +6,7 @@ order: 2
 
 # Render a server-sent document
 
-A server describes a page as data, and the client turns it into HTML. The server can ship a new layout without a client release, and the client does not trust what arrives: every node is checked against its registration. This recipe is the full round trip. A route handler answers with a JSON document, the client fetches it, renders the nodes it has a component for, and reports the nodes it does not, with their paths. The server in the recipe is newer than the client on purpose, so you see what the client does with a component it has never heard of.
+A server describes a page as data, and the client turns it into HTML. The server can ship a new layout without a client release, and the client does not trust what arrives: every node is checked against its registration. This example is the full round trip. A route handler answers with a JSON document, the client fetches it, renders the nodes it has a component for, and reports the nodes it does not, with their paths. The server in the recipe is newer than the client on purpose, so you see what the client does with a component it has never heard of.
 
 It uses the registry of [A design-system registry](/docs/examples/design-system-registry). `components.ts` and `design-system.ts` below are the same files, so copy them from either page.
 
@@ -33,7 +33,7 @@ export interface Order {
  * The document of an order page, as the server builds it.
  *
  * @remarks
- * This server is newer than the client in the recipe: it sends a `warning` tone and a `countdown` component the
+ * This server is newer than the client in the example: it sends a `warning` tone and a `countdown` component the
  * client has not registered yet.
  */
 export function orderDocument(order: Order): unknown[] {
@@ -107,12 +107,12 @@ The client resolves nodes through the design system's registry. These two files 
 
 ```ts title="components.ts"
 import * as z from 'zod/mini';
-import type { BaseRegistration } from '@schema-engine/registry';
+import type { ComponentRegistration } from '@schema-engine/registry';
 
 z.config(z.locales.en());
 
-/** A registration of the design system: the schema of its config, and how it draws itself as HTML. */
-export interface Component extends BaseRegistration {
+/** A registration of the design system: a `ComponentRegistration` whose `render` draws the component as HTML. */
+export interface Component extends ComponentRegistration {
 	render(config: unknown): string;
 }
 
@@ -259,7 +259,7 @@ issue 2.$type: No component is registered for $type 'countdown'.
 - **`1.tone` is a configuration the client rejects.** The badge is known, but its schema allows `info`, `success` and `danger`, so the server's `warning` is reported at the field. The badge is not rendered, because a half-valid node is not shown.
 - **`2.$type` is a component the client has not registered.** The path names the node by its index, so a log or an error report says exactly which part of the document the client could not draw.
 
-The test of this recipe runs the same route handler against the client, then replaces the network with a failure, a 503 and a body that is not JSON.
+The test of this example runs the same route handler against the client, then replaces the network with a failure, a 503 and a body that is not JSON.
 
 ## Take it further
 

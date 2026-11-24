@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
 import {
-	FormActionTriggerSchema,
+	type BuilderActionConfig,
 	formResetPlugin,
 	formSubmitPlugin,
 	type ActionExecutionResult,
@@ -59,14 +59,10 @@ class ActionEventDispatcher {
 export const actionEventDispatcher = new ActionEventDispatcher();
 
 const LoggerActionSchema = z.object({
-	id: z.string(),
-	$type: z.literal('event_logger'),
 	description: z.optional(z.string()),
-	enabled: z._default(z.boolean(), true),
-	triggers: z.optional(z.array(FormActionTriggerSchema)),
 });
 
-type LoggerAction = z.infer<typeof LoggerActionSchema>;
+type LoggerAction = BuilderActionConfig<'event_logger', typeof LoggerActionSchema>;
 
 function loggerPlugin(
 	dispatcher: ActionEventDispatcher,

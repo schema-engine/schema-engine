@@ -7,6 +7,10 @@ dist
 *.tgz
 .turbo
 
+# the skill router is one file in packages/registry; each package's copy is made by its build
+packages/*/skill/SKILL.md
+!packages/registry/skill/SKILL.md
+
 # code coverage
 coverage
 *.lcov

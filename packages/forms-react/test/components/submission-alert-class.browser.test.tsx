@@ -8,7 +8,7 @@ import { InputElementRegistration } from '@/components/schema-engine/forms/input
 import { SubmitButtonElementRegistration } from '@/components/schema-engine/forms/actions/submit-button.registration';
 import { SubmissionAlertElementRegistration } from '@/components/schema-engine/forms/content/form-submission-alert.registration';
 
-const gateSchema = z.object({ $type: z.literal('gate'), id: z.string(), triggers: z.optional(z.array(z.string())) });
+const gateSchema = z.object({});
 
 /**
  * A submit action that fails, or never settles, so the alert reaches its error and pending states.

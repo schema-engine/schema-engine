@@ -109,9 +109,9 @@ The table names forms as the example consumer: its `grid`, `appearance` and `vie
 | Set a size, a width or a gap for one form                           | A class in `className` that sets the token                              | [Theming](/docs/layout/theming#where-to-set-a-token)                                          |
 | Style one form, step or field once                                  | `className`, or `style` with custom properties                          | [Escape hatches](#escape-hatches)                                                             |
 | Show or hide a part of a recipe (descriptions, labels, orientation) | Slot config on `view`, for example `view.header.showDescription`        | [View recipes](/docs/forms-react/layouts)                                                     |
-| Use a different frame around the fields                             | A recipe, built in or your own                                          | [Layout recipes](/docs/examples/layout-recipes#a-custom-recipe-shell-in-react-and-in-radiant) |
+| Use a different frame around the fields                             | A recipe, built in or your own                                          | [A custom recipe shell](/docs/examples/brand-frame)                                           |
 | Make two engines or two renderers look the same                     | One compiled layout theme passed to both                                | [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines)                     |
-| Copy a working setup                                                | A recipe                                                                | [Layout recipes](/docs/examples/layout-recipes)                                               |
+| Copy a working setup                                                | An example                                                              | [Layout examples](/docs/examples/overview#layout)                                             |
 
 When two tools fit, prefer them in this order: a named width before a raw line, an axis value before a token override, a token override before a class, a class before inline `style`.
 
@@ -150,7 +150,9 @@ Names cover the common cases. Three hatches stay open for the rest, and they wor
 
 - [Layout themes](/docs/layout/layout-themes): compile a theme, share it, the neutral hooks and nested themes.
 - [Appearance axes](/docs/layout/appearance-axes): the definition, the rules, built-in axes and your own.
+- [Grid and placement](/docs/layout/grid-and-placement): widths, offsets, areas and breakpoints.
 - [Theming](/docs/layout/theming): the custom properties a host overrides, with a complete theme file.
+- [Recipe protocol](/docs/layout/recipe-protocol): declare the slots and kinds of a domain's view recipes.
 - [A layout page](/docs/examples/layout-page): a page with no form, laid out by this package alone.
-- [Layout recipes](/docs/examples/layout-recipes): copy-paste configs with their CSS, each rendered live.
-- [YAML Forms](/docs/forms/yaml): author any of these in a `.form.yaml` file.
+- [Layout examples](/docs/examples/overview#layout): copy-paste configs with their CSS, each rendered live.
+- [YAML forms](/docs/forms/yaml): author any of these in a `.form.yaml` file.

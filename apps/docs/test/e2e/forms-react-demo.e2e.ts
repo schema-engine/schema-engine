@@ -4,7 +4,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { contactForm } from '../../src/lib/examples/contact-form/config';
 
 const baseUrl = inject('docsBaseUrl');
-const recipePath = '/docs/examples/contact-form';
+const examplePath = '/docs/examples/contact-form';
 
 /** Waits until React has hydrated the live demo form. */
 async function waitForReactFormHydration(page: Page): Promise<void> {
@@ -25,7 +25,7 @@ async function waitForReactFormHydration(page: Page): Promise<void> {
 	);
 }
 
-describe('React live demo of a forms recipe', () => {
+describe('React live demo of a forms example', () => {
 	let browser: Browser;
 	let page: Page;
 	const pageErrors: string[] = [];
@@ -46,7 +46,7 @@ describe('React live demo of a forms recipe', () => {
 	});
 
 	test('hydrates the contact form demo and validates on submit', async () => {
-		await page.goto(`${baseUrl}${recipePath}`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}${examplePath}`, { waitUntil: 'networkidle' });
 		await waitForReactFormHydration(page);
 
 		const submit = page.locator('.docs-react-form-demo button[type="submit"]');
@@ -61,7 +61,7 @@ describe('React live demo of a forms recipe', () => {
 	});
 
 	test('keeps a typed value in form state across a validation render', async () => {
-		await page.goto(`${baseUrl}${recipePath}`, { waitUntil: 'networkidle' });
+		await page.goto(`${baseUrl}${examplePath}`, { waitUntil: 'networkidle' });
 		await waitForReactFormHydration(page);
 
 		const name = page.locator('.docs-react-form-demo input[name="name"]');
@@ -75,7 +75,7 @@ describe('React live demo of a forms recipe', () => {
 	});
 
 	test('ships the demo config serialized for client hydration', async () => {
-		await page.goto(`${baseUrl}${recipePath}`, { waitUntil: 'domcontentloaded' });
+		await page.goto(`${baseUrl}${examplePath}`, { waitUntil: 'domcontentloaded' });
 		const root = page.locator('.docs-react-form-demo[data-se-react-form-demo-root="true"]');
 		const serialized = await root.getAttribute('data-se-form-config');
 		expect(JSON.parse(serialized ?? 'null')).toEqual(contactForm);

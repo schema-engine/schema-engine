@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
-import type { AnyActionRegistration } from '@/types/registration';
 import { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument, isZodType } from '@/lib/zod-json-schema';
@@ -123,14 +122,14 @@ export interface FormEngineJSONSchemaSerializer {
 const VENDOR = '@schema-engine/forms';
 const FORM_CONFIG_SCHEMA_ID = 'form-config-schema';
 
-/** Extract Zod-compatible action validators for JSON Schema conversion. */
+/** The Zod schemas the JSON Schema export lists the actions by, keyed by `$type`. */
 export function createActionConfigValidatorMap(
-	actionRegistrations: Iterable<AnyActionRegistration>,
+	exportedActions: Iterable<{ $type: string; exportSchema: unknown }>,
 ): Map<string, z.ZodMiniType> {
 	return new Map(
-		Array.from(actionRegistrations)
-			.filter((registration) => isZodType(registration.schema))
-			.map((registration) => [registration.$type, registration.schema as z.ZodMiniType] as const),
+		Array.from(exportedActions)
+			.filter((action) => isZodType(action.exportSchema))
+			.map((action) => [action.$type, action.exportSchema as z.ZodMiniType] as const),
 	);
 }
 

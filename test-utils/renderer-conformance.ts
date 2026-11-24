@@ -29,7 +29,7 @@ function rejectingResult(): { success: boolean } {
 
 export const conformanceAction = {
 	$type: 'conformance',
-	schema: v.object({ $type: v.literal('conformance'), id: v.string(), triggers: v.optional(v.array(v.string())) }),
+	schema: v.object({}),
 	metadata: { name: 'Conformance' },
 	execute: vi.fn(async (context: BuilderActionRuntimeContext<{ id: string }>) => {
 		if (context.config.id === 'reject-dispatch') return rejectingResult();

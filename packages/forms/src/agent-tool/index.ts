@@ -2,9 +2,8 @@ import { logger } from '@/lib/logger';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { buildSubmissionShape, type SubmissionShape } from '@/lib/submission-shape';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
-import type { FormEngineRuntime } from '@/engine/form-engine';
-import type { SubmissionSchemaConfig } from '@/engine/submission-schema';
 import type { FormRuntime, SubmitOutcome } from '@/runtime';
+import { issueText } from '@/state-container/issue-text';
 import { FORM_ROOT } from '@/state-container/types';
 import type { FormStateIssue, FormSubmissionIssue } from '@/state-container/types';
 
@@ -48,48 +47,15 @@ export interface FormAgentToolOptions {
 	 * @remarks Without it the tool fills the form and reports that it waits for the user to submit, so a person confirms. Default: `false`.
 	 */
 	autoSubmit?: boolean;
-	/** The engine the form was built with: its submission schema is the tool's input schema. */
-	engine: Pick<FormEngineRuntime, 'submissionSchema' | 'getIssueFormatter'>;
-	/** The normalized config the runtime was created from. */
-	config: SubmissionSchemaConfig;
 	/**
 	 * The form's own issue formatter, such as the one `useFormContext()` or `FormController` gives.
 	 *
-	 * @remarks Default: the engine's. An issue with no text from either is reported by its own `message`, then its `type`.
+	 * @remarks Default: the engine's. An issue with no text from either is reported by its own `message`, then its `type` and its `params`.
 	 */
 	formatIssue?: FormAgentIssueFormatter;
 }
 
 const text = (value: string): FormAgentToolResult => ({ content: [{ type: 'text', text: value }] });
-
-/** The description of a parameter: the field's label, then its help text. */
-function describeElement(element: object | undefined): string | undefined {
-	const { label, description } = (element ?? {}) as { label?: unknown; description?: unknown };
-	const parts = [label, description].filter((part): part is string => typeof part === 'string' && part !== '');
-	return parts.length > 0 ? parts.join(': ') : undefined;
-}
-
-/** `schema` with the labels and help text of the fields it describes, walked along the shape the schema was composed from. */
-function withDescriptions(schema: JSONSchemaObject, shape: SubmissionShape): JSONSchemaObject {
-	const described = describeElement(shape.element);
-	const base = described ? { ...schema, description: described } : schema;
-	if (shape.kind === 'array') {
-		return base.items ? { ...base, items: withDescriptions(base.items as JSONSchemaObject, shape.row) } : base;
-	}
-	if (shape.kind === 'object') {
-		const properties = (base.properties ?? {}) as Record<string, JSONSchemaObject>;
-		return {
-			...base,
-			properties: Object.fromEntries(
-				Object.entries(properties).map(([key, property]) => {
-					const child = shape.fields[key];
-					return [key, child ? withDescriptions(property, child) : property];
-				}),
-			),
-		};
-	}
-	return base;
-}
 
 interface Write {
 	readonly path: string;
@@ -111,27 +77,32 @@ function collectWrites(shape: SubmissionShape, value: unknown, path: string, wri
 	writes.push({ path, kind: shape.kind === 'array' ? 'rows' : 'value', value });
 }
 
+/** Puts `value` at the path: a list writes its rows, and a value that is no list, as `undefined` for a list the form never had, is written as it is. */
 function writeTo(container: FormRuntime['container'], { path, kind, value }: Write): void {
-	if (kind === 'rows') container.fieldArray(path).replace(Array.isArray(value) ? [...value] : []);
+	if (kind === 'rows' && Array.isArray(value)) container.fieldArray(path).replace([...value]);
 	else container.setValue(path, value);
 }
 
-/** The text of one issue: the formatter's, else the issue's own message, else its type, which an agent can still act on. */
-function issueText(
+/** The text of one issue: what {@link issueText} gives, else the issue's type and params, which an agent can still act on. */
+function agentIssueText(
 	issue: FormStateIssue | FormSubmissionIssue,
 	path: string,
 	formatIssue: FormAgentIssueFormatter | undefined,
 ): string {
-	return formatIssue?.(issue, { path }) || issue.message || issue.type;
+	const text = issueText(issue, path, formatIssue);
+	if (text) return text;
+	return issue.params && Object.keys(issue.params).length > 0
+		? `${issue.type} ${JSON.stringify(issue.params)}`
+		: issue.type;
 }
 
 function describeErrors(runtime: FormRuntime, formatIssue: FormAgentIssueFormatter | undefined): string[] {
 	const lines = Object.entries(runtime.container.getSnapshot().errors).map(([path, error]) => {
-		const reasons = [...new Set(error.all.map((issue) => issueText(issue, path, formatIssue)))];
+		const reasons = [...new Set(error.all.map((issue) => agentIssueText(issue, path, formatIssue)))];
 		return `- ${path === FORM_ROOT ? 'form' : path}: ${reasons.join('; ')}`;
 	});
 	for (const failure of runtime.getSnapshot().submission.failures) {
-		lines.push(`- form: ${issueText(failure, FORM_ROOT, formatIssue)}`);
+		lines.push(`- form: ${agentIssueText(failure, FORM_ROOT, formatIssue)}`);
 	}
 	return lines;
 }
@@ -169,8 +140,8 @@ function reportOutcome(
  * WebMCP is an Origin Trial and its API may change. Nothing else in the package imports this entry.
  * It does nothing on the server and where the browser has no `document.modelContext`.
  *
- * The input schema is the JSON Schema of `engine.submissionSchema(config)`, with the label and help text of each
- * field as its description, and it throws when a value schema has no JSON Schema. `execute` first checks the input
+ * The input schema is the JSON Schema of the runtime's `submissionSchema`, which describes each field by its label and
+ * help text, and it throws when a value schema has no JSON Schema. `execute` first checks the input
  * against the same schema without requiring any key, so a value of the wrong type is refused before it reaches the form. It then writes the values into
  * the form's container, the way a person's edits arrive, and, when `autoSubmit` is set, runs `runtime.submit()`: the same
  * validation, constraints, value check, actions and `onSubmit` as a human submit. In a wizard it submits again after each
@@ -185,14 +156,11 @@ export function registerFormAgentTool(runtime: FormRuntime, options: FormAgentTo
 	const modelContext = (document as Document & { modelContext?: ModelContext }).modelContext;
 	if (!modelContext) return () => {};
 
-	const { name, description, autoSubmit = false, engine, config } = options;
-	const formatIssue = options.formatIssue ?? engine.getIssueFormatter();
-	const submission = engine.submissionSchema(config);
-	const shape = buildSubmissionShape(config.steps);
-	const inputSchema = withDescriptions(
-		{ ...submission['~standard'].jsonSchema.input({ target: 'draft-2020-12' }) },
-		shape,
-	);
+	const { name, description, autoSubmit = false } = options;
+	const formatIssue = options.formatIssue ?? runtime.formatIssue;
+	const submission = runtime.submissionSchema;
+	const shape = buildSubmissionShape(runtime.config.steps);
+	const inputSchema = { ...submission['~standard'].jsonSchema.input({ target: 'draft-2020-12' }) };
 
 	const execute = async (input: unknown, { signal }: AgentToolExecuteOptions): Promise<FormAgentToolResult> => {
 		if (signal.aborted) return text('The call was cancelled before the form was changed.');

@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -18,7 +19,10 @@ const SHADCN_PAGES: Record<string, string> = {
 	'forms-react/layouts': 'The default view recipes the shadcn registry installs.',
 	'layout/theming': 'The colour roles the React registry controls read.',
 	'layout/appearance-axes': 'What the React registry controls read of the size and tone axes.',
-	'examples/layout-recipes': 'The React recipes that start from the shadcn registry.',
+	'examples/overview': 'The React path of the layout examples starts from the shadcn registry.',
+	'examples/brand-theme': 'The colour roles a shadcn theme reads, which the tone axis sets.',
+	'examples/shared-theme': 'The colour roles a shadcn theme reads, which the tone axis of its theme file sets.',
+	'examples/acme-theme': 'The colour roles Radiant UI and shadcn components read, which the theme file sets.',
 };
 
 /** What the docs app's own MDX imports look like: `import { X } from '@/components/x'`. They are not prose. */
@@ -67,6 +71,31 @@ describe('no unused library is named', () => {
 		}
 		expect(SHADCN.test('Run `pnpm dlx shadcn@latest add`.')).toBe(true);
 		expect(SHADCN.test("import { Button } from '@/components/ui/button';")).toBe(true);
-		expect(SHADCN.test("import { Demo } from '@/components/recipe-demo';")).toBe(false);
+		expect(SHADCN.test("import { Demo } from '@/components/form-example-demo';")).toBe(false);
+	});
+});
+
+/** The tracked files of `src/public` that are not an asset or a favicon, and so may be generated docs text. */
+const strays = (tracked: string[]) => tracked.filter((file) => !/^(assets|favicon)\//.test(file));
+
+describe('the public folder', () => {
+	test('holds only assets and favicons in git, so no generated docs text is served stale', () => {
+		const tracked = execFileSync('git', ['ls-files', '-z', '--', '.'], {
+			cwd: join(import.meta.dirname, '../src/public'),
+			encoding: 'utf8',
+		})
+			.split('\0')
+			.filter(Boolean);
+		expect(tracked.length).toBeGreaterThan(0);
+		expect(strays(tracked)).toEqual([]);
+	});
+
+	test('the check names a generated docs file that was committed', () => {
+		expect(strays(['assets/fonts/a.woff2', 'favicon/icon.svg'])).toEqual([]);
+		expect(strays(['llms-content/forms/overview.md', 'llms.txt', 'skill/SKILL.md'])).toEqual([
+			'llms-content/forms/overview.md',
+			'llms.txt',
+			'skill/SKILL.md',
+		]);
 	});
 });

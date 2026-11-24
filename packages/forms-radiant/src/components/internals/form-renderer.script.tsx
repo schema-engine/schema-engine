@@ -8,6 +8,8 @@ import type {
 	FormValues,
 	NormalizedFormConfig,
 	FormConfig,
+	FormActionTrigger,
+	SubmissionActionResult,
 } from '@schema-engine/forms';
 import type { FormAction, FormSubmitContext } from '@/adapters/types';
 import { resolveFormEngine } from '@/contexts/resolve-form-engine';
@@ -36,6 +38,18 @@ export interface FormRendererProps<TValues extends FormValues = FormValues> {
 	onSubmit?: (data: TValues, context: FormSubmitContext) => void | Promise<void>;
 	onChange?: (data: FormValues) => void;
 	onAction?: (action: FormAction, data: TValues) => void | Promise<void>;
+	/**
+	 * Called with the results of every trigger that ran actions, and once with those of the submit actions, as React's `onActionResults` is.
+	 *
+	 * @remarks The same results reach the `se-action-results` event, which also serves a page that has no `FormRenderer` callback, such as a form rendered on the server.
+	 */
+	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
+	/**
+	 * Takes the page to the `redirectUrl` a submit action asked for, once the whole submission succeeded.
+	 *
+	 * @remarks Defaults to `location.assign` in a browser and does nothing on a server. It replaces the native post of a form with `action`, since the redirect is where the page goes next.
+	 */
+	navigate?: (url: string) => void;
 	class?: string;
 	style?: Record<string, string | number | undefined>;
 	engine?: FormEngine;

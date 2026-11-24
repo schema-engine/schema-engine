@@ -29,7 +29,7 @@ There is no `detail`: read `host.value` or `host.checked`. A value set from code
 
 `FormController` finds the form a host belongs to through its ancestors, so the element has to be rendered inside the form. Make the signals once, as fields, and read them inside an effect.
 
-```tsx
+```tsx title="radiant-summary.tsx"
 import { effect } from '@ecopages/signals';
 import * as z from 'zod/mini';
 import { defineStatic } from '@schema-engine/forms';
@@ -97,7 +97,7 @@ A control that is not one of Radiant UI's becomes a form control in three steps:
 
 This is a control that picks a tone, with the registration that puts it in a form as an element:
 
-```tsx
+```tsx title="radiant-control.tsx"
 import { customElement, prop } from '@ecopages/radiant';
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import { RuiFieldError } from '@ecopages/radiant-ui/field';

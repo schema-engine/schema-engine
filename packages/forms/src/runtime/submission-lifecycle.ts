@@ -1,11 +1,11 @@
 import type {
 	ActionDispatchInput,
-	ActionExecutionResult,
 	ActionSequenceEntry,
 	ParsedAction,
 	ParsedActionSequence,
 } from '@schema-engine/actions';
 import type { FormActionTrigger } from '@/actions';
+import type { ActionExecutionResult } from '@/actions/types';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import type { BuilderActionBaseContext } from '@/types';
 

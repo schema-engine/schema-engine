@@ -1,7 +1,7 @@
 ---
 title: 'Writing a widget'
 description: 'Bind a React component to a field: uncontrolled for a native control, controlled for a component that takes value and onChange.'
-order: 6
+order: 3
 ---
 
 # Writing a widget
@@ -19,7 +19,7 @@ A widget is the React component a registration renders for one field. It binds t
 
 Both modes are in this file: a text field that is uncontrolled, a rating that is controlled and a submit button.
 
-```tsx
+```tsx title="react-widgets.react.tsx"
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput, defineStatic, BaseFieldSchema } from '@schema-engine/forms';
 import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
@@ -93,6 +93,80 @@ const SubmitRegistration = defineStatic({
 export const engine = createFormEngine({ elements: [TextRegistration, RatingRegistration, SubmitRegistration] });
 ```
 
+## A checkbox and a radio group
+
+A checkbox takes `defaultChecked`, and a radio group takes `defaultChecked={defaultValue === option}` on each radio, all sharing `fieldProps` (give each radio its own `id` after the spread):
+
+```tsx
+import * as z from 'zod/mini';
+import { BaseFieldSchema } from '@schema-engine/forms';
+import { useFormField } from '@schema-engine/forms-react/hooks';
+
+const CheckboxSchema = z.extend(BaseFieldSchema, { $type: z.literal('checkbox') });
+
+const RadioSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('radio'),
+	options: z.array(z.object({ value: z.string() })),
+});
+
+export function CheckboxField(config: z.output<typeof CheckboxSchema>) {
+	const { defaultValue, fieldProps } = useFormField(config);
+	return <input type="checkbox" {...fieldProps} defaultChecked={Boolean(defaultValue)} />;
+}
+
+export function RadioField(config: z.output<typeof RadioSchema>) {
+	const { defaultValue, fieldProps } = useFormField(config);
+	return config.options.map(({ value }) => (
+		<input
+			key={value}
+			type="radio"
+			value={value}
+			{...fieldProps}
+			id={`${config.id}-${value}`}
+			defaultChecked={defaultValue === value}
+		/>
+	));
+}
+```
+
+## A component that takes value and onChange
+
+Pass `{ controlled: true }` and hand the component what the hook returns. The field re-renders whenever its value changes:
+
+```tsx
+import * as z from 'zod/mini';
+import { BaseFieldSchema } from '@schema-engine/forms';
+import { useFormField } from '@schema-engine/forms-react/hooks';
+
+const DateSchema = z.extend(BaseFieldSchema, { $type: z.literal('date') });
+
+interface DatePickerProps {
+	value: Date | undefined;
+	onChange(value: string): void;
+	onBlur(): void;
+}
+
+function DatePicker({ value, onChange, onBlur }: DatePickerProps) {
+	return (
+		<input
+			type="date"
+			value={value?.toISOString().slice(0, 10) ?? ''}
+			onChange={(event) => onChange(event.target.value)}
+			onBlur={onBlur}
+		/>
+	);
+}
+
+function toDate(value: unknown): Date | undefined {
+	return typeof value === 'string' && value !== '' ? new Date(value) : undefined;
+}
+
+export function DateField(config: z.output<typeof DateSchema>) {
+	const { value, onChange, onBlur } = useFormField(config, { controlled: true });
+	return <DatePicker value={toDate(value)} onChange={onChange} onBlur={onBlur} />;
+}
+```
+
 ## Declare the value
 
 Every registration of an input declares the value its control writes, with `value`: a function of the configured element
@@ -124,13 +198,6 @@ In development, an uncontrolled field whose `ref` lands on something that is not
 
 ## The other hooks
 
-| Hook                               | Returns                                                                                                                |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `useFormField('contacts.0.email')` | The state and texts of a path (a field, an array or `FORM_ROOT`), with no value.                                       |
-| `useWatch(path)`                   | The value at a path. `useWatch()` is every value, and `useWatch([a, b])` is the values in order.                       |
-| `useFieldArray('contacts')`        | `fields` and `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace` and `remove`. Adding a row focuses it. |
-| `useFormContext()`                 | `getValues`, `setValue`, `validate`, `reset`, `setFocus`, `formatIssue`, `clearSubmission` and a lazy `formState`.     |
-
-`formState` (`errors`, `isValid`, `submission`) is read lazily: a component re-renders only for the keys it reads, so a submit button that reads `submission.status` does not render while the user types. See [Hooks](/docs/forms-react/hooks) for the full reference.
+`useFormField(path)` reads the state of a path, `useWatch(path)` its value, `useFieldArray(path)` edits a list and `useFormContext()` reaches the form's commands and lazy `formState`. [Hooks](/docs/forms-react/hooks) is the reference. A component re-renders only for the `formState` keys it reads, so a submit button that reads `submission.status` does not render while the user types.
 
 Values are `unknown`, so a text control passes its default through `fieldText(value)`, which gives the text a text control shows.

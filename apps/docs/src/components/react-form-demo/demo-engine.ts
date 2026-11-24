@@ -2,8 +2,8 @@ import { createFormEngine } from '@schema-engine/forms';
 import { demoFormRegistrations } from './demo-registrations.react';
 import { demoRecipeRegistrations } from './demo-recipes.react';
 import { createDocsDemoActions } from '@/lib/docs-demo-actions';
-import { BrandFrameRecipe } from '@/lib/recipes/brand-frame.react';
-import { brandTheme } from '@/lib/recipes/brand-theme';
+import { BrandFrameRecipe } from '@/lib/examples/brand-frame/brand-frame.react';
+import { brandTheme } from '@/lib/examples/brand-theme/theme';
 
 /**
  * Docs React engine bound to the Radiant-styled demo kit.

@@ -55,7 +55,7 @@ describe('ActionDispatcher', () => {
 
 		registry.register({
 			$type: 'log',
-			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
+			schema: z.object({ name: z.string() }),
 			metadata: { name: 'Log', defaultTriggers: ['submit'] },
 			execute: async (ctx) => {
 				receivedMetadata = ctx.metadata;
@@ -78,7 +78,7 @@ describe('ActionDispatcher', () => {
 
 		registry.register({
 			$type: 'log',
-			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
+			schema: z.object({ name: z.string() }),
 			metadata: { name: 'Log', defaultTriggers: ['submit'] },
 			execute: async (ctx) => {
 				receivedId = ctx.id;
@@ -101,7 +101,7 @@ describe('ActionDispatcher', () => {
 
 		registry.register({
 			$type: 'log',
-			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
+			schema: z.object({ name: z.string() }),
 			metadata: { name: 'Log', defaultTriggers: ['submit'] },
 			execute: async (ctx) => {
 				executeCalls.push({ context: ctx, config: ctx.config });
@@ -130,7 +130,7 @@ describe('ActionDispatcher', () => {
 
 		registry.register({
 			$type: 'log',
-			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
+			schema: z.object({ name: z.string() }),
 			metadata: { name: 'Log', defaultTriggers: ['submit'] },
 			execute: async (ctx) => {
 				executeCalls.push(ctx.config);
@@ -157,7 +157,7 @@ describe('ActionDispatcher', () => {
 	describe('hasMatching', () => {
 		const logRegistration: ActionRegistration<TestActionConfig, TestContext, TestTrigger> = {
 			$type: 'log',
-			schema: z.object({ id: z.string(), $type: z.literal('log'), name: z.string() }),
+			schema: z.object({ name: z.string() }),
 			metadata: { name: 'Log', defaultTriggers: ['submit'] },
 			execute: async () => ({ success: true }),
 		};

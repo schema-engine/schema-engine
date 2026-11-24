@@ -190,7 +190,13 @@ describe('forms/actions', () => {
 			string,
 			unknown
 		>;
-		const options = Object.keys((browserPackage.AutoSaveActionRegistration.schema as { shape: object }).shape);
+		const options = [
+			'$type',
+			'id',
+			'enabled',
+			'triggers',
+			...Object.keys((browserPackage.AutoSaveActionRegistration.schema as { shape: object }).shape),
+		];
 		expect(Object.keys(draft).filter((key) => !options.includes(key))).toEqual([]);
 		expect(readPage(page)).not.toContain('debounceMs');
 	});

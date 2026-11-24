@@ -3,7 +3,8 @@
 	"tasks": {
 		"build:lib": {
 			"dependsOn": ["^build:lib"],
-			"outputs": ["dist/**"]
+			"inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/registry/skill/SKILL.md"],
+			"outputs": ["dist/**", "skill/SKILL.md"]
 		},
 		"build": {
 			"dependsOn": ["^build", "^build:lib"],

@@ -11,10 +11,10 @@ import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engin
  * The `FormRenderer` view authors every step's fields once inside this host.
  * There is no render override and no slot projection: the host binds its own
  * `hidden` attribute to a flag derived from the instance context, so step
- * switching is pure DOM and SSR emits the full form with only the active step
- * visible. The view also passes the initial `hidden` attribute (step 0 active for
- * wizards). Until an instance value arrives the host keeps the attribute the
- * view wrote.
+ * switching is pure DOM. The host is hidden while its step is skipped, and in a
+ * wizard while it is not the current step. The view also passes the initial `hidden`
+ * attribute, by the same rule on the form's initial values. Until an instance value
+ * arrives the host keeps the attribute the view wrote.
  *
  * @element se-form-step
  */
@@ -54,7 +54,8 @@ export class FormStepElement extends RadiantElement {
 	private syncHidden(): void {
 		const { instance } = this;
 		if (instance?.isWizard === undefined) return;
-		this.hiddenStep = instance.isWizard && instance.current !== this.stepId;
+		const skipped = instance.steps.find((step) => step.id === this.stepId)?.skipped ?? false;
+		this.hiddenStep = skipped || (instance.isWizard && instance.current !== this.stepId);
 	}
 }
 

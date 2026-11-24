@@ -4,13 +4,13 @@ description: 'Fetch a form config from an endpoint, check it with safeValidateFo
 order: 9
 ---
 
-import { FormRecipeDemo } from '@/components/form-recipe-demo';
+import { FormExampleDemo } from '@/components/form-example-demo';
 import { RendererTabs } from '@/components/renderer-tabs';
 import { signupForm } from '@/lib/examples/server-driven-form/server';
 
 # A server-driven form
 
-When the server owns the form, a change to a question is a change to a response. This recipe fetches a sign-up form from an endpoint as JSON and renders it. The client does not trust the answer: `safeValidateForm` checks every element and rule against what this client has registered, and a form it cannot render is a list of issues with their paths. The submit uses the `fetch` the engine hands to `onSubmit`, so a CSRF header is added without code, and a 422 from the server is shown on the fields it names.
+When the server owns the form, a change to a question is a change to a response. This example fetches a sign-up form from an endpoint as JSON and renders it. The client does not trust the answer: `safeValidateForm` checks every element and rule against what this client has registered, and a form it cannot render is a list of issues with their paths. The submit uses the `fetch` the engine hands to `onSubmit`, so a CSRF header is added without code, and a 422 from the server is shown on the fields it names.
 
 ## Install
 
@@ -26,13 +26,13 @@ For Radiant:
 pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started).
+Copy the files below into one folder. Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation and quick start](/docs/forms-radiant/getting-started). React needs `"jsx": "react-jsx"` in `tsconfig.json`.
 
 ## See it
 
-The demos render the config the server sends, styled for this site. They do not call a server: the files below do, and the recipe's tests run them against the handlers of `server.ts`.
+The demos render the config the server sends. The files below call the server, and the example's tests run them against the handlers of `server.ts`.
 
-<FormRecipeDemo config={signupForm} />
+<FormExampleDemo config={signupForm} />
 
 ## The server
 
@@ -379,7 +379,7 @@ export async function mountSignupForm(host: HTMLElement, url: string, onSignedUp
 
 ## What the tests check
 
-The recipe's tests render both files in a browser against the handlers of `server.ts`. The form the server sends renders, and an empty submit shows its messages without a request. A valid submit posts JSON with the `X-CSRF-Token` header and calls `onSignedUp`. A taken username shows the server's message on its field. The form of the next release shows its issues, with their paths, instead of a form. The unit tests cover each way the request can fail: the network, an error status and a body that is not JSON.
+The example's tests render both files in a browser against the handlers of `server.ts`. The form the server sends renders, and an empty submit shows its messages without a request. A valid submit posts JSON with the `X-CSRF-Token` header and calls `onSignedUp`. A taken username shows the server's message on its field. The form of the next release shows its issues, with their paths, instead of a form. The unit tests cover each way the request can fail: the network, an error status and a body that is not JSON.
 
 ## Take it further
 

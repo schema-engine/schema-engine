@@ -17,8 +17,9 @@ export interface RenderedConstraints {
  *
  * @remarks
  * The same source as the client: the container's participation of the values the server rendered, with the
- * containers around the field folded in, so a field that a skipped step or a hidden field takes out is not in
- * the server markup, and hydration does not remove it.
+ * containers around the field folded in, so a hidden field is not in the server markup, and hydration does not
+ * remove it. A skipped step is not folded in: its `se-form-step` host hides it, and the renderer reads the fields
+ * of that step from the participation of the step as if it were shown (`resolveParticipation`'s `shownStep`).
  */
 export function constraintsFromParticipation(
 	participation: Pick<Participation, 'fields'>,

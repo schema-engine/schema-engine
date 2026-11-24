@@ -1,11 +1,5 @@
 import { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
-import type {
-	FormIssueFormatter,
-	FormStateContainer,
-	FormStateIssue,
-	FormStateSnapshot,
-	FormSubmissionIssue,
-} from '@schema-engine/forms/state-container';
+import type { FormIssueFormatter, FormStateContainer, FormStateSnapshot } from '@schema-engine/forms/state-container';
 import type { FormRuntime } from '@schema-engine/forms';
 import type { FieldRegistry } from './field-registry';
 
@@ -49,18 +43,4 @@ export function useContainerSelector<T>(selector: (snapshot: FormStateSnapshot) 
 		() => selector(container.getSnapshot()),
 		() => selector(container.getServerSnapshot()),
 	);
-}
-
-/**
- * The text of an issue: what the form's formatter says, else the issue's own `message`, else nothing.
- *
- * @remarks A formatter that returns an empty text says nothing worth showing. The rule type is never shown.
- */
-export function formatIssueText(
-	issue: FormStateIssue | FormSubmissionIssue,
-	path: string,
-	formatIssue: FormIssueFormatter | undefined,
-): string | undefined {
-	const formatted = formatIssue?.(issue, { path });
-	return formatted || issue.message || undefined;
 }

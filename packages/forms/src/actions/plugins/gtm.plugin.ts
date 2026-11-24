@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
-import { FormActionTriggerSchema } from '../triggers';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '@/types';
 
 /**
  * GTM Tracker Interface for GTM Plugin
@@ -28,14 +27,8 @@ export interface GTMPluginConfig {
 
 /** Schema for the `gtm_event` action configuration. */
 export const GTMEventActionSchema = z.object({
-	/** Unique identifier for this action within the form */
-	id: z.string().check(z.minLength(1, 'Action ID cannot be empty')),
-	/** Action type identifier */
-	$type: z.literal('gtm_event'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.optional(z.string()),
-	/** Whether this action is enabled and should be executed */
-	enabled: z._default(z.boolean(), true),
 	/** Name of the GTM event to push to dataLayer */
 	eventName: z.string().check(z.minLength(1, 'Event name cannot be empty')),
 	/** Static data to include with the event */
@@ -50,15 +43,9 @@ export const GTMEventActionSchema = z.object({
 		z.union([z.boolean(), z.array(z.string().check(z.minLength(1, 'Field name cannot be empty')))]),
 		false,
 	),
-	/**
-	 * Optional specific triggers for this GTM event.
-	 * If not provided, uses default GTM trigger mapping.
-	 * Allows fine-grained control over when events fire.
-	 */
-	triggers: z.optional(z.array(FormActionTriggerSchema)),
 });
 
-export type GTMEventAction = z.infer<typeof GTMEventActionSchema>;
+export type GTMEventAction = BuilderActionConfig<'gtm_event', typeof GTMEventActionSchema>;
 
 /** Creates a configured `gtm_event` action registration. */
 export function gtmPlugin(

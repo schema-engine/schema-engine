@@ -72,6 +72,8 @@ export function FormRenderer<TValues extends FormValues = FormValues>({
 				onSubmit={props.onSubmit}
 				onChange={props.onChange}
 				onAction={props.onAction}
+				onActionResults={props.onActionResults}
+				navigate={props.navigate}
 			>
 				{children}
 			</FormInstance>

@@ -102,7 +102,7 @@ How the stylesheet reaches the page differs by renderer, by design:
 
 The stylesheet content is the same in both. A host that also wants the rules in its own head can serve `engine.getLayout().css`; the forms keep their copies, which hold the same rules.
 
-See the [two engines recipe](/docs/examples/layout-recipes#two-engines-sharing-one-theme) for a working pair.
+See the [two engines example](/docs/examples/shared-theme) for a working pair.
 
 ## The neutral hooks
 
@@ -168,4 +168,4 @@ const step = defineAxis({
 createLayoutTheme({ appearance: [...builtInAxes, step] }, { reservedNames: ['step'] }); // throws
 ```
 
-The package also holds the [recipe protocol](/docs/forms-react/layouts#custom-recipes) a domain uses to declare the slots and kinds of its view recipes (`defineRecipeProtocol`). The built-in form recipes stay in `@schema-engine/forms`.
+The package also holds the [recipe protocol](/docs/layout/recipe-protocol) a domain uses to declare the slots and kinds of its view recipes (`defineRecipeProtocol`). The built-in form recipes stay in `@schema-engine/forms`.

@@ -114,8 +114,12 @@ export function typecheck(files: Record<string, string>): Record<string, string[
 
 const REACT_PRAGMA = '/** @jsxImportSource react */';
 
-/** A `tsx` fence that imports from React or the React renderer is React JSX, whose pragma a page leaves out. */
+/** A `tsx` fence with no title that imports from React or the React renderer is React JSX. */
 const REACT_IMPORT = /from '(react|@schema-engine\/forms-react[^']*)'/;
+
+/** A `.react.tsx` file is React JSX whatever it imports, and any other titled file is not. */
+const isReactFence = (title: string | undefined, code: string): boolean =>
+	title === undefined ? REACT_IMPORT.test(code) : title.endsWith('.react.tsx');
 
 /** A TypeScript fence that does not compile, named by its page, its place on the page and its heading. */
 export interface SnippetFailure {
@@ -134,7 +138,8 @@ export interface SnippetFailure {
  * meta carries `title="<name>"` is itself a file of the app, so a later fence on the page can import it. A fence
  * with no import or export gets an empty export, so snippets that declare the same name do not collide. A fence
  * for which `skip` returns true is left out. A fence that holds JSX needs the `tsx` tag: under `ts` it fails to
- * parse. A `tsx` fence that imports React or `@schema-engine/forms-react` is compiled as React JSX.
+ * parse. A `tsx` fence titled `*.react.tsx` is compiled as React JSX, as is an untitled one that imports React or
+ * `@schema-engine/forms-react`.
  */
 export function checkPageSnippets(
 	page: string,
@@ -152,7 +157,7 @@ export function checkPageSnippets(
 		const name = titled ?? `fence-${fence}.${block.lang === 'tsx' ? 'tsx' : 'ts'}`;
 		names.set(fence, name);
 		const code = /^\s*(import|export)\s/m.test(block.code) ? block.code : `${block.code}\nexport {};`;
-		files[name] = block.lang === 'tsx' && REACT_IMPORT.test(block.code) ? `${REACT_PRAGMA}\n${code}` : code;
+		files[name] = block.lang === 'tsx' && isReactFence(titled, block.code) ? `${REACT_PRAGMA}\n${code}` : code;
 	}
 	const checked = fences.filter(({ block, fence }) => !skip(block, fence));
 	if (checked.length === 0) return [];

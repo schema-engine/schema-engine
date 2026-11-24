@@ -4,6 +4,7 @@ import { describe, expect, test } from 'vitest';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { DOCS_SECTION_CONFIG, DOCS_SECTION_ORDER } from '../src/content/docs';
+import { DEFAULT_SITE_ORIGIN } from '../src/lib/docs/site-meta';
 import { generateLlmDocs } from '../scripts/generate-llm-docs';
 import { docsPageIds, docsRoot } from './snippet-harness';
 
@@ -59,6 +60,37 @@ describe('the READMEs', () => {
 		const root = read('README.md');
 		for (const name of packageNames) expect(root, name).toContain(`@schema-engine/${name}`);
 		expect(root).not.toMatch(/\b(Vue|Svelte|Angular|Solid)\b|\bCLI\b|IoC Container|Command Pattern/);
+	});
+});
+
+describe('the READMEs and package manifests point at the hosted docs', () => {
+	const hostedDocs = `${DEFAULT_SITE_ORIGIN}/docs/`;
+
+	/** The hosted docs links of a text, as the page id each opens, without a fragment. */
+	const hostedPages = (text: string) =>
+		[...text.matchAll(new RegExp(`${hostedDocs.replaceAll('.', '\\.')}([a-z0-9/-]+)(?:#[a-z0-9-]*)?`, 'g'))].map(
+			(match) => match[1]!,
+		);
+
+	test.each(readmes)('%s links no .mdx file and no path into the docs app or a source folder', (readme) => {
+		const text = read(readme);
+		expect(text).not.toMatch(/\.mdx\b/);
+		expect(fileLinks(text).filter((link) => /apps\/docs|\/src\//.test(link))).toEqual([]);
+	});
+
+	test.each(readmes)('%s links the docs with absolute URLs of pages that exist', (readme) => {
+		const text = read(readme);
+		expect(text).not.toMatch(/\]\(\/docs\//);
+		const links = hostedPages(text);
+		expect(links.length).toBeGreaterThan(0);
+		expect(links.filter((link) => !pages.has(link))).toEqual([]);
+	});
+
+	test.each(packageNames)('packages/%s/package.json has the overview of its docs section as homepage', (name) => {
+		const manifest = JSON.parse(read(`packages/${name}/package.json`)) as { homepage?: string; private?: boolean };
+		if (manifest.private) return;
+		expect(manifest.homepage).toBe(`${hostedDocs}${name}/overview`);
+		expect(pages.has(`${name}/overview`)).toBe(true);
 	});
 });
 

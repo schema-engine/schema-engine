@@ -6,6 +6,7 @@ describe('the state container entry point', () => {
 		expect(Object.keys(entry).toSorted()).toEqual([
 			'FORM_ROOT',
 			'createFormStateContainer',
+			'issueText',
 			'selectFieldState',
 			'selectValue',
 			'toFieldArrayValue',

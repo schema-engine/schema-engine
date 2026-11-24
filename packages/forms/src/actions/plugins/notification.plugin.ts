@@ -1,7 +1,6 @@
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '@/types';
 import { logger } from '@/lib/logger';
-import { FormActionTriggerSchema } from '../triggers';
 
 /**
  * Notification Plugin Configuration
@@ -25,16 +24,8 @@ export interface NotificationPluginConfig {
 
 /** Schema for the `show_notification` action configuration. */
 export const NotificationActionSchema = z.object({
-	/** Unique identifier for this action within the form */
-	id: z.string().check(z.minLength(1, 'Action ID cannot be empty')),
-	/** Action type identifier */
-	$type: z.literal('show_notification'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.optional(z.string()),
-	/** Whether this action is enabled and should be executed */
-	enabled: z._default(z.boolean(), true),
-	/** Custom triggers that override the default triggers for this action */
-	triggers: z.optional(z.array(FormActionTriggerSchema)),
 	/** Message to display in the notification */
 	message: z.string().check(z.minLength(1, 'Message cannot be empty')),
 	/** Visual style of the notification */
@@ -43,7 +34,7 @@ export const NotificationActionSchema = z.object({
 	duration: z.optional(z._default(z.number().check(z.gte(0)), 3000)),
 });
 
-export type NotificationAction = z.infer<typeof NotificationActionSchema>;
+export type NotificationAction = BuilderActionConfig<'show_notification', typeof NotificationActionSchema>;
 
 /** Creates a configured `show_notification` action registration. */
 export function notificationPlugin(

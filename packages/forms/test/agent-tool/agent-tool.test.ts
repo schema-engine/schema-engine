@@ -5,6 +5,9 @@ import { registerFormAgentTool, type FormAgentToolResult } from '@/agent-tool';
 import { createFormRuntime } from '@/runtime';
 import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineInput } from '@/types';
+import type { FormEngineRuntime } from '@/engine/form-engine';
+import type { FormIssueFormatter } from '@/state-container/types';
+import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 
 const text = defineInput({
 	$type: 'text',
@@ -42,7 +45,7 @@ const engine = createFormEngine({ elements: [text, stars, rows], formatIssue });
 type Tool = {
 	name: string;
 	description: string;
-	inputSchema: Record<string, any>;
+	inputSchema: JSONSchemaObject;
 	execute(input: unknown, options: { signal: AbortSignal }): Promise<FormAgentToolResult>;
 };
 
@@ -86,18 +89,25 @@ const reviewForm = {
 	],
 };
 
-function setup(options: { autoSubmit?: boolean; form?: Record<string, unknown> } = {}) {
+function setup(
+	options: {
+		autoSubmit?: boolean;
+		form?: Record<string, unknown>;
+		formatIssue?: FormIssueFormatter;
+		engine?: FormEngineRuntime;
+	} = {},
+) {
 	const stub = stubModelContext();
-	const config = engine.validateForm(options.form ?? reviewForm);
+	const usedEngine = options.engine ?? engine;
+	const config = usedEngine.validateForm(options.form ?? reviewForm);
 	const onSubmit = vi.fn();
-	const runtime = createFormRuntime({ engine, config, host: { focus: vi.fn() }, onSubmit });
+	const runtime = createFormRuntime({ engine: usedEngine, config, host: { focus: vi.fn() }, onSubmit });
 	runtime.mount();
 	const unregister = registerFormAgentTool(runtime, {
 		name: 'submit_review',
 		description: 'Send a review',
 		autoSubmit: options.autoSubmit,
-		engine,
-		config,
+		formatIssue: options.formatIssue,
 	});
 	const { tool, signal } = stub.registered[0]!;
 	const run = (input: unknown, abort = new AbortController()) => tool.execute(input, { signal: abort.signal });
@@ -140,6 +150,49 @@ describe('registerFormAgentTool', () => {
 		expect(said(result)).toContain('- name: name says required');
 		expect(formatIssue).toHaveBeenCalled();
 		expect(onSubmit).not.toHaveBeenCalled();
+	});
+
+	test('an issue nothing words is reported by its type and params, so the agent can still act on it', async () => {
+		const plain = createFormEngine({ elements: [text] });
+		const { run } = setup({
+			autoSubmit: true,
+			engine: plain,
+			form: {
+				id: 'short',
+				steps: [
+					{
+						id: 'main',
+						title: 'Main',
+						elements: [{ $type: 'text', name: 'name', rules: [{ $type: 'minLength', value: 3 }] }],
+					},
+				],
+			},
+		});
+
+		const result = await run({ name: 'Al' });
+
+		expect(said(result)).toContain('- name: minLength {"minLength":3}');
+	});
+
+	test("the formatIssue option words the issues in place of the engine's formatter", async () => {
+		const own: FormIssueFormatter = (issue, { path }) => `own ${path}: ${issue.type}`;
+		const { run } = setup({ autoSubmit: true, formatIssue: own });
+
+		const result = await run({ rating: 4 });
+
+		expect(said(result)).toContain('- name: own name: required');
+		expect(formatIssue).not.toHaveBeenCalled();
+	});
+
+	test('a call aborted while it submits leaves a list the user never had as it was', async () => {
+		const { run, runtime } = setup({ autoSubmit: true });
+		const abort = new AbortController();
+
+		const pending = run({ name: '', tags: ['new'] }, abort);
+		abort.abort();
+		await pending;
+
+		expect(runtime.container.getValue('tags')).toBeUndefined();
 	});
 
 	test('input of the wrong type is refused before anything is written', async () => {
@@ -252,8 +305,6 @@ describe('registerFormAgentTool', () => {
 			name: 'wizard',
 			description: 'Fill the wizard',
 			autoSubmit: true,
-			engine: wizardEngine,
-			config,
 		});
 		const { tool } = stub.registered[0]!;
 		const abort = new AbortController();
@@ -281,7 +332,7 @@ describe('without WebMCP', () => {
 	const setupBare = () => {
 		const config = engine.validateForm(reviewForm);
 		const runtime = createFormRuntime({ engine, config, host: { focus: vi.fn() } });
-		return () => registerFormAgentTool(runtime, { name: 'x', description: 'x', engine, config });
+		return () => registerFormAgentTool(runtime, { name: 'x', description: 'x' });
 	};
 
 	test('does nothing and does not throw on the server', () => {

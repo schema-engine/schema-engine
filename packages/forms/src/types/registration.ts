@@ -125,6 +125,30 @@ export type RecipeRegistration<
 >;
 
 /**
+ * The arguments of an action as its schema types them, or nothing when the schema takes none.
+ *
+ * @remarks
+ * A schema for no arguments, such as `z.object({})`, types its input and output as `Record<string, never>`. Intersected with the base keys it
+ * would turn `id` and every other base key into `never`, so it stands for no arguments instead.
+ */
+export type ActionArguments<TOutput> = string extends keyof TOutput
+	? TOutput[string] extends never
+		? unknown
+		: TOutput
+	: TOutput;
+
+/**
+ * The config of a form action: the keys the engine owns plus the output of the registration's schema.
+ *
+ * @template TType - The action type identifier
+ * @template TSchema - The registration's schema, which lists the action's own arguments only
+ */
+export type BuilderActionConfig<
+	TType extends string = string,
+	TSchema extends StandardSchemaV1 = StandardSchemaV1,
+> = ActionConfigBase<TType> & ActionArguments<StandardSchemaV1.InferOutput<TSchema>>;
+
+/**
  * Action registration object for forms.
  *
  * This extends the base ActionRegistration from @schema-engine/actions,
@@ -139,11 +163,7 @@ export type BuilderActionRegistration<
 	TType extends string = string,
 	TSchema extends StandardSchemaV1 = StandardSchemaV1,
 > = Omit<
-	ActionRegistration<
-		StandardSchemaV1.InferOutput<TSchema> & ActionConfigBase<TType>,
-		BuilderActionBaseContext,
-		FormActionTrigger
-	>,
+	ActionRegistration<BuilderActionConfig<TType, TSchema>, BuilderActionBaseContext, FormActionTrigger>,
 	'schema' | '$type'
 > & {
 	$type: TType;

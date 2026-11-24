@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ChangeEvent, CSSProperties } from 'react';
 import { mergeControlProps, createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms';
-import { selectFieldState, selectValue } from '@schema-engine/forms/state-container';
+import { issueText, selectFieldState, selectValue } from '@schema-engine/forms/state-container';
 import { getGridItemVariables } from '@schema-engine/layout';
 import { isElementRequired } from '@/hooks/is-element-required';
 import { useOptionalFormEngine } from '@/hooks/use-form-context';
 import { logger } from '@/lib/logger';
-import { formatIssueText, useContainerSelector, useFormStateContext } from './context';
+import { useContainerSelector, useFormStateContext } from './context';
 import type { ControlledFormField, FormField, FormFieldConfig, FormFieldOptions, FormFieldStatus } from './types';
 
 let fallbackValidationRegistry: ValidationRegistry | undefined;
@@ -30,8 +30,8 @@ function useFieldStatus(path: string): FormFieldStatus {
 		selectFieldState(snapshot, path),
 	);
 	return {
-		error: error && formatIssueText(error, path, formatIssue),
-		warning: warning && formatIssueText(warning, path, formatIssue),
+		error: error && issueText(error, path, formatIssue),
+		warning: warning && issueText(warning, path, formatIssue),
 		issue: error,
 		invalid,
 		isTouched,

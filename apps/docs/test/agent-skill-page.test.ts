@@ -18,7 +18,7 @@ test('the page lists exactly the references the packages ship, as the router rou
 });
 
 test('the page names where the router and a reference are installed and where the site serves them', () => {
-	expect(page).toContain('node_modules/@schema-engine/registry/skill/SKILL.md');
+	expect(page).toContain('node_modules/@schema-engine/<package>/skill/SKILL.md');
 	expect(page).toContain('node_modules/@schema-engine/<package>/skill/reference/<file>');
 	expect(page).toContain('/skill/SKILL.md');
 	expect(page).toContain('/skill/reference/');

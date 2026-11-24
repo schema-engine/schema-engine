@@ -141,6 +141,7 @@ function FormRendererInner<
 	onChange,
 	onAction,
 	onActionResults,
+	navigate,
 	formatIssue,
 	className = '',
 	style,
@@ -158,6 +159,7 @@ function FormRendererInner<
 			onChange={onChange}
 			onAction={onAction}
 			onActionResults={onActionResults}
+			navigate={navigate}
 			formatIssue={formatIssue}
 		>
 			<div className={`se-form ${className}`.trim()} style={style}>

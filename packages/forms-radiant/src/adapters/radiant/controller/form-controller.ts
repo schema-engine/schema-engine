@@ -1,14 +1,14 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import { fromExternalStore, type Signal } from '@ecopages/signals';
 import type { FormRuntime } from '@schema-engine/forms';
-import type {
-	FormStateContainer,
-	FormStateIssue,
-	FormStateSnapshot,
-	FormSubmissionIssue,
+import {
+	issueText,
+	type FormStateContainer,
+	type FormStateIssue,
+	type FormStateSnapshot,
+	type FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { describeIssue } from '@/lib/describe-issue';
 
 /**
  * The form of the `se-form-instance` that contains a host: its container, a signal over its state, and its issue text.
@@ -26,7 +26,7 @@ export class FormController {
 
 	/** The form's state container, once the instance has one. */
 	get container(): FormStateContainer | undefined {
-		return this.context()?.container;
+		return this.context()?.runtime?.container;
 	}
 
 	private context(): FormInstanceContextValue | undefined {
@@ -86,7 +86,7 @@ export class FormController {
 		let unsubscribeContainer: (() => void) | undefined;
 		let first = true;
 		const stop = this.follow((context) => {
-			const next = context?.container;
+			const next = context?.runtime?.container;
 			const initial = first;
 			first = false;
 			if (next === current && !initial) return;
@@ -150,6 +150,6 @@ export class FormController {
 	 * @remarks `undefined` when neither gives text, never the issue's `type`.
 	 */
 	formatIssue(issue: FormStateIssue | FormSubmissionIssue, { path }: { readonly path: string }): string | undefined {
-		return describeIssue(issue, path, this.context()?.formatIssue);
+		return issueText(issue, path, this.context()?.formatIssue);
 	}
 }

@@ -14,10 +14,7 @@ describe('NotificationPlugin', () => {
 
 	describe('Schema Validation', () => {
 		test('should validate valid notification action', () => {
-			const validAction: NotificationAction = {
-				id: 'show-success',
-				$type: 'show_notification',
-				enabled: true,
+			const validAction = {
 				message: 'Form submitted successfully!',
 				variant: 'success',
 				duration: 4000,
@@ -28,12 +25,8 @@ describe('NotificationPlugin', () => {
 		});
 
 		test('should validate notification action with all optional fields', () => {
-			const fullAction: NotificationAction = {
-				id: 'show-warning',
-				$type: 'show_notification',
+			const fullAction = {
 				description: 'Show a warning message',
-				enabled: true,
-				triggers: ['form_submit'],
 				message: 'Please review your input',
 				variant: 'warning',
 				duration: 5000,
@@ -45,9 +38,6 @@ describe('NotificationPlugin', () => {
 
 		test('should default variant to info', () => {
 			const action = {
-				id: 'show-info',
-				$type: 'show_notification',
-				enabled: true,
 				message: 'Information message',
 			};
 
@@ -57,9 +47,6 @@ describe('NotificationPlugin', () => {
 
 		test('should default duration to 3000ms', () => {
 			const action = {
-				id: 'show-success',
-				$type: 'show_notification',
-				enabled: true,
 				message: 'Success message',
 				variant: 'success',
 			};
@@ -70,9 +57,6 @@ describe('NotificationPlugin', () => {
 
 		test('should reject invalid variant', () => {
 			const invalidAction = {
-				id: 'show-invalid',
-				$type: 'show_notification',
-				enabled: true,
 				message: 'Invalid message',
 				variant: 'invalid',
 			};
@@ -82,9 +66,6 @@ describe('NotificationPlugin', () => {
 
 		test('should reject empty message', () => {
 			const invalidAction = {
-				id: 'show-empty',
-				$type: 'show_notification',
-				enabled: true,
 				message: '', // Empty message
 				variant: 'info',
 			};
@@ -94,9 +75,6 @@ describe('NotificationPlugin', () => {
 
 		test('should reject negative duration', () => {
 			const invalidAction = {
-				id: 'show-negative',
-				$type: 'show_notification',
-				enabled: true,
 				message: 'Message',
 				variant: 'info',
 				duration: -1000,

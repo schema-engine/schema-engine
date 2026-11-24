@@ -1,0 +1,40 @@
+---
+title: 'Browser helpers'
+description: 'Consent-aware drafts and analytics events that run in the browser.'
+order: 14
+---
+
+# Browser helpers
+
+These helpers live in `@schema-engine/forms/browser`. They run in the browser and are not tied to a renderer. The browser actions of [Actions in forms](/docs/forms/actions) use them.
+
+## Consent-aware drafts
+
+```ts
+import { GDPRConsent } from '@schema-engine/forms/browser';
+
+GDPRConsent.grantConsent();
+GDPRConsent.saveDraft('contact', { email: 'reader@example.com' });
+const draft = GDPRConsent.loadDraft('contact');
+```
+
+Grant consent before saving a draft. Drafts use the `autosave_<formId>` key shared with the auto-save and reset
+actions. `GDPRConsent.revokeConsent()` clears drafts that the browser auto-save action
+or `GDPRConsent.saveDraft` wrote, under either the default key or a custom `storageKey`. Consent is browser storage
+state; applications provide their own subscriptions, disclosure and
+retention policy.
+
+## Analytics
+
+```ts
+import { GTMTracker } from '@schema-engine/forms/browser';
+
+GTMTracker.pushFormEvent('form_submit', undefined, { formId: 'contact' });
+```
+
+`pushFormEvent` accepts `form_mount`, `form_step_complete`, `form_submit`, and
+`form_abandon`. Applications choose the values they send. The helper filters
+common sensitive field names, but does not replace application data minimization.
+
+For config-driven analytics, register the `gtm_event` action and place an action
+config in `form.actions`. See [Actions](/docs/forms/actions).

@@ -26,8 +26,6 @@ describe('ActionRegistry', () => {
 	const mockAction: ActionRegistration<LogActionConfig, TestContext, TestTrigger> = {
 		$type: 'log',
 		schema: z.object({
-			id: z.string(),
-			$type: z.literal('log'),
 			message: z.string(),
 		}),
 		metadata: {
@@ -44,8 +42,6 @@ describe('ActionRegistry', () => {
 	const anotherAction: ActionRegistration<ApiActionConfig, TestContext, TestTrigger> = {
 		$type: 'api',
 		schema: z.object({
-			id: z.string(),
-			$type: z.literal('api'),
 			url: z.string(),
 		}),
 		metadata: {

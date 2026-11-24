@@ -3,6 +3,7 @@ import type { FormEngineRuntime } from '@/engine/form-engine';
 import type { FormActionConfig, SubmissionActionResult } from '@/runtime/submission-lifecycle';
 import type { FormStepState, StepNavigationMode } from '@/engine/step-machine';
 import type { ValidationStep } from '@/engine/value-validation';
+import type { SubmissionSchema } from '@/engine/submission-schema';
 import type { FormFetch } from '@/lib/form-fetch';
 import type { FormActionTrigger } from '@/actions';
 import type { DefaultValuesOf } from '@/builder/form-values';
@@ -11,6 +12,7 @@ import type {
 	FormStateContainer,
 	FormStateContainerConfig,
 	FormStateErrorsInput,
+	FormIssueFormatter,
 	FormStateHydration,
 	FormSubmissionIssue,
 } from '@/state-container/types';
@@ -152,6 +154,16 @@ export interface CreateFormRuntimeOptions<TAction extends FormActionConfig = For
 	onChange?: (data: FormValues) => void;
 	/** Called with each submit action that succeeded, and the values that passed. Typed by the engine's actions. */
 	onAction?: (action: TAction, data: TValues) => void | Promise<void>;
+	/**
+	 * Takes the page to the `redirectUrl` a submit action asked for, once the whole submission succeeded.
+	 *
+	 * @remarks
+	 * Called at most once, after every submit action and `onSubmit` succeeded and the success trigger ran, with the
+	 * `redirectUrl` of the last successful submit action that set one. It replaces
+	 * {@link FormRuntimeHost.submitNatively} for that submission, since a native post would load a page of its own.
+	 * Defaults to {@link defaultNavigate}: `location.assign` where `globalThis.location` exists, and nothing on a server.
+	 */
+	navigate?: (url: string) => void;
 	/** Called with the results of every trigger that ran actions, and once with those of the submit actions. */
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 }
@@ -160,6 +172,16 @@ export interface CreateFormRuntimeOptions<TAction extends FormActionConfig = For
 export interface FormRuntime {
 	/** The form state: values, field state, validation and the captured submission. */
 	readonly container: FormStateContainer;
+	/** The normalized config the runtime was created from. */
+	readonly config: FormRuntimeConfig;
+	/**
+	 * The submitted values of the form as a Standard Schema, composed once from the config's elements.
+	 *
+	 * @remarks The schema every submission is checked against, so a tool that builds values for the form reads it from here and cannot drift from the runtime's.
+	 */
+	readonly submissionSchema: SubmissionSchema;
+	/** The engine's `formatIssue`, which a form without one of its own words its issues with. */
+	readonly formatIssue: FormIssueFormatter | undefined;
 	/**
 	 * Starts the runtime: dispatches `form_mount` the first time, and watches the values for `form_change` and `onChange`.
 	 *

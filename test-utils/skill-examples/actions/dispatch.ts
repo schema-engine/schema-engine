@@ -2,9 +2,9 @@ import * as z from 'zod/mini';
 import {
 	ActionDispatcher,
 	ActionRegistry,
+	defineAction,
 	parseActions,
 	type ActionConfigBase,
-	type ActionRegistration,
 } from '@schema-engine/actions';
 
 type Trigger = 'save';
@@ -17,15 +17,11 @@ interface NotifyConfig extends ActionConfigBase<'notify'> {
 	channel: string;
 }
 
-const notify: ActionRegistration<NotifyConfig, Context, Trigger> = {
+const defineNotify = defineAction<Context, Trigger>();
+
+const notify = defineNotify<NotifyConfig>({
 	$type: 'notify',
-	schema: z.object({
-		$type: z.literal('notify'),
-		id: z.string(),
-		channel: z.string(),
-		enabled: z.optional(z.boolean()),
-		triggers: z.optional(z.array(z.string())),
-	}),
+	schema: z.object({ channel: z.string() }),
 	metadata: { name: 'Notify', defaultTriggers: ['save'] },
 	execute: async ({ config, sent, signal }) => {
 		if (signal.aborted) return { success: false, error: 'Cancelled' };
@@ -34,7 +30,7 @@ const notify: ActionRegistration<NotifyConfig, Context, Trigger> = {
 			? { success: false, error: 'No such channel', shouldContinue: false }
 			: { success: true };
 	},
-};
+});
 
 export const registry = new ActionRegistry<Context, Trigger>([notify]);
 

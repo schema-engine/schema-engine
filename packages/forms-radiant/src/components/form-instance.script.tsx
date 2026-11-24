@@ -13,6 +13,8 @@ import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { onContextUpdate, provideContext, type ContextProvider } from '@ecopages/radiant/context';
 import {
 	createFormRuntime,
+	defaultNavigate,
+	type FormActionTrigger,
 	type FormEngineRuntime as CoreFormEngine,
 	type FormRuntime,
 	type FormSubmissionState,
@@ -307,6 +309,7 @@ export class FormInstanceElement extends RadiantElement {
 			onChange: (data) => instanceCallbacks(this).onChange?.(data),
 			onAction: (action, data) => instanceCallbacks(this).onAction?.(action, data),
 			onActionResults: (results, trigger) => this.reportActionResults(ruiForm, inFlight, results, trigger),
+			navigate: (url) => (instanceCallbacks(this).navigate ?? defaultNavigate)(url),
 		});
 		const bound: BoundForm = { config, engine, host: ruiForm, defaultValues, runtime, inFlight };
 		this.firstForm = false;
@@ -403,15 +406,16 @@ export class FormInstanceElement extends RadiantElement {
 		}
 	}
 
-	/** Reports the results of a trigger's actions with `se-action-results` on the `rui-form`, and keeps those of the submit actions for `se-action-submit-complete`. */
+	/** Reports the results of a trigger's actions with `se-action-results` on the `rui-form` and to the renderer's `onActionResults`, and keeps those of the submit actions for `se-action-submit-complete`. */
 	private reportActionResults(
 		host: HTMLElement,
 		inFlight: InFlightSubmit,
 		results: readonly SubmissionActionResult[],
-		trigger: string,
-	): void {
+		trigger: FormActionTrigger,
+	): void | Promise<void> {
 		if (trigger === 'form_submit') inFlight.results = results;
 		this.announce(host, 'se-action-results', { trigger, results });
+		return instanceCallbacks(this).onActionResults?.(results, trigger);
 	}
 
 	/**
@@ -469,7 +473,6 @@ export class FormInstanceElement extends RadiantElement {
 			back: this.back,
 			goTo: this.goTo,
 			submission: snapshot?.submission ?? idle,
-			container: this.bound?.runtime.container,
 			runtime: this.bound?.runtime,
 			formatIssue: this.issueFormatter(),
 		};

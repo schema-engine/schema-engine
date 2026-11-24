@@ -20,7 +20,7 @@ The React renderer needs React 19. Set `"jsx": "react-jsx"` in `tsconfig.json`. 
 
 One file holds everything: a text widget built on `useFormField`, its `defineInput` registration, `createFormEngine`, a form config and a component that renders it with `FormRenderer` and shows the submitted values. The form has no `view`, so no view recipe is involved and no CSS is needed: fields render as plain markup.
 
-```tsx
+```tsx title="react-quick-start.react.tsx"
 import { useState } from 'react';
 import * as z from 'zod/mini';
 import { BaseFieldSchema, createFormEngine, defineInput, defineStatic, type FormValues } from '@schema-engine/forms';
@@ -102,7 +102,7 @@ export function ContactForm() {
 	return (
 		<>
 			<FormRenderer engine={engine} config={contactForm} onSubmit={setValues} />
-			{values && <pre data-testid="submitted">{JSON.stringify(values)}</pre>}
+			{values && <pre>{JSON.stringify(values)}</pre>}
 		</>
 	);
 }
@@ -111,7 +111,7 @@ export function ContactForm() {
 - **The widget** reads its state with `useFormField(config)`, spreads `fieldProps` on a native input and shows `error` through `errorProps`. It is uncontrolled: a keystroke renders nothing. [Writing a widget](/docs/forms-react/widgets) covers the controlled mode and the other hooks.
 - **The registration** gives the widget a `$type`, the schema of its config and the schema of its `value`, which is what it contributes to the submitted values.
 - **The engine** registers the elements. Create it once and reuse it across your application.
-- **The config** is an object. It could equally be JSON from a file or a server, checked with `engine.validateForm`. See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+- **The config** is an object. It could equally be JSON from a file or a server, checked with `engine.validateForm`. See [Authoring modes](/docs/forms/engine#author-a-form-config).
 - **`FormRenderer`** validates the config, renders it and calls `onSubmit` with the values once validation passes. `FormValues` is what a config loaded from JSON submits. With `engine.defineForm()` of a literal config the type comes from the config. See [Submitted values](/docs/forms/form-state#submitted-values).
 
 Submit the empty form and the required rules show their messages. Fill both fields and the values appear under the form.
@@ -168,7 +168,7 @@ These imports resolve only after the `shadcn add` has copied the files. A config
 
 ## Where to go next
 
-- [Contact form](/docs/examples/contact-form) and [Registration wizard](/docs/examples/registration-wizard): full recipes with a React tab, a server and the failure paths.
+- [Contact form](/docs/examples/contact-form) and [Registration wizard](/docs/examples/registration-wizard): full examples with a React tab, a server and the failure paths.
 - [Writing a widget](/docs/forms-react/widgets): uncontrolled and controlled widgets.
 - [Registry fields](/docs/forms-react/components): the elements the shadcn registry installs.
 - [View recipes](/docs/forms-react/layouts): shells and blocks.

@@ -44,8 +44,7 @@ Form authors supply schema **input** (defaults stay optional). After `defineForm
 ## Forms logging
 
 `@schema-engine/forms` and the renderer packages use `@ecopages/logger` through
-each package’s shared `logger` instance. The forms instance is also exported as
-`logger` from `@schema-engine/forms`. Tags identify
+each package’s shared `logger` instance. Tags identify
 the package (`[schema-engine/forms]`, `[schema-engine/forms-react]`, and so on).
 Debug output stays off unless the host enables Ecopages log levels.
 
@@ -60,7 +59,7 @@ holds, and it ignores its own `mode`, `defaultValues`, `resolver` and field `rul
 dispatch the native `input` (the user changed the value) and `change` (the user committed it) on the host, never for
 a value set from code, and a custom host announces itself with `announceControlConnect` when it connects, so a field
 that registered earlier seeds it. `rui-change` stays only for components that are not form controls. The instance
-provides the container on `formInstanceContext`, and scoped `FormController` instances read it there (`container`,
+provides the runtime, whose `container` is the form's state, on `formInstanceContext`, and scoped `FormController` instances read it there (`container`,
 `select`, `formatIssue`); there is no global active form. A new config, engine or `defaultValues` is a new container; moving the instance keeps it. `rui-form` is connected to the container as it is. Radiant UI's own choice controls hold text, a list of text or a list of numbers where the form holds the value its element declares, so the `select`, `combobox`, `radio`, `checkbox-group` and `slider` elements each wrap their control in a host (`se-select`, `se-combobox`, `se-radio-group`, `se-checkbox-group`, `se-slider`, built on `ControlHost` in `lib/control-host.ts`) whose `value` is the declared value: the host writes it into the control as the control holds it, maps what the user chose back, and dispatches the native `input` and `change` on itself. `FormInstanceElement` is internal to the `FormRenderer` view, which feeds it the callbacks through a `ref` (it has no property to assign and the package does not export it): the view's typed props are the one way to receive the submitted values. `registerHostControl` registers every host with `rui-field` in one of two modes: `wraps` (a host around a Radiant UI control, `ControlHost`, not form-associated, `submission: 'none'`) and `owns` (a host that renders its own control: the form-associated phone, OTP and masked inputs, `submission: 'host'`, and the drop zone, whose file input is the submitted control).
 The application gives the engine a `formatIssue` that turns an issue (`type`, `ruleId`, `params`) into
 text, and a renderer may override it for its forms (renderer over engine);
@@ -102,7 +101,7 @@ one-element array compares as its element, so a single-selection control matches
 an authored scalar.
 
 Field references resolve identically for constraints and for validation, and
-that is deliberate: `resolveFieldRef` in `@schema-engine/forms` is
+that is deliberate: `resolveFieldRef` is
 the single implementation, and `resolveConstraintPath` is an alias of it. A
 validation handler reaches it through the `ValidationContext` its second
 argument carries — `resolve`, plus the form's nested `values` and the field's

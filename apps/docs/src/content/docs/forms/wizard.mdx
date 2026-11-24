@@ -1,7 +1,7 @@
 ---
 title: 'Wizard and runtime'
 description: 'The form runtime: submission, wizard navigation, skippable steps and the outcome every command returns.'
-order: 10
+order: 9
 ---
 
 # Wizard and runtime
@@ -12,17 +12,18 @@ In an app you do not create it. React's `FormProvider` and Radiant's `se-form-in
 
 ## Create a runtime
 
-| Option            | Meaning                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------- |
-| `engine`          | The engine, for its validation registry, its actions and its `fetch`.                          |
-| `config`          | The normalized form, from `engine.defineForm` or `engine.validateForm`.                        |
-| `defaults`        | Values the form starts from, over the defaults of its fields.                                  |
-| `snapshot`        | The server's container snapshot, to hydrate from.                                              |
-| `host`            | What only the renderer can do, below.                                                          |
-| `onSubmit`        | Called with the values that passed, after the submit actions and before `form_submit_success`. |
-| `onChange`        | Called when the values change, never for an error, a touch or a validation result.             |
-| `onAction`        | Called with each submit action that succeeded. Typed by the engine's actions.                  |
-| `onActionResults` | Called with the results of every trigger that ran actions.                                     |
+| Option            | Meaning                                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine`          | The engine, for its validation registry, its actions and its `fetch`.                                                                                          |
+| `config`          | The normalized form, from `engine.defineForm` or `engine.validateForm`.                                                                                        |
+| `defaults`        | Values the form starts from, over the defaults of its fields.                                                                                                  |
+| `snapshot`        | The server's container snapshot, to hydrate from.                                                                                                              |
+| `host`            | What only the renderer can do, below.                                                                                                                          |
+| `onSubmit`        | Called with the values that passed, after the submit actions and before `form_submit_success`.                                                                 |
+| `onChange`        | Called when the values change, never for an error, a touch or a validation result.                                                                             |
+| `onAction`        | Called with each submit action that succeeded. Typed by the engine's actions.                                                                                  |
+| `onActionResults` | Called with the results of every trigger that ran actions.                                                                                                     |
+| `navigate`        | Takes the page to the `redirectUrl` of a submit action once the submission succeeded. Defaults to `location.assign` in a browser and does nothing on a server. |
 
 `runtime.mount()` dispatches `form_mount` the first time and starts the change watch; the function it returns stops the watch and revokes any command in flight. The runtime exposes `container`, `getSnapshot()`, `getServerSnapshot()`, `subscribe(listener)`, `next()`, `back()`, `goTo(id)`, `submit()` and `clearSubmission()`.
 
@@ -99,7 +100,7 @@ The form config chooses how free the stepper is with `navigation`:
 
 A step can be skipped from earlier answers. Give it `constraints` with the same logic as fields, limited to `show` and `hide`. In this checkout the `company` step is shown only when `hasCompany` is `'yes'`. The recipe runs the form without a renderer, with the `focus` host member as the only thing it supplies:
 
-```ts
+```ts title="checkout-wizard.ts"
 import { createFormRuntime, type FormRuntimeOutcome, type FormValues } from '@schema-engine/forms';
 import { engine } from './engine';
 

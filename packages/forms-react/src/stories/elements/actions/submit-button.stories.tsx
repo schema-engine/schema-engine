@@ -6,7 +6,7 @@ import * as z from 'zod/mini';
 import {
 	type BuilderActionRuntimeContext,
 	type BuilderActionRegistration,
-	FormActionTriggerSchema,
+	type BuilderActionConfig,
 	type ActionExecutionResult,
 } from '@schema-engine/forms';
 import { SUBMIT_FORM_MOCK_URL } from '@/stories/msw/submit-form';
@@ -332,17 +332,13 @@ export const SubscriptionForm: Story = {
 };
 
 const ConfettiActionSchema = z.object({
-	id: z.string(),
-	$type: z.literal('confetti'),
 	description: z.optional(z.string()),
-	enabled: z._default(z.boolean(), true),
-	triggers: z.optional(z.array(FormActionTriggerSchema)),
 	particleCount: z.optional(z._default(z.number(), 100)),
 	spread: z.optional(z._default(z.number(), 70)),
 	origin: z.optional(z._default(z.object({ y: z.number() }), { y: 0.6 })),
 });
 
-type ConfettiAction = z.infer<typeof ConfettiActionSchema>;
+type ConfettiAction = BuilderActionConfig<'confetti', typeof ConfettiActionSchema>;
 
 function confettiPlugin(): BuilderActionRegistration<'confetti', typeof ConfettiActionSchema> {
 	return {

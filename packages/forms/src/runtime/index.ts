@@ -1,4 +1,4 @@
-export { createFormRuntime } from './create-form-runtime';
+export { createFormRuntime, defaultNavigate } from './create-form-runtime';
 export { isSubmissionBusy } from './types';
 export type {
 	CreateFormRuntimeOptions,

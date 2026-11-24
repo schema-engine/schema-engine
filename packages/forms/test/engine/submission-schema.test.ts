@@ -308,6 +308,42 @@ describe('engine.submissionSchema', () => {
 			/not supported/,
 		);
 	});
+
+	test('describes each field by its label, then its help text', () => {
+		const config = form([
+			{ $type: 'text', name: 'email', label: 'Email', description: 'Where we reply' },
+			{ $type: 'text', name: 'nick', label: 'Nickname' },
+			{ $type: 'text', name: 'plain' },
+			{
+				$type: 'fieldSet',
+				name: 'address',
+				label: 'Address',
+				elements: [{ $type: 'text', name: 'city', label: 'City' }],
+			},
+			{ $type: 'rows', name: 'tags', label: 'Tags', elements: [{ $type: 'text', name: 'tag', label: 'Tag' }] },
+		]);
+
+		const { properties } = engine.submissionSchema(config)['~standard'].jsonSchema.input({
+			target: 'draft-2020-12',
+		}) as {
+			properties: Record<
+				string,
+				{
+					description?: string;
+					properties?: Record<string, { description?: string }>;
+					items?: { description?: string };
+				}
+			>;
+		};
+
+		expect(properties.email.description).toBe('Email: Where we reply');
+		expect(properties.nick.description).toBe('Nickname');
+		expect(properties.plain).not.toHaveProperty('description');
+		expect(properties.address.description).toBe('Address');
+		expect(properties.address.properties?.city.description).toBe('City');
+		expect(properties.tags.description).toBe('Tags');
+		expect(properties.tags.items?.description).toBe('Tag');
+	});
 });
 
 describe('createFormEngine', () => {

@@ -1,18 +1,17 @@
 import * as z from 'zod/mini';
-import { createFormEngine, type BuilderActionRegistration } from '@schema-engine/forms';
+import { defineAction, type ActionConfigBase } from '@schema-engine/actions';
+import { createFormEngine, type BuilderActionBaseContext, type FormActionTrigger } from '@schema-engine/forms';
 import { textRegistration } from './engine';
 
-const NotifyActionSchema = z.object({
-	$type: z.literal('notify'),
-	id: z.string(),
-	channel: z.string(),
-	enabled: z._default(z.boolean(), true),
-	triggers: z.optional(z.array(z.string())),
-});
+const defineFormAction = defineAction<BuilderActionBaseContext, FormActionTrigger>();
 
-export const notifyAction: BuilderActionRegistration<'notify', typeof NotifyActionSchema> = {
+interface NotifyConfig extends ActionConfigBase<'notify'> {
+	channel: string;
+}
+
+export const notifyAction = defineFormAction<NotifyConfig>({
 	$type: 'notify',
-	schema: NotifyActionSchema,
+	schema: z.object({ channel: z.string() }),
 	metadata: { name: 'Notify', defaultTriggers: ['form_submit'] },
 	execute: async ({ config, formData, fetch }) => {
 		const response = await fetch('/api/notify', {
@@ -21,7 +20,7 @@ export const notifyAction: BuilderActionRegistration<'notify', typeof NotifyActi
 		});
 		return response.ok ? { success: true } : { success: false, error: `Notify failed with ${response.status}` };
 	},
-};
+});
 
 export const notifyEngine = createFormEngine({ elements: [textRegistration], actions: [notifyAction] });
 

@@ -64,18 +64,16 @@ import { ActionDispatcher, ActionRegistry, parseActions, type ActionRegistration
 
 z.config(z.locales.en());
 
-const entry = { id: z.string(), enabled: z.optional(z.boolean()), triggers: z.optional(z.array(z.string())) };
-
 const charge: ActionRegistration<{ id: string; $type: 'charge' }> = {
 	$type: 'charge',
-	schema: z.object({ ...entry, $type: z.literal('charge') }),
+	schema: z.object({}),
 	metadata: { name: 'Charge the card', defaultTriggers: ['checkout'] },
 	execute: () => ({ success: false, error: 'The card was declined', shouldContinue: false }),
 };
 
 const syncStock: ActionRegistration<{ id: string; $type: 'syncStock' }> = {
 	$type: 'syncStock',
-	schema: z.object({ ...entry, $type: z.literal('syncStock') }),
+	schema: z.object({}),
 	metadata: { name: 'Sync stock', defaultTriggers: ['checkout'] },
 	execute: async ({ signal }) => {
 		await sleep(1000, undefined, { signal });
@@ -85,7 +83,7 @@ const syncStock: ActionRegistration<{ id: string; $type: 'syncStock' }> = {
 
 const receipt: ActionRegistration<{ id: string; $type: 'receipt' }> = {
 	$type: 'receipt',
-	schema: z.object({ ...entry, $type: z.literal('receipt') }),
+	schema: z.object({}),
 	metadata: { name: 'Send the receipt', defaultTriggers: ['checkout'] },
 	execute: () => ({ success: true }),
 };

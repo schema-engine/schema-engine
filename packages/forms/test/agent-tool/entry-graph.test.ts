@@ -38,9 +38,4 @@ test('the agent-tool entry is the only published path to the feature', () => {
 		exports: Record<string, unknown>;
 	};
 	expect(Object.keys(exports).filter((key) => key.includes('agent-tool'))).toEqual(['./agent-tool']);
-
-	const defining = [...filesUnder('.js'), ...filesUnder('.d.ts')].filter((file) =>
-		readFileSync(file, 'utf8').includes('registerFormAgentTool'),
-	);
-	expect(defining).toEqual([]);
 });

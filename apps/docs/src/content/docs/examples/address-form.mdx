@@ -1,0 +1,84 @@
+---
+title: 'An address fieldset'
+description: 'A fieldset that lays its children out on a grid of its own, and the CSS that tightens its rhythm.'
+order: 13
+---
+
+import { FormExampleDemo } from '@/components/form-example-demo';
+import { addressForm } from '@/lib/examples/address-form/config';
+import '@/lib/examples/address-form/address-form.css';
+
+# An address fieldset
+
+A fieldset lays its children out on a grid of its own, so `width` works on the children of a container exactly as it does on a step's fields. The step has no `columns`, and it does not need one. The CSS tightens the rhythm with the public gap tokens. The demo is Radiant; in React the fieldset needs the fieldset registration in your engine.
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Set your app up as the getting-started page of your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), then copy the files below into one folder.
+
+## See it
+
+<FormExampleDemo config={addressForm} renderers={['radiant']} />
+
+## The config
+
+The config is data: it names the layout it wants, and the CSS and the theme below decide how it looks.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/** Address fieldset whose children sit on its own inner grid. */
+export const addressForm: FormConfig = {
+	id: 'address-form',
+	title: 'Delivery',
+	className: 'address-form',
+	view: { $type: 'card' },
+	steps: [
+		{
+			id: 'delivery',
+			title: 'Delivery address',
+			elements: [
+				{
+					$type: 'fieldSet',
+					id: 'address',
+					name: 'address',
+					legend: 'Address',
+					elements: [
+						{ $type: 'input', id: 'street', name: 'street', label: 'Street' },
+						{ $type: 'input', id: 'city', name: 'city', label: 'City', grid: { width: 'two-thirds' } },
+						{ $type: 'input', id: 'zip', name: 'zip', label: 'ZIP code', grid: { width: 'third' } },
+						{ $type: 'input', id: 'region', name: 'region', label: 'Region', grid: { width: 'half' } },
+						{ $type: 'input', id: 'country', name: 'country', label: 'Country', grid: { width: 'half' } },
+					],
+				},
+			],
+		},
+	],
+};
+```
+
+## The CSS
+
+```css title="address-form.css"
+/* Gap tokens are public custom properties: set them on the form (or on :root for every form). */
+.address-form {
+	--se-grid-gap-compact: 0.5rem;
+	--se-grid-gap-default: 1rem;
+}
+```
+
+## What the tests check
+
+The test checks that the config is valid in a Radiant engine, that the fieldset's children carry the widths the page describes while the step sets no `columns`, and that the CSS styles the class the config puts on the form and no other.

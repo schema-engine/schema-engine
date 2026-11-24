@@ -6,7 +6,7 @@ order: 3
 
 # A checkout workflow
 
-A checkout is a workflow: reserve the stock, charge the card, tell the warehouse, track the purchase, send a receipt. Some steps depend on the one before, and some can run together. Some can fail, and a failure has to stop the steps that are still running. This recipe writes the five steps as actions, expresses the order of a purchase as a JSON array, and runs it. A declined card cancels the other members of its group through their `signal`.
+A checkout is a workflow: reserve the stock, charge the card, tell the warehouse, track the purchase, send a receipt. Some steps depend on the one before, and some can run together. Some can fail, and a failure has to stop the steps that are still running. This example writes the five steps as actions, expresses the order of a purchase as a JSON array, and runs it. A declined card cancels the other members of its group through their `signal`.
 
 The workflow is data, so a server can build it, a CMS can store it and a log can replay it. [A server-driven workflow](/docs/examples/server-driven-workflow) fetches it from an endpoint.
 
@@ -55,12 +55,6 @@ function delay(ms: number, signal: AbortSignal): Promise<void> {
 
 const define = defineAction<CheckoutContext, CheckoutTrigger>();
 
-const entry = {
-	id: z.string(),
-	enabled: z.optional(z.boolean()),
-	triggers: z.optional(z.array(z.string())),
-};
-
 interface ReserveStockConfig extends ActionConfigBase<'reserveStock'> {
 	sku: string;
 	quantity: number;
@@ -69,8 +63,6 @@ interface ReserveStockConfig extends ActionConfigBase<'reserveStock'> {
 const reserveStock = define<ReserveStockConfig>({
 	$type: 'reserveStock',
 	schema: z.object({
-		...entry,
-		$type: z.literal('reserveStock'),
 		sku: z.string(),
 		quantity: z.number().check(z.int(), z.positive()),
 	}),
@@ -91,7 +83,7 @@ interface ChargeCardConfig extends ActionConfigBase<'chargeCard'> {
 
 const chargeCard = define<ChargeCardConfig>({
 	$type: 'chargeCard',
-	schema: z.object({ ...entry, $type: z.literal('chargeCard'), amount: z.number().check(z.positive()) }),
+	schema: z.object({ amount: z.number().check(z.positive()) }),
 	metadata: { name: 'Charge the card', defaultTriggers: ['submit'] },
 	execute: async ({ config, cardLimit, signal }) => {
 		await delay(10, signal);
@@ -106,7 +98,7 @@ type NotifyWarehouseConfig = ActionConfigBase<'notifyWarehouse'>;
 
 const notifyWarehouse = define<NotifyWarehouseConfig>({
 	$type: 'notifyWarehouse',
-	schema: z.object({ ...entry, $type: z.literal('notifyWarehouse') }),
+	schema: z.object({}),
 	metadata: { name: 'Notify the warehouse', defaultTriggers: ['submit'] },
 	execute: async ({ sent, signal }) => {
 		await delay(50, signal);
@@ -121,7 +113,7 @@ interface TrackPurchaseConfig extends ActionConfigBase<'trackPurchase'> {
 
 const trackPurchase = define<TrackPurchaseConfig>({
 	$type: 'trackPurchase',
-	schema: z.object({ ...entry, $type: z.literal('trackPurchase'), event: z.string() }),
+	schema: z.object({ event: z.string() }),
 	metadata: { name: 'Track the purchase', defaultTriggers: ['change', 'submit'] },
 	execute: async ({ config, sent, signal }) => {
 		await delay(50, signal);
@@ -136,7 +128,7 @@ interface SendReceiptConfig extends ActionConfigBase<'sendReceipt'> {
 
 const sendReceipt = define<SendReceiptConfig>({
 	$type: 'sendReceipt',
-	schema: z.object({ ...entry, $type: z.literal('sendReceipt'), to: z.email() }),
+	schema: z.object({ to: z.email() }),
 	metadata: { name: 'Send the receipt', defaultTriggers: ['submit'] },
 	execute: async ({ config, sent }) => {
 		sent.push(`receipt:${config.to}`);
@@ -305,9 +297,9 @@ sent: nothing
 
 - **A card that pays.** The five entries succeed. The three members of the group carry the same `sequenceIndex` and their `groupIndex`, and results come back in configuration order, not in the order they finished.
 - **A card that is declined.** `charge` fails with `shouldContinue: false`. The dispatcher aborts the signal of `warehouse` and `track`, which stop waiting and report `cancelled` with `cancellationRequested: true`. No later entry runs, so there is no receipt, and nothing was sent.
-- **The reservation stays.** Cancelling stops what is still running. It does not undo what already happened: the stock of the declined order is still reserved. A real checkout adds an action that releases it, run on a trigger the failure path answers.
+- **The reservation stays.** Cancelling stops what is still running. It does not undo what already happened: the stock of the declined order is still reserved. A real checkout adds a `releaseStock` action and dispatches it with its own trigger, for example `declined`, when the result of the `submit` dispatch shows that the charge failed.
 
-The package logs a warning to the console for each failed action. The recipe's test silences it.
+The package logs a warning to the console for each failed action. The example's test silences it.
 
 ## Take it further
 

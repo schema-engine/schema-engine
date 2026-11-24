@@ -17,26 +17,7 @@ import { ArrayElementRegistration } from '@/elements/inputs/form-array-elements.
 import { SubmitButtonElementRegistration } from '@/elements/actions/submit-button.registration';
 import { SubmissionAlertElementRegistration } from '@/elements/content/form-submission-alert.registration';
 
-export {
-	InputElementRegistration,
-	TextareaElementRegistration,
-	NumberElementRegistration,
-	SelectElementRegistration,
-	CheckboxElementRegistration,
-	CheckboxGroupElementRegistration,
-	SwitchElementRegistration,
-	RadioElementRegistration,
-	SliderElementRegistration,
-	ComboboxElementRegistration,
-	DropZoneElementRegistration,
-	FieldSetRegistration,
-	InputOTPElementRegistration,
-	PhoneInputElementRegistration,
-	MaskedInputElementRegistration,
-	ArrayElementRegistration,
-	SubmitButtonElementRegistration,
-	SubmissionAlertElementRegistration,
-};
+export * from './elements';
 
 /**
  * Every element registration of the package, in registration order.

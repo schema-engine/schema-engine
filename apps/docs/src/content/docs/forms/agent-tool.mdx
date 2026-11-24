@@ -1,7 +1,7 @@
 ---
-title: 'Agent tools (experimental)'
-description: 'Offer a rendered form to a browser agent as a WebMCP tool: the engine supplies the schema and runs the submission.'
-order: 20
+title: 'Agent tools'
+description: 'Offer a form to a browser agent as a WebMCP tool: the engine supplies the schema and runs the submission.'
+order: 17
 status: experimental
 ---
 
@@ -19,28 +19,45 @@ import { RuiAlert, RuiAlertDescription, RuiAlertTitle } from '@ecopages/radiant-
 	</RuiAlertDescription>
 </RuiAlert>
 
-WebMCP lets a page register tools that a browser agent calls directly, through `document.modelContext`, instead of finding and clicking the DOM. `registerFormAgentTool` from `@schema-engine/forms/agent-tool` registers a rendered form as one: the tool's input is the exact set of values the form submits, and calling it fills the form and, when you allow it, submits it the way a person would.
+WebMCP lets a page register tools that a browser agent calls directly, through `document.modelContext`, instead of finding and clicking the DOM. `registerFormAgentTool` from `@schema-engine/forms/agent-tool` registers a form as one: the tool's input is the exact set of values the form submits, and calling it fills the form and, when you allow it, submits it the way a person would.
 
 It uses WebMCP's imperative API (`document.modelContext.registerTool(tool, { signal })`), not the declarative `toolname` attribute on a `<form>`. The declarative API derives a schema from native inputs, which fits a form of plain controls but not fields that depend on each other, custom controls that do not serialize themselves, or a wizard. The engine already knows all three.
 
 ## Register a form
 
-`registerFormAgentTool(runtime, options)` takes the form's runtime, which the binding hands over, and returns the function that unregisters the tool. Register while the form is rendered and unregister when it goes.
+`registerFormAgentTool(runtime, options)` takes the form's runtime and returns the function that unregisters the tool. Register while the form is in use and unregister when it goes. The runtime is the one `createFormRuntime` returns, which a renderer creates for each form it draws:
 
-| Option        | Meaning                                                                                                                                     |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | The tool's name. Unique on the page: the browser rejects a duplicate.                                                                       |
-| `description` | What the tool does, for the agent.                                                                                                          |
-| `engine`      | The engine the form was built with. Its `submissionSchema(config)` is the tool's input schema.                                              |
-| `config`      | The normalized config the runtime was created from.                                                                                         |
-| `formatIssue` | Optional. The form's own issue formatter, which the bindings give you. Without it the engine's, then an issue's `message`, then its `type`. |
-| `autoSubmit`  | Optional, `false` by default. See [When to submit](#when-to-submit).                                                                        |
+```ts
+import { createFormRuntime } from '@schema-engine/forms';
+import { registerFormAgentTool } from '@schema-engine/forms/agent-tool';
+import { contact } from './contact';
+import { engine } from './engine';
 
-### React
+const runtime = createFormRuntime({ engine, config: contact, host: { focus: () => {} } });
+runtime.mount();
+
+export const unregister = registerFormAgentTool(runtime, {
+	name: 'send_contact',
+	description: 'Fill in the contact form: the name and the email of the sender.',
+});
+```
+
+| Option        | Meaning                                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | The tool's name. Unique on the page: the browser rejects a duplicate.                                                                                    |
+| `description` | What the tool does, for the agent.                                                                                                                       |
+| `formatIssue` | Optional. The form's own issue formatter, which the bindings give you. Without it the engine's, then an issue's `message`, then its `type` and `params`. |
+| `autoSubmit`  | Optional, `false` by default. See [When to submit](#when-to-submit).                                                                                     |
+
+### In a renderer
+
+A renderer gives you the runtime of the form it draws, and the formatter of that form. The two examples below are renderer code: [Forms React](/docs/forms-react/overview) and [Forms Radiant](/docs/forms-radiant/overview) have the setup they need.
+
+#### React
 
 `useFormRuntime()` from `@schema-engine/forms-react/hooks` gives the runtime of the form the component sits in, and `useFormContext().formatIssue` its formatter. Render the component as a child of `FormRenderer`.
 
-```tsx
+```tsx title="agent-tool.react.tsx"
 import { useEffect } from 'react';
 import { registerFormAgentTool } from '@schema-engine/forms/agent-tool';
 import { FormRenderer } from '@schema-engine/forms-react';
@@ -72,8 +89,6 @@ function FeedbackAgentTool() {
 			registerFormAgentTool(runtime, {
 				name: 'send_feedback',
 				description: 'Fill in the feedback form: the name of the sender and a rating from 1 to 5.',
-				engine,
-				config: feedback,
 				formatIssue,
 			}),
 		[runtime, formatIssue],
@@ -95,11 +110,11 @@ export function FeedbackForm({ send }: { send: (name: string, stars: number | un
 }
 ```
 
-### Radiant
+#### Radiant
 
 `FormController.watchRuntime` calls you with the runtime of the form the element sits in, now and each time the form replaces it (a new config starts a new runtime), so release the previous tool first.
 
-```tsx
+```tsx title="radiant-agent-tool.tsx"
 import * as z from 'zod/mini';
 import { defineStatic } from '@schema-engine/forms';
 import { registerFormAgentTool } from '@schema-engine/forms/agent-tool';
@@ -126,8 +141,6 @@ class FeedbackAgentTool extends HTMLElement {
 				? registerFormAgentTool(runtime, {
 						name: 'send_feedback',
 						description: 'Fill in the feedback form: the name of the sender and a comment.',
-						engine,
-						config: feedback,
 						formatIssue: (issue, field) => this.form.formatIssue(issue, field),
 					})
 				: undefined;
@@ -190,7 +203,7 @@ When the agent calls the tool:
 
 A refused submission returns its issues as text, one line per field, worded by the form's formatter, so the agent can correct them and call again. An agent never sees a rule type unless nothing else says what is wrong.
 
-A [wizard](/docs/forms/wizard) is filled across the steps the answers make active: the tool submits again after each step it moves past, and the runtime validates the steps in order. The values of a skipped step are not submitted. If a step refuses, the form stays on it and the agent gets that step's issues.
+A [wizard](/docs/forms/wizard) is filled across the steps the answers make active. With `autoSubmit`, the tool submits again after each step it moves past and the runtime validates the steps in order. Without it, the tool fills what it can and the user moves through the steps. The values of a skipped step are not submitted. If a step refuses, the form stays on it and the agent gets that step's issues.
 
 If the agent cancels the call (its signal aborts) before the tool writes, the form is untouched. If it aborts while the form is being submitted, the values and the step the user had are put back, unless the form was already submitted. Errors that the check recorded stay.
 

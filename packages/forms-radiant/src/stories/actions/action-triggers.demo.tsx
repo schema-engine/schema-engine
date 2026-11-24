@@ -7,7 +7,7 @@ import { localStorageAutoSaveStorage } from '@schema-engine/forms/browser';
 import {
 	formResetPlugin,
 	formSubmitPlugin,
-	FormActionTriggerSchema,
+	type BuilderActionConfig,
 	type ActionExecutionResult,
 	type BuilderActionRuntimeContext,
 	type BuilderActionRegistration,
@@ -46,13 +46,9 @@ class ActionEventDispatcher {
 
 const actionEventDispatcher = new ActionEventDispatcher();
 const LoggerActionSchema = z.object({
-	id: z.string(),
-	$type: z.literal('event_logger'),
 	description: z.optional(z.string()),
-	enabled: z._default(z.boolean(), true),
-	triggers: z.optional(z.array(FormActionTriggerSchema)),
 });
-type LoggerAction = z.infer<typeof LoggerActionSchema>;
+type LoggerAction = BuilderActionConfig<'event_logger', typeof LoggerActionSchema>;
 
 function loggerPlugin(): BuilderActionRegistration<'event_logger', typeof LoggerActionSchema> {
 	let previousFormData: Record<string, unknown> = {};

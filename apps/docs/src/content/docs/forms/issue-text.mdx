@@ -1,12 +1,12 @@
 ---
 title: 'Issue text'
 description: 'The engine writes no text: it reports issues, and one formatter words them in your language.'
-order: 8
+order: 10
 ---
 
 # Issue text
 
-The engine never writes text. Every issue it produces is data: what went wrong, where it came from, which rule and with which numbers. There is no English inside the engine and no default message. Turning an issue into words, in the user's language, is the application's job.
+The engine never writes text for what a user enters or submits. Every issue of a field or a submission is data: what went wrong, where it came from, which rule and with which numbers. There is no default message. Turning an issue into words, in the user's language, is the application's job. (The messages of a [form configuration error](/docs/forms/engine#form-configuration-errors) are for developers and are in English.)
 
 ## The issue
 
@@ -46,7 +46,7 @@ In React, keep the formatter's identity stable: define it at module level or mem
 
 This one looks a translation up by the most specific key first (the rule's `ruleId`, then the problem's type), fills the numbers from `params` and falls back to the issue's own `message`. Text a server already wrote for people is shown as it is. Swap `t` for your i18n library.
 
-```ts
+```ts title="format-issue.ts"
 import { createFormEngine } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import { textInput } from './engine';

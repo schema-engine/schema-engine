@@ -4,16 +4,16 @@ The domain-agnostic action package: a registration, a registry, `parseActions` a
 
 ## The flow
 
-Serialized actions are checked, then dispatched: `parseActions(registry, input)`, then `dispatcher.dispatch({ actions: parsed.data, trigger, context })`. `dispatch` takes only what `parseActions` returned, so an action that failed its registration's schema never reaches a handler.
+Serialized actions are checked, then dispatched: `parseActions(registry, input)`, then `dispatcher.dispatch({ actions: parsed.data, trigger, context })`. `dispatch` takes only what `parseActions` returned, as a type, so dispatching an unchecked action does not type-check. `defineAction<Context, Trigger>()` fixes the context and the trigger of a domain once, so each registration states only its config.
 
 ```ts title="actions/dispatch.ts"
 import * as z from 'zod/mini';
 import {
 	ActionDispatcher,
 	ActionRegistry,
+	defineAction,
 	parseActions,
 	type ActionConfigBase,
-	type ActionRegistration,
 } from '@schema-engine/actions';
 
 type Trigger = 'save';
@@ -26,15 +26,11 @@ interface NotifyConfig extends ActionConfigBase<'notify'> {
 	channel: string;
 }
 
-const notify: ActionRegistration<NotifyConfig, Context, Trigger> = {
+const defineNotify = defineAction<Context, Trigger>();
+
+const notify = defineNotify<NotifyConfig>({
 	$type: 'notify',
-	schema: z.object({
-		$type: z.literal('notify'),
-		id: z.string(),
-		channel: z.string(),
-		enabled: z.optional(z.boolean()),
-		triggers: z.optional(z.array(z.string())),
-	}),
+	schema: z.object({ channel: z.string() }),
 	metadata: { name: 'Notify', defaultTriggers: ['save'] },
 	execute: async ({ config, sent, signal }) => {
 		if (signal.aborted) return { success: false, error: 'Cancelled' };
@@ -43,7 +39,7 @@ const notify: ActionRegistration<NotifyConfig, Context, Trigger> = {
 			? { success: false, error: 'No such channel', shouldContinue: false }
 			: { success: true };
 	},
-};
+});
 
 export const registry = new ActionRegistry<Context, Trigger>([notify]);
 
@@ -59,7 +55,7 @@ export async function run(input: unknown, sent: string[]) {
 
 ## An action
 
-A registration is `{ $type, schema, metadata, execute }`; an instance is `{ $type, id, ...config, enabled?, triggers? }`. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the base context you pass to `dispatch` plus `config` (the instance), `trigger` and an abort `signal`, and returns `{ success, message?, error?, data?, shouldContinue? }`. `ActionRegistry` is built once from a list, like any registry (`registry.md`). A domain that registers at runtime implements `ActionRegistryProvider` instead.
+A registration is `{ $type, schema, metadata, execute }`; an instance is `{ $type, id, ...config, enabled?, triggers? }`. `schema` describes the action's own arguments: `parseActions` checks `id`, `$type`, `enabled` and `triggers` itself, so a schema never lists them. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the base context you pass to `dispatch` plus `config` (the instance), `trigger` and an abort `signal`, and returns `{ success, message?, error?, data?, shouldContinue? }`. `ActionRegistry` is built once from a list, like any registry (`registry.md`). A domain that registers at runtime implements `ActionRegistryProvider` instead.
 
 ## parseActions
 

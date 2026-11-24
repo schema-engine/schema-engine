@@ -1,0 +1,125 @@
+---
+title: 'Two engines sharing one theme'
+description: 'One compiled theme passed to two engines, so every form carries the same theme id and each picks its own tone.'
+order: 17
+---
+
+import { FormExampleDemo } from '@/components/form-example-demo';
+import { checkoutForm, profileForm } from '@/lib/examples/shared-theme/config';
+
+# Two engines sharing one theme
+
+Compile a theme once and pass the same object to every engine. Both engines then carry one `data-se-theme` and the same stylesheet content, so a checkout form and a profile form match whatever engine built them. The docs engines use the same pattern across renderers: Radiant and React engines are both built on one theme.
+
+Each form picks its own tone. How each renderer emits the shared stylesheet is in [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines).
+
+## Install
+
+For React:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
+```
+
+For Radiant:
+
+```bash
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+```
+
+Set your app up as the getting-started page of your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), then copy the files below into one folder.
+
+## See it
+
+Both forms are built on one theme and each picks its own tone.
+
+<FormExampleDemo config={checkoutForm} renderers={['radiant']} engine="checkout" caption="checkoutEngine" />
+
+<FormExampleDemo config={profileForm} renderers={['radiant']} engine="profile" caption="profileEngine" />
+
+## The config
+
+The config is data: it names the layout it wants, and the CSS and the theme below decide how it looks.
+
+```ts title="config.ts"
+import type { FormConfig } from '@schema-engine/forms';
+
+/** Two forms for two engines that share one theme. */
+export const checkoutForm: FormConfig = {
+	id: 'checkout-theme',
+	title: 'Checkout',
+	appearance: { tone: 'brand' },
+	view: { $type: 'card', shell: { appearance: { size: 'compact' } } },
+	steps: [
+		{
+			id: 'contact',
+			title: 'Contact',
+			elements: [{ $type: 'input', id: 'email', name: 'email', label: 'Email', inputType: 'email' }],
+		},
+	],
+};
+
+export const profileForm: FormConfig = {
+	id: 'profile-theme',
+	title: 'Profile',
+	appearance: { tone: 'forest' },
+	view: { $type: 'card', shell: { appearance: { size: 'compact' } } },
+	steps: [
+		{
+			id: 'name',
+			title: 'Name',
+			elements: [{ $type: 'input', id: 'display', name: 'display', label: 'Display name' }],
+		},
+	],
+};
+```
+
+## The theme
+
+```ts title="theme.ts"
+import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
+
+/**
+ * A host axis. Each value is a set of tokens: the colour roles Radiant UI (`--primary`, `--on-primary`) and a
+ * shadcn theme (`--primary`, `--primary-foreground`) read.
+ */
+export const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone', description: 'Accent colour of a form' },
+	default: 'neutral',
+	values: {
+		neutral: {},
+		brand: {
+			'--primary': '#c2410c',
+			'--on-primary': '#ffffff',
+			'--primary-foreground': '#ffffff',
+			'--primary-container': '#ffedd5',
+			'--on-primary-container': '#7c2d12',
+		},
+		forest: {
+			'--primary': '#15803d',
+			'--on-primary': '#ffffff',
+			'--primary-foreground': '#ffffff',
+			'--primary-container': '#dcfce7',
+			'--on-primary-container': '#14532d',
+		},
+	},
+});
+
+/** The compiled theme: the built-in `size` and `surface` axes plus `tone`. Pass it to every engine as `layout`. */
+export const brandTheme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
+```
+
+## The engines
+
+```ts title="engines.ts"
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { brandTheme } from './theme';
+
+export const checkoutEngine = createRadiantFormEngine({ elements: schemaFormRegistrations, layout: brandTheme });
+export const profileEngine = createRadiantFormEngine({ elements: schemaFormRegistrations, layout: brandTheme });
+```
+
+## What the tests check
+
+The test checks that both engines hold the very theme object, that each validates its own form and the forms pick `brand` and `forest`, and that `theme.ts` is the file of the [brand theme](/docs/examples/brand-theme), so the two cannot drift.

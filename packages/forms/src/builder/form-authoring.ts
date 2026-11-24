@@ -1,5 +1,7 @@
 import type { AppearanceInput, GridLayoutConfig } from '@schema-engine/layout';
+import type { ActionConfigBase } from '@schema-engine/actions';
 import type { StepConstraint } from '../schemas/base-field';
+import type { ActionArguments } from '../types/registration';
 
 /**
  * Discriminated union of `{ $type }` plus the registered config for each key.
@@ -103,7 +105,18 @@ type ExactSlot<TSlot, TDeclared, TAppearance extends Record<string, string>> = T
 			}
 		: TSlot;
 
-export type FormAuthoringAction<TActions extends Record<string, unknown>> = DiscriminatedConfigs<TActions>;
+/**
+ * An action as an author writes it: the keys the engine owns plus the arguments its registration's schema lists.
+ *
+ * @remarks An empty map yields `never`, like {@link DiscriminatedConfigs}.
+ */
+export type FormAuthoringAction<TActions extends Record<string, unknown>> = string extends keyof TActions
+	? never
+	: [keyof TActions] extends [never]
+		? never
+		: {
+				[K in keyof TActions & string]: ActionConfigBase<K> & ActionArguments<TActions[K]>;
+			}[keyof TActions & string];
 
 /**
  * Recursively rewrite container `elements` to this engine's authoring union.

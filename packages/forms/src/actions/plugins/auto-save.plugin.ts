@@ -1,6 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
-import { FormActionTriggerSchema } from '../triggers';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '@/types';
 
 /**
  * Storage Interface for Auto-Save Plugin
@@ -32,23 +31,15 @@ export interface AutoSavePluginConfig {
 
 /** Schema for the `auto_save` action configuration. */
 export const AutoSaveActionSchema = z.object({
-	/** Unique identifier for this action within the form */
-	id: z.string().check(z.minLength(1, 'Action ID cannot be empty')),
-	/** Action type identifier */
-	$type: z.literal('auto_save'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.optional(z.string()),
-	/** Whether this action is enabled and should be executed */
-	enabled: z._default(z.boolean(), true),
-	/** Custom triggers that override the default triggers for this action */
-	triggers: z.optional(z.array(FormActionTriggerSchema)),
 	/** Storage key to use (will use generated key if not provided) */
 	storageKey: z.optional(z.string()),
 	/** Whether to include sensitive fields in auto-save */
 	includeSensitive: z.optional(z._default(z.boolean(), false)),
 });
 
-export type AutoSaveAction = z.infer<typeof AutoSaveActionSchema>;
+export type AutoSaveAction = BuilderActionConfig<'auto_save', typeof AutoSaveActionSchema>;
 
 const autoSaveDraftKeyPrefix = 'autosave_';
 

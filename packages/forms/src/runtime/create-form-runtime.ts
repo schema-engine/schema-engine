@@ -78,6 +78,15 @@ async function parseValues(schema: StandardSchemaV1, values: unknown): Promise<P
 	return result.issues === undefined ? { ok: true, values: result.value } : { ok: false, issues: result.issues };
 }
 
+/**
+ * The `navigate` a runtime has when none is given: loads the page, where there is one.
+ *
+ * @remarks `globalThis.location` is undefined on a server, where a submission has nowhere to go. A renderer that takes its own `navigate` falls back to this one.
+ */
+export function defaultNavigate(url: string): void {
+	if (typeof globalThis.location !== 'undefined') globalThis.location.assign(url);
+}
+
 const errorMessage = (error: unknown): string | undefined => (error instanceof Error ? error.message : undefined);
 
 /**
@@ -181,7 +190,7 @@ export function createFormRuntime<TAction extends FormActionConfig = FormActionC
 export function createFormRuntime<TAction extends FormActionConfig, TValues extends FormValues>(
 	options: Omit<CreateFormRuntimeOptions<TAction, TValues>, 'config'> & { config: FormRuntimeConfig<TAction> },
 ): FormRuntime {
-	const { engine, config, host, onSubmit, onChange, onAction, onActionResults } = options;
+	const { engine, config, host, onSubmit, onChange, onAction, onActionResults, navigate = defaultNavigate } = options;
 	const derivedSchema = engine.submissionSchema(config);
 	const appSchema = getNormalizedFormValues(config);
 	const defaults = withoutMismatchedDefaults(derivedSchema, options.defaults ?? {});
@@ -611,7 +620,11 @@ export function createFormRuntime<TAction extends FormActionConfig, TValues exte
 		} catch (error) {
 			logger.error('Action results callback failed:', error);
 		}
-		if (succeeded && live(op)) host.submitNatively?.(declared);
+		if (succeeded && live(op)) {
+			const redirectUrl = results.findLast((result) => result.success && result.redirectUrl)?.redirectUrl;
+			if (redirectUrl) navigate(redirectUrl);
+			else host.submitNatively?.(declared);
+		}
 
 		const count = submission.submitCount + 1;
 		if (succeeded) {
@@ -687,6 +700,9 @@ export function createFormRuntime<TAction extends FormActionConfig, TValues exte
 
 	return {
 		container,
+		config,
+		submissionSchema: derivedSchema,
+		formatIssue: engine.getIssueFormatter(),
 		mount() {
 			mounted = true;
 			if (lifecycleAbort.signal.aborted) lifecycleAbort = new AbortController();

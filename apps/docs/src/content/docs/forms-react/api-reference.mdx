@@ -1,10 +1,10 @@
 ---
-title: 'API Reference'
-description: 'Public surface of the React adapter.'
-order: 10
+title: 'API reference'
+description: 'Public surface of the React renderer.'
+order: 8
 ---
 
-# API Reference
+# API reference
 
 ## Engine factory
 
@@ -47,7 +47,7 @@ export function Contact() {
 }
 ```
 
-`FormRenderer` takes the engine as a prop. To render several forms with one engine, wrap them in `FormEngineProvider engine={engine}` and leave the prop out.
+The engine and `contactForm` are the ones of the [quick start](/docs/forms-react/getting-started). `FormRenderer` takes the engine as a prop. To render several forms with one engine, wrap them in `FormEngineProvider engine={engine}` and leave the prop out.
 
 `FormRenderer` and `FormProvider` type `onSubmit`, `onAction` and `defaultValues` from the normalized config they are
 given: the inferred type of `engine.defineForm` with a literal config, the output of the schema in
@@ -81,17 +81,8 @@ as omitting `FormRenderer`, which still lives in this package.
 
 ## Form hooks
 
-`@schema-engine/forms-react/hooks` exports `useFormContext`, `useFormField`, `useWatch`,
-and `useFieldArray`. They can be used
-inside recipe blocks as well as ordinary form elements.
+`@schema-engine/forms-react/hooks` exports `useFormContext`, `useFormField`, `useWatch` and `useFieldArray`. They work inside recipe blocks as well as ordinary form elements. [Hooks](/docs/forms-react/hooks) describes each, and [Writing a widget](/docs/forms-react/widgets) shows `useFormField` in both modes.
 
-`useFormField(config)` is uncontrolled: it returns `defaultValue` and `fieldProps` (with
-`onChange` and `onBlur`) for a native control, and the field renders for an error, warning or
-flag, never for a keystroke. `useFormField(config, { controlled: true })` returns `value`,
-`onChange(value)` and `onBlur()` for a component that takes `value` and `onChange` props.
-`useFormField(path)` returns the state and texts of a path, with no value. In both modes the form
-reports the browser's validity of a native control as native facts. See
-[Hooks](/docs/forms-react/hooks#useformfield).
+## Debugging
 
-`useFieldArray` returns `fields` and the mutation methods `append`, `prepend`,
-`insert`, `swap`, `move`, `update`, `replace`, and `remove`.
+`FormDebugger` from `@schema-engine/forms-react/components/form-debugger` renders a panel with the form's steps, values and errors, for development. Render it inside a `FormRenderer`. It takes `defaultOpen` (open on mount), `showStepDetails` (each step's description in the timeline) and `showFormState` (the state, values and errors section).

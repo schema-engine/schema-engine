@@ -79,7 +79,7 @@ A domain gives the language a job. Forms is the first: it adds fields, validatio
 
 ## Renderer
 
-A renderer turns a validated document into output with the registrations of its engine. Forms React renders to React elements and Forms Radiant to custom elements. A renderer draws what the engine resolved and does not own the rules for validating or dispatching, so a document keeps its meaning across renderers.
+A renderer turns a validated document into output with the registrations of its domain's engine, the object that holds that domain's registries (`createFormEngine` builds the forms engine). Forms React renders to React elements and Forms Radiant to custom elements. A renderer draws what the engine resolved and does not own the rules for validating or dispatching, so a document keeps its meaning across renderers.
 
 ## Vocabulary
 

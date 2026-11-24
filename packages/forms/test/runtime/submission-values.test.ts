@@ -17,7 +17,7 @@ const stars = defineInput({
 
 const probe = {
 	$type: 'probe',
-	schema: z.looseObject({ $type: z.literal('probe'), id: z.string() }),
+	schema: z.object({}),
 	metadata: { name: 'Probe' },
 	execute: async () => ({ success: true }),
 };

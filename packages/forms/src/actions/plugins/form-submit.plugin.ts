@@ -1,7 +1,6 @@
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '@/types';
 import { logger } from '@/lib/logger';
-import { FormActionTriggerSchema } from '../triggers';
 
 /**
  * Form Submit Plugin Configuration
@@ -22,16 +21,8 @@ export interface FormSubmitPluginConfig {
 
 /** Schema for the `submit` action configuration. */
 export const FormSubmitActionSchema = z.object({
-	/** Unique identifier for this action within the form */
-	id: z.string().check(z.minLength(1, 'Action ID cannot be empty')),
-	/** Action type identifier */
-	$type: z.literal('submit'),
 	/** Optional description for documentation and debugging purposes */
 	description: z.optional(z.string()),
-	/** Whether this action is enabled and should be executed */
-	enabled: z._default(z.boolean(), true),
-	/** Custom triggers that override the default triggers for this action */
-	triggers: z.optional(z.array(FormActionTriggerSchema)),
 	/** Target URL for form submission (supports both full URLs and relative paths) */
 	endpoint: z.string().check(z.minLength(1, 'Endpoint cannot be empty')),
 	/** HTTP method for the request */
@@ -44,7 +35,7 @@ export const FormSubmitActionSchema = z.object({
 	redirectUrl: z.optional(z.string().check(z.minLength(1, 'Redirect URL cannot be empty'))),
 });
 
-export type FormSubmitAction = z.infer<typeof FormSubmitActionSchema>;
+export type FormSubmitAction = BuilderActionConfig<'submit', typeof FormSubmitActionSchema>;
 
 /** Creates a configured `submit` action registration. */
 export function formSubmitPlugin(

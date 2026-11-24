@@ -8,7 +8,7 @@ export interface Order {
  * The document of an order page, as the server builds it.
  *
  * @remarks
- * This server is newer than the client in the recipe: it sends a `warning` tone and a `countdown` component the
+ * This server is newer than the client in the example: it sends a `warning` tone and a `countdown` component the
  * client has not registered yet.
  */
 export function orderDocument(order: Order): unknown[] {
