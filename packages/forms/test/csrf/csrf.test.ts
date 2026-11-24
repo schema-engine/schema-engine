@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { csrf, csrfFieldFor } from '@/csrf';
-import { buildFormActionContext, createFormEngine } from '@/index';
+import { createFormEngine } from '@/index';
+import { buildFormActionContext } from '@/engine/form-action-context';
 import { formSubmitPlugin, type FormSubmitAction } from '@/actions/plugins/form-submit.plugin';
 import { createValidationContext } from '@/schemas/validation';
 import { createMockBuilderContext } from '../actions/__tools';

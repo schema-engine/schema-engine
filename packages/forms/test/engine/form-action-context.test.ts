@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { buildFormActionContext } from '@/index';
+import { buildFormActionContext } from '@/engine/form-action-context';
 
 const form = {
 	reset: () => undefined,

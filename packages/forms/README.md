@@ -198,7 +198,7 @@ submit actions stop. `onSubmit` runs after the submit actions and before the suc
 when the actions succeeded; a rejection fails the submission. A submission that failed leaves its reason in
 `snapshot.submission.failures` as issues the form's one formatter words. Each result of the submit actions
 carries the `actionId` of the configured action that produced it.
-`buildFormActionContext` is an exported utility that constructs a form action
+`buildFormActionContext` constructs a form action
 context with form data and timing metadata, including a stable step start time that resets
 when the current step changes; it carries the current `stepId`, and `currentStep` and `totalSteps` count the steps that are not skipped. Its form state takes `errors` and `touched` by dotted path, so a handler reads `context.errors['address.street']` in every renderer, and
 `userInteractions` counts touched fields plus `submitCount`, the submit attempts since the last reset, failed ones included.
@@ -508,10 +508,9 @@ Field rules then use it as `{ $type: 'postcode', message: '...' }`. Rule objects
 [validation guide](./src/schemas/validation/README.md) and the
 [custom validations page](../../apps/docs/src/content/docs/forms/validation-custom.mdx).
 
-The forms package exports shared value-validation helpers from
-`@schema-engine/forms`. `validateFormValues` accepts a `ValidationElementTree`,
-and `collectStepFieldPaths` accepts a `ValidationStep`; both types follow the
-engine's normalized form model.
+`validateFormValues` is the one value-validation helper the root exports. It accepts
+a `ValidationElementTree`; the helpers it is built from are internal, and are described
+here for how validation works.
 
 - `collectStepFieldPaths(step, values)` walks named fields in nested containers
   and expands field templates for each array row. Scalar array child rules use
@@ -610,8 +609,6 @@ widgets with a different `$type`. The engine carries this metadata into frozen
 normalized elements for default seeding and field traversal. Authoring JSON does
 not include this marker. Containers without an array marker use object paths.
 See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
-
-`templatePath` in `@schema-engine/forms` removes numeric array indices from rendered paths for constraint declaration lookup, alongside `expandFieldTemplatePaths`.
 
 Engine construction stores elements, recipes, actions and validation rules in read-only registries
 from `@schema-engine/registry` (last registration wins, no override warning) and

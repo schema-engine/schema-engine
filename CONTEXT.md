@@ -44,8 +44,7 @@ Form authors supply schema **input** (defaults stay optional). After `defineForm
 ## Forms logging
 
 `@schema-engine/forms` and the renderer packages use `@ecopages/logger` through
-each package’s shared `logger` instance. The forms instance is also exported as
-`logger` from `@schema-engine/forms`. Tags identify
+each package’s shared `logger` instance. Tags identify
 the package (`[schema-engine/forms]`, `[schema-engine/forms-react]`, and so on).
 Debug output stays off unless the host enables Ecopages log levels.
 
@@ -102,7 +101,7 @@ one-element array compares as its element, so a single-selection control matches
 an authored scalar.
 
 Field references resolve identically for constraints and for validation, and
-that is deliberate: `resolveFieldRef` in `@schema-engine/forms` is
+that is deliberate: `resolveFieldRef` is
 the single implementation, and `resolveConstraintPath` is an alias of it. A
 validation handler reaches it through the `ValidationContext` its second
 argument carries — `resolve`, plus the form's nested `values` and the field's
