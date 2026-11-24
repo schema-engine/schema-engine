@@ -94,7 +94,7 @@ export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => vo
 }
 ```
 
-`FormRenderer` validates the config, renders it and calls `onSubmit` with the values that passed validation. The values are `FormValues` for a config loaded from JSON. With `engine.defineForm()` of a literal config, `onSubmit`, `onAction` and `defaultValues` take their types from the config, and with `engine.validateForm(json, { values })` from the output of your schema. See [Authoring modes](/docs/forms/core-concepts#authoring-modes) and [Submitted values](/docs/forms/form-state#submitted-values).
+`FormRenderer` validates the config, renders it and calls `onSubmit` with the values that passed validation. The values are `FormValues` for a config loaded from JSON. With `engine.defineForm()` of a literal config, `onSubmit`, `onAction` and `defaultValues` take their types from the config, and with `engine.validateForm(json, { values })` from the output of your schema. See [Authoring modes](/docs/forms/engine#author-a-form-config) and [Submitted values](/docs/forms/form-state#submitted-values).
 
 ## Override a registration
 

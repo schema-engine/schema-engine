@@ -111,7 +111,7 @@ export function ContactForm() {
 - **The widget** reads its state with `useFormField(config)`, spreads `fieldProps` on a native input and shows `error` through `errorProps`. It is uncontrolled: a keystroke renders nothing. [Writing a widget](/docs/forms-react/widgets) covers the controlled mode and the other hooks.
 - **The registration** gives the widget a `$type`, the schema of its config and the schema of its `value`, which is what it contributes to the submitted values.
 - **The engine** registers the elements. Create it once and reuse it across your application.
-- **The config** is an object. It could equally be JSON from a file or a server, checked with `engine.validateForm`. See [Authoring modes](/docs/forms/core-concepts#authoring-modes).
+- **The config** is an object. It could equally be JSON from a file or a server, checked with `engine.validateForm`. See [Authoring modes](/docs/forms/engine#author-a-form-config).
 - **`FormRenderer`** validates the config, renders it and calls `onSubmit` with the values once validation passes. `FormValues` is what a config loaded from JSON submits. With `engine.defineForm()` of a literal config the type comes from the config. See [Submitted values](/docs/forms/form-state#submitted-values).
 
 Submit the empty form and the required rules show their messages. Fill both fields and the values appear under the form.

@@ -199,4 +199,4 @@ Each issue names the node that failed: `children.1.children.0.label` is the labe
 - **A document a server sends.** [Serialized documents](/docs/schema-engine/serialized-documents) validates a document that arrives over the network and shows the issues a caller sees.
 - **Override a default.** Offer `[...defaults, ...extra]` where you build a registry, so replacing a registration is a change to a list: [Read-only and mutable registries](/docs/registry/registries).
 - **Keep the registry out of the global scope.** Pass a registry to the code that needs it, as the forms engine does. There is no module-level registry to fall back to.
-- **A kind of the forms engine.** Elements, recipes, actions and axes are kinds like these: [What the forms engine registers](/docs/forms/builder#what-the-forms-engine-registers).
+- **A kind of the forms engine.** Elements, recipes, actions and axes are kinds like these: [What the forms engine registers](/docs/forms/engine#what-the-engine-registers).

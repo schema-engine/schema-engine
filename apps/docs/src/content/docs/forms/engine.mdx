@@ -1,0 +1,250 @@
+---
+title: 'Engine and registrations'
+description: 'Build the form engine from registrations (elements, recipes, actions, rules), author or load a form config, and read the issues a config reports.'
+order: 3
+---
+
+# Engine and registrations
+
+The forms package separates serializable form data from rendering. `createFormEngine` is its entry point: you pass lists of registrations and it returns an immutable `FormEngine` that checks form configs against them. The engine has no UI. A renderer draws the form.
+
+## Build the engine
+
+The engine has three independent registries:
+
+- **Elements** render fields and static content inside a step.
+- **Recipes** compose the form shell and optional header, progress, and action blocks.
+- **Actions** respond to form and step lifecycle triggers.
+
+```ts
+import { createFormEngine, SubmitActionRegistration } from '@schema-engine/forms';
+import { email, text } from './registrations';
+
+export const engine = createFormEngine({
+	elements: [text, email],
+	actions: [SubmitActionRegistration],
+});
+```
+
+The registrations are the ones the [quick start](/docs/forms/getting-started) writes. A form that names a `$type` the engine has not registered fails validation, and a form that names the `submit` action fails the same way until `SubmitActionRegistration` is registered.
+
+Registration IDs are the `$type` values used in serialized configuration. Each list is stored in a read-only registry from `@schema-engine/registry`. A registration whose schema is not a Standard Schema throws when the engine is built, naming its `$type`. Only the winning registration of each `$type` is checked. The engine stores a frozen shallow copy of each winner, taken when it is built. Your objects are left untouched, but changing or spying on them afterwards does not reach the engine: spy or patch before building, or build a new engine.
+
+Duplicate `$type` values follow last-wins semantics, with no warning, so `[...defaults, mine]` is how you override a default. Use `engine.extend({ actions: [extraAction] })` to derive a new engine without re-spreading the full lists. It builds a new engine from the old lists plus yours, inherits the layout theme and the default wizard recipe, and registers nothing into the engine you extended.
+
+### What the engine registers
+
+`createFormEngine` builds one read-only registry per kind, from the lists you pass:
+
+| You pass                        | Registry label | Registration                               | Metadata entry id |
+| ------------------------------- | -------------- | ------------------------------------------ | ----------------- |
+| `elements`                      | `Element`      | `defineInput`, `defineStatic`              | `element:<$type>` |
+| `recipes`                       | `Recipe`       | `defineRecipe` bound to a spec             | `recipe:<$type>`  |
+| `actions`                       | `Action`       | An action registration with an `execute`   | `action:<$type>`  |
+| `layout: { appearance: [...] }` | `Axis`         | `defineAxis`                               | `axis:<$type>`    |
+| `validations`                   | `Validation`   | A validation registration with a `handler` | none              |
+
+The engine starts empty except for what it ships: the 27 [validation rules](/docs/forms/validation) and the two appearance axes `size` and `surface` of the layout theme. It registers no element, recipe or action. `SubmitActionRegistration` and `NotificationActionRegistration` come from `@schema-engine/forms`, and the browser actions from `@schema-engine/forms/browser`: [Actions in forms](/docs/forms/actions) lists them. A recipe is also checked against the forms recipe protocol, and a registration that declares an axis the theme lacks fails the engine build.
+
+```ts
+import { createFormEngine } from '@schema-engine/forms';
+import { builtInAxes, defineAxis } from '@schema-engine/layout';
+import { email, text } from './registrations';
+import { postalCode } from './postal-code';
+
+const tone = defineAxis({
+	$type: 'tone',
+	metadata: { name: 'Tone' },
+	default: 'neutral',
+	values: { neutral: {}, brand: { '--primary': '#c2410c' } },
+});
+
+export const engine = createFormEngine({
+	elements: [text, email],
+	validations: [postalCode],
+	layout: { appearance: [...builtInAxes, tone] },
+});
+```
+
+The engine binds no application field components or visual recipes: a renderer package or your own code supplies them. [Forms React](/docs/forms-react/getting-started) writes the first React element and registers it, and [Forms Radiant](/docs/forms-radiant/getting-started) uses `createRadiantFormEngine`, which registers the Radiant elements and binds the canonical view recipes.
+
+## Register a custom field
+
+Pass the schema directly. `defineInput` checks that `render` accepts the schema's output (defaults and transforms applied). Form authors still write schema input, so defaulted properties stay optional in `defineForm`.
+
+An input also declares the value its control writes, with `value`: a function of the configured element that returns a Standard Schema. It is what lets the engine check every submission and type `onSubmit` from the config (see [Submitted values](/docs/forms/form-state#submitted-values)). Here a rating is a whole number from one to its `max`. What `render` returns is the renderer's business: a renderer package's elements return what that renderer draws, and these return nothing.
+
+```ts
+import { defineInput, createFormEngine } from '@schema-engine/forms';
+import * as z from 'zod/mini';
+
+const RatingSchema = z.object({
+	$type: z.literal('rating'),
+	id: z.string(),
+	name: z.string(),
+	max: z._default(z.number(), 5),
+});
+
+export const RatingRegistration = defineInput({
+	$type: 'rating',
+	schema: RatingSchema,
+	metadata: { name: 'Rating', category: 'input' },
+	value: ({ max }) => z.number().check(z.int(), z.gte(1), z.lte(max)),
+	render: () => null,
+});
+
+const engine = createFormEngine({ elements: [RatingRegistration] });
+
+engine.defineForm({
+	id: 'review',
+	steps: [
+		{
+			id: 'main',
+			title: 'Review',
+			elements: [{ $type: 'rating', id: 'score', name: 'score' }],
+		},
+	],
+});
+```
+
+## Register a container
+
+A container declares children with `elementChildrenSchema`. Nested authoring uses the same engine registrations as top-level fields, and nested children are typed from them.
+
+```ts
+import { defineInput, elementChildrenSchema, BaseFieldSchema } from '@schema-engine/forms';
+import * as z from 'zod/mini';
+
+const GroupSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('group'),
+	elements: elementChildrenSchema.check(z.minLength(1)),
+});
+
+export const GroupRegistration = defineInput({
+	$type: 'group',
+	schema: GroupSchema,
+	metadata: { name: 'Group', category: 'input' },
+	render: () => null,
+});
+```
+
+A container declares no `value`: its value is its children's, which the engine composes by the same path rules. `defineInput` requires `value` exactly when the schema has no `elements`, and rejects one on a schema that has (`containerKind` may sit beside `elements`; `'object'` is the default). `createFormEngine` rejects an input without one, whatever its `metadata.category`: the helpers set `kind: 'input'` or `kind: 'static'`, which is what the engine reads, and a registration written by hand states its `kind`.
+
+Field paths are a render-time scope, not a copy of each child's config. A renderer that draws a container gives each child its scope: `objectFieldScope(name, config)` for an object, and `arrayItemScope(name, index, instanceId)` for an array, where `instanceId` is a stable item id, not the current index, so ids survive item removal. Scalar array items set `{ scalar: true }` so the child binds to the item path itself. [`FormElements`](/docs/forms-react/api-reference#formelements) of Forms React is the React way to draw the children.
+
+## Author a form config
+
+Choose how you author a form based on where the data lives:
+
+| Mode                       | Use when                                          | API                                                                |
+| -------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
+| **TypeScript in your app** | The form is hardcoded next to a known engine      | `engine.defineForm({ ... })`, typed from your registrations        |
+| **Portable JSON**          | CMS, API, storage, or shared files across systems | Plain `FormConfig` (or raw JSON) + `engine.validateForm(unknown)` |
+
+```ts
+import { engine } from './engine';
+
+export const form = engine.defineForm({
+	id: 'contact',
+	title: 'Contact',
+	steps: [
+		{
+			id: 'details',
+			title: 'Contact details',
+			elements: [{ $type: 'email', id: 'email', name: 'email', label: 'Email' }],
+		},
+	],
+});
+```
+
+`defineForm` and `validateForm` run the same validation pipeline. `defineForm` only adds compile-time checks for the engine you built. The exported `FormConfig` type is envelope-level: it does not narrow each `$type` until validation runs. Both parse the form against the engine's registered elements, recipes and actions, apply schema defaults and transforms, check nested child elements at the same boundary and return a frozen `NormalizedFormConfig` owned by that engine. A form normalized by one engine cannot be passed to another: start from the authoring input or the JSON instead. Snapshot isolation copies plain objects and arrays; other objects remain shared.
+
+Authors supply schema **input**, so defaulted properties stay optional in `defineForm`. Components receive schema **output**. A field created outside a form must go through `engine.validateElement()` first.
+
+A renderer validates a plain config at the form boundary, so passing one is enough. Pre-validate only when you need a `NormalizedFormConfig` outside a renderer (caching, tests, custom pipelines).
+
+### View recipes and steps
+
+One view recipe is selected for the form, with `view.$type`. A renderer package registers the recipes it ships: see [Forms React layouts](/docs/forms-react/layouts) and [Forms Radiant layouts](/docs/forms-radiant/layouts) for the compositions and the custom recipe API.
+
+```ts
+import type { FormConfig } from '@schema-engine/forms';
+
+export const config: FormConfig = {
+	id: 'contact',
+	steps: [{ id: 'details', title: 'Contact details', elements: [] }],
+	view: {
+		$type: 'card',
+		shell: { appearance: { size: 'default' } },
+	},
+};
+```
+
+The recipe determines its kind and its allowed slots. Single-step recipes require exactly one step, cannot declare a progress slot, and still render a submit-only actions bar. Wizard recipes require at least two steps. Do not place shell, header, progress or action configuration on individual steps. A single-step form may omit `view` to render fields directly.
+
+Validation writes the resolved `view` into the normalized config: a multi-step form that omits `view` gets `{ $type: 'bare-controls' }` (or the engine's `defaultWizardRecipe`), and each slot config is the recipe's `slotDefaults` under the author's keys, merged deep. When the default recipe is not registered the form validates without a `view`, validation warns, and the renderer paints fields without chrome. Renderers read the normalized `view` and apply no defaults of their own.
+
+A multi-step form is a wizard. A step may take `constraints` (`show` or `hide`, on non-row fields of earlier steps; the first step has none) and is skipped when they hide it, and the form's `navigation` is `'linear'` (default) or `'free'`. [Wizard and runtime](/docs/forms/wizard) has the rest.
+
+## Form configuration errors
+
+Validation errors are about a field's _value_. A form's _configuration_ (a width that does not exist, a recipe that is not registered, a rule with no handler) is checked by `engine.validateForm`, which throws a `FormValidationError` listing the problems it found. `engine.safeValidateForm(json)` returns `{ success, data }` or `{ success: false, issues }` instead. Each issue has a `message` and the `path` of the config key it is about, so you can point at the mistake without parsing English:
+
+| Problem                                           | `path`                                                            |
+| ------------------------------------------------- | ----------------------------------------------------------------- |
+| The third field of step 1 has `grid.width: halve` | `['steps', 0, 'elements', 2, 'grid', 'width']`                    |
+| A fieldset child uses a rule with no handler      | `['steps', 0, 'elements', 1, 'elements', 0, 'rules', 0, '$type']` |
+| `view.$type` is not a registered recipe           | `['view', '$type']`                                               |
+| A problem with the whole form                     | `[]`                                                              |
+
+`error.message` has one line per issue, `<path>: <message>`, with array indexes in brackets and the `id` of each element or step the path passes:
+
+```text
+steps[0] (contact).elements[2] (email).grid.width: Expected one of full, three-quarters, two-thirds, half, third, quarter.
+view.$type: Unknown view recipe 'nope'. Register it with createFormEngine({ recipes: [...] }).
+```
+
+An issue a schema reported also has a `code` and `params` (for example `too_small` with `{ minimum: 3 }`), so an editor can localize the diagnostic instead of showing the English `message`. An issue the engine finds itself has neither. A union that fails is reported at the key that failed in the branch the value was closest to, or at the union when no branch is.
+
+A malformed form envelope (its own shape, such as `steps` not being an array) stops the deeper checks and is reported alone. An unrecognized key is reported at the key itself, for example `['view', 'shell', 'bogus']`.
+
+```ts
+import { formatIssuePath } from '@schema-engine/forms';
+import { engine } from './engine';
+
+export function loadForm(json: unknown) {
+	const result = engine.safeValidateForm(json);
+	if (!result.success) {
+		for (const { path, message } of result.issues) {
+			console.error(`${formatIssuePath(path) || '(form)'}: ${message}`);
+		}
+		return undefined;
+	}
+	return result.data; // the same frozen NormalizedFormConfig validateForm returns
+}
+```
+
+The `{ message, path }` shape is a Standard Schema issue, so a YAML loader or an editor can map each `path` to a line or a field. A renderer calls `validateForm`, so an invalid config thrown at render time shows the same lines in the error message.
+
+## The catalog
+
+The engine records a metadata entry for every element, recipe, action and axis it builds. An entry is `{ id, title, description, componentType, category }`, and its `id` is `<componentType>:<$type>`. `engine.getSchemaCatalog()` returns these entries: they are the metadata the JSON Schema export and the authoring catalog read, so an editor completes a registration you added. They are not the registrations. To list what the engine has registered, use `engine.getAllElements()`, `getAllRecipes()` and `getAllActions()`, and `engine.getValidationRegistry()` for the rules.
+
+```ts
+import { engine } from './engine';
+
+const catalog = engine.getSchemaCatalog();
+
+export const title = catalog.get('axis:tone')?.title; // 'Tone'
+export const registeredRecipes = engine.getAllRecipes().map((recipe) => recipe.$type);
+
+export const jsonSchema = engine.generateFormConfigSchema({ io: 'input' }); // lists the registered $types
+```
+
+The registration's `metadata.name` is the title, and `metadata.description` and `metadata.category` follow. Validation rules are held in their own registry (`engine.getValidationRegistry()`) and are not catalog entries.
+
+## Where to go next
+
+- [Validation](/docs/forms/validation): declarative field rules.
+- [Actions](/docs/forms/actions): lifecycle behavior.
+- [Forms API reference](/docs/forms/api-reference): exact engine signatures.

@@ -2,14 +2,14 @@ import { expect, inject, test } from 'vitest';
 import { chromium } from 'playwright';
 
 const baseUrl = inject('docsBaseUrl');
-const pagePath = '/docs/forms/builder';
+const pagePath = '/docs/forms/engine';
 
 test('built docs HTML carries SEO links, heading ids and copy buttons', async () => {
 	const html = await (await fetch(`${baseUrl}${pagePath}`)).text();
 
 	expect(html).toMatch(/<link rel="canonical" href="https?:\/\/[^"]+\/docs\/forms\/builder">/);
 	expect(html).toContain('rel="alternate" type="text/markdown"');
-	expect(html).toContain('/docs-llm/forms/builder.md');
+	expect(html).toContain('/docs-llm/forms/engine.md');
 	expect(html).toContain('property="og:image"');
 	expect(html).toMatch(/<h2 id="[a-z0-9-]+"/);
 	expect(html).toContain('data-rehype-pretty-copy=');
@@ -18,7 +18,7 @@ test('built docs HTML carries SEO links, heading ids and copy buttons', async ()
 test('sitemap lists docs pages and the llms index', async () => {
 	const sitemap = await (await fetch(`${baseUrl}/sitemap.xml`)).text();
 
-	expect(sitemap).toContain('/docs/forms/builder');
+	expect(sitemap).toContain('/docs/forms/engine');
 	expect(sitemap).toContain('/llms.txt');
 });
 
@@ -105,9 +105,9 @@ test('a heading fragment link lands on its heading', async () => {
 
 test('Copy for LLM renders on the server and copies the page Markdown export', async () => {
 	const html = await (await fetch(`${baseUrl}${pagePath}`)).text();
-	expect(html).toContain('<radiant-copy-for-llm llm-url="/docs-llm/forms/builder.md"');
+	expect(html).toContain('<radiant-copy-for-llm llm-url="/docs-llm/forms/engine.md"');
 
-	const markdown = await fetch(`${baseUrl}/docs-llm/forms/builder.md`);
+	const markdown = await fetch(`${baseUrl}/docs-llm/forms/engine.md`);
 	expect(markdown.status).toBe(200);
 	const expected = await markdown.text();
 

@@ -25,7 +25,7 @@ import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine
 export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 ```
 
-It takes the options of `createFormEngine` and returns the same engine type. It prepends the canonical Radiant recipes (`radiantRecipes`) to the `recipes` you pass, so a recipe of yours with the same `$type` replaces a built-in one. It registers no element: pass `schemaFormRegistrations`, a subset or your own. [Engine and registrations](/docs/forms/builder) covers the options.
+It takes the options of `createFormEngine` and returns the same engine type. It prepends the canonical Radiant recipes (`radiantRecipes`) to the `recipes` you pass, so a recipe of yours with the same `$type` replaces a built-in one. It registers no element: pass `schemaFormRegistrations`, a subset or your own. [Engine and registrations](/docs/forms/engine) covers the options.
 
 ## FormRenderer
 

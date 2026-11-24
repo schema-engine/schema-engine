@@ -3,7 +3,7 @@ import { expect, inject, test } from 'vitest';
 
 const baseUrl = inject('docsBaseUrl');
 const experimentalPath = '/docs/forms/agent-tool';
-const stablePath = '/docs/forms/builder';
+const stablePath = '/docs/forms/engine';
 
 const badge = '.docs-status-badge[title="Experimental: this API may change"]';
 
@@ -45,5 +45,5 @@ test('llms.txt notes the experimental page and no stable one', async () => {
 	const lines = (await (await fetch(`${baseUrl}/llms.txt`)).text()).split('\n');
 
 	expect(lines.find((line) => line.includes('/docs-llm/forms/agent-tool.md'))).toMatch(/\(experimental\)$/);
-	expect(lines.find((line) => line.includes('/docs-llm/forms/builder.md'))).not.toMatch(/experimental/);
+	expect(lines.find((line) => line.includes('/docs-llm/forms/engine.md'))).not.toMatch(/experimental/);
 });

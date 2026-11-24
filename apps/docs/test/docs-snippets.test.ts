@@ -156,10 +156,10 @@ export const postalCode = {
 const CONTINUES: Record<string, string[]> = {
 	'schema-engine/serialized-documents': ['schema-engine/quick-start'],
 	'actions/sequences-and-cancellation': ['actions/overview'],
-	'forms/core-concepts': ['forms/getting-started'],
 	'forms/constraints': ['forms/getting-started'],
 	'forms/validation': ['forms/getting-started'],
-	'forms/builder': ['forms/getting-started'],
+	'forms/engine': ['forms/getting-started'],
+	'forms/agent-tool': ['forms/getting-started'],
 	'forms/csrf': ['forms/form-state'],
 	'forms/issue-text': ['forms/form-state'],
 };

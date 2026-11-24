@@ -141,7 +141,7 @@ For editor autocomplete, write `engine.generateFormConfigSchema({ io: 'input', t
 `# yaml-language-server: $schema=...` header. The docs page `/docs/forms/yaml` (YAML Forms)
 has recipes for Node, Bun, Vite and fetch.
 
-The styling guides are in the docs: [Styling and layout](../../apps/docs/src/content/docs/layout/overview.mdx), [Layout themes](../../apps/docs/src/content/docs/layout/layout-themes.mdx) and [What the forms engine registers](../../apps/docs/src/content/docs/forms/builder.mdx).
+The styling guides are in the docs: [Styling and layout](../../apps/docs/src/content/docs/layout/overview.mdx), [Layout themes](../../apps/docs/src/content/docs/layout/layout-themes.mdx) and [What the forms engine registers](../../apps/docs/src/content/docs/forms/engine.mdx).
 
 ### Form state
 

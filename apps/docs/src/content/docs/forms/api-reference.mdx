@@ -1,10 +1,10 @@
 ---
-title: 'API Reference'
+title: 'API reference'
 description: 'Public surface of the forms package.'
-order: 14
+order: 15
 ---
 
-# API Reference
+# API reference
 
 ## createFormEngine
 
@@ -63,11 +63,11 @@ request function with the [CSRF policy](/docs/forms/csrf) applied, and `engine.g
 
 `engine.getSchemaCatalog()` returns the metadata the JSON Schema export reads (title, description and category by id, such as
 `element:input`), not a list of what is registered. Read what is registered with `engine.getAllElements()`,
-`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([What the forms engine registers](/docs/forms/builder#what-the-forms-engine-registers)).
+`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([What the engine registers](/docs/forms/engine#what-the-engine-registers)).
 
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
 and is not typed per engine: field `rules` keep their `$type` string. See
-[Custom Validations](./validation-custom).
+[Custom and async rules](/docs/forms/validation-custom).
 
 Authors supply schema **input**. After validation, render functions receive
 schema **output**. Register elements with `defineInput` / `defineStatic` so the
@@ -138,7 +138,7 @@ type FormValidationResult<T> = { success: true; data: T } | { success: false; is
 ```
 
 `params` holds the details a code reports and only those that are set: `values`, `expected`, `origin`, `minimum`, `maximum`, `inclusive`, `format`, `pattern` and `keys`. `error.issues` on a `FormValidationError` has the same shape. See
-[Form configuration errors](/docs/forms/core-concepts#form-configuration-errors)
+[Form configuration errors](/docs/forms/engine#form-configuration-errors)
 for the paths and a copy-pasteable example.
 
 JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
@@ -165,9 +165,9 @@ slots. It does not check the `appearance` of an element whose schema is lazy; `v
 `getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` expose
 the same input/output converters through the Standard JSON Schema contract.
 Consumer schemas from other Standard Schema providers remain fully supported
-for runtime validation. Their provider-specific JSON Schema is not introspected
-in this iteration; mixed form config exports retain the registered `$type`
-envelope for those schemas.
+for runtime validation. Their provider-specific JSON Schema is not introspected:
+mixed form config exports retain the registered `$type` envelope for those
+schemas.
 
 ## createFormRuntime
 
@@ -216,9 +216,7 @@ interface FormStepState {
 
 - One lock covers navigation and submission: a command made while another runs is `'busy'`, and a reset or an unmount
   revokes a command whose values were not yet captured, which is `'cancelled'` and writes nothing.
-- `container.reset()` is the only reset. The container snapshot's `generation` goes up with it, and the runtime then
-  returns the submission to idle with a count of 0 and the steps to the first, firing no step trigger. A submission
-  whose values were already captured is committed: it runs to its end and publishes its outcome after the reset.
+- `container.reset()` is the only reset: it returns the submission to idle and the steps to the first. See [Reset](/docs/forms/form-state#reset).
 - `next()` validates the current step and moves to the next active step (`'refused'` on the last); `back()` never
   validates; `goTo(id)` refuses a skipped or unknown step, always allows going back and, going forward, follows the
   form's `navigation` (`'linear'`: visited steps only, validating every step on the way; `'free'`: any active step).
@@ -232,10 +230,12 @@ interface FormStepState {
 
 | Entry                                  | Exports                                                                                                                                                                                                                  | Guide                                                |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| `@schema-engine/forms/state-container` | `createFormStateContainer`, the `FormStateContainer`, `FormStateSnapshot` and `FormIssueFormatter` types, `selectFieldState`, `selectValue`, `toFieldArrayValue`, `toHydration`, `FORM_ROOT` and `FormValidationFailure` | [Form state](/docs/forms/form-state)                 |
+| `@schema-engine/forms/state-container` | `createFormStateContainer`, the `FormStateContainer`, `FormStateSnapshot` and `FormIssueFormatter` types, `selectFieldState`, `selectValue`, `toFieldArrayValue`, `toHydration` and `FORM_ROOT`                             | [Form state](/docs/forms/form-state)                 |
 | `@schema-engine/forms/server-errors`   | `fromProblemDetails`, `fromJsonApiErrors` and `ServerErrorsInputError`                                                                                                                                                   | [Server errors](/docs/forms/server-errors)           |
 | `@schema-engine/forms/csrf`            | `csrf` (`fromMeta`, `fromCookie`, `custom`), `csrfFieldFor` and the `CsrfPolicy` type                                                                                                                                    | [CSRF](/docs/forms/csrf)                             |
 | `@schema-engine/forms/testing`         | `formStateContainerConformance`                                                                                                                                                                                          | [Form state](/docs/forms/form-state#write-a-binding) |
+
+`FormValidationFailure`, which `container.validate()` rejects with when a rule cannot run, is exported by `@schema-engine/forms` itself.
 
 ## RecipeRegistration
 
@@ -258,5 +258,4 @@ The recipe protocol (the slots, the kinds, the rules that check them) is declare
 `defineRecipeProtocol` from `@schema-engine/layout`; forms declares `shell | header | progress | actions` and
 `single-step | wizard`. See [A custom recipe shell](/docs/examples/brand-frame).
 
-See [Engine and registrations](/docs/forms/builder) for adapter factories and
-composition rules.
+See [Engine and registrations](/docs/forms/engine) for the registrations an engine takes and the rules they follow.
