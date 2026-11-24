@@ -153,7 +153,7 @@ export async function register(values: FormValues, { fetch, setServerErrors }: F
 
 ## The renderer
 
-Radiant ships the wizard recipe and the elements, so its file is the same as the contact form's. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own. React ships neither: the React tab has an input and a select, and a recipe of its own. A recipe is a spec, which names it and its slots, bound to React components by `defineRecipe`. This one has a shell that lays out the current step and the controls, and the controls read the navigation from `useViewContext`: Previous, a step counter, and Next or the submit button. [View recipes](/docs/forms-react/layouts) covers the built-in specs.
+Radiant ships the wizard recipe and the elements, so its file is the same as the contact form's. React ships neither: the React tab has an input and a select, and a recipe of its own. A recipe is a spec, which names it and its slots, bound to React components by `defineRecipe`. This one has a shell that lays out the current step and the controls, and the controls read the navigation from `useViewContext`: Previous, a step counter, and Next or the submit button. [View recipes](/docs/forms-react/layouts) covers the built-in specs. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
 
 <RendererTabs name="registration-wizard">
 <div data-renderer="react">
@@ -338,7 +338,7 @@ export function RegistrationWizard({ onRegistered }: { onRegistered: () => void 
 
 ## What the tests check
 
-The example's tests render both files in a browser. Next stays on the account step while its rules fail and names each one, including the 12-character password rule. Previous keeps what was typed. The last step submits the values of both steps and calls `onRegistered`. A 409 moves the wizard back to the account step and shows the message on the email field.
+The example's tests render both files in a browser. Next stays on the account step while its rules fail and names each one, including the 12-character password rule. Previous keeps what was typed. The last step submits the values of both steps and calls `onRegistered`. A 409 moves the wizard back to the account step and shows the message on the email field. The unit test checks the `show_notification` entry of the config in both engines, so a config that names an action an engine did not register fails.
 
 ## Take it further
 

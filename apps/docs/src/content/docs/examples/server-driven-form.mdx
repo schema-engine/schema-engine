@@ -393,7 +393,7 @@ export async function mountSignupForm(host: HTMLElement, url: string, onSignedUp
 
 ## What the tests check
 
-The example's tests render both files in a browser against the handlers of `server.ts`. The form the server sends renders, and an empty submit shows its messages without a request. A valid submit posts JSON with the `X-CSRF-Token` header and calls `onSignedUp`. A taken username shows the server's message on its field. The form of the next release shows its issues, with their paths, instead of a form. The unit tests cover each way the request can fail: the network, an error status and a body that is not JSON.
+The example's tests render both files in a browser against the handlers of `server.ts`. The form the server sends renders, and an empty submit shows its messages without a request. A valid submit posts JSON with the `X-CSRF-Token` header and calls `onSignedUp`. A taken username shows the server's message on its field. The form of the next release shows its issues, with their paths, instead of a form. The unit tests cover each way the request can fail: the network, an error status and a body that is not JSON. The unit test checks the `show_notification` entry of the config in both engines, so a config that names an action an engine did not register fails.
 
 ## Take it further
 

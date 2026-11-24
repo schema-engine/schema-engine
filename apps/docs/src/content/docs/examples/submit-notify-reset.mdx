@@ -98,7 +98,7 @@ export const newsletter: FormConfig = {
 An action runs only when the engine has its registration, and the config refers to it by `$type`. A config that names an action nobody registered is a config issue at its path, not a failure at submit time. This file registers the three the config uses:
 
 - `SubmitActionRegistration` sends the values with the engine's `fetch`, as form data, and expects JSON back.
-- `show_notification` is built with `notificationPlugin`. The package's own `NotificationActionRegistration` only logs, because the package cannot know how an app shows a message. The function you pass here is where an app calls its toast library: this recipe publishes the message on an `EventTarget` that the form's file listens to.
+- `show_notification` is built with `notificationPlugin`. The package's own `NotificationActionRegistration` only logs, because the package cannot know how an app shows a message. The function you pass here is where an app calls its toast library: this example publishes the message on an `EventTarget` that the form's file listens to.
 - `ResetActionRegistration` clears the form. It lives in `@schema-engine/forms/browser`, because it uses browser storage.
 
 ```ts title="actions.ts"

@@ -9,6 +9,7 @@
 @import './fonts.css';
 @import './components/prose.css';
 @import './components/demo-stage.css';
+@import './components/radio-tabs.css';
 
 @source inline("sr-only");
 @source "../generated/shadcn";

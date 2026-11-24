@@ -27,7 +27,7 @@
 	 * `text-muted-foreground`), not the docs shell. They map onto Radiant raw tokens so the demo
 	 * follows the same palette. The shell itself only needs the three tokens above.
 	 */
-	--color-muted-foreground: color-mix(in oklab, var(--on-background) 55%, transparent);
+	--color-muted-foreground: var(--on-surface-muted);
 	--color-foreground: var(--on-background);
 	--color-card: var(--background);
 	--color-card-foreground: var(--on-background);

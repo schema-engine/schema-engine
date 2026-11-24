@@ -79,24 +79,22 @@ describe('styling docs pages', () => {
 	}
 
 	/** Opens the page of the themed form example, wide enough to show both renderers, and waits until React has hydrated. */
-	async function openExample(id: string): Promise<void> {
+	async function openExample(): Promise<void> {
 		pageErrors.length = 0;
 		await page.setViewportSize({ width: 1700, height: 900 });
-		await page.goto(`${baseUrl}/docs/examples/${id}`, { waitUntil: 'networkidle' });
-		if ((await page.locator('.docs-react-form-demo').count()) > 0) {
-			await page.waitForFunction(() => {
-				const form = document.querySelector('.docs-react-form-demo form');
-				return form !== null && Object.keys(form).some((key) => key.startsWith('__react'));
-			});
-		}
+		await page.goto(`${baseUrl}/docs/examples/theming`, { waitUntil: 'networkidle' });
+		await page.waitForFunction(() => {
+			const form = document.querySelector('.docs-react-form-demo form');
+			return form !== null && Object.keys(form).some((key) => key.startsWith('__react'));
+		});
 	}
 
 	describe('the themed form example page', () => {
 		test('renders each of its demos on a page without script errors', async () => {
-			await openExample('theming');
+			await openExample();
 			const demos = page.locator('[data-example] .example-demo__demo');
 			const count = await demos.count();
-			expect(count).toBeGreaterThan(0);
+			expect(count).toBe(2);
 			for (let index = 0; index < count; index += 1) {
 				await pwExpect(demos.nth(index).locator('input').first()).toBeVisible();
 			}
@@ -104,7 +102,7 @@ describe('styling docs pages', () => {
 		});
 
 		test.each(['radiant', 'react'])('%s: a half-width pair shares a row and the rest fill it', async (renderer) => {
-			await openExample('theming');
+			await openExample();
 			const [first, last, email] = await rects('themed', ['first', 'last', 'email'], renderer);
 			expect(first!.y).toBeCloseTo(last!.y, 0);
 			expect(first!.width).toBeCloseTo(last!.width, 0);
@@ -113,7 +111,7 @@ describe('styling docs pages', () => {
 		});
 
 		test('the tone axis writes its attribute and sets the colour roles', async () => {
-			await openExample('theming');
+			await openExample();
 			const form = page.locator('[data-example="themed"] [data-renderer="radiant"] rui-form.themed');
 			await pwExpect(form).toHaveAttribute('data-se-tone', 'brand');
 			expect(
@@ -122,12 +120,17 @@ describe('styling docs pages', () => {
 		});
 
 		test('both renderers run on one theme', async () => {
-			await openExample('theming');
-			const themes = await page
-				.locator('[data-example="themed"] [data-renderer] [data-se-theme]')
-				.evaluateAll((elements) => elements.map((element) => element.getAttribute('data-se-theme')));
-			expect(themes.length).toBeGreaterThan(1);
-			expect(new Set(themes).size).toBe(1);
+			await openExample();
+			const themesOf = (renderer: string) =>
+				page
+					.locator(`[data-example="themed"] [data-renderer="${renderer}"] [data-se-theme]`)
+					.evaluateAll((elements) => [
+						...new Set(elements.map((element) => element.getAttribute('data-se-theme'))),
+					]);
+			const [react, radiant] = [await themesOf('react'), await themesOf('radiant')];
+			expect(react).toHaveLength(1);
+			expect(radiant).toHaveLength(1);
+			expect(react).toEqual(radiant);
 		});
 
 		test.each([
@@ -136,7 +139,7 @@ describe('styling docs pages', () => {
 		])(
 			'%s: the size hooks set on the form class reach the compact card and its controls',
 			async (renderer, card) => {
-				await openExample('theming');
+				await openExample();
 				const demo = page.locator(`[data-example="themed"] [data-renderer="${renderer}"]`);
 				expect(
 					await demo
@@ -168,24 +171,36 @@ describe('the layout page example', () => {
 			await pwExpect(inFrame.locator('main')).toBeVisible();
 
 			const left = async (tag: string) => (await inFrame.locator(tag).boundingBox())!.x;
-			const shown = async () => ({
-				frame: (await frame.boundingBox())!,
-				column: (await demo.boundingBox())!,
-			});
+			const widthOf = async () => (await frame.boundingBox())!.width;
+			const columnWidth = async () => (await demo.boundingBox())!.width;
 			await pwExpect(inFrame.locator('nav')).toBeVisible();
 			expect(await left('nav')).toBeLessThan(await left('main'));
 			expect(await left('main')).toBeLessThan(await left('aside'));
-			const desktop = await shown();
-			expect(desktop.frame.width).toBeLessThanOrEqual(desktop.column.width);
-			expect(desktop.frame.width).toBeGreaterThan(desktop.column.width * 0.9);
 			expect(await frame.evaluate((element) => getComputedStyle(element).width)).toBe('1200px');
+			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
+			expect(await widthOf()).toBeLessThanOrEqual(await columnWidth());
+
+			const pageHeight = () =>
+				inFrame.locator('html').evaluate((element) => element.getBoundingClientRect().height);
+			await pwExpect
+				.poll(async () => (await frame.boundingBox())!.height)
+				.toBeCloseTo((await pageHeight()) * ((await widthOf()) / 1200), 0);
+
+			await page.setViewportSize({ width: 900, height: 900 });
+			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
+			expect(await widthOf()).toBeLessThan(700);
+			await page.setViewportSize({ width: 1300, height: 900 });
+			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
 
 			await demo.getByLabel('Tablet 900px').check();
-			await pwExpect.poll(async () => (await inFrame.locator('aside').boundingBox())!.x).toBe(await left('main'));
+			await pwExpect
+				.poll(async () => (await inFrame.locator('aside').boundingBox())!.x - (await left('main')))
+				.toBe(0);
 			expect(await left('nav')).toBeLessThan(await left('main'));
 
 			await demo.getByLabel('Phone 400px').check();
 			await pwExpect(inFrame.locator('nav')).toBeHidden();
+			await pwExpect.poll(widthOf).toBeCloseTo(400, 0);
 		} finally {
 			await browser.close();
 		}

@@ -19,7 +19,6 @@ const SHADCN_PAGES: Record<string, string> = {
 	'forms-react/layouts': 'The default view recipes the shadcn registry installs.',
 	'layout/theming': 'The colour roles the React registry controls read.',
 	'layout/appearance-axes': 'What the React registry controls read of the size and tone axes.',
-	'examples/overview': 'The React path of the layout examples starts from the shadcn registry.',
 	'examples/theming': 'The colour roles a shadcn theme reads, which the tone axis sets.',
 };
 

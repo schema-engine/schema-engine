@@ -1,13 +1,14 @@
 /**
  * @remarks
- * Fits each layout page frame to its column: the frame keeps the width the reader chose, and its scale is what makes
- * that width fit. The scale never enlarges the frame. The script runs on the first load and after each client-side
- * navigation, and a resize observer follows the column afterwards.
+ * Fits each layout page frame to its column and to its page: the frame keeps the width the reader chose, its scale is
+ * what makes that width fit (it never enlarges the frame), and its height is the height of the page inside, measured
+ * again whenever the page reflows. The script runs on the first load and after each client-side navigation, and
+ * observers follow the column and the page afterwards.
  */
 const DEMO_SELECTOR = '.layout-page-demo';
 const fitted = new WeakSet<Element>();
 
-function fit(demo: HTMLElement): void {
+function fitWidth(demo: HTMLElement): void {
 	const chosen = demo.querySelector<HTMLInputElement>('input:checked');
 	const width = Number(chosen?.value);
 	if (!Number.isFinite(width) || width <= 0) return;
@@ -15,13 +16,31 @@ function fit(demo: HTMLElement): void {
 	demo.style.setProperty('--frame-scale', String(Math.min(1, demo.clientWidth / width)));
 }
 
+function fitHeight(demo: HTMLElement, frame: HTMLIFrameElement): void {
+	const height = frame.contentDocument?.documentElement.offsetHeight;
+	if (height) demo.style.setProperty('--frame-height', `${height}px`);
+}
+
+function follow(demo: HTMLElement): void {
+	const frame = demo.querySelector('iframe');
+	if (!frame) return;
+	const measure = () => {
+		fitHeight(demo, frame);
+		const page = frame.contentDocument?.documentElement;
+		if (page) new ResizeObserver(() => fitHeight(demo, frame)).observe(page);
+	};
+	if (frame.contentDocument?.readyState === 'complete') measure();
+	frame.addEventListener('load', measure);
+}
+
 function fitFrames(): void {
 	for (const demo of document.querySelectorAll<HTMLElement>(DEMO_SELECTOR)) {
-		fit(demo);
+		fitWidth(demo);
 		if (fitted.has(demo)) continue;
 		fitted.add(demo);
-		new ResizeObserver(() => fit(demo)).observe(demo);
-		demo.addEventListener('change', () => fit(demo));
+		new ResizeObserver(() => fitWidth(demo)).observe(demo);
+		demo.addEventListener('change', () => fitWidth(demo));
+		follow(demo);
 	}
 }
 

@@ -356,7 +356,7 @@ export function Survey({ onSent }: { onSent: () => void }) {
 
 ## What the tests check
 
-The example's tests render both files in a browser. A good answer goes from the first step to the last and sends no follow-up fields. A poor answer opens the follow-up step, where Next names each failing rule. Changing the answer back after filling the follow-up step drops what was typed there from the submission. A failed send does not call `onSent`.
+The example's tests render both files in a browser. A good answer goes from the first step to the last and sends no follow-up fields. A poor answer opens the follow-up step, where Next names each failing rule. Changing the answer back after filling the follow-up step drops what was typed there from the submission. A failed send does not call `onSent`. The unit test checks the `show_notification` entry of the config in both engines, so a config that names an action an engine did not register fails.
 
 ## Take it further
 

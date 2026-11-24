@@ -1,45 +1,16 @@
+/*
+ * `--frame-width` is written on the element by the component, from its list of widths, and the script keeps it and
+ * the scale in step with the chosen preset and the column. The height is a fallback until the script measures the page.
+ */
 .layout-page-demo {
-	--frame-width: 1200px;
-	--frame-height: 300px;
+	--frame-height: 20rem;
 	--frame-scale: 1;
 	display: block;
 	margin-block: 2rem;
 }
 
-.layout-page-demo__widths {
-	display: flex;
-	gap: 0.25rem;
-	margin-block-end: var(--space-4, 1rem);
-	border-block-end: 1px solid var(--border, currentColor);
-}
-
-.layout-page-demo__width {
-	position: relative;
-	padding: var(--space-control-y, 0.25rem) var(--space-control-x, 0.625rem);
-	cursor: pointer;
-	color: var(--on-surface-muted);
-	font-size: 0.875rem;
-	border-block-end: 2px solid transparent;
-	margin-block-end: -1px;
-}
-
-.layout-page-demo__width input {
-	position: absolute;
-	inset: 0;
-	opacity: 0;
-	cursor: pointer;
-}
-
-.layout-page-demo__width:has(input:checked) {
-	border-block-end-color: var(--primary, currentColor);
-	color: var(--on-background);
-	font-weight: var(--font-weight-medium, 500);
-}
-
-.layout-page-demo__width:has(input:focus-visible) {
-	box-shadow:
-		0 0 0 2px var(--background),
-		0 0 0 4px color-mix(in oklab, var(--primary) 40%, transparent);
+.layout-page-demo .radio-tabs {
+	margin-block-end: var(--space-4);
 }
 
 /*

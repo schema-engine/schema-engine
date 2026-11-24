@@ -66,8 +66,8 @@ describe('the forms example pages', () => {
 	const react = () => page.locator('.docs-react-form-demo').first();
 
 	/** The notice a `show_notification` action of the config raised, which the docs shell shows as a toast. */
-	const expectNotice = (message: string) =>
-		pwExpect(page.getByRole('status').getByText(message, { exact: true })).toBeVisible();
+	const notice = (message: string) => page.getByRole('status').getByText(message, { exact: true });
+	const expectNotice = (message: string) => pwExpect(notice(message)).toBeVisible();
 
 	test('the contact form loads with its React demo hydrated and its Radiant demo rendered', async () => {
 		await open(contactPath);
@@ -85,6 +85,7 @@ describe('the forms example pages', () => {
 
 		await pwExpect(form.locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');
 		await pwExpect(form.locator('input[name="email"] + .rui-field__error')).toContainText('Enter your email');
+		await pwExpect(notice('Message sent. We answer within one working day.')).toHaveCount(0);
 		await expectNoReload(contactPath);
 
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
@@ -107,17 +108,18 @@ describe('the forms example pages', () => {
 		await open(contactPath);
 		const form = react();
 		const radiant = page.locator('.docs-form-renderer-preview form').first();
-		const marked = async (scope: typeof form) => scope.locator('[data-se-required-marker]:visible').count();
-		expect(await marked(form)).toBe(4);
-		expect(await marked(radiant)).toBe(4);
+		for (const scope of [form, radiant]) {
+			await pwExpect(scope.locator('[data-se-required-marker]:visible')).toHaveCount(4);
+		}
 
-		await form.locator('button[type="submit"]').click();
 		const select = form.locator('select[name="subject"]');
+		const border = (control: typeof select) =>
+			control.evaluate((element) => getComputedStyle(element).borderTopColor);
+		const before = await border(select);
+		await form.locator('button[type="submit"]').click();
 		await pwExpect(select).toHaveAttribute('aria-invalid', 'true');
-		await pwExpect(select).toHaveCSS(
-			'border-top-color',
-			await form.locator('input[name="name"]').evaluate((input) => getComputedStyle(input).borderTopColor),
-		);
+		await pwExpect(select).not.toHaveCSS('border-top-color', before);
+		await pwExpect(select).toHaveCSS('border-top-color', await border(form.locator('input[name="name"]')));
 	});
 
 	test('the React wizard draws the steps and the counter from the same config as the Radiant one', async () => {
@@ -257,14 +259,17 @@ describe('the forms example pages', () => {
 		expect(left!.y).toBe(right!.y);
 		expect(left!.width).toBeGreaterThanOrEqual(384);
 
-		await page.setViewportSize({ width: 1300, height: 900 });
-		await pwExpect(tabs.locator('.renderer-tabs__list')).toBeVisible();
-		await pwExpect(react).toBeVisible();
-		await pwExpect(radiant).toBeHidden();
-		await tabs.getByRole('radio', { name: 'Radiant' }).check();
-		await pwExpect(radiant).toBeVisible();
-		await pwExpect(react).toBeHidden();
-		await page.setViewportSize({ width: 1700, height: 900 });
+		try {
+			await page.setViewportSize({ width: 1300, height: 900 });
+			await pwExpect(tabs.locator('.renderer-tabs__list')).toBeVisible();
+			await pwExpect(react).toBeVisible();
+			await pwExpect(radiant).toBeHidden();
+			await tabs.getByRole('radio', { name: 'Radiant' }).check();
+			await pwExpect(radiant).toBeVisible();
+			await pwExpect(react).toBeHidden();
+		} finally {
+			await page.setViewportSize({ width: 1700, height: 900 });
+		}
 	});
 
 	test('navigating between docs pages hydrates the demos of the page that arrives', async () => {
