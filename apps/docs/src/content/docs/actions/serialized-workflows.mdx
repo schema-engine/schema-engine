@@ -8,7 +8,7 @@ order: 5
 
 An action is defined once, in code, on the client. A workflow is data: a JSON array of action entries whose arguments travel as JSON. A server can build it and send it, a CMS can store it, and a client can run it. Async steps, parallel groups and cancellation are all expressed in the document, so the whole workflow is something you can log and replay.
 
-The flow has four steps: `JSON.parse`, `parseActions`, show the issues, `dispatch`. `parseActions` checks every entry against the schema of its registration, and `ActionDispatcher.dispatch` accepts only what it returned, so an entry that did not pass never reaches a handler. See [Serialized documents](/docs/schema-engine/serialized-documents) for the same boundary on a document of nodes.
+The flow has four steps: `JSON.parse`, `parseActions`, show the issues, `dispatch`. `parseActions` checks every entry against the schema of its registration, and `ActionDispatcher.dispatch` accepts only what it returned, as a type, so dispatching an entry that was not checked does not type-check. See [Serialized documents](/docs/schema-engine/serialized-documents) for the same boundary on a document of nodes.
 
 ## The actions
 
@@ -132,7 +132,7 @@ export async function runWorkflow(text: string, context: ShopContext): Promise<v
 }
 ```
 
-A workflow arrives as text, and `parseActions` takes its parsed value. When it returns `success: false`, nothing has run: `issues` lists every bad entry, in order. An issue's `path` is the index of the entry, then the index inside a group when the entry is one, then the path the schema reported, so `1.0.amount` is the `amount` of the first member of the group at index 1. An entry without a string `$type` and a `$type` no registration answers are issues at `$type`.
+A workflow arrives as text, and `parseActions` takes its parsed value. When it returns `success: false`, nothing has run: `issues` lists every bad entry, in order. The `path` of an issue is explained in the [`parseActions` reference](/docs/actions/api-reference#parseactions): `1.0.amount` is the `amount` of the first member of the group at index 1.
 
 ### Run three workflows
 

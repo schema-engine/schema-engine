@@ -55,9 +55,9 @@ export function renderDocument(input: unknown): RenderResult {
 
 ### Actions: `parseActions`
 
-A workflow is checked by `parseActions`. It validates each entry, and each member of a group, against the schema of its registration, and returns either the parsed sequence or every issue. The issue path is the index of the entry, then the index inside a group when the entry is one, then the path the schema reported. An unknown `$type` is an issue at its `$type`.
+A workflow is checked by `parseActions`. It validates each entry, and each member of a group, against the schema of its registration, and returns either the parsed sequence or every issue. The [`parseActions` reference](/docs/actions/api-reference#parseactions) says where each issue's `path` points.
 
-The `ActionDispatcher` takes only what `parseActions` returned, so a workflow that was not checked cannot be dispatched.
+The `ActionDispatcher` takes only what `parseActions` returned, as a type, so dispatching a workflow that was not checked does not type-check.
 
 ### See the issues
 

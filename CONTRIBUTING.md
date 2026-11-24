@@ -9,7 +9,7 @@ pnpm install
 pnpm exec playwright install chromium
 ```
 
-Node 24 or newer and pnpm 10 are required. The browser tests of `forms-react`, `forms-radiant` and `docs` run in headless Chromium through Vitest browser mode, which is why Playwright's Chromium is installed.
+Node `^24.22.0` or `>=26.0.0` and pnpm 10 are required (the `engines` field of `package.json`). The browser tests of `forms-react`, `forms-radiant` and `docs` run in headless Chromium through Vitest browser mode, which is why Playwright's Chromium is installed.
 
 ## The pre-commit hook
 

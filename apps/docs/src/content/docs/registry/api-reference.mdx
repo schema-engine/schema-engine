@@ -49,6 +49,15 @@ function safeParseStandardSchema<TInput, TOutput>(
 
 Runs a registration's schema without throwing. It supports only synchronous validation and throws for a schema that validates asynchronously.
 
+```typescript
+type StandardSchemaIssue = StandardSchemaV1.Issue;
+
+type StandardSchemaSafeParseResult<T> =
+	{ success: true; data: T } | { success: false; error: { issues: StandardSchemaIssue[] } };
+```
+
+`StandardSchemaIssue` is the issue of the Standard Schema spec (`message` and an optional `path`), and `StandardSchemaSafeParseResult<T>` is what `safeParseStandardSchema` returns.
+
 ## BaseRegistry
 
 Abstract, mutable class for plugin systems that register at runtime. Prefer `createRegistry` otherwise.
@@ -83,7 +92,7 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 | `size`           | `number`              | Count of items                               |
 | `clear()`        | `void`                | Removes all items                            |
 
-### Protected Methods
+### Protected methods
 
 | Method              | Description                                    |
 | ------------------- | ---------------------------------------------- |
@@ -97,7 +106,7 @@ abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration
 ```typescript
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
-interface BaseRegistration<TConfig = unknown, TMeta extends RegistrationMetadata = ComponentMetadata> {
+interface BaseRegistration<_TConfig = unknown, TMeta extends RegistrationMetadata = ComponentMetadata> {
 	$type: string;
 	schema: StandardSchemaV1;
 	metadata: TMeta;

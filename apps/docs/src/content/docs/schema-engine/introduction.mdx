@@ -24,11 +24,11 @@ Four ideas carry everything else. [Core concepts](/docs/schema-engine/core-conce
 
 **Serialized documents.** Everything a document holds is JSON: no functions, no class instances, no framework objects. That is what lets a server send an interface to a client, a CMS store it or a tool generate it, and what lets the engine check it, at the boundary, against the schemas your registrations declare. YAML works too. See [Serialized documents](/docs/schema-engine/serialized-documents).
 
-**Rendering from data.** A renderer takes a validated document and draws it with the registrations of its engine. The rules for resolving, validating and dispatching live in the engine, not in the renderer, so a document keeps its meaning from one renderer to the next.
+**Rendering from data.** A renderer takes a validated document and draws it with the registrations of its domain's engine, the object that holds that domain's registries. The rules for resolving, validating and dispatching live in the engine, not in the renderer, so a document keeps its meaning from one renderer to the next.
 
 ## Domains
 
-A domain gives the language a job. **Forms** is the first. It adds fields, validation rules, constraints, steps, the form state and the submit lifecycle, and it renders with [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview). **Layout** needs no domain: a grid, named appearance and the recipe protocol a domain uses for the frame around its content. See [Forms](/docs/forms/overview) and [Layout](/docs/layout/overview).
+A domain gives the language a job. **Forms** is the first. It adds fields, validation rules, constraints, steps, the form state and the submit lifecycle, and it renders with [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview). [Layout](/docs/layout/overview) is not a domain: it is domain-neutral, with a grid, named appearance and the recipe protocol a domain uses for the frame around its content. See [Forms](/docs/forms/overview).
 
 ## What you own
 
