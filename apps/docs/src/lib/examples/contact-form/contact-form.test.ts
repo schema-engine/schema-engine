@@ -83,3 +83,23 @@ describe('sendMessage', () => {
 		expect(setServerErrors).not.toHaveBeenCalled();
 	});
 });
+
+describe('the notice of the contact form', () => {
+	test.each([
+		['React', reactEngine],
+		['Radiant', radiantEngine],
+	])(
+		'is a show_notification action that runs after a successful submission, and the %s engine registers it',
+		(_renderer, engine) => {
+			const result = engine.safeValidateForm(contactForm);
+			expect(result.success && result.data.actions).toMatchObject([
+				{
+					$type: 'show_notification',
+					message: 'Message sent. We answer within one working day.',
+					variant: 'success',
+					triggers: ['form_submit_success'],
+				},
+			]);
+		},
+	);
+});

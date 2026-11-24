@@ -30,13 +30,13 @@ Copy the files below into one folder. Radiant also needs its JSX setup and style
 
 ## See it
 
-Select Next on the empty form: the account step stays, with a message for each field. Fill it in, select Next, then Previous: the values are still there.
+Select Next on the empty form: the account step stays, with a message for each field. Fill it in, select Next, then Previous: the values are still there. Submit the last step to see the notice.
 
 <FormExampleDemo config={registration} />
 
 ## The config
 
-A form with more than one step names the recipe that draws the wizard in `view.$type`. A recipe is the shell and the controls around the steps: the progress, the title and Previous, Next and Submit. Each renderer registers a recipe of that name, so the same config runs in both. Each step holds its own `elements`.
+A form with more than one step names the recipe that draws the wizard in `view.$type`. A recipe is the shell and the controls around the steps: the progress, the title and Previous, Next and Submit. Each renderer registers a recipe of that name, so the same config runs in both. Each step holds its own `elements`. The `show_notification` entry in `actions` runs on `form_submit_success`, after the account was created.
 
 ```ts title="config.ts"
 import type { FormConfig } from '@schema-engine/forms';
@@ -109,6 +109,15 @@ export const registration: FormConfig = {
 			],
 		},
 	],
+	actions: [
+		{
+			id: 'created',
+			$type: 'show_notification',
+			message: 'Account created. Welcome aboard.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };
 ```
 
@@ -144,7 +153,7 @@ export async function register(values: FormValues, { fetch, setServerErrors }: F
 
 ## The renderer
 
-Radiant ships the wizard recipe and the elements, so its file is the same as the contact form's. React ships neither: the React tab has an input and a select, and a recipe of its own. A recipe is a spec, which names it and its slots, bound to React components by `defineRecipe`. This one has a shell that lays out the current step and the controls, and the controls read the navigation from `useViewContext`: Previous, a step counter, and Next or the submit button. [View recipes](/docs/forms-react/layouts) covers the built-in specs.
+Radiant ships the wizard recipe and the elements, so its file is the same as the contact form's. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own. React ships neither: the React tab has an input and a select, and a recipe of its own. A recipe is a spec, which names it and its slots, bound to React components by `defineRecipe`. This one has a shell that lays out the current step and the controls, and the controls read the navigation from `useViewContext`: Previous, a step counter, and Next or the submit button. [View recipes](/docs/forms-react/layouts) covers the built-in specs.
 
 <RendererTabs name="registration-wizard">
 <div data-renderer="react">
@@ -269,14 +278,18 @@ export const WizardRecipe = defineRecipe(wizardSpec, { shell: Shell, slots: { ac
 ```
 
 ```tsx title="registration-wizard.react.tsx"
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, NotificationActionRegistration } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { registration } from './config';
 import { register } from './submit';
 import { elements } from './widgets.react';
 import { WizardRecipe } from './wizard.react';
 
-export const engine = createFormEngine({ elements, recipes: [WizardRecipe] });
+export const engine = createFormEngine({
+	elements,
+	recipes: [WizardRecipe],
+	actions: [NotificationActionRegistration],
+});
 
 /** Renders the wizard and calls `onRegistered` once the server has created the account. */
 export function RegistrationWizard({ onRegistered }: { onRegistered: () => void }) {
@@ -296,11 +309,15 @@ export function RegistrationWizard({ onRegistered }: { onRegistered: () => void 
 <div data-renderer="radiant">
 
 ```tsx title="registration-wizard.radiant.tsx"
+import { NotificationActionRegistration } from '@schema-engine/forms';
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { registration } from './config';
 import { register } from './submit';
 
-export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+export const engine = createRadiantFormEngine({
+	elements: schemaFormRegistrations,
+	actions: [NotificationActionRegistration],
+});
 
 /** Renders the wizard and calls `onRegistered` once the server has created the account. */
 export function RegistrationWizard({ onRegistered }: { onRegistered: () => void }) {

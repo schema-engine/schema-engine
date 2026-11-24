@@ -34,7 +34,7 @@ export const FormExampleDemo = eco.component<{ config: FormConfig }, JsxRenderab
 			</RendererTabs>
 			<p class="example-demo__note">
 				The demos use this site&apos;s styled widgets, not the example&apos;s own files, and send to no real
-				server: the actions of a config run against a mock endpoint.
+				server: a valid submit shows the notice the config names.
 			</p>
 		</div>
 	),

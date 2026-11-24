@@ -30,13 +30,13 @@ Copy the files below into one folder. Radiant also needs its JSX setup and style
 
 ## See it
 
-The demos render the config the server sends. The files below call the server, and the example's tests run them against the handlers of `server.ts`.
+The demos render the config the server sends, notice included: a valid submit shows it. The files below call the server, and the example's tests run them against the handlers of `server.ts`.
 
 <FormExampleDemo config={signupForm} />
 
 ## The server
 
-`GET` is the route handler of `/forms/signup`: it answers with the form config. `POST` is `/api/signups`: it creates the account, or answers 422 with RFC 9457 Problem Details when the username is taken. Any runtime that speaks `Request` and `Response` runs them. `?next` returns the form of a later release, which asks for a rating with an element this client has not registered, so you see what the client does with a form it cannot render.
+`GET` is the route handler of `/forms/signup`: it answers with the form config. `POST` is `/api/signups`: it creates the account, or answers 422 with RFC 9457 Problem Details when the username is taken. Any runtime that speaks `Request` and `Response` runs them. `?next` returns the form of a later release, which asks for a rating with an element this client has not registered, so you see what the client does with a form it cannot render. The config also carries a `show_notification` entry in `actions`, so the server decides what the visitor is told after a successful submit; each engine registers `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one.
 
 ```ts title="server.ts"
 export const signupForm = {
@@ -82,6 +82,15 @@ export const signupForm = {
 				},
 				{ $type: 'submit', id: 'create', name: 'create', label: 'Create account' },
 			],
+		},
+	],
+	actions: [
+		{
+			id: 'created',
+			$type: 'show_notification',
+			message: 'Account created.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
 		},
 	],
 };
@@ -301,14 +310,14 @@ export const elements = [input, select, submit];
 
 ```tsx title="server-driven-form.react.tsx"
 import { useEffect, useState } from 'react';
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, NotificationActionRegistration } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { policy } from './csrf';
 import { loadForm, type LoadedForm } from './load-form';
 import { signUp } from './submit';
 import { elements } from './widgets.react';
 
-export const engine = createFormEngine({ elements, csrf: policy });
+export const engine = createFormEngine({ elements, csrf: policy, actions: [NotificationActionRegistration] });
 
 /** Fetches the form from `url`, then renders it, or lists why it cannot. `onSignedUp` runs once the account exists. */
 export function SignupForm({ url, onSignedUp }: { url: string; onSignedUp: () => void }) {
@@ -344,12 +353,17 @@ export function SignupForm({ url, onSignedUp }: { url: string; onSignedUp: () =>
 
 ```tsx title="server-driven-form.radiant.tsx"
 import { createRoot } from '@ecopages/jsx/client';
+import { NotificationActionRegistration } from '@schema-engine/forms';
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { policy } from './csrf';
 import { loadForm } from './load-form';
 import { signUp } from './submit';
 
-export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, csrf: policy });
+export const engine = createRadiantFormEngine({
+	elements: schemaFormRegistrations,
+	csrf: policy,
+	actions: [NotificationActionRegistration],
+});
 
 /** Fetches the form from `url` and renders it into `host`, or lists why it cannot. `onSignedUp` runs once the account exists. */
 export async function mountSignupForm(host: HTMLElement, url: string, onSignedUp: () => void): Promise<void> {

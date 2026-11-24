@@ -43,6 +43,15 @@ export const signupForm = {
 			],
 		},
 	],
+	actions: [
+		{
+			id: 'created',
+			$type: 'show_notification',
+			message: 'Account created.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };
 
 /**

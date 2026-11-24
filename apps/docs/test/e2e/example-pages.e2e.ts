@@ -65,6 +65,10 @@ describe('the forms example pages', () => {
 
 	const react = () => page.locator('.docs-react-form-demo').first();
 
+	/** The notice a `show_notification` action of the config raised, which the docs shell shows as a toast. */
+	const expectNotice = (message: string) =>
+		pwExpect(page.getByRole('status').getByText(message, { exact: true })).toBeVisible();
+
 	test('the contact form loads with its React demo hydrated and its Radiant demo rendered', async () => {
 		await open(contactPath);
 		await pwExpect(page.locator('h1')).toHaveText('Contact form');
@@ -94,9 +98,8 @@ describe('the forms example pages', () => {
 
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('button[type="submit"]').click();
-		await pwExpect(form.locator('input[name="email"] + .rui-field__error')).toBeHidden();
+		await expectNotice('Message sent. We answer within one working day.');
 		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
-		await pwExpect(form.locator('input[name="email"]')).toHaveValue('ada@example.com');
 		await expectNoReload(contactPath);
 	});
 
@@ -128,6 +131,19 @@ describe('the forms example pages', () => {
 		}
 	});
 
+	test('the Radiant demo shows the same notice after a valid submit', async () => {
+		await page.goto(`${baseUrl}${contactPath}`, { waitUntil: 'networkidle' });
+		const radiantForm = page.locator('.docs-form-renderer-preview form').first();
+		await pwExpect(radiantForm).toBeVisible();
+		await radiantForm.locator('input[name="name"]').fill('Ada Lovelace');
+		await radiantForm.locator('input[name="email"]').fill('ada@example.com');
+		await radiantForm.locator('[data-select-trigger]').click();
+		await radiantForm.locator('[data-value="general"]').click();
+		await radiantForm.locator('textarea[name="message"]').fill('Hello there, team.');
+		await radiantForm.locator('button[type="submit"]').click();
+		await expectNotice('Message sent. We answer within one working day.');
+	});
+
 	test('the ticket field appears for a support request and is checked in its shape', async () => {
 		await open(contactPath);
 		const form = react();
@@ -150,7 +166,7 @@ describe('the forms example pages', () => {
 
 		await form.locator('input[name="ticket"]').fill('SUP-1024');
 		await form.locator('button[type="submit"]').click();
-		await pwExpect(form.locator('input[name="ticket"] + .rui-field__error')).toBeHidden();
+		await expectNotice('Message sent. We answer within one working day.');
 		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
 	});
 
@@ -182,8 +198,8 @@ describe('the forms example pages', () => {
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
 		await form.locator('select[name="role"]').selectOption('designer');
 		await form.getByRole('button', { name: 'Submit' }).click();
+		await expectNotice('Account created. Welcome aboard.');
 		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
-		await pwExpect(form.locator('select[name="role"]')).toHaveValue('designer');
 		await expectNoReload(wizardPath);
 	});
 
@@ -300,7 +316,7 @@ describe('the forms example pages', () => {
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('button[type="submit"]').click();
-		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
+		await expectNotice('Message sent.');
 		await expectNoReload(shadcnPath);
 	});
 

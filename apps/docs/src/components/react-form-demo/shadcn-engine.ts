@@ -1,4 +1,5 @@
 import { createFormEngine } from '@schema-engine/forms';
+import { createDocsDemoActions } from '@/lib/docs-demo-actions';
 import { InputElementRegistration } from '@/generated/shadcn/components/schema-engine/forms/inputs/form-input.registration';
 import { CardRecipe } from '@/generated/shadcn/components/schema-engine/forms/recipes/registrations/card';
 import { theme } from '@/lib/examples/theming/theme';
@@ -14,5 +15,6 @@ import { theme } from '@/lib/examples/theming/theme';
 export const docsShadcnFormEngine = createFormEngine({
 	elements: [InputElementRegistration],
 	recipes: [CardRecipe],
+	actions: createDocsDemoActions(),
 	layout: theme,
 });

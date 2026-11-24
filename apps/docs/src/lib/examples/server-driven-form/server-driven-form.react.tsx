@@ -1,13 +1,13 @@
 /** @jsxImportSource react */
 import { useEffect, useState } from 'react';
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, NotificationActionRegistration } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { policy } from './csrf';
 import { loadForm, type LoadedForm } from './load-form';
 import { signUp } from './submit';
 import { elements } from './widgets.react';
 
-export const engine = createFormEngine({ elements, csrf: policy });
+export const engine = createFormEngine({ elements, csrf: policy, actions: [NotificationActionRegistration] });
 
 /** Fetches the form from `url`, then renders it, or lists why it cannot. `onSignedUp` runs once the account exists. */
 export function SignupForm({ url, onSignedUp }: { url: string; onSignedUp: () => void }) {

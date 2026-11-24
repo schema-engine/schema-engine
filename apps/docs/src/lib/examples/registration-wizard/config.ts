@@ -68,4 +68,13 @@ export const registration: FormConfig = {
 			],
 		},
 	],
+	actions: [
+		{
+			id: 'created',
+			$type: 'show_notification',
+			message: 'Account created. Welcome aboard.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };

@@ -66,3 +66,23 @@ describe('register', () => {
 		await expect(register(values, given)).rejects.toThrow('The server answered 503.');
 	});
 });
+
+describe('the notice of the registration wizard', () => {
+	test.each([
+		['React', reactEngine],
+		['Radiant', radiantEngine],
+	])(
+		'is a show_notification action that runs after a successful submission, and the %s engine registers it',
+		(_renderer, engine) => {
+			const result = engine.safeValidateForm(registration);
+			expect(result.success && result.data.actions).toMatchObject([
+				{
+					$type: 'show_notification',
+					message: 'Account created. Welcome aboard.',
+					variant: 'success',
+					triggers: ['form_submit_success'],
+				},
+			]);
+		},
+	);
+});

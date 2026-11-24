@@ -78,4 +78,13 @@ export const contactForm: FormConfig = {
 			],
 		},
 	],
+	actions: [
+		{
+			id: 'sent',
+			$type: 'show_notification',
+			message: 'Message sent. We answer within one working day.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };

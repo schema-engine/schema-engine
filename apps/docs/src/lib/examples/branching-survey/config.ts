@@ -73,4 +73,13 @@ export const survey: FormConfig = {
 			elements: [{ $type: 'textarea', id: 'comments', name: 'comments', label: 'Comments', rows: 4 }],
 		},
 	],
+	actions: [
+		{
+			id: 'thanks',
+			$type: 'show_notification',
+			message: 'Thanks for your answers.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };
