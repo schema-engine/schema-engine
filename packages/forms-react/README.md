@@ -136,7 +136,7 @@ task in Turbo. Renderer actions import the dispatcher from
 
 The form container delegates validation to the engine's `validateFormValues`, and `FormProvider` creates one
 [form runtime](../forms/src/runtime/README.md) (`createFormRuntime`) per form, keyed by the identity of the config and the
-engine, with stable callback wrappers that read the latest `onSubmit`, `onChange`, `onAction` and `onActionResults`; it
+engine, with stable callback wrappers that read the latest `onSubmit`, `onChange`, `onAction`, `onActionResults` and `navigate`; it
 mounts the runtime in an effect (`form_mount` once, then the change watch; the cleanup revokes any command in flight) and
 provides it. The runtime owns the steps, the navigation (the one lock, the step triggers, skipped steps and the
 `navigation` setting) and the submission: `onSubmit` runs inside the lifecycle, so a rejected `onSubmit` is a failed

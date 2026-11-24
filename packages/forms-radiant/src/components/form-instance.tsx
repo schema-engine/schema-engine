@@ -10,7 +10,7 @@ import { getViewRecipe } from '@schema-engine/forms/recipes';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
 import type { FormAction, FormSubmitContext } from '@/adapters/types';
-import { feedInstanceCallbacks } from '@/lib/instance-callbacks';
+import { feedInstanceCallbacks, type InstanceCallbacks } from '@/lib/instance-callbacks';
 import { createFormStateContainer, toHydration, type FormStateHydration } from '@schema-engine/forms/state-container';
 
 /** Registers `<se-form-instance>` when this view is imported. */
@@ -60,6 +60,8 @@ export function FormInstance<TValues extends FormValues = FormValues>({
 	method,
 	onChange,
 	onAction,
+	onActionResults,
+	navigate,
 	children,
 }: {
 	config: NormalizedFormConfig<Record<string, unknown>, Record<string, unknown>, Record<string, unknown>, TValues>;
@@ -70,6 +72,8 @@ export function FormInstance<TValues extends FormValues = FormValues>({
 	method?: string;
 	onChange?: (data: FormValues) => void;
 	onAction?: (action: FormAction, data: TValues) => void | Promise<void>;
+	onActionResults?: InstanceCallbacks['onActionResults'];
+	navigate?: (url: string) => void;
 	children?: JsxRenderable;
 }): JsxRenderable {
 	const initialValues = collectFormInitialValues(config, defaultValues);
@@ -81,7 +85,8 @@ export function FormInstance<TValues extends FormValues = FormValues>({
 			engine={engine}
 			hydration={hydration}
 			ref={(instance) => {
-				if (instance) feedInstanceCallbacks(instance, { onSubmit, onChange, onAction });
+				if (instance)
+					feedInstanceCallbacks(instance, { onSubmit, onChange, onAction, onActionResults, navigate });
 			}}
 		>
 			<ConfiguredRuiForm config={config} layoutThemeId={engine.getLayout().id} action={action} method={method}>

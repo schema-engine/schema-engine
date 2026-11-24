@@ -23,6 +23,7 @@ In an app you do not create it. React's `FormProvider` and Radiant's `se-form-in
 | `onChange`        | Called when the values change, never for an error, a touch or a validation result.             |
 | `onAction`        | Called with each submit action that succeeded. Typed by the engine's actions.                  |
 | `onActionResults` | Called with the results of every trigger that ran actions.                                     |
+| `navigate`        | Takes the page to the `redirectUrl` of a submit action once the submission succeeded. Defaults to `location.assign` in a browser and does nothing on a server. |
 
 `runtime.mount()` dispatches `form_mount` the first time and starts the change watch; the function it returns stops the watch and revokes any command in flight. The runtime exposes `container`, `getSnapshot()`, `getServerSnapshot()`, `subscribe(listener)`, `next()`, `back()`, `goTo(id)`, `submit()` and `clearSubmission()`.
 

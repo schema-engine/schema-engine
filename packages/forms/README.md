@@ -176,7 +176,7 @@ formStateContainerConformance(createMyContainer);
 
 ### The form runtime
 
-`createFormRuntime({ engine, config, defaults, snapshot, host, onSubmit, onChange, onAction, onActionResults })` is
+`createFormRuntime({ engine, config, defaults, snapshot, host, onSubmit, onChange, onAction, onActionResults, navigate })` is
 the one lifecycle every renderer shares: it builds the form's container and owns the submission, the wizard's
 steps and navigation, `form_mount` and `form_change`, and every action dispatch. A renderer only supplies the
 `host` (`focus(paths)`, and `sync` and `submitNatively` where it needs them). See the
@@ -615,8 +615,7 @@ See [engine internals](src/engine/README.md#schema-artifacts-and-extension).
 
 Engine construction stores elements, recipes, actions and validation rules in read-only registries
 from `@schema-engine/registry` (last registration wins, no override warning) and
-checks each winning schema once at that boundary. It stores frozen shallow copies taken at build and leaves the registration objects you passed untouched; changes to them afterwards do not reach the engine. Form action results add optional browser redirects
-to the generic result; see [actions](./src/actions/README.md).
+checks each winning schema once at that boundary. It stores frozen shallow copies taken at build and leaves the registration objects you passed untouched; changes to them afterwards do not reach the engine. Form action results add an optional `redirectUrl` to the generic result: once the whole submission succeeded, the runtime hands the last one set to `navigate`, which defaults to `location.assign` in a browser and does nothing on a server; see [actions](./src/actions/README.md).
 
 ## Pre-publish API
 

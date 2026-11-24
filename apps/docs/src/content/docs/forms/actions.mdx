@@ -115,7 +115,9 @@ export const contact = engine.defineForm({
 | `gtm_event`         | `eventName` (required), `eventData`, `includeFormData`                                                      | the registration's `defaultTriggers`          |
 | `reset`             | `confirmMessage`, `resetToDefaults`                                                                         | the registration's `defaultTriggers`          |
 
-Every entry also takes `id`, `description`, `enabled` and `triggers`. Auto-save writes the form's values to browser storage on each trigger it answers, with `form_change` here. It does not debounce: it runs on every change.
+Every entry also takes `id`, `description`, `enabled` and `triggers`. The engine checks `id`, `enabled` and `triggers` itself, so a registration's schema lists an action's own options only.
+
+The `submit` action returns its `redirectUrl` in its result. Once the whole submission succeeded (every submit action and `onSubmit`), the runtime calls `navigate` with the last `redirectUrl` a successful submit action set. It defaults to `location.assign` in a browser and does nothing on a server; pass `navigate` to `FormRenderer` to use your router instead. Auto-save writes the form's values to browser storage on each trigger it answers, with `form_change` here. It does not debounce: it runs on every change.
 
 ## Triggers
 

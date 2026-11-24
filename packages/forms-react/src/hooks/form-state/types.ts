@@ -209,6 +209,12 @@ export interface FormProviderProps<
 	/** Results of each action trigger, including submission failures. */
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 	/**
+	 * Takes the page to the `redirectUrl` a submit action asked for, once the whole submission succeeded.
+	 *
+	 * @remarks Defaults to `location.assign` in a browser and does nothing on a server. Pass your router's navigate to keep the visit client-side.
+	 */
+	navigate?: (url: string) => void;
+	/**
 	 * Turns an issue into the text a field or a submission failure shows, for this form.
 	 *
 	 * @remarks Overrides the engine's `formatIssue` (`createFormEngine({ formatIssue })`). It is the only per-form override.

@@ -225,5 +225,9 @@ Register `logMessage` in `createFormEngine({ actions: [logMessage] })` to add it
 configuration type to that engine; no global namespace augmentation is needed.
 
 Form action results use `ActionExecutionResult` from `@schema-engine/forms`, which
-extends the generic action result with optional `redirectUrl` for browser navigation.
+extends the generic action result with an optional `redirectUrl`. Once the whole submission succeeded (every submit
+action and `onSubmit`), the runtime calls its `navigate` option once with the `redirectUrl` of the last successful
+submit result that set one. `navigate` defaults to `location.assign` where there is a `location` and does nothing on
+a server, and a renderer passes its own: React's `navigate` prop, Radiant's `FormRenderer` `navigate` prop. A redirect
+replaces the native post of a Radiant form with `action`.
 Both renderers execute actions through `ActionDispatcher.dispatch` or `dispatchSync` from `@schema-engine/actions`; the actions of a validated form are already parsed, as `parseActions` returns them. See the [actions package](../../../actions/README.md#parallel-groups-and-results) for cancellation and result semantics.

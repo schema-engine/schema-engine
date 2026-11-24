@@ -152,6 +152,16 @@ export interface CreateFormRuntimeOptions<TAction extends FormActionConfig = For
 	onChange?: (data: FormValues) => void;
 	/** Called with each submit action that succeeded, and the values that passed. Typed by the engine's actions. */
 	onAction?: (action: TAction, data: TValues) => void | Promise<void>;
+	/**
+	 * Takes the page to the `redirectUrl` a submit action asked for, once the whole submission succeeded.
+	 *
+	 * @remarks
+	 * Called at most once, after every submit action and `onSubmit` succeeded and the success trigger ran, with the
+	 * `redirectUrl` of the last successful submit action that set one. It replaces
+	 * {@link FormRuntimeHost.submitNatively} for that submission, since a native post would load a page of its own.
+	 * Defaults to {@link defaultNavigate}: `location.assign` where `globalThis.location` exists, and nothing on a server.
+	 */
+	navigate?: (url: string) => void;
 	/** Called with the results of every trigger that ran actions, and once with those of the submit actions. */
 	onActionResults?: (results: readonly SubmissionActionResult[], trigger: FormActionTrigger) => void | Promise<void>;
 }

@@ -16,7 +16,7 @@ export const engine = createFormEngine({ elements: [textFieldRegistration, ratin
 
 ## Rendering
 
-`FormRenderer` takes the form and renders it. A plain config is validated at that boundary; pass `engine.defineForm(...)` when you want the typed, normalized one. The engine comes from the `engine` prop or from an enclosing `FormEngineProvider`. Its other props are `defaultValues`, `onSubmit(values, helpers)`, `onChange(values)`, `onAction`, `onActionResults`, `formatIssue`, `className`, `style` and `children`, which render inside the form so they can use the hooks.
+`FormRenderer` takes the form and renders it. A plain config is validated at that boundary; pass `engine.defineForm(...)` when you want the typed, normalized one. The engine comes from the `engine` prop or from an enclosing `FormEngineProvider`. Its other props are `defaultValues`, `onSubmit(values, helpers)`, `onChange(values)`, `onAction`, `onActionResults`, `navigate` (where a submit action's `redirectUrl` takes the page, `location.assign` by default), `formatIssue`, `className`, `style` and `children`, which render inside the form so they can use the hooks.
 
 ```tsx title="react/profile-form.tsx"
 import type { FormSubmitHelpers, FormValues } from '@schema-engine/forms';

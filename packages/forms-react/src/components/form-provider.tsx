@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAppearanceAttributes } from '@schema-engine/layout';
-import { type EngineOutputMaps, createFormRuntime, type FormConfigView, type FormValues } from '@schema-engine/forms';
+import {
+	type EngineOutputMaps,
+	createFormRuntime,
+	defaultNavigate,
+	type FormConfigView,
+	type FormValues,
+} from '@schema-engine/forms';
 import { getObjectIdentity } from '@/lib/object-identity';
 import { FormStateContext, type FormStateContextValue } from '@/hooks/form-state/context';
 import { createFieldRegistry, type FieldRegistry } from '@/hooks/form-state/field-registry';
@@ -16,15 +22,16 @@ function FormInstance<TOutputs extends EngineOutputMaps, TValues extends FormVal
 	onChange,
 	onAction,
 	onActionResults,
+	navigate,
 	formatIssue,
 }: FormProviderProps<TOutputs, TValues>) {
 	const { engine } = useFormEngine();
 	const runtimeConfig: FormConfigView = config;
 
-	const callbacks = useRef({ onSubmit, onChange, onAction, onActionResults });
+	const callbacks = useRef({ onSubmit, onChange, onAction, onActionResults, navigate });
 	useEffect(() => {
-		callbacks.current = { onSubmit, onChange, onAction, onActionResults };
-	}, [onSubmit, onChange, onAction, onActionResults]);
+		callbacks.current = { onSubmit, onChange, onAction, onActionResults, navigate };
+	}, [onSubmit, onChange, onAction, onActionResults, navigate]);
 
 	const [{ runtime, fields }] = useState(() => {
 		let registry: FieldRegistry | undefined;
@@ -37,6 +44,7 @@ function FormInstance<TOutputs extends EngineOutputMaps, TValues extends FormVal
 			onChange: (data) => callbacks.current.onChange?.(data),
 			onAction: (action, data) => callbacks.current.onAction?.(action, data),
 			onActionResults: (results, trigger) => callbacks.current.onActionResults?.(results, trigger),
+			navigate: (url) => (callbacks.current.navigate ?? defaultNavigate)(url),
 		});
 		registry = createFieldRegistry(created.container);
 		return { runtime: created, fields: registry };

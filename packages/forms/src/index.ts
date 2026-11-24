@@ -20,7 +20,7 @@ export * from './lib/path-values';
 export * from './lib/standard-schema';
 export * from './lib/validate-form';
 export type { ElementRegistry, RecipeRegistry, ActionRegistrationRegistry } from './registries';
-export { createFormRuntime, isSubmissionBusy } from './runtime';
+export { createFormRuntime, defaultNavigate, isSubmissionBusy } from './runtime';
 export type { SubmissionActionResult } from './runtime/submission-lifecycle';
 export type {
 	CreateFormRuntimeOptions,
