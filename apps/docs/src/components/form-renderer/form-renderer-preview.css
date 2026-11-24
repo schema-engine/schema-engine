@@ -1,16 +1,12 @@
 .docs-form-renderer-preview {
-	@apply block w-full p-5 text-left bg-muted rounded-md;
+	@apply block w-full;
 }
 
 /*
  * Recipe shells size themselves for full-page use (`100svh`, viewport
- * centering). Inside the docs demo container that reserves a viewport of
- * blank space around a small card, so the demo frame flattens them.
+ * centering). Inside the docs demo stage that reserves a viewport of
+ * blank space around a small card, so the stage flattens them.
  */
-.docs-form-renderer-preview:has(.card-shell, .hero-shell, .split-screen-shell, .se-sidebar-shell, .se-stack-shell) {
-	@apply bg-transparent p-0 rounded-none;
-}
-
 .docs-form-renderer-preview .card-shell,
 .docs-form-renderer-preview .hero-shell,
 .docs-form-renderer-preview .split-screen-shell,

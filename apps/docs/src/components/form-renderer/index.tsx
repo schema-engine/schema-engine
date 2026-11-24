@@ -22,7 +22,7 @@ export const FormRendererPreview = eco.component<{ config: FormConfig }, JsxRend
 	render: ({ config }) => {
 		return (
 			<div class="not-prose unstyled">
-				<div class="docs-form-renderer-preview">
+				<div class="docs-form-renderer-preview docs-demo-stage">
 					<FormRenderer engine={formEngine} config={config} />
 				</div>
 			</div>

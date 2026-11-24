@@ -19,7 +19,7 @@ interface RendererTabsProps {
  * example apart from another's.
  *
  * `sideBySide` is for live demos: when the tabs are wide enough for two forms at a real width, the stylesheet
- * hides the tabs and shows both panels in two columns, each labelled with its renderer. The width is the width of
+ * hides the tabs and shows both panels in two columns, each labelled by a `.renderer-tabs__caption` the page puts first inside the panel. The width is the width of
  * the tabs themselves, not the viewport, so it follows the sidebar and the table of contents of the docs layout.
  */
 export const RendererTabs = eco.component<RendererTabsProps, JsxRenderable>({

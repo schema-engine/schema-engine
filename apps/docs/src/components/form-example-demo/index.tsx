@@ -24,15 +24,17 @@ export const FormExampleDemo = eco.component<{ config: FormConfig }, JsxRenderab
 		<div class="example-demo not-prose unstyled" data-example={config.id}>
 			<RendererTabs name={config.id} sideBySide>
 				<figure class="example-demo__demo" data-renderer="react">
+					<figcaption class="renderer-tabs__caption">React</figcaption>
 					<ReactFormDemoEmbed config={config} />
 				</figure>
 				<figure class="example-demo__demo" data-renderer="radiant">
+					<figcaption class="renderer-tabs__caption">Radiant</figcaption>
 					<FormRendererPreview config={config} />
 				</figure>
 			</RendererTabs>
 			<p class="example-demo__note">
 				The demos use this site&apos;s styled widgets, not the example&apos;s own files, and send to no real
-				server: a valid submit shows its values or posts to a mock endpoint.
+				server: the actions of a config run against a mock endpoint.
 			</p>
 		</div>
 	),
