@@ -11,10 +11,14 @@ The engine never writes text. Every issue it produces is data: what went wrong, 
 ## The issue
 
 ```ts
-{ type: 'minLength', source: 'validation', ruleId: 'password-min', params: { minLength: 8 } }
-{ type: 'typeMismatch', source: 'native', params: { inputType: 'email' }, message: 'Please include an "@"' }
-{ type: 'taken', source: 'server', message: 'This email is already registered' }
-{ type: 'actionFailed', source: 'submission', params: { actionId: 'save' } }
+import type { FormStateIssue, FormSubmissionIssue } from '@schema-engine/forms/state-container';
+
+export const issues: Array<FormStateIssue | FormSubmissionIssue> = [
+	{ type: 'minLength', source: 'validation', ruleId: 'password-min', params: { minLength: 8 } },
+	{ type: 'typeMismatch', source: 'native', params: { inputType: 'email' }, message: 'Please include an "@"' },
+	{ type: 'taken', source: 'server', message: 'This email is already registered' },
+	{ type: 'actionFailed', source: 'submission', params: { actionId: 'save' } },
+];
 ```
 
 | Field     | Holds                                                                                                                                                         |

@@ -315,7 +315,13 @@ export function ContactForm({ onSent }: { onSent: () => void }) {
 Render it where the page needs it:
 
 ```tsx
-<ContactForm onSent={() => setSent(true)} />
+import { useState } from 'react';
+import { ContactForm } from './contact-form.react';
+
+export function ContactPage() {
+	const [sent, setSent] = useState(false);
+	return sent ? <p>Thanks, we will answer within one working day.</p> : <ContactForm onSent={() => setSent(true)} />;
+}
 ```
 
 ## What the tests check

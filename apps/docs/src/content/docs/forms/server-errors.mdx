@@ -57,10 +57,10 @@ Pass either function as `onSubmit` of `FormRenderer`, or of the Radiant `FormRen
 It becomes:
 
 ```ts
-{
+export const errors = {
 	email: { type: 'taken', message: 'This email is already registered' },
 	__root__: { type: 'rate_limited', message: 'Try again later' },
-}
+};
 ```
 
 The first lands on the `email` field. The second names no field, so it lands on the form itself, `FORM_ROOT`.

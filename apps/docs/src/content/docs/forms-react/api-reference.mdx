@@ -10,18 +10,13 @@ order: 10
 
 ```ts
 import { createFormEngine } from '@schema-engine/forms';
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
-import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+import { elements } from './elements';
 import { brandRecipe } from './brand-recipe';
 
-export const engine = createFormEngine({
-	elements: schemaFormRegistrations,
-	recipes: [...schemaFormRecipeRegistrations, brandRecipe],
-});
+export const engine = createFormEngine({ elements, recipes: [brandRecipe] });
 ```
 
-`createFormEngine()` is headless. Register installed default recipes or
-your own recipes in the `recipes` array. Use `engine.extend({ recipes: [brandRecipe] })`
+`createFormEngine()` is headless. Register your widgets in `elements` and your view recipes in the `recipes` array. Use `engine.extend({ recipes: [brandRecipe] })`
 to add registrations later.
 
 ## FormElements
