@@ -4,16 +4,16 @@ The domain-agnostic action package: a registration, a registry, `parseActions` a
 
 ## The flow
 
-Serialized actions are checked, then dispatched: `parseActions(registry, input)`, then `dispatcher.dispatch({ actions: parsed.data, trigger, context })`. `dispatch` takes only what `parseActions` returned, so an action that failed its registration's schema never reaches a handler.
+Serialized actions are checked, then dispatched: `parseActions(registry, input)`, then `dispatcher.dispatch({ actions: parsed.data, trigger, context })`. `dispatch` takes only what `parseActions` returned, as a type, so dispatching an unchecked action does not type-check. `defineAction<Context, Trigger>()` fixes the context and the trigger of a domain once, so each registration states only its config.
 
 ```ts title="actions/dispatch.ts"
 import * as z from 'zod/mini';
 import {
 	ActionDispatcher,
 	ActionRegistry,
+	defineAction,
 	parseActions,
 	type ActionConfigBase,
-	type ActionRegistration,
 } from '@schema-engine/actions';
 
 type Trigger = 'save';
@@ -26,7 +26,9 @@ interface NotifyConfig extends ActionConfigBase<'notify'> {
 	channel: string;
 }
 
-const notify: ActionRegistration<NotifyConfig, Context, Trigger> = {
+const defineNotify = defineAction<Context, Trigger>();
+
+const notify = defineNotify<NotifyConfig>({
 	$type: 'notify',
 	schema: z.object({ channel: z.string() }),
 	metadata: { name: 'Notify', defaultTriggers: ['save'] },
@@ -37,7 +39,7 @@ const notify: ActionRegistration<NotifyConfig, Context, Trigger> = {
 			? { success: false, error: 'No such channel', shouldContinue: false }
 			: { success: true };
 	},
-};
+});
 
 export const registry = new ActionRegistry<Context, Trigger>([notify]);
 

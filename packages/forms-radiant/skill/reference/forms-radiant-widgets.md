@@ -147,7 +147,7 @@ Replacing a packaged widget is the same registration under the same `$type`, lis
 
 Test a widget in a browser project, through the real renderer and the form's own container read through a `FormController`, not a copy of them. A widget test covers: `reset` and `setValue` write back into the control, the error is shown and announced (`aria-invalid`, `aria-describedby`), a native control's fact blocks the check, and a custom host takes its value from the form and gives its changes back.
 
-```ts title="radiant/text-field.browser.suite.ts"
+```ts title="radiant/text-field.browser.test.ts"
 import { createRoot } from '@ecopages/jsx/client';
 import { afterEach, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
@@ -240,4 +240,4 @@ test('a custom host takes its value from the form and gives its changes back', a
 });
 ```
 
-Save your copy as `text-field.browser.test.ts`; the `.suite` name only keeps this mirrored example out of this repository's own test runs.
+Save your copy as `text-field.browser.test.ts`.

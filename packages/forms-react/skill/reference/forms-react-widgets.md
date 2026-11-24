@@ -100,7 +100,7 @@ Register the widget with `defineInput` (`forms.md`) and pass it to `createFormEn
 
 Test a widget through the real renderer and the form's own container, not a copy of them. A widget test covers four things: an uncontrolled widget renders zero times per keystroke once dirty, `reset` and `setValue` write back into the control, the error is shown and announced (`aria-invalid`, `aria-describedby` and the alert), and a native control's fact blocks the check. It runs under Testing Library in a browser project.
 
-```tsx title="react/text-field.suite.tsx"
+```tsx title="react/text-field.test.tsx"
 import { Profiler, useEffect, type ReactNode } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
@@ -219,4 +219,4 @@ test('the form renders its fields and the children it is given', () => {
 });
 ```
 
-Save your copy as `text-field.test.tsx`; the `.suite` name only keeps this mirrored example out of this repository's own test runs.
+Save your copy as `text-field.test.tsx`.

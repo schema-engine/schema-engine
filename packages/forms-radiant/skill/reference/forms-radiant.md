@@ -27,7 +27,7 @@ export function bindEngine(root: ParentNode): void {
 
 A test of the binding builds the element and checks the renderer holds the engine:
 
-```ts title="radiant/bind-engine.browser.suite.ts"
+```ts title="radiant/bind-engine.browser.test.ts"
 import { expect, test } from 'vitest';
 import { engine } from './app-engine';
 import { bindEngine } from './bind-engine';
@@ -43,7 +43,7 @@ test('the packaged engine registers the default widgets, and an app binds it to 
 });
 ```
 
-Save your copy as `bind-engine.browser.test.ts`; the `.suite` name only keeps this mirrored example out of this repository's own test runs.
+Save your copy as `bind-engine.browser.test.ts`.
 
 ## What the elements do
 

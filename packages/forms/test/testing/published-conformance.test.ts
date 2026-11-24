@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 import pkg from '../../package.json' with { type: 'json' };
-await import('../../../../test-utils/skill-examples/forms/container-conformance.suite');
+await import('../../../../test-utils/skill-examples/forms/container-conformance.test');
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 

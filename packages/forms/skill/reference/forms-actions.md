@@ -4,18 +4,23 @@ Code that runs on a form event. The runtime runs a form's actions with the dispa
 
 ## An action
 
-An action is a registration, `{ $type, schema, metadata, execute }`, and an instance in the config, `{ $type, id, ...config, triggers? }`. `schema` is any Standard Schema and describes the action's own arguments: the engine checks `id`, `$type`, `enabled` and `triggers` (a form trigger name) itself, so a schema never lists them. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the form's context, with the instance as `config`, and returns `{ success, message?, error?, data?, shouldContinue? }`; `shouldContinue: false` stops the sequence. Type it with `BuilderActionRegistration`, and register it in `createFormEngine({ actions })`. The engine checks the `actions` of a form and of a step against the registered schemas when it validates the form (`defineForm`, `validateForm`): a bad action is a config issue whose path is the owner's `actions`, the index of the entry (and of the member, in a group), then the path the action's schema reported, and only checked actions reach the dispatcher.
+An action is a registration, `{ $type, schema, metadata, execute }`, written with `defineAction<BuilderActionBaseContext, FormActionTrigger>()` (`actions.md` explains `defineAction`), and an instance in the config, `{ $type, id, ...config, triggers? }`. `schema` is any Standard Schema and describes the action's own arguments: the engine checks `id`, `$type`, `enabled` and `triggers` (a form trigger name) itself, so a schema never lists them. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the form's context, with the instance as `config`, and returns `{ success, message?, error?, data?, shouldContinue? }`; `shouldContinue: false` stops the sequence. Register it in `createFormEngine({ actions })`. The engine checks the `actions` of a form and of a step against the registered schemas when it validates the form (`defineForm`, `validateForm`): a bad action is a config issue whose path is the owner's `actions`, the index of the entry (and of the member, in a group), then the path the action's schema reported, and only checked actions reach the dispatcher.
 
 ```ts title="forms/notify-action.ts"
 import * as z from 'zod/mini';
-import { createFormEngine, type BuilderActionRegistration } from '@schema-engine/forms';
+import { defineAction, type ActionConfigBase } from '@schema-engine/actions';
+import { createFormEngine, type BuilderActionBaseContext, type FormActionTrigger } from '@schema-engine/forms';
 import { textRegistration } from './engine';
 
-const NotifyActionSchema = z.object({ channel: z.string() });
+const defineFormAction = defineAction<BuilderActionBaseContext, FormActionTrigger>();
 
-export const notifyAction: BuilderActionRegistration<'notify', typeof NotifyActionSchema> = {
+interface NotifyConfig extends ActionConfigBase<'notify'> {
+	channel: string;
+}
+
+export const notifyAction = defineFormAction<NotifyConfig>({
 	$type: 'notify',
-	schema: NotifyActionSchema,
+	schema: z.object({ channel: z.string() }),
 	metadata: { name: 'Notify', defaultTriggers: ['form_submit'] },
 	execute: async ({ config, formData, fetch }) => {
 		const response = await fetch('/api/notify', {
@@ -24,7 +29,7 @@ export const notifyAction: BuilderActionRegistration<'notify', typeof NotifyActi
 		});
 		return response.ok ? { success: true } : { success: false, error: `Notify failed with ${response.status}` };
 	},
-};
+});
 
 export const notifyEngine = createFormEngine({ elements: [textRegistration], actions: [notifyAction] });
 
@@ -39,7 +44,7 @@ export const notifyForm = notifyEngine.defineForm({
 
 `form_mount`, `form_change`, `form_submit_start`, `form_submit`, `form_submit_success`, `form_submit_error`, `form_submit_complete`, `step_leave`, `step_change` and `step_enter`. Form-level `actions` are dispatched on every trigger, and an action runs when the trigger is one of its own; a step's own `actions` are dispatched too while that step is current. `actions` is a sequence: an inner array is a parallel group that starts together and joins before the next entry.
 
-The step triggers fire only when the current step changes, and a reset fires none. Step and mount actions cannot block anything, and their failures reach `onActionResults`. The submit actions run after validation passed and before `onSubmit`. A failed submit action fails the submission, and `shouldContinue: false` stops the ones after it.
+The step triggers fire only when the current step changes, and a reset fires none. Step and mount actions cannot block anything, and their failures reach `onActionResults`. The submit actions run after validation passed and before `onSubmit`. A submit action that fails with `shouldContinue: false` stops the ones after it and fails the submission. One that fails without it is reported and the rest still run, and `onSubmit` still runs.
 
 ## The context
 

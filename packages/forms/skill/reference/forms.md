@@ -94,7 +94,7 @@ Form-level keys: `view` (a registered recipe, optional for a one-step form), `va
 
 ## Validation timing
 
-`validationMode` says when a field validates before a check of it has failed: `onSubmit` (default), `onChange`, `onBlur`, `onTouched` (the first blur, then every change) or `all`. `reValidateMode` (`onChange` default, `onBlur`, `onSubmit`) says when it validates once a check of it has failed. Writing the rules is in `validation-and-issues.md`.
+`validationMode` says when a field validates before a check of it has failed: `onSubmit` (default), `onChange`, `onBlur`, `onTouched` (the first blur, then every change) or `all`. `reValidateMode` (`onChange` default, `onBlur`, `onSubmit`) says when it validates once a check of it has failed. Writing the rules is in `forms-validation.md`.
 
 ## Constraints
 
@@ -159,20 +159,20 @@ export function createNotifyRuntime(onSubmit: (values: FormValues) => void) {
 }
 ```
 
-Every command resolves one string: `moved`, `submitted`, `failed`, `invalid`, `overtaken`, `refused`, `busy` or `cancelled`. One lock covers navigation and submission, so a command made while another runs is `busy`, and a reset or `unmount` revokes the one in flight (`cancelled`); a submission whose values were already captured is committed and still completes. `runtime.getSnapshot()` is `{ submission, current, navigating, steps }`, each step with `skipped`, `visited`, `complete` and `invalid`; `runtime.container` is the state. Submitting is in `submission.md`.
+Every command resolves one string: `moved`, `submitted`, `failed`, `invalid`, `overtaken`, `refused`, `busy` or `cancelled`. One lock covers navigation and submission, so a command made while another runs is `busy`, and a reset or `unmount` revokes the one in flight (`cancelled`); a submission whose values were already captured is committed and still completes. `runtime.getSnapshot()` is `{ submission, current, navigating, steps }`, each step with `skipped`, `visited`, `complete` and `invalid`; `runtime.container` is the state. Submitting is in `forms-submission.md`.
 
 ## Testing a container
 
 A container of your own, or a store that must behave like this one, proves it with the conformance suite. It registers its cases with vitest, an optional peer dependency, so import this entry only from a test file.
 
-```ts title="forms/container-conformance.suite.ts"
+```ts title="forms/container-conformance.test.ts"
 import { createFormStateContainer } from '@schema-engine/forms/state-container';
 import { formStateContainerConformance } from '@schema-engine/forms/testing';
 
 formStateContainerConformance(createFormStateContainer);
 ```
 
-Save your copy as `container-conformance.test.ts`; the `.suite` name only keeps this mirrored example out of this repository's own test runs.
+Save your copy as `container-conformance.test.ts`.
 
 ## Agent tool (experimental)
 
