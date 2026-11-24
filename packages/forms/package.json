@@ -2,7 +2,25 @@
 	"name": "@schema-engine/forms",
 	"type": "module",
 	"version": "0.1.0",
+	"description": "The forms domain of Schema Engine: JSON forms with elements, validation, constraints, steps, form state and submission, with no renderer",
+	"keywords": [
+		"schema-engine",
+		"forms",
+		"json",
+		"validation",
+		"wizard",
+		"standard-schema"
+	],
+	"author": "Andrea Zanenghi",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/andeeplus/schema-engine.git",
+		"directory": "packages/forms"
+	},
+	"engines": {
+		"node": "^24.22.0 || >=26.0.0"
+	},
 	"homepage": "https://schema-engine.com/docs/forms/overview",
 	"publishConfig": {
 		"access": "public"

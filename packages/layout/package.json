@@ -2,7 +2,24 @@
 	"name": "@schema-engine/layout",
 	"type": "module",
 	"version": "0.1.0",
+	"description": "Domain-neutral layout for Schema Engine: a named grid, appearance axes and a theme compiler",
+	"keywords": [
+		"schema-engine",
+		"layout",
+		"grid",
+		"theme",
+		"css"
+	],
+	"author": "Andrea Zanenghi",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/andeeplus/schema-engine.git",
+		"directory": "packages/layout"
+	},
+	"engines": {
+		"node": "^24.22.0 || >=26.0.0"
+	},
 	"homepage": "https://schema-engine.com/docs/layout/overview",
 	"publishConfig": {
 		"access": "public"

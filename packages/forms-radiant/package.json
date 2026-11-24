@@ -2,7 +2,24 @@
 	"name": "@schema-engine/forms-radiant",
 	"type": "module",
 	"version": "0.1.0",
+	"description": "The Radiant renderer for Schema Engine forms, with 18 ready elements built on Radiant UI",
+	"keywords": [
+		"schema-engine",
+		"forms",
+		"radiant",
+		"ecopages",
+		"web-components"
+	],
+	"author": "Andrea Zanenghi",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/andeeplus/schema-engine.git",
+		"directory": "packages/forms-radiant"
+	},
+	"engines": {
+		"node": "^24.22.0 || >=26.0.0"
+	},
 	"homepage": "https://schema-engine.com/docs/forms-radiant/overview",
 	"publishConfig": {
 		"access": "public"
@@ -36,8 +53,8 @@
 		"@ecopages/radiant": ">=0.12.0",
 		"@ecopages/radiant-ui": ">=0.6.1",
 		"@ecopages/signals": ">=0.12.0",
-		"@schema-engine/forms": "workspace:*",
-		"@schema-engine/layout": "workspace:*",
+		"@schema-engine/forms": "workspace:^",
+		"@schema-engine/layout": "workspace:^",
 		"typescript": "^5.4",
 		"zod": "^4.0.17"
 	},
@@ -53,9 +70,9 @@
 		"@ecopages/storybook-radiant-vite": "0.2.3",
 		"@ecopages/vite-plugin-radiant": "0.2.3",
 		"@rolldown/plugin-babel": "^0.2.1",
-		"@schema-engine/forms": "workspace:*",
-		"@schema-engine/layout": "workspace:*",
-		"@schema-engine/scripts": "workspace:*",
+		"@schema-engine/forms": "workspace:^",
+		"@schema-engine/layout": "workspace:^",
+		"@schema-engine/scripts": "workspace:^",
 		"@storybook/addon-a11y": "^10.5.10",
 		"@storybook/addon-docs": "^10.5.2",
 		"@storybook/addon-vitest": "^10.5.2",
@@ -76,7 +93,7 @@
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",
-		"@schema-engine/actions": "workspace:*",
+		"@schema-engine/actions": "workspace:^",
 		"country-flag-icons": "^1.6.20",
 		"imask": "^7.6.1",
 		"libphonenumber-js": "^1.13.12"

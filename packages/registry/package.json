@@ -2,7 +2,24 @@
 	"name": "@schema-engine/registry",
 	"type": "module",
 	"version": "0.1.0",
+	"description": "The registration contract and registries of Schema Engine: documents name registrations by $type, and each registration validates its own configuration",
+	"keywords": [
+		"schema-engine",
+		"registry",
+		"json",
+		"serialization",
+		"standard-schema"
+	],
+	"author": "Andrea Zanenghi",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/andeeplus/schema-engine.git",
+		"directory": "packages/registry"
+	},
+	"engines": {
+		"node": "^24.22.0 || >=26.0.0"
+	},
 	"homepage": "https://schema-engine.com/docs/registry/overview",
 	"publishConfig": {
 		"access": "public"
