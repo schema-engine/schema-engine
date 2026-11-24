@@ -3,7 +3,7 @@
 	"type": "module",
 	"version": "0.1.0",
 	"license": "MIT",
-	"homepage": "https://schema-engine.ecopages.app/docs/forms-radiant/overview",
+	"homepage": "https://schema-engine.com/docs/forms-radiant/overview",
 	"publishConfig": {
 		"access": "public"
 	},

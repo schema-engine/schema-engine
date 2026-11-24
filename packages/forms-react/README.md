@@ -75,13 +75,13 @@ export const Contact = () => <FormRenderer engine={engine} config={form} onSubmi
 
 ## Documentation
 
-- [Forms React](https://schema-engine.ecopages.app/docs/forms-react/overview): what the package supplies.
-- [Installation and quick start](https://schema-engine.ecopages.app/docs/forms-react/getting-started): your first widget, and the optional shadcn registry.
-- [Writing a widget](https://schema-engine.ecopages.app/docs/forms-react/widgets): uncontrolled and controlled widgets.
-- [Hooks](https://schema-engine.ecopages.app/docs/forms-react/hooks) and [View recipes](https://schema-engine.ecopages.app/docs/forms-react/layouts).
-- [Other React state](https://schema-engine.ecopages.app/docs/forms-react/other-react-state): mount a form in a panel that holds other state.
-- [API reference](https://schema-engine.ecopages.app/docs/forms-react/api-reference).
-- [For AI agents](https://schema-engine.ecopages.app/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
+- [Forms React](https://schema-engine.com/docs/forms-react/overview): what the package supplies.
+- [Installation and quick start](https://schema-engine.com/docs/forms-react/getting-started): your first widget, and the optional shadcn registry.
+- [Writing a widget](https://schema-engine.com/docs/forms-react/widgets): uncontrolled and controlled widgets.
+- [Hooks](https://schema-engine.com/docs/forms-react/hooks) and [View recipes](https://schema-engine.com/docs/forms-react/layouts).
+- [Other React state](https://schema-engine.com/docs/forms-react/other-react-state): mount a form in a panel that holds other state.
+- [API reference](https://schema-engine.com/docs/forms-react/api-reference).
+- [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License
 

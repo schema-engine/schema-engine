@@ -63,13 +63,13 @@ The package has one entry, `@schema-engine/actions`: `ActionRegistry`, `ActionDi
 
 ## Documentation
 
-- [Actions](https://schema-engine.ecopages.app/docs/actions/overview): register actions, check a workflow and dispatch it.
-- [Concepts](https://schema-engine.ecopages.app/docs/actions/concepts): the registration, the context, trigger matching and results.
-- [Sequences, parallel groups, cancellation](https://schema-engine.ecopages.app/docs/actions/sequences-and-cancellation): ordering and stopping a workflow.
-- [Writing actions](https://schema-engine.ecopages.app/docs/actions/writing-actions): `defineAction`, a service call and testing.
-- [Serialized workflows](https://schema-engine.ecopages.app/docs/actions/serialized-workflows): a workflow as JSON.
-- [API reference](https://schema-engine.ecopages.app/docs/actions/api-reference): every export.
-- [For AI agents](https://schema-engine.ecopages.app/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
+- [Actions](https://schema-engine.com/docs/actions/overview): register actions, check a workflow and dispatch it.
+- [Concepts](https://schema-engine.com/docs/actions/concepts): the registration, the context, trigger matching and results.
+- [Sequences, parallel groups, cancellation](https://schema-engine.com/docs/actions/sequences-and-cancellation): ordering and stopping a workflow.
+- [Writing actions](https://schema-engine.com/docs/actions/writing-actions): `defineAction`, a service call and testing.
+- [Serialized workflows](https://schema-engine.com/docs/actions/serialized-workflows): a workflow as JSON.
+- [API reference](https://schema-engine.com/docs/actions/api-reference): every export.
+- [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License
 

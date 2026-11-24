@@ -52,11 +52,11 @@ export function resolve(node: { $type: string }): string {
 
 ## Documentation
 
-- [Registry](https://schema-engine.ecopages.app/docs/registry/overview): install, build a registry and resolve a JSON node.
-- [Read-only and mutable registries](https://schema-engine.ecopages.app/docs/registry/registries): `createRegistry` and `BaseRegistry`.
-- [Resolve a document](https://schema-engine.ecopages.app/docs/registry/resolve-a-document): walk a tree of nodes through registries.
-- [API reference](https://schema-engine.ecopages.app/docs/registry/api-reference): every export.
-- [For AI agents](https://schema-engine.ecopages.app/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
+- [Registry](https://schema-engine.com/docs/registry/overview): install, build a registry and resolve a JSON node.
+- [Read-only and mutable registries](https://schema-engine.com/docs/registry/registries): `createRegistry` and `BaseRegistry`.
+- [Resolve a document](https://schema-engine.com/docs/registry/resolve-a-document): walk a tree of nodes through registries.
+- [API reference](https://schema-engine.com/docs/registry/api-reference): every export.
+- [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License
 
