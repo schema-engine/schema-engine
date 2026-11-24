@@ -52,7 +52,7 @@ Import one theme, never two. Dark mode is a `dark` class on an ancestor, usually
 
 One file holds the engine, the form config and a component that renders it. `createRadiantFormEngine` registers the elements of the package and binds the canonical view recipes:
 
-```tsx
+```tsx title="radiant-quick-start.tsx"
 import type { FormValues } from '@schema-engine/forms';
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 

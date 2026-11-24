@@ -38,7 +38,7 @@ It uses WebMCP's imperative API (`document.modelContext.registerTool(tool, { sig
 
 `useFormRuntime()` from `@schema-engine/forms-react/hooks` gives the runtime of the form the component sits in, and `useFormContext().formatIssue` its formatter. Render the component as a child of `FormRenderer`.
 
-```tsx
+```tsx title="agent-tool.react.tsx"
 import { useEffect } from 'react';
 import { registerFormAgentTool } from '@schema-engine/forms/agent-tool';
 import { FormRenderer } from '@schema-engine/forms-react';
@@ -95,7 +95,7 @@ export function FeedbackForm({ send }: { send: (name: string, stars: number | un
 
 `FormController.watchRuntime` calls you with the runtime of the form the element sits in, now and each time the form replaces it (a new config starts a new runtime), so release the previous tool first.
 
-```tsx
+```tsx title="radiant-agent-tool.tsx"
 import * as z from 'zod/mini';
 import { defineStatic } from '@schema-engine/forms';
 import { registerFormAgentTool } from '@schema-engine/forms/agent-tool';

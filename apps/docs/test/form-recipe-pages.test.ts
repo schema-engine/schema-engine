@@ -1,51 +1,40 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { shownExactly } from './shown-exactly';
 
 describe('the pages show the recipes they run', () => {
 	const recipesDir = join(import.meta.dirname, '../src/lib/form-recipes');
 	const docsRoot = join(import.meta.dirname, '../src/content/docs');
 
-	/** The page that shows each recipe file, which the tests of the recipes run. */
+	/** The recipe files each page shows, which the tests of the recipes run. */
 	const shown: Record<string, string[]> = {
-		'engine.ts': ['forms/form-state'],
-		'container.ts': ['forms/form-state'],
-		'hydration.ts': ['forms/form-state'],
-		'format-issue.ts': ['forms/issue-text'],
-		'native-facts.ts': ['forms/native-validity'],
-		'server-errors.ts': ['forms/server-errors'],
-		'csrf.ts': ['forms/csrf'],
-		'checkout-wizard.ts': ['forms/wizard'],
-		'react-widgets.react.tsx': ['forms-react/widgets'],
-		'react-quick-start.react.tsx': ['forms-react/getting-started'],
-		'settings-panel.react.tsx': ['forms-react/other-react-state'],
-		'react-typed-values.react.tsx': ['forms/form-state'],
-		'agent-tool.react.tsx': ['forms/agent-tool'],
-		'radiant-quick-start.tsx': ['forms-radiant/getting-started'],
-		'radiant-agent-tool.tsx': ['forms/agent-tool'],
-		'radiant-summary.tsx': ['forms-radiant/form-controls'],
-		'radiant-control.tsx': ['forms-radiant/form-controls'],
+		'forms/form-state': ['engine.ts', 'container.ts', 'hydration.ts', 'react-typed-values.react.tsx'],
+		'forms/issue-text': ['format-issue.ts'],
+		'forms/native-validity': ['native-facts.ts'],
+		'forms/server-errors': ['server-errors.ts'],
+		'forms/csrf': ['csrf.ts'],
+		'forms/wizard': ['checkout-wizard.ts'],
+		'forms/agent-tool': ['agent-tool.react.tsx', 'radiant-agent-tool.tsx'],
+		'forms-react/widgets': ['react-widgets.react.tsx'],
+		'forms-react/getting-started': ['react-quick-start.react.tsx'],
+		'forms-react/other-react-state': ['settings-panel.react.tsx'],
+		'forms-radiant/getting-started': ['radiant-quick-start.tsx'],
+		'forms-radiant/form-controls': ['radiant-summary.tsx', 'radiant-control.tsx'],
 	};
 
-	/** A file as a page shows it: React files drop the pragma line that only the docs app's own compiler needs. */
-	function asShown(file: string): string {
-		const lines = readFileSync(join(recipesDir, file), 'utf8').trimEnd().split('\n');
-		return (lines[0]!.startsWith('/** @jsxImportSource') ? lines.slice(1) : lines).join('\n');
-	}
+	const read = (file: string) => ({ name: file, source: readFileSync(join(recipesDir, file), 'utf8') });
 
-	test.each(Object.entries(shown))('%s is on its page, word for word', (file, pages) => {
-		const fence = file.endsWith('.tsx') ? 'tsx' : 'ts';
-		for (const page of pages) {
+	test.each(Object.entries(shown))(
+		'%s shows its recipe files word for word, and no other titled file',
+		(page, files) => {
 			const text = readFileSync(join(docsRoot, `${page}.mdx`), 'utf8');
-			const body = asShown(file);
-			const plain = text.includes(`\`\`\`${fence}\n${body}\n\`\`\``);
-			const titled = text.includes(`\`\`\`${fence} title="${file}"\n${body}\n\`\`\``);
-			expect(plain || titled, `${page} shows ${file}`).toBe(true);
-		}
-	});
+			expect(shownExactly(files.map(read), text)).toEqual([]);
+		},
+	);
 
 	test('every recipe file is listed, so none is shown untested', () => {
 		const files = readdirSync(recipesDir).filter((name) => !name.includes('.test.'));
-		expect(files.toSorted()).toEqual(Object.keys(shown).toSorted());
+		expect(files.toSorted()).toEqual(Object.values(shown).flat().toSorted());
 	});
 });

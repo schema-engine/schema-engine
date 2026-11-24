@@ -8,8 +8,7 @@ import { checkRecipe, examplePagesRoot, importsOf, packageOf, readRecipes, type 
  *
  * @remarks
  * `overview` explains the format. A page that shows `RecipeDemo` tabs keeps its files in `src/lib/recipes`, and
- * `test/styling-docs.test.ts` holds it to the same rules. A page of the old form examples stays until the recipe
- * that replaces it lands, and then leaves this list.
+ * `test/styling-docs.test.ts` holds it to the same rules.
  */
 const OTHER_PAGES = ['overview', 'layout-recipes'];
 
@@ -102,6 +101,29 @@ describe('the recipe format checker', () => {
 			const [first] = problems(imports(specifier), goodPage);
 			expect(first, specifier).toContain(`main.ts imports ${specifier}`);
 		}
+	});
+
+	test('resolves a relative import to a file by its exact name, not by the start of it', () => {
+		const importing = (specifier: string) => ({
+			files: [{ name: 'main.ts', source: `import { x } from '${specifier}';\n` }, recipe.files[2]!],
+		});
+		const importProblems = (specifier: string) =>
+			problems(importing(specifier), goodPage).filter((problem) => problem.includes('imports'));
+		expect(importProblems('./view.react')).toEqual([]);
+		expect(importProblems('./view')).toEqual(['main.ts imports ./view, which is not a file of this recipe']);
+	});
+
+	test('reads an import in either quote style', () => {
+		expect(importsOf("import { a } from './a';")).toEqual(['./a']);
+		expect(importsOf('import { a } from "./a";\nexport * from "../b";')).toEqual(['./a', '../b']);
+		const [first] = problems({ files: [{ name: 'main.ts', source: 'import { x } from "@/lib/x";\n' }] }, goodPage);
+		expect(first).toContain('main.ts imports @/lib/x');
+	});
+
+	test('fails a titled fence on the page for a file that is not in the folder', () => {
+		expect(problems({}, `${goodPage}\n\n${shown('stale.ts', 'ts', 'export const stale = 1;')}`)).toEqual([
+			'the page shows stale.ts, which is not one of the files',
+		]);
 	});
 
 	test('fails a folder with no test, or a test that runs none of its files', () => {

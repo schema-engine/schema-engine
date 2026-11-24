@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { shownExactly } from './shown-exactly';
 
 /** One folder per recipe, each holding the files the recipe's page shows and the tests that run them. */
 export const examplesRoot = join(import.meta.dirname, '../src/lib/examples');
@@ -21,7 +22,6 @@ export interface Recipe {
 }
 
 const TEST_FILE = /\.test(\.browser)?\.tsx?$/;
-const FENCE_LANGUAGE: Record<string, string> = { ts: 'ts', tsx: 'tsx', css: 'css', json: 'json', yaml: 'yaml' };
 const PACKAGE_SPECIFIER = /^(@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*(\/.*)?$/;
 const RELATIVE_SPECIFIER = /^\.\/[\w.-]+$/;
 
@@ -43,16 +43,14 @@ export function readRecipes(root = examplesRoot): Recipe[] {
 		.toSorted((a, b) => a.id.localeCompare(b.id));
 }
 
-/** A file as its page shows it: a React file drops the pragma line that only the docs app's own compiler needs. */
-export function asShown(source: string): string {
-	const lines = source.trimEnd().split('\n');
-	return (lines[0]!.startsWith('/** @jsxImportSource') ? lines.slice(1) : lines).join('\n');
+/** The module specifiers a file imports or re-exports, in either quote style. */
+export function importsOf(source: string): string[] {
+	return [...source.matchAll(/(?:from|import)\s*\(?\s*(['"])([^'"]+)\1/g)].map((match) => match[2]!);
 }
 
-/** The module specifiers a file imports or re-exports. */
-export function importsOf(source: string): string[] {
-	return [...source.matchAll(/(?:from|import)\s*\(?\s*'([^']+)'/g)].map((match) => match[1]!);
-}
+/** Whether a relative specifier names one of the files: its name without the last extension, or the whole name. */
+const namesFile = (specifier: string, names: readonly string[]): boolean =>
+	names.some((name) => name === specifier.slice(2) || name.replace(/\.[^.]+$/, '') === specifier.slice(2));
 
 /** The package a specifier names: `@scope/name` or `name`, without a subpath. */
 export function packageOf(specifier: string): string {
@@ -86,7 +84,7 @@ export function checkRecipe(recipe: Recipe, page: string | undefined, overview: 
 			if (PACKAGE_SPECIFIER.test(specifier)) continue;
 			if (!RELATIVE_SPECIFIER.test(specifier)) {
 				problems.push(`${file.name} imports ${specifier}, which is not a package or a file of its own folder`);
-			} else if (!names.some((name) => name.startsWith(`${specifier.slice(2)}.`))) {
+			} else if (!namesFile(specifier, names)) {
 				problems.push(`${file.name} imports ${specifier}, which is not a file of this recipe`);
 			}
 		}
@@ -101,12 +99,7 @@ export function checkRecipe(recipe: Recipe, page: string | undefined, overview: 
 		return problems;
 	}
 
-	for (const file of recipe.files) {
-		const language = FENCE_LANGUAGE[file.name.split('.').at(-1)!];
-		const fence = `\`\`\`${language} title="${file.name}"\n${asShown(file.source)}\n\`\`\``;
-		if (!language) problems.push(`${file.name} has a type the page cannot show`);
-		else if (!page.includes(fence)) problems.push(`the page does not show ${file.name} word for word`);
-	}
+	problems.push(...shownExactly(recipe.files, page));
 
 	const installs = installLines(page);
 	if (installs.length === 0) {

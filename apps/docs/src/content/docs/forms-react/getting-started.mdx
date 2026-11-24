@@ -20,7 +20,7 @@ The React renderer needs React 19. Set `"jsx": "react-jsx"` in `tsconfig.json`. 
 
 One file holds everything: a text widget built on `useFormField`, its `defineInput` registration, `createFormEngine`, a form config and a component that renders it with `FormRenderer` and shows the submitted values. The form has no `view`, so no view recipe is involved and no CSS is needed: fields render as plain markup.
 
-```tsx
+```tsx title="react-quick-start.react.tsx"
 import { useState } from 'react';
 import * as z from 'zod/mini';
 import { BaseFieldSchema, createFormEngine, defineInput, defineStatic, type FormValues } from '@schema-engine/forms';

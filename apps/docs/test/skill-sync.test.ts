@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { filesUnder } from '../../../test-utils/packed-skill';
 import { findSkillSources, PACKAGES_ROOT } from '../scripts/skill-sources';
+import { shownExactly } from './shown-exactly';
 
 const examplesRoot = path.join(import.meta.dirname, '../../../test-utils/skill-examples');
 const read = (file: string) => readFileSync(file, 'utf8');
@@ -119,17 +120,10 @@ describe('the code in the skill', () => {
 		expect(code.filter(({ title }) => title === undefined).map(({ file }) => file)).toEqual([]);
 	});
 
-	test.each(fences.filter(({ title }) => title !== undefined))(
-		'$file: $title matches the file, so the example the tests run is the one the reference shows',
-		({ title, body }) => {
-			const source = read(path.join(examplesRoot, title ?? ''));
-			expect(body.trimEnd()).toBe(source.trimEnd());
-		},
-	);
-
-	test('every example file is shown by a reference', () => {
-		const shown = new Set(fences.map(({ title }) => title));
-		expect(filesUnder(examplesRoot).filter((file) => !shown.has(file))).toEqual([]);
+	test('the references show the example files the tests run, word for word, and no other titled file', () => {
+		const files = filesUnder(examplesRoot).map((name) => ({ name, source: read(path.join(examplesRoot, name)) }));
+		expect(files.length).toBeGreaterThan(0);
+		expect(shownExactly(files, referenceTexts.map(({ text }) => text).join('\n\n'))).toEqual([]);
 	});
 
 	test('the other blocks are shell, css or text', () => {

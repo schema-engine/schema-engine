@@ -46,7 +46,7 @@ In React, keep the formatter's identity stable: define it at module level or mem
 
 This one looks a translation up by the most specific key first (the rule's `ruleId`, then the problem's type), fills the numbers from `params` and falls back to the issue's own `message`. Text a server already wrote for people is shown as it is. Swap `t` for your i18n library.
 
-```ts
+```ts title="format-issue.ts"
 import { createFormEngine } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import { textInput } from './engine';

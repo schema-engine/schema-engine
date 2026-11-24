@@ -19,7 +19,7 @@ A widget is the React component a registration renders for one field. It binds t
 
 Both modes are in this file: a text field that is uncontrolled, a rating that is controlled and a submit button.
 
-```tsx
+```tsx title="react-widgets.react.tsx"
 import * as z from 'zod/mini';
 import { createFormEngine, defineInput, defineStatic, BaseFieldSchema } from '@schema-engine/forms';
 import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';

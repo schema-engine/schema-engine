@@ -100,7 +100,7 @@ The form config chooses how free the stepper is with `navigation`:
 
 A step can be skipped from earlier answers. Give it `constraints` with the same logic as fields, limited to `show` and `hide`. In this checkout the `company` step is shown only when `hasCompany` is `'yes'`. The recipe runs the form without a renderer, with the `focus` host member as the only thing it supplies:
 
-```ts
+```ts title="checkout-wizard.ts"
 import { createFormRuntime, type FormRuntimeOutcome, type FormValues } from '@schema-engine/forms';
 import { engine } from './engine';
 

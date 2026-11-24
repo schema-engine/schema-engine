@@ -16,7 +16,7 @@ import { fromJsonApiErrors, fromProblemDetails } from '@schema-engine/forms/serv
 
 `onSubmit(values, { setServerErrors, fetch })` runs with exactly the values that passed validation. `fetch` is the engine's, so the [CSRF policy](/docs/forms/csrf) is applied for you. A helper turns the response body into the input of `setServerErrors`.
 
-```ts
+```ts title="server-errors.ts"
 import type { FormSubmitHelpers, FormValues } from '@schema-engine/forms';
 import { fromJsonApiErrors, fromProblemDetails } from '@schema-engine/forms/server-errors';
 

@@ -54,7 +54,7 @@ export const engine = createFormEngine({ elements: [textInput], recipes: [bareCo
 
 A container is made from the normalized form config, the engine's validation registry and the defaults. The config carries the validation timing (`validationMode`, `reValidateMode`) and the `payload`, so no renderer can differ.
 
-```ts
+```ts title="container.ts"
 import { createFormStateContainer, selectFieldState } from '@schema-engine/forms/state-container';
 import { engine } from './engine';
 
@@ -218,7 +218,7 @@ The type of the values a form submits comes from the form config, and the runtim
 - A TypeScript config: `engine.defineForm` with a literal config returns the normalized config carrying the inferred type, and a renderer types `onSubmit`, `onAction` and `defaultValues` from it, with no annotation. A config that is not a literal gives `FormValues`.
 - A JSON config: `engine.validateForm(json, { values: Profile })` binds the application's schema. The runtime parses with it after the derived one, and the type is its output. Without `values`, `onSubmit` receives `FormValues`, still checked at runtime.
 
-```tsx
+```tsx title="react-typed-values.react.tsx"
 import * as z from 'zod/mini';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { engine } from './react-widgets.react';
@@ -274,7 +274,7 @@ The type of a choice field (select, combobox, radio, checkbox group) is the unio
 
 A server builds a container, renders its state and sends the part a client needs. The client passes it back as `snapshot`, with the same defaults, so the fields that differ from them are dirty and `reset` restores them:
 
-```ts
+```ts title="hydration.ts"
 import { createFormStateContainer, toHydration } from '@schema-engine/forms/state-container';
 import { engine } from './engine';
 

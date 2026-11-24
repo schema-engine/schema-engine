@@ -17,7 +17,7 @@ A form that is mounted is a `<form>` element, and HTML does not allow a form ins
 
 The panel holds the notification settings. It mounts a form with a `switch` and a `select`, both widgets written with `useFormField`, prefilled from the saved settings. The form reports each change, and the panel keeps the latest values until the user saves:
 
-```tsx
+```tsx title="settings-panel.react.tsx"
 import { useState } from 'react';
 import * as z from 'zod/mini';
 import { BaseFieldSchema, createFormEngine, defineInput, type FormValues } from '@schema-engine/forms';
