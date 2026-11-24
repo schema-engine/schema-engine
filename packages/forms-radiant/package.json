@@ -55,7 +55,6 @@
 		"@ecopages/signals": ">=0.12.0",
 		"@schema-engine/forms": "workspace:^",
 		"@schema-engine/layout": "workspace:^",
-		"typescript": "^5.4",
 		"zod": "^4.0.17"
 	},
 	"devDependencies": {

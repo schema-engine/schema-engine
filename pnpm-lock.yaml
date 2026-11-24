@@ -272,9 +272,6 @@ importers:
       '@schema-engine/registry':
         specifier: workspace:^
         version: link:../registry
-      typescript:
-        specifier: ^5
-        version: 5.9.3
     devDependencies:
       '@schema-engine/scripts':
         specifier: workspace:^
@@ -285,6 +282,9 @@ importers:
       tsc-alias:
         specifier: ^1.8.16
         version: 1.9.5
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       vitest:
         specifier: ^4.0.13
         version: 4.1.11(@types/node@24.13.6)(@vitest/browser-playwright@4.1.11)(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -309,9 +309,6 @@ importers:
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
-      typescript:
-        specifier: ^5.4
-        version: 5.9.3
       zod:
         specifier: ^4.0.17
         version: 4.6.5
@@ -328,6 +325,9 @@ importers:
       tsc-alias:
         specifier: ^1.8.16
         version: 1.9.5
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       valibot:
         specifier: ^1.4.2
         version: 1.5.0(typescript@5.9.3)
@@ -455,9 +455,6 @@ importers:
       '@ecopages/logger':
         specifier: ^0.2.3
         version: 0.2.3(typescript@5.9.3)
-      typescript:
-        specifier: ^5.4
-        version: 5.9.3
     devDependencies:
       '@base-ui/react':
         specifier: ^1.1.0
@@ -597,6 +594,9 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       vitest:
         specifier: ^4.0.13
         version: 4.1.11(@types/node@24.13.6)(@vitest/browser-playwright@4.1.11)(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -615,9 +615,6 @@ importers:
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
-      typescript:
-        specifier: ^5
-        version: 5.9.3
     devDependencies:
       '@schema-engine/scripts':
         specifier: workspace:*
@@ -628,6 +625,9 @@ importers:
       tsc-alias:
         specifier: ^1.8.16
         version: 1.9.5
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       vitest:
         specifier: ^4.0.13
         version: 4.1.11(@types/node@24.13.6)(@vitest/browser-playwright@4.1.11)(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -643,9 +643,6 @@ importers:
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
-      typescript:
-        specifier: ^5
-        version: 5.9.3
     devDependencies:
       '@schema-engine/scripts':
         specifier: workspace:*
@@ -656,6 +653,9 @@ importers:
       tsc-alias:
         specifier: ^1.8.16
         version: 1.9.5
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       vitest:
         specifier: ^4.0.13
         version: 4.1.11(@types/node@24.13.6)(@vitest/browser-playwright@4.1.11)(msw@2.15.0(@types/node@24.13.6)(typescript@5.9.3))(vite@8.3.1(@types/node@24.13.6)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
