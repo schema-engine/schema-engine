@@ -9,7 +9,7 @@
 	 * The width of the page container on a desktop: the site header and the docs body (sidebar, content and table of
 	 * contents) are both held to it.
 	 */
-	--site-container: 92rem;
+	--site-container: 100rem;
 }
 
 @theme {

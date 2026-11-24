@@ -31,6 +31,15 @@
 		@apply mt-2 mb-7;
 	}
 
+	/**
+	 * The column is wide for the demos and the code, so running text keeps a readable line length of its own.
+	 */
+	.docs-page > p:not(.unstyled),
+	.docs-page > ul:not(.unstyled),
+	.docs-page > ol:not(.unstyled) {
+		max-inline-size: 75ch;
+	}
+
 	a:not(.unstyled, .unstyled *, .rui-button) {
 		@apply text-link font-medium underline decoration-link/30 underline-offset-4 transition-colors duration-200 hover:decoration-link;
 	}
