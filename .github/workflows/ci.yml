@@ -40,14 +40,15 @@ jobs:
             - name: Check the registry catalog
               run: pnpm registry:check
 
-            - name: Lint
-              run: pnpm lint
-
             - name: Format
               run: pnpm format:check
 
             - name: Build the packages
               run: pnpm build:lib
+
+            # Type-aware lint reads the sibling packages' types from their dist, so it runs after the build.
+            - name: Lint
+              run: pnpm lint
 
             - name: Type-check and test every package
               run: pnpm turbo check-types test:all
