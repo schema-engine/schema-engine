@@ -63,7 +63,7 @@ const ALLOWED_FENCES: AllowedFence[] = [
 	},
 	{
 		page: 'forms-react/layouts',
-		heading: 'Default registry recipes',
+		heading: 'Default shadcn registry recipes',
 		reason: 'Imports the barrels the shadcn command copies into the app, which do not exist before it runs.',
 	},
 	{

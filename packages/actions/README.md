@@ -1,6 +1,6 @@
 # @schema-engine/actions
 
-Domain-agnostic action execution primitives for event-driven architectures.
+Registered behaviour for Schema Engine: actions that run in sequences and parallel groups, answer triggers and cancel cooperatively. An action entry in a workflow is plain data, so a JSON array can be stored, sent and replayed, and `parseActions` checks it before anything runs.
 
 ## Overview
 
@@ -16,8 +16,10 @@ The package is intended to be reusable across different domains such as forms, w
 ## Installation
 
 ```bash
-pnpm add @schema-engine/actions
+pnpm add @schema-engine/actions zod
 ```
+
+[Overview and quick start](../../apps/docs/src/content/docs/actions/overview.mdx) registers actions and dispatches a workflow, and [Serialized workflows](../../apps/docs/src/content/docs/actions/serialized-workflows.mdx) sends one as JSON.
 
 The package has no schema-library runtime dependency. Action registrations use the provider-neutral `StandardSchemaV1` contract, so applications can choose Zod Mini, Zod, Valibot, Effect Schema, or another Standard Schema implementation.
 

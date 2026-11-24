@@ -1,6 +1,6 @@
 # @schema-engine/registry
 
-Shared registry primitives for building typed registration systems across the Schema Engine workspace.
+The registration contract and the registries that hold registrations by `$type`: the base of Schema Engine's common language. A document names registrations by `$type`, and a registry resolves each one and its schema validates the configuration.
 
 This package provides one registry mechanism for typed registrations keyed by `$type`:
 
@@ -17,8 +17,10 @@ Docs: [Overview and quick start](../../apps/docs/src/content/docs/registry/overv
 ## Installation
 
 ```bash
-pnpm add @schema-engine/registry
+pnpm add @schema-engine/registry zod
 ```
+
+[Overview and quick start](../../apps/docs/src/content/docs/registry/overview.mdx) builds a registry and resolves a node from JSON.
 
 ## Core Types
 

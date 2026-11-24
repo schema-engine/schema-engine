@@ -2,10 +2,12 @@
 
 ## Core terms
 
+- **Common language.** What Schema Engine is: a small set of rules for describing an interface or a process as a document, which every registry, engine and renderer reads the same way. The person who builds with it owns the vocabulary, and the language does not bend to a library or a framework.
 - **Document.** Plain JSON, or YAML that parses to it, that describes an interface or a process by naming registered pieces. It holds no function or class instance, so it can be stored, sent from a server to a client and checked when it arrives.
 - **`$type`.** The one key that says what a node is. Elements, action entries, validation rules and constraints carry it, and a registry looks it up.
 - **Registration.** The code behind a `$type`: the `$type`, a Standard Schema for a node's configuration and metadata, plus what its domain adds (`render` for a component, `execute` for an action).
 - **Registry (code).** A collection of registrations keyed by `$type`, built by `createRegistry` (read-only) or `BaseRegistry` (mutable). It is not the **shadcn registry**, which is a set of React source files copied into an app and is a Forms React term only. Never write "registry" bare where the two could be confused.
+- **Action.** Registered behaviour: a `$type`, a schema for its entry, metadata and an `execute`. Say "action", never "plugin": a plugin is what an app's own plugin system registers in a mutable registry.
 - **Action entry.** One object in a workflow: the `$type` of a registered action, an `id`, the action's own arguments and, optionally, `triggers` and `enabled`. An entry that is an array is a group whose members run in parallel. `parseActions` checks entries, and only what it returns can be dispatched.
 - **Trigger.** The name of the event that starts a dispatch, such as `submit`. An entry answers it through its own `triggers`, else through the `defaultTriggers` of its registration.
 - **Context.** What the caller hands to a dispatch. The dispatcher adds the entry's `config`, the `trigger`, `triggeredBy` and a `signal`.

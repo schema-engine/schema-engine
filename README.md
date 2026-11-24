@@ -1,145 +1,83 @@
 # Schema Engine
 
-> **Declarative interfaces, extended with your own components and actions** — build deterministic, type-safe, event-driven interfaces from portable definitions.
+> **Declarative interfaces, extended with your own components and actions.**
 
-> **Important:** This README is an overview, not the API reference. For copy-paste-ready examples and current contracts, use the [Documentation App](./apps/docs) — start with [Quick Start](./apps/docs/src/content/docs/forms-react/quick-start.mdx).
+Schema Engine is a common language for describing an interface or a process as data. You register the pieces it is made of, describe a screen or a workflow as a JSON document that names those pieces, and let a renderer draw it or an engine run it. The document can be written by hand, stored, or built on a server and sent to a client, and it stays the same data everywhere.
+
+Start with the [documentation](./apps/docs/src/content/docs/schema-engine/introduction.mdx) or run the [quick start](./apps/docs/src/content/docs/schema-engine/quick-start.mdx).
 
 ---
-
-Forms and renderer runtime diagnostics use package-tagged `@ecopages/logger`
-instances. Forms execute actions with the dispatcher from `@schema-engine/actions`;
-see the [forms API](./packages/forms/README.md#pre-publish-api) for the supported
-grid and recipe contracts. Debug output is disabled by default; warnings and errors remain visible.
 
 ## Why Schema Engine?
 
-In modern software architecture, the layer between human intent and system behavior often remains a fragmented landscape of imperative logic and tightly coupled UI components.
+Schema Engine comes from years of building forms, and from seeing most of the ways to build them. Complex forms are hard to represent: fields that depend on other fields, steps that depend on earlier answers, checks that call a server, work that runs after a submit. After a lot of trial and error the result was a structure that holds them, and Schema Engine is that structure.
 
-**Schema Engine** describes an interface as a portable definition and keeps the rules for interpreting it in one place. Each team brings its own vocabulary of components and actions; the engine keeps the rules the same: how definitions resolve, validate, compose and dispatch.
+Two things mattered from the start. The person who builds with it owns the result: their inputs, their decorative elements, their design system. And it does not bend to a library or a framework. Schema Engine is not a component kit. It is a small set of rules, a common ground that anyone can use to describe their own interface and their own way of working, and that every renderer reads the same way.
 
-**Forms** is the first domain. The core (registry, actions, constraints, recipes) is domain-agnostic, and further domains are planned. Schema Engine is not a standard; it uses [Standard Schema](https://standardschema.dev/) at the registration boundary, so registrations can be validated by Zod, Valibot, Effect Schema or a hand-written schema. See [ABOUT.md](./ABOUT.md) for the project's layers and wording.
-
----
-
-## Core Concepts
-
-We have distilled interface requirements into four core concepts that are completely domain-agnostic.
-
-| Concept         | Role         | Description                                                                                 |
-| --------------- | ------------ | ------------------------------------------------------------------------------------------- |
-| **Registry**    | `Definition` | **IoC Container**. Decouples _what_ a component is from _how_ it renders (React, Vue, CLI). |
-| **Action**      | `Behavior`   | **Command Pattern**. Handles system events and transitions state deterministically.         |
-| **Constraint**  | `Logic`      | **Rule Engine**. Declarative rules that govern visibility and state without side effects.   |
-| **Composition** | `Structure`  | **Recursive Assembly**. Builds complex systems from atomic, testable units.                 |
+**Forms** is the first domain, and the core is not limited to it. Schema Engine is not a standard. It uses [Standard Schema](https://standardschema.dev/) at the registration boundary, so a registration can be validated with Zod, Valibot, Effect Schema or a schema you write. [ABOUT.md](./ABOUT.md) describes the project's layers and how to talk about it.
 
 ---
 
-## Key Features by Example
+## Core concepts
 
-### 1. End-to-End Type Fidelity
+Four ideas carry everything else.
 
-We reject the compromise between dynamic behavior and static analysis. Through advanced TypeScript inference, your runtime schema dictates your compile-time types.
+| Idea                     | What it is                                                                                                                                                                      | Read                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **Registry**             | A collection of registrations that follow the same rules. A registration has a `$type`, a schema for its configuration and metadata. A document names registrations by `$type`. | [Registry](./apps/docs/src/content/docs/registry/overview.mdx)                              |
+| **Actions**              | Registered behaviour. An action entry in a document is data: its `$type`, its arguments and the triggers it answers. Entries run in order and a nested list runs in parallel.   | [Actions](./apps/docs/src/content/docs/actions/overview.mdx)                                |
+| **Serialized documents** | A document holds only JSON, so a server can send an interface to a client and a client can check it, at the boundary, against the schemas of its registrations.                 | [Serialized documents](./apps/docs/src/content/docs/schema-engine/serialized-documents.mdx) |
+| **Rendering from data**  | A renderer draws a validated document with the registrations of its engine. The rules for resolving, validating and dispatching live in the engine, not in the renderer.        | [Core concepts](./apps/docs/src/content/docs/schema-engine/core-concepts.mdx)               |
 
-```typescript
-import { createFormEngine } from '@schema-engine/forms';
-import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
+A workflow is a JSON array of action entries. `parseActions` checks each entry against its registration, and only what it returns can be dispatched:
 
-const engine = createFormEngine({ elements: schemaFormRegistrations });
-// Register schemaFormRecipeRegistrations when the form sets view.$type or has more than one step.
-
-// Registered element types are inferred from createFormEngine options.
-const myForm = {
-	id: 'my-form',
-	steps: [
-		{
-			id: 'step-1',
-			elements: [
-				{
-					$type: 'input',
-					name: 'username',
-					label: 'Username',
-					inputType: 'text',
-					placeholder: 'Enter name',
-				},
-			],
-		},
+```json
+[
+	{ "id": "reserve", "$type": "reserveStock", "sku": "tee-black-m", "quantity": 2 },
+	[
+		{ "id": "charge", "$type": "chargeCard", "amount": 120 },
+		{ "id": "warehouse", "$type": "notifyWarehouse" }
 	],
-};
+	{ "id": "receipt", "$type": "sendReceipt" }
+]
 ```
 
-### 2. Declarative Constraints
+The inner array is a group: its entries run together, and a failure with `shouldContinue: false` cancels the rest of the group. [A checkout workflow](./apps/docs/src/content/docs/examples/checkout-workflow.mdx) runs this one.
 
-Complex logic (show/hide, enable/disable) typically leads to unmaintainable "spaghetti code" in UI components. We elevate this logic into **Constraints**—declarative rules evaluated by a central engine.
+A form is a document too. Constraints are data: this field shows only when `country` is `US`.
 
-**Example: Conditional Visibility**
-Show the "State" field only when "Country" is "US".
-
-```typescript
+```ts
 {
-  $type: 'select',
-  name: 'country',
-  label: 'Country',
-  options: [{ label: 'United States', value: 'US' }, { label: 'Canada', value: 'CA' }]
-},
-{
-  $type: 'select',
-  name: 'state',
-  label: 'State',
-  // This field is hidden by default until the constraint is met
-  constraints: [
-    {
-      field: 'country',
-      operator: 'equals',
-      value: 'US',
-      $type: 'show'
-    }
-  ]
+	$type: 'select',
+	id: 'state',
+	name: 'state',
+	label: 'State',
+	options: [{ label: 'California', value: 'CA' }],
+	constraints: [{ field: 'country', operator: 'equals', value: 'US', $type: 'show' }],
 }
 ```
 
-### 3. Event-Driven Actions
-
-Forms are dynamic systems. We model interactivity not as callbacks, but as discrete **Actions** triggered by events. This separates business logic from presentation.
-
-**Example: Custom Submission Action**
-
-```typescript
-const submitLeadAction = {
-	$type: 'submit_lead',
-	schema: z.object({ endpoint: z.string() }),
-	metadata: { name: 'Submit Lead' },
-	execute: async (context) => {
-		const result = await fetch(context.config.endpoint, {
-			method: 'POST',
-			body: JSON.stringify(context.formData),
-		});
-		return { success: result.ok };
-	},
-};
-
-// Register with createFormEngine, then reference in form config actions array.
-```
-
 ---
 
-## System Architecture
+## System architecture
 
-The Schema Engine monorepo is organized as a layered architecture, moving from abstract definitions to concrete implementations.
+The monorepo has a core that knows no domain, the forms domain built on it, and two renderers.
 
 ```mermaid
 graph TD
-    subgraph Core ["Core Abstractions"]
-        Registry["@schema-engine/registry<br/>(Core: IoC & Types)"]
-        Actions["@schema-engine/actions<br/>(Core: Event System)"]
-        Layout["@schema-engine/layout<br/>(Core: Grid, Appearance & Recipes)"]
+    subgraph Core ["Core"]
+        Registry["@schema-engine/registry<br/>(registrations and registries)"]
+        Actions["@schema-engine/actions<br/>(sequences, groups, triggers)"]
+        Layout["@schema-engine/layout<br/>(grid, appearance, themes)"]
     end
 
-    subgraph Implementation ["Implementation Layer"]
-        Forms["@schema-engine/forms<br/>(Form Engine Implementation)"]
+    subgraph Domain ["Domain"]
+        Forms["@schema-engine/forms<br/>(elements, rules, form state)"]
     end
 
-    subgraph Presentation ["Presentation Layer"]
-        React["@schema-engine/forms-react<br/>(React renderer)"]
+    subgraph Renderers ["Renderers"]
+        React["@schema-engine/forms-react"]
+        Radiant["@schema-engine/forms-radiant"]
     end
 
     Registry --> Actions
@@ -148,24 +86,25 @@ graph TD
     Actions --> Forms
     Layout --> Forms
     Forms --> React
+    Forms --> Radiant
 ```
 
 ---
 
-## 📦 Packages
+## Packages
 
-| Package                                                      | Version | Description                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **[@schema-engine/forms](./packages/forms)**                 | `0.1.0` | Contains `createFormEngine` and `FormEngine`. Types form configurations from each engine's element, recipe, and action registrations; handles validation, constraint evaluation, and state management.                                                                                                                                                                                                                                               |
-| **[@schema-engine/forms-react](./packages/forms-react)**     | `0.1.0` | React rendering at the root, the form state, runtime and view hooks at `/hooks`, and rendering primitives at `/primitives`. The form state is the engine's own container, built in; elements and recipes are consumer-owned. A new normalized config starts a fresh form instance, and reset restores the defaults. Default recipes live in the shadcn registry.                                                                                     |
-| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | `0.1.0` | Radiant/JSX adapter with hydrated registry validation, shared per-engine lifecycle actions, nested submit values, SSR constraints evaluated against defaults, authored disabled preservation, scoped form and engine controllers, optional decorators, array-level validation, initial row values, SSR default rows, and stable field-array row IDs. Binds canonical view recipes in-package; specs stay in `@schema-engine/forms/recipes/built-in`. |
-| **[@schema-engine/actions](./packages/actions)**             | `0.1.0` | A standalone, domain-agnostic command pattern implementation for handling system events.                                                                                                                                                                                                                                                                                                                                                             |
-| **[@schema-engine/registry](./packages/registry)**           | `0.1.0` | The low-level type definitions and registry implementations that power the IoC container, plus an optional `/yaml` subpath that parses YAML documents with line-accurate errors.                                                                                                                                                                                                                                                                     |
-| **[@schema-engine/layout](./packages/layout)**               | `0.1.0` | Domain-neutral layout: the grid schemas and compiler, named placement, appearance axes (`defineAxis`), `createLayoutTheme`, which compiles both into one theme with one `data-se-theme` and one stylesheet (engines take it as `layout`), and the recipe protocol (`defineRecipeProtocol`) a domain uses to declare its recipes' slots, kinds and rules. It does not depend on forms.                                                                |
+| Package                                                      | What it is                                                                                                                                                    |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[@schema-engine/registry](./packages/registry)**           | The registration contract and the registries that hold registrations by `$type`, with an optional YAML reader that reports errors by line and column.         |
+| **[@schema-engine/actions](./packages/actions)**             | Registered behaviour that runs in sequences and parallel groups, answers triggers and cancels cooperatively. `parseActions` checks a workflow before it runs. |
+| **[@schema-engine/layout](./packages/layout)**               | A grid with named placement and drawn areas, named appearance axes, and one compiled theme and stylesheet. It does not depend on forms.                       |
+| **[@schema-engine/forms](./packages/forms)**                 | The forms domain: elements, validation rules, constraints, steps, the form state and the submit lifecycle, with no renderer.                                  |
+| **[@schema-engine/forms-react](./packages/forms-react)**     | Renders a form with React. The form state hooks and primitives are for widgets you write, and ready-made fields are an optional shadcn registry.              |
+| **[@schema-engine/forms-radiant](./packages/forms-radiant)** | Renders a form with Radiant. The elements and the view recipes ship in the package.                                                                           |
 
 ---
 
-## 🚀 Quick Start
+## Quick start
 
 Each section of the docs starts with its installation and a quick start that runs:
 
@@ -176,33 +115,20 @@ Each section of the docs starts with its installation and a quick start that run
 
 ---
 
-## 📚 Documentation
+## Documentation
 
-Detailed architectural documentation is available in the [Documentation App](./apps/docs), which uses self-hosted IBM Plex fonts.
+The [documentation app](./apps/docs) reads in this order:
 
-- **[Quick Start](./apps/docs/src/content/docs/schema-engine/quick-start.mdx)**
-- **[Forms — Core Concepts](./apps/docs/src/content/docs/forms/core-concepts.mdx)**
-- **[Layout](./apps/docs/src/content/docs/layout/overview.mdx)**: grid, appearance axes, theming and copy-paste [recipes](./apps/docs/src/content/docs/examples/layout-recipes.mdx)
-- **[Component Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and [Read-only and mutable registries](./apps/docs/src/content/docs/registry/registries.mdx)
-- **[shadcn Registry Sources](./registry/README.md)**
-- **[Action System](./apps/docs/src/content/docs/actions/overview.mdx)**
-- **[Forms React — Getting Started](./apps/docs/src/content/docs/forms-react/getting-started.mdx)**
+- **[Introduction](./apps/docs/src/content/docs/schema-engine/introduction.mdx)** and **[Core concepts](./apps/docs/src/content/docs/schema-engine/core-concepts.mdx)**
+- **[Registry](./apps/docs/src/content/docs/registry/overview.mdx)** and **[Actions](./apps/docs/src/content/docs/actions/overview.mdx)**
+- **[Forms](./apps/docs/src/content/docs/forms/overview.mdx)**, **[Forms React](./apps/docs/src/content/docs/forms-react/overview.mdx)** and **[Forms Radiant](./apps/docs/src/content/docs/forms-radiant/overview.mdx)**
+- **[Layout](./apps/docs/src/content/docs/layout/overview.mdx)**: grid, appearance axes and theming
+- **[Examples](./apps/docs/src/content/docs/examples/overview.mdx)**: tested recipes with the files to copy
+- **[shadcn registry sources](./registry/README.md)**: the optional React fields and recipes for Forms React
 - **[Contributing](./CONTRIBUTING.md)**: the pre-commit hook and how to run its checks locally
 
 ---
 
-## 📄 License
+## License
 
 MIT © Schema Engine Contributors
-
-The [registry package](./packages/registry/README.md) exposes `createRegistry`, the
-read-only registry the forms engine and actions package use, `BaseRegistry` as the
-mutable opt-in for runtime plugins, and the registration types. Action sequences support concurrent groups and cooperative cancellation; the [actions package](./packages/actions/README.md)
-executes through `ActionDispatcher`; form-specific redirect results are described
-in the [forms action guide](./packages/forms/src/actions/README.md).
-
-The [React renderer](./packages/forms-react/README.md#validation-navigation-and-action-contexts)
-uses the engine's shared validation, navigation, submission and action context
-contracts, including nested errors and conditional required fields.
-
-Radiant forms share the engine step and submission lifecycle, refresh form snapshots for each submit trigger, publish nested provider callbacks, and serialize full config once per instance. See [Radiant rendering](./packages/forms-radiant/README.md#rendering-architecture).

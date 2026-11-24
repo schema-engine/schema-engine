@@ -1,7 +1,17 @@
 # @schema-engine/forms
 
-Framework-agnostic form configuration, validation, actions, and view-recipe
-registration for Schema Engine.
+The forms domain of Schema Engine: elements, validation rules, constraints,
+steps, the form state and the submit lifecycle, with no renderer. A renderer
+draws a form: [`@schema-engine/forms-react`](../forms-react) or
+[`@schema-engine/forms-radiant`](../forms-radiant).
+
+## Install
+
+```sh
+pnpm add @schema-engine/forms zod
+```
+
+[Installation and quick start](../../apps/docs/src/content/docs/forms/getting-started.mdx) checks and submits a form with no renderer.
 
 First-party schemas are authored with Zod Mini's functional API and imported
 from `zod/mini`. Install the `zod` package when using the built-in schemas. The

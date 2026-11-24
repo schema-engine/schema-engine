@@ -2,7 +2,7 @@
 
 Domain-neutral layout for Schema Engine: the grid schemas and compiler, named placement, the appearance axes, `createLayoutTheme`, which compiles grid and appearance into one theme, and the recipe protocol that lets a domain declare the slots and kinds of its view recipes.
 
-It knows nothing about forms and does not depend on `@schema-engine/forms`. `@schema-engine/forms` and its renderers build on it, and any other domain that places items in a container can reuse the same rules.
+It knows nothing about forms and does not depend on `@schema-engine/forms`. [Overview and quick start](../../apps/docs/src/content/docs/layout/overview.mdx) compiles a theme and lays out a container with no forms. `@schema-engine/forms` and its renderers build on it, and any other domain that places items in a container can reuse the same rules.
 
 ## Installation
 

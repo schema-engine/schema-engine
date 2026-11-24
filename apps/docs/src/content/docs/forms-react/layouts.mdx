@@ -21,9 +21,9 @@ Recipes compose a **shell** with optional **header**, **progress**, and **action
 | `schema-engine-form-recipes` (shadcn registry) | React shells, blocks, `schemaFormRecipeRegistrations`                                                                                                  |
 | `@schema-engine/forms-radiant`                 | Radiant shells and blocks, auto-bound by `createRadiantFormEngine()`                                                                                   |
 
-## Default registry recipes
+## Default shadcn registry recipes
 
-[Registry fields](/docs/forms-react/components#see-them) renders the registry's `card` recipe and `input` field live.
+[Registry fields](/docs/forms-react/components#see-them) renders the shadcn registry's `card` recipe and `input` field live.
 
 Install the recipes from the optional shadcn path of [Installation and quick start](/docs/forms-react/getting-started#optional-start-from-the-shadcn-registry), which also has the stylesheet imports. The recipe CSS lives in a file beside each component (`shells/hero-shell.css`, `blocks/form-actions.css` and the rest), every rule inside `:where()` so a class of yours wins, and the Tailwind classes left on the components are mostly your shadcn theme's colours and type, plus the few that override a shadcn `Button`. Without the import the shells and blocks render unstyled. The size axis also needs `controls.css`, unlayered, after the recipe styles (see [Appearance and the default styles](#appearance-and-the-default-styles)). Then add the generated recipe barrel when you construct the engine:
 

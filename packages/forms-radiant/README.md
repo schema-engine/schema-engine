@@ -1,6 +1,6 @@
 # @schema-engine/forms-radiant
 
-Radiant/JSX adapter for the Schema Engine form system.
+The Radiant renderer for Schema Engine forms. The elements and the view recipes ship in the package, so there is no copy step.
 
 ## Logging
 
