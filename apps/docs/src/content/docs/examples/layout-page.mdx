@@ -22,13 +22,13 @@ pnpm add @schema-engine/layout zod
 
 ## See it
 
-Drag the bottom-right corner of the frame to change its width. Its breakpoints are the theme's: `md` at 30rem and `lg` at 40rem, low enough for the frame to cross them at the width of this page.
+The frame is 1200px wide, shrunk to fit the column, so the page shows whole in the three-column layout of a desktop. Choose Tablet or Phone to see it at a narrower width. Its breakpoints are the theme's: `md` at 48rem and `lg` at 70rem.
 
 <LayoutPageDemo />
 
 ## The theme
 
-A theme compiles a vocabulary into one id and one stylesheet. This one moves the `sm`, `md` and `lg` breakpoints and widens the default gap. A theme keeps its breakpoints in ascending order, so `sm` moves below `md`. The stylesheet, `theme.css`, goes into the page once, and its rules apply only to elements that carry the theme's id.
+A theme compiles a vocabulary into one id and one stylesheet. This one moves the `md` and `lg` breakpoints and widens the default gap. The stylesheet, `theme.css`, goes into the page once, and its rules apply only to elements that carry the theme's id.
 
 ```ts title="theme.ts"
 import { createLayoutTheme } from '@schema-engine/layout';
@@ -41,7 +41,7 @@ import { createLayoutTheme } from '@schema-engine/layout';
  * `[data-se-theme="<id>"]`, so they apply only to what carries the id.
  */
 export const theme = createLayoutTheme({
-	grid: { breakpoints: { sm: '20rem', md: '30rem', lg: '40rem' }, gap: { default: '1.25rem' } },
+	grid: { breakpoints: { md: '48rem', lg: '70rem' }, gap: { default: '1.25rem' } },
 });
 ```
 
@@ -186,12 +186,12 @@ console.log(renderPage(dashboard));
 ```
 
 ```text
-<div class="se-grid" data-se-theme="ln7n40w" data-se-size="comfortable" style="--se-grid-areas:&quot;header&quot; &quot;main&quot; &quot;aside&quot; &quot;footer&quot;;--se-grid-template:repeat(1, minmax(0, 1fr));--se-grid-areas-md:&quot;header header&quot; &quot;nav main&quot; &quot;nav aside&quot; &quot;footer footer&quot;;--se-grid-template-md:repeat(2, minmax(0, 1fr));--se-grid-areas-lg:&quot;header header header&quot; &quot;nav main aside&quot; &quot;footer footer footer&quot;;--se-grid-template-lg:repeat(3, minmax(0, 1fr))">
-<header class="se-grid-item" data-se-theme="ln7n40w" style="--se-item-grid-column:header;--se-item-grid-row:header"><h1>Team dashboard</h1></header>
-<nav class="se-grid-item" data-se-theme="ln7n40w" style="--se-item-grid-column:nav;--se-item-grid-row:nav;--se-item-display:none;--se-item-display-md:var(--se-item-display-mode, block)"><a href="/overview">Overview</a> <a href="/people">People</a></nav>
-<main class="se-grid-item" data-se-theme="ln7n40w" style="--se-item-grid-column:main;--se-item-grid-row:main"><h2>This week</h2><p>12 pull requests merged.</p></main>
-<aside class="se-grid-item" data-se-theme="ln7n40w" data-se-surface="outlined" style="--se-item-grid-column:aside;--se-item-grid-row:aside"><h2>On call</h2><p>Ada Lovelace</p></aside>
-<footer class="se-grid-item" data-se-theme="ln7n40w" style="--se-item-grid-column:footer;--se-item-grid-row:footer"><small>Updated every morning</small></footer>
+<div class="se-grid" data-se-theme="l168y9hq" data-se-size="comfortable" style="--se-grid-areas:&quot;header&quot; &quot;main&quot; &quot;aside&quot; &quot;footer&quot;;--se-grid-template:repeat(1, minmax(0, 1fr));--se-grid-areas-md:&quot;header header&quot; &quot;nav main&quot; &quot;nav aside&quot; &quot;footer footer&quot;;--se-grid-template-md:repeat(2, minmax(0, 1fr));--se-grid-areas-lg:&quot;header header header&quot; &quot;nav main aside&quot; &quot;footer footer footer&quot;;--se-grid-template-lg:repeat(3, minmax(0, 1fr))">
+<header class="se-grid-item" data-se-theme="l168y9hq" style="--se-item-grid-column:header;--se-item-grid-row:header"><h1>Team dashboard</h1></header>
+<nav class="se-grid-item" data-se-theme="l168y9hq" style="--se-item-grid-column:nav;--se-item-grid-row:nav;--se-item-display:none;--se-item-display-md:var(--se-item-display-mode, block)"><a href="/overview">Overview</a> <a href="/people">People</a></nav>
+<main class="se-grid-item" data-se-theme="l168y9hq" style="--se-item-grid-column:main;--se-item-grid-row:main"><h2>This week</h2><p>12 pull requests merged.</p></main>
+<aside class="se-grid-item" data-se-theme="l168y9hq" data-se-surface="outlined" style="--se-item-grid-column:aside;--se-item-grid-row:aside"><h2>On call</h2><p>Ada Lovelace</p></aside>
+<footer class="se-grid-item" data-se-theme="l168y9hq" style="--se-item-grid-column:footer;--se-item-grid-row:footer"><small>Updated every morning</small></footer>
 </div>
 ```
 

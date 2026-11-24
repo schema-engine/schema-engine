@@ -1,14 +1,66 @@
 .layout-page-demo {
+	--frame-width: 1200px;
+	--frame-height: 300px;
+	--frame-scale: 1;
 	display: block;
-	width: 100%;
-	min-width: 16rem;
-	max-width: 100%;
-	height: 28rem;
-	margin-block: 1.5rem;
-	border: 1px solid var(--border, currentColor);
-	border-radius: 0.5rem;
+	margin-block: 2rem;
+}
+
+.layout-page-demo__widths {
+	display: flex;
+	gap: 0.25rem;
+	margin-block-end: var(--space-4, 1rem);
+	border-block-end: 1px solid var(--border, currentColor);
+}
+
+.layout-page-demo__width {
+	position: relative;
+	padding: var(--space-control-y, 0.25rem) var(--space-control-x, 0.625rem);
+	cursor: pointer;
+	color: var(--on-surface-muted);
+	font-size: 0.875rem;
+	border-block-end: 2px solid transparent;
+	margin-block-end: -1px;
+}
+
+.layout-page-demo__width input {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.layout-page-demo__width:has(input:checked) {
+	border-block-end-color: var(--primary, currentColor);
+	color: var(--on-background);
+	font-weight: var(--font-weight-medium, 500);
+}
+
+.layout-page-demo__width:has(input:focus-visible) {
+	box-shadow:
+		0 0 0 2px var(--background),
+		0 0 0 4px color-mix(in oklab, var(--primary) 40%, transparent);
+}
+
+/*
+ * The viewport is the size of the scaled frame, so the page flows around the smaller picture and not around the
+ * frame's own width. Without the script the scale is 1 and the viewport scrolls.
+ */
+.layout-page-demo__viewport {
+	box-sizing: border-box;
+	inline-size: min(100%, calc(var(--frame-width) * var(--frame-scale)));
+	block-size: calc(var(--frame-height) * var(--frame-scale));
+	margin-inline: auto;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-container);
 	overflow: auto;
-	resize: horizontal;
-	background: #fff;
-	color: #1b1b1b;
+}
+
+.layout-page-demo__frame {
+	display: block;
+	inline-size: var(--frame-width);
+	block-size: var(--frame-height);
+	border: 0;
+	transform: scale(var(--frame-scale));
+	transform-origin: top left;
 }

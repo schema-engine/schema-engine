@@ -132,7 +132,7 @@ describe('styling docs pages', () => {
 
 		test.each([
 			['radiant', '.card-shell__section'],
-			['react', '.se-demo-shell__card'],
+			['react', '.se-demo-card__section'],
 		])(
 			'%s: the size hooks set on the form class reach the compact card and its controls',
 			async (renderer, card) => {
@@ -156,30 +156,35 @@ describe('styling docs pages', () => {
 });
 
 describe('the layout page example', () => {
-	test('its frame is in the three-column layout on a desktop, and crosses the breakpoints of the theme when it is dragged narrower', async () => {
+	test('its frame shows the three-column layout of a desktop, shrunk to the column, and crosses the breakpoints of the theme at the narrower widths', async () => {
 		const browser = await chromium.launch();
 		try {
 			const page = await browser.newPage({ viewport: { width: 1300, height: 900 } });
 			await page.goto(`${baseUrl}/docs/examples/layout-page`, { waitUntil: 'networkidle' });
-			const frame = page.locator('iframe.layout-page-demo');
+			const demo = page.locator('.layout-page-demo');
+			const frame = demo.locator('iframe');
 			await pwExpect(frame).toBeVisible();
-			const inFrame = page.frameLocator('iframe.layout-page-demo');
+			const inFrame = page.frameLocator('.layout-page-demo iframe');
 			await pwExpect(inFrame.locator('main')).toBeVisible();
 
 			const left = async (tag: string) => (await inFrame.locator(tag).boundingBox())!.x;
+			const shown = async () => ({
+				frame: (await frame.boundingBox())!,
+				column: (await demo.boundingBox())!,
+			});
 			await pwExpect(inFrame.locator('nav')).toBeVisible();
 			expect(await left('nav')).toBeLessThan(await left('main'));
 			expect(await left('main')).toBeLessThan(await left('aside'));
+			const desktop = await shown();
+			expect(desktop.frame.width).toBeLessThanOrEqual(desktop.column.width);
+			expect(desktop.frame.width).toBeGreaterThan(desktop.column.width * 0.9);
+			expect(await frame.evaluate((element) => getComputedStyle(element).width)).toBe('1200px');
 
-			await frame.evaluate((element) => {
-				element.style.width = '520px';
-			});
+			await demo.getByLabel('Tablet 900px').check();
 			await pwExpect.poll(async () => (await inFrame.locator('aside').boundingBox())!.x).toBe(await left('main'));
 			expect(await left('nav')).toBeLessThan(await left('main'));
 
-			await frame.evaluate((element) => {
-				element.style.width = '300px';
-			});
+			await demo.getByLabel('Phone 400px').check();
 			await pwExpect(inFrame.locator('nav')).toBeHidden();
 		} finally {
 			await browser.close();

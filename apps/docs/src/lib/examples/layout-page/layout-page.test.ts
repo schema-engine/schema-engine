@@ -43,8 +43,8 @@ describe('the layout page', () => {
 
 	test('the stylesheet is scoped by the theme id the markup carries', () => {
 		expect(theme.css).toContain(`[data-se-theme="${theme.id}"]`);
-		expect(theme.css).toContain('30rem');
-		expect(theme.css).toContain('40rem');
+		expect(theme.css).toContain('48rem');
+		expect(theme.css).toContain('70rem');
 	});
 });
 
