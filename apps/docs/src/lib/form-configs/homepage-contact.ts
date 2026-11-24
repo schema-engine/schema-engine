@@ -1,6 +1,11 @@
 import type { FormConfig } from '@schema-engine/forms';
 
-/** Homepage and intro previews — includes demo submit action and submission alert. */
+/**
+ * Homepage hero form: a valid submit is announced by a toast and celebrated with confetti, then the form resets.
+ *
+ * @remarks
+ * `celebrate` is not built in. The docs register it once in `createDocsDemoActions`, and this document only names it.
+ */
 export const contactFormConfig = {
 	id: 'contact-form',
 	title: 'Contact Form',
@@ -13,9 +18,8 @@ export const contactFormConfig = {
 					id: 'submission-status',
 					name: 'submissionStatus',
 					$type: 'submission-alert',
-					showOn: ['submitting', 'success'],
+					showOn: ['submitting'],
 					submittingMessage: 'Pending Submission',
-					successMessage: 'Submission Successful',
 				},
 				{
 					id: 'email',
@@ -57,11 +61,28 @@ export const contactFormConfig = {
 			id: 'contact-submit',
 			$type: 'submit',
 			description: 'Submit contact form',
-			successMessage: 'Message sent! Thanks for reaching out.',
-			errorMessage: 'Failed to send message. Please try again.',
 			enabled: true,
 			endpoint: '/api/submit-demo',
 			method: 'POST',
+		},
+		{
+			id: 'thanks',
+			$type: 'show_notification',
+			message: 'Message sent! Thanks for reaching out.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+		{
+			id: 'party',
+			$type: 'celebrate',
+			triggers: ['form_submit_success'],
+		},
+		{
+			id: 'sorry',
+			$type: 'show_notification',
+			message: 'Failed to send message. Please try again.',
+			variant: 'error',
+			triggers: ['form_submit_error'],
 		},
 		{
 			id: 'reset-form',
