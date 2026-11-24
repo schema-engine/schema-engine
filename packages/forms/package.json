@@ -57,6 +57,7 @@
 		"effect": "^3.22.1",
 		"esbuild": "^0.27.0",
 		"tsc-alias": "^1.8.16",
+		"typescript": "catalog:",
 		"valibot": "^1.4.2",
 		"vitest": "^4.0.13",
 		"yaml": "2.9.1"
@@ -69,7 +70,6 @@
 		"@schema-engine/registry": "workspace:^"
 	},
 	"peerDependencies": {
-		"typescript": "^5.4",
 		"zod": "^4.0.17",
 		"vitest": "^4.0.13"
 	},
