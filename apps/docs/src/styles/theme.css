@@ -10,6 +10,9 @@
 	 * contents) are both held to it.
 	 */
 	--site-container: 100rem;
+
+	/** Secondary text: captions, notes and counters. The Radiant blocks mute their text by the same mix. */
+	--on-surface-muted: color-mix(in srgb, var(--on-surface) 65%, transparent);
 }
 
 @theme {
@@ -32,7 +35,7 @@
 	--color-primary: var(--primary);
 	--color-primary-foreground: var(--on-primary);
 	--color-border: var(--border);
-	--color-input: var(--background);
+	--color-input: var(--rui-control-border-color);
 	--color-ring: var(--focus-ring);
 	--color-destructive: var(--error);
 	--color-destructive-foreground: var(--on-error);

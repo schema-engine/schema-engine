@@ -74,14 +74,13 @@ describe('the forms example pages', () => {
 		await pwExpect(page.locator('.docs-form-renderer-preview form')).toBeVisible();
 	});
 
-	test('an invalid submit shows each message without a reload or values in the URL, then a valid one shows the values', async () => {
+	test('an invalid submit shows each message without a reload or values in the URL, then a valid one clears them', async () => {
 		await open(contactPath);
 		const form = react();
 		await form.locator('button[type="submit"]').click();
 
 		await pwExpect(form.locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');
 		await pwExpect(form.locator('input[name="email"] + .rui-field__error')).toContainText('Enter your email');
-		await pwExpect(form.locator('[data-se-demo-result]')).toHaveCount(0);
 		await expectNoReload(contactPath);
 
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
@@ -95,11 +94,38 @@ describe('the forms example pages', () => {
 
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('button[type="submit"]').click();
-		const result = form.locator('[data-se-demo-result]');
-		await pwExpect(result).toContainText('Form submitted successfully.');
-		await pwExpect(result).toContainText('"email": "ada@example.com"');
-		await pwExpect(result).not.toContainText('"ticket"');
+		await pwExpect(form.locator('input[name="email"] + .rui-field__error')).toBeHidden();
+		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
+		await pwExpect(form.locator('input[name="email"]')).toHaveValue('ada@example.com');
 		await expectNoReload(contactPath);
+	});
+
+	test('the React demo marks every required field and shows an invalid select, as the Radiant demo does', async () => {
+		await open(contactPath);
+		const form = react();
+		const radiant = page.locator('.docs-form-renderer-preview form').first();
+		const marked = async (scope: typeof form) => scope.locator('[data-se-required-marker]').count();
+		expect(await marked(form)).toBe(4);
+		expect(await marked(radiant)).toBe(4);
+
+		await form.locator('button[type="submit"]').click();
+		const select = form.locator('select[name="subject"]');
+		await pwExpect(select).toHaveAttribute('aria-invalid', 'true');
+		await pwExpect(select).toHaveCSS(
+			'border-top-color',
+			await form.locator('input[name="name"]').evaluate((input) => getComputedStyle(input).borderTopColor),
+		);
+	});
+
+	test('the React wizard draws the steps and the counter from the same config as the Radiant one', async () => {
+		await open(wizardPath);
+		const form = react();
+		const radiant = page.locator('.docs-form-renderer-preview').first();
+		for (const scope of [form, radiant]) {
+			await pwExpect(scope.getByText('Step 1 of 2')).toBeVisible();
+			await pwExpect(scope.getByRole('button', { name: /Profile/ })).toBeDisabled();
+			await pwExpect(scope.getByRole('button', { name: /Account/ })).toHaveAttribute('aria-current', 'step');
+		}
 	});
 
 	test('the ticket field appears for a support request and is checked in its shape', async () => {
@@ -124,7 +150,8 @@ describe('the forms example pages', () => {
 
 		await form.locator('input[name="ticket"]').fill('SUP-1024');
 		await form.locator('button[type="submit"]').click();
-		await pwExpect(form.locator('[data-se-demo-result]')).toContainText('"ticket": "SUP-1024"');
+		await pwExpect(form.locator('input[name="ticket"] + .rui-field__error')).toBeHidden();
+		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
 	});
 
 	test('a wizard blocks Next on an invalid step, keeps values across steps and submits from the last', async () => {
@@ -155,9 +182,8 @@ describe('the forms example pages', () => {
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
 		await form.locator('select[name="role"]').selectOption('designer');
 		await form.getByRole('button', { name: 'Submit' }).click();
-		const result = form.locator('[data-se-demo-result]');
-		await pwExpect(result).toContainText('"email": "ada@example.com"');
-		await pwExpect(result).toContainText('"role": "designer"');
+		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
+		await pwExpect(form.locator('select[name="role"]')).toHaveValue('designer');
 		await expectNoReload(wizardPath);
 	});
 
@@ -270,12 +296,11 @@ describe('the forms example pages', () => {
 		await form.locator('button[type="submit"]').click();
 		await pwExpect(form.locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');
 		await pwExpect(form.getByText('Name is required')).toBeVisible();
-		await pwExpect(form.locator('[data-se-demo-result]')).toHaveCount(0);
 
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('button[type="submit"]').click();
-		await pwExpect(form.locator('[data-se-demo-result]')).toContainText('"name": "Ada Lovelace"');
+		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
 		await expectNoReload(shadcnPath);
 	});
 

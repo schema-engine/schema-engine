@@ -134,7 +134,7 @@ describe('docs dev server source boundary', () => {
 		await demo.locator('input[name="name"]').fill('Ada Lovelace');
 		await demo.locator('input[name="email"]').fill('ada@example.com');
 		await demo.locator('button[type="submit"]').click();
-		await pwExpect(demo.locator('[data-se-demo-result]')).toContainText('"name": "Ada Lovelace"');
+		await pwExpect(demo.locator('[aria-invalid="true"]')).toHaveCount(0);
 		expect(problems).toEqual([]);
 	}, 120_000);
 

@@ -23,7 +23,7 @@ export function ReactFormDemoRoot({
 }) {
 	return (
 		<div
-			class="not-prose unstyled docs-react-form-demo"
+			class="not-prose unstyled docs-react-form-demo docs-demo-stage"
 			data-se-react-form-demo-root="true"
 			data-se-form-config={JSON.stringify(config)}
 			data-se-react-form-demo-kit={kit}

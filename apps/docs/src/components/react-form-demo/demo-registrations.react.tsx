@@ -64,7 +64,6 @@ export const DemoSelectRegistration = defineInput({
 
 const DemoCheckboxSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('checkbox'),
-	checkLabel: z.optional(z.string()),
 });
 
 export type DemoCheckboxConfig = z.infer<typeof DemoCheckboxSchema>;
