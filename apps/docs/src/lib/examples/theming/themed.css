@@ -16,7 +16,10 @@
 	--se-measure: 30rem;
 }
 
-/* The renderer writes data-se-tone on the form element, and the tone axis sets --primary below it: this file only reads it. */
+/*
+ * The renderer writes data-se-tone on the form element, and the tone axis sets --primary below it: this file only
+ * reads it.
+ */
 .themed[data-se-tone='brand'] {
 	padding-inline-start: 1rem;
 	border-inline-start: 0.25rem solid var(--primary);

@@ -40,12 +40,14 @@ export function renderPage(page: Page): string {
 		throw new Error(issues.map((issue) => `${issue.path?.join('.')}: ${issue.message}`).join('\n'));
 	}
 	const items = page.regions.map((region) => ({ grid: placementOf(region) }));
-	const regions = page.regions.map(
-		(region, index) =>
-			`<${region.tag} class="${GRID_ITEM_CLASS}" data-se-theme="${theme.id}"${attributes(region.appearance)} style="${style(getGridItemVariables(items[index]!.grid))}">${region.html}</${region.tag}>`,
-	);
+	const regions = page.regions.map((region, index) => {
+		const marks = `data-se-theme="${theme.id}"${attributes(region.appearance)}`;
+		const open = `<${region.tag} class="${GRID_ITEM_CLASS}" ${marks}`;
+		return `${open} style="${style(getGridItemVariables(items[index]!.grid))}">${region.html}</${region.tag}>`;
+	});
+	const container = `<div class="${GRID_CLASS}" data-se-theme="${theme.id}"${attributes(page.appearance)}`;
 	return [
-		`<div class="${GRID_CLASS}" data-se-theme="${theme.id}"${attributes(page.appearance)} style="${style(getGridVariables(grid.data, theme.grid, items))}">`,
+		`${container} style="${style(getGridVariables(grid.data, theme.grid, items))}">`,
 		...regions,
 		'</div>',
 	].join('\n');

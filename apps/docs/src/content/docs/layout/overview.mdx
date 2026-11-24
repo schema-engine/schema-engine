@@ -61,15 +61,14 @@ export function renderSection(): string {
 	const attributes = Object.entries(getAppearanceAttributes({ size: 'compact' }))
 		.map(([name, value]) => `${name}="${value}"`)
 		.join(' ');
-	const cells = items.map(
-		(item) =>
-			`<div class="${GRID_ITEM_CLASS}" data-se-theme="${theme.id}" style="${style(getGridItemVariables(item.grid))}">${item.label}</div>`,
+	const cells = items.map((item) => {
+		const open = `<div class="${GRID_ITEM_CLASS}" data-se-theme="${theme.id}"`;
+		return `${open} style="${style(getGridItemVariables(item.grid))}">${item.label}</div>`;
+	});
+	const open = `<section class="${GRID_CLASS}" data-se-theme="${theme.id}" ${attributes}`;
+	return [`${open} style="${style(getGridVariables(undefined, theme.grid, items))}">`, ...cells, `</section>`].join(
+		'\n',
 	);
-	return [
-		`<section class="${GRID_CLASS}" data-se-theme="${theme.id}" ${attributes} style="${style(getGridVariables(undefined, theme.grid, items))}">`,
-		...cells,
-		`</section>`,
-	].join('\n');
 }
 ```
 
@@ -79,11 +78,21 @@ import { renderSection } from './section';
 console.log(renderSection());
 ```
 
-```text
-<section class="se-grid" data-se-theme="l1tvu4rv" data-se-size="compact" style="--se-grid-template:repeat(12, minmax(0, 1fr));--se-grid-default-column:1 / -1">
-<div class="se-grid-item" data-se-theme="l1tvu4rv" style="--se-item-grid-column:span 6">First name</div>
-<div class="se-grid-item" data-se-theme="l1tvu4rv" style="--se-item-grid-column:span 6">Last name</div>
-<div class="se-grid-item" data-se-theme="l1tvu4rv" style="">Email</div>
+{/* prettier-ignore */}
+```html
+<section
+	class="se-grid"
+	data-se-theme="l1tvu4rv"
+	data-se-size="compact"
+	style="--se-grid-template: repeat(12, minmax(0, 1fr)); --se-grid-default-column: 1 / -1"
+>
+	<div class="se-grid-item" data-se-theme="l1tvu4rv" style="--se-item-grid-column: span 6">
+		First name
+	</div>
+	<div class="se-grid-item" data-se-theme="l1tvu4rv" style="--se-item-grid-column: span 6">
+		Last name
+	</div>
+	<div class="se-grid-item" data-se-theme="l1tvu4rv" style="">Email</div>
 </section>
 ```
 

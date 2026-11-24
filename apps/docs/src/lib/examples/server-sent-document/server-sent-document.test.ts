@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { outputBlocks } from '../../../../test/format-html';
 import { loadDocument } from './client';
 import { GET, orderDocument, type Order } from './server';
 
@@ -109,6 +110,7 @@ describe('the example run', () => {
 			join(import.meta.dirname, '../../../content/docs/examples/server-sent-document.mdx'),
 			'utf8',
 		);
-		expect(lines.join('\n')).toBe(page.match(/```text\n([\s\S]*?)\n```/)?.[1]);
+		const shown = [...page.matchAll(/```(html|text)\n([\s\S]*?)\n```/g)].map(([, lang, code]) => ({ lang, code }));
+		expect(await outputBlocks(lines)).toEqual(shown.slice(0, 2));
 	});
 });

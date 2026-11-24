@@ -234,7 +234,10 @@ const profile = engine.defineForm({
 	],
 });
 
-/** A literal config types `values` as `{ readonly name: string; readonly stars?: number | '' | null }`, with no annotation. */
+/**
+ * A literal config types `values` as `{ readonly name: string; readonly stars?: number | '' | null }`, with no
+ * annotation.
+ */
 export function TypedProfile({ save }: { save: (name: string, stars: number | undefined) => Promise<void> }) {
 	return (
 		<FormRenderer

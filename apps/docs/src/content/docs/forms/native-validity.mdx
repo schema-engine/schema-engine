@@ -10,7 +10,8 @@ A browser validates every `input`, `select` and `textarea` against its own attri
 
 ```
 what is rendered                 the browser decides                  the host forwards
-<input type="email"> + "abc"     validity.typeMismatch = true         reportNative({ email: { type: 'typeMismatch', params: { inputType: 'email' } } })
+<input type="email"> + "abc"     validity.typeMismatch = true         reportNative({ email: { type: 'typeMismatch',
+                                                                        params: { inputType: 'email' } } })
 <input type="number"> + "1e"     validity.badInput = true             reportNative({ age: { type: 'badInput' } })
 <input type="email"> + "a@b.c"   validity.valid = true                reportNative({ email: null })
 ```

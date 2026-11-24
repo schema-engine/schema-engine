@@ -253,14 +253,11 @@ export async function runCheckout(text: string, context: CheckoutContext): Promi
 
 ## Run it
 
-`main.ts` runs the workflow twice: with a card that pays, and with a card that is declined because the amount is above the limit. It prints each `ActionDispatchResult`, one per line, and what left the shop.
+`main.ts` runs the workflow twice: with a card that pays, and with a card that is declined because the amount is above the limit. It prints one line for each `ActionDispatchResult`, with the entry's step and group, its status and its message or error, and what left the shop.
 
 ```ts title="main.ts"
 import { runCheckout } from './checkout';
 import { checkoutWorkflow } from './workflow';
-
-/** `cause` holds the error a handler threw, which has no JSON form. */
-const withoutCause = (key: string, value: unknown) => (key === 'cause' ? undefined : value);
 
 const order = { sku: 'tee-black-m', quantity: 2, amount: 120, email: 'ada@example.com' };
 
@@ -273,7 +270,11 @@ for (const [name, amount] of [
 	const checkout = await runCheckout(checkoutWorkflow({ ...order, amount }), context);
 	if (!checkout.success) console.log(checkout.issues.join('\n'));
 	else {
-		for (const result of checkout.results) console.log(JSON.stringify(result, withoutCause));
+		for (const result of checkout.results) {
+			const group = result.groupIndex === undefined ? '' : `, group ${result.groupIndex}`;
+			const outcome = result.success ? result.message : result.error;
+			console.log(`${result.actionId} (step ${result.sequenceIndex}${group}) ${result.status}: ${outcome}`);
+		}
 		console.log(`sent: ${context.sent.join(', ') || 'nothing'}`);
 	}
 }
@@ -281,22 +282,22 @@ for (const [name, amount] of [
 
 ```text
 a card that pays
-{"success":true,"message":"Reserved 2 of tee-black-m","actionId":"reserve","sequenceIndex":0,"status":"succeeded","cancellationRequested":false}
-{"success":true,"message":"Charged 120","actionId":"charge","sequenceIndex":1,"groupIndex":0,"status":"succeeded","cancellationRequested":false}
-{"success":true,"message":"Warehouse notified","actionId":"warehouse","sequenceIndex":1,"groupIndex":1,"status":"succeeded","cancellationRequested":false}
-{"success":true,"message":"Tracked purchase","actionId":"track","sequenceIndex":1,"groupIndex":2,"status":"succeeded","cancellationRequested":false}
-{"success":true,"message":"Receipt sent to ada@example.com","actionId":"receipt","sequenceIndex":2,"status":"succeeded","cancellationRequested":false}
+reserve (step 0) succeeded: Reserved 2 of tee-black-m
+charge (step 1, group 0) succeeded: Charged 120
+warehouse (step 1, group 1) succeeded: Warehouse notified
+track (step 1, group 2) succeeded: Tracked purchase
+receipt (step 2) succeeded: Receipt sent to ada@example.com
 sent: warehouse, analytics:purchase, receipt:ada@example.com
 a card that is declined
-{"success":true,"message":"Reserved 2 of tee-black-m","actionId":"reserve","sequenceIndex":0,"status":"succeeded","cancellationRequested":false}
-{"success":false,"error":"The card was declined","shouldContinue":false,"actionId":"charge","sequenceIndex":1,"groupIndex":0,"status":"failed","cancellationRequested":false}
-{"success":false,"error":"The operation was aborted.","shouldContinue":true,"actionId":"warehouse","sequenceIndex":1,"groupIndex":1,"status":"cancelled","cancellationRequested":true}
-{"success":false,"error":"The operation was aborted.","shouldContinue":true,"actionId":"track","sequenceIndex":1,"groupIndex":2,"status":"cancelled","cancellationRequested":true}
+reserve (step 0) succeeded: Reserved 2 of tee-black-m
+charge (step 1, group 0) failed: The card was declined
+warehouse (step 1, group 1) cancelled: The operation was aborted.
+track (step 1, group 2) cancelled: The operation was aborted.
 sent: nothing
 ```
 
-- **A card that pays.** The five entries succeed. The three members of the group carry the same `sequenceIndex` and their `groupIndex`, and results come back in configuration order, not in the order they finished.
-- **A card that is declined.** `charge` fails with `shouldContinue: false`. The dispatcher aborts the signal of `warehouse` and `track`, which stop waiting and report `cancelled` with `cancellationRequested: true`. No later entry runs, so there is no receipt, and nothing was sent.
+- **A card that pays.** The five entries succeed. The three members of the group share the step and have a group of their own, and results come back in configuration order, not in the order they finished.
+- **A card that is declined.** `charge` fails with `shouldContinue: false`. The dispatcher aborts the signal of `warehouse` and `track`, which stop waiting and report `cancelled`. No later entry runs, so there is no receipt, and nothing was sent.
 - **The reservation stays.** Cancelling stops what is still running. It does not undo what already happened: the stock of the declined order is still reserved. A real checkout adds a `releaseStock` action and dispatches it with its own trigger, for example `declined`, when the result of the `submit` dispatch shows that the charge failed.
 
 The package logs a warning to the console for each failed action. The example's test silences it.

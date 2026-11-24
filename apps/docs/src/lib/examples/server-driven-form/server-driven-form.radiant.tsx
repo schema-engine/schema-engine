@@ -11,7 +11,10 @@ export const engine = createRadiantFormEngine({
 	actions: [NotificationActionRegistration],
 });
 
-/** Fetches the form from `url` and renders it into `host`, or lists why it cannot. `onSignedUp` runs once the account exists. */
+/**
+ * Fetches the form from `url` and renders it into `host`, or lists why it cannot. `onSignedUp` runs once the account
+ * exists.
+ */
 export async function mountSignupForm(host: HTMLElement, url: string, onSignedUp: () => void): Promise<void> {
 	const loaded = await loadForm(engine, url);
 	createRoot(host).render(

@@ -9,7 +9,7 @@
 	 * The width of the page container on a desktop: the site header and the docs body (sidebar, content and table of
 	 * contents) are both held to it.
 	 */
-	--site-container: 100rem;
+	--site-container: 90rem;
 
 	/** Secondary text: captions, notes and counters. The Radiant blocks mute their text by the same mix. */
 	--on-surface-muted: color-mix(in srgb, var(--on-surface) 65%, transparent);

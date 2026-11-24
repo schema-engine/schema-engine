@@ -26,9 +26,15 @@ interface CreateFormEngineOptions<TElements, TRecipes, TActions, TLayout> {
 	layout?: TLayout;
 	/** Turns an issue into the text to show: the one formatter both renderers read. Inherited by `extend()`. */
 	formatIssue?: FormIssueFormatter;
-	/** The request function every request the engine makes goes through; the global `fetch` by default. Inherited by `extend()`. */
+	/**
+	 * The request function every request the engine makes goes through; the global `fetch` by default. Inherited by
+	 * `extend()`.
+	 */
 	fetch?: FormFetch;
-	/** Where a CSRF token comes from, from `csrf.fromMeta`, `csrf.fromCookie` or `csrf.custom`. Off unless set. Inherited by `extend()`. */
+	/**
+	 * Where a CSRF token comes from, from `csrf.fromMeta`, `csrf.fromCookie` or `csrf.custom`. Off unless set.
+	 * Inherited by `extend()`.
+	 */
 	csrf?: CsrfPolicy;
 }
 
@@ -130,7 +136,8 @@ type FormValidationIssue = {
 	message: string;
 	path: ReadonlyArray<PropertyKey>; // ['steps', 0, 'elements', 2, 'grid', 'width']
 	code?: string; // the schema's code on a schema issue, such as 'too_small'
-	params?: Readonly<Record<string, unknown>>; // its details, such as { origin: 'string', minimum: 3, inclusive: true }
+	/** Its details, such as `{ origin: 'string', minimum: 3, inclusive: true }`. */
+	params?: Readonly<Record<string, unknown>>;
 };
 
 type FormValidationResult<T> = { success: true; data: T } | { success: false; issues: FormValidationIssue[] };

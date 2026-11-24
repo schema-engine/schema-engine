@@ -12,12 +12,14 @@ function fitWidth(demo: HTMLElement): void {
 	const chosen = demo.querySelector<HTMLInputElement>('input:checked');
 	const width = Number(chosen?.value);
 	if (!Number.isFinite(width) || width <= 0) return;
+	demo.dataset.fitted = '';
 	demo.style.setProperty('--frame-width', `${width}px`);
 	demo.style.setProperty('--frame-scale', String(Math.min(1, demo.clientWidth / width)));
 }
 
 function fitHeight(demo: HTMLElement, frame: HTMLIFrameElement): void {
-	const height = frame.contentDocument?.documentElement.offsetHeight;
+	const page = frame.contentDocument?.documentElement;
+	const height = page ? Math.ceil(page.getBoundingClientRect().height) : 0;
 	if (height) demo.style.setProperty('--frame-height', `${height}px`);
 }
 

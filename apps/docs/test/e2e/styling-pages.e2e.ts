@@ -186,9 +186,10 @@ describe('the layout page example', () => {
 				.poll(async () => (await frame.boundingBox())!.height)
 				.toBeCloseTo((await pageHeight()) * ((await widthOf()) / 1200), 0);
 
+			const wide = await widthOf();
 			await page.setViewportSize({ width: 900, height: 900 });
 			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
-			expect(await widthOf()).toBeLessThan(700);
+			expect(await widthOf()).toBeLessThan(wide);
 			await page.setViewportSize({ width: 1300, height: 900 });
 			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
 

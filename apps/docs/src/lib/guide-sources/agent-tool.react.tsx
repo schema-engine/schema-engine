@@ -20,7 +20,10 @@ const feedback = engine.defineForm({
 	],
 });
 
-/** Offers the form it sits in to a browser agent while it is rendered. Without `autoSubmit` the agent fills the form and the user sends it. */
+/**
+ * Offers the form it sits in to a browser agent while it is rendered. Without `autoSubmit` the agent fills the form
+ * and the user sends it.
+ */
 function FeedbackAgentTool() {
 	const runtime = useFormRuntime();
 	const { formatIssue } = useFormContext();

@@ -125,9 +125,8 @@ async function main() {
 		context: { tickets },
 	});
 	for (const { actionId, sequenceIndex, groupIndex, status } of results) {
-		console.log(
-			`${actionId} (entry ${sequenceIndex}${groupIndex === undefined ? '' : `, member ${groupIndex}`}): ${status}`,
-		);
+		const member = groupIndex === undefined ? '' : `, member ${groupIndex}`;
+		console.log(`${actionId} (entry ${sequenceIndex}${member}): ${status}`);
 	}
 }
 

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { formatHtml } from '../../../../test/format-html';
 import { renderPage } from './host';
 import { dashboard, placementOf, type Page } from './page';
 import { theme } from './theme';
@@ -59,6 +60,6 @@ describe('the example run', () => {
 		vi.spyOn(console, 'log').mockImplementation((line: string) => void lines.push(line));
 		await import('./main');
 		const page = readFileSync(join(import.meta.dirname, '../../../content/docs/examples/layout-page.mdx'), 'utf8');
-		expect(lines.join('\n')).toBe(page.match(/```text\n([\s\S]*?)\n```/)?.[1]);
+		expect(await formatHtml(lines.join('\n'))).toBe(page.match(/```html\n([\s\S]*?)\n```/)?.[1]);
 	});
 });

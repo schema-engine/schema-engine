@@ -15,16 +15,20 @@
 
 /*
  * The viewport is the size of the scaled frame, so the page flows around the smaller picture and not around the
- * frame's own width. Without the script the scale is 1 and the viewport scrolls.
+ * frame's own width. Its outline is a shadow, so it adds nothing to the box and the frame fits it exactly. Without the
+ * script the scale is 1 and the viewport scrolls; with it the frame always fits, so nothing scrolls.
  */
 .layout-page-demo__viewport {
-	box-sizing: border-box;
 	inline-size: min(100%, calc(var(--frame-width) * var(--frame-scale)));
 	block-size: calc(var(--frame-height) * var(--frame-scale));
 	margin-inline: auto;
-	border: 1px solid var(--border);
 	border-radius: var(--radius-container);
+	box-shadow: 0 0 0 1px var(--border);
 	overflow: auto;
+}
+
+.layout-page-demo[data-fitted] .layout-page-demo__viewport {
+	overflow: hidden;
 }
 
 .layout-page-demo__frame {

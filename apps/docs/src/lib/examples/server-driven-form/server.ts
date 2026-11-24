@@ -70,7 +70,9 @@ const nextForm = {
 	],
 };
 
-/** The route handler of `/forms/signup`: it answers with the form config as JSON. `?next` asks for the next release's. */
+/**
+ * The route handler of `/forms/signup`: it answers with the form config as JSON. `?next` asks for the next release's.
+ */
 export function GET(request: Request): Response {
 	return Response.json(new URL(request.url).searchParams.has('next') ? nextForm : signupForm);
 }

@@ -5,6 +5,7 @@ import * as registryYaml from '@schema-engine/registry/yaml';
 import * as z from 'zod/mini';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { outputBlocks, type OutputBlock } from './format-html';
 import { codeBlocks, readPage, runTitledFiles, titledRunner } from './snippet-harness';
 import * as layoutPackage from '@schema-engine/layout';
 import * as formsPackage from '@schema-engine/forms';
@@ -26,29 +27,36 @@ const packages = {
 const quickStart = 'schema-engine/quick-start';
 const serialized = 'schema-engine/serialized-documents';
 
-/** The text fences of a page under one heading, joined: what the page says a run prints. */
-const shownOutput = (page: string, heading: string): string =>
+/**
+ * The output fences of a page under one heading: what the page says a run prints, as {@link outputBlocks} returns it,
+ * with fences of one kind that follow each other joined.
+ */
+const shownOutput = (page: string, heading: string): OutputBlock[] =>
 	codeBlocks(page)
-		.filter((block) => block.lang === 'text' && block.heading === heading)
-		.map((block) => block.code)
-		.join('\n');
+		.filter((block) => (block.lang === 'text' || block.lang === 'html') && block.heading === heading)
+		.reduce<OutputBlock[]>((blocks, { lang, code }) => {
+			const last = blocks.at(-1);
+			if (last?.lang === lang) last.code = `${last.code}\n${code}`;
+			else blocks.push({ lang: lang as OutputBlock['lang'], code });
+			return blocks;
+		}, []);
 
 describe(quickStart, () => {
 	test('main.ts prints the output the page shows', async () => {
 		const lines = await runTitledFiles(quickStart, packages, 'main.ts');
-		expect(lines.join('\n')).toEqual(shownOutput(quickStart, 'Run it'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput(quickStart, 'Run it'));
 	});
 });
 
 describe(serialized, () => {
 	test('a bad document and a bad workflow report the issues the page shows', async () => {
 		const lines = await runTitledFiles([quickStart, serialized], packages, 'bad-input.ts');
-		expect(lines.join('\n')).toEqual(shownOutput(serialized, 'See the issues'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput(serialized, 'See the issues'));
 	});
 
 	test('a YAML file with a bad value reports its file, line and column', async () => {
 		const lines = await runTitledFiles([quickStart, serialized], packages, 'parse-welcome.ts');
-		expect(lines.join('\n')).toEqual(shownOutput(serialized, 'YAML'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput(serialized, 'YAML'));
 	});
 
 	test('the document the server sends passes the client check', async () => {
@@ -72,24 +80,24 @@ describe(serialized, () => {
 describe('registry pages', () => {
 	test('the quick start resolves, rejects and reports as the page shows', async () => {
 		const lines = await runTitledFiles('registry/overview', packages, 'check.ts');
-		expect(lines.join('\n')).toEqual(shownOutput('registry/overview', '3. Run it'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput('registry/overview', '3. Run it'));
 	});
 
 	test('a document resolves to HTML, and a broken one reports its paths', async () => {
 		const lines = await runTitledFiles('registry/resolve-a-document', packages, 'check.ts');
-		expect(lines.join('\n')).toEqual(shownOutput('registry/resolve-a-document', 'Use it'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput('registry/resolve-a-document', 'Use it'));
 	});
 });
 
 describe('actions pages', () => {
 	test('the quick start runs the workflow and prints the results the page shows', async () => {
 		const lines = await runTitledFiles('actions/overview', packages, 'main.ts');
-		expect(lines.join('\n')).toEqual(shownOutput('actions/overview', '3. Run it and read the results'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput('actions/overview', '3. Run it and read the results'));
 	});
 
 	test('a failed charge cancels its group sibling and stops the workflow', async () => {
 		const lines = await runTitledFiles('actions/sequences-and-cancellation', packages, 'cancel.ts');
-		expect(lines.join('\n')).toEqual(shownOutput('actions/sequences-and-cancellation', 'Cancellation'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput('actions/sequences-and-cancellation', 'Cancellation'));
 	});
 
 	test('the webhook action fails with shouldContinue false on an error status', async () => {
@@ -118,7 +126,7 @@ describe('actions/serialized-workflows', () => {
 
 	test('a valid, a bad and a cancelled run print what the page shows', async () => {
 		const lines = await runTitledFiles(page, packages, 'check.ts', { settleMs: 1000 });
-		expect(lines.join('\n')).toEqual(shownOutput(page, 'Run three workflows'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput(page, 'Run three workflows'));
 	});
 
 	test('the workflow JSON the page shows parses', () => {
@@ -137,9 +145,9 @@ describe('forms/getting-started', () => {
 
 	test('a broken config reports its issues and a submission prints its values', async () => {
 		const lines = await runTitledFiles(page, packages, 'broken.ts');
-		expect(lines.join('\n')).toEqual(shownOutput(page, '3. Check a form loaded as JSON'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput(page, '3. Check a form loaded as JSON'));
 		const run = await runTitledFiles(page, packages, 'submit.ts', { globals: { Response, FormData } });
-		expect(run.join('\n')).toEqual(shownOutput(page, '4. Submit it'));
+		expect(await outputBlocks(run)).toEqual(shownOutput(page, '4. Submit it'));
 	});
 
 	test('the overview rule count is the number of registered rules', () => {
@@ -156,7 +164,7 @@ describe('forms/constraints', () => {
 		const lines = await runTitledFiles(['forms/getting-started', page], packages, 'submit-support.ts', {
 			globals: { Response, FormData },
 		});
-		expect(lines.join('\n')).toEqual(shownOutput(page, 'Hidden and disabled fields do not submit'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput(page, 'Hidden and disabled fields do not submit'));
 	});
 });
 
@@ -245,6 +253,6 @@ describe('layout/overview', () => {
 	test('the quick start builds the section the page shows from its own files', async () => {
 		const page = 'layout/overview';
 		const lines = await runTitledFiles(page, packages, 'page.ts');
-		expect(lines.join('\n')).toEqual(shownOutput(page, 'Quick start'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput(page, 'Quick start'));
 	});
 });

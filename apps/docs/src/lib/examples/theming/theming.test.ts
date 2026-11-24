@@ -26,7 +26,7 @@ describe('the themed form', () => {
 		['React', reactEngine],
 		['Radiant', radiantEngine],
 	])(
-		'announces the account with a show_notification action that runs after a submission, in the %s engine',
+		'accepts the show_notification entry of the config, so a config naming an unregistered action fails, in the %s engine',
 		(_renderer, engine) => {
 			const result = engine.safeValidateForm(themedForm);
 			expect(result.success && result.data.actions).toMatchObject([
