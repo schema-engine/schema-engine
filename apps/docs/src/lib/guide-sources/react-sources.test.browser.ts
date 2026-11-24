@@ -164,13 +164,13 @@ describe('the React quick start', () => {
 		const host = await mount(createElement(ContactForm));
 		await userEvent.click(host.querySelector<HTMLButtonElement>('button[type="submit"]')!);
 		await expect.poll(() => host.textContent).toContain('Enter your name');
-		expect(host.querySelector('[data-testid="submitted"]')).toBeNull();
+		expect(host.querySelector('pre')).toBeNull();
 
 		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="name"]')!, 'Ada Lovelace');
 		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="email"]')!, 'ada@example.com');
 		await userEvent.click(host.querySelector<HTMLButtonElement>('button[type="submit"]')!);
 		await expect
-			.poll(() => host.querySelector('[data-testid="submitted"]')?.textContent)
+			.poll(() => host.querySelector('pre')?.textContent)
 			.toBe(JSON.stringify({ name: 'Ada Lovelace', email: 'ada@example.com' }));
 	});
 });

@@ -28,7 +28,6 @@ describe('the contact form config', () => {
 		const config = reactEngine.validateForm(contactForm);
 		const container = createFormStateContainer({ config, registry: reactEngine.getValidationRegistry() });
 
-		container.setValue('subject', 'support');
 		for (const [name, value] of Object.entries({ ...values, subject: 'support' })) container.setValue(name, value);
 		expect((await container.validate()).outcome).toBe('invalid');
 		expect(container.getSnapshot().errors['ticket']).toMatchObject({

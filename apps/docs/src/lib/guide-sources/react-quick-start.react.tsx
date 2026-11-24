@@ -80,7 +80,7 @@ export function ContactForm() {
 	return (
 		<>
 			<FormRenderer engine={engine} config={contactForm} onSubmit={setValues} />
-			{values && <pre data-testid="submitted">{JSON.stringify(values)}</pre>}
+			{values && <pre>{JSON.stringify(values)}</pre>}
 		</>
 	);
 }
