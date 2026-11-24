@@ -180,8 +180,7 @@ const profile = createFormEngine({ elements, layout: theme });
 ```
 
 Engines built on one compiled theme carry the same `data-se-theme` and the same stylesheet
-content. React hoists the equal stylesheets to one element; Radiant puts an identical copy in
-each form, by design. A form of one engine can sit inside a grid item of another: the nearest
+content; [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines) says how each renderer emits it. A form of one engine can sit inside a grid item of another: the nearest
 theme's token rules apply.
 
 A form, a step, a field or a recipe slot picks a named value per axis with

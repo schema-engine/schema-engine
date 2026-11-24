@@ -11,7 +11,7 @@ import { checkoutForm, profileForm } from '@/lib/examples/shared-theme/config';
 
 Compile a theme once and pass the same object to every engine. Both engines then carry one `data-se-theme` and the same stylesheet content, so a checkout form and a profile form match whatever engine built them. The docs engines use the same pattern across renderers: Radiant and React engines are both built on one theme.
 
-Each form picks its own tone. React hoists the shared stylesheet to one element; Radiant puts an identical copy in each form, by design (see [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines)).
+Each form picks its own tone. How each renderer emits the shared stylesheet is in [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines).
 
 ## Install
 

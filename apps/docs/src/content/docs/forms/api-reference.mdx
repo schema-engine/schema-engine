@@ -46,8 +46,7 @@ function createFormEngine<
 lists. `layout` is accepted by `createFormEngine` and by
 `createRadiantFormEngine`, which forwards it. Pass one theme compiled with
 `createLayoutTheme` (from `@schema-engine/layout`) to several engines and they carry the same
-`data-se-theme` and the same stylesheet content (React hoists one element; Radiant inlines an identical
-copy per form, by design); inline options compile a theme of the engine's own.
+`data-se-theme` and the same stylesheet content ([how each renderer emits it](/docs/layout/layout-themes#share-a-theme-between-engines)); inline options compile a theme of the engine's own.
 `engine.extend()` does not take `layout`; extended engines inherit the source
 engine's layout theme, which `engine.getLayout()` returns (`id`, `grid`, `axes`, `appearance`, `css`).
 
