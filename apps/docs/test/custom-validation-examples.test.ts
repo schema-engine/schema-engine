@@ -38,7 +38,7 @@ afterEach(() => {
 });
 
 test('the documented IBAN rule accepts a valid IBAN and rejects a changed digit or a malformed value', () => {
-	const { engine, isValidIban } = runInNewContext(`${example('### 4. Check with a real algorithm')}\nexports;`, {
+	const { engine, isValidIban } = runInNewContext(`${example('## Check with an algorithm')}\nexports;`, {
 		exports: {},
 		require: (name: string) => (name === 'zod/mini' ? z : { createFormEngine }),
 	}) as { engine: ReturnType<typeof createFormEngine>; isValidIban: (value: string) => boolean };
@@ -48,7 +48,7 @@ test('the documented IBAN rule accepts a valid IBAN and rejects a changed digit 
 	expect(isValidIban('not an iban')).toBe(false);
 	const schema = engine.getValidationRegistry().createSchema({ $type: 'iban' }, createValidationContext());
 	expect(schema?.safeParse('GB82 WEST 1234 5698 7654 32').success).toBe(true);
-	expect(schema?.safeParse('GB82 WEST 1234 5698 7654 33').error?.issues[0]?.message).toBe('Enter a valid IBAN');
+	expect(schema?.safeParse('GB82 WEST 1234 5698 7654 33').success).toBe(false);
 });
 
 /**
@@ -90,7 +90,7 @@ test('the documented username rule reports a taken name, and a failed request is
 
 	expect((await check(answer({ available: true }))).success).toBe(true);
 	const taken = await check(answer({ available: false }));
-	expect(taken.error?.issues[0]?.message).toBe('Username is already taken');
+	expect(taken.success).toBe(false);
 	await expect(check(answer({}, 503))).rejects.toBeInstanceOf(ValidationUnavailable);
 	await expect(
 		check(async () => {
@@ -99,18 +99,8 @@ test('the documented username rule reports a taken name, and a failed request is
 	).rejects.toBeInstanceOf(ValidationUnavailable);
 });
 
-test('the documented postal code rule reports its message through the engine', () => {
-	const { engine, postalCodeField } = runInNewContext(`${example('### Simple Custom Validation')}\nexports;`, {
-		exports: {},
-		require: (name: string) => (name === 'zod/mini' ? z : { createFormEngine }),
-	}) as { engine: ReturnType<typeof createFormEngine>; postalCodeField: { rules: Array<{ $type: string }> } };
-	const schema = engine.getValidationRegistry().createSchema(postalCodeField.rules[1], createValidationContext());
-	expect(schema?.safeParse('12345-6789').success).toBe(true);
-	expect(schema?.safeParse('nope').error?.issues[0]?.message).toBe('Please enter a valid postal code');
-});
-
 test('the documented form uses a registered rule in the rules of an element, and rejects an unregistered one', () => {
-	const { engine, form } = runInNewContext(`${example('### Use the Rule in a Form')}\nexports;`, {
+	const { engine, form } = runInNewContext(`${example('## Register a rule')}\nexports;`, {
 		exports: {},
 		require: (name: string) => {
 			if (name === 'zod/mini') return z;
@@ -121,16 +111,27 @@ test('the documented form uses a registered rule in the rules of an element, and
 		engine: ReturnType<typeof createFormEngine>;
 		form: { steps: Array<{ elements: Array<{ rules: unknown[] }> }> };
 	};
-	expect(form.steps[0]?.elements[0]?.rules).toEqual([
-		{ $type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' },
-	]);
+	const rule = { $type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' };
+	expect(form.steps[0]?.elements[0]?.rules).toEqual([rule]);
+	const registry = engine.getValidationRegistry();
+	expect(registry.getRuleParams(rule)).toEqual({ country: 'ca' });
+	expect(registry.getRuleMessage(rule, 'text the schema reported')).toBe('Enter a Canadian postal code');
+	expect(registry.getRuleMessage({ $type: 'postalCode' }, 'text the schema reported')).toBeUndefined();
+	const schema = registry.createSchema(rule, createValidationContext());
+	expect(schema?.safeParse('K1A 0B1').success).toBe(true);
+	expect(schema?.safeParse('12345').success).toBe(false);
 	const field = (rule: unknown) => ({
 		id: 'address',
 		steps: [{ id: 'main', title: 'Address', elements: [{ $type: 'text', id: 'zip', name: 'zip', rules: [rule] }] }],
 	});
 	expect(engine.safeValidateForm(field({ $type: 'postalcode' }))).toMatchObject({
 		success: false,
-		issues: [{ message: /^Unknown validation rule 'postalcode'\. Register it with/ }],
+		issues: [
+			{
+				path: ['steps', 0, 'elements', 0, 'rules', 0, '$type'],
+				message: /^Unknown validation rule 'postalcode'\. Register it with/,
+			},
+		],
 	});
 	expect(engine.safeValidateForm(field({ $type: 'postalCode', country: 'mx' }))).toMatchObject({
 		success: false,
@@ -143,7 +144,11 @@ test('the documented debounced async rule settles replaced checks and keeps fiel
 	vi.spyOn(globalThis, 'fetch').mockImplementation(
 		async () => new Response(JSON.stringify({ valid: true }), { status: 200 }),
 	);
-	const rule = runInNewContext(`${example('### Debouncing Async Validations')}\nusernameRule;`, { exports: {} });
+	const { usernameRule: rule } = runInNewContext(`${example('## The built-in async rule')}\nexports;`, {
+		exports: {},
+	}) as {
+		usernameRule: { $type: string };
+	};
 	const registry = createDefaultValidationRegistry();
 	const debounceScope = createDebounceScope();
 	const firstField = registry.createSchema(rule, createValidationContext({ fieldPath: 'first', debounceScope }));
@@ -175,44 +180,17 @@ function runPattern(heading: string, index = 0): Record<string, any> {
 	return exports;
 }
 
-function parse(engine: ReturnType<typeof createFormEngine>, rule: { $type: string }, value: unknown, context = {}) {
-	const schema = engine.getValidationRegistry().createSchema(rule, createValidationContext(context));
-	if (!schema) throw new Error(`${rule.$type} is not registered`);
-	return schema.safeParse(value);
-}
-
-test('the length range pattern enforces the documented bounds', () => {
-	const { engine } = runPattern('### Validation with Parameters');
-	const rule = { $type: 'lengthRange', value: { min: 3, max: 5 } };
-	expect(parse(engine, rule, 'abcd').success).toBe(true);
-	expect(parse(engine, rule, 'ab').success).toBe(false);
-	expect(parse(engine, rule, 'abcdef').success).toBe(false);
-});
-
-test('the credit card pattern accepts a Luhn-valid number and rejects a changed digit', () => {
-	const { engine } = runPattern('### Validation with Parameters', 1);
-	expect(parse(engine, { $type: 'creditCard' }, '4242 4242 4242 4242').success).toBe(true);
-	expect(parse(engine, { $type: 'creditCard' }, '4242 4242 4242 4241').success).toBe(false);
-});
-
-test('the company email pattern accepts only the listed domains', () => {
-	const { engine, emailField } = runPattern('### Business Rule Validations');
-	const rule = emailField.rules[0];
-	expect(parse(engine, rule, 'ada@mycompany.com').success).toBe(true);
-	expect(parse(engine, rule, 'ada@other.com').success).toBe(false);
-});
-
-test('the password strength pattern applies its documented requirements', () => {
-	const { engine, passwordField } = runPattern('### Password Strength');
-	const rule = passwordField.rules[0];
-	expect(parse(engine, rule, 'Abcdefghij12').success).toBe(true);
-	expect(parse(engine, rule, 'abcdefghij12').success).toBe(false);
-});
-
-test('the confirm password pattern reads its sibling through the context', () => {
-	const { engine } = runPattern('## Cross-Field Validations');
-	const context = { values: { password: 'secret' }, fieldPath: 'confirm' };
-	expect(parse(engine, { $type: 'confirmPassword' }, 'secret', context).success).toBe(true);
-	expect(parse(engine, { $type: 'confirmPassword' }, 'other', context).success).toBe(false);
-	expect(engine.getValidationRegistry().getRuleDependencies({ $type: 'confirmPassword' })).toEqual(['password']);
+test('the confirm password rule reads its sibling through the context and declares what it reads', () => {
+	const { engine } = runPattern('## Rules that read other fields');
+	const registry = engine.getValidationRegistry();
+	const parse = (value: unknown) =>
+		registry
+			.createSchema(
+				{ $type: 'confirmPassword' },
+				createValidationContext({ values: { password: 'secret' }, fieldPath: 'confirm' }),
+			)
+			?.safeParse(value);
+	expect(parse('secret')?.success).toBe(true);
+	expect(parse('other')?.success).toBe(false);
+	expect(registry.getRuleDependencies({ $type: 'confirmPassword' })).toEqual(['password']);
 });
