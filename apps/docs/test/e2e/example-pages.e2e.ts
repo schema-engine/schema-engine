@@ -104,7 +104,7 @@ describe('the forms example pages', () => {
 		await open(contactPath);
 		const form = react();
 		const radiant = page.locator('.docs-form-renderer-preview form').first();
-		const marked = async (scope: typeof form) => scope.locator('[data-se-required-marker]').count();
+		const marked = async (scope: typeof form) => scope.locator('[data-se-required-marker]:visible').count();
 		expect(await marked(form)).toBe(4);
 		expect(await marked(radiant)).toBe(4);
 
