@@ -1,4 +1,4 @@
-import { readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const repoRoot = join(import.meta.dirname, '../../..');
@@ -37,15 +37,21 @@ async function listOrEmpty(folder: string): Promise<string[]> {
  * Finds the one skill the packages ship: the router of {@link ROUTER_PACKAGE} and every `skill/reference/*.md` of every package.
  *
  * @remarks
- * The references are served flat, so a name must be unique across packages. A package other than the router's with a `SKILL.md`
- * is an error, because a skill has one router.
+ * The references are served flat, so a name must be unique across packages. A package other than the router's may hold a
+ * `SKILL.md` only when it is a copy of the router, which its build makes; any other is an error, because a skill has one router.
  */
 export async function findSkillSources(packagesRoot = PACKAGES_ROOT): Promise<SkillSources> {
 	const references: SkillReference[] = [];
 	for (const pkg of await listOrEmpty(packagesRoot)) {
 		const skillRoot = join(packagesRoot, pkg, 'skill');
 		if (pkg !== ROUTER_PACKAGE && (await listOrEmpty(skillRoot)).includes('SKILL.md')) {
-			throw new Error(`packages/${pkg}/skill/SKILL.md: the router lives in packages/${ROUTER_PACKAGE} only.`);
+			const copy = await readFile(join(skillRoot, 'SKILL.md'), 'utf8');
+			const router = await readFile(join(packagesRoot, ROUTER_PACKAGE, 'skill', 'SKILL.md'), 'utf8');
+			if (copy !== router) {
+				throw new Error(
+					`packages/${pkg}/skill/SKILL.md: the router lives in packages/${ROUTER_PACKAGE} only, and a copy must match it.`,
+				);
+			}
 		}
 		for (const name of await listOrEmpty(join(skillRoot, 'reference'))) {
 			const clash = references.find((reference) => reference.name === name);

@@ -1,4 +1,4 @@
-import { existsSync, globSync, lstatSync } from 'node:fs';
+import { copyFileSync, existsSync, globSync, lstatSync } from 'node:fs';
 import path from 'node:path';
 import { build, context, type BuildOptions, type Plugin } from 'esbuild';
 
@@ -79,8 +79,24 @@ function collectEntryPoints(cwd: string, patterns: string[], exclude: string[]):
 	return [...files];
 }
 
+/**
+ * Puts the skill router of `@schema-engine/registry` into the `skill` folder of a package that ships a skill.
+ *
+ * @remarks
+ * The router is one file, `packages/registry/skill/SKILL.md`. Every published package carries a copy, so an agent that installed
+ * only that package finds it, whatever the package manager links at the top level. The copy is derived on every build and is
+ * not tracked.
+ */
+function copySkillRouter(cwd: string): void {
+	const router = path.resolve(cwd, '../registry/skill/SKILL.md');
+	const skillRoot = path.join(cwd, 'skill');
+	if (path.resolve(skillRoot, 'SKILL.md') === router || !existsSync(skillRoot) || !existsSync(router)) return;
+	copyFileSync(router, path.join(skillRoot, 'SKILL.md'));
+}
+
 export async function buildLib(options: BuildLibOptions): Promise<void> {
 	const cwd = options.cwd ?? process.cwd();
+	copySkillRouter(cwd);
 	const watch = process.argv.includes('--watch');
 	const outdir = path.resolve(cwd, options.outdir ?? 'dist');
 	const outbase = path.resolve(cwd, options.outbase ?? 'src');

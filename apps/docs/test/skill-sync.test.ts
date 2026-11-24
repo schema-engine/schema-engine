@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { filesUnder } from '../../../test-utils/packed-skill';
-import { findSkillSources, PACKAGES_ROOT, ROUTER_PACKAGE } from '../scripts/skill-sources';
+import { findSkillSources, PACKAGES_ROOT } from '../scripts/skill-sources';
 
 const examplesRoot = path.join(import.meta.dirname, '../../../test-utils/skill-examples');
 const read = (file: string) => readFileSync(file, 'utf8');
@@ -55,12 +55,20 @@ describe('the router and the references the packages ship', () => {
 			const root = path.join(PACKAGES_ROOT, pkg, 'skill');
 			if (!existsSync(root)) continue;
 			const expected = [
-				...(pkg === ROUTER_PACKAGE ? ['SKILL.md'] : []),
+				'SKILL.md',
 				...sources.references
 					.filter((reference) => reference.package === pkg)
 					.map(({ name }) => `reference/${name}`),
 			];
 			expect(filesUnder(root), pkg).toEqual(expected.toSorted());
+		}
+	});
+
+	test('every package that ships a skill carries a copy of the router, which its build makes from the one source', () => {
+		for (const pkg of packageNames) {
+			const root = path.join(PACKAGES_ROOT, pkg, 'skill');
+			if (!existsSync(root)) continue;
+			expect(read(path.join(root, 'SKILL.md')), pkg).toBe(router);
 		}
 	});
 

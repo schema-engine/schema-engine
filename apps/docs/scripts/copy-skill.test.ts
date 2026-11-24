@@ -70,6 +70,17 @@ test('refuses a reference name two packages ship, and a router outside the regis
 
 	await rm(join(packages, 'forms'), { recursive: true });
 	await rm(join(packages, 'actions', 'skill', 'reference'), { recursive: true });
-	await write(join(packages, 'actions', 'skill', 'SKILL.md'));
+	await write(join(packages, 'actions', 'skill', 'SKILL.md'), '# Another router');
 	await expect(findSkillSources(packages)).rejects.toThrow('router lives in packages/registry only');
+});
+
+test('accepts the copy of the router a package build makes', async () => {
+	const packages = await scratch();
+	await write(join(packages, 'registry', 'skill', 'SKILL.md'));
+	await write(join(packages, 'actions', 'skill', 'SKILL.md'));
+	await write(join(packages, 'actions', 'skill', 'reference', 'actions.md'));
+
+	const sources = await findSkillSources(packages);
+
+	expect(sources.references.map(({ name }) => name)).toEqual(['actions.md']);
 });
