@@ -1,7 +1,7 @@
 {
 	"name": "@schema-engine/forms",
 	"type": "module",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"description": "The forms domain of Schema Engine: JSON forms with elements, validation, constraints, steps, form state and submission, with no renderer",
 	"keywords": [
 		"schema-engine",

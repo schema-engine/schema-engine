@@ -1,7 +1,7 @@
 {
 	"name": "@schema-engine/forms-radiant",
 	"type": "module",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"description": "The Radiant renderer for Schema Engine forms, with 18 ready elements built on Radiant UI",
 	"keywords": [
 		"schema-engine",

@@ -1,5 +1,13 @@
 # @schema-engine/forms-radiant
 
+## 0.5.2
+
+### Patch Changes
+
+- [#408](https://github.com/schema-engine/schema-engine/pull/408) [`1adccc7`](https://github.com/schema-engine/schema-engine/commit/1adccc70f2fe81361510df0723e9149559673ae7) Thanks [@andeeplus](https://github.com/andeeplus)! - Cards, the hero form, fieldsets, array rows, the drop zone and the debugger timeline now round their corners with Radiant UI's `--radius-container` instead of `--radius-control`, so a theme can round controls fully (pill) without turning cards into ellipses. With the default Radiant UI radius pack, containers are slightly rounder (5.6px instead of 4.2px).
+- Updated dependencies []:
+    - @schema-engine/forms@0.5.2
+
 ## 0.5.1
 
 ### Patch Changes

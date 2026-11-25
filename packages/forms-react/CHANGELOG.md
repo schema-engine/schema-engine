@@ -1,5 +1,12 @@
 # @schema-engine/forms-react
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies []:
+    - @schema-engine/forms@0.5.2
+
 ## 0.5.1
 
 ### Patch Changes
