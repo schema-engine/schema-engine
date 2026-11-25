@@ -8,7 +8,7 @@ import {
 	nestedHostTheme,
 	nestedThemeForm,
 	type NestedThemeFormOptions,
-} from '../../../../test-utils/nested-theme-acceptance';
+} from '../../../../test-utils/nested-theme-fixtures';
 import { createSsrAcceptanceEngine } from './render-form-ssr-html';
 
 await import('@/components/form-instance.script');

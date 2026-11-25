@@ -167,7 +167,7 @@ test('a nested error clears when the value becomes valid', async () => {
 	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
 	await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Street is required'));
 	await userEvent.fill(screen.getByRole('textbox'), 'abc');
-	await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/^$/));
+	await waitFor(() => expect(screen.getByRole('alert').textContent).toBe(''));
 });
 
 const vat: ElementConfig = {
@@ -199,7 +199,7 @@ test('a require constraint makes the field required', async () => {
 	expect(screen.getByRole('textbox', { name: 'VAT' })).toBeRequired();
 	await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
 	await waitFor(() => expect(screen.getByRole('textbox', { name: 'VAT' })).toHaveAttribute('aria-invalid', 'true'));
-	expect(screen.getByLabelText('VAT error')).toHaveTextContent(/^$/);
+	expect(screen.getByLabelText('VAT error').textContent).toBe('');
 	await userEvent.fill(screen.getByRole('textbox', { name: 'customerType' }), 'individual');
 	await waitFor(() => expect(screen.getByRole('textbox', { name: 'VAT' })).toHaveAttribute('aria-invalid', 'false'));
 	expect(screen.getByRole('textbox', { name: 'VAT' })).not.toBeRequired();

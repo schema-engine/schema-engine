@@ -6,7 +6,7 @@ import {
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
-import { ssrNestedFields } from '../../../../test-utils/ssr-grid-acceptance';
+import { ssrNestedFields } from '../../../../test-utils/ssr-grid-fixtures';
 
 const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
