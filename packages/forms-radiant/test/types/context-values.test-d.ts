@@ -4,7 +4,7 @@
  */
 
 import type { ContextType } from '@ecopages/radiant/context';
-import type { FormEngineRuntime } from '@schema-engine/forms';
+import type { FormEngineRuntime, FormWizard } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import { formEngineContext } from '../../src/components/provider';
 import { formInstanceContext, type FormInstanceContextValue } from '../../src/contexts/form-instance-context';
@@ -16,3 +16,5 @@ assertType<Equal<ContextType<typeof formInstanceContext>, FormInstanceContextVal
 assertType<
 	Equal<ContextType<typeof formEngineContext>, { engine?: FormEngineRuntime; formatIssue?: FormIssueFormatter }>
 >();
+
+assertType<FormInstanceContextValue extends FormWizard ? true : false>();

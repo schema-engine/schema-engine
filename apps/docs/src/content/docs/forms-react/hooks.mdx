@@ -67,7 +67,7 @@ or a list of paths) and `useFieldArray` cover observation and array editing.
 Import engine hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormEngine` reads the `FormEngine` supplied by `FormEngineProvider`, while
-`useFormInstanceActions` exposes the form's wizard: `current` (the id of the current step), `steps` (every step in
+`useFormWizard` exposes the form's wizard: `current` (the id of the current step), `steps` (every step in
 order, each with `skipped`, `visited`, `complete`, `invalid` and `reachable`), `navigating`, and the commands `next()`, `back()`
 and `goTo(id)`. Each command resolves to one outcome string: `'moved'`, `'invalid'` (the step has errors, which are
 shown and focused), `'failed'` (a rule could not run, so the step has no verdict and the cause is logged), `'overtaken'` (an edit outran the check), `'refused'` (nowhere to go, or a skipped or
@@ -79,4 +79,4 @@ is passed over by `next` and `back` and refused by `goTo`.
 
 The form owns all of this and the submission, so `useFormContext().reset`, an action's `form.reset` and a native
 reset button all return the form to its first step with an idle submission. See [Wizard](/docs/forms/wizard) for
-a stepper built on `useFormInstanceActions`.
+a stepper built on `useFormWizard`.

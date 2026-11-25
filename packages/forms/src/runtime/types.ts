@@ -99,6 +99,17 @@ export interface FormRuntimeSnapshot {
 	readonly steps: readonly FormStepState[];
 }
 
+/**
+ * What an application reads of a form's wizard: where it is, and the commands that move it.
+ *
+ * @remarks
+ * The commands are those of the form's runtime and end with an outcome (`'moved'`, `'invalid'`, `'busy'`, ...). `steps` lists every
+ * step in order with `skipped`, `visited`, `complete` and `invalid`; a skipped step is passed over by `next` and `back` and refused by `goTo`.
+ * Each renderer exposes it its own way: `useFormWizard` in React, `FormController.wizard` in Radiant.
+ */
+export type FormWizard = Pick<FormRuntimeSnapshot, 'current' | 'steps' | 'navigating'> &
+	Pick<FormRuntime, 'next' | 'back' | 'goTo'>;
+
 /** What only the renderer can do. */
 export interface FormRuntimeHost {
 	/**

@@ -16,7 +16,7 @@ import { FormProvider } from '../../src/components/form-provider';
 import { FormRenderer } from '../../src/components/internals/form-renderer';
 import { FormEngineContext } from '../../src/components/provider';
 import { useFormContext, useFormField } from '../../src/hooks/form-state';
-import { useFormInstanceActions } from '../../src/hooks/use-form-context';
+import { useFormWizard } from '../../src/hooks/use-form-context';
 
 const handled: string[] = [];
 const contexts: BuilderActionRuntimeContext[] = [];
@@ -91,7 +91,7 @@ function Field({ name }: { name: string }) {
 	);
 }
 function Controls() {
-	const { steps, current, next } = useFormInstanceActions();
+	const { steps, current, next } = useFormWizard();
 	const currentStep = steps.filter(({ skipped }) => !skipped).findIndex(({ id }) => id === current);
 	const { validate, formState } = useFormContext();
 	const { status, failures } = formState.submission;

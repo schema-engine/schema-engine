@@ -131,4 +131,171 @@ describe('FormController over the form instance container', () => {
 		expect(listener).toHaveBeenCalled();
 		stop();
 	});
+
+	describe('wizard', () => {
+		const wizardFields = [
+			{ id: 'a', title: 'A', elements: [{ $type: 'input', id: 'title', name: 'title', label: 'Title' }] },
+			{ id: 'b', title: 'B', elements: [] },
+		];
+		const createWizardRuntime = () => {
+			const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+			const config = engine.validateForm({ id: 'wizard', steps: wizardFields });
+			return createFormRuntime({ engine, config, host: { focus: () => {} } });
+		};
+
+		test('reads undefined while the form has no runtime, and on a host with no instance', () => {
+			const orphan = new FormController(document.createElement('div'));
+			expect(orphan.wizard.get()).toBeUndefined();
+			expect(orphan.submission.get()).toBeUndefined();
+			expect(() => orphan.clearSubmission()).not.toThrow();
+
+			const element = document.createElement('div');
+			const host = document.createElement('div');
+			element.append(host);
+			provideTestRuntime(element, undefined);
+			const form = new FormController(host);
+			const stop = form.wizard.subscribe(() => {});
+			expect(form.wizard.get()).toBeUndefined();
+			expect(form.submission.get()).toBeUndefined();
+			stop();
+		});
+
+		test('reads the current step, the steps and the commands of the runtime, and notifies when a step moves', async () => {
+			const runtime = createWizardRuntime();
+			const element = document.createElement('div');
+			const host = document.createElement('div');
+			element.append(host);
+			provideTestRuntime(element, runtime);
+			const form = new FormController(host);
+			const listener = vi.fn();
+			const stop = form.wizard.subscribe(listener);
+			listener.mockClear();
+
+			const first = form.wizard.get();
+			expect(first?.current).toBe('a');
+			expect(first?.steps.map(({ id }) => id)).toEqual(['a', 'b']);
+			expect(first?.next).toBe(runtime.next);
+			expect(first?.goTo).toBe(runtime.goTo);
+
+			await expect(first?.next()).resolves.toBe('moved');
+			expect(form.wizard.get()?.current).toBe('b');
+			expect(listener).toHaveBeenCalled();
+			stop();
+		});
+
+		test('keeps the wizard object, and does not notify, while a value or the submission changes', async () => {
+			const runtime = createWizardRuntime();
+			const element = document.createElement('div');
+			const host = document.createElement('div');
+			element.append(host);
+			provideTestRuntime(element, runtime);
+			const form = new FormController(host);
+			const listener = vi.fn();
+			const stop = form.wizard.subscribe(listener);
+			const before = form.wizard.get();
+			listener.mockClear();
+
+			runtime.container.setValue('title', 'typed');
+			runtime.clearSubmission();
+
+			expect(form.wizard.get()).toBe(before);
+			expect(listener).not.toHaveBeenCalled();
+			stop();
+		});
+
+		test('follows the runtime the instance replaces', () => {
+			const [first, second] = [createWizardRuntime(), createWizardRuntime()];
+			const element = document.createElement('div');
+			const host = document.createElement('div');
+			element.append(host);
+			const provider = provideTestRuntime(element, first);
+			const form = new FormController(host);
+			const listener = vi.fn();
+			const stop = form.wizard.subscribe(listener);
+			expect(form.wizard.get()?.next).toBe(first.next);
+			listener.mockClear();
+
+			provider.setContext({ ...provider.getContext(), runtime: second });
+
+			expect(form.wizard.get()?.next).toBe(second.next);
+			expect(listener).toHaveBeenCalledTimes(1);
+			stop();
+		});
+
+		test('stops listening to the runtime once unsubscribed', async () => {
+			const runtime = createWizardRuntime();
+			const element = document.createElement('div');
+			const host = document.createElement('div');
+			element.append(host);
+			provideTestRuntime(element, runtime);
+			const form = new FormController(host);
+			const listener = vi.fn();
+			form.wizard.subscribe(listener)();
+			listener.mockClear();
+
+			await runtime.next();
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('submission', () => {
+		test('reads the runtime submission, notifies when it changes, and clearSubmission hides its outcome', async () => {
+			const { form, runtime } = createTestForm({}, [
+				{
+					$type: 'input',
+					id: 'title',
+					name: 'title',
+					label: 'Title',
+					rules: [{ $type: 'required', message: 'Required' }],
+				},
+			]);
+			const listener = vi.fn();
+			const stop = form.submission.subscribe(listener);
+			expect(form.submission.get()).toEqual({ status: 'idle', failures: [], submitCount: 0 });
+			listener.mockClear();
+
+			await expect(runtime.submit()).resolves.toBe('invalid');
+			expect(form.submission.get()?.submitCount).toBe(1);
+			expect(listener).toHaveBeenCalled();
+			const failed = form.submission.get();
+
+			listener.mockClear();
+			runtime.container.setValue('title', 'x');
+			expect(form.submission.get()).toBe(failed);
+			expect(listener).not.toHaveBeenCalled();
+
+			form.clearSubmission();
+			expect(form.submission.get()).toEqual({ status: 'idle', failures: [], submitCount: 1 });
+			stop();
+		});
+
+		test('follows the runtime the instance replaces', async () => {
+			const first = createTestForm();
+			const second = createTestForm({}, [
+				{
+					$type: 'input',
+					id: 'title',
+					name: 'title',
+					label: 'Title',
+					rules: [{ $type: 'required', message: 'Required' }],
+				},
+			]);
+			await second.runtime.submit();
+			const element = document.createElement('div');
+			const host = document.createElement('div');
+			element.append(host);
+			const provider = provideTestRuntime(element, first.runtime);
+			const form = new FormController(host);
+			const listener = vi.fn();
+			const stop = form.submission.subscribe(listener);
+			listener.mockClear();
+
+			provider.setContext({ ...provider.getContext(), runtime: second.runtime });
+
+			expect(form.submission.get()).toBe(second.runtime.getSnapshot().submission);
+			expect(listener).toHaveBeenCalledTimes(1);
+			stop();
+		});
+	});
 });

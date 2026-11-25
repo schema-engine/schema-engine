@@ -1,4 +1,4 @@
-import type { FormStepState, NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormStepState, FormWizard, NormalizedFormConfig } from '@schema-engine/forms';
 import {
 	createViewNavigation,
 	projectViewSteps,
@@ -32,18 +32,12 @@ export function createFormMeta(config: NormalizedFormConfig): FormMeta {
  * resolve everything from serializable props plus the instance context, without
  * a separate view context whose provider publishes after children serialize.
  */
-export function deriveFormSteps(
-	config: FormMeta,
-	instance: Pick<FormInstanceContextValue, 'current' | 'steps'>,
-): ViewStep[] {
+export function deriveFormSteps(config: FormMeta, instance: Pick<FormWizard, 'current' | 'steps'>): ViewStep[] {
 	return projectViewSteps(config.steps, instance.steps, instance.current);
 }
 
 /** The navigation a block reads: what can be reached from the current step, and the commands that move there. */
-export function deriveNavigation(
-	config: FormMeta,
-	instance: Pick<FormInstanceContextValue, 'current' | 'steps' | 'next' | 'back' | 'goTo'>,
-): ViewNavigation {
+export function deriveNavigation(config: FormMeta, instance: FormWizard): ViewNavigation {
 	return createViewNavigation(instance.steps, instance.current, instance);
 }
 
