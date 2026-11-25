@@ -1,4 +1,4 @@
-import { formatIssuePath } from '@schema-engine/registry';
+import { issuePath } from '@/engine/submission-schema';
 import { logger } from '@/lib/logger';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { buildSubmissionShape, type SubmissionShape } from '@/lib/submission-shape';
@@ -168,9 +168,7 @@ export function registerFormAgentTool(runtime: FormRuntime, options: FormAgentTo
 
 		const checked = submission.partial['~standard'].validate(input);
 		if (checked.issues) {
-			const lines = checked.issues.map(
-				(issue) => `- ${formatIssuePath(issue.path) || 'input'}: ${issue.message}`,
-			);
+			const lines = checked.issues.map((issue) => `- ${issuePath(issue) || 'input'}: ${issue.message}`);
 			return text(`The input does not match the form, so nothing was filled in:\n${lines.join('\n')}`);
 		}
 
