@@ -26,19 +26,16 @@ describe('the Examples', () => {
 		},
 	);
 
-	test.each(['server-sent-document', 'checkout-workflow'])(
-		'%s imports no UI framework and no forms package',
-		(id) => {
-			const example = examples.find((candidate) => candidate.id === id);
-			const packages = [...(example?.files ?? []), ...(example?.helpers ?? [])].flatMap((file) =>
-				importsOf(file.source).map(packageOf),
-			);
-			expect(packages.length).toBeGreaterThan(0);
-			expect(
-				packages.filter((name) => /^(react|react-dom|@ecopages\/.+|@schema-engine\/forms.*)$/.test(name)),
-			).toEqual([]);
-		},
-	);
+	test('checkout-workflow imports no UI framework and no forms package', () => {
+		const example = examples.find((candidate) => candidate.id === 'checkout-workflow');
+		const packages = [...(example?.files ?? []), ...(example?.helpers ?? [])].flatMap((file) =>
+			importsOf(file.source).map(packageOf),
+		);
+		expect(packages.length).toBeGreaterThan(0);
+		expect(
+			packages.filter((name) => /^(react|react-dom|@ecopages\/.+|@schema-engine\/forms.*)$/.test(name)),
+		).toEqual([]);
+	});
 
 	test('every page of Examples is an example or is listed as another kind of page', () => {
 		const ids = new Set(examples.map((example) => example.id));

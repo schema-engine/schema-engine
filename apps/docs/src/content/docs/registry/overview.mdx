@@ -53,25 +53,21 @@ Zod Mini ships no error messages, so the first lines load the English ones.
 
 ### 2. Resolve a node from JSON
 
-A node arrives as JSON, so its content is `unknown` until a schema has checked it. Look the `$type` up, validate the node with the registration's schema, then use the result. A `$type` that is not registered is a case to handle, not an exception:
+A node arrives as JSON, so its content is `unknown` until a schema has checked it. `safeParseNode` looks the `$type` up in the registry and validates the node with the registration's schema. It returns the registration with the validated configuration, or every issue. A `$type` that is not registered is an issue, not an exception:
 
 ```ts title="resolve.ts"
-import { safeParseStandardSchema } from '@schema-engine/registry';
+import { safeParseNode } from '@schema-engine/registry';
 import { badges } from './registry';
 
 export function resolve(json: string): string {
-	const node: { $type: string } = JSON.parse(json);
-	const registration = badges.get(node.$type);
-	if (!registration) return `No registration for $type '${node.$type}'.`;
+	const parsed = safeParseNode(badges, JSON.parse(json));
+	if (!parsed.success) return parsed.issues.map((issue) => issue.message).join('; ');
 
-	const parsed = safeParseStandardSchema(registration.schema, node);
-	if (!parsed.success) return parsed.error.issues.map((issue) => issue.message).join('; ');
-
-	return registration.render(parsed.data);
+	return parsed.registration.render(parsed.data);
 }
 ```
 
-`safeParseStandardSchema` runs the schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }`. It supports synchronous schemas only.
+`safeParseNode` never throws for a bad node, and it supports synchronous schemas only. Each issue has a `path`. Pass where the node sits in its document as a third argument and every path starts with it, which is how a walk over a tree reports [issues by position](/docs/registry/resolve-a-document).
 
 ### 3. Run it
 

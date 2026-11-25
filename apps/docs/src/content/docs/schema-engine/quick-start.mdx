@@ -110,7 +110,7 @@ Both inputs arrive as JSON text, as they would from a file or a server. The docu
 
 ```ts title="main.ts"
 import { ActionDispatcher, parseActions } from '@schema-engine/actions';
-import { safeParseStandardSchema } from '@schema-engine/registry';
+import { safeParseNode } from '@schema-engine/registry';
 import { actions, type Mailer } from './actions';
 import { components } from './components';
 
@@ -133,16 +133,14 @@ const mailer: Mailer = {
 	},
 };
 
-function renderNode(node: { $type: string }): string {
-	const component = components.get(node.$type);
-	if (!component) throw new Error(`No component is registered for '${node.$type}'.`);
-	const parsed = safeParseStandardSchema(component.schema, node);
-	if (!parsed.success) throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
-	return component.render(parsed.data);
+function renderNode(node: unknown): string {
+	const parsed = safeParseNode(components, node);
+	if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join('; '));
+	return parsed.registration.render(parsed.data);
 }
 
 async function main() {
-	const nodes: { $type: string }[] = JSON.parse(documentJson);
+	const nodes: unknown[] = JSON.parse(documentJson);
 	console.log(nodes.map(renderNode).join('\n'));
 
 	const parsed = parseActions(actions, JSON.parse(workflowJson));

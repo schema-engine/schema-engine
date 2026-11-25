@@ -58,6 +58,36 @@ type StandardSchemaSafeParseResult<T> =
 
 `StandardSchemaIssue` is the issue of the Standard Schema spec (`message` and an optional `path`), and `StandardSchemaSafeParseResult<T>` is what `safeParseStandardSchema` returns.
 
+## safeParseNode
+
+```typescript
+function safeParseNode<TRegistration extends BaseRegistration>(
+	registry: NodeLookup<TRegistration>,
+	node: unknown,
+	path?: ReadonlyArray<PropertyKey | { key: PropertyKey }>,
+): SafeParseNodeResult<TRegistration>;
+```
+
+Checks one node against the registration its `$type` names, without throwing. `registry` is anything with `get(key)`, so a `createRegistry` result, a `BaseRegistry` and a lookup over several registries all fit. `path` is where the node sits in its document, and every issue's `path` starts with it.
+
+```typescript
+interface NodeLookup<TRegistration extends BaseRegistration = BaseRegistration> {
+	get(key: string): TRegistration | undefined;
+}
+
+type SafeParseNodeResult<TRegistration extends BaseRegistration = BaseRegistration> =
+	{ success: true; registration: TRegistration; data: unknown } | { success: false; issues: StandardSchemaIssue[] };
+```
+
+| Node                                | Result                                                                                              |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Valid                               | `{ success: true, registration, data }`, where `data` is what the schema returned, defaults applied |
+| Not an object with a string `$type` | One issue at `path`: `A node is an object with a string $type.`                                     |
+| A `$type` no registration answers   | One issue at `[...path, '$type']`: `No registration for $type '<type>'.`                            |
+| The schema refuses it               | The schema's issues, each with `path` in front of the path the schema reported                      |
+
+It looks at one node. To walk a tree, call it for each node and pass each child its own `path`: [Resolve a document](/docs/registry/resolve-a-document). It throws, like `safeParseStandardSchema`, for a schema that validates asynchronously. The result has the `issues` shape of `parseActions`, so `(value) => safeParseNode(registry, value)` is a validator for [`parseYaml`](/docs/schema-engine/serialized-documents#yaml).
+
 ## BaseRegistry
 
 Abstract, mutable class for plugin systems that register at runtime. Prefer `createRegistry` otherwise.

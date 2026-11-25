@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { nodeIssues } from '../../../../test-utils/skill-examples/registry/draw-node';
 import { readSite } from '../../../../test-utils/skill-examples/registry/site-yaml';
 import { widgets } from '../../../../test-utils/skill-examples/registry/widgets';
 
@@ -13,6 +14,18 @@ describe('the registry of the skill', () => {
 	test('the registry is read-only', () => {
 		expect(Object.isFrozen(widgets)).toBe(true);
 		expect('register' in widgets).toBe(false);
+	});
+});
+
+describe('the node example', () => {
+	test('a valid node has no issues', () => {
+		expect(nodeIssues({ $type: 'card', title: 'Docs', tone: 'info' }, 0)).toEqual([]);
+	});
+
+	test('an issue starts with the position of the node it is about', () => {
+		const node: unknown = JSON.parse('{ "$type": "card", "title": 5, "tone": "info" }');
+		expect(nodeIssues(node, 2)).toEqual(['children.2.title: Invalid input']);
+		expect(nodeIssues({ $type: 'chip' }, 3)).toEqual(["children.3.$type: No registration for $type 'chip'."]);
 	});
 });
 
