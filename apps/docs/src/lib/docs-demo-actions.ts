@@ -8,6 +8,7 @@ import {
 	gtmPlugin as gtmEventPlugin,
 	notificationPlugin,
 } from '@schema-engine/forms';
+import { celebrateAction } from '@/lib/docs-celebrate-action';
 import { showDocsActionNotification } from '@/lib/docs-demo-notification';
 
 /**
@@ -30,6 +31,7 @@ export function createDocsDemoActions(): ActionRegistrationConstraint[] {
 				showDocsActionNotification(message, variant, action.duration ?? 3000);
 			},
 		}),
+		celebrateAction(),
 		formResetPlugin({
 			storage: localStorageAutoSaveStorage,
 			onReset: (context) => {
