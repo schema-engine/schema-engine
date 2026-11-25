@@ -6,7 +6,7 @@ order: 0
 
 # Examples
 
-An example is one use case, written as files you can copy into an app and run. Each example page shows every file word for word, and a test runs the same files, so a snippet cannot drift from the code that works.
+An example is one use case, written as files you can copy into an app and run. Each example page shows every file word for word, and a test runs the same files, so a snippet cannot drift from the code that works. The one exception is a helper, a file named `<name>.helper.ts` that holds only what a demo run needs, such as fake services or a stand-in network. The page names it where an import points at it and does not show it: the files that carry the lesson run with your own services in its place.
 
 ## What an example holds
 
@@ -53,7 +53,7 @@ Each forms example has React and Radiant tabs and the same two install lines, on
 
 ### Layout
 
-| Example                                     | Shows                                                                                                                                  | Install                                     |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| [A layout page](/docs/examples/layout-page) | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name                                         | `pnpm add @schema-engine/layout zod`        |
-| [A themed form](/docs/examples/theming)     | A host `tone` axis compiled into a theme shared by every engine, and one stylesheet for rhythm, the compact size hooks and the measure | The two install lines of the forms examples |
+| Example                                     | Shows                                                                                                                                  | Install                                              |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [A layout page](/docs/examples/layout-page) | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name                                         | `pnpm add @schema-engine/layout zod react react-dom` |
+| [A themed form](/docs/examples/theming)     | A host `tone` axis compiled into a theme shared by every engine, and one stylesheet for rhythm, the compact size hooks and the measure | The two install lines of the forms examples          |
