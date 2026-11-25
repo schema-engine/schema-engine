@@ -1,17 +1,19 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { outputBlocks } from '../../../../test/format-html';
 import { loadDocument } from './client';
 import { GET, orderDocument, type Order } from './server';
 
-const answer = (response: () => Response) => async () => response();
 /** The client talking to the route handler, without a network. */
 const server: typeof fetch = async (url, init) => GET(new Request(url, init));
 
 describe('loadDocument', () => {
+	beforeEach(() => void vi.stubGlobal('fetch', vi.fn(server)));
+	afterEach(() => void vi.unstubAllGlobals());
+
 	test('renders the nodes it knows and reports the ones it does not, each with its path', async () => {
-		const result = await loadDocument('https://shop.example/orders/1043', server);
+		const result = await loadDocument('https://shop.example/orders/1043');
 		expect(result).toEqual({
 			success: true,
 			html: [
@@ -23,7 +25,7 @@ describe('loadDocument', () => {
 	});
 
 	test('an invalid config is an issue at its field, and the rest still renders', async () => {
-		const result = await loadDocument('https://shop.example/orders/1042', server);
+		const result = await loadDocument('https://shop.example/orders/1042');
 		expect(result.success && result.html).toHaveLength(2);
 		expect(result.success && result.issues.map(({ path }) => path)).toEqual([
 			[1, 'tone'],
@@ -31,50 +33,34 @@ describe('loadDocument', () => {
 		]);
 	});
 
-	test('asks for JSON and gives the request the url it was called with', async () => {
-		const request = vi.fn(server);
-		await loadDocument('https://shop.example/orders/1042', request);
-		expect(request).toHaveBeenCalledWith('https://shop.example/orders/1042', {
+	test('asks for JSON and gives fetch the url it was called with', async () => {
+		await loadDocument('https://shop.example/orders/1042');
+		expect(fetch).toHaveBeenCalledWith('https://shop.example/orders/1042', {
 			headers: { Accept: 'application/json' },
 		});
 	});
 
-	test('a network failure, a status that is not a success and a body that is not JSON are results', async () => {
-		expect(
-			await loadDocument('/x', async () => {
-				throw new TypeError('Failed to fetch');
-			}),
-		).toEqual({ success: false, error: 'The server could not be reached.' });
-		expect(await loadDocument('https://shop.example/orders/9', server)).toEqual({
+	test('a status that is not a success is a result', async () => {
+		expect(await loadDocument('https://shop.example/orders/9')).toEqual({
 			success: false,
 			error: 'The server answered 404.',
 		});
-		expect(
-			await loadDocument(
-				'/x',
-				answer(() => new Response('', { status: 503 })),
-			),
-		).toEqual({
-			success: false,
-			error: 'The server answered 503.',
+		vi.stubGlobal('fetch', async () => new Response('', { status: 503 }));
+		expect(await loadDocument('/x')).toEqual({ success: false, error: 'The server answered 503.' });
+	});
+
+	test('a network failure and a body that is not JSON throw', async () => {
+		vi.stubGlobal('fetch', async () => {
+			throw new TypeError('Failed to fetch');
 		});
-		expect(
-			await loadDocument(
-				'/x',
-				answer(() => new Response('<html>')),
-			),
-		).toEqual({
-			success: false,
-			error: 'The answer is not JSON.',
-		});
+		await expect(loadDocument('/x')).rejects.toThrow('Failed to fetch');
+		vi.stubGlobal('fetch', async () => new Response('<html>'));
+		await expect(loadDocument('/x')).rejects.toThrow(SyntaxError);
 	});
 
 	test('a body that is not a document is one issue', async () => {
-		const result = await loadDocument(
-			'/x',
-			answer(() => Response.json({ $type: 'badge' })),
-		);
-		expect(result).toEqual({
+		vi.stubGlobal('fetch', async () => Response.json({ $type: 'badge' }));
+		expect(await loadDocument('/x')).toEqual({
 			success: true,
 			html: [],
 			issues: [{ message: 'A document is a list of nodes.', path: [] }],

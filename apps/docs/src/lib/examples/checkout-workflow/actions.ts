@@ -3,30 +3,22 @@ import { ActionRegistry, defineAction, type ActionConfigBase } from '@schema-eng
 
 z.config(z.locales.en());
 
-/** What the actions of a checkout read and change. A test, or another runtime, passes its own. */
+/**
+ * The services the actions of a checkout call.
+ *
+ * @remarks
+ * The actions pass their `signal` to the calls that wait, so a cancelled action stops waiting. An app passes clients
+ * of its own services, and a test passes fakes.
+ */
 export interface CheckoutContext {
-	stock: Record<string, number>;
-	cardLimit: number;
-	/** What left the shop, in order: the warehouse, the analytics and the mailer. */
-	sent: string[];
+	inventory: { reserve(sku: string, quantity: number): Promise<{ ok: true } | { ok: false; left: number }> };
+	payments: { charge(amount: number, options: { signal: AbortSignal }): Promise<{ approved: boolean }> };
+	warehouse: { notify(options: { signal: AbortSignal }): Promise<void> };
+	analytics: { track(event: string, options: { signal: AbortSignal }): Promise<void> };
+	mailer: { sendReceipt(to: string): Promise<void> };
 }
 
 export type CheckoutTrigger = 'change' | 'submit';
-
-/** Waits `ms`, and rejects as soon as `signal` aborts, so a cancelled action stops waiting. */
-function delay(ms: number, signal: AbortSignal): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const timer = setTimeout(resolve, ms);
-		signal.addEventListener(
-			'abort',
-			() => {
-				clearTimeout(timer);
-				reject(new DOMException('The operation was aborted.', 'AbortError'));
-			},
-			{ once: true },
-		);
-	});
-}
 
 const define = defineAction<CheckoutContext, CheckoutTrigger>();
 
@@ -42,12 +34,11 @@ const reserveStock = define<ReserveStockConfig>({
 		quantity: z.number().check(z.int(), z.positive()),
 	}),
 	metadata: { name: 'Reserve stock', defaultTriggers: ['submit'] },
-	execute: async ({ config, stock }) => {
-		const left = stock[config.sku] ?? 0;
-		if (left < config.quantity) {
-			return { success: false, error: `Only ${left} of ${config.sku} left`, shouldContinue: false };
+	execute: async ({ config, inventory }) => {
+		const reservation = await inventory.reserve(config.sku, config.quantity);
+		if (!reservation.ok) {
+			return { success: false, error: `Only ${reservation.left} of ${config.sku} left`, shouldContinue: false };
 		}
-		stock[config.sku] = left - config.quantity;
 		return { success: true, message: `Reserved ${config.quantity} of ${config.sku}` };
 	},
 });
@@ -60,11 +51,9 @@ const chargeCard = define<ChargeCardConfig>({
 	$type: 'chargeCard',
 	schema: z.object({ amount: z.number().check(z.positive()) }),
 	metadata: { name: 'Charge the card', defaultTriggers: ['submit'] },
-	execute: async ({ config, cardLimit, signal }) => {
-		await delay(10, signal);
-		if (config.amount > cardLimit) {
-			return { success: false, error: 'The card was declined', shouldContinue: false };
-		}
+	execute: async ({ config, payments, signal }) => {
+		const { approved } = await payments.charge(config.amount, { signal });
+		if (!approved) return { success: false, error: 'The card was declined', shouldContinue: false };
 		return { success: true, message: `Charged ${config.amount}` };
 	},
 });
@@ -75,9 +64,8 @@ const notifyWarehouse = define<NotifyWarehouseConfig>({
 	$type: 'notifyWarehouse',
 	schema: z.object({}),
 	metadata: { name: 'Notify the warehouse', defaultTriggers: ['submit'] },
-	execute: async ({ sent, signal }) => {
-		await delay(50, signal);
-		sent.push('warehouse');
+	execute: async ({ warehouse, signal }) => {
+		await warehouse.notify({ signal });
 		return { success: true, message: 'Warehouse notified' };
 	},
 });
@@ -90,9 +78,8 @@ const trackPurchase = define<TrackPurchaseConfig>({
 	$type: 'trackPurchase',
 	schema: z.object({ event: z.string() }),
 	metadata: { name: 'Track the purchase', defaultTriggers: ['change', 'submit'] },
-	execute: async ({ config, sent, signal }) => {
-		await delay(50, signal);
-		sent.push(`analytics:${config.event}`);
+	execute: async ({ config, analytics, signal }) => {
+		await analytics.track(config.event, { signal });
 		return { success: true, message: `Tracked ${config.event}` };
 	},
 });
@@ -105,8 +92,8 @@ const sendReceipt = define<SendReceiptConfig>({
 	$type: 'sendReceipt',
 	schema: z.object({ to: z.email() }),
 	metadata: { name: 'Send the receipt', defaultTriggers: ['submit'] },
-	execute: async ({ config, sent }) => {
-		sent.push(`receipt:${config.to}`);
+	execute: async ({ config, mailer }) => {
+		await mailer.sendReceipt(config.to);
 		return { success: true, message: `Receipt sent to ${config.to}` };
 	},
 });

@@ -120,7 +120,7 @@ describe.each([
 
 		expect(host.querySelector('form')).toBeNull();
 		expect(host.querySelector('[role="alert"]')?.textContent).toContain(
-			'steps.0.elements.4.$type: Unknown element type',
+			'steps[0].elements[4].$type: Unknown element type',
 		);
 	});
 });

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FormSubmitHelpers } from '@schema-engine/forms';
 import { loadForm } from './load-form';
 import { GET, POST, signupForm } from './server';
@@ -6,18 +6,22 @@ import { engine as radiantEngine } from './server-driven-form.radiant';
 import { engine as reactEngine } from './server-driven-form.react';
 import { signUp } from './submit';
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+	vi.restoreAllMocks();
+	vi.unstubAllGlobals();
+});
 
 const server: typeof fetch = async (url, init) => GET(new Request(url, init));
-const answer = (response: () => Response) => async () => response();
 const origin = 'https://app.example';
+
+beforeEach(() => void vi.stubGlobal('fetch', vi.fn(server)));
 
 describe.each([
 	['React', reactEngine],
 	['Radiant', radiantEngine],
 ])('loadForm in the %s engine', (_renderer, engine) => {
 	test('returns the config the server sent, checked and normalized', async () => {
-		const loaded = await loadForm(engine, `${origin}/forms/signup`, server);
+		const loaded = await loadForm(engine, `${origin}/forms/signup`);
 		expect(loaded.success && loaded.config.steps[0]?.elements.map((element) => element.$type)).toEqual([
 			'input',
 			'input',
@@ -27,40 +31,23 @@ describe.each([
 	});
 
 	test('a config this client cannot render is a list of issues with their paths, not an error', async () => {
-		const loaded = await loadForm(engine, `${origin}/forms/signup?next`, server);
+		const loaded = await loadForm(engine, `${origin}/forms/signup?next`);
 		expect(loaded.success).toBe(false);
 		expect(!loaded.success && loaded.issues).toHaveLength(1);
 		expect(!loaded.success && loaded.issues[0]).toBe(
-			"steps.0.elements.4.$type: Unknown element type 'rating'. Register it with createFormEngine({ elements: [...] }).",
+			"steps[0].elements[4].$type: Unknown element type 'rating'. Register it with createFormEngine({ elements: [...] }).",
 		);
 	});
 
-	test('a network failure, an error status and a body that is not JSON are issues', async () => {
-		expect(
-			await loadForm(engine, '/x', async () => {
-				throw new TypeError('Failed to fetch');
-			}),
-		).toEqual({ success: false, issues: ['The server could not be reached.'] });
-		expect(
-			await loadForm(
-				engine,
-				'/x',
-				answer(() => new Response('', { status: 404 })),
-			),
-		).toEqual({
-			success: false,
-			issues: ['The server answered 404.'],
+	test('an error status is an issue, and a network failure or a body that is not JSON throws', async () => {
+		vi.stubGlobal('fetch', async () => new Response('', { status: 404 }));
+		expect(await loadForm(engine, '/x')).toEqual({ success: false, issues: ['The server answered 404.'] });
+		vi.stubGlobal('fetch', async () => {
+			throw new TypeError('Failed to fetch');
 		});
-		expect(
-			await loadForm(
-				engine,
-				'/x',
-				answer(() => new Response('<html>')),
-			),
-		).toEqual({
-			success: false,
-			issues: ['The answer is not JSON.'],
-		});
+		await expect(loadForm(engine, '/x')).rejects.toThrow('Failed to fetch');
+		vi.stubGlobal('fetch', async () => new Response('<html>'));
+		await expect(loadForm(engine, '/x')).rejects.toThrow(SyntaxError);
 	});
 });
 
