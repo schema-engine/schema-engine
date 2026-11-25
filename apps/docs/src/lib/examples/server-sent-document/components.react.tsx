@@ -1,18 +1,17 @@
+/** @jsxImportSource react */
+import type { ReactNode } from 'react';
 import * as z from 'zod/mini';
-import type { ComponentRegistration } from '@schema-engine/registry';
+import { createRegistry, type ComponentRegistration } from '@schema-engine/registry';
 
 z.config(z.locales.en());
 
-/** A registration of the design system: a `ComponentRegistration` whose `render` draws the component as HTML. */
+/** A registration of the design system: a `ComponentRegistration` whose `render` draws the component in React. */
 export interface Component extends ComponentRegistration {
-	render(config: unknown): string;
+	render(config: unknown): ReactNode;
 }
 
-/** Escapes the characters that end a text or an attribute value in HTML. */
-export const escape = (text: string) => text.replace(/[&<>"]/g, (character) => `&#${character.charCodeAt(0)};`);
-
 /** A link target the design system accepts: a path on this site or an http(s) URL, never `javascript:`. */
-export const hrefSchema = z.string().check(z.regex(/^(\/|https?:\/\/)/, 'Use a path or an http(s) URL'));
+const hrefSchema = z.string().check(z.regex(/^(\/|https?:\/\/)/, 'Use a path or an http(s) URL'));
 
 const buttonSchema = z.object({
 	$type: z.literal('button'),
@@ -21,14 +20,21 @@ const buttonSchema = z.object({
 	variant: z.optional(z.enum(['primary', 'secondary'])),
 });
 
-export const button: Component = {
+const button: Component = {
 	$type: 'button',
 	schema: buttonSchema,
 	metadata: { name: 'Button', description: 'An action. With an href it is a link.', tags: ['action'] },
 	render({ label, href, variant = 'primary' }: z.output<typeof buttonSchema>) {
-		return href === undefined
-			? `<button type="button" class="button button-${variant}">${escape(label)}</button>`
-			: `<a class="button button-${variant}" href="${escape(href)}">${escape(label)}</a>`;
+		const className = `button button-${variant}`;
+		return href === undefined ? (
+			<button type="button" className={className}>
+				{label}
+			</button>
+		) : (
+			<a className={className} href={href}>
+				{label}
+			</a>
+		);
 	},
 };
 
@@ -38,12 +44,12 @@ const badgeSchema = z.object({
 	tone: z.optional(z.enum(['info', 'success', 'danger'])),
 });
 
-export const badge: Component = {
+const badge: Component = {
 	$type: 'badge',
 	schema: badgeSchema,
 	metadata: { name: 'Badge', description: 'A short status label.', tags: ['status'] },
 	render({ label, tone = 'info' }: z.output<typeof badgeSchema>) {
-		return `<span class="badge badge-${tone}">${escape(label)}</span>`;
+		return <span className={`badge badge-${tone}`}>{label}</span>;
 	},
 };
 
@@ -54,15 +60,18 @@ const calloutSchema = z.object({
 	tone: z.optional(z.enum(['info', 'success', 'danger'])),
 });
 
-export const callout: Component = {
+const callout: Component = {
 	$type: 'callout',
 	schema: calloutSchema,
 	metadata: { name: 'Callout', description: 'A message that stands out from the page.', tags: ['status'] },
 	render({ title, text, tone = 'info' }: z.output<typeof calloutSchema>) {
-		const body = text === undefined ? '' : ` <span>${escape(text)}</span>`;
-		return `<aside class="callout callout-${tone}"><strong>${escape(title)}</strong>${body}</aside>`;
+		return (
+			<aside className={`callout callout-${tone}`}>
+				<strong>{title}</strong> {text && <span>{text}</span>}
+			</aside>
+		);
 	},
 };
 
-/** The components the design system ships. */
-export const defaults: readonly Component[] = [button, badge, callout];
+/** The components this client knows. A `$type` outside this registry is an issue, not an error. */
+export const components = createRegistry('Component', [button, badge, callout]);

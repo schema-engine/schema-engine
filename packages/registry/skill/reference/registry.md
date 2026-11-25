@@ -35,6 +35,18 @@ export const widgets = createRegistry('Widget', [...defaults, custom]);
 
 `safeParseStandardSchema(schema, value)` runs a registration's schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }` (it throws for a schema that validates asynchronously). Form validation and `parseActions` both go through it; `assertStandardSchema` is the build-time check on its own.
 
+`safeParseNode(registry, node, path?)` checks one node of a document: it looks `node.$type` up in the registry (anything with `get(key)`), validates the node with the registration's schema and returns `{ success: true, registration, data }` or `{ success: false, issues }`. A node that is not an object with a string `$type`, and a `$type` no registration answers, are issues, not throws. Every issue's `path` starts with `path`, the position of the node in its document, so a walk over a tree passes each child its own.
+
+```ts title="registry/draw-node.ts"
+import { safeParseNode } from '@schema-engine/registry';
+import { widgets } from './widgets';
+
+export function nodeIssues(node: unknown, index: number): string[] {
+	const parsed = safeParseNode(widgets, node, ['children', index]);
+	return parsed.success ? [] : parsed.issues.map((issue) => `${issue.path?.join('.')}: ${issue.message}`);
+}
+```
+
 ## BaseRegistry
 
 `BaseRegistry` is the mutable opt-in for registrations that arrive at runtime, such as a plugin system: `register`, `has`, `get`, `getAll`, `getAllKeys`, `size` and `clear`. It warns when `register` overrides a key and does not check schemas. Use `createRegistry` unless the list is not known when the registry is built.
