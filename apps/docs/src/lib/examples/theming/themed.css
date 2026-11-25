@@ -1,8 +1,11 @@
 /*
  * One stylesheet for every form that carries `className: 'themed'`. The tone axis of theme.ts decides what
- * `--primary` is; this file decides how the form is spaced and how tight its compact size is.
+ * `--primary` is and its font axis what `--font-sans` is; this file decides how the form is spaced, how tight its
+ * compact size is and that its text is set in `--font-sans`.
  */
 .themed {
+	font-family: var(--font-sans);
+
 	/* Rhythm: the gap token every grid of the form reads. */
 	--se-grid-gap-default: 1.25rem;
 

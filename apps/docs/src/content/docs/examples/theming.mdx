@@ -4,14 +4,14 @@ description: 'One compiled theme with a host tone axis, shared by every engine, 
 order: 9
 ---
 
-import { FormExampleDemo } from '@/components/form-example-demo';
 import { RendererTabs } from '@/components/renderer-tabs';
+import { ThemingPlayground } from '@/components/theming-playground';
 import { themedForm } from '@/lib/examples/theming/config';
 import '@/lib/examples/theming/themed.css';
 
 # A themed form
 
-A form is themed in two places. The **theme** is code: it compiles the vocabulary of appearance, here the built-in `size` and `surface` axes plus a host `tone` axis added with `defineAxis`, into one id and one stylesheet. Every engine receives that one object as `layout`, so a React form and a Radiant form carry the same `data-se-theme`. The **stylesheet** is CSS scoped by the class the config puts on the form: it sets the rhythm between fields, the two hooks the compact size reads and the measure it sets, and it reads the colour roles the tone axis sets.
+A form is themed in two places. The **theme** is code: it compiles the vocabulary of appearance, here the built-in `size` and `surface` axes plus the host axes `tone`, `shape` and `font` added with `defineAxis`, into one id and one stylesheet. Every engine receives that one object as `layout`, so a React form and a Radiant form carry the same `data-se-theme`. The **stylesheet** is CSS scoped by the class the config puts on the form: it sets the rhythm between fields, the two hooks the compact size reads and the measure it sets, and it reads the colour roles the tone axis sets and the font role the font axis sets.
 
 The config only names what it wants: `tone: 'brand'`, `size: 'compact'` and `surface: 'outlined'`. What each name means is decided by the theme and the stylesheet, so a different theme changes the look without touching the config.
 
@@ -33,11 +33,13 @@ Set your app up as the getting-started page of your renderer says ([Forms Radian
 
 ## See it
 
-<FormExampleDemo config={themedForm} />
+Press Shuffle to draw a new tone, shape, font, size and surface, and watch the React and the Radiant form follow. The note above the forms names the current picks. Shuffle changes only the `appearance` picks of the config below. The theme and the stylesheet stay the same, and both renderers read the one compiled theme, so they look the same for every combination. The form starts as the config picks it and is rendered again, empty, with each change.
+
+<ThemingPlayground config={themedForm} />
 
 ## The theme
 
-The built-in axes are `size` and `surface`. A host adds its own with `defineAxis`: here `tone`, whose values set the colour roles that Radiant UI (`--primary`, `--on-primary`) and shadcn (`--primary`, `--primary-foreground`) components read. `createLayoutTheme` compiles the axes into the theme.
+The built-in axes are `size` and `surface`. A host adds its own with `defineAxis`: here `tone`, whose values set the colour roles that Radiant UI (`--primary`, `--on-primary`) and shadcn (`--primary`, `--primary-foreground`) components read, `shape`, which sets the radius tokens, and `font`, which sets the font roles with system stacks only. `createLayoutTheme` compiles the axes into the theme.
 
 ```ts title="theme.ts"
 import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layout';
@@ -45,6 +47,11 @@ import { builtInAxes, createLayoutTheme, defineAxis } from '@schema-engine/layou
 /**
  * A host axis. Each value is a set of tokens: the colour roles Radiant UI (`--primary`, `--on-primary`) and a
  * shadcn theme (`--primary`, `--primary-foreground`) read.
+ *
+ * @remarks
+ * An axis holds two to five values, so the tones are the neutral default and four accents. Every accent sets a white
+ * `--on-primary` that reads at least 4.5:1 on its `--primary` (brand 5.2, forest 5.0, violet 7.1, ocean 5.9), and a
+ * container pair that reads 7:1 or better.
  */
 export const tone = defineAxis({
 	$type: 'tone',
@@ -66,11 +73,82 @@ export const tone = defineAxis({
 			'--primary-container': '#dcfce7',
 			'--on-primary-container': '#14532d',
 		},
+		violet: {
+			'--primary': '#6d28d9',
+			'--on-primary': '#ffffff',
+			'--primary-foreground': '#ffffff',
+			'--primary-container': '#ede9fe',
+			'--on-primary-container': '#4c1d95',
+		},
+		ocean: {
+			'--primary': '#0369a1',
+			'--on-primary': '#ffffff',
+			'--primary-foreground': '#ffffff',
+			'--primary-container': '#e0f2fe',
+			'--on-primary-container': '#0c4a6e',
+		},
 	},
 });
 
-/** The compiled theme: the built-in `size` and `surface` axes plus `tone`. Pass it to every engine as `layout`. */
-export const theme = createLayoutTheme({ appearance: [...builtInAxes, tone] });
+/**
+ * A host axis for the corners of controls and containers: the radius tokens Radiant UI (`--radius-control`,
+ * `--radius-button`, `--radius-container`) and a shadcn theme (`--radius`) read.
+ *
+ * @remarks
+ * `rounded` sets nothing, so it is the radius the host theme already has. `pill` rounds past half the height of a
+ * single-line control, so inputs, selects and buttons are fully round. It is a length, not `9999px`, because the card
+ * shell of both renderers reads `--radius-control` as well, and a radius that large would turn a card into an ellipse.
+ */
+export const shape = defineAxis({
+	$type: 'shape',
+	metadata: { name: 'Shape', description: 'Corner radius of controls and containers' },
+	default: 'rounded',
+	values: {
+		sharp: {
+			'--radius-control': '0',
+			'--radius-button': '0',
+			'--radius-container': '0',
+			'--radius': '0',
+		},
+		rounded: {},
+		pill: {
+			'--radius-control': '1.25rem',
+			'--radius-button': '1.25rem',
+			'--radius-container': '1.5rem',
+			'--radius': '1.25rem',
+		},
+	},
+});
+
+/**
+ * A host axis for the typeface: the font roles Radiant UI (`--font-sans`, `--font-heading`) reads.
+ *
+ * @remarks
+ * Only system stacks, so a pick downloads nothing. A stylesheet decides where the role is read: `themed.css` sets the
+ * `font-family` of the form from `--font-sans`. `sans` sets nothing, so it is the typeface the host theme already has.
+ */
+export const font = defineAxis({
+	$type: 'font',
+	metadata: { name: 'Font', description: 'Typeface of a form' },
+	default: 'sans',
+	values: {
+		sans: {},
+		serif: {
+			'--font-sans': "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif",
+			'--font-heading': "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif",
+		},
+		mono: {
+			'--font-sans': "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace",
+			'--font-heading': "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace",
+		},
+	},
+});
+
+/**
+ * The compiled theme: the built-in `size` and `surface` axes plus `tone`, `shape` and `font`. Pass it to every engine
+ * as `layout`.
+ */
+export const theme = createLayoutTheme({ appearance: [...builtInAxes, tone, shape, font] });
 ```
 
 ## The config
@@ -259,14 +337,17 @@ export function ThemedForm() {
 
 ## The stylesheet
 
-The stylesheet is scoped by the class of the config. Three kinds of setting meet in it. The gap token and the two hooks of the compact size are custom properties, so they work on the form's class, or on `:root` or a wrapper for every form below it. `--se-measure` has a literal value on the element that carries the size pick, so a rule that targets that element, with the specificity of a class, overrides it. The last rule keys on the `data-se-tone` attribute the renderer writes on the form and reads the colour role the axis sets.
+The stylesheet is scoped by the class of the config. It sets the `font-family` of the form from `--font-sans`, the role the font axis sets: an axis only sets tokens, and the stylesheet decides where a token is read. Three more kinds of setting meet in it. The gap token and the two hooks of the compact size are custom properties, so they work on the form's class, or on `:root` or a wrapper for every form below it. `--se-measure` has a literal value on the element that carries the size pick, so a rule that targets that element, with the specificity of a class, overrides it. The last rule keys on the `data-se-tone` attribute the renderer writes on the form and reads the colour role the axis sets.
 
 ```css title="themed.css"
 /*
  * One stylesheet for every form that carries `className: 'themed'`. The tone axis of theme.ts decides what
- * `--primary` is; this file decides how the form is spaced and how tight its compact size is.
+ * `--primary` is and its font axis what `--font-sans` is; this file decides how the form is spaced, how tight its
+ * compact size is and that its text is set in `--font-sans`.
  */
 .themed {
+	font-family: var(--font-sans);
+
 	/* Rhythm: the gap token every grid of the form reads. */
 	--se-grid-gap-default: 1.25rem;
 
@@ -292,7 +373,7 @@ The stylesheet is scoped by the class of the config. Three kinds of setting meet
 
 ## What the tests check
 
-The unit test checks that the form is valid in the React and the Radiant engine built on the theme and fails with `Unknown axis 'tone'` in one that is not, that both engines accept the `show_notification` entry of the config, so a config that names an action an engine did not register fails, and that every hook the stylesheet sets is one the compact size reads. The browser test renders both files: the first and last name share a row, and the card and the form carry the picks of the `size`, `surface` and `tone` axes.
+The unit test checks that the form is valid in the React and the Radiant engine built on the theme and fails with `Unknown axis 'tone'` in one that is not, that both engines accept the `show_notification` entry of the config, so a config that names an action an engine did not register fails, and that every hook the stylesheet sets is one the compact size reads. The browser test renders both files: the first and last name share a row, and the card and the form carry the picks of the `size`, `surface` and `tone` axes. An end-to-end test of this page presses Shuffle and checks that the combination changes every time, that the note names it, and that the React and the Radiant form both carry the same colour, corners and font.
 
 ## Take it further
 

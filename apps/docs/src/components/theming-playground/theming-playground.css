@@ -1,0 +1,17 @@
+.theming-playground {
+	display: block;
+	margin-block: 2rem;
+}
+
+.theming-playground__picks {
+	flex: 1;
+	margin: 0;
+}
+
+.theming-playground .example-demo {
+	margin-block-start: var(--space-5);
+}
+
+.theming-playground .renderer-tabs {
+	margin-block: 0;
+}
