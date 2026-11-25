@@ -186,6 +186,8 @@ schemas.
 
 `FormValidationFailure`, which `container.validate()` rejects with when a rule cannot run, is exported by `@schema-engine/forms` itself.
 
+`createFormRuntime`, which a renderer calls for each form it draws, is also exported by `@schema-engine/forms`. An app does not call it: the [Form runtime](/docs/renderer-authors/runtime) page of the Renderer authors section describes it.
+
 ## RecipeRegistration
 
 ```ts

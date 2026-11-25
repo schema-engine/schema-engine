@@ -31,7 +31,7 @@ export function renderForm(
 		onSubmit,
 		host: {
 			focus: (paths) =>
-				form.querySelector<HTMLElement>(paths.map((path) => `[name="${path}"]`).join(','))?.focus(),
+				form.querySelector<HTMLElement>(paths.map((path) => `[name="${CSS.escape(path)}"]`).join(','))?.focus(),
 		},
 	});
 	const { container } = runtime;

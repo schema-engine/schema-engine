@@ -1,6 +1,6 @@
 # @schema-engine/forms
 
-The forms domain of Schema Engine: elements, validation rules, constraints, steps, the form state and the submit lifecycle. A form is a JSON document that names registered elements by `$type`. [`@schema-engine/forms-react`](https://www.npmjs.com/package/@schema-engine/forms-react) and [`@schema-engine/forms-radiant`](https://www.npmjs.com/package/@schema-engine/forms-radiant) draw it.
+The forms domain of Schema Engine: elements, validation rules, constraints, steps, the form state and the submit lifecycle, which run with no renderer. A form is a JSON document that names registered elements by `$type`. [`@schema-engine/forms-react`](https://www.npmjs.com/package/@schema-engine/forms-react) and [`@schema-engine/forms-radiant`](https://www.npmjs.com/package/@schema-engine/forms-radiant) draw it.
 
 ## Install
 

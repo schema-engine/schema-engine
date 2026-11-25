@@ -103,33 +103,11 @@ Step triggers `step_leave`, `step_change` and `step_enter` fire when the current
 
 ## What a command returns
 
-Next, Previous and a jump each resolve to one outcome string, and a submit adds `submitted`. A component that moves the wizard reads it to say what happened.
-
-| Outcome     | Meaning                                                                                               |
-| ----------- | ----------------------------------------------------------------------------------------------------- |
-| `moved`     | The current step changed.                                                                             |
-| `submitted` | A submission ran, and its actions and `onSubmit` succeeded.                                           |
-| `failed`    | A submission failed, or a rule could not run, so the step has no verdict. The cause is logged.        |
-| `invalid`   | Validation found errors. They are shown and focused.                                                  |
-| `overtaken` | An edit outran the check, so there is no verdict: nothing is shown or focused. Ask again.             |
-| `refused`   | There was nowhere to go: the last step, an unknown or skipped step, or a step that cannot be reached. |
-| `busy`      | Another command was running.                                                                          |
-| `cancelled` | A reset or an unmount revoked the command, so it wrote nothing.                                       |
-
-One lock covers navigation and submission, so Next and submit cannot interleave. Why a submission failed is in `submission.failures`, which `useFormContext().formState.submission` reads in React.
+Next, Previous and a jump each resolve to one outcome string, and a submit adds `submitted`. A component that moves the wizard reads it to say what happened: `moved` when the step changed, `submitted` when the submission succeeded, `invalid` when validation found errors (they are shown and focused), `failed` when a submission failed or a step check could not run (the cause is logged), and `refused` when there was nowhere to go. `overtaken`, `busy` and `cancelled` mean the command did nothing: an edit outran the check, another command was running, or a reset or an unmount revoked it. Why a submission failed is in `submission.failures`, which `useFormContext().formState.submission` reads in React. The [Form runtime](/docs/renderer-authors/runtime#commands-and-outcomes) page has the full table.
 
 ## The step state
 
-Both renderers give a component the same list, every step in the order of the config:
-
-| Field       | Meaning                                                       |
-| ----------- | ------------------------------------------------------------- |
-| `id`        | The id of the step in the config. The state carries no title. |
-| `skipped`   | Its constraints hide it.                                      |
-| `visited`   | The visitor has been there.                                   |
-| `complete`  | Next validated it and moved on.                               |
-| `invalid`   | An error is recorded at one of its fields.                    |
-| `reachable` | A jump can move there from the current step.                  |
+Both renderers give a component the same list, every step in the order of the config. Each entry has the `id` of the step (it carries no title), and `skipped` (its constraints hide it), `visited`, `complete` (Next validated it and moved on), `invalid` (an error is recorded at one of its fields) and `reachable` (a jump can move there from the current step). The [Form runtime](/docs/renderer-authors/runtime#the-snapshot) page has the type.
 
 ## In React
 

@@ -110,6 +110,7 @@ interface FormStepState {
 	visited: boolean;
 	complete: boolean;
 	invalid: boolean;
+	reachable: boolean;
 }
 ```
 
