@@ -34,7 +34,6 @@ Schema Engine is a set of packages that build on each other. Install the ones th
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | A registry only              | `pnpm add @schema-engine/registry zod`                                                                                                                        | [Registry](/docs/registry/overview)           |
 | Actions only                 | `pnpm add @schema-engine/actions zod`                                                                                                                         | [Actions](/docs/actions/overview)             |
-| A headless form              | `pnpm add @schema-engine/forms zod`                                                                                                                           | [Forms](/docs/forms/overview)                 |
 | A React form                 | `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`                                                          | [Forms React](/docs/forms-react/overview)     |
 | A Radiant form               | `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod` | [Forms Radiant](/docs/forms-radiant/overview) |
 | A layout theme without forms | `pnpm add @schema-engine/layout zod`                                                                                                                          | [Layout](/docs/layout/overview)               |
@@ -68,7 +67,7 @@ Every package needs strict mode and bundler module resolution:
 }
 ```
 
-The registry, actions, layout and headless forms need nothing else. A renderer sets the JSX transform:
+The registry, actions and layout need nothing else. A renderer sets the JSX transform:
 
 | Renderer | Extra `compilerOptions`                                       |
 | -------- | ------------------------------------------------------------- |

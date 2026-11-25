@@ -67,13 +67,14 @@ Each package ships this router as its own `skill/SKILL.md` and its references in
 
 The full documentation is at `/docs` on the deployed site. The LLM-exported corpus is `/llms.txt` (index) and `/docs-llm/<section>/<slug>.md` (page bodies).
 
-| Section                        | Path prefix                        |
-| ------------------------------ | ---------------------------------- |
-| Schema Engine                  | `/docs/schema-engine/introduction` |
-| `@schema-engine/registry`      | `/docs/registry/overview`          |
-| `@schema-engine/actions`       | `/docs/actions/overview`           |
-| `@schema-engine/forms`         | `/docs/forms/overview`             |
-| `@schema-engine/forms-react`   | `/docs/forms-react/overview`       |
-| `@schema-engine/forms-radiant` | `/docs/forms-radiant/overview`     |
-| `@schema-engine/layout`        | `/docs/layout/overview`            |
-| Examples                       | `/docs/examples/overview`          |
+| Section                        | Path prefix                               |
+| ------------------------------ | ----------------------------------------- |
+| Schema Engine                  | `/docs/schema-engine/introduction`        |
+| `@schema-engine/registry`      | `/docs/registry/overview`                 |
+| `@schema-engine/actions`       | `/docs/actions/overview`                  |
+| `@schema-engine/forms`         | `/docs/forms/overview`                    |
+| `@schema-engine/forms-react`   | `/docs/forms-react/overview`              |
+| `@schema-engine/forms-radiant` | `/docs/forms-radiant/overview`            |
+| `@schema-engine/layout`        | `/docs/layout/overview`                   |
+| Examples                       | `/docs/examples/overview`                 |
+| Renderer authors               | `/docs/renderer-authors/write-a-renderer` |

@@ -209,7 +209,7 @@ The recipe determines its kind and its allowed slots. Single-step recipes requir
 
 Validation writes the resolved `view` into the normalized config: a multi-step form that omits `view` gets `{ $type: 'bare-controls' }` (or the engine's `defaultWizardRecipe`), and each slot config is the recipe's `slotDefaults` under the author's keys, merged deep. When the default recipe is not registered the form validates without a `view`, validation warns, and the renderer paints fields without chrome. Renderers read the normalized `view` and apply no defaults of their own.
 
-A multi-step form is a wizard. A step may take `constraints` (`show` or `hide`, on non-row fields of earlier steps; the first step has none) and is skipped when they hide it, and the form's `navigation` is `'linear'` (default) or `'free'`. [Wizard and runtime](/docs/forms/wizard) has the rest.
+A multi-step form is a wizard. A step may take `constraints` (`show` or `hide`, on non-row fields of earlier steps; the first step has none) and is skipped when they hide it, and the form's `navigation` is `'linear'` (default) or `'free'`. [Wizard](/docs/forms/wizard) has the rest.
 
 ## Form configuration errors
 

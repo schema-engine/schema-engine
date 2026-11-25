@@ -1,6 +1,5 @@
-import { createFormEngine } from '@schema-engine/forms';
 import { csrf } from '@schema-engine/forms/csrf';
-import { textInput } from './engine';
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 
 /** Rails renders the token into `<meta name="csrf-token" content="...">`. */
 export const fromMeta = csrf.fromMeta('csrf-token', { header: 'X-CSRF-Token', field: 'authenticity_token' });
@@ -14,4 +13,4 @@ export const fromGlobal = csrf.custom({
 	header: 'X-CSRF-Token',
 });
 
-export const engine = createFormEngine({ elements: [textInput], csrf: fromMeta });
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, csrf: fromMeta });

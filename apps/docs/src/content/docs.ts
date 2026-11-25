@@ -8,6 +8,7 @@ import {
 	formsRadiantIcon,
 	formsReactIcon,
 	layoutIcon,
+	rendererAuthorsIcon,
 	registryIcon,
 	schemaEngineIcon,
 } from './section-icons';
@@ -25,6 +26,7 @@ export const DOCS_SECTION_ORDER = [
 	'forms-radiant',
 	'layout',
 	'examples',
+	'renderer-authors',
 ] as const;
 
 export type DocsSectionId = (typeof DOCS_SECTION_ORDER)[number];
@@ -44,6 +46,7 @@ export const DOCS_SECTION_CONFIG: Record<DocsSectionId, { title: string; icon: J
 	'forms-radiant': { title: 'Forms Radiant', icon: formsRadiantIcon },
 	layout: { title: 'Layout', icon: layoutIcon },
 	examples: { title: 'Examples', icon: examplesIcon },
+	'renderer-authors': { title: 'Renderer authors', icon: rendererAuthorsIcon },
 };
 
 export function isDocsSectionId(value: string): value is DocsSectionId {

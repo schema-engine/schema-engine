@@ -1,192 +1,258 @@
 ---
-title: 'Wizard and runtime'
-description: 'The form runtime: submission, wizard navigation, skippable steps and the outcome every command returns.'
+title: 'Wizard'
+description: 'A form with several steps: how the config drives navigation and skipped steps, and how to read and move the wizard from React and from Radiant.'
 order: 9
 ---
 
-# Wizard and runtime
+# Wizard
 
-`createFormRuntime` is one framework-free instance per rendered form, shared by every renderer. It builds the form's [state container](/docs/forms/form-state) and owns what is around it: the submission, the wizard's steps and navigation, `form_mount` and `form_change`, and every action dispatch. A renderer supplies only what it alone can do, as the `host`.
+A form with more than one step is a wizard. The config decides everything about it: the steps and their order, which steps are skipped and how freely a visitor jumps between them. A view recipe draws the controls (Previous, Next and the submit button). The [Registration wizard](/docs/examples/registration-wizard) example has the files of both renderers; this page covers the config, and how to read and move the wizard from a component of your own.
 
-In an app you do not create it. React's `FormProvider` and Radiant's `se-form-instance` do, mount it and hand its state to the elements. Create one yourself to test a form without a DOM or to write a renderer.
+## Define the steps
 
-## Create a runtime
+`view.$type` names the recipe that draws the wizard, and each step lists its own `elements`. This checkout has three steps, and the `company` step is shown only when the buyer is a company. Both renderers draw the same config.
 
-| Option            | Meaning                                                                                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `engine`          | The engine, for its validation registry, its actions and its `fetch`.                                                                                          |
-| `config`          | The normalized form, from `engine.defineForm` or `engine.validateForm`.                                                                                        |
-| `defaults`        | Values the form starts from, over the defaults of its fields.                                                                                                  |
-| `snapshot`        | The server's container snapshot, to hydrate from.                                                                                                              |
-| `host`            | What only the renderer can do, below.                                                                                                                          |
-| `onSubmit`        | Called with the values that passed, after the submit actions and before `form_submit_success`.                                                                 |
-| `onChange`        | Called when the values change, never for an error, a touch or a validation result.                                                                             |
-| `onAction`        | Called with each submit action that succeeded. Typed by the engine's actions.                                                                                  |
-| `onActionResults` | Called with the results of every trigger that ran actions.                                                                                                     |
-| `navigate`        | Takes the page to the `redirectUrl` of a submit action once the submission succeeded. Defaults to `location.assign` in a browser and does nothing on a server. |
+```ts title="checkout.ts"
+import type { FormConfig } from '@schema-engine/forms';
 
-`runtime.mount()` dispatches `form_mount` the first time and starts the change watch; the function it returns stops the watch and revokes any command in flight. The runtime exposes `container`, `getSnapshot()`, `getServerSnapshot()`, `subscribe(listener)`, `next()`, `back()`, `goTo(id)`, `submit()` and `clearSubmission()`.
-
-### The host
-
-| Host member              | The renderer does                                                                                                                                                                                                     |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `focus(paths)`           | Focus the first control with an error among the paths; the host picks the first in its document.                                                                                                                      |
-| `sync()`                 | Write the controls' values into the container and report their native validity, as a submit does. The runtime calls it before it validates. React has none: its controls write as the user types.                     |
-| `submitNatively(values)` | Called once a submission succeeded, after its actions and `onSubmit`, so the navigation cannot cut off the success triggers. The host decides whether it posts. Radiant does when the application gave no `onSubmit`. |
-
-## Commands and outcomes
-
-`next()`, `back()`, `goTo(id)` and `submit()` each return one string, and why a submission failed is read from `snapshot.submission.failures`, never from the return value.
-
-| Outcome     | Meaning                                                                                                              |
-| ----------- | -------------------------------------------------------------------------------------------------------------------- |
-| `moved`     | The current step changed.                                                                                            |
-| `submitted` | A submission ran, and its actions and `onSubmit` succeeded.                                                          |
-| `failed`    | A submission ran and failed, or a step check could not run.                                                          |
-| `invalid`   | Validation found errors. They are shown and focused.                                                                 |
-| `overtaken` | An edit or a row move outran the check, so there is no verdict: nothing is shown, focused or counted.                |
-| `refused`   | There was nowhere to go: the last step, an unknown or skipped step, the current step, or a step `goTo` cannot reach. |
-| `busy`      | Another command was running.                                                                                         |
-| `cancelled` | A reset or an unmount revoked the command before its values were captured, so it wrote nothing.                      |
-
-One lock covers navigation and submission, so Next and submit cannot interleave: a command made while another runs is `busy`. `back()`, `next()` and `goTo()` end in the subset `NavigationOutcome`; `submit()` adds `submitted`.
-
-## The snapshot
-
-```ts
-import type { FormSubmissionIssue } from '@schema-engine/forms/state-container';
-
-interface FormRuntimeSnapshot {
-	submission: {
-		status: 'idle' | 'validating' | 'submitting' | 'success' | 'error';
-		failures: FormSubmissionIssue[];
-		submitCount: number;
-	};
-	current: string; // the id of the current step
-	navigating: boolean; // a next, back, goTo or a submit that acts as next is running
-	steps: FormStepState[]; // every step in config order
-}
-
-interface FormStepState {
-	id: string;
-	skipped: boolean; // its constraints hide it
-	visited: boolean;
-	complete: boolean; // next() validated it and moved on
-	invalid: boolean; // an error is recorded at one of its fields
-	reachable: boolean; // goTo can move there
-}
-```
-
-The snapshot keeps its identity while nothing it reports changed, so it is safe in `useSyncExternalStore`. The runtime stores only `current`, `visited` and `complete`, by step id. `skipped`, `invalid` and `reachable` are derived from the container, so they cannot go stale.
-
-## Navigation
-
-- **`next()`** syncs the host, validates the current step's fields and moves to the next active step. If the step has errors it focuses them and returns `invalid`; on the last active step it returns `refused`. It never marks the form submitted.
-- **`back()`** moves to the previous active step and never validates.
-- **`goTo(id)`** refuses an unknown, skipped or current step. Going back is always allowed. Going forward follows the form's `navigation`.
-- **`submit()`** before the last active step acts as `next()`, so Enter in a field of an early step is a Next. On the last active step it checks every active step, runs the actions and `onSubmit`, and on `invalid` moves to the first step with an error and focuses it. A server error that `onSubmit` sets on an earlier step moves there too, so it is never invisible. An error on the form itself (`FORM_ROOT`) belongs to no step and stays put.
-
-The form config chooses how free the stepper is with `navigation`:
-
-| `navigation`         | `goTo` forward                                                                                                                |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `'linear'` (default) | Reaches only visited steps, and validates the current step and every active step on the way, landing on the first that fails. |
-| `'free'`             | Reaches any active step without validating.                                                                                   |
-
-`next()` validates in both modes. Step triggers `step_leave`, `step_change` and `step_enter` fire when the current step changes and cannot block a move: the step's validation is the guard. Their failures are reported through `onActionResults`.
-
-## Skippable steps
-
-A step can be skipped from earlier answers. Give it `constraints` with the same logic as fields, limited to `show` and `hide`. In this checkout the `company` step is shown only when `hasCompany` is `'yes'`. The recipe runs the form without a renderer, with the `focus` host member as the only thing it supplies:
-
-```ts title="checkout-wizard.ts"
-import { createFormRuntime, type FormRuntimeOutcome, type FormValues } from '@schema-engine/forms';
-import { engine } from './engine';
-
-export const config = engine.defineForm({
+/**
+ * A three-step checkout that both renderers draw.
+ *
+ * @remarks
+ * `view.$type` names the wizard recipe, which draws Previous, Next and the submit button. The `company` step is
+ * skipped unless the buyer is a company, and `navigation: 'linear'` lets a visitor jump only to steps already visited.
+ */
+export const checkout: FormConfig = {
 	id: 'checkout',
+	view: { $type: 'wizard' },
 	navigation: 'linear',
 	steps: [
 		{
 			id: 'contact',
 			title: 'Contact',
 			elements: [
-				{ $type: 'input', id: 'email', name: 'email', rules: [{ $type: 'required' }] },
-				{ $type: 'input', id: 'hasCompany', name: 'hasCompany', defaultValue: 'no' },
+				{
+					$type: 'input',
+					id: 'email',
+					name: 'email',
+					label: 'Email',
+					inputType: 'email',
+					rules: [{ $type: 'required', message: 'Enter your email' }],
+				},
+				{
+					$type: 'select',
+					id: 'buyer',
+					name: 'buyer',
+					label: 'Buying as',
+					defaultValue: 'person',
+					options: [
+						{ value: 'person', label: 'A person' },
+						{ value: 'company', label: 'A company' },
+					],
+				},
 			],
 		},
 		{
 			id: 'company',
 			title: 'Company',
-			constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
-			elements: [{ $type: 'input', id: 'vat', name: 'vat', rules: [{ $type: 'required' }] }],
+			constraints: [{ $type: 'show', field: 'buyer', operator: 'equals', value: 'company' }],
+			elements: [
+				{
+					$type: 'input',
+					id: 'vat',
+					name: 'vat',
+					label: 'VAT number',
+					rules: [{ $type: 'required', message: 'Enter the VAT number' }],
+				},
+			],
 		},
 		{
 			id: 'payment',
 			title: 'Payment',
-			elements: [{ $type: 'input', id: 'card', name: 'card', rules: [{ $type: 'required' }] }],
+			elements: [
+				{
+					$type: 'input',
+					id: 'card',
+					name: 'card',
+					label: 'Card number',
+					rules: [{ $type: 'required', message: 'Enter the card number' }],
+				},
+			],
 		},
 	],
-});
+};
+```
 
-export function createCheckout(onSubmit: (values: FormValues) => void = () => {}) {
-	const runtime = createFormRuntime({ engine, config, host: { focus: () => {} }, onSubmit });
-	runtime.mount();
-	return runtime;
+The config decides how the wizard behaves:
+
+| In the config           | Effect                                                                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `navigation: 'linear'`  | The default. A visitor jumps forward only to steps already visited, and the steps on the way are validated.                  |
+| `navigation: 'free'`    | A visitor jumps to any step that takes part, without validation. Next still validates the step it leaves.                    |
+| `constraints` on a step | `show` or `hide`, with the same logic as fields, on non-row fields of earlier steps. The first step cannot have constraints. |
+
+- **Next validates.** It checks the fields of the current step and moves to the next step that takes part. A step with errors shows them, focuses the first and stays put.
+- **Previous never validates.** It moves to the previous step that takes part.
+- **Submit before the last step is a Next.** On the last step it checks every step that takes part, runs the [actions](/docs/forms/actions) and `onSubmit`, and on an error moves to the first step that has one.
+- **A skipped step is passed over.** Next and Previous skip it and a jump refuses it. Progress such as "step 2 of 3" counts only the steps that take part.
+- **A skipped step takes no part.** Its fields are not validated, do not block and are not submitted, exactly like hidden fields. Their values are kept and return when the step is shown again.
+- **The current step can become skipped**, for example after an action. The wizard then moves back to the nearest step before it that takes part, and never forward without validating.
+- **A server error on an earlier step moves the wizard there**, so it is never invisible. See [Server errors](/docs/forms/server-errors).
+
+Step triggers `step_leave`, `step_change` and `step_enter` fire when the current step changes. They cannot block a move: the validation of the step is the guard.
+
+## What a command returns
+
+Next, Previous and a jump each resolve to one outcome string, and a submit adds `submitted`. A component that moves the wizard reads it to say what happened.
+
+| Outcome     | Meaning                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------- |
+| `moved`     | The current step changed.                                                                             |
+| `submitted` | A submission ran, and its actions and `onSubmit` succeeded.                                           |
+| `failed`    | A submission failed, or a rule could not run, so the step has no verdict. The cause is logged.        |
+| `invalid`   | Validation found errors. They are shown and focused.                                                  |
+| `overtaken` | An edit outran the check, so there is no verdict: nothing is shown or focused. Ask again.             |
+| `refused`   | There was nowhere to go: the last step, an unknown or skipped step, or a step that cannot be reached. |
+| `busy`      | Another command was running.                                                                          |
+| `cancelled` | A reset or an unmount revoked the command, so it wrote nothing.                                       |
+
+One lock covers navigation and submission, so Next and submit cannot interleave. Why a submission failed is in `submission.failures`, which `useFormContext().formState.submission` reads in React.
+
+## The step state
+
+Both renderers give a component the same list, every step in the order of the config:
+
+| Field       | Meaning                                                       |
+| ----------- | ------------------------------------------------------------- |
+| `id`        | The id of the step in the config. The state carries no title. |
+| `skipped`   | Its constraints hide it.                                      |
+| `visited`   | The visitor has been there.                                   |
+| `complete`  | Next validated it and moved on.                               |
+| `invalid`   | An error is recorded at one of its fields.                    |
+| `reachable` | A jump can move there from the current step.                  |
+
+## In React
+
+`useFormInstanceActions()` from `@schema-engine/forms-react/hooks` returns `current` (the id of the current step), `steps`, `navigating` (a command is running) and the commands `next()`, `back()` and `goTo(id)`. It has to run inside the form, so render the component as a child of `FormRenderer`. This stepper lists the steps that take part and jumps to one the form lets the visitor reach:
+
+```tsx title="react-stepper.react.tsx"
+import type { FormValues } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-react';
+import { useFormInstanceActions } from '@schema-engine/forms-react/hooks';
+import { checkout } from './checkout';
+import { engine } from './react-wizard.helper.react';
+
+const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.title ?? id;
+
+/** Lists the steps that take part and jumps to one the form lets the visitor reach. */
+function Stepper() {
+	const { current, steps, goTo } = useFormInstanceActions();
+	return (
+		<ol aria-label="Steps">
+			{steps
+				.filter((step) => !step.skipped)
+				.map((step) => (
+					<li key={step.id}>
+						<button
+							type="button"
+							aria-current={step.id === current ? 'step' : undefined}
+							disabled={!step.reachable}
+							onClick={() => void goTo(step.id)}
+						>
+							{titleOf(step.id)}
+							{step.invalid ? ' (fix)' : ''}
+						</button>
+					</li>
+				))}
+		</ol>
+	);
 }
 
-export async function walkThrough() {
-	const submitted: FormValues[] = [];
-	const checkout = createCheckout((values) => void submitted.push(values));
-	const log: Array<[command: string, outcome: FormRuntimeOutcome, current: string]> = [];
-	const run = async (command: string, move: () => Promise<FormRuntimeOutcome>) => {
-		log.push([command, await move(), checkout.getSnapshot().current]);
-	};
-
-	await run('next', checkout.next);
-	checkout.container.setValue('email', 'ada@example.com');
-	await run('next', checkout.next);
-	await run('back', checkout.back);
-
-	checkout.container.setValue('hasCompany', 'yes');
-	await run('next', checkout.next);
-	await run('goTo payment', () => checkout.goTo('payment'));
-	checkout.container.setValue('vat', 'IT12345678901');
-	await run('goTo payment', () => checkout.goTo('payment'));
-
-	await run('submit', checkout.submit);
-	checkout.container.setValue('card', '4242 4242 4242 4242');
-	await run('submit', checkout.submit);
-
-	return { log, steps: checkout.getSnapshot().steps, submitted };
+/** The checkout with a stepper of its own beside the wizard's Previous and Next. */
+export function Checkout({ onSubmit }: { onSubmit: (values: FormValues) => void }) {
+	return (
+		<FormRenderer engine={engine} config={checkout} onSubmit={onSubmit}>
+			<Stepper />
+		</FormRenderer>
+	);
 }
 ```
 
-| Command        | Outcome     | Current   | Why                                                                                   |
-| -------------- | ----------- | --------- | ------------------------------------------------------------------------------------- |
-| `next`         | `invalid`   | `contact` | The email is empty.                                                                   |
-| `next`         | `moved`     | `payment` | `hasCompany` is `'no'`, so `company` is skipped.                                      |
-| `back`         | `moved`     | `contact` | `back` skips it again.                                                                |
-| `next`         | `moved`     | `company` | `hasCompany` is now `'yes'`.                                                          |
-| `goTo payment` | `invalid`   | `company` | `payment` was visited, but the current step is checked on the way and `vat` is empty. |
-| `goTo payment` | `moved`     | `payment` | `vat` is filled.                                                                      |
-| `submit`       | `invalid`   | `payment` | The card is empty.                                                                    |
-| `submit`       | `submitted` | `payment` | Every active step passed and `onSubmit` ran with the values.                          |
+A recipe's own blocks read the same state as `useViewContext().navigation`, as [View recipes](/docs/forms-react/layouts) shows.
 
-- **A skipped step is passed over.** `next` and `back` skip it and `goTo` refuses it. Progress such as "step 2 of 3" counts only active steps.
-- **A skipped step takes no part.** Its fields are not validated, do not block and are not submitted, exactly like hidden fields. Their values are kept and return when the step is shown again.
-- **A step constraint reads earlier steps only.** It may read only non-row fields of earlier steps, so the first step cannot have constraints, the start is deterministic and there is no cycle. Config validation enforces it.
-- **The current step can become skipped**, for example after an action. The runtime then moves back to the nearest active step before it, firing the step triggers, and never forward without validating.
-- **Excluded values are absent.** The value of a skipped step, or of a hidden field, counts as absent for every later constraint that reads it, so a skipped step that still holds `'yes'` cannot keep a later field shown and required.
+## In Radiant
+
+`FormRenderer` draws a `se-form-instance` element around the form. It publishes the wizard on `formInstanceContext`, which `@schema-engine/forms-radiant/contexts` exports: `current`, `steps`, `navigating`, `next()`, `back()`, `goTo(id)` and the `submission`. An element reads it with `contextSelector` from `@ecopages/radiant/context` and renders again when it changes. The element has to sit inside the form, so pass it to `FormRenderer` as a child:
+
+```tsx title="radiant-stepper.tsx"
+import { customElement, RadiantElement } from '@ecopages/radiant';
+import { contextSelector } from '@ecopages/radiant/context';
+import type { JsxRenderable } from '@ecopages/jsx';
+import type { FormValues } from '@schema-engine/forms';
+import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { formInstanceContext, type FormInstanceContextValue } from '@schema-engine/forms-radiant/contexts';
+import { checkout } from './checkout';
+
+const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.title ?? id;
+
+/**
+ * Lists the steps that take part and jumps to one the form lets the visitor reach.
+ *
+ * @remarks
+ * `se-form-instance` publishes the wizard on `formInstanceContext`, and the selector re-renders the element each
+ * time it changes. The element has to sit inside the form, so it is passed to `FormRenderer` as a child.
+ */
+@customElement('checkout-stepper')
+export class CheckoutStepper extends RadiantElement {
+	@contextSelector({ context: formInstanceContext })
+	protected instance?: FormInstanceContextValue;
+
+	override render(): JsxRenderable {
+		const instance = this.instance;
+		if (!instance) return null;
+		return (
+			<ol aria-label="Steps">
+				{instance.steps
+					.filter((step) => !step.skipped)
+					.map((step) => (
+						<li key={step.id}>
+							<button
+								type="button"
+								aria-current={step.id === instance.current ? 'step' : undefined}
+								prop:disabled={!step.reachable}
+								on:click={() => void instance.goTo(step.id)}
+							>
+								{titleOf(step.id)}
+								{step.invalid ? ' (fix)' : ''}
+							</button>
+						</li>
+					))}
+			</ol>
+		);
+	}
+}
+
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+
+/** The checkout with a stepper of its own beside the wizard's Previous and Next. */
+export function Checkout({ onSubmit }: { onSubmit: (values: FormValues) => void }) {
+	return (
+		<FormRenderer engine={engine} config={checkout} onSubmit={onSubmit}>
+			<checkout-stepper />
+		</FormRenderer>
+	);
+}
+```
+
+`FormController` gives the same element the form's container and its signals, as [Form controls](/docs/forms-radiant/form-controls#read-the-form-from-your-own-element) shows. The instance also emits the `se-action-submit-start`, `se-action-submit-invalid` and `se-action-submit-complete` events for the submission.
 
 ## Reset
 
-`container.reset()` is the only reset: there is no `runtime.reset()`. The container's `generation` goes up with it, and the runtime then revokes a command whose values were not yet captured (`cancelled`), returns the submission to idle with a count of 0 and the steps to the first, and fires no step trigger. A submission whose values were already captured is committed instead: it runs to its end and publishes its outcome (`success` or `error`, with a count of 1) after the reset. An action's `form.reset`, `useFormContext().reset` and a native reset button all do the same.
+`useFormContext().reset`, an action's `form.reset`, a native reset button and `FormController.container.reset()` all return the form to its first step with an idle submission and no step trigger fired.
 
-## In the renderers
+## Where to go next
 
-| Renderer | Reads the runtime through                                                                                                                                                   |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| React    | `useFormInstanceActions()` gives `current`, `steps`, `navigating`, `next`, `back` and `goTo`, and `useFormContext().formState.submission` gives the submission.             |
-| Radiant  | The `se-form-instance` context publishes `current`, `steps`, `navigating`, `next`, `back` and `goTo`, and `submission`; the instance emits the `se-action-submit-*` events. |
+- [Registration wizard](/docs/examples/registration-wizard) and [Branching survey](/docs/examples/branching-survey): a wizard in both renderers, with a skipped step.
+- [Form state](/docs/forms/form-state): the values, the errors and the submission the wizard shares with a single-step form.
+- [View recipes](/docs/forms-react/layouts) and [Layouts](/docs/forms-radiant/layouts): the shells and wizard blocks of each renderer.
+- [Form runtime](/docs/renderer-authors/runtime): the commands, the snapshot and the lock, for the author of a renderer.

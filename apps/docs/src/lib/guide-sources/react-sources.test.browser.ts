@@ -4,6 +4,8 @@ import { FormRenderer } from '@schema-engine/forms-react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { FeedbackForm } from './agent-tool.react';
+import { Checkout } from './react-stepper.react';
+import { ContactWithStatus } from './react-form-status.react';
 import { ContactForm } from './react-quick-start.react';
 import { SettingsPanel } from './settings-panel.react';
 import { engine } from './react-widgets.react';
@@ -172,5 +174,68 @@ describe('the React quick start', () => {
 		await expect
 			.poll(() => host.querySelector('pre')?.textContent)
 			.toBe(JSON.stringify({ name: 'Ada Lovelace', email: 'ada@example.com' }));
+	});
+});
+
+const steps = (host: HTMLElement) =>
+	[...host.querySelectorAll<HTMLButtonElement>('ol[aria-label="Steps"] button')].map((button) => ({
+		text: button.textContent,
+		current: button.getAttribute('aria-current') === 'step',
+		disabled: button.disabled,
+	}));
+const next = (host: HTMLElement) =>
+	[...host.querySelectorAll('button')].find((button) => button.textContent === 'Next')!;
+
+describe('the React stepper', () => {
+	test('lists the steps that take part, follows the wizard and jumps back to a visited step', async () => {
+		const host = await mount(createElement(Checkout, { onSubmit: () => {} }));
+		expect(steps(host)).toEqual([
+			{ text: 'Contact', current: true, disabled: true },
+			{ text: 'Payment', current: false, disabled: true },
+		]);
+
+		await userEvent.click(next(host));
+		await expect.poll(() => host.querySelector('[role="alert"]')?.textContent).toBe('Enter your email');
+		expect(steps(host)[0]).toMatchObject({ text: 'Contact (fix)', current: true });
+
+		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="email"]')!, 'ada@example.com');
+		await userEvent.click(next(host));
+		await expect.poll(() => host.querySelector('input[name="card"]')).toBeTruthy();
+		expect(steps(host)).toEqual([
+			{ text: 'Contact', current: false, disabled: false },
+			{ text: 'Payment', current: true, disabled: true },
+		]);
+
+		await userEvent.click(host.querySelector<HTMLButtonElement>('ol[aria-label="Steps"] button')!);
+		await expect.poll(() => host.querySelector('input[name="email"]')).toBeTruthy();
+	});
+
+	test('adds the company step when the buyer is a company', async () => {
+		const host = await mount(createElement(Checkout, { onSubmit: () => {} }));
+		await userEvent.selectOptions(host.querySelector<HTMLSelectElement>('select[name="buyer"]')!, 'company');
+		await expect.poll(() => steps(host).map(({ text }) => text)).toEqual(['Contact', 'Company', 'Payment']);
+	});
+});
+
+describe('the form status', () => {
+	test('follows a value and the submission, and starts over', async () => {
+		const onSubmit = vi.fn();
+		const host = await mount(createElement(ContactWithStatus, { onSubmit }));
+		const status = () => host.querySelector('output')?.textContent;
+		expect(status()).toBe('Submissions: 0');
+
+		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="email"]')!, 'ada@example.com');
+		await expect.poll(status).toBe('Writing to ada@example.com. Submissions: 0');
+
+		await userEvent.type(host.querySelector<HTMLInputElement>('input[name="name"]')!, 'Ada');
+		await userEvent.click(host.querySelector('button[type="submit"]')!);
+		await expect.poll(status).toBe('Writing to ada@example.com. Submissions: 1');
+		expect(onSubmit).toHaveBeenCalledOnce();
+
+		await userEvent.click(
+			[...host.querySelectorAll('button')].find((button) => button.textContent === 'Start over')!,
+		);
+		await expect.poll(status).toBe('Submissions: 0');
+		expect(host.querySelector<HTMLInputElement>('input[name="email"]')!.value).toBe('');
 	});
 });

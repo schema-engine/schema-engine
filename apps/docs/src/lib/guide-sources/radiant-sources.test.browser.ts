@@ -1,10 +1,11 @@
 import { createRoot } from '@ecopages/jsx/client';
-import { FormRenderer } from '@schema-engine/forms-radiant';
+import { FormController, FormRenderer } from '@schema-engine/forms-radiant';
 import { afterEach, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { engine as feedbackEngine, feedback } from './radiant-agent-tool';
 import { engine as toneEngine, type ToneControl } from './radiant-control';
 import { ContactForm } from './radiant-quick-start';
+import { Checkout } from './radiant-stepper';
 import { engine } from './radiant-summary';
 
 afterEach(() => document.body.replaceChildren());
@@ -163,4 +164,41 @@ test('the quick start renders its form in Radiant, blocks an invalid submit and 
 	await userEvent.click(host.querySelector('button[type="submit"]')!);
 	await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
 	expect(onSubmit.mock.calls[0]![0]).toEqual({ name: 'Ada Lovelace', email: 'ada@example.com' });
+});
+
+test('a custom stepper reads the wizard from the form instance and moves it', async () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	createRoot(host).render(Checkout({ onSubmit: () => {} }));
+	const steps = () =>
+		[...host.querySelectorAll<HTMLButtonElement>('checkout-stepper button')].map((button) => ({
+			text: button.textContent,
+			current: button.getAttribute('aria-current') === 'step',
+			disabled: button.disabled,
+		}));
+	await expect.poll(steps).toEqual([
+		{ text: 'Contact', current: true, disabled: true },
+		{ text: 'Payment', current: false, disabled: true },
+	]);
+
+	await userEvent.click(
+		[...host.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Next')!,
+	);
+	await expect.poll(() => steps()[0]?.text).toBe('Contact (fix)');
+
+	await userEvent.type(host.querySelector('input[name="email"]')!, 'ada@example.com');
+	await userEvent.click(
+		[...host.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Next')!,
+	);
+	await expect.poll(steps).toEqual([
+		{ text: 'Contact', current: false, disabled: false },
+		{ text: 'Payment', current: true, disabled: true },
+	]);
+
+	await userEvent.click(host.querySelector<HTMLButtonElement>('checkout-stepper button')!);
+	await expect.poll(() => steps()[0]?.current).toBe(true);
+
+	const form = new FormController(host.querySelector<HTMLElement>('checkout-stepper')!);
+	form.container!.setValue('buyer', 'company');
+	await expect.poll(() => steps().map(({ text }) => text)).toEqual(['Contact', 'Company', 'Payment']);
 });

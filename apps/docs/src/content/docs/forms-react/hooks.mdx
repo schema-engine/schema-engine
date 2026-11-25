@@ -6,7 +6,7 @@ order: 4
 
 # Hooks
 
-The hooks of `@schema-engine/forms-react/hooks`: the view hooks for recipe blocks, the form hooks for widgets and the engine hooks for the form's wizard and runtime.
+The hooks of `@schema-engine/forms-react/hooks`: the view hooks for recipe blocks, the form hooks for widgets and the engine hooks for the form's wizard.
 
 ## View hooks
 
@@ -77,6 +77,6 @@ is passed over by `next` and `back` and refused by `goTo`.
 
 `useFormRuntime` returns the form's whole runtime, for what takes a form over, such as the [agent tool](/docs/forms/agent-tool).
 
-The form's runtime ([`createFormRuntime`](/docs/forms/api-reference#createformruntime)) owns all of this and the submission, so
-`useFormContext().reset`, an action's `form.reset` and a native reset button all return the form to its first
-step with an idle submission.
+The form owns all of this and the submission, so `useFormContext().reset`, an action's `form.reset` and a native
+reset button all return the form to its first step with an idle submission. See [Wizard](/docs/forms/wizard) for
+a stepper built on `useFormInstanceActions`.

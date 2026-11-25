@@ -12,12 +12,15 @@ describe('the pages show the guide sources they run', () => {
 
 	/** The guide sources each page shows, which the tests of the guide sources run. */
 	const shown: Record<string, string[]> = {
-		'forms/form-state': ['engine.ts', 'container.ts', 'hydration.ts', 'react-typed-values.react.tsx'],
+		'forms/form-state': ['react-form-status.react.tsx', 'react-typed-values.react.tsx'],
 		'forms/issue-text': ['format-issue.ts'],
-		'forms/native-validity': ['native-facts.ts'],
 		'forms/server-errors': ['server-errors.ts'],
 		'forms/csrf': ['csrf.ts'],
-		'forms/wizard': ['checkout-wizard.ts'],
+		'forms/wizard': ['checkout.ts', 'react-stepper.react.tsx', 'radiant-stepper.tsx'],
+		'renderer-authors/write-a-renderer': ['engine.ts', 'plain-renderer.ts'],
+		'renderer-authors/runtime': ['checkout-wizard.ts'],
+		'renderer-authors/state-container': ['container.ts', 'hydration.ts'],
+		'renderer-authors/native-validity': ['native-facts.ts'],
 		'forms/agent-tool': ['agent-tool.react.tsx', 'radiant-agent-tool.tsx'],
 		'forms-react/widgets': ['react-widgets.react.tsx'],
 		'forms-react/getting-started': ['react-quick-start.react.tsx'],

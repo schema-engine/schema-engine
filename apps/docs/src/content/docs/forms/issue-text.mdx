@@ -29,7 +29,7 @@ export const issues: Array<FormStateIssue | FormSubmissionIssue> = [
 | `params`  | The numbers a sentence needs, under the names the platform uses: `minLength`, `max`, `inputType`. They are serializable.                                      |
 | `message` | Text that someone wrote: the rule's author, the server or the browser. It is a fallback, never the first choice. The schema library's own text is never used. |
 
-A field's error is the issue to show plus every issue of that path in `all`. See [Form state](/docs/forms/form-state#read-state).
+A field's error is the issue to show plus every issue of that path in `all`. See [Form state](/docs/forms/form-state#what-it-holds).
 
 ## One formatter, one override
 
@@ -47,9 +47,8 @@ In React, keep the formatter's identity stable: define it at module level or mem
 This one looks a translation up by the most specific key first (the rule's `ruleId`, then the problem's type), fills the numbers from `params` and falls back to the issue's own `message`. Text a server already wrote for people is shown as it is. `t` looks the first of its keys up in a catalogue and fills its `{name}` placeholders; it lives in a helper that this page does not show, so swap it for your i18n library. The keys are `form.rules.<ruleId>`, `form.<source>.<type>` and `form.fields.<path>`, and the texts below come from the catalogue.
 
 ```ts title="format-issue.ts"
-import { createFormEngine } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
-import { textInput } from './engine';
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { t } from './i18n.helper';
 
 export const formatIssue: FormIssueFormatter = (issue, { path }) => {
@@ -63,7 +62,7 @@ export const formatIssue: FormIssueFormatter = (issue, { path }) => {
 	return t(keys, { ...issue.params, field: t([`form.fields.${path}`]) ?? path }) ?? issue.message ?? '';
 };
 
-export const engine = createFormEngine({ elements: [textInput], formatIssue });
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, formatIssue });
 ```
 
 The catalogue and the engine's formatter give these texts:

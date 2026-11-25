@@ -104,7 +104,6 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		'createFormEngine',
 		'defineInput / defineStatic',
 		'FormEngine',
-		'createFormRuntime',
 		'RecipeRegistration',
 	]),
 	...declarations('registry/api-reference', [
@@ -158,8 +157,9 @@ const CONTINUES: Record<string, string[]> = {
 	'forms/validation': ['forms/getting-started'],
 	'forms/actions': ['forms/getting-started'],
 	'forms/validation-custom': ['forms/getting-started'],
-	'forms/csrf': ['forms/form-state'],
-	'forms/issue-text': ['forms/form-state'],
+	'renderer-authors/runtime': ['renderer-authors/write-a-renderer'],
+	'renderer-authors/state-container': ['renderer-authors/write-a-renderer'],
+	'renderer-authors/native-validity': ['renderer-authors/write-a-renderer'],
 };
 
 /** The helpers of the example a page of Examples shows, which sit in the folder of the example. */

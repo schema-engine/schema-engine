@@ -9,9 +9,8 @@ order: 13
 `createFormEngine({ csrf })` takes a policy that reads your CSRF token. The engine then sends it with the requests it makes and with a native form post. It is off unless you configure it.
 
 ```ts title="csrf.ts"
-import { createFormEngine } from '@schema-engine/forms';
 import { csrf } from '@schema-engine/forms/csrf';
-import { textInput } from './engine';
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 
 /** Rails renders the token into `<meta name="csrf-token" content="...">`. */
 export const fromMeta = csrf.fromMeta('csrf-token', { header: 'X-CSRF-Token', field: 'authenticity_token' });
@@ -25,7 +24,7 @@ export const fromGlobal = csrf.custom({
 	header: 'X-CSRF-Token',
 });
 
-export const engine = createFormEngine({ elements: [textInput], csrf: fromMeta });
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, csrf: fromMeta });
 ```
 
 `@schema-engine/forms/csrf` exports `csrf`, three readers that each return the policy:

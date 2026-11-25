@@ -73,3 +73,9 @@ export const examplesIcon: JsxRenderable = (
 		<path d="M4 6h16M4 12h16M4 18h16" />
 	</SectionIcon>
 );
+
+export const rendererAuthorsIcon: JsxRenderable = (
+	<SectionIcon>
+		<path d="M8 6l-5 6 5 6M16 6l5 6-5 6" />
+	</SectionIcon>
+);
