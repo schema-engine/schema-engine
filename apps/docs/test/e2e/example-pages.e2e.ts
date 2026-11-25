@@ -119,7 +119,9 @@ describe('the forms example pages', () => {
 		await form.locator('button[type="submit"]').click();
 		await pwExpect(select).toHaveAttribute('aria-invalid', 'true');
 		await pwExpect(select).not.toHaveCSS('border-top-color', before);
-		await pwExpect(select).toHaveCSS('border-top-color', await border(form.locator('input[name="name"]')));
+		const name = form.locator('input[name="name"]');
+		await pwExpect(name).toHaveAttribute('aria-invalid', 'true');
+		await pwExpect.poll(async () => (await border(select)) === (await border(name))).toBe(true);
 	});
 
 	test('the React wizard draws the steps and the counter from the same config as the Radiant one', async () => {
