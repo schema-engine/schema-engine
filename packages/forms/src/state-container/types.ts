@@ -19,7 +19,7 @@ import type { FieldArrayCommands } from './field-array';
  * The container is named for what it holds, not `FormStore`, which is a class of Radiant UI. The contract is
  * public through `@schema-engine/forms/state-container`, with `@schema-engine/forms/csrf` and
  * `@schema-engine/forms/server-errors` beside it. Its conformance suite is `formStateContainerConformance` from
- * `@schema-engine/forms/testing`.
+ * `@schema-engine/forms/testing`, which takes the `describe` and `test` of any test runner.
  */
 
 /**

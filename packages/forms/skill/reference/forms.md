@@ -163,13 +163,14 @@ Every command resolves one string: `moved`, `submitted`, `failed`, `invalid`, `o
 
 ## Testing a container
 
-A container of your own, or a store that must behave like this one, proves it with the conformance suite. It registers its cases with vitest, an optional peer dependency, so import this entry only from a test file.
+A container of your own, or a store that must behave like this one, proves it with the conformance suite. It depends on no test runner: pass the `describe` and `test` of yours (Vitest below; Jest, Bun and `node:test` work the same), and import this entry only from a test file.
 
 ```ts title="forms/container-conformance.test.ts"
+import { describe, test } from 'vitest';
 import { createFormStateContainer } from '@schema-engine/forms/state-container';
 import { formStateContainerConformance } from '@schema-engine/forms/testing';
 
-formStateContainerConformance(createFormStateContainer);
+formStateContainerConformance(createFormStateContainer, { describe, test });
 ```
 
 Save your copy as `container-conformance.test.ts`.

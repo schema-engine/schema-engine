@@ -291,8 +291,8 @@ it is a programming error, nothing to catch and match on.
 - A row operation validates the array's own rules, not its rows, and `reset` gives every row a new id.
 - A command notifies subscribers once, including when it starts a validation.
 
-The rules are tests: `formStateContainerConformance(createStore)` in [testing/form-state-container-conformance.ts](../testing/form-state-container-conformance.ts),
-published as `@schema-engine/forms/testing` (vitest is an optional peer dependency), registers them with vitest, with a case for each failure sequence of
+The rules are tests: `formStateContainerConformance(createStore, { describe, test })` in [testing/form-state-container-conformance.ts](../testing/form-state-container-conformance.ts),
+published as `@schema-engine/forms/testing`, registers them with the `describe` and `test` of the caller's runner (Vitest, Jest, Bun, `node:test`: the suite imports none, its helpers are in [testing/assert.ts](../testing/assert.ts)), with a case for each failure sequence of
 the review that motivated freshness, provenance, native facts and participation.
 `test/state-container/form-state-container-rules.test.ts` points each rule at a container written to break it,
 and two files mock the run tracker and the row anchors to show the late-result cases fail without them.

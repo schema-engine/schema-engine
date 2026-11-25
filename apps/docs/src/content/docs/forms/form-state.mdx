@@ -308,16 +308,16 @@ The contract is public, so a renderer for another framework, a native client or 
 - keeps focus, the native controls and the native submit, which are the host's;
 - submits with `submit()`, or through the [runtime](/docs/forms/wizard), and shows the server's answer through `setServerErrors`.
 
-`formStateContainerConformance` from `@schema-engine/forms/testing` is the suite that proves a container keeps the contract: validation timing, row identity, native facts, freshness, participation and server errors. Run it against any implementation of `FormStateContainerFactory`:
+`formStateContainerConformance` from `@schema-engine/forms/testing` is the suite that proves a container keeps the contract: validation timing, row identity, native facts, freshness, participation and server errors. Run it against any implementation of `FormStateContainerFactory`, and pass the `describe` and `test` of your test runner:
 
 ```ts
-import { describe } from 'vitest';
+import { describe, test } from 'vitest';
 import { formStateContainerConformance } from '@schema-engine/forms/testing';
 import { createFormStateContainer } from '@schema-engine/forms/state-container';
 
-describe('my container', () => {
-	formStateContainerConformance(createFormStateContainer);
-});
+formStateContainerConformance(createFormStateContainer, { describe, test });
 ```
+
+The suite depends on no test runner, so any runner with `describe` and `test` works, such as Jest, Bun or `node:test`.
 
 To mount a form in a screen that has state of its own, see [Other React state](/docs/forms-react/other-react-state).

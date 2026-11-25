@@ -52,7 +52,7 @@ const result = engine.safeValidateForm({
 | `@schema-engine/forms/recipes/built-in` | The built-in recipe specs and their slot schemas                                      |
 | `@schema-engine/forms/browser`          | Browser actions: auto-save, reset and analytics, with consent                         |
 | `@schema-engine/forms/agent-tool`       | Offers a form to a browser agent as a WebMCP tool (experimental)                      |
-| `@schema-engine/forms/testing`          | A conformance suite for a form state container (needs `vitest`)                       |
+| `@schema-engine/forms/testing`          | A conformance suite for a form state container, for any test runner                   |
 
 ## Documentation
 
