@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as z from 'zod/mini';
-import { BaseRegistry, createRegistry, safeParseNode, type BaseRegistration } from '../src';
+import { BaseRegistry, createRegistry, safeParseNode, unregisteredTypeMessage, type BaseRegistration } from '../src';
 
 const badge: BaseRegistration = {
 	$type: 'badge',
@@ -43,28 +43,33 @@ describe('safeParseNode', () => {
 	});
 
 	it('adds the hint of the lookup to the message of a $type no registration answers', () => {
-		const lookup = {
-			get: (type: string) => badges.get(type),
-			hint: (type: string) => `Register '${type}' with defineBadge.`,
-		};
+		const lookup = { get: (type: string) => badges.get(type), hint: 'Register it with defineBadge.' };
 
 		expect(safeParseNode(lookup, { $type: 'chip' }, [1])).toEqual({
 			success: false,
 			issues: [
-				{ message: "No registration for $type 'chip'. Register 'chip' with defineBadge.", path: [1, '$type'] },
+				{ message: "No registration for $type 'chip'. Register it with defineBadge.", path: [1, '$type'] },
 			],
 		});
 	});
 
-	it('does not run the hint for a $type it answers or for a node that has no $type', () => {
-		const hint = vi.fn(() => 'unused');
-		const lookup = { get: (type: string) => badges.get(type), hint };
+	it('does not add the hint to an issue that is not about an unregistered $type', () => {
+		const lookup = { get: (type: string) => badges.get(type), hint: 'Register it with defineBadge.' };
 
-		safeParseNode(lookup, { $type: 'badge', label: 'ok' });
-		safeParseNode(lookup, { $type: 7 });
-		safeParseNode(lookup, null);
+		const results = [safeParseNode(lookup, null), safeParseNode(lookup, { $type: 7 })];
 
-		expect(hint).not.toHaveBeenCalled();
+		for (const result of results) {
+			expect(!result.success && result.issues.map((issue) => issue.message)).not.toContainEqual(
+				expect.stringContaining('defineBadge'),
+			);
+		}
+	});
+
+	it('words an unregistered $type the same way for a caller that throws', () => {
+		expect(unregisteredTypeMessage('chip')).toBe("No registration for $type 'chip'.");
+		expect(unregisteredTypeMessage('chip', 'Register it with defineBadge.')).toBe(
+			"No registration for $type 'chip'. Register it with defineBadge.",
+		);
 	});
 
 	it.each([null, undefined, 'badge', 7, []])(

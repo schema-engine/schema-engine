@@ -86,14 +86,12 @@ describe('parseActions', () => {
 
 	test('ends the message of an unknown $type with the hint of the domain', () => {
 		const result = parseActions(registry, [{ id: 'a', $type: 'put' }], {
-			hint: (type) => `Register '${type}' with the domain.`,
+			hint: 'Register it with the domain.',
 		});
 
 		expect(result).toEqual({
 			success: false,
-			issues: [
-				{ path: [0, '$type'], message: "No registration for $type 'put'. Register 'put' with the domain." },
-			],
+			issues: [{ path: [0, '$type'], message: "No registration for $type 'put'. Register it with the domain." }],
 		});
 	});
 

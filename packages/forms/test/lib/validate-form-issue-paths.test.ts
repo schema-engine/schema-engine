@@ -124,6 +124,17 @@ describe('validation issue paths', () => {
 		]);
 	});
 
+	test('an empty view $type is an unregistered type', () => {
+		const issues = issuesOf(formWith([named('a')], { view: { $type: '' } }));
+
+		expect(issues).toEqual([
+			{
+				path: ['view', '$type'],
+				message: "No registration for $type ''. Register it with createFormEngine({ recipes: [...] }).",
+			},
+		]);
+	});
+
 	test('a view slot appearance pick carries the path through the view and the slot', () => {
 		const issues = issuesOf(
 			formWith([named('a')], { view: { $type: 'card', shell: { appearance: { size: 'huge' } } } }),

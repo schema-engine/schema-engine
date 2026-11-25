@@ -1,7 +1,7 @@
 import type { FormTaggedConfig } from '@/schemas/form-config';
 import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
 import { resolveRecipeView, type RecipeViewInput } from '@schema-engine/layout';
-import { safeParseNode, type NodeLookup, type StandardSchemaIssue } from '@schema-engine/registry';
+import { safeParseNode, standardSchema, type NodeLookup, type StandardSchemaIssue } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { AnyRecipeRegistration } from '@/types/registration';
 import { logger } from '@/lib/logger';
@@ -20,8 +20,7 @@ import { fromSchemaIssues } from './schema-issues';
 const warnedMissingWizardRecipe = new WeakMap<object, Set<string>>();
 
 /**
- * Finds a recipe by the `$type` of the view, with what holds a view of that recipe: the recipe's kind against the
- * number of steps, then the view as `resolveRecipeView` resolves it.
+ * Finds a recipe by the `$type` of the view, with what holds a view of that recipe ({@link viewSchema}).
  *
  * @remarks
  * `safeParseNode` runs the schema only once it has found the recipe, so the view is an object with a registered
@@ -37,35 +36,36 @@ function recipeLookup(
 			const recipe = getRecipe(type);
 			return recipe && { schema: viewSchema(recipe, stepCount, appearance) };
 		},
-		hint: () => 'Register it with createFormEngine({ recipes: [...] }).',
+		hint: 'Register it with createFormEngine({ recipes: [...] }).',
 	};
 }
 
+/**
+ * The schema of a view: the recipe's kind against the number of steps, then the view as `resolveRecipeView` resolves it.
+ *
+ * @remarks
+ * The `value as RecipeViewInput` cast relies on the lookup contract: {@link recipeLookup} hands this schema only to
+ * `safeParseNode`, which runs it after it has checked that the view is an object with a string `$type`.
+ */
 function viewSchema(recipe: AnyRecipeRegistration, stepCount: number, appearance: AppearanceScope): StandardSchemaV1 {
-	return {
-		'~standard': {
-			version: 1,
-			vendor: 'schema-engine',
-			validate(value) {
-				const issues: StandardSchemaIssue[] = [];
-				if (recipe.kind === 'single-step' && stepCount !== 1) {
-					issues.push({
-						path: ['$type'],
-						message: `Recipe '${recipe.$type}' is single-step only (kind: 'single-step') but the form has ${stepCount} steps.`,
-					});
-				}
-				if (recipe.kind === 'wizard' && stepCount < 2) {
-					issues.push({
-						path: ['$type'],
-						message: `Recipe '${recipe.$type}' requires at least 2 steps (kind: 'wizard') but the form has ${stepCount} step(s).`,
-					});
-				}
-				const resolved = resolveRecipeView(recipe, value as RecipeViewInput, appearance);
-				issues.push(...resolved.issues, ...(resolved.schemaIssues ?? []));
-				return issues.length > 0 ? { issues } : { value: resolved.view };
-			},
-		},
-	};
+	return standardSchema((value) => {
+		const issues: StandardSchemaIssue[] = [];
+		if (recipe.kind === 'single-step' && stepCount !== 1) {
+			issues.push({
+				path: ['$type'],
+				message: `Recipe '${recipe.$type}' is single-step only (kind: 'single-step') but the form has ${stepCount} steps.`,
+			});
+		}
+		if (recipe.kind === 'wizard' && stepCount < 2) {
+			issues.push({
+				path: ['$type'],
+				message: `Recipe '${recipe.$type}' requires at least 2 steps (kind: 'wizard') but the form has ${stepCount} step(s).`,
+			});
+		}
+		const resolved = resolveRecipeView(recipe, value as RecipeViewInput, appearance);
+		issues.push(...resolved.issues, ...(resolved.schemaIssues ?? []));
+		return issues.length > 0 ? { issues } : { value: resolved.view };
+	});
 }
 
 export function parseView(

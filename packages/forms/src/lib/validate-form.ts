@@ -51,12 +51,7 @@ export function validateElementConfig(
 		axes: options.axes ?? getDefaultLayoutTheme().axes,
 		inherited: {},
 	});
-	if (parsed.issues.length > 0 || !parsed.item) {
-		throw new FormValidationError(
-			parsed.issues.length > 0 ? parsed.issues : [issueAt([], 'Expected an object with a string $type.')],
-			config,
-		);
-	}
+	if (!parsed.item) throw new FormValidationError(parsed.issues, config);
 	return brandElementTree(parsed.item, options.getElement);
 }
 

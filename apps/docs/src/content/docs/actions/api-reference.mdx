@@ -40,7 +40,7 @@ function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
 
 interface ParseActionsOptions {
 	triggers?: readonly string[];
-	hint?(type: string): string;
+	hint?: string;
 }
 
 type ParseActionsResult<TConfig> =

@@ -11,15 +11,28 @@ export interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema
 	 * A sentence that follows the message of a `$type` `get` does not answer, such as where to register it.
 	 *
 	 * @remarks
-	 * It is a function of the type so a message can name what is registered. It runs only for an unregistered
-	 * `$type`: the message is `No registration for $type 'x'. ` and what it returns.
+	 * The message is `No registration for $type 'x'.`, a space and the hint.
 	 */
-	hint?(type: string): string;
+	hint?: string;
 }
 
 /** What {@link safeParseNode} returns: the registration with the node's validated configuration, or every issue found. */
 export type SafeParseNodeResult<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> =
 	{ success: true; registration: TRegistration; data: unknown } | { success: false; issues: StandardSchemaIssue[] };
+
+/**
+ * The message for a `$type` no registration answers, as {@link safeParseNode} reports it.
+ *
+ * @param type - The `$type` that found nothing
+ * @param hint - A sentence that follows the message, as {@link NodeLookup.hint} gives it
+ *
+ * @remarks
+ * Exported so a caller that has to throw for the same case, instead of returning an issue, says the same thing.
+ */
+export function unregisteredTypeMessage(type: string, hint?: string): string {
+	const message = `No registration for $type '${type}'.`;
+	return hint ? `${message} ${hint}` : message;
+}
 
 function isRecord(value: unknown): value is Record<PropertyKey, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -59,12 +72,9 @@ export function safeParseNode<TRegistration extends Pick<BaseRegistration, 'sche
 	}
 	const registration = registry.get(type);
 	if (!registration) {
-		const message = `No registration for $type '${type}'.`;
 		return {
 			success: false,
-			issues: [
-				{ message: registry.hint ? `${message} ${registry.hint(type)}` : message, path: [...path, '$type'] },
-			],
+			issues: [{ message: unregisteredTypeMessage(type, registry.hint), path: [...path, '$type'] }],
 		};
 	}
 	const parsed = safeParseStandardSchema(registration.schema, node);

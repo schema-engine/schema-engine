@@ -13,7 +13,7 @@ import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
 
 /** Finds an element by `$type` for `safeParseNode`, and says where to register one nothing answers. */
 function elementLookup(getElement: ValidateFormOptions['getElement']): NodeLookup<ElementRegistration> {
-	return { get: getElement, hint: () => 'Register it with createFormEngine({ elements: [...] }).' };
+	return { get: getElement, hint: 'Register it with createFormEngine({ elements: [...] }).' };
 }
 
 /**
@@ -56,6 +56,9 @@ function reservedNameSegment(item: FormTaggedConfig): string | undefined {
 	return typeof item.name === 'string' ? item.name.split('.').find(isReservedPathKey) : undefined;
 }
 
+/** What {@link parseElementNode} returns: the element, or the issues found, never neither. */
+type ParsedElement = { issues: FormValidationIssue[]; item?: undefined } | { issues: []; item: FormTaggedConfig };
+
 export function parseElementNode(
 	item: unknown,
 	getElement: ValidateFormOptions['getElement'],
@@ -63,7 +66,7 @@ export function parseElementNode(
 	path: Path,
 	appearance: AppearanceScope,
 	nested = false,
-): { issues: FormValidationIssue[]; item?: FormTaggedConfig } {
+): ParsedElement {
 	const fail = (message: string, relative: Path = []) => ({ issues: [issueAt([...path, ...relative], message)] });
 
 	const tagged = isTaggedConfig(item) ? item : undefined;
@@ -74,8 +77,14 @@ export function parseElementNode(
 			['name'],
 		);
 	}
-	const { appearance: authoredAppearance, ...authored } = tagged ?? { appearance: undefined };
-	const parsed = safeParseNode(elementLookup(getElement), tagged ? authored : item, path);
+	let authoredAppearance: unknown;
+	let node: unknown = item;
+	if (tagged) {
+		const { appearance: taggedAppearance, ...withoutAppearance } = tagged;
+		authoredAppearance = taggedAppearance;
+		node = withoutAppearance;
+	}
+	const parsed = safeParseNode(elementLookup(getElement), node, path);
 	if (!parsed.success) {
 		return { issues: fromSchemaIssues(parsed.issues, []) };
 	}

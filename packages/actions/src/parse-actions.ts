@@ -1,6 +1,7 @@
 import {
 	safeParseNode,
 	safeParseStandardSchema,
+	standardSchema,
 	type BaseRegistration,
 	type NodeLookup,
 	type StandardSchemaIssue,
@@ -98,31 +99,25 @@ function entrySchema(
 	own: BaseRegistration['schema'],
 	options: ParseActionsOptions | undefined,
 ): BaseRegistration['schema'] {
-	return {
-		'~standard': {
-			version: 1,
-			vendor: 'schema-engine',
-			validate(value) {
-				const entry = value as Record<PropertyKey, unknown>;
-				const issues = checkBase(entry, options);
-				const base: Record<string, unknown> = {};
-				const rest: Record<string, unknown> = {};
-				for (const [key, field] of Object.entries(entry)) {
-					if ((BASE_KEYS as readonly string[]).includes(key)) base[key] = field;
-					else rest[key] = field;
-				}
-				const result = safeParseStandardSchema(own, rest);
-				if (!result.success) return { issues: [...issues, ...result.error.issues] };
-				const { data } = result;
-				if (!isRecord(data)) {
-					const message = `Invalid action configuration for '${type}': the schema must return an object.`;
-					return { issues: [...issues, issueAt([], message)] };
-				}
-				if (issues.length > 0) return { issues };
-				return { value: { ...data, ...base, id: entry.id, $type: type } };
-			},
-		},
-	};
+	return standardSchema((value) => {
+		const entry = value as Record<PropertyKey, unknown>;
+		const issues = checkBase(entry, options);
+		const base: Record<string, unknown> = {};
+		const rest: Record<string, unknown> = {};
+		for (const [key, field] of Object.entries(entry)) {
+			if ((BASE_KEYS as readonly string[]).includes(key)) base[key] = field;
+			else rest[key] = field;
+		}
+		const result = safeParseStandardSchema(own, rest);
+		if (!result.success) return { issues: [...issues, ...result.error.issues] };
+		const { data } = result;
+		if (!isRecord(data)) {
+			const message = `Invalid action configuration for '${type}': the schema must return an object.`;
+			return { issues: [...issues, issueAt([], message)] };
+		}
+		if (issues.length > 0) return { issues };
+		return { value: { ...data, ...base, id: entry.id, $type: type } };
+	});
 }
 
 /**
@@ -158,7 +153,7 @@ export function parseActions<TConfig extends ActionConfigBase = ActionConfigBase
 			const registration = registry.getAction(type);
 			return registration && { schema: entrySchema(type, registration.schema, options) };
 		},
-		hint: options?.hint ?? (() => DEFAULT_HINT),
+		hint: options?.hint ?? DEFAULT_HINT,
 	};
 	const issues: StandardSchemaIssue[] = [];
 	const sequence: Array<ParsedAction<TConfig> | Array<ParsedAction<TConfig>>> = [];
