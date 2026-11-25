@@ -1,5 +1,5 @@
 import { csrf } from '@schema-engine/forms/csrf';
-import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { createFormEngine } from '@schema-engine/forms';
 
 /** Rails renders the token into `<meta name="csrf-token" content="...">`. */
 export const fromMeta = csrf.fromMeta('csrf-token', { header: 'X-CSRF-Token', field: 'authenticity_token' });
@@ -13,4 +13,5 @@ export const fromGlobal = csrf.custom({
 	header: 'X-CSRF-Token',
 });
 
-export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, csrf: fromMeta });
+/** Your engine: add the elements you register beside `csrf`. */
+export const engine = createFormEngine({ csrf: fromMeta });
