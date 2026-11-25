@@ -47,7 +47,7 @@ export function nodeIssues(node: unknown, index: number): string[] {
 }
 ```
 
-`formatIssuePath(path, source?)` writes the `path` of an issue as text: keys joined by dots and indexes in brackets (`children[1].label`), the empty string for a missing or empty path. A segment may be a key or a Standard Schema `{ key }` object. Given the document as `source`, an array item with a string `id` is followed by it, `children[1] (hero).label`. `@schema-engine/forms` re-exports it.
+`formatIssuePath(path, source?)` writes the `path` of an issue as text: keys joined by dots and indexes in brackets (`children[1].label`), the empty string for a missing or empty path. A segment may be a key or a Standard Schema `{ key }` object. Given the document as `source`, an array item with a string `id` is followed by it, `children[1] (hero).label`.
 
 ## BaseRegistry
 

@@ -61,30 +61,33 @@ type StandardSchemaSafeParseResult<T> =
 ## safeParseNode
 
 ```typescript
-function safeParseNode<TRegistration extends BaseRegistration>(
+function safeParseNode<TRegistration extends Pick<BaseRegistration, 'schema'>>(
 	registry: NodeLookup<TRegistration>,
 	node: unknown,
 	path?: ReadonlyArray<PropertyKey | { key: PropertyKey }>,
 ): SafeParseNodeResult<TRegistration>;
 ```
 
-Checks one node against the registration its `$type` names, without throwing. `registry` is anything with `get(key)`, so a `createRegistry` result, a `BaseRegistry` and a lookup over several registries all fit. `path` is where the node sits in its document, and every issue's `path` starts with it.
+Checks one node against the registration its `$type` names, without throwing. `registry` is anything whose `get(key)` returns a registration with a `schema`, so a `createRegistry` result, a `BaseRegistry` and a lookup over several registries all fit. `path` is where the node sits in its document, and every issue's `path` starts with it.
 
 ```typescript
-interface NodeLookup<TRegistration extends BaseRegistration = BaseRegistration> {
+interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> {
 	get(key: string): TRegistration | undefined;
 }
 
-type SafeParseNodeResult<TRegistration extends BaseRegistration = BaseRegistration> =
+type SafeParseNodeResult<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> =
 	{ success: true; registration: TRegistration; data: unknown } | { success: false; issues: StandardSchemaIssue[] };
 ```
 
-| Node                                | Result                                                                                              |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Valid                               | `{ success: true, registration, data }`, where `data` is what the schema returned, defaults applied |
-| Not an object with a string `$type` | One issue at `path`: `A node is an object with a string $type.`                                     |
-| A `$type` no registration answers   | One issue at `[...path, '$type']`: `No registration for $type '<type>'.`                            |
-| The schema refuses it               | The schema's issues, each with `path` in front of the path the schema reported                      |
+| Node                               | Result                                                                                              |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Valid                              | `{ success: true, registration, data }`, where `data` is what the schema returned, defaults applied |
+| Not an object                      | One issue at `path`: `Expected an object with a string $type.`                                      |
+| An object without a string `$type` | One issue at `[...path, '$type']`: `Expected a string $type.`                                       |
+| A `$type` no registration answers  | One issue at `[...path, '$type']`: `No registration for $type '<type>'.`                            |
+| The schema refuses it              | The schema's issues, each with `path` in front of the path the schema reported                      |
+
+An issue points at the value that is wrong, the way a schema reports a missing required key at the key, so an editor can mark it and [`parseYaml`](/docs/schema-engine/serialized-documents#yaml) finds its line. [`parseActions`](/docs/actions/api-reference#parseactions) checks each entry of a workflow with it, so an entry reports these issues at the same places.
 
 It looks at one node. To walk a tree, call it for each node and pass each child its own `path`: [Resolve a document](/docs/registry/resolve-a-document). It throws, like `safeParseStandardSchema`, for a schema that validates asynchronously. The result has the `issues` shape of `parseActions`, so `(value) => safeParseNode(registry, value)` is a validator for [`parseYaml`](/docs/schema-engine/serialized-documents#yaml).
 
@@ -103,7 +106,7 @@ Writes the `path` of an issue as text for a log or a message: keys are joined by
 | `[{ key: 'steps' }, { key: 0 }, 'id']`    | `steps[0].id`                   |
 | `undefined`                               | `''`                            |
 
-With the document as `source`, an array item that has a string `id` is followed by the id in parentheses, `steps[0] (main).elements[1] (email).id`, so a log of a large document names the node it means. `@schema-engine/forms` re-exports it.
+With the document as `source`, an array item that has a string `id` is followed by the id in parentheses, `steps[0] (main).elements[1] (email).id`, so a log of a large document names the node it means.
 
 ## BaseRegistry
 

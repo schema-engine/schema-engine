@@ -42,15 +42,22 @@ describe('safeParseNode', () => {
 		});
 	});
 
-	it.each([null, undefined, 'badge', 7, [], {}, { $type: 7 }])(
-		'reports %j, which is not an object with a string $type, at the path of the node',
+	it.each([null, undefined, 'badge', 7, []])(
+		'reports %j, which is not an object, at the path of the node',
 		(node) => {
 			expect(safeParseNode(badges, node, [3])).toEqual({
 				success: false,
-				issues: [{ message: 'A node is an object with a string $type.', path: [3] }],
+				issues: [{ message: 'Expected an object with a string $type.', path: [3] }],
 			});
 		},
 	);
+
+	it.each([{}, { $type: 7 }])('reports %j, an object without a string $type, at its $type', (node) => {
+		expect(safeParseNode(badges, node, [3])).toEqual({
+			success: false,
+			issues: [{ message: 'Expected a string $type.', path: [3, '$type'] }],
+		});
+	});
 
 	it('works with a mutable registry', () => {
 		class Badges extends BaseRegistry<string, BaseRegistration> {

@@ -77,7 +77,7 @@ describe('the checkout workflow', () => {
 	test('an unknown action and text that is not JSON are issues', async () => {
 		expect(await runCheckout('[{ "id": "refund", "$type": "refundCard" }]', shop().context)).toEqual({
 			success: false,
-			issues: ["[0].$type: Unknown action type 'refundCard'. Register it in the action registry."],
+			issues: ["[0].$type: No registration for $type 'refundCard'."],
 		});
 		expect(await runCheckout('[', shop().context)).toEqual({
 			success: false,

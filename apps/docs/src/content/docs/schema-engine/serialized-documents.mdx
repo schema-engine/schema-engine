@@ -152,7 +152,7 @@ if (!workflow.success)
 ```text
 workflow [0].to: Invalid email address
 workflow [1][0].subject: Invalid input: expected string, received undefined
-workflow [1][1].$type: Unknown action type 'refundCard'. Register it in the action registry.
+workflow [1][1].$type: No registration for $type 'refundCard'.
 ```
 
 Every bad node and entry is reported, in the order it appears, so a caller can show all of them at once. `path` is the position in the document, so an editor can mark the node and a log can name it.

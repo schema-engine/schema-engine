@@ -1,4 +1,10 @@
-import { safeParseStandardSchema, type BaseRegistration, type StandardSchemaIssue } from '@schema-engine/registry';
+import {
+	safeParseNode,
+	safeParseStandardSchema,
+	type BaseRegistration,
+	type NodeLookup,
+	type StandardSchemaIssue,
+} from '@schema-engine/registry';
 import type { ActionConfigBase, ParsedAction, ParsedActionSequence } from './types';
 
 /** What {@link parseActions} needs of a registry: the registration of a `$type`, for its schema. */
@@ -21,14 +27,12 @@ export interface ParseActionsOptions {
  *
  * @remarks
  * An issue is a Standard Schema issue whose `path` starts with the index of the entry, then the index inside
- * a group, then the path the schema reported (`[1, 0, 'endpoint']`). An entry that is not an action object
- * with a `$type`, and a `$type` no registration answers, are issues at `$type`. An empty group is an issue at its index.
+ * a group, then the path the schema reported (`[1, 0, 'endpoint']`). Each entry is checked by `safeParseNode`, so its
+ * issues sit where that function puts them: an entry that is not an object at the entry, and a missing or unregistered
+ * `$type` at `$type`. An empty group is an issue at its index.
  */
 export type ParseActionsResult<TConfig extends ActionConfigBase = ActionConfigBase> =
 	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: StandardSchemaIssue[] };
-
-type ParsedEntry<TConfig extends ActionConfigBase> =
-	{ ok: true; action: ParsedAction<TConfig> } | { ok: false; issues: StandardSchemaIssue[] };
 
 function isRecord(value: unknown): value is Record<PropertyKey, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -43,29 +47,28 @@ const BASE_KEYS = ['id', '$type', 'enabled', 'triggers'] as const;
 
 function checkBase(
 	entry: Record<PropertyKey, unknown>,
-	path: ReadonlyArray<PropertyKey>,
 	options: ParseActionsOptions | undefined,
 ): StandardSchemaIssue[] {
 	const issues: StandardSchemaIssue[] = [];
 	if (typeof entry.id !== 'string' || entry.id === '') {
-		issues.push(issueAt([...path, 'id'], 'Action ID must be a non-empty string.'));
+		issues.push(issueAt(['id'], 'Action ID must be a non-empty string.'));
 	}
 	if (entry.enabled !== undefined && typeof entry.enabled !== 'boolean') {
-		issues.push(issueAt([...path, 'enabled'], 'enabled must be a boolean.'));
+		issues.push(issueAt(['enabled'], 'enabled must be a boolean.'));
 	}
 	const { triggers } = entry;
 	if (triggers === undefined) return issues;
 	if (!Array.isArray(triggers)) {
-		issues.push(issueAt([...path, 'triggers'], 'triggers must be an array of trigger names.'));
+		issues.push(issueAt(['triggers'], 'triggers must be an array of trigger names.'));
 		return issues;
 	}
 	triggers.forEach((trigger: unknown, index) => {
 		if (typeof trigger !== 'string') {
-			issues.push(issueAt([...path, 'triggers', index], 'A trigger must be a string.'));
+			issues.push(issueAt(['triggers', index], 'A trigger must be a string.'));
 		} else if (options?.triggers && !options.triggers.includes(trigger)) {
 			issues.push(
 				issueAt(
-					[...path, 'triggers', index],
+					['triggers', index],
 					`Unknown trigger '${trigger}'. Use one of: ${options.triggers.join(', ')}.`,
 				),
 			);
@@ -74,48 +77,44 @@ function checkBase(
 	return issues;
 }
 
-function parseEntry<TConfig extends ActionConfigBase>(
-	registry: ActionSchemaLookup,
-	entry: unknown,
-	path: ReadonlyArray<PropertyKey>,
+/**
+ * The schema of a whole entry: the envelope keys the engine checks, then the remaining keys checked by the
+ * registration's schema, merged into the parsed action.
+ *
+ * @remarks
+ * `safeParseNode` runs it only once it has found the registration, so the entry is an object with a registered
+ * `$type`. Its issues are relative to the entry; `safeParseNode` puts the entry's path in front.
+ */
+function entrySchema(
+	type: string,
+	own: BaseRegistration['schema'],
 	options: ParseActionsOptions | undefined,
-): ParsedEntry<TConfig> {
-	if (!isRecord(entry) || typeof entry.$type !== 'string') {
-		return { ok: false, issues: [issueAt([...path, '$type'], 'Invalid action configuration: missing $type.')] };
-	}
-	const registration = registry.getAction(entry.$type);
-	if (!registration) {
-		return {
-			ok: false,
-			issues: [
-				issueAt(
-					[...path, '$type'],
-					`Unknown action type '${entry.$type}'. Register it in the action registry.`,
-				),
-			],
-		};
-	}
-	const issues = checkBase(entry, path, options);
-	const base: Record<string, unknown> = {};
-	const own: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(entry)) {
-		if ((BASE_KEYS as readonly string[]).includes(key)) base[key] = value;
-		else own[key] = value;
-	}
-	const result = safeParseStandardSchema(registration.schema, own);
-	if (!result.success) {
-		issues.push(...result.error.issues.map((issue) => ({ ...issue, path: [...path, ...(issue.path ?? [])] })));
-		return { ok: false, issues };
-	}
-	const { data } = result;
-	if (!isRecord(data)) {
-		issues.push(
-			issueAt(path, `Invalid action configuration for '${entry.$type}': the schema must return an object.`),
-		);
-	}
-	if (issues.length > 0 || !isRecord(data)) return { ok: false, issues };
-	const action: ActionConfigBase = { ...data, ...base, id: entry.id as string, $type: entry.$type };
-	return { ok: true, action: action as ParsedAction<TConfig> };
+): BaseRegistration['schema'] {
+	return {
+		'~standard': {
+			version: 1,
+			vendor: 'schema-engine',
+			validate(value) {
+				const entry = value as Record<PropertyKey, unknown>;
+				const issues = checkBase(entry, options);
+				const base: Record<string, unknown> = {};
+				const rest: Record<string, unknown> = {};
+				for (const [key, field] of Object.entries(entry)) {
+					if ((BASE_KEYS as readonly string[]).includes(key)) base[key] = field;
+					else rest[key] = field;
+				}
+				const result = safeParseStandardSchema(own, rest);
+				if (!result.success) return { issues: [...issues, ...result.error.issues] };
+				const { data } = result;
+				if (!isRecord(data)) {
+					const message = `Invalid action configuration for '${type}': the schema must return an object.`;
+					return { issues: [...issues, issueAt([], message)] };
+				}
+				if (issues.length > 0) return { issues };
+				return { value: { ...data, ...base, id: entry.id, $type: type } };
+			},
+		},
+	};
 }
 
 /**
@@ -129,7 +128,8 @@ function parseEntry<TConfig extends ActionConfigBase>(
  * This is the only way to produce a {@link ParsedAction}, and so the only way to a call of
  * {@link ActionDispatcher.dispatch}. Every entry is checked, so a sequence with two bad entries reports both.
  *
- * The engine owns the keys every entry carries: `id` (a non-empty string), `$type` (a registered one), `enabled` and
+ * Each entry is a node, checked with `safeParseNode` from `@schema-engine/registry` like any other node. The engine
+ * owns the keys every entry carries: `id` (a non-empty string), `$type` (a registered one), `enabled` and
  * `triggers`. It checks them itself, then hands the remaining keys to the registration's schema, which describes
  * the action's own arguments only. The result is those keys merged with what the schema returned, so its defaults and
  * transforms apply. `TConfig` is the caller's claim about the result; the parse itself checks the schemas, not that claim.
@@ -145,11 +145,17 @@ export function parseActions<TConfig extends ActionConfigBase = ActionConfigBase
 		return { success: false, issues: [issueAt([], 'Actions must be an array.')] };
 	}
 
+	const entries: NodeLookup<Pick<BaseRegistration, 'schema'>> = {
+		get(type) {
+			const registration = registry.getAction(type);
+			return registration && { schema: entrySchema(type, registration.schema, options) };
+		},
+	};
 	const issues: StandardSchemaIssue[] = [];
 	const sequence: Array<ParsedAction<TConfig> | Array<ParsedAction<TConfig>>> = [];
 	const collect = (entry: unknown, path: ReadonlyArray<PropertyKey>): ParsedAction<TConfig> | undefined => {
-		const parsed = parseEntry<TConfig>(registry, entry, path, options);
-		if (parsed.ok) return parsed.action;
+		const parsed = safeParseNode(entries, entry, path);
+		if (parsed.success) return parsed.data as ParsedAction<TConfig>;
 		issues.push(...parsed.issues);
 		return undefined;
 	};

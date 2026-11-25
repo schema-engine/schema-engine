@@ -59,7 +59,7 @@ A registration is `{ $type, schema, metadata, execute }`; an instance is `{ $typ
 
 ## parseActions
 
-`input` is the sequence as it arrived. Each entry is validated with the schema of the registration its `$type` names, and `data` holds what the schema returned, so defaults and transforms apply. Every entry is checked, so two bad entries report both. An issue's `path` is the index of the entry, the index inside a group when the entry is one, then the path the schema reported (`[1, 0, 'channel']`); an entry with no string `$type`, and a `$type` no registration answers, are issues at `$type`.
+`input` is the sequence as it arrived. Each entry is validated with the schema of the registration its `$type` names, and `data` holds what the schema returned, so defaults and transforms apply. Every entry is checked, so two bad entries report both. An issue's `path` is the index of the entry, the index inside a group when the entry is one, then the path the schema reported (`[1, 0, 'channel']`); each entry is checked with `safeParseNode` of the registry, so an entry that is not an object is an issue at its own path, and one with no string `$type` or a `$type` no registration answers is an issue at `$type`.
 
 ## Sequences, groups and cancellation
 

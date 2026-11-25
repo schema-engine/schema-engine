@@ -74,14 +74,12 @@ describe('parseActions', () => {
 		expect(result.issues.map((issue) => issue.path)).toEqual([[1, 1, 'endpoint']]);
 	});
 
-	test('reports an unknown $type at the $type, with a hint to register it', () => {
+	test('reports an unknown $type at the $type', () => {
 		const result = parseActions(registry, [[{ id: 'a', $type: 'put' }]]);
 
 		expect(result.success).toBe(false);
 		if (result.success) return;
-		expect(result.issues).toEqual([
-			{ path: [0, 0, '$type'], message: "Unknown action type 'put'. Register it in the action registry." },
-		]);
+		expect(result.issues).toEqual([{ path: [0, 0, '$type'], message: "No registration for $type 'put'." }]);
 	});
 
 	test('reports every bad entry, not only the first', () => {
@@ -101,10 +99,14 @@ describe('parseActions', () => {
 		]);
 	});
 
-	test('reports an entry that is not an action, and an input that is not a list', () => {
-		expect(parseActions(registry, [null, 'post', { id: 'x' }])).toMatchObject({
+	test('reports an entry that is not an object at the entry, one without a $type at $type, and an input that is not a list', () => {
+		expect(parseActions(registry, [null, 'post', { id: 'x' }])).toEqual({
 			success: false,
-			issues: [{ path: [0, '$type'] }, { path: [1, '$type'] }, { path: [2, '$type'] }],
+			issues: [
+				{ path: [0], message: 'Expected an object with a string $type.' },
+				{ path: [1], message: 'Expected an object with a string $type.' },
+				{ path: [2, '$type'], message: 'Expected a string $type.' },
+			],
 		});
 		expect(parseActions(registry, { $type: 'post' })).toMatchObject({
 			success: false,
@@ -162,6 +164,29 @@ describe('parseActions', () => {
 			true,
 		);
 		expect(parseActions(strict, [{ id: 'a', $type: 'post', endpoint: '/a', extra: 1 }]).success).toBe(false);
+	});
+
+	test('reports a schema that does not return an object at the entry, beside the envelope issues', () => {
+		const scalar = new ActionRegistry([
+			{
+				...post,
+				schema: z.pipe(
+					z.object({}),
+					z.transform(() => 1),
+				),
+			},
+		]);
+
+		expect(parseActions(scalar, [[{ $type: 'post' }]])).toEqual({
+			success: false,
+			issues: [
+				{ path: [0, 0, 'id'], message: 'Action ID must be a non-empty string.' },
+				{
+					path: [0, 0],
+					message: "Invalid action configuration for 'post': the schema must return an object.",
+				},
+			],
+		});
 	});
 
 	test('rejects an empty group', () => {
