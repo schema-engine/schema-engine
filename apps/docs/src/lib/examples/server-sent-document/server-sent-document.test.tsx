@@ -17,8 +17,8 @@ describe('DocumentView', () => {
 		expect(markup(await sent(1042))).toBe(
 			[
 				'<aside class="callout callout-success"><strong>Order 1042 confirmed</strong> <span>Thanks for shopping with us.</span></aside>',
-				'<ul role="alert"><li>1.tone: Invalid option: expected one of &quot;info&quot;|&quot;success&quot;|&quot;danger&quot;</li></ul>',
-				'<ul role="alert"><li>2.$type: No registration for $type &#x27;countdown&#x27;.</li></ul>',
+				'<ul role="alert"><li>[1].tone: Invalid option: expected one of &quot;info&quot;|&quot;success&quot;|&quot;danger&quot;</li></ul>',
+				'<ul role="alert"><li>[2].$type: No registration for $type &#x27;countdown&#x27;.</li></ul>',
 				'<a class="button button-primary" href="/parcels/1042">Track parcel</a>',
 			].join(''),
 		);
@@ -30,14 +30,14 @@ describe('DocumentView', () => {
 
 	test('a node that is not an object with a string $type is an issue at its index', () => {
 		expect(markup([null, { label: 'x' }])).toBe(
-			'<ul role="alert"><li>0: A node is an object with a string $type.</li></ul>' +
-				'<ul role="alert"><li>1: A node is an object with a string $type.</li></ul>',
+			'<ul role="alert"><li>[0]: A node is an object with a string $type.</li></ul>' +
+				'<ul role="alert"><li>[1]: A node is an object with a string $type.</li></ul>',
 		);
 	});
 
 	test('a link target that is not a path or an http(s) URL is an issue, not a link', () => {
 		const html = markup([{ $type: 'button', label: 'Go', href: 'javascript:alert(1)' }]);
-		expect(html).toContain('0.href: Use a path or an http(s) URL');
+		expect(html).toContain('[0].href: Use a path or an http(s) URL');
 		expect(html).not.toContain('<a');
 	});
 

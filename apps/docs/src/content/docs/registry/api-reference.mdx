@@ -88,6 +88,23 @@ type SafeParseNodeResult<TRegistration extends BaseRegistration = BaseRegistrati
 
 It looks at one node. To walk a tree, call it for each node and pass each child its own `path`: [Resolve a document](/docs/registry/resolve-a-document). It throws, like `safeParseStandardSchema`, for a schema that validates asynchronously. The result has the `issues` shape of `parseActions`, so `(value) => safeParseNode(registry, value)` is a validator for [`parseYaml`](/docs/schema-engine/serialized-documents#yaml).
 
+## formatIssuePath
+
+```typescript
+function formatIssuePath(path: StandardSchemaIssue['path'], source?: unknown): string;
+```
+
+Writes the `path` of an issue as text for a log or a message: keys are joined by dots, indexes are in brackets, and a missing or empty path is the empty string. A segment is a key or a Standard Schema `{ key }` object, so the `path` of any issue passes as it is.
+
+| `path`                                    | Result                          |
+| ----------------------------------------- | ------------------------------- |
+| `['children', 1, 'children', 0, 'label']` | `children[1].children[0].label` |
+| `[1, 0, 'amount']`                        | `[1][0].amount`                 |
+| `[{ key: 'steps' }, { key: 0 }, 'id']`    | `steps[0].id`                   |
+| `undefined`                               | `''`                            |
+
+With the document as `source`, an array item that has a string `id` is followed by the id in parentheses, `steps[0] (main).elements[1] (email).id`, so a log of a large document names the node it means. `@schema-engine/forms` re-exports it.
+
 ## BaseRegistry
 
 Abstract, mutable class for plugin systems that register at runtime. Prefer `createRegistry` otherwise.

@@ -76,7 +76,7 @@ export const components = createRegistry('Component', [badge, callout]);
 
 ```tsx title="document.react.tsx"
 import { Fragment } from 'react';
-import { safeParseNode } from '@schema-engine/registry';
+import { formatIssuePath, safeParseNode } from '@schema-engine/registry';
 import { components } from './components.react';
 
 export function DocumentView({ nodes }: { nodes: unknown[] }) {
@@ -88,7 +88,7 @@ export function DocumentView({ nodes }: { nodes: unknown[] }) {
 				return (
 					<ul key={index} role="alert">
 						{parsed.issues.map(({ path, message }, issue) => (
-							<li key={issue}>{`${path?.join('.')}: ${message}`}</li>
+							<li key={issue}>{`${formatIssuePath(path)}: ${message}`}</li>
 						))}
 					</ul>
 				);
@@ -111,6 +111,7 @@ A document with a wrong `label`, an unregistered `$type` and a missing field, an
 ```tsx title="bad-input.react.tsx"
 import { renderToStaticMarkup } from 'react-dom/server';
 import { parseActions } from '@schema-engine/actions';
+import { formatIssuePath } from '@schema-engine/registry';
 import { actions } from './actions';
 import { DocumentView } from './document.react';
 
@@ -132,26 +133,26 @@ console.log(renderToStaticMarkup(<DocumentView nodes={badDocument} />));
 
 const workflow = parseActions(actions, badWorkflow);
 if (!workflow.success)
-	for (const issue of workflow.issues) console.log(`workflow ${issue.path?.join('.')}: ${issue.message}`);
+	for (const issue of workflow.issues) console.log(`workflow ${formatIssuePath(issue.path)}: ${issue.message}`);
 ```
 
 {/* prettier-ignore */}
 ```html
 <ul role="alert">
-	<li>0.label: Invalid input: expected string, received number</li>
+	<li>[0].label: Invalid input: expected string, received number</li>
 </ul>
 <ul role="alert">
-	<li>1.$type: No registration for $type &#x27;banner&#x27;.</li>
+	<li>[1].$type: No registration for $type &#x27;banner&#x27;.</li>
 </ul>
 <ul role="alert">
-	<li>2.text: Invalid input: expected string, received undefined</li>
+	<li>[2].text: Invalid input: expected string, received undefined</li>
 </ul>
 ```
 
 ```text
-workflow 0.to: Invalid email address
-workflow 1.0.subject: Invalid input: expected string, received undefined
-workflow 1.1.$type: Unknown action type 'refundCard'. Register it in the action registry.
+workflow [0].to: Invalid email address
+workflow [1][0].subject: Invalid input: expected string, received undefined
+workflow [1][1].$type: Unknown action type 'refundCard'. Register it in the action registry.
 ```
 
 Every bad node and entry is reported, in the order it appears, so a caller can show all of them at once. `path` is the position in the document, so an editor can mark the node and a log can name it.
@@ -184,7 +185,7 @@ pnpm add yaml
 The `@schema-engine/registry/yaml` subpath parses the text, hands the value to a validator of your choice and turns every issue into a file, line and column. A function that returns `{ success, data }` or `{ success: false, issues }`, such as `safeParseNode` and `parseActions`, is that validator:
 
 ```ts title="parse-welcome.ts"
-import { safeParseNode } from '@schema-engine/registry';
+import { formatIssuePath, safeParseNode } from '@schema-engine/registry';
 import { parseYaml, YamlDocumentError } from '@schema-engine/registry/yaml';
 import { components } from './components.react';
 

@@ -153,14 +153,14 @@ export const components = createRegistry('Component', [button, badge, callout]);
 
 ```tsx title="server-document.react.tsx"
 import { Fragment, useEffect, useState } from 'react';
-import { safeParseNode, type StandardSchemaIssue } from '@schema-engine/registry';
+import { formatIssuePath, safeParseNode, type StandardSchemaIssue } from '@schema-engine/registry';
 import { components } from './components.react';
 
 function Fallback({ issues }: { issues: StandardSchemaIssue[] }) {
 	return (
 		<ul role="alert">
 			{issues.map(({ path, message }, index) => (
-				<li key={index}>{`${path?.join('.')}: ${message}`}</li>
+				<li key={index}>{`${formatIssuePath(path)}: ${message}`}</li>
 			))}
 		</ul>
 	);
@@ -246,19 +246,19 @@ The callout and the button are drawn, and each node the client rejects is drawn 
 </aside>
 <ul role="alert">
 	<li>
-		1.tone: Invalid option: expected one of
+		[1].tone: Invalid option: expected one of
 		&quot;info&quot;|&quot;success&quot;|&quot;danger&quot;
 	</li>
 </ul>
 <ul role="alert">
-	<li>2.$type: No registration for $type &#x27;countdown&#x27;.</li>
+	<li>[2].$type: No registration for $type &#x27;countdown&#x27;.</li>
 </ul>
 <a class="button button-primary" href="/parcels/1042">Track parcel</a>
 ```
 
 - **The callout and the button are drawn.** They are in the registry and their configuration is valid.
-- **`1.tone` is a configuration the client rejects.** The badge is known, but its schema allows `info`, `success` and `danger`, so the server's `warning` is reported at the field. The badge is not drawn, because a half-valid node is not shown.
-- **`2.$type` is a component the client has not registered.** The path names the node by its index, so a log or an error report says exactly which part of the document the client could not draw.
+- **`[1].tone` is a configuration the client rejects.** The badge is known, but its schema allows `info`, `success` and `danger`, so the server's `warning` is reported at the field. The badge is not drawn, because a half-valid node is not shown.
+- **`[2].$type` is a component the client has not registered.** The path names the node by its index, so a log or an error report says exactly which part of the document the client could not draw.
 
 The tests run the same files: the document of each order drawn to markup, the issues of a bad node, then the component in a browser against the route handler, with a 404, a network failure and a body that is not JSON.
 
