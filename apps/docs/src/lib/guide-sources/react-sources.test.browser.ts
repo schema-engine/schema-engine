@@ -95,16 +95,18 @@ describe('the settings panel', () => {
 		);
 		const toggle = host.querySelector<HTMLElement>('[role="switch"]')!;
 		const trigger = host.querySelector<HTMLElement>('[data-slot="select-trigger"]')!;
+		const value = host.querySelector<HTMLElement>('[data-slot="select-value"]')!;
 		expect(toggle.getAttribute('aria-checked')).toBe('true');
 		expect(host.querySelectorAll('form')).toHaveLength(1);
 		expect(host.querySelector('form form')).toBeNull();
 
+		expect(value.textContent).toBe('Every week');
+
 		toggle.click();
 		await userEvent.click(trigger);
-		const options = () => [...document.querySelectorAll<HTMLElement>('[role="option"]')];
-		const chosen = options().find((option) => option.getAttribute('aria-selected') === 'true');
-		expect(chosen?.textContent).toBe('Every week');
-		await userEvent.click(options().find((option) => option.textContent === 'Every day')!);
+		const options = [...document.querySelectorAll<HTMLElement>('[role="option"]')];
+		await userEvent.click(options.find((option) => option.textContent === 'Every day')!);
+		await expect.poll(() => value.textContent).toBe('Every day');
 		await userEvent.click(
 			[...host.querySelectorAll('button')].find((button) => button.textContent === 'Save settings')!,
 		);
