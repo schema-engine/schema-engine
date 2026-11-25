@@ -190,7 +190,7 @@ describe('the server errors page', () => {
 
 describe('the wizard page', () => {
 	test('the walk-through returns the documented outcomes', async () => {
-		const { log, steps, submitted } = await wizard();
+		const { log, focused, steps, submitted } = await wizard();
 		expect(log).toEqual([
 			['next', 'invalid', 'contact'],
 			['next', 'moved', 'payment'],
@@ -201,6 +201,7 @@ describe('the wizard page', () => {
 			['submit', 'invalid', 'payment'],
 			['submit', 'submitted', 'payment'],
 		]);
+		expect(focused).toEqual([['email'], ['vat'], ['card']]);
 		expect(steps.map(({ id, visited, complete }) => [id, visited, complete])).toEqual([
 			['contact', true, true],
 			['company', true, true],

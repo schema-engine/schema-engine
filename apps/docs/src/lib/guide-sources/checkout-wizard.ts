@@ -1,4 +1,9 @@
-import { createFormRuntime, type FormRuntimeOutcome, type FormValues } from '@schema-engine/forms';
+import {
+	createFormRuntime,
+	type FormRuntimeHost,
+	type FormRuntimeOutcome,
+	type FormValues,
+} from '@schema-engine/forms';
 import { engine } from './engine';
 
 export const config = engine.defineForm({
@@ -27,13 +32,20 @@ export const config = engine.defineForm({
 	],
 });
 
+/** The paths the runtime asked the host to focus, in order. */
+export const focused: string[][] = [];
+
+/** A host with no document: it records where the runtime would put the focus. */
+const host: FormRuntimeHost = { focus: (paths) => void focused.push([...paths]) };
+
 export function createCheckout(onSubmit: (values: FormValues) => void = () => {}) {
-	const runtime = createFormRuntime({ engine, config, host: { focus: () => {} }, onSubmit });
+	const runtime = createFormRuntime({ engine, config, host, onSubmit });
 	runtime.mount();
 	return runtime;
 }
 
 export async function walkThrough() {
+	focused.length = 0;
 	const submitted: FormValues[] = [];
 	const checkout = createCheckout((values) => void submitted.push(values));
 	const log: Array<[command: string, outcome: FormRuntimeOutcome, current: string]> = [];
@@ -56,5 +68,5 @@ export async function walkThrough() {
 	checkout.container.setValue('card', '4242 4242 4242 4242');
 	await run('submit', checkout.submit);
 
-	return { log, steps: checkout.getSnapshot().steps, submitted };
+	return { log, focused: [...focused], steps: checkout.getSnapshot().steps, submitted };
 }

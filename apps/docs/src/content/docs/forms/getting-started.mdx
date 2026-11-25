@@ -18,7 +18,7 @@ Zod provides the `zod/mini` entry point the first-party schemas use. Registratio
 
 ## 1. Create the engine
 
-`createFormEngine` builds an engine from lists of registrations: the elements a form may use, the recipes that frame it, the actions it may run and the validation rules. The engine has no UI, so a renderer supplies the elements that draw. `createRadiantFormEngine` is `createFormEngine` with the Radiant elements and view recipes registered, and `schemaFormRegistrations` is the list of elements. To write an element of your own, see [Engine and registrations](/docs/forms/engine).
+`createFormEngine` builds an engine from lists of registrations: the elements a form may use, the recipes that frame it, the actions it may run and the validation rules. A renderer supplies the elements that draw. `createRadiantFormEngine` is `createFormEngine` with the Radiant elements and view recipes registered, and `schemaFormRegistrations` is the list of elements. To write an element of your own, see [Engine and registrations](/docs/forms/engine).
 
 ```ts title="engine.ts"
 import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';

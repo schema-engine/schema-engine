@@ -1,6 +1,5 @@
-import { createFormEngine } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
-import { textInput } from './engine';
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { t } from './i18n.helper';
 
 export const formatIssue: FormIssueFormatter = (issue, { path }) => {
@@ -14,4 +13,4 @@ export const formatIssue: FormIssueFormatter = (issue, { path }) => {
 	return t(keys, { ...issue.params, field: t([`form.fields.${path}`]) ?? path }) ?? issue.message ?? '';
 };
 
-export const engine = createFormEngine({ elements: [textInput], formatIssue });
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, formatIssue });

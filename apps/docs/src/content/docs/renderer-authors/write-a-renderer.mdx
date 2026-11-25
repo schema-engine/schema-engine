@@ -1,0 +1,181 @@
+---
+title: 'Write a renderer'
+description: 'What the form runtime owns and what a renderer owns, and a small renderer that draws a form, forwards what the user does and shows what the form reports.'
+order: 1
+---
+
+# Write a renderer
+
+An app draws a form with [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview) and never meets the pages of this section. They are for the other job: drawing forms with something else, such as another framework, a native client or a test harness.
+
+A renderer is small because the engine owns the rules. `createFormRuntime` builds one **form runtime** for each form you draw. The runtime builds the form's [state container](/docs/renderer-authors/state-container) and owns what is around it, so React and Radiant share one lifecycle instead of two copies.
+
+| Owner     | Owns                                                                                                                                                                                |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Container | The values, the state of each field, validation, which fields and steps take part, the captured submission and `reset()`.                                                           |
+| Runtime   | The submission, the one lock, `form_mount` and `form_change`, every action dispatch, the wizard's steps and navigation, and submit as Next.                                         |
+| Renderer  | The elements, their context, the focus, `sync`, the native submit and its events. It hands the ones the runtime needs to it as the [host](/docs/renderer-authors/runtime#the-host). |
+
+## An engine to draw with
+
+The examples of this section register one placeholder field, which draws nothing, and a wizard recipe that draws nothing, because the renderer draws the form itself. An app registers the elements and recipes of a real renderer instead.
+
+```ts title="engine.ts"
+import * as z from 'zod/mini';
+import { createFormEngine, defineInput } from '@schema-engine/forms';
+
+/**
+ * A field that draws nothing: a renderer under construction draws it itself.
+ *
+ * @remarks
+ * An app registers the elements and recipes of its renderer instead.
+ */
+export const textInput = defineInput({
+	$type: 'input',
+	schema: z.looseObject({ $type: z.literal('input'), name: z.string(), label: z.optional(z.string()) }),
+	metadata: { name: 'Input', category: 'input' },
+	value: () => z.string(),
+	render: () => null,
+});
+
+/** The wizard recipe a multi-step form without a `view` falls back to. */
+export const bareControls = {
+	$type: 'bare-controls',
+	kind: 'wizard',
+	slots: ['actions'],
+	schema: z.looseObject({ $type: z.literal('bare-controls') }),
+	metadata: { name: 'Bare controls' },
+	render: () => null,
+} as const;
+
+export const engine = createFormEngine({ elements: [textInput], recipes: [bareControls] });
+```
+
+## A renderer in one file
+
+This renderer draws a text field for each element of the first step, the issue of each field and a submit button, in the DOM. It does five things, and every renderer does the same five:
+
+1. **Create the runtime** with the engine, the config and a `host`. The host is the part only the renderer can do: here, focusing the first control with an error.
+2. **Draw the elements** from `config.steps`. A real renderer looks each `$type` up in the engine and calls its `render`.
+3. **Forward what the user does** to the container: `setValue(path, value)` when a control changes and `blur(path)` when it loses focus.
+4. **Show what the container reports.** `getSnapshot()` holds the errors, `subscribe` says when they change, and `issueText` turns an issue into the words of the form's formatter.
+5. **Submit and mount.** A submit event calls `runtime.submit()`, and `runtime.mount()` starts the lifecycle. The function it returns is the cleanup.
+
+```ts title="plain-renderer.ts"
+import {
+	createFormRuntime,
+	type FormEngineRuntime,
+	type FormValues,
+	type NormalizedFormConfig,
+} from '@schema-engine/forms';
+import { issueText } from '@schema-engine/forms/state-container';
+
+/**
+ * Draws the first step of a form into `root`: a text field and an error for each element, and a submit button.
+ *
+ * @returns Stops the form: the runtime revokes any command in flight, and the markup is removed.
+ *
+ * @remarks
+ * The runtime owns the values, the validation and the submission. This renderer only forwards what the user did to the
+ * container and paints what the container reports. It needs no `sync`, because every control writes to the
+ * container as the user types.
+ */
+export function renderForm(
+	engine: FormEngineRuntime,
+	config: NormalizedFormConfig,
+	root: HTMLElement,
+	onSubmit: (values: FormValues) => void,
+): () => void {
+	const form = document.createElement('form');
+	form.noValidate = true;
+
+	const runtime = createFormRuntime({
+		engine,
+		config,
+		onSubmit,
+		host: {
+			focus: (paths) =>
+				form.querySelector<HTMLElement>(paths.map((path) => `[name="${path}"]`).join(','))?.focus(),
+		},
+	});
+	const { container } = runtime;
+	const errors = new Map<string, HTMLElement>();
+
+	for (const element of config.steps[0]?.elements ?? []) {
+		const label = document.createElement('label');
+		const control = document.createElement('input');
+		control.name = element.name;
+		control.addEventListener('input', () => container.setValue(element.name, control.value));
+		control.addEventListener('blur', () => container.blur(element.name));
+		const error = document.createElement('p');
+		error.role = 'alert';
+		errors.set(element.name, error);
+		label.append(element.label ?? element.name, control);
+		form.append(label, error);
+	}
+
+	const submit = document.createElement('button');
+	submit.textContent = 'Send';
+	form.append(submit);
+	form.addEventListener('submit', (event) => {
+		event.preventDefault();
+		void runtime.submit();
+	});
+
+	const paint = () => {
+		const { errors: issues } = container.getSnapshot();
+		for (const [name, output] of errors) {
+			const issue = issues[name];
+			output.textContent = (issue && issueText(issue, name, runtime.formatIssue)) ?? '';
+		}
+	};
+	const unsubscribe = container.subscribe(paint);
+	const unmount = runtime.mount();
+
+	root.append(form);
+	return () => {
+		unsubscribe();
+		unmount();
+		form.remove();
+	};
+}
+```
+
+An invalid submit shows the message of each rule under its field and focuses the first, without a line of validation in the renderer:
+
+```ts
+import { engine } from './engine';
+import { renderForm } from './plain-renderer';
+
+const signup = engine.defineForm({
+	id: 'signup',
+	steps: [
+		{
+			id: 'main',
+			title: 'Sign up',
+			elements: [
+				{
+					$type: 'input',
+					id: 'name',
+					name: 'name',
+					label: 'Name',
+					rules: [{ $type: 'required', message: 'Enter your name' }],
+				},
+			],
+		},
+	],
+});
+
+export const stop = renderForm(engine, signup, document.body, (values) => console.log(values));
+```
+
+## What a complete renderer adds
+
+The example leaves out what a real renderer needs, and each part has a page of its own:
+
+- **Commands and steps.** `next()`, `back()`, `goTo(id)`, the outcome each returns and the step state a progress bar reads: [Form runtime](/docs/renderer-authors/runtime).
+- **The whole container.** Field state, field arrays with stable row ids, warnings, validity and the server's snapshot to hydrate from: [State container](/docs/renderer-authors/state-container).
+- **What the browser says.** A control's `validity`, reported with `reportNative` so a number input that holds `1e` is not read as empty: [Native validity](/docs/renderer-authors/native-validity).
+- **Proof.** `formStateContainerConformance` runs the contract against a container of your own, as [State container](/docs/renderer-authors/state-container#test-a-container) shows.
+
+A renderer registers its elements and recipes on the engine, as [Engine and registrations](/docs/forms/engine) describes.

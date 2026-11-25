@@ -184,7 +184,7 @@ button, uses `defineStatic` and declares none.
 - **Rows keep their elements.** On a row move the `ref` re-registers under the new path and nothing is written.
 - **Text typed before hydration is kept.** If the control differs from what React rendered when its `ref` attaches, the container takes it.
 - **A native reset button** goes through `container.reset()`, so the screen and the values cannot disagree.
-- **It reports native validity** when the `ref` lands on an input, select or textarea. See [Native validity](/docs/forms/native-validity).
+- **It reports native validity** when the `ref` lands on an input, select or textarea. See [Native validity](/docs/forms/form-state#native-validity).
 
 In development, an uncontrolled field whose `ref` lands on something that is not an input, select or textarea logs a warning that names `{ controlled: true }`.
 

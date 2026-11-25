@@ -1,0 +1,229 @@
+---
+title: 'Form runtime'
+description: 'createFormRuntime: its options, the host a renderer supplies, the commands and their outcomes, the snapshot, step navigation and reset.'
+order: 2
+---
+
+# Form runtime
+
+`createFormRuntime` is one framework-free instance per rendered form, shared by every renderer. It builds the form's [state container](/docs/renderer-authors/state-container) and owns what is around it: the submission, the wizard's steps and navigation, `form_mount` and `form_change`, and every action dispatch. A renderer supplies only what it alone can do, as the `host`.
+
+An app never creates one: React's `FormProvider` and Radiant's `se-form-instance` do, mount it and hand its state to the elements. [Write a renderer](/docs/renderer-authors/write-a-renderer) uses it in a small renderer, and a test that drives a form without a DOM can create one too. What an app reads of it is in [Wizard](/docs/forms/wizard) and [Form state](/docs/forms/form-state).
+
+## Create a runtime
+
+| Option            | Meaning                                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine`          | The engine, for its validation registry, its actions and its `fetch`.                                                                                          |
+| `config`          | The normalized form, from `engine.defineForm` or `engine.validateForm`.                                                                                        |
+| `defaults`        | Values the form starts from, over the defaults of its fields.                                                                                                  |
+| `snapshot`        | The server's container snapshot, to hydrate from.                                                                                                              |
+| `host`            | What only the renderer can do, below.                                                                                                                          |
+| `onSubmit`        | Called with the values that passed, after the submit actions and before `form_submit_success`.                                                                 |
+| `onChange`        | Called when the values change, never for an error, a touch or a validation result.                                                                             |
+| `onAction`        | Called with each submit action that succeeded. Typed by the engine's actions.                                                                                  |
+| `onActionResults` | Called with the results of every trigger that ran actions.                                                                                                     |
+| `navigate`        | Takes the page to the `redirectUrl` of a submit action once the submission succeeded. Defaults to `location.assign` in a browser and does nothing on a server. |
+
+`runtime.mount()` dispatches `form_mount` the first time and starts the change watch; the function it returns stops the watch and revokes any command in flight. Mounting again is allowed and dispatches `form_mount` no more.
+
+The runtime exposes `container`, `config`, `submissionSchema` (the schema every submission is checked against), `formatIssue`, `getSnapshot()`, `getServerSnapshot()`, `subscribe(listener)`, `next()`, `back()`, `goTo(id)`, `submit()` and `clearSubmission()`. Steps are keyed by id.
+
+### The host
+
+| Host member              | The renderer does                                                                                                                                                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `focus(paths)`           | Focus the first control with an error among the paths; the host picks the first in its document.                                                                                                                      |
+| `sync()`                 | Write the controls' values into the container and report their native validity, as a submit does. The runtime calls it before it validates. React has none: its controls write as the user types.                     |
+| `submitNatively(values)` | Called once a submission succeeded, after its actions and `onSubmit`, so the navigation cannot cut off the success triggers. The host decides whether it posts. Radiant does when the application gave no `onSubmit`. |
+
+## Commands and outcomes
+
+`next()`, `back()`, `goTo(id)` and `submit()` each return one string, and why a submission failed is read from `snapshot.submission.failures`, never from the return value.
+
+| Outcome     | Meaning                                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `moved`     | The current step changed.                                                                                            |
+| `submitted` | A submission ran, and its actions and `onSubmit` succeeded.                                                          |
+| `failed`    | A submission ran and failed, or a step check could not run.                                                          |
+| `invalid`   | Validation found errors. They are shown and focused.                                                                 |
+| `overtaken` | An edit or a row move outran the check, so there is no verdict: nothing is shown, focused or counted.                |
+| `refused`   | There was nowhere to go: the last step, an unknown or skipped step, the current step, or a step `goTo` cannot reach. |
+| `busy`      | Another command was running.                                                                                         |
+| `cancelled` | A reset or an unmount revoked the command before its values were captured, so it wrote nothing.                      |
+
+One lock covers navigation and submission, so Next and submit cannot interleave: a command made while another runs is `busy`. `back()`, `next()` and `goTo()` end in the subset `NavigationOutcome`; `submit()` ends in `SubmitOutcome`, which adds `submitted`.
+
+```ts
+type FormRuntimeOutcome = 'moved' | 'submitted' | 'failed' | 'invalid' | 'overtaken' | 'refused' | 'busy' | 'cancelled';
+type NavigationOutcome = Exclude<FormRuntimeOutcome, 'submitted'>;
+type SubmitOutcome = FormRuntimeOutcome;
+```
+
+## The snapshot
+
+```ts
+import type { FormSubmissionIssue } from '@schema-engine/forms/state-container';
+
+interface FormRuntimeSnapshot {
+	submission: {
+		status: 'idle' | 'validating' | 'submitting' | 'success' | 'error';
+		failures: FormSubmissionIssue[];
+		submitCount: number;
+	};
+	current: string; // the id of the current step
+	navigating: boolean; // a next, back, goTo or a submit that acts as next is running
+	steps: FormStepState[]; // every step in config order
+}
+
+interface FormStepState {
+	id: string;
+	skipped: boolean; // its constraints hide it
+	visited: boolean;
+	complete: boolean; // next() validated it and moved on
+	invalid: boolean; // an error is recorded at one of its fields
+	reachable: boolean; // goTo can move there
+}
+```
+
+The snapshot keeps its identity while nothing it reports changed, so it is safe in `useSyncExternalStore`. The runtime stores only `current`, `visited` and `complete`, by step id. `skipped`, `invalid` and `reachable` are derived from the container, so they cannot go stale.
+
+## Navigation
+
+- **`next()`** syncs the host, validates the current step's fields and moves to the next active step. If the step has errors it focuses them and returns `invalid`; on the last active step it returns `refused`. It never marks the form submitted.
+- **`back()`** moves to the previous active step and never validates.
+- **`goTo(id)`** refuses an unknown, skipped or current step. Going back is always allowed. Going forward follows the form's `navigation`.
+- **`submit()`** before the last active step acts as `next()`, so Enter in a field of an early step is a Next. On the last active step it checks every active step, runs the actions and `onSubmit`, and on `invalid` moves to the first step with an error and focuses it. A server error that `onSubmit` sets on an earlier step moves there too, so it is never invisible. An error on the form itself (`FORM_ROOT`) belongs to no step and stays put.
+
+The form config chooses how free the stepper is with `navigation`:
+
+| `navigation`         | `goTo` forward                                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `'linear'` (default) | Reaches only visited steps, and validates the current step and every active step on the way, landing on the first that fails. |
+| `'free'`             | Reaches any active step without validating.                                                                                   |
+
+`next()` validates in both modes. Step triggers `step_leave`, `step_change` and `step_enter` fire when the current step changes and cannot block a move: the step's validation is the guard. Their failures are reported through `onActionResults`.
+
+## Skippable steps
+
+A step can be skipped from earlier answers. Give it `constraints` with the same logic as fields, limited to `show` and `hide`. In this checkout the `company` step is shown only when `hasCompany` is `'yes'`. The recipe below drives the runtime with no renderer at all. Its host records the paths the runtime asks it to focus, which is the one thing a host must supply:
+
+```ts title="checkout-wizard.ts"
+import {
+	createFormRuntime,
+	type FormRuntimeHost,
+	type FormRuntimeOutcome,
+	type FormValues,
+} from '@schema-engine/forms';
+import { engine } from './engine';
+
+export const config = engine.defineForm({
+	id: 'checkout',
+	navigation: 'linear',
+	steps: [
+		{
+			id: 'contact',
+			title: 'Contact',
+			elements: [
+				{ $type: 'input', id: 'email', name: 'email', rules: [{ $type: 'required' }] },
+				{ $type: 'input', id: 'hasCompany', name: 'hasCompany', defaultValue: 'no' },
+			],
+		},
+		{
+			id: 'company',
+			title: 'Company',
+			constraints: [{ field: 'hasCompany', operator: 'equals', value: 'yes', $type: 'show' }],
+			elements: [{ $type: 'input', id: 'vat', name: 'vat', rules: [{ $type: 'required' }] }],
+		},
+		{
+			id: 'payment',
+			title: 'Payment',
+			elements: [{ $type: 'input', id: 'card', name: 'card', rules: [{ $type: 'required' }] }],
+		},
+	],
+});
+
+/** The paths the runtime asked the host to focus, in order. */
+export const focused: string[][] = [];
+
+/** A host with no document: it records where the runtime would put the focus. */
+const host: FormRuntimeHost = { focus: (paths) => void focused.push([...paths]) };
+
+export function createCheckout(onSubmit: (values: FormValues) => void = () => {}) {
+	const runtime = createFormRuntime({ engine, config, host, onSubmit });
+	runtime.mount();
+	return runtime;
+}
+
+export async function walkThrough() {
+	focused.length = 0;
+	const submitted: FormValues[] = [];
+	const checkout = createCheckout((values) => void submitted.push(values));
+	const log: Array<[command: string, outcome: FormRuntimeOutcome, current: string]> = [];
+	const run = async (command: string, move: () => Promise<FormRuntimeOutcome>) => {
+		log.push([command, await move(), checkout.getSnapshot().current]);
+	};
+
+	await run('next', checkout.next);
+	checkout.container.setValue('email', 'ada@example.com');
+	await run('next', checkout.next);
+	await run('back', checkout.back);
+
+	checkout.container.setValue('hasCompany', 'yes');
+	await run('next', checkout.next);
+	await run('goTo payment', () => checkout.goTo('payment'));
+	checkout.container.setValue('vat', 'IT12345678901');
+	await run('goTo payment', () => checkout.goTo('payment'));
+
+	await run('submit', checkout.submit);
+	checkout.container.setValue('card', '4242 4242 4242 4242');
+	await run('submit', checkout.submit);
+
+	return { log, focused: [...focused], steps: checkout.getSnapshot().steps, submitted };
+}
+```
+
+| Command        | Outcome     | Current   | Why                                                                                   |
+| -------------- | ----------- | --------- | ------------------------------------------------------------------------------------- |
+| `next`         | `invalid`   | `contact` | The email is empty.                                                                   |
+| `next`         | `moved`     | `payment` | `hasCompany` is `'no'`, so `company` is skipped.                                      |
+| `back`         | `moved`     | `contact` | `back` skips it again.                                                                |
+| `next`         | `moved`     | `company` | `hasCompany` is now `'yes'`.                                                          |
+| `goTo payment` | `invalid`   | `company` | `payment` was visited, but the current step is checked on the way and `vat` is empty. |
+| `goTo payment` | `moved`     | `payment` | `vat` is filled.                                                                      |
+| `submit`       | `invalid`   | `payment` | The card is empty.                                                                    |
+| `submit`       | `submitted` | `payment` | Every active step passed and `onSubmit` ran with the values.                          |
+
+Each `invalid` asked the host to focus the first field with an error: `email`, then `vat`, then `card`.
+
+- **A skipped step is passed over.** `next` and `back` skip it and `goTo` refuses it. Progress such as "step 2 of 3" counts only active steps.
+- **A skipped step takes no part.** Its fields are not validated, do not block and are not submitted, exactly like hidden fields. Their values are kept and return when the step is shown again.
+- **A step constraint reads earlier steps only.** It may read only non-row fields of earlier steps, so the first step cannot have constraints, the start is deterministic and there is no cycle. Config validation enforces it.
+- **The current step can become skipped**, for example after an action. The runtime then moves back to the nearest active step before it, firing the step triggers, and never forward without validating.
+- **Excluded values are absent.** The value of a skipped step, or of a hidden field, counts as absent for every later constraint that reads it, so a skipped step that still holds `'yes'` cannot keep a later field shown and required.
+
+## The submission
+
+`submit()` on the last active step runs the lifecycle below. The container validates, and the runtime wraps it:
+
+1. The runtime takes its one lock, calls the host's `sync` and sets the status to `validating`. A second submit meanwhile is `busy`.
+2. `container.submit()` validates. `invalid` shows and focuses the errors and stops. `overtaken` stops without showing anything. Both return the status to `idle`, so a submission that did not pass is never `submitting`.
+3. The values that passed are parsed with the [submission schema](/docs/forms/form-state#submitted-values). A mismatch stops the submission with a `valueMismatch` failure and is logged; it is not an attempt.
+4. The status becomes `submitting`, and `form_submit_start` runs. It runs only for a submission that passed validation.
+5. The submit actions run (`form_submit`). An action that fails and stops the sequence skips `onSubmit`.
+6. `onSubmit(values, { setServerErrors, fetch })` runs with the values that passed. A rejection is a failed submission.
+7. `form_submit_success` runs, or `form_submit_error` after a failure, then `form_submit_complete`.
+8. Once the success and complete triggers ran, the host's `submitNatively(values)` runs, or `navigate(url)` when a submit action asked for a `redirectUrl`, never both.
+
+`onSubmit`, `onChange`, `onAction`, `onActionResults` and `navigate` are the options of [Create a runtime](#create-a-runtime): a renderer passes its own callbacks through, as React's `FormProvider` and Radiant's `se-form-instance` do.
+
+## Reset
+
+`container.reset()` is the only reset: there is no `runtime.reset()`. The container's `generation` goes up with it, and the runtime then revokes a command whose values were not yet captured (`cancelled`), returns the submission to idle with a count of 0 and the steps to the first, and fires no step trigger. A submission whose values were already captured is committed instead: it runs to its end and publishes its outcome (`success` or `error`, with a count of 1) after the reset. An action's `form.reset`, `useFormContext().reset` and a native reset button all do the same.
+
+## How the renderers use it
+
+| Renderer | Host and state                                                                                                                                                                                                  |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| React    | `FormProvider` creates the runtime, with `focus` from its field registry and no `sync`, mounts it in an effect and shares it on a context. `useFormInstanceActions()` and `useFormContext()` read it.           |
+| Radiant  | `se-form-instance` creates it with `focus` and `sync` from `rui-form` and a `submitNatively` that posts when the app gave no `onSubmit`, mounts it on connect and publishes its state on `formInstanceContext`. |

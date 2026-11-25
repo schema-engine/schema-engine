@@ -1,6 +1,6 @@
 # @schema-engine/forms
 
-The forms domain of Schema Engine: elements, validation rules, constraints, steps, the form state and the submit lifecycle, with no renderer. A form is a JSON document that names registered elements by `$type`. [`@schema-engine/forms-react`](https://www.npmjs.com/package/@schema-engine/forms-react) and [`@schema-engine/forms-radiant`](https://www.npmjs.com/package/@schema-engine/forms-radiant) draw it.
+The forms domain of Schema Engine: elements, validation rules, constraints, steps, the form state and the submit lifecycle. A form is a JSON document that names registered elements by `$type`. [`@schema-engine/forms-react`](https://www.npmjs.com/package/@schema-engine/forms-react) and [`@schema-engine/forms-radiant`](https://www.npmjs.com/package/@schema-engine/forms-radiant) draw it.
 
 ## Install
 
@@ -60,7 +60,7 @@ const result = engine.safeValidateForm({
 - [Installation and quick start](https://schema-engine.com/docs/forms/getting-started): create the engine, check JSON and render it.
 - [Engine and registrations](https://schema-engine.com/docs/forms/engine): the engine, custom fields and configuration errors.
 - [Validation](https://schema-engine.com/docs/forms/validation) and [custom and async rules](https://schema-engine.com/docs/forms/validation-custom).
-- [Form state](https://schema-engine.com/docs/forms/form-state), [Wizard and runtime](https://schema-engine.com/docs/forms/wizard) and [Actions in forms](https://schema-engine.com/docs/forms/actions).
+- [Form state](https://schema-engine.com/docs/forms/form-state), [Wizard](https://schema-engine.com/docs/forms/wizard) and [Actions in forms](https://schema-engine.com/docs/forms/actions).
 - [Issue text](https://schema-engine.com/docs/forms/issue-text), [Server errors](https://schema-engine.com/docs/forms/server-errors) and [CSRF](https://schema-engine.com/docs/forms/csrf).
 - [Agent tools](https://schema-engine.com/docs/forms/agent-tool) and [API reference](https://schema-engine.com/docs/forms/api-reference).
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.

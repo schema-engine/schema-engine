@@ -102,7 +102,7 @@ With the topic `billing` the order number is hidden, so the submission holds onl
 
 ## Constraints on a step
 
-A step takes `constraints` too, restricted to `show` and `hide`: enabling, disabling and requiring apply to a field, not a step. A step that its constraints hide is skipped by the wizard, and its fields are absent from the submission. The first step has no earlier step to depend on, so it takes none, and a step's constraints may name only fields of earlier steps. See [Wizard and runtime](/docs/forms/wizard#skippable-steps).
+A step takes `constraints` too, restricted to `show` and `hide`: enabling, disabling and requiring apply to a field, not a step. A step that its constraints hide is skipped by the wizard, and its fields are absent from the submission. The first step has no earlier step to depend on, so it takes none, and a step's constraints may name only fields of earlier steps. See [Wizard](/docs/forms/wizard#define-the-steps).
 
 ## Inside containers
 
@@ -111,5 +111,5 @@ A bare `field` is resolved from the declaring field: inside the row `contacts.0.
 ## Where to go next
 
 - [Validation](/docs/forms/validation): rules, including cross-field rules with `relate`.
-- [Wizard and runtime](/docs/forms/wizard): steps, skipped steps and submission.
+- [Wizard](/docs/forms/wizard): steps, skipped steps and navigation.
 - [Form state](/docs/forms/form-state): how a hidden field leaves the container.

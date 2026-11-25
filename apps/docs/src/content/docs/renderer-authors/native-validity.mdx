@@ -1,10 +1,12 @@
 ---
 title: 'Native validity'
-description: 'What the browser says about a control, how a form receives it and the seven rules it follows.'
-order: 11
+description: 'What the browser says about a control, how a renderer reports it to the container and the seven rules it follows.'
+order: 4
 ---
 
 # Native validity
+
+This page is for the author of a renderer, who reads the browser's verdict and hands it to the container. An app gets it from [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview) and sees only the issue it becomes.
 
 A browser validates every `input`, `select` and `textarea` against its own attributes and keeps the verdict in `element.validity`. A **native fact** is that verdict, copied into the form state container. It is evidence, never configuration: nobody writes a fact by hand, nothing switches facts on or off, and a host only reads it and forwards it.
 

@@ -2,14 +2,14 @@ import * as z from 'zod/mini';
 import { createFormEngine, defineInput } from '@schema-engine/forms';
 
 /**
- * A field with no rendering, so the examples run without a renderer.
+ * A field that draws nothing: a renderer under construction draws it itself.
  *
  * @remarks
- * An app registers its renderer's elements and recipes instead.
+ * An app registers the elements and recipes of its renderer instead.
  */
 export const textInput = defineInput({
 	$type: 'input',
-	schema: z.looseObject({ $type: z.literal('input'), name: z.string() }),
+	schema: z.looseObject({ $type: z.literal('input'), name: z.string(), label: z.optional(z.string()) }),
 	metadata: { name: 'Input', category: 'input' },
 	value: () => z.string(),
 	render: () => null,
