@@ -20,6 +20,8 @@ For React:
 pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
 ```
 
+The React file imports the fields that the shadcn registry installs. Run `pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form` once, as the [Contact form](/docs/examples/contact-form#install) explains.
+
 For Radiant:
 
 ```bash
@@ -151,91 +153,10 @@ export async function sendAnswers(values: FormValues, { fetch }: FormSubmitHelpe
 
 ## The renderer
 
-Radiant ships the wizard recipe and the elements. React ships neither, so its tab has the widgets and a recipe of its own, the one of the [Registration wizard](/docs/examples/registration-wizard) with the submit button's label changed. `FormRenderer` calls `onSubmit` with the values once the last step passes, and the file calls `onSent` when `sendAnswers` returns. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
+Radiant ships the wizard recipe and the elements. React ships neither: its tab registers the installed fields and a recipe of its own, the one of the [Registration wizard](/docs/examples/registration-wizard) with the submit button's label changed. `FormRenderer` calls `onSubmit` with the values once the last step passes, and the file calls `onSent` when `sendAnswers` returns. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
 
 <RendererTabs name="branching-survey">
 <div data-renderer="react">
-
-```tsx title="widgets.react.tsx"
-import * as z from 'zod/mini';
-import { BaseFieldSchema, defineInput } from '@schema-engine/forms';
-import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
-
-const InputSchema = z.extend(BaseFieldSchema, { $type: z.literal('input') });
-
-function InputField(config: z.output<typeof InputSchema>) {
-	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
-	return (
-		<div>
-			<label {...labelProps}>{config.label}</label>
-			<input {...fieldProps} defaultValue={fieldText(defaultValue)} />
-			{errorProps && <p {...errorProps}>{error}</p>}
-		</div>
-	);
-}
-
-const TextareaSchema = z.extend(BaseFieldSchema, { $type: z.literal('textarea'), rows: z.optional(z.number()) });
-
-function TextareaField(config: z.output<typeof TextareaSchema>) {
-	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
-	return (
-		<div>
-			<label {...labelProps}>{config.label}</label>
-			<textarea {...fieldProps} rows={config.rows} defaultValue={fieldText(defaultValue)} />
-			{errorProps && <p {...errorProps}>{error}</p>}
-		</div>
-	);
-}
-
-const SelectSchema = z.extend(BaseFieldSchema, {
-	$type: z.literal('select'),
-	options: z.array(z.object({ value: z.string(), label: z.string() })),
-});
-
-function SelectField(config: z.output<typeof SelectSchema>) {
-	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
-	return (
-		<div>
-			<label {...labelProps}>{config.label}</label>
-			<select {...fieldProps} defaultValue={fieldText(defaultValue)}>
-				<option value="">{config.placeholder}</option>
-				{config.options.map((option) => (
-					<option key={option.value} value={option.value}>
-						{option.label}
-					</option>
-				))}
-			</select>
-			{errorProps && <p {...errorProps}>{error}</p>}
-		</div>
-	);
-}
-
-const input = defineInput({
-	$type: 'input',
-	schema: InputSchema,
-	render: InputField,
-	value: () => z.string(),
-	metadata: { name: 'Input', category: 'input' },
-});
-
-const textarea = defineInput({
-	$type: 'textarea',
-	schema: TextareaSchema,
-	render: TextareaField,
-	value: () => z.string(),
-	metadata: { name: 'Textarea', category: 'input' },
-});
-
-const select = defineInput({
-	$type: 'select',
-	schema: SelectSchema,
-	render: SelectField,
-	value: ({ options }) => z.enum(options.map((option) => option.value)),
-	metadata: { name: 'Select', category: 'input' },
-});
-
-export const elements = [input, textarea, select];
-```
 
 ```tsx title="wizard.react.tsx"
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
@@ -298,11 +219,11 @@ import { createFormEngine, NotificationActionRegistration } from '@schema-engine
 import { FormRenderer } from '@schema-engine/forms-react';
 import { survey } from './config';
 import { sendAnswers } from './submit';
-import { elements } from './widgets.react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { WizardRecipe } from './wizard.react';
 
 export const engine = createFormEngine({
-	elements,
+	elements: schemaFormRegistrations,
 	recipes: [WizardRecipe],
 	actions: [NotificationActionRegistration],
 });

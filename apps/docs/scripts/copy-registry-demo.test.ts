@@ -34,12 +34,19 @@ describe('copyRegistryDemo', () => {
 		await rm(root, { recursive: true, force: true });
 	});
 
-	test('copies the input field, the card recipe, their primitives and styles to shadcn target paths', () => {
+	test('copies the fields, the card recipe, their primitives and styles to shadcn target paths', () => {
 		const copied = files.map((file) => relative(root, file));
 		expect(copied).toEqual(
 			expect.arrayContaining([
 				'components/schema-engine/forms/inputs/form-input.react.tsx',
 				'components/schema-engine/forms/inputs/form-input.registration.ts',
+				'components/schema-engine/forms/inputs/form-textarea.react.tsx',
+				'components/schema-engine/forms/inputs/form-select.react.tsx',
+				'components/schema-engine/forms/inputs/form-switch.react.tsx',
+				'components/schema-engine/forms/actions/submit-button.react.tsx',
+				'components/ui/textarea.react.tsx',
+				'components/ui/select.react.tsx',
+				'components/ui/switch.react.tsx',
 				'components/schema-engine/forms/recipes/registrations/card.ts',
 				'components/schema-engine/forms/recipes/shells/card-shell.react.tsx',
 				'components/schema-engine/forms/recipes/shells/card-shell.css',

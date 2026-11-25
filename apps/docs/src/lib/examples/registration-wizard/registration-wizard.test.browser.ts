@@ -15,6 +15,15 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
+/** The labels of the options, which the shadcn select shows. */
+const roles: Record<string, string> = { developer: 'Developer', designer: 'Designer', product: 'Product manager' };
+
+/** An option of the open listbox, which the select renders in a portal outside the form. */
+const option = (label: string) =>
+	[...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+		(candidate) => candidate.textContent === label,
+	)!;
+
 interface Driver {
 	mount(onRegistered: () => void): Promise<HTMLElement>;
 	/** The submit button of the last step: React's own text, and the built-in recipe's text in Radiant. */
@@ -33,7 +42,8 @@ const react: Driver = {
 		return host;
 	},
 	async choose(host, value) {
-		await userEvent.selectOptions(host.querySelector<HTMLSelectElement>('select[name="role"]')!, value);
+		await userEvent.click(host.querySelector<HTMLElement>('[data-slot="select-trigger"]')!);
+		await userEvent.click(option(roles[value]!));
 	},
 };
 

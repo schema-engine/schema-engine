@@ -9,8 +9,9 @@ import {
 	readPage,
 	titledFiles,
 	type CodeBlock,
+	type InstalledModules,
 } from './snippet-harness';
-import { readExamples } from './example-format';
+import { INSTALLED_BARREL, readExamples } from './example-format';
 import { guideHelpers } from './helper-files';
 
 vi.setConfig({ testTimeout: 120_000 });
@@ -179,13 +180,25 @@ const appFor = (page: string): Record<string, string> => ({
 	...Object.assign({}, ...(CONTINUES[page] ?? []).map(titledFiles)),
 });
 
+/** The pages whose files import the registration barrel of the installed shadcn registry, which the docs app stands in for. */
+const installedFor = (page: string): InstalledModules =>
+	page.startsWith('examples/') || page === 'forms-react/other-react-state'
+		? { [INSTALLED_BARREL]: 'src/lib/installed-components/registrations.ts' }
+		: {};
+
 const isAllowed = (page: string, block: CodeBlock): boolean =>
 	ALLOWED_FENCES.some((entry) => entry.page === page && entry.heading === block.heading);
 
 describe('docs snippets', () => {
 	test('the TypeScript fences of every docs page compile', () => {
 		const failures = docsPageIds().flatMap((page) =>
-			checkPageSnippets(page, readPage(page), appFor(page), (block) => isAllowed(page, block)).map(
+			checkPageSnippets(
+				page,
+				readPage(page),
+				appFor(page),
+				(block) => isAllowed(page, block),
+				installedFor(page),
+			).map(
 				(failure) =>
 					`${failure.page}, fence ${failure.fence} under "${failure.heading}": ${failure.messages.join(' ')}`,
 			),
@@ -201,9 +214,13 @@ describe('docs snippets', () => {
 				(block) => isTypeScriptFence(block) && block.heading === entry.heading,
 			);
 			expect(fences.length, `${entry.page} has no TypeScript fence under "${entry.heading}"`).toBeGreaterThan(0);
-			const failures = checkPageSnippets(entry.page, readPage(entry.page), appFor(entry.page)).filter(
-				(failure) => failure.heading === entry.heading,
-			);
+			const failures = checkPageSnippets(
+				entry.page,
+				readPage(entry.page),
+				appFor(entry.page),
+				undefined,
+				installedFor(entry.page),
+			).filter((failure) => failure.heading === entry.heading);
 			expect(
 				failures.length,
 				`${entry.page} under "${entry.heading}" compiles; drop it from the list`,

@@ -18,6 +18,7 @@
 				"../../registry/base-ui/primitives/*",
 				"../../registry/shared/primitives/*"
 			],
+			"@/components/schema-engine/forms/registrations": ["./src/lib/installed-components/registrations.ts"],
 			"@/components/schema-engine/forms/*": ["../../registry/shared/forms/*"],
 			"@/components/ui/calendar": ["../../registry/shared/primitives/calendar.tsx"],
 			"@/components/ui/*": ["../../packages/forms-react/.storybook/ui/*", "../../registry/ui-stubs/*"],

@@ -11,6 +11,10 @@ export const REGISTRY_DEMO_ROOT = join(appRoot, 'src/generated/shadcn');
 
 const REGISTRY_ITEMS = [
 	'schema-engine-form-input',
+	'schema-engine-form-textarea',
+	'schema-engine-form-select',
+	'schema-engine-form-switch',
+	'schema-engine-form-submit-button',
 	'schema-engine-form-field-primitive',
 	'schema-engine-form-utils',
 	'schema-engine-form-recipes',
@@ -35,6 +39,9 @@ const SHADCN_FILES: ReadonlyArray<readonly [source: string, target: string]> = [
 	['packages/forms-react/.storybook/ui/input.tsx', 'components/ui/input.tsx'],
 	['packages/forms-react/.storybook/ui/label.tsx', 'components/ui/label.tsx'],
 	['packages/forms-react/.storybook/ui/button.tsx', 'components/ui/button.tsx'],
+	['packages/forms-react/.storybook/ui/textarea.tsx', 'components/ui/textarea.tsx'],
+	['packages/forms-react/.storybook/ui/select.tsx', 'components/ui/select.tsx'],
+	['packages/forms-react/.storybook/ui/switch.tsx', 'components/ui/switch.tsx'],
 	['registry/ui-stubs/lib/utils.ts', 'lib/utils.ts'],
 ];
 
@@ -59,9 +66,11 @@ function resolveTarget(target: string): string {
  * cannot import `registry/` directly.
  *
  * Deviations from a real install:
- * - the shadcn `input`, `label` and `button` come from `packages/forms-react/.storybook/ui`, and
+ * - the shadcn `input`, `label`, `button`, `textarea`, `select` and `switch` come from `packages/forms-react/.storybook/ui`, and
  *   `lib/utils.ts` from `registry/ui-stubs`, not from the shadcn registry;
- * - only the `input` field and the `card` recipe are copied, not the whole `schema-engine-form-recipes` item;
+ * - only the `input`, `textarea`, `select`, `switch` and `submit` fields and the `card` recipe are copied, not the whole
+ *   `schema-form` aggregate and `schema-engine-form-recipes` items, so there is no generated `registrations.ts`
+ *   barrel (the docs' own `installed-components` module plays that role for the copied fields);
  * - components are written as `.react.tsx`, the extension the docs' React integration owns (the docs
  *   default to the Ecopages JSX runtime), imports of them gain the `.react` suffix and the files get the
  *   React JSX pragma;

@@ -27,6 +27,17 @@ export interface Example {
 const PACKAGE_SPECIFIER = /^(@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*(\/.*)?$/;
 const RELATIVE_SPECIFIER = /^\.\/[\w.-]+$/;
 
+/**
+ * The one import of an example that is neither a package nor a sibling: the registration barrel that installing the
+ * shadcn registry leaves in an app.
+ *
+ * @remarks
+ * The page does not show the components behind it, as it does not show a package's source. The docs app resolves the
+ * specifier to `src/lib/installed-components/registrations.ts` (`paths` of `tsconfig.json`, `alias` of
+ * `vitest.config.ts`), which re-exports the copy of the registry that `scripts/copy-registry-demo.ts` writes.
+ */
+export const INSTALLED_BARREL = '@/components/schema-engine/forms/registrations';
+
 /** Reads every folder of `root` as an example, in id order. */
 export function readExamples(root = examplesRoot): Example[] {
 	if (!existsSync(root)) return [];
@@ -74,8 +85,8 @@ export function installLines(page: string): string[] {
 
 /**
  * Everything that makes an example fail the format: a file the page does not show word for word, an import that is
- * neither a package nor a sibling, a folder without a test that runs its files, a page without the install line its
- * files need, or an example the overview does not list.
+ * neither a package, a sibling nor the {@link INSTALLED_BARREL}, a folder without a test that runs its files, a page
+ * without the install line its files need, or an example the overview does not list.
  */
 export function checkExample(example: Example, page: string | undefined, overview: string): string[] {
 	const problems: string[] = [];
@@ -84,7 +95,7 @@ export function checkExample(example: Example, page: string | undefined, overvie
 
 	for (const file of [...example.files, ...example.helpers]) {
 		for (const specifier of importsOf(file.source)) {
-			if (PACKAGE_SPECIFIER.test(specifier)) continue;
+			if (PACKAGE_SPECIFIER.test(specifier) || specifier === INSTALLED_BARREL) continue;
 			if (!RELATIVE_SPECIFIER.test(specifier)) {
 				problems.push(`${file.name} imports ${specifier}, which is not a package or a file of its own folder`);
 			} else if (!namesFile(specifier, names)) {

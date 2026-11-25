@@ -4,11 +4,11 @@ import { FormRenderer } from '@schema-engine/forms-react';
 import { CardRecipe } from './card.react';
 import { themedForm } from './config';
 import { theme } from './theme';
-import { elements } from './widgets.react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
 /** The compiled theme goes in as `layout`, so the form carries its `data-se-theme` and the stylesheet applies. */
 export const engine = createFormEngine({
-	elements,
+	elements: schemaFormRegistrations,
 	recipes: [CardRecipe],
 	layout: theme,
 	actions: [NotificationActionRegistration],
