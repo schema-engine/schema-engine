@@ -132,7 +132,7 @@ The grid and item rules read custom properties, which the renderer writes inline
 
 Each property has a variant per breakpoint (`--se-item-grid-column-md`, `--se-grid-template-lg`, and so on) that applies from that width up. The stylesheet falls back through the narrower variants, so you set only the widths that change.
 
-An item that needs its own `display` (a flex field, for example) sets `--se-item-display-mode` instead of `display`. The item rule outranks a component's own class, and `--se-item-display-mode` is what a responsive `hidden` toggles against, so a hidden item comes back as the mode you set, not forced to `block`.
+An item that needs its own `display` (a flex field, for example) sets `--se-item-display-mode` instead of `display`. The item rule outranks a component's own class, and `--se-item-display-mode` is what a responsive `hidden` toggles against, so a hidden item comes back as the mode you set, not forced to `block`. The mode applies to that item only: each grid resets it, so the fields inside a fieldset that sets `grid` stay `block`.
 
 The gap tokens (`--se-grid-gap-none`, `-compact`, `-default`, `-loose`, `-wide`) are public: set them to restyle every grid. See [Theming](/docs/layout/theming).
 

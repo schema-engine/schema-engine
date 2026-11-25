@@ -202,6 +202,15 @@ describe('generated stylesheet', () => {
 		expect(grid.value('align-content')).toBe('start');
 	});
 
+	test('a grid resets the display mode so its items do not inherit the mode of the item that holds it', () => {
+		const sheet = layout();
+		const grid = computeElement(sheet.css, sheet.id, 'grid', 1700, {
+			inherited: { '--se-item-display-mode': 'grid' },
+		});
+		expect(grid.custom['--se-item-display-mode']).toBeUndefined();
+		expect(computeElement(sheet.css, sheet.id, 'item', 1700).value('display')).toBe('block');
+	});
+
 	test('a theme does not read the slots an ancestor theme with other breakpoints declared', () => {
 		const outer = layout();
 		const inner = layout({ breakpoints: { md: '60rem' } });
