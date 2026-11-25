@@ -11,7 +11,7 @@ This page builds a contact form: an engine with the elements of a renderer, a fo
 ## Install
 
 ```bash
-pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @schema-engine/registry @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
 Zod provides the `zod/mini` entry point the first-party schemas use. Registrations may use any [Standard Schema](https://standardschema.dev/) validator. Radiant renders with its own JSX runtime and three stylesheets: [Forms Radiant](/docs/forms-radiant/getting-started) sets them up. The [React quick start](/docs/forms-react/getting-started) has the equivalent setup for React.
@@ -61,7 +61,7 @@ export const contact = engine.validateForm(JSON.parse(contactJson));
 A config with mistakes is reported, not thrown, by `safeValidateForm`. This one names an element type nobody registered and leaves out a field's required `name`:
 
 ```ts title="broken.ts"
-import { formatIssuePath } from '@schema-engine/forms';
+import { formatIssuePath } from '@schema-engine/registry';
 import { engine } from './engine';
 
 const brokenJson = `{

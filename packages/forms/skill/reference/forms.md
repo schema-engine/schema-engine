@@ -51,7 +51,7 @@ A widget is a registration, `defineInput({ $type, schema, metadata, value, rende
 
 ## Config
 
-Authors supply schema input, so defaults stay optional; renderers receive schema output. `defineForm` and `validateForm` run one pipeline and throw a `FormValidationError` on an invalid form; `engine.safeValidateForm(json)` returns `{ success, data | issues }` with the config `path` of each issue; `formatIssuePath(path)` (from `@schema-engine/registry`, re-exported by forms) writes a path as `steps[0].elements[2].name`. A step needs an `id` and a `title`.
+Authors supply schema input, so defaults stay optional; renderers receive schema output. `defineForm` and `validateForm` run one pipeline and throw a `FormValidationError` on an invalid form; `engine.safeValidateForm(json)` returns `{ success, data | issues }` with the config `path` of each issue; `formatIssuePath(path)` from `@schema-engine/registry` writes a path as `steps[0].elements[2].name`. A step needs an `id` and a `title`.
 
 ```ts title="forms/contact-form.ts"
 import { engine } from './engine';

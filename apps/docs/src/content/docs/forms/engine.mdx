@@ -234,7 +234,7 @@ An issue a schema reported also has a `code` and `params` (for example `too_smal
 A malformed form envelope (its own shape, such as `steps` not being an array) stops the deeper checks and is reported alone. An unrecognized key is reported at the key itself, for example `['view', 'shell', 'bogus']`.
 
 ```ts
-import { formatIssuePath } from '@schema-engine/forms';
+import { formatIssuePath } from '@schema-engine/registry';
 import { engine } from './engine';
 
 export function loadForm(json: unknown) {
@@ -249,7 +249,7 @@ export function loadForm(json: unknown) {
 }
 ```
 
-`formatIssuePath` is the registry's formatter, [documented there](/docs/registry/api-reference#formatissuepath), and `@schema-engine/forms` re-exports it.
+[`formatIssuePath`](/docs/registry/api-reference#formatissuepath) comes from `@schema-engine/registry`, which writes the path of any issue the same way.
 
 The `{ message, path }` shape is a Standard Schema issue, so a YAML loader or an editor can map each `path` to a line or a field. A renderer calls `validateForm`, so an invalid config thrown at render time shows the same lines in the error message.
 

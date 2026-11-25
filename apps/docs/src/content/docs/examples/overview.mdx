@@ -38,10 +38,15 @@ Examples by domain, with what each shows and the install line it needs.
 
 ### Forms
 
-Each forms example has React and Radiant tabs and the same two install lines, one for each renderer:
+Each forms example has React and Radiant tabs and these two install lines, one for each renderer:
 
 - React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`
 - Radiant: `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod`
+
+A server-driven form also writes issue paths with `formatIssuePath`, so its lines add `@schema-engine/registry`:
+
+- React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout @schema-engine/registry react react-dom zod`
+- Radiant: `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @schema-engine/registry @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod`
 
 | Example                                                        | Shows                                                                                                           |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
