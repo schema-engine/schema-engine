@@ -166,7 +166,11 @@ Standard Schema issues, then points each issue at a line and column. It needs th
 
 ```typescript
 parseYaml<T>(text: string, validate: YamlValidate<T>, options?: { filename?: string }): T; // throws YamlDocumentError
-safeParseYaml<T>(text: string, validate: YamlValidate<T>, options?: { filename?: string }): { success: true; data: T } | { success: false; issues: YamlIssue[] };
+safeParseYaml<T>(
+	text: string,
+	validate: YamlValidate<T>,
+	options?: { filename?: string },
+): { success: true; data: T } | { success: false; issues: YamlIssue[] };
 stringifyYaml(value: unknown, options?: { schemaUrl?: string }): string;
 
 type YamlIssue = { message: string; path: PropertyKey[]; line: number; column: number; filename?: string };

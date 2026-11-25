@@ -1,0 +1,43 @@
+/**
+ * A row of tabs made of radio inputs: the renderer tabs and the width presets of the layout page demo share it.
+ *
+ * @remarks
+ * Each tab is a `label.radio-tabs__tab` around a hidden `input[type='radio']`, so the selection works before any
+ * script loads. The selected tab is medium weight in the body colour, as Radiant UI's tabs are, and focus draws the
+ * same ring.
+ */
+.radio-tabs {
+	display: flex;
+	gap: 0.25rem;
+	border-block-end: 1px solid var(--border);
+}
+
+.radio-tabs__tab {
+	position: relative;
+	margin-block-end: -1px;
+	padding: var(--space-control-y) var(--space-control-x);
+	border-block-end: 2px solid transparent;
+	color: var(--on-surface-muted);
+	font-size: 0.875rem;
+	font-weight: 400;
+	cursor: pointer;
+}
+
+.radio-tabs__tab input {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.radio-tabs__tab:has(input:checked) {
+	border-block-end-color: var(--primary);
+	color: var(--on-background);
+	font-weight: var(--font-weight-medium);
+}
+
+.radio-tabs__tab:has(input:focus-visible) {
+	box-shadow:
+		0 0 0 2px var(--background),
+		0 0 0 4px color-mix(in oklab, var(--primary) 40%, transparent);
+}

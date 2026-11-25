@@ -1,7 +1,7 @@
 ---
 title: 'A server-driven form'
 description: 'Fetch a form config from an endpoint, check it with safeValidateForm, render it in React or Radiant, send it with the engine fetch and its CSRF header, and show a 422 on the fields.'
-order: 9
+order: 7
 ---
 
 import { FormExampleDemo } from '@/components/form-example-demo';
@@ -30,13 +30,13 @@ Copy the files below into one folder. Radiant also needs its JSX setup and style
 
 ## See it
 
-The demos render the config the server sends. The files below call the server, and the example's tests run them against the handlers of `server.ts`.
+The demos render the config the server sends, notice included: a valid submit shows it. The files below call the server, and the example's tests run them against the handlers of `server.ts`.
 
 <FormExampleDemo config={signupForm} />
 
 ## The server
 
-`GET` is the route handler of `/forms/signup`: it answers with the form config. `POST` is `/api/signups`: it creates the account, or answers 422 with RFC 9457 Problem Details when the username is taken. Any runtime that speaks `Request` and `Response` runs them. `?next` returns the form of a later release, which asks for a rating with an element this client has not registered, so you see what the client does with a form it cannot render.
+`GET` is the route handler of `/forms/signup`: it answers with the form config. `POST` is `/api/signups`: it creates the account, or answers 422 with RFC 9457 Problem Details when the username is taken. Any runtime that speaks `Request` and `Response` runs them. `?next` returns the form of a later release, which asks for a rating with an element this client has not registered, so you see what the client does with a form it cannot render. The config also carries a `show_notification` entry in `actions`, so the server decides what the visitor is told after a successful submit; each engine registers `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one.
 
 ```ts title="server.ts"
 export const signupForm = {
@@ -84,6 +84,15 @@ export const signupForm = {
 			],
 		},
 	],
+	actions: [
+		{
+			id: 'created',
+			$type: 'show_notification',
+			message: 'Account created.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };
 
 /**
@@ -102,7 +111,9 @@ const nextForm = {
 	],
 };
 
-/** The route handler of `/forms/signup`: it answers with the form config as JSON. `?next` asks for the next release's. */
+/**
+ * The route handler of `/forms/signup`: it answers with the form config as JSON. `?next` asks for the next release's.
+ */
 export function GET(request: Request): Response {
 	return Response.json(new URL(request.url).searchParams.has('next') ? nextForm : signupForm);
 }
@@ -301,14 +312,14 @@ export const elements = [input, select, submit];
 
 ```tsx title="server-driven-form.react.tsx"
 import { useEffect, useState } from 'react';
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, NotificationActionRegistration } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { policy } from './csrf';
 import { loadForm, type LoadedForm } from './load-form';
 import { signUp } from './submit';
 import { elements } from './widgets.react';
 
-export const engine = createFormEngine({ elements, csrf: policy });
+export const engine = createFormEngine({ elements, csrf: policy, actions: [NotificationActionRegistration] });
 
 /** Fetches the form from `url`, then renders it, or lists why it cannot. `onSignedUp` runs once the account exists. */
 export function SignupForm({ url, onSignedUp }: { url: string; onSignedUp: () => void }) {
@@ -344,14 +355,22 @@ export function SignupForm({ url, onSignedUp }: { url: string; onSignedUp: () =>
 
 ```tsx title="server-driven-form.radiant.tsx"
 import { createRoot } from '@ecopages/jsx/client';
+import { NotificationActionRegistration } from '@schema-engine/forms';
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { policy } from './csrf';
 import { loadForm } from './load-form';
 import { signUp } from './submit';
 
-export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations, csrf: policy });
+export const engine = createRadiantFormEngine({
+	elements: schemaFormRegistrations,
+	csrf: policy,
+	actions: [NotificationActionRegistration],
+});
 
-/** Fetches the form from `url` and renders it into `host`, or lists why it cannot. `onSignedUp` runs once the account exists. */
+/**
+ * Fetches the form from `url` and renders it into `host`, or lists why it cannot. `onSignedUp` runs once the account
+ * exists.
+ */
 export async function mountSignupForm(host: HTMLElement, url: string, onSignedUp: () => void): Promise<void> {
 	const loaded = await loadForm(engine, url);
 	createRoot(host).render(
@@ -379,7 +398,7 @@ export async function mountSignupForm(host: HTMLElement, url: string, onSignedUp
 
 ## What the tests check
 
-The example's tests render both files in a browser against the handlers of `server.ts`. The form the server sends renders, and an empty submit shows its messages without a request. A valid submit posts JSON with the `X-CSRF-Token` header and calls `onSignedUp`. A taken username shows the server's message on its field. The form of the next release shows its issues, with their paths, instead of a form. The unit tests cover each way the request can fail: the network, an error status and a body that is not JSON.
+The example's tests render both files in a browser against the handlers of `server.ts`. The form the server sends renders, and an empty submit shows its messages without a request. A valid submit posts JSON with the `X-CSRF-Token` header and calls `onSignedUp`. A taken username shows the server's message on its field. The form of the next release shows its issues, with their paths, instead of a form. The unit tests cover each way the request can fail: the network, an error status and a body that is not JSON. The unit test checks the `show_notification` entry of the config in both engines, so a config that names an action an engine did not register fails.
 
 ## Take it further
 

@@ -1,0 +1,18 @@
+/**
+ * The frame of a live form demo: one surface for every demo on the site, whichever renderer draws it.
+ *
+ * @remarks
+ * The frame belongs to the demo and not to the renderer, so the React and the Radiant columns of an example line up.
+ * `--surface` is lighter than the controls in dark mode and darker in light mode, so the inputs, which sit on
+ * `--background`, read as wells in light and as raised in dark. The shadow of a card inside is turned off for both.
+ */
+.docs-demo-stage {
+	--se-shadow: none;
+	box-sizing: border-box;
+	min-width: 0;
+	padding: var(--space-6);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-container);
+	background: var(--surface);
+	text-align: left;
+}

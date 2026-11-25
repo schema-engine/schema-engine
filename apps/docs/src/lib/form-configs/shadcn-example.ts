@@ -36,4 +36,13 @@ export const shadcnContactFormConfig: FormConfig = {
 			],
 		},
 	],
+	actions: [
+		{
+			id: 'sent',
+			$type: 'show_notification',
+			message: 'Message sent.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };

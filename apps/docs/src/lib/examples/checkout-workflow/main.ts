@@ -1,9 +1,6 @@
 import { runCheckout } from './checkout';
 import { checkoutWorkflow } from './workflow';
 
-/** `cause` holds the error a handler threw, which has no JSON form. */
-const withoutCause = (key: string, value: unknown) => (key === 'cause' ? undefined : value);
-
 const order = { sku: 'tee-black-m', quantity: 2, amount: 120, email: 'ada@example.com' };
 
 for (const [name, amount] of [
@@ -15,7 +12,11 @@ for (const [name, amount] of [
 	const checkout = await runCheckout(checkoutWorkflow({ ...order, amount }), context);
 	if (!checkout.success) console.log(checkout.issues.join('\n'));
 	else {
-		for (const result of checkout.results) console.log(JSON.stringify(result, withoutCause));
+		for (const result of checkout.results) {
+			const group = result.groupIndex === undefined ? '' : `, group ${result.groupIndex}`;
+			const outcome = result.success ? result.message : result.error;
+			console.log(`${result.actionId} (step ${result.sequenceIndex}${group}) ${result.status}: ${outcome}`);
+		}
 		console.log(`sent: ${context.sent.join(', ') || 'nothing'}`);
 	}
 }

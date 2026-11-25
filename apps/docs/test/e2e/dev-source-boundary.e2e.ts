@@ -134,7 +134,7 @@ describe('docs dev server source boundary', () => {
 		await demo.locator('input[name="name"]').fill('Ada Lovelace');
 		await demo.locator('input[name="email"]').fill('ada@example.com');
 		await demo.locator('button[type="submit"]').click();
-		await pwExpect(demo.locator('[data-se-demo-result]')).toContainText('"name": "Ada Lovelace"');
+		await pwExpect(page.getByRole('status').getByText('Message sent.', { exact: true })).toBeVisible();
 		expect(problems).toEqual([]);
 	}, 120_000);
 
@@ -156,7 +156,7 @@ describe('docs dev server source boundary', () => {
 		expect(problems).toEqual([]);
 	}, 120_000);
 
-	test.each(['/docs/forms-react/layouts', '/docs/examples/contact-card', '/docs/examples/contact-form'])(
+	test.each(['/docs/forms-react/layouts', '/docs/examples/theming', '/docs/examples/contact-form'])(
 		'%s hydrates its form demos without a mismatch in dev',
 		async (pagePath) => {
 			await page.goto(`${baseUrl}${pagePath}`, { waitUntil: 'networkidle' });

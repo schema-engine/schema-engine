@@ -1,7 +1,7 @@
 ---
 title: 'Branching survey'
 description: 'A three-step survey whose follow-up step is skipped unless the answer was poor, so Next passes over it and its fields are left out of what is sent, in React and in Radiant.'
-order: 7
+order: 5
 ---
 
 import { FormExampleDemo } from '@/components/form-example-demo';
@@ -30,13 +30,13 @@ Copy the files below into one folder. Radiant also needs its JSX setup and style
 
 ## See it
 
-Choose "Great" and select Next: the survey goes to the last step. Go back, choose "Poor" and select Next: the follow-up step opens, and Next waits for its answers.
+Choose "Great" and select Next: the survey goes to the last step. Go back, choose "Poor" and select Next: the follow-up step opens, and Next waits for its answers. Submit the last step to see the notice.
 
 <FormExampleDemo config={survey} />
 
 ## The config
 
-The branch is a step-level `constraints` entry. It reads `satisfaction`, a field of an earlier step, and shows the step only when it equals `poor`. A step takes the same constraints as a field, on fields of earlier steps: the first step cannot have one, because nothing comes before it ([Constraints](/docs/forms/constraints)). While the constraint hides the step, the values kept in its fields come back if the constraint holds again, but they take no part in validation or in what is submitted.
+The branch is a step-level `constraints` entry. It reads `satisfaction`, a field of an earlier step, and shows the step only when it equals `poor`. A step takes the same constraints as a field, on fields of earlier steps: the first step cannot have one, because nothing comes before it ([Constraints](/docs/forms/constraints)). While the constraint hides the step, the values kept in its fields come back if the constraint holds again, but they take no part in validation or in what is submitted. The `show_notification` entry in `actions` runs on `form_submit_success`, after the answers were sent.
 
 ```ts title="config.ts"
 import type { FormConfig } from '@schema-engine/forms';
@@ -114,6 +114,15 @@ export const survey: FormConfig = {
 			elements: [{ $type: 'textarea', id: 'comments', name: 'comments', label: 'Comments', rows: 4 }],
 		},
 	],
+	actions: [
+		{
+			id: 'thanks',
+			$type: 'show_notification',
+			message: 'Thanks for your answers.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };
 ```
 
@@ -142,7 +151,7 @@ export async function sendAnswers(values: FormValues, { fetch }: FormSubmitHelpe
 
 ## The renderer
 
-Radiant ships the wizard recipe and the elements. React ships neither, so its tab has the widgets and a recipe of its own, the one of the [Registration wizard](/docs/examples/registration-wizard) with the submit button's label changed. `FormRenderer` calls `onSubmit` with the values once the last step passes, and the file calls `onSent` when `sendAnswers` returns.
+Radiant ships the wizard recipe and the elements. React ships neither, so its tab has the widgets and a recipe of its own, the one of the [Registration wizard](/docs/examples/registration-wizard) with the submit button's label changed. `FormRenderer` calls `onSubmit` with the values once the last step passes, and the file calls `onSent` when `sendAnswers` returns. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
 
 <RendererTabs name="branching-survey">
 <div data-renderer="react">
@@ -285,14 +294,18 @@ export const WizardRecipe = defineRecipe(wizardSpec, { shell: Shell, slots: { ac
 ```
 
 ```tsx title="branching-survey.react.tsx"
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, NotificationActionRegistration } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { survey } from './config';
 import { sendAnswers } from './submit';
 import { elements } from './widgets.react';
 import { WizardRecipe } from './wizard.react';
 
-export const engine = createFormEngine({ elements, recipes: [WizardRecipe] });
+export const engine = createFormEngine({
+	elements,
+	recipes: [WizardRecipe],
+	actions: [NotificationActionRegistration],
+});
 
 /** Renders the survey and calls `onSent` once the server has the answers. */
 export function Survey({ onSent }: { onSent: () => void }) {
@@ -313,11 +326,15 @@ export function Survey({ onSent }: { onSent: () => void }) {
 <div data-renderer="radiant">
 
 ```tsx title="branching-survey.radiant.tsx"
+import { NotificationActionRegistration } from '@schema-engine/forms';
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { survey } from './config';
 import { sendAnswers } from './submit';
 
-export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+export const engine = createRadiantFormEngine({
+	elements: schemaFormRegistrations,
+	actions: [NotificationActionRegistration],
+});
 
 /** Renders the survey and calls `onSent` once the server has the answers. */
 export function Survey({ onSent }: { onSent: () => void }) {
@@ -339,7 +356,7 @@ export function Survey({ onSent }: { onSent: () => void }) {
 
 ## What the tests check
 
-The example's tests render both files in a browser. A good answer goes from the first step to the last and sends no follow-up fields. A poor answer opens the follow-up step, where Next names each failing rule. Changing the answer back after filling the follow-up step drops what was typed there from the submission. A failed send does not call `onSent`.
+The example's tests render both files in a browser. A good answer goes from the first step to the last and sends no follow-up fields. A poor answer opens the follow-up step, where Next names each failing rule. Changing the answer back after filling the follow-up step drops what was typed there from the submission. A failed send does not call `onSent`. The unit test checks the `show_notification` entry of the config in both engines, so a config that names an action an engine did not register fails.
 
 ## Take it further
 

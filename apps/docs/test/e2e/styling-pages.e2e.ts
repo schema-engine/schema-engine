@@ -9,22 +9,9 @@ const STYLING_PAGES = [
 	['/docs/layout/layout-themes', 'Layout themes'],
 	['/docs/layout/appearance-axes', 'Appearance axes'],
 	['/docs/layout/theming', 'Theming'],
-	['/docs/examples/contact-card', 'A contact card'],
+	['/docs/examples/theming', 'A themed form'],
 	['/docs/registry/registries', 'Read-only and mutable registries'],
 ] as const;
-
-/** The layout examples, one page each, and the renderers their demos show. */
-const EXAMPLE_IDS = [
-	'contact-card',
-	'address-form',
-	'checkout-wizard',
-	'drawn-layout',
-	'brand-theme',
-	'shared-theme',
-	'tight-size',
-	'brand-frame',
-	'acme-theme',
-];
 
 describe('styling docs pages', () => {
 	let browser: Browser;
@@ -64,9 +51,9 @@ describe('styling docs pages', () => {
 
 	test('the llms exports carry the new pages', async () => {
 		const index = await (await fetch(`${baseUrl}/llms.txt`)).text();
-		expect(index).toContain('/docs-llm/examples/contact-card.md');
-		const markdown = await (await fetch(`${baseUrl}/docs-llm/examples/contact-card.md`)).text();
-		expect(markdown).toContain('two half-width fields');
+		expect(index).toContain('/docs-llm/examples/theming.md');
+		const markdown = await (await fetch(`${baseUrl}/docs-llm/examples/theming.md`)).text();
+		expect(markdown).toContain('Two `half` fields share a row');
 	});
 
 	/** Rectangles of named inputs of one recipe, read in one frame so a reflow cannot split them. */
@@ -91,163 +78,130 @@ describe('styling docs pages', () => {
 		);
 	}
 
-	/** Opens the page of a layout example and waits until React has hydrated the demos it has. */
-	async function openExample(id: string): Promise<void> {
+	/** Opens the page of the themed form example, wide enough to show both renderers, and waits until React has hydrated. */
+	async function openExample(): Promise<void> {
 		pageErrors.length = 0;
-		await page.setViewportSize({ width: 1300, height: 900 });
-		await page.goto(`${baseUrl}/docs/examples/${id}`, { waitUntil: 'networkidle' });
-		if ((await page.locator('.docs-react-form-demo').count()) > 0) {
-			await page.waitForFunction(() => {
-				const form = document.querySelector('.docs-react-form-demo form');
-				return form !== null && Object.keys(form).some((key) => key.startsWith('__react'));
-			});
-		}
+		await page.setViewportSize({ width: 1700, height: 900 });
+		await page.goto(`${baseUrl}/docs/examples/theming`, { waitUntil: 'networkidle' });
+		await page.waitForFunction(() => {
+			const form = document.querySelector('.docs-react-form-demo form');
+			return form !== null && Object.keys(form).some((key) => key.startsWith('__react'));
+		});
 	}
 
-	describe('the layout example pages', () => {
-		test.each(EXAMPLE_IDS)('%s renders each of its demos on a page without script errors', async (id) => {
-			await openExample(id);
+	describe('the themed form example page', () => {
+		test('renders each of its demos on a page without script errors', async () => {
+			await openExample();
 			const demos = page.locator('[data-example] .example-demo__demo');
 			const count = await demos.count();
-			expect(count, id).toBeGreaterThan(0);
+			expect(count).toBe(2);
 			for (let index = 0; index < count; index += 1) {
-				await pwExpect(demos.nth(index).locator('input').first(), id).toBeVisible();
+				await pwExpect(demos.nth(index).locator('input').first()).toBeVisible();
 			}
 			expect(pageErrors).toEqual([]);
 		});
 
 		test.each(['radiant', 'react'])('%s: a half-width pair shares a row and the rest fill it', async (renderer) => {
-			await openExample('contact-card');
-			const [first, last, email] = await rects('contact-card', ['first', 'last', 'email'], renderer);
+			await openExample();
+			const [first, last, email] = await rects('themed', ['first', 'last', 'email'], renderer);
 			expect(first!.y).toBeCloseTo(last!.y, 0);
 			expect(first!.width).toBeCloseTo(last!.width, 0);
 			expect(email!.y).toBeGreaterThan(first!.y);
 			expect(email!.width).toBeGreaterThan(first!.width * 1.9);
 		});
 
-		test('a fieldset places its children on its own grid', async () => {
-			await openExample('address-form');
-			const [city, zip, region, country] = await rects('address-form', ['city', 'zip', 'region', 'country']);
-			expect(city!.y).toBeCloseTo(zip!.y, 0);
-			expect(city!.width).toBeGreaterThan(zip!.width * 1.8);
-			expect(region!.y).toBeCloseTo(country!.y, 0);
-			expect(region!.y).toBeGreaterThan(city!.y);
-		});
-
-		test('the drawn layout follows the breakpoint', async () => {
-			await openExample('drawn-layout');
-			const names = ['a', 'b', 'c', 'd', 'e'];
-			const [a, b, c, d, e] = await rects('drawn-layout', names);
-			expect(b!.x).toBeGreaterThan(a!.x + a!.width - 1);
-			expect(c!.x).toBeCloseTo(b!.x, 0);
-			expect(c!.y).toBeGreaterThan(b!.y);
-			expect(d!.y).toBeCloseTo(e!.y, 0);
-			expect(d!.y).toBeGreaterThan(c!.y);
-
-			await page.setViewportSize({ width: 420, height: 900 });
-			const stacked = await rects('drawn-layout', names);
-			for (let index = 1; index < stacked.length; index += 1) {
-				expect(stacked[index]!.x).toBeCloseTo(stacked[0]!.x, 0);
-				expect(stacked[index]!.y).toBeGreaterThan(stacked[index - 1]!.y);
-			}
-			await page.setViewportSize({ width: 1300, height: 900 });
-		});
-
 		test('the tone axis writes its attribute and sets the colour roles', async () => {
-			await openExample('brand-theme');
-			const form = page.locator('rui-form.brand-form');
+			await openExample();
+			const form = page.locator('[data-example="themed"] [data-renderer="radiant"] rui-form.themed');
 			await pwExpect(form).toHaveAttribute('data-se-tone', 'brand');
 			expect(
 				await form.evaluate((element) => getComputedStyle(element).getPropertyValue('--primary').trim()),
 			).toBe('#c2410c');
 		});
 
-		test('two engines on one theme share its id and each picks its own tone', async () => {
-			await openExample('shared-theme');
-			const forms = page.locator('[data-example] rui-form');
-			const themes = await forms.evaluateAll((elements) =>
-				elements.map((element) => element.getAttribute('data-se-theme')),
-			);
-			expect(new Set(themes).size).toBe(1);
-			const tones = await forms.evaluateAll((elements) =>
-				elements.map((element) => element.getAttribute('data-se-tone')),
-			);
-			expect(tones).toEqual(['brand', 'forest']);
+		test('both renderers run on one theme', async () => {
+			await openExample();
+			const themesOf = (renderer: string) =>
+				page
+					.locator(`[data-example="themed"] [data-renderer="${renderer}"] [data-se-theme]`)
+					.evaluateAll((elements) => [
+						...new Set(elements.map((element) => element.getAttribute('data-se-theme'))),
+					]);
+			const [react, radiant] = [await themesOf('react'), await themesOf('radiant')];
+			expect(react).toHaveLength(1);
+			expect(radiant).toHaveLength(1);
+			expect(react).toEqual(radiant);
 		});
 
 		test.each([
 			['radiant', '.card-shell__section'],
-			['react', '.se-demo-shell__card'],
-		])('%s: size hooks set on the form class reach the compact card and its controls', async (renderer, card) => {
-			await openExample('tight-size');
-			const demo = page.locator(`[data-example="tight-size"] [data-renderer="${renderer}"]`);
-			expect(
-				await demo
-					.locator(card)
-					.first()
-					.evaluate((element) => getComputedStyle(element).paddingTop),
-			).toBe('8px');
-			expect(
-				await demo
-					.locator('input')
-					.first()
-					.evaluate((element) => element.getBoundingClientRect().height),
-			).toBe(24);
-		});
-
-		test('the custom recipe frames both renderers', async () => {
-			await openExample('brand-frame');
-			for (const renderer of ['react', 'radiant']) {
-				const demo = page.locator(`[data-example="brand-frame"] [data-renderer="${renderer}"]`);
-				await pwExpect(demo.locator('.brand-frame__label')).toHaveText('Newsletter');
-			}
-		});
-
-		test('the theme file of a form is in force: its colour roles, its picks and its size hooks', async () => {
-			await openExample('acme-theme');
-			const form = page.locator('[data-example="acme-theme"] rui-form.acme');
-			await pwExpect(form).toBeVisible();
-			await pwExpect(
-				page.locator('[data-example="acme-theme"] [data-se-size="comfortable"]').first(),
-			).toBeAttached();
-			expect(
-				await form.evaluate((element) => getComputedStyle(element).getPropertyValue('--primary').trim()),
-			).toBe('#4f46e5');
-			const input = page.locator('[data-example="acme-theme"] input').first();
-			expect(await input.evaluate((element) => element.getBoundingClientRect().height)).toBe(44);
-		});
+			['react', '.se-demo-card__section'],
+		])(
+			'%s: the size hooks set on the form class reach the compact card and its controls',
+			async (renderer, card) => {
+				await openExample();
+				const demo = page.locator(`[data-example="themed"] [data-renderer="${renderer}"]`);
+				expect(
+					await demo
+						.locator(card)
+						.first()
+						.evaluate((element) => getComputedStyle(element).paddingTop),
+				).toBe('12px');
+				expect(
+					await demo
+						.locator('input')
+						.first()
+						.evaluate((element) => element.getBoundingClientRect().height),
+				).toBe(28);
+			},
+		);
 	});
 });
 
-describe('the layout page recipe', () => {
-	test('its frame crosses the breakpoints of the theme when it is resized', async () => {
+describe('the layout page example', () => {
+	test('its frame shows the three-column layout of a desktop, shrunk to the column, and crosses the breakpoints of the theme at the narrower widths', async () => {
 		const browser = await chromium.launch();
 		try {
 			const page = await browser.newPage({ viewport: { width: 1300, height: 900 } });
 			await page.goto(`${baseUrl}/docs/examples/layout-page`, { waitUntil: 'networkidle' });
-			const frame = page.locator('iframe.layout-page-demo');
+			const demo = page.locator('.layout-page-demo');
+			const frame = demo.locator('iframe');
 			await pwExpect(frame).toBeVisible();
-			const inFrame = page.frameLocator('iframe.layout-page-demo');
+			const inFrame = page.frameLocator('.layout-page-demo iframe');
 			await pwExpect(inFrame.locator('main')).toBeVisible();
 
 			const left = async (tag: string) => (await inFrame.locator(tag).boundingBox())!.x;
-			await frame.evaluate((element) => {
-				element.style.maxWidth = 'none';
-				element.style.width = '300px';
-			});
-			await pwExpect(inFrame.locator('nav')).toBeHidden();
-
-			await frame.evaluate((element) => {
-				element.style.width = '800px';
-			});
+			const widthOf = async () => (await frame.boundingBox())!.width;
+			const columnWidth = async () => (await demo.boundingBox())!.width;
 			await pwExpect(inFrame.locator('nav')).toBeVisible();
 			expect(await left('nav')).toBeLessThan(await left('main'));
-			expect((await inFrame.locator('aside').boundingBox())!.x).toBe(await left('main'));
-
-			await frame.evaluate((element) => {
-				element.style.width = '1200px';
-			});
 			expect(await left('main')).toBeLessThan(await left('aside'));
+			expect(await frame.evaluate((element) => getComputedStyle(element).width)).toBe('1200px');
+			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
+			expect(await widthOf()).toBeLessThanOrEqual(await columnWidth());
+
+			const pageHeight = () =>
+				inFrame.locator('html').evaluate((element) => element.getBoundingClientRect().height);
+			await pwExpect
+				.poll(async () => (await frame.boundingBox())!.height)
+				.toBeCloseTo((await pageHeight()) * ((await widthOf()) / 1200), 0);
+
+			const wide = await widthOf();
+			await page.setViewportSize({ width: 900, height: 900 });
+			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
+			expect(await widthOf()).toBeLessThan(wide);
+			await page.setViewportSize({ width: 1300, height: 900 });
+			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
+
+			await demo.getByLabel('Tablet 900px').check();
+			await pwExpect
+				.poll(async () => (await inFrame.locator('aside').boundingBox())!.x - (await left('main')))
+				.toBe(0);
+			expect(await left('nav')).toBeLessThan(await left('main'));
+
+			await demo.getByLabel('Phone 400px').check();
+			await pwExpect(inFrame.locator('nav')).toBeHidden();
+			await pwExpect.poll(widthOf).toBeCloseTo(400, 0);
 		} finally {
 			await browser.close();
 		}

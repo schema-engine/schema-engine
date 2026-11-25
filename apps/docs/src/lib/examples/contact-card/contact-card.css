@@ -1,4 +1,0 @@
-/* The card's width is the readable measure, --se-measure. Set it on the form's own class. */
-.contact-card {
-	--se-measure: 36rem;
-}

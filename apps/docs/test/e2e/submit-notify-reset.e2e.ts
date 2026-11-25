@@ -4,10 +4,13 @@ import { chromium } from 'playwright';
 
 const baseUrl = inject('docsBaseUrl');
 
+/** Wide enough for the demos of an example to sit side by side, so the Radiant one is not behind a tab. */
+const viewport = { width: 1700, height: 900 };
+
 test('the actions of the config run after a submission: send, notify, reset', async () => {
 	const browser = await chromium.launch();
 	try {
-		const page = await browser.newPage();
+		const page = await browser.newPage({ viewport });
 		const pageErrors: string[] = [];
 		page.on('pageerror', (error) => pageErrors.push(error.message));
 		await page.goto(`${baseUrl}/docs/examples/submit-notify-reset`, { waitUntil: 'networkidle' });
@@ -48,7 +51,7 @@ test('the actions of the config run after a submission: send, notify, reset', as
 test('the actions run after navigating within the docs', async () => {
 	const browser = await chromium.launch();
 	try {
-		const page = await browser.newPage();
+		const page = await browser.newPage({ viewport });
 		await page.goto(`${baseUrl}/docs/schema-engine/introduction`, { waitUntil: 'networkidle' });
 		await page.evaluate(() => Reflect.set(window, '__docsNavigationProbe', true));
 		await page.locator('a[href="/docs/examples/submit-notify-reset"]').first().click();
@@ -70,7 +73,7 @@ test('the actions run after navigating within the docs', async () => {
 test('an invalid submission does not run the success actions', async () => {
 	const browser = await chromium.launch();
 	try {
-		const page = await browser.newPage();
+		const page = await browser.newPage({ viewport });
 		await page.goto(`${baseUrl}/docs/examples/submit-notify-reset`, { waitUntil: 'networkidle' });
 		await page.evaluate(() => {
 			const events: string[] = [];
@@ -95,7 +98,7 @@ test('an invalid submission does not run the success actions', async () => {
 test('the homepage form submits and resets', async () => {
 	const browser = await chromium.launch();
 	try {
-		const page = await browser.newPage();
+		const page = await browser.newPage({ viewport });
 		await page.goto(baseUrl, { waitUntil: 'networkidle' });
 		const demo = page.locator('.docs-form-renderer-preview');
 		const email = demo.locator('input[name="email"]');

@@ -1,11 +1,12 @@
 /**
- * Radiant-styled shells and chrome for the docs React form demos.
+ * Chrome of the docs React form demos: the select wrapper, the card and stack shells and the step blocks.
  *
  * @remarks
- * Companion to the demo recipe kit: controls reuse `rui-*` rules from
- * `@schema-engine/forms-radiant/index.css`, these classes cover the shells and
- * step chrome so React demos match the Radiant demos visually.
+ * Plain controls reuse Radiant UI's `rui-*` rules, which the docs shell loads. Everything here is the kit's own and is
+ * built from the docs' tokens, so the React demos match the Radiant ones without importing the class names of
+ * `@schema-engine/forms-radiant`.
  */
+
 /*
  * The registry card shell fills the viewport (`min-height: 100svh`, centered) because it is meant to
  * be a page; inside a docs page it sits in the flow like the demo shell. Its rules sit in `:where()`,
@@ -17,109 +18,252 @@
 	background-color: transparent;
 }
 
-.docs-react-form-result {
-	display: grid;
-	gap: var(--space-2, 0.5rem);
-	margin-top: var(--space-3, 0.75rem);
-	border: 1px solid var(--border, currentColor);
-	border-radius: var(--radius-md, 0.5rem);
-	padding: var(--space-3, 0.75rem);
-	font-size: 0.875rem;
+.se-demo-select {
+	position: relative;
+	display: inline-grid;
+	inline-size: fit-content;
+	max-inline-size: 100%;
 }
 
-.docs-react-form-result pre {
-	margin: 0;
-	overflow-x: auto;
-	font-size: 0.8125rem;
-}
-
-.se-demo-shell {
-	display: block;
-	padding: var(--space-4, 1rem) 0;
-}
-
-/* Reads the same appearance tokens as the Radiant and registry card shells; the fallbacks are the unpicked look. */
-.se-demo-shell__card {
-	display: grid;
-	gap: var(--space-4, 1rem);
+.se-demo-select__control {
+	appearance: none;
 	box-sizing: border-box;
-	max-width: var(--se-measure, none);
-	margin-inline: auto;
+	min-inline-size: 0;
+	block-size: var(--size-control-md, 2rem);
+	padding-block: 0;
+	padding-inline: var(--space-control-x, 0.625rem)
+		calc(var(--space-control-x, 0.625rem) + 1rem + var(--space-1, 0.25rem));
+	border: 1px solid var(--rui-control-border-color, var(--border));
+	border-radius: var(--radius-control, 0.2625rem);
+	background: var(--background);
+	color: var(--on-background);
+	font: inherit;
+	font-size: var(--text-control-input, 0.875rem);
+	line-height: 1.25rem;
+	outline: none;
+	cursor: pointer;
+	transition-duration: var(--duration-normal, 150ms);
+}
+
+.se-demo-select__control:focus-visible {
+	box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.se-demo-select__control[aria-invalid='true'] {
+	border-color: var(--error);
+}
+
+.se-demo-select__control:disabled {
+	cursor: not-allowed;
+	opacity: var(--opacity-disabled, 0.5);
+}
+
+.se-demo-select::after {
+	content: '';
+	position: absolute;
+	inset-block: 0;
+	inset-inline-end: var(--space-control-x, 0.625rem);
+	inline-size: 1rem;
+	block-size: 1rem;
+	margin-block: auto;
+	pointer-events: none;
+	background: currentColor;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+		center / contain no-repeat;
+}
+
+/*
+ * The card, drawn like Radiant's: its width is the readable measure, and the appearance axes set the
+ * tokens it reads. The fallbacks are the look of an unpicked card.
+ */
+.se-demo-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.se-demo-card__card {
+	box-sizing: border-box;
+	inline-size: min(100%, var(--se-measure, 28rem));
 	border: var(--se-border-width, 1px) solid var(--border, currentColor);
-	border-radius: var(--radius-lg, 0.75rem);
-	box-shadow: var(--se-shadow, none);
-	padding: var(--se-space, var(--space-5, 1.25rem));
+	border-radius: var(--radius-control, 0.2625rem);
+	box-shadow: var(--se-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent));
 	background: var(--se-surface-background, var(--surface, #fff));
 }
 
-.se-demo-shell__header {
+.se-demo-card__section {
+	padding: var(--se-space, var(--space-6, 1.5rem));
+}
+
+.se-demo-card__header {
 	border-bottom: 1px solid var(--border, currentColor);
-	padding-bottom: var(--space-4, 1rem);
-	margin-bottom: var(--space-2, 0.5rem);
 }
 
-.se-demo-shell__header--lg {
-	padding-bottom: var(--space-6, 1.5rem);
+.se-demo-card__content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6, 1.5rem);
+	min-inline-size: 0;
 }
 
-.se-demo-shell__content {
-	display: grid;
-	gap: var(--space-5, 1.25rem);
-	align-content: start;
+/* The stack: the shell of a wizard that has none of its own. */
+.se-demo-stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--se-space, var(--space-6, 1.5rem));
+	inline-size: 100%;
+	max-inline-size: 40rem;
+	min-inline-size: 0;
+	margin-inline: auto;
+}
+
+.se-demo-stack__content {
+	flex: 1 1 auto;
+	min-block-size: 0;
 }
 
 .se-demo-step-header {
-	display: grid;
-	gap: var(--space-2, 0.5rem);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4, 1rem);
+}
+
+.se-demo-step-header[data-align='start'] {
+	align-items: flex-start;
+	text-align: left;
+}
+
+.se-demo-step-header[data-align='center'] {
+	align-items: center;
+	text-align: center;
 }
 
 .se-demo-step-header__title {
 	margin: 0;
-	font-size: 1.25rem;
+	font-size: var(--text-3xl, 1.875rem);
 	font-weight: 600;
-	line-height: 1.3;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
+	text-wrap: balance;
+	color: var(--on-background);
+}
+
+.se-demo-step-header[data-size='sm'] .se-demo-step-header__title {
+	font-size: var(--text-xl, 1.25rem);
+}
+
+.se-demo-step-header[data-size='sm'] {
+	gap: var(--space-3, 0.75rem);
+}
+
+.se-demo-step-header[data-size='lg'] .se-demo-step-header__title {
+	font-size: var(--text-4xl, 2.25rem);
+	line-height: 1.15;
+	letter-spacing: -0.025em;
 }
 
 .se-demo-step-header__description {
+	max-inline-size: 40rem;
 	margin: 0;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
-	font-size: 0.9rem;
+	font-size: var(--text-body, 1rem);
+	color: var(--on-surface-muted);
+}
+
+.se-demo-step-header[data-align='center'] .se-demo-step-header__description {
+	margin-inline: auto;
 }
 
 .se-demo-step-header__counter {
 	margin: 0;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
-	font-size: 0.8rem;
-	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--on-surface-muted);
+}
+
+.se-demo-indicators {
+	inline-size: 100%;
+	min-inline-size: 0;
+	overflow-x: auto;
 }
 
 .se-demo-indicators__list {
 	display: flex;
 	gap: var(--space-2, 0.5rem);
+	min-inline-size: 100%;
 	margin: 0;
 	padding: 0;
 	list-style: none;
 }
 
 .se-demo-indicators__item {
+	display: flex;
+	flex: 1 1 0;
+	min-inline-size: 7.5rem;
+}
+
+.se-demo-indicators__button.rui-button {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var(--space-2, 0.5rem);
+	inline-size: 100%;
+	min-inline-size: 0;
+	block-size: auto;
+	padding: 0.75rem;
+	border-radius: var(--radius-control, 0.2625rem);
+	text-align: center;
+	white-space: normal;
+}
+
+.se-demo-indicators__button[data-active='true'] {
+	background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.se-demo-indicators__number {
 	display: inline-flex;
+	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
 	inline-size: 2rem;
 	block-size: 2rem;
 	border: 1px solid var(--border, currentColor);
 	border-radius: 999px;
-	font-size: 0.8rem;
-	color: var(--on-surface-muted, color-mix(in srgb, currentColor 65%, transparent));
-	background: transparent;
+	font-size: 0.875rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
 }
 
-.se-demo-indicators__item--active,
-.se-demo-indicators__item[data-active] {
-	border-color: var(--primary, currentColor);
-	color: var(--primary, currentColor);
-	font-weight: 600;
+.se-demo-indicators__button[data-active='true'] .se-demo-indicators__number {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+
+.se-demo-indicators__button[data-completed='true'] .se-demo-indicators__number {
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--on-primary, #fff);
+}
+
+.se-demo-indicators__copy {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-1, 0.25rem);
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+
+.se-demo-indicators__title {
+	font-weight: 500;
+	overflow-wrap: break-word;
+	text-wrap: balance;
+}
+
+.se-demo-indicators small {
+	display: block;
+	font-size: 0.75rem;
+	color: var(--on-surface-muted);
 }
 
 .se-demo-actions {
@@ -127,14 +271,29 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--space-4, 1rem);
+	inline-size: 100%;
+	min-inline-size: 0;
+}
+
+.se-demo-actions--start {
+	justify-content: flex-start;
+}
+
+.se-demo-actions--center {
+	justify-content: center;
 }
 
 .se-demo-actions--end {
 	justify-content: flex-end;
 }
 
+.se-demo-actions__counter {
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--on-surface-muted);
+}
+
 .se-demo-actions__forward {
 	display: flex;
-	justify-content: flex-end;
 	gap: var(--space-2, 0.5rem);
 }

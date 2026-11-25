@@ -30,7 +30,7 @@ describe('the forms example pages', () => {
 
 	beforeAll(async () => {
 		browser = await chromium.launch();
-		page = await browser.newPage();
+		page = await browser.newPage({ viewport: { width: 1700, height: 900 } });
 		page.on('pageerror', (error) => problems.push(error.message));
 		page.on('console', (message) => {
 			if (message.type() === 'error') problems.push(`console: ${message.text()}`);
@@ -65,6 +65,10 @@ describe('the forms example pages', () => {
 
 	const react = () => page.locator('.docs-react-form-demo').first();
 
+	/** The notice a `show_notification` action of the config raised, which the docs shell shows as a toast. */
+	const notice = (message: string) => page.getByRole('status').getByText(message, { exact: true });
+	const expectNotice = (message: string) => pwExpect(notice(message)).toBeVisible();
+
 	test('the contact form loads with its React demo hydrated and its Radiant demo rendered', async () => {
 		await open(contactPath);
 		await pwExpect(page.locator('h1')).toHaveText('Contact form');
@@ -74,14 +78,14 @@ describe('the forms example pages', () => {
 		await pwExpect(page.locator('.docs-form-renderer-preview form')).toBeVisible();
 	});
 
-	test('an invalid submit shows each message without a reload or values in the URL, then a valid one shows the values', async () => {
+	test('an invalid submit shows each message without a reload or values in the URL, then a valid one clears them', async () => {
 		await open(contactPath);
 		const form = react();
 		await form.locator('button[type="submit"]').click();
 
 		await pwExpect(form.locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');
 		await pwExpect(form.locator('input[name="email"] + .rui-field__error')).toContainText('Enter your email');
-		await pwExpect(form.locator('[data-se-demo-result]')).toHaveCount(0);
+		await pwExpect(notice('Message sent. We answer within one working day.')).toHaveCount(0);
 		await expectNoReload(contactPath);
 
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
@@ -95,11 +99,51 @@ describe('the forms example pages', () => {
 
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('button[type="submit"]').click();
-		const result = form.locator('[data-se-demo-result]');
-		await pwExpect(result).toContainText('Form submitted successfully.');
-		await pwExpect(result).toContainText('"email": "ada@example.com"');
-		await pwExpect(result).not.toContainText('"ticket"');
+		await expectNotice('Message sent. We answer within one working day.');
+		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
 		await expectNoReload(contactPath);
+	});
+
+	test('the React demo marks every required field and shows an invalid select, as the Radiant demo does', async () => {
+		await open(contactPath);
+		const form = react();
+		const radiant = page.locator('.docs-form-renderer-preview form').first();
+		for (const scope of [form, radiant]) {
+			await pwExpect(scope.locator('[data-se-required-marker]:visible')).toHaveCount(4);
+		}
+
+		const select = form.locator('select[name="subject"]');
+		const border = (control: typeof select) =>
+			control.evaluate((element) => getComputedStyle(element).borderTopColor);
+		const before = await border(select);
+		await form.locator('button[type="submit"]').click();
+		await pwExpect(select).toHaveAttribute('aria-invalid', 'true');
+		await pwExpect(select).not.toHaveCSS('border-top-color', before);
+		await pwExpect(select).toHaveCSS('border-top-color', await border(form.locator('input[name="name"]')));
+	});
+
+	test('the React wizard draws the steps and the counter from the same config as the Radiant one', async () => {
+		await open(wizardPath);
+		const form = react();
+		const radiant = page.locator('.docs-form-renderer-preview').first();
+		for (const scope of [form, radiant]) {
+			await pwExpect(scope.getByText('Step 1 of 2')).toBeVisible();
+			await pwExpect(scope.getByRole('button', { name: /Profile/ })).toBeDisabled();
+			await pwExpect(scope.getByRole('button', { name: /Account/ })).toHaveAttribute('aria-current', 'step');
+		}
+	});
+
+	test('the Radiant demo shows the same notice after a valid submit', async () => {
+		await page.goto(`${baseUrl}${contactPath}`, { waitUntil: 'networkidle' });
+		const radiantForm = page.locator('.docs-form-renderer-preview form').first();
+		await pwExpect(radiantForm).toBeVisible();
+		await radiantForm.locator('input[name="name"]').fill('Ada Lovelace');
+		await radiantForm.locator('input[name="email"]').fill('ada@example.com');
+		await radiantForm.locator('[data-select-trigger]').click();
+		await radiantForm.locator('[data-value="general"]').click();
+		await radiantForm.locator('textarea[name="message"]').fill('Hello there, team.');
+		await radiantForm.locator('button[type="submit"]').click();
+		await expectNotice('Message sent. We answer within one working day.');
 	});
 
 	test('the ticket field appears for a support request and is checked in its shape', async () => {
@@ -124,7 +168,8 @@ describe('the forms example pages', () => {
 
 		await form.locator('input[name="ticket"]').fill('SUP-1024');
 		await form.locator('button[type="submit"]').click();
-		await pwExpect(form.locator('[data-se-demo-result]')).toContainText('"ticket": "SUP-1024"');
+		await expectNotice('Message sent. We answer within one working day.');
+		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
 	});
 
 	test('a wizard blocks Next on an invalid step, keeps values across steps and submits from the last', async () => {
@@ -155,9 +200,8 @@ describe('the forms example pages', () => {
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
 		await form.locator('select[name="role"]').selectOption('designer');
 		await form.getByRole('button', { name: 'Submit' }).click();
-		const result = form.locator('[data-se-demo-result]');
-		await pwExpect(result).toContainText('"email": "ada@example.com"');
-		await pwExpect(result).toContainText('"role": "designer"');
+		await expectNotice('Account created. Welcome aboard.');
+		await pwExpect(form.locator('[aria-invalid="true"]')).toHaveCount(0);
 		await expectNoReload(wizardPath);
 	});
 
@@ -184,7 +228,7 @@ describe('the forms example pages', () => {
 
 	test('the renderer tabs show one renderer at a time, with the files of that renderer', async () => {
 		await page.goto(`${baseUrl}${contactPath}`, { waitUntil: 'networkidle' });
-		const tabs = page.locator('.renderer-tabs');
+		const tabs = page.locator('.renderer-tabs:not([data-side-by-side])');
 		const reactPanel = tabs.locator('[data-renderer="react"]');
 		const radiantPanel = tabs.locator('[data-renderer="radiant"]');
 
@@ -198,6 +242,34 @@ describe('the forms example pages', () => {
 		await pwExpect(reactPanel).toBeHidden();
 		await pwExpect(radiantPanel).toContainText('createRadiantFormEngine');
 		await pwExpect(radiantPanel.locator('figure[data-title="contact-form.radiant.tsx"]')).toBeVisible();
+	});
+
+	test('the demos sit side by side when the column has room for two forms, and behind tabs when it has not', async () => {
+		await page.goto(`${baseUrl}${contactPath}`, { waitUntil: 'networkidle' });
+		const demo = page.locator('[data-example="contact"]');
+		const tabs = demo.locator('.renderer-tabs');
+		const react = demo.locator('[data-renderer="react"]');
+		const radiant = demo.locator('[data-renderer="radiant"]');
+
+		await pwExpect(react).toBeVisible();
+		await pwExpect(radiant).toBeVisible();
+		await pwExpect(tabs.locator('.renderer-tabs__list')).toBeHidden();
+		const [left, right] = [await react.boundingBox(), await radiant.boundingBox()];
+		expect(right!.x).toBeGreaterThan(left!.x + left!.width - 1);
+		expect(left!.y).toBe(right!.y);
+		expect(left!.width).toBeGreaterThanOrEqual(384);
+
+		try {
+			await page.setViewportSize({ width: 1300, height: 900 });
+			await pwExpect(tabs.locator('.renderer-tabs__list')).toBeVisible();
+			await pwExpect(react).toBeVisible();
+			await pwExpect(radiant).toBeHidden();
+			await tabs.getByRole('radio', { name: 'Radiant' }).check();
+			await pwExpect(radiant).toBeVisible();
+			await pwExpect(react).toBeHidden();
+		} finally {
+			await page.setViewportSize({ width: 1700, height: 900 });
+		}
 	});
 
 	test('navigating between docs pages hydrates the demos of the page that arrives', async () => {
@@ -245,12 +317,11 @@ describe('the forms example pages', () => {
 		await form.locator('button[type="submit"]').click();
 		await pwExpect(form.locator('input[name="name"]')).toHaveAttribute('aria-invalid', 'true');
 		await pwExpect(form.getByText('Name is required')).toBeVisible();
-		await pwExpect(form.locator('[data-se-demo-result]')).toHaveCount(0);
 
 		await form.locator('input[name="name"]').fill('Ada Lovelace');
 		await form.locator('input[name="email"]').fill('ada@example.com');
 		await form.locator('button[type="submit"]').click();
-		await pwExpect(form.locator('[data-se-demo-result]')).toContainText('"name": "Ada Lovelace"');
+		await expectNotice('Message sent.');
 		await expectNoReload(shadcnPath);
 	});
 
@@ -265,7 +336,7 @@ describe('the forms example pages', () => {
 		};
 		expect(await sheets(contactPath)).toEqual([]);
 		expect(await sheets('/docs/forms-react/getting-started')).toEqual([]);
-		expect(await sheets('/docs/examples/contact-card')).toEqual([]);
+		expect(await sheets('/docs/examples/theming')).toEqual([]);
 		expect((await sheets(shadcnPath)).length).toBe(2);
 
 		const requested: string[] = [];

@@ -1,7 +1,7 @@
 ---
 title: 'Contact form'
 description: 'A contact form with validation, a field a constraint shows only for a support request, and a submit that sends JSON and shows the server answer on the fields, in React and in Radiant.'
-order: 5
+order: 3
 ---
 
 import { FormExampleDemo } from '@/components/form-example-demo';
@@ -30,13 +30,13 @@ Radiant also needs its JSX setup and stylesheets: [Forms Radiant: installation a
 
 ## See it
 
-Both forms render the config below. Submit the empty form to see each message, choose "Technical support" to show the ticket field, then submit a valid form to see its values.
+Both forms render the config below. Submit the empty form to see each message, choose "Technical support" to show the ticket field, then submit a valid form: a notice says the message was sent.
 
 <FormExampleDemo config={contactForm} />
 
 ## The config
 
-The config is data, so it could equally be a JSON file or a server's answer. `rules` validate a field and carry the message the visitor reads. The ticket field has a `constraints` entry that shows it only when `subject` equals `support`, and a field a constraint hides takes no part in validation or in the submitted values: a general question needs no ticket. A `submit` element is the button.
+The config is data, so it could equally be a JSON file or a server's answer. `rules` validate a field and carry the message the visitor reads. The ticket field has a `constraints` entry that shows it only when `subject` equals `support`, and a field a constraint hides takes no part in validation or in the submitted values: a general question needs no ticket. A `submit` element is the button. The one `show_notification` entry in `actions` runs on `form_submit_success`, after the `onSubmit` callback resolved, so the visitor is told only once the message was accepted.
 
 ```ts title="config.ts"
 import type { FormConfig } from '@schema-engine/forms';
@@ -119,6 +119,15 @@ export const contactForm: FormConfig = {
 			],
 		},
 	],
+	actions: [
+		{
+			id: 'sent',
+			$type: 'show_notification',
+			message: 'Message sent. We answer within one working day.',
+			variant: 'success',
+			triggers: ['form_submit_success'],
+		},
+	],
 };
 ```
 
@@ -155,7 +164,7 @@ export async function sendMessage(values: FormValues, { fetch, setServerErrors }
 
 ## The renderer
 
-Each tab builds an engine, renders the config with `FormRenderer`, and calls `onSent` once the server accepted the message. The React renderer has no elements of its own, so the React tab starts with the widgets of the form: an input, a textarea, a select and a submit button, each a registration with a `$type` the config names. [Writing a widget](/docs/forms-react/widgets) explains them. Radiant ships these elements, so its engine registers the package's.
+Each tab builds an engine, renders the config with `FormRenderer`, and calls `onSent` once the server accepted the message. The React renderer has no elements of its own, so the React tab starts with the widgets of the form: an input, a textarea, a select and a submit button, each a registration with a `$type` the config names. [Writing a widget](/docs/forms-react/widgets) explains them. Radiant ships these elements, so its engine registers the package's. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
 
 <RendererTabs name="contact-form">
 <div data-renderer="react">
@@ -263,13 +272,13 @@ export const elements = [input, textarea, select, submit];
 ```
 
 ```tsx title="contact-form.react.tsx"
-import { createFormEngine } from '@schema-engine/forms';
+import { createFormEngine, NotificationActionRegistration } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { contactForm } from './config';
 import { sendMessage } from './submit';
 import { elements } from './widgets.react';
 
-export const engine = createFormEngine({ elements });
+export const engine = createFormEngine({ elements, actions: [NotificationActionRegistration] });
 
 /** Renders the form and calls `onSent` once the server has accepted the message. */
 export function ContactForm({ onSent }: { onSent: () => void }) {
@@ -289,11 +298,15 @@ export function ContactForm({ onSent }: { onSent: () => void }) {
 <div data-renderer="radiant">
 
 ```tsx title="contact-form.radiant.tsx"
+import { NotificationActionRegistration } from '@schema-engine/forms';
 import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 import { contactForm } from './config';
 import { sendMessage } from './submit';
 
-export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
+export const engine = createRadiantFormEngine({
+	elements: schemaFormRegistrations,
+	actions: [NotificationActionRegistration],
+});
 
 /** Renders the form and calls `onSent` once the server has accepted the message. */
 export function ContactForm({ onSent }: { onSent: () => void }) {
@@ -326,7 +339,7 @@ export function ContactPage() {
 
 ## What the tests check
 
-The example's tests render both files in a browser. An empty submit shows each message of the visible required fields and sends nothing. The ticket field appears for a support request and is required there. A valid submit posts the values as JSON and calls `onSent`. A 422 puts the server's message on its field and does not call `onSent`.
+The example's tests render both files in a browser. An empty submit shows each message of the visible required fields and sends nothing. The ticket field appears for a support request and is required there. A valid submit posts the values as JSON and calls `onSent`. A 422 puts the server's message on its field and does not call `onSent`. The unit test checks the `show_notification` entry of the config in both engines, so a config that names an action an engine did not register fails.
 
 ## Take it further
 

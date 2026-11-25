@@ -7,6 +7,7 @@ import { docsShadcnFormEngine } from './shadcn-engine';
 import { installMockFormApi } from '@/lib/mock-form-api';
 import '@/generated/shadcn/components/schema-engine/forms/recipes/recipes.css';
 import '@/generated/shadcn/components/ui/schema-engine/components/controls.css';
+import './shadcn-theme.css';
 
 /**
  * Live React form preview rendered by the copied shadcn registry source.

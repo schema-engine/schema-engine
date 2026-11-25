@@ -1,0 +1,15 @@
+/**
+ * The raw theme variables the copied shadcn source reads, mapped onto the docs' tokens, for the demo of that source.
+ *
+ * @remarks
+ * The copied card shell reads `--card`, `--card-foreground`, `--muted` and `--radius` as plain variables, which the
+ * docs do not define globally: without them the card stays white in dark mode. The utility classes of the copied
+ * fields read the Tailwind colours of `styles/theme.css` instead, which is where the visible input border
+ * (`--color-input`) is set.
+ */
+.docs-react-form-demo[data-se-react-form-demo-kit='shadcn'] {
+	--card: var(--background);
+	--card-foreground: var(--on-background);
+	--muted: var(--surface-container-low);
+	--radius: var(--radius-control);
+}

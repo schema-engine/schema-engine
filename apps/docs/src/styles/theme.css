@@ -4,6 +4,15 @@
 	--font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
 	--font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	--font-serif: 'IBM Plex Serif', ui-serif, Georgia, serif;
+
+	/**
+	 * The width of the page container on a desktop: the site header and the docs body (sidebar, content and table of
+	 * contents) are both held to it.
+	 */
+	--site-container: 90rem;
+
+	/** Secondary text: captions, notes and counters. The Radiant blocks mute their text by the same mix. */
+	--on-surface-muted: color-mix(in srgb, var(--on-surface) 65%, transparent);
 }
 
 @theme {
@@ -18,7 +27,7 @@
 	 * `text-muted-foreground`), not the docs shell. They map onto Radiant raw tokens so the demo
 	 * follows the same palette. The shell itself only needs the three tokens above.
 	 */
-	--color-muted-foreground: color-mix(in oklab, var(--on-background) 55%, transparent);
+	--color-muted-foreground: var(--on-surface-muted);
 	--color-foreground: var(--on-background);
 	--color-card: var(--background);
 	--color-card-foreground: var(--on-background);
@@ -26,7 +35,7 @@
 	--color-primary: var(--primary);
 	--color-primary-foreground: var(--on-primary);
 	--color-border: var(--border);
-	--color-input: var(--background);
+	--color-input: var(--rui-control-border-color);
 	--color-ring: var(--focus-ring);
 	--color-destructive: var(--error);
 	--color-destructive-foreground: var(--on-error);

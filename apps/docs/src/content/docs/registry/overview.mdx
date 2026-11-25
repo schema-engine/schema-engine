@@ -83,8 +83,12 @@ console.log(resolve('{ "$type": "badge", "label": 5 }'));
 console.log(resolve('{ "$type": "chip", "label": "New" }'));
 ```
 
-```text
+{/* prettier-ignore */}
+```html
 <span class="badge">New</span>
+```
+
+```text
 Invalid input: expected string, received number
 No registration for $type 'chip'.
 ```

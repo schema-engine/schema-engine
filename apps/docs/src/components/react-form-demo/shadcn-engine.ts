@@ -1,7 +1,8 @@
 import { createFormEngine } from '@schema-engine/forms';
+import { createDocsDemoActions } from '@/lib/docs-demo-actions';
 import { InputElementRegistration } from '@/generated/shadcn/components/schema-engine/forms/inputs/form-input.registration';
 import { CardRecipe } from '@/generated/shadcn/components/schema-engine/forms/recipes/registrations/card';
-import { brandTheme } from '@/lib/examples/brand-theme/theme';
+import { theme } from '@/lib/examples/theming/theme';
 
 /**
  * Docs React engine built from the shadcn registry source, copied into the docs app (see `scripts/copy-registry-demo.ts` for how it differs from a real install).
@@ -14,5 +15,6 @@ import { brandTheme } from '@/lib/examples/brand-theme/theme';
 export const docsShadcnFormEngine = createFormEngine({
 	elements: [InputElementRegistration],
 	recipes: [CardRecipe],
-	layout: brandTheme,
+	actions: createDocsDemoActions(),
+	layout: theme,
 });

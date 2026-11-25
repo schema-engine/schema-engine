@@ -5,13 +5,15 @@ import type { ElementGridConfig } from '@schema-engine/layout';
 import { fieldText, useFormField, useFieldHost } from '@schema-engine/forms-react/hooks';
 
 /**
- * Radiant-styled field chrome for docs demos.
+ * Field chrome for docs demos, drawn like the Radiant fields.
  *
  * @remarks
- * Mirrors the DOM structure and `rui-*` classes of radiant-ui so the docs app's
- * global `@ecopages/radiant-ui/styles.css` styles the demo controls. Controls
- * stamp `data-rui-control` for the shared field-control contract. The field host comes from
- * `useFieldHost`, so `grid` placement and `appearance` reach the demos as they do the registry fields.
+ * Plain controls keep Radiant UI's `rui-*` classes, which the docs app's global `@ecopages/radiant-ui/styles.css`
+ * styles; the select wrapper is the kit's own (`se-demo-select`, in `demo-recipes.css`), so nothing here depends on
+ * the class names of `@schema-engine/forms-radiant`. The field host comes from `useFieldHost`, so `grid` placement
+ * and `appearance` reach the demos as they do the registry fields. The host is the grid item and the inner
+ * `rui-field` lays out the label, control and messages: the item's display, set by the layout theme, would
+ * otherwise collapse the gaps between them.
  */
 function DemoField({
 	label,
@@ -23,7 +25,8 @@ function DemoField({
 	style,
 	children,
 }: {
-	label: string;
+	/** Left out for a control that carries its own label, such as the checkbox. */
+	label?: string;
 	htmlFor?: string;
 	description?: string;
 	error?: string | null;
@@ -34,18 +37,26 @@ function DemoField({
 }) {
 	const host = useFieldHost(grid, style);
 	return (
-		<div {...host} className={`rui-field ${host.className}`} data-ref="field">
-			<label className="rui-label" htmlFor={htmlFor}>
-				{label}
-				{required ? ' *' : ''}
-			</label>
-			{children}
-			{description ? <p className="rui-field__description">{description}</p> : null}
-			<p className="rui-field__error" role="alert" hidden={!error}>
-				{error}
-			</p>
+		<div {...host}>
+			<div className="rui-field" data-ref="field">
+				{label ? (
+					<label className="rui-label" htmlFor={htmlFor}>
+						{label}
+						{required ? <RequiredMarker /> : null}
+					</label>
+				) : null}
+				{children}
+				{description ? <p className="rui-field__description">{description}</p> : null}
+				<p className="rui-field__error" role="alert" hidden={!error}>
+					{error}
+				</p>
+			</div>
 		</div>
 	);
+}
+
+function RequiredMarker() {
+	return <span data-se-required-marker> *</span>;
 }
 
 export function DemoInput({
@@ -96,7 +107,7 @@ export function DemoTextarea({
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const { defaultValue, error, fieldProps } = useFormField(config);
+	const { defaultValue, error, fieldProps, required } = useFormField(config);
 	const rows = (config.rows as number | undefined) ?? 5;
 
 	return (
@@ -105,6 +116,7 @@ export function DemoTextarea({
 			htmlFor={config.id as string}
 			description={config.description as string}
 			error={error}
+			required={required}
 			grid={config.grid as ElementGridConfig | undefined}
 			style={config.style as React.CSSProperties | undefined}
 		>
@@ -135,7 +147,8 @@ export function DemoSelect({
 	onChange?: (value: string) => void;
 	onBlur?: () => void;
 }) {
-	const { defaultValue, error, fieldProps } = useFormField(config);
+	const { defaultValue, error, fieldProps, required } = useFormField(config);
+	const placeholder = config.placeholder as string | undefined;
 	const options = ((config.options as Array<{ value: unknown; label: string; disabled?: boolean }>) ?? []).map(
 		(option) => ({ value: String(option.value), label: option.label, disabled: option.disabled }),
 	);
@@ -146,29 +159,32 @@ export function DemoSelect({
 			htmlFor={config.id as string}
 			description={config.description as string}
 			error={error}
+			required={required}
 			grid={config.grid as ElementGridConfig | undefined}
 			style={config.style as React.CSSProperties | undefined}
 		>
-			<select
-				{...fieldProps}
-				className="rui-input"
-				defaultValue={fieldText(defaultValue)}
-				onChange={(event) => {
-					fieldProps.onChange(event);
-					propsOnChange?.(event.target.value);
-				}}
-				onBlur={() => {
-					fieldProps.onBlur();
-					propsOnBlur?.();
-				}}
-			>
-				<option value="">{(config.placeholder as string) ?? 'Select an option'}</option>
-				{options.map((option) => (
-					<option key={option.value} value={option.value} disabled={option.disabled}>
-						{option.label}
-					</option>
-				))}
-			</select>
+			<span className="se-demo-select">
+				<select
+					{...fieldProps}
+					className="se-demo-select__control"
+					defaultValue={fieldText(defaultValue)}
+					onChange={(event) => {
+						fieldProps.onChange(event);
+						propsOnChange?.(event.target.value);
+					}}
+					onBlur={() => {
+						fieldProps.onBlur();
+						propsOnBlur?.();
+					}}
+				>
+					{placeholder === undefined ? null : <option value="">{placeholder}</option>}
+					{options.map((option) => (
+						<option key={option.value} value={option.value} disabled={option.disabled}>
+							{option.label}
+						</option>
+					))}
+				</select>
+			</span>
 		</DemoField>
 	);
 }
@@ -181,12 +197,10 @@ export function DemoCheckbox({
 	onChange?: (value: boolean) => void;
 	onBlur?: () => void;
 }) {
-	const { defaultValue, error, fieldProps } = useFormField(config);
+	const { defaultValue, error, fieldProps, required } = useFormField(config);
 
 	return (
 		<DemoField
-			label={(config.label as string) || (config.name as string)}
-			htmlFor={config.id as string}
 			description={config.description as string}
 			error={error}
 			grid={config.grid as ElementGridConfig | undefined}
@@ -209,7 +223,10 @@ export function DemoCheckbox({
 					}}
 				/>
 				<span className="rui-checkbox__control" aria-hidden="true" />
-				<span className="rui-checkbox__label">{(config.checkLabel as string) ?? 'Yes'}</span>
+				<span className="rui-checkbox__label">
+					{(config.label as string) || (config.name as string)}
+					{required ? <RequiredMarker /> : null}
+				</span>
 			</label>
 		</DemoField>
 	);

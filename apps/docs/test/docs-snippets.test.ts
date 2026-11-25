@@ -123,7 +123,7 @@ const ALLOWED_FENCES: AllowedFence[] = [
  *
  * @remarks
  * `registrations` and `engine` are the Radiant setup of the Forms Radiant getting started page; the others are files
- * of a layout example that a guide page imports.
+ * that a guide page imports without defining them.
  */
 const APP: Record<string, string> = {
 	'registrations.ts': "export { schemaFormRegistrations as elements } from '@schema-engine/forms-radiant';",
@@ -137,11 +137,6 @@ export const postalCode = {
 	category: 'string',
 	handler: () => z.string(),
 } as const;`,
-	'brand-frame.ts': "export { BrandFrameRecipe } from './brand-frame.radiant';",
-	'brand-frame.radiant.tsx': readFileSync(
-		join(import.meta.dirname, '../src/lib/examples/brand-frame/brand-frame.radiant.tsx'),
-		'utf8',
-	),
 	'react-quick-start.react.tsx': readFileSync(
 		join(import.meta.dirname, '../src/lib/guide-sources/react-quick-start.react.tsx'),
 		'utf8',

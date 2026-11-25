@@ -1,14 +1,41 @@
+/*
+ * `--frame-width` is written on the element by the component, from its list of widths, and the script keeps it and
+ * the scale in step with the chosen preset and the column. The height is a fallback until the script measures the page.
+ */
 .layout-page-demo {
+	--frame-height: 20rem;
+	--frame-scale: 1;
 	display: block;
-	width: 100%;
-	min-width: 16rem;
-	max-width: 100%;
-	height: 28rem;
-	margin-block: 1.5rem;
-	border: 1px solid var(--border, currentColor);
-	border-radius: 0.5rem;
+	margin-block: 2rem;
+}
+
+.layout-page-demo .radio-tabs {
+	margin-block-end: var(--space-4);
+}
+
+/*
+ * The viewport is the size of the scaled frame, so the page flows around the smaller picture and not around the
+ * frame's own width. Its outline is a shadow, so it adds nothing to the box and the frame fits it exactly. Without the
+ * script the scale is 1 and the viewport scrolls; with it the frame always fits, so nothing scrolls.
+ */
+.layout-page-demo__viewport {
+	inline-size: min(100%, calc(var(--frame-width) * var(--frame-scale)));
+	block-size: calc(var(--frame-height) * var(--frame-scale));
+	margin-inline: auto;
+	border-radius: var(--radius-container);
+	box-shadow: 0 0 0 1px var(--border);
 	overflow: auto;
-	resize: horizontal;
-	background: #fff;
-	color: #1b1b1b;
+}
+
+.layout-page-demo[data-fitted] .layout-page-demo__viewport {
+	overflow: hidden;
+}
+
+.layout-page-demo__frame {
+	display: block;
+	inline-size: var(--frame-width);
+	block-size: var(--frame-height);
+	border: 0;
+	transform: scale(var(--frame-scale));
+	transform-origin: top left;
 }

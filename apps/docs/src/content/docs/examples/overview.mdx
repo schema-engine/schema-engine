@@ -28,15 +28,13 @@ Examples by domain, with what each shows and the install line it needs.
 
 | Example                                                              | Shows                                                                           | Install                                |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- |
-| [A design-system registry](/docs/examples/design-system-registry)    | Components with schemas, a document rendered to HTML, and an override that wins | `pnpm add @schema-engine/registry zod` |
 | [Render a server-sent document](/docs/examples/server-sent-document) | A route handler, a client that renders what it knows and reports what it cannot | `pnpm add @schema-engine/registry zod` |
 
 ### Actions
 
-| Example                                                           | Shows                                                                             | Install                               |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------- |
-| [A checkout workflow](/docs/examples/checkout-workflow)           | A JSON workflow with a parallel group, and a declined card that cancels the group | `pnpm add @schema-engine/actions zod` |
-| [A server-driven workflow](/docs/examples/server-driven-workflow) | A workflow fetched from an endpoint, checked, and run by `submit` and `change`    | `pnpm add @schema-engine/actions zod` |
+| Example                                                 | Shows                                                                             | Install                               |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------- |
+| [A checkout workflow](/docs/examples/checkout-workflow) | A JSON workflow with a parallel group, and a declined card that cancels the group | `pnpm add @schema-engine/actions zod` |
 
 ### Forms
 
@@ -55,33 +53,7 @@ Each forms example has React and Radiant tabs and the same two install lines, on
 
 ### Layout
 
-| Example                                     | Shows                                                                                          | Install                              |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------ |
-| [A layout page](/docs/examples/layout-page) | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name | `pnpm add @schema-engine/layout zod` |
-
-The layout examples below style a form. Each is a form config with the CSS or the theme it needs, rendered live, and they share the two install lines of the forms examples. Set your app up as the getting-started page of your renderer says ([Forms Radiant](/docs/forms-radiant/getting-started) or [Forms React](/docs/forms-react/getting-started)), copy the files into one folder, and render the config:
-
-```tsx
-import { FormRenderer, createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
-import type { FormConfig } from '@schema-engine/forms';
-
-const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
-
-export function Layouted({ config }: { config: FormConfig }) {
-	return <FormRenderer engine={engine} config={config} onSubmit={(data) => console.log(data)} />;
-}
-```
-
-In React, create the engine with the widgets you wrote or, optionally, with the fields you copied from the shadcn registry, as [Forms React](/docs/forms-react/getting-started) shows, and render `FormRenderer` with the same `config`. Every CSS file is scoped by the class its config puts on the form with `className`, so it applies only once pasted with that config. The demos use Radiant-styled widgets, not the shadcn registry components, so fallbacks such as the card's maximum width and shadow differ from a registry install.
-
-| Example                                               | Shows                                                                                           |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [A contact card](/docs/examples/contact-card)         | A single-step card with two half-width fields and the CSS that sets its measure                 |
-| [An address fieldset](/docs/examples/address-form)    | A fieldset that lays its children out on a grid of its own                                      |
-| [A card wizard](/docs/examples/checkout-wizard)       | A wizard whose steps each draw their own areas                                                  |
-| [A drawn layout](/docs/examples/drawn-layout)         | Five fields drawn as areas that change at a breakpoint                                          |
-| [A brand theme](/docs/examples/brand-theme)           | A host `tone` axis added with `defineAxis`, compiled into a theme and picked on a form          |
-| [Two engines, one theme](/docs/examples/shared-theme) | One compiled theme passed to two engines, each form picking its own tone                        |
-| [Overriding size tokens](/docs/examples/tight-size)   | The two hooks the compact size reads and the measure it sets                                    |
-| [A custom recipe shell](/docs/examples/brand-frame)   | A single-step recipe shell bound to React and to Radiant, with one shared stylesheet            |
-| [A complete theme file](/docs/examples/acme-theme)    | One stylesheet for every form that carries a class: rhythm, size hooks, colour roles and tokens |
+| Example                                     | Shows                                                                                                                                  | Install                                     |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| [A layout page](/docs/examples/layout-page) | A page with no form: a theme, drawn areas that change at two breakpoints, items placed by name                                         | `pnpm add @schema-engine/layout zod`        |
+| [A themed form](/docs/examples/theming)     | A host `tone` axis compiled into a theme shared by every engine, and one stylesheet for rhythm, the compact size hooks and the measure | The two install lines of the forms examples |

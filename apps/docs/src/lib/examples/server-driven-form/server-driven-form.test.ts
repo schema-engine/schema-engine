@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import type { FormSubmitHelpers } from '@schema-engine/forms';
 import { loadForm } from './load-form';
-import { GET, POST } from './server';
+import { GET, POST, signupForm } from './server';
 import { engine as radiantEngine } from './server-driven-form.radiant';
 import { engine as reactEngine } from './server-driven-form.react';
 import { signUp } from './submit';
@@ -108,4 +108,24 @@ describe('signUp', () => {
 		const { given } = helpers(new Response(null, { status: 503 }));
 		await expect(signUp({}, given)).rejects.toThrow('The server answered 503.');
 	});
+});
+
+describe('the notice of the signup form the server sends', () => {
+	test.each([
+		['React', reactEngine],
+		['Radiant', radiantEngine],
+	])(
+		'is a show_notification action that runs after a successful submission, and the %s engine registers it',
+		(_renderer, engine) => {
+			const result = engine.safeValidateForm(signupForm);
+			expect(result.success && result.data.actions).toMatchObject([
+				{
+					$type: 'show_notification',
+					message: 'Account created.',
+					variant: 'success',
+					triggers: ['form_submit_success'],
+				},
+			]);
+		},
+	);
 });

@@ -186,8 +186,18 @@ for (const document of [confirmation, broken]) {
 }
 ```
 
+{/* prettier-ignore */}
+```html
+<div class="stack stack-large">
+	<p>Order 1042 confirmed</p>
+	<div class="stack stack-small">
+		<span class="badge badge-success">Paid</span>
+		<span class="badge badge-info">Shipping soon</span>
+	</div>
+</div>
+```
+
 ```text
-<div class="stack stack-large"><p>Order 1042 confirmed</p><div class="stack stack-small"><span class="badge badge-success">Paid</span><span class="badge badge-info">Shipping soon</span></div></div>
 children.1.children.0.label: Invalid input: expected string, received number
 children.1.children.1.$type: No registration for $type 'chip'. Register it first.
 ```

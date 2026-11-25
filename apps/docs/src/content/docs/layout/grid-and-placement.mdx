@@ -53,6 +53,24 @@ lay out their children on their own grid, so `width` and `offset` work on a
 container's children the same way, and the enclosing grid's `columns` do not conflict
 with them.
 
+```ts
+export const address = {
+	$type: 'fieldSet',
+	id: 'address',
+	name: 'address',
+	legend: 'Address',
+	elements: [
+		{ $type: 'input', id: 'street', name: 'street', label: 'Street' },
+		{ $type: 'input', id: 'city', name: 'city', label: 'City', grid: { width: 'two-thirds' } },
+		{ $type: 'input', id: 'zip', name: 'zip', label: 'ZIP code', grid: { width: 'third' } },
+		{ $type: 'input', id: 'region', name: 'region', label: 'Region', grid: { width: 'half' } },
+		{ $type: 'input', id: 'country', name: 'country', label: 'Country', grid: { width: 'half' } },
+	],
+};
+```
+
+The street fills its row, the city and the ZIP code share the next one, and the region and the country share the last.
+
 Validation enforces these rules for named widths:
 
 - A form grid that sets `columns` or `minColumnWidth` (at any breakpoint) cannot
@@ -193,4 +211,4 @@ The full guides are in [Layout](/docs/layout/overview):
 - [Layout themes](/docs/layout/layout-themes): the options, sharing a theme, the neutral `.se-grid`, `.se-grid-item` and `[data-se-theme]` hooks, the `--se-item-*` properties and nested themes.
 - [Appearance axes](/docs/layout/appearance-axes): the definition, what makes a good axis, `size` and `surface`, `defineAxis` and host axes.
 - [Theming](/docs/layout/theming): the custom properties a host overrides.
-- [Layout examples](/docs/examples/overview#layout): copy-paste configs with their CSS, rendered live.
+- [A themed form](/docs/examples/theming): a form config with its theme and CSS, rendered live.

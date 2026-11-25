@@ -58,3 +58,23 @@ describe('sendAnswers', () => {
 		);
 	});
 });
+
+describe('the notice of the survey', () => {
+	test.each([
+		['React', reactEngine],
+		['Radiant', radiantEngine],
+	])(
+		'is a show_notification action that runs after a successful submission, and the %s engine registers it',
+		(_renderer, engine) => {
+			const result = engine.safeValidateForm(survey);
+			expect(result.success && result.data.actions).toMatchObject([
+				{
+					$type: 'show_notification',
+					message: 'Thanks for your answers.',
+					variant: 'success',
+					triggers: ['form_submit_success'],
+				},
+			]);
+		},
+	);
+});

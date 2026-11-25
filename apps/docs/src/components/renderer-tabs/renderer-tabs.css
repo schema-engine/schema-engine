@@ -1,45 +1,70 @@
 .renderer-tabs {
 	display: block;
-	margin-block: 1.5rem;
+	margin-block: 2rem;
 }
 
-.renderer-tabs__list {
-	display: flex;
-	gap: 0.25rem;
-	border-block-end: 1px solid var(--border, currentColor);
-}
-
-.renderer-tabs__tab {
-	position: relative;
-	padding: 0.5rem 1rem;
-	cursor: pointer;
-	font-size: 0.875rem;
-	font-weight: 500;
-	border-block-end: 2px solid transparent;
-	margin-block-end: -1px;
-}
-
-.renderer-tabs__tab input {
-	position: absolute;
-	inset: 0;
-	opacity: 0;
-	cursor: pointer;
-}
-
-.renderer-tabs__tab:has(input:checked) {
-	border-block-end-color: var(--primary, currentColor);
-}
-
-.renderer-tabs__tab:has(input:focus-visible) {
-	outline: 2px solid var(--primary, currentColor);
-	outline-offset: -2px;
+.renderer-tabs__panels {
+	margin-block-start: var(--space-4);
 }
 
 .renderer-tabs__panels > [data-renderer] {
 	display: none;
 }
 
+.renderer-tabs__panels > [data-renderer] > :first-child {
+	margin-block-start: 0;
+}
+
 .renderer-tabs:has(input[value='react']:checked) > .renderer-tabs__panels > [data-renderer='react'],
 .renderer-tabs:has(input[value='radiant']:checked) > .renderer-tabs__panels > [data-renderer='radiant'] {
 	display: block;
+}
+
+.renderer-tabs__captions {
+	display: none;
+}
+
+.renderer-tabs__note {
+	max-inline-size: 75ch;
+	margin: var(--space-3) 0 0;
+	color: var(--on-surface-muted);
+	font-size: 0.8125rem;
+}
+
+/*
+ * A live demo (side by side) shows both panels once the tabs are wide enough for two forms: at 50rem each column is
+ * 24.25rem, which is 21rem for the form inside the padding of its stage. The query reads the width of the tabs
+ * themselves, which the sidebar and the table of contents narrow, not the viewport. The captions name the columns,
+ * since the tabs that name them are hidden.
+ */
+.renderer-tabs[data-side-by-side] {
+	container-type: inline-size;
+	container-name: renderer-tabs;
+}
+
+@container renderer-tabs (min-width: 50rem) {
+	.renderer-tabs[data-side-by-side] > .renderer-tabs__list {
+		display: none;
+	}
+
+	.renderer-tabs[data-side-by-side] > .renderer-tabs__captions,
+	.renderer-tabs[data-side-by-side] > .renderer-tabs__panels {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.5rem;
+	}
+
+	.renderer-tabs[data-side-by-side] > .renderer-tabs__captions {
+		color: var(--on-surface-muted);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+	}
+
+	.renderer-tabs[data-side-by-side] > .renderer-tabs__panels {
+		margin-block-start: 0.375rem;
+	}
+
+	.renderer-tabs[data-side-by-side] > .renderer-tabs__panels > [data-renderer] {
+		display: block;
+	}
 }
