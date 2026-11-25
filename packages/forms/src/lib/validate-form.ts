@@ -53,9 +53,7 @@ export function validateElementConfig(
 	});
 	if (parsed.issues.length > 0 || !parsed.item) {
 		throw new FormValidationError(
-			parsed.issues.length > 0
-				? parsed.issues
-				: [issueAt(['$type'], 'Invalid element configuration: missing $type.')],
+			parsed.issues.length > 0 ? parsed.issues : [issueAt([], 'Expected an object with a string $type.')],
 			config,
 		);
 	}

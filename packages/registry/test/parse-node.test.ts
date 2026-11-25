@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { BaseRegistry, createRegistry, safeParseNode, type BaseRegistration } from '../src';
 
@@ -40,6 +40,31 @@ describe('safeParseNode', () => {
 			success: false,
 			issues: [{ message: "No registration for $type 'chip'.", path: [1, '$type'] }],
 		});
+	});
+
+	it('adds the hint of the lookup to the message of a $type no registration answers', () => {
+		const lookup = {
+			get: (type: string) => badges.get(type),
+			hint: (type: string) => `Register '${type}' with defineBadge.`,
+		};
+
+		expect(safeParseNode(lookup, { $type: 'chip' }, [1])).toEqual({
+			success: false,
+			issues: [
+				{ message: "No registration for $type 'chip'. Register 'chip' with defineBadge.", path: [1, '$type'] },
+			],
+		});
+	});
+
+	it('does not run the hint for a $type it answers or for a node that has no $type', () => {
+		const hint = vi.fn(() => 'unused');
+		const lookup = { get: (type: string) => badges.get(type), hint };
+
+		safeParseNode(lookup, { $type: 'badge', label: 'ok' });
+		safeParseNode(lookup, { $type: 7 });
+		safeParseNode(lookup, null);
+
+		expect(hint).not.toHaveBeenCalled();
 	});
 
 	it.each([null, undefined, 'badge', 7, []])(

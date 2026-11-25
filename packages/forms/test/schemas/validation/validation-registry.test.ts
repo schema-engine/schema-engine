@@ -307,7 +307,7 @@ describe('ValidationRegistry', () => {
 					{
 						path: ['$type'],
 						message: expect.stringMatching(
-							/Unknown validation rule 'nonexistent'.*Registered rules: faulty, fine\./,
+							/No registration for \$type 'nonexistent'.*Registered rules: faulty, fine\./,
 						),
 					},
 				],

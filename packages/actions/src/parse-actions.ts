@@ -20,6 +20,12 @@ export interface ParseActionsOptions {
 	 * @remarks Without it, any string is accepted, since the engine cannot know a domain's triggers.
 	 */
 	triggers?: readonly string[];
+	/**
+	 * The sentence that follows the message of an action `$type` nothing registers, naming where to register it.
+	 *
+	 * @remarks Without it, the sentence is `Register it in the action registry.`. A domain that registers actions through its own entry point says that one.
+	 */
+	hint?: NodeLookup['hint'];
 }
 
 /**
@@ -29,7 +35,7 @@ export interface ParseActionsOptions {
  * An issue is a Standard Schema issue whose `path` starts with the index of the entry, then the index inside
  * a group, then the path the schema reported (`[1, 0, 'endpoint']`). Each entry is checked by `safeParseNode`, so its
  * issues sit where that function puts them: an entry that is not an object at the entry, and a missing or unregistered
- * `$type` at `$type`. An empty group is an issue at its index.
+ * `$type` at `$type`. An unregistered `$type` says where to register it ({@link ParseActionsOptions.hint}). An empty group is an issue at its index.
  */
 export type ParseActionsResult<TConfig extends ActionConfigBase = ActionConfigBase> =
 	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: StandardSchemaIssue[] };
@@ -41,6 +47,8 @@ function isRecord(value: unknown): value is Record<PropertyKey, unknown> {
 function issueAt(path: ReadonlyArray<PropertyKey>, message: string): StandardSchemaIssue {
 	return { message, path };
 }
+
+const DEFAULT_HINT = 'Register it in the action registry.';
 
 /** The envelope keys the engine checks itself; a registration's schema never sees them. */
 const BASE_KEYS = ['id', '$type', 'enabled', 'triggers'] as const;
@@ -150,6 +158,7 @@ export function parseActions<TConfig extends ActionConfigBase = ActionConfigBase
 			const registration = registry.getAction(type);
 			return registration && { schema: entrySchema(type, registration.schema, options) };
 		},
+		hint: options?.hint ?? (() => DEFAULT_HINT),
 	};
 	const issues: StandardSchemaIssue[] = [];
 	const sequence: Array<ParsedAction<TConfig> | Array<ParsedAction<TConfig>>> = [];

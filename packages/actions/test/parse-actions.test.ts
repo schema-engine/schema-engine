@@ -79,7 +79,22 @@ describe('parseActions', () => {
 
 		expect(result.success).toBe(false);
 		if (result.success) return;
-		expect(result.issues).toEqual([{ path: [0, 0, '$type'], message: "No registration for $type 'put'." }]);
+		expect(result.issues).toEqual([
+			{ path: [0, 0, '$type'], message: "No registration for $type 'put'. Register it in the action registry." },
+		]);
+	});
+
+	test('ends the message of an unknown $type with the hint of the domain', () => {
+		const result = parseActions(registry, [{ id: 'a', $type: 'put' }], {
+			hint: (type) => `Register '${type}' with the domain.`,
+		});
+
+		expect(result).toEqual({
+			success: false,
+			issues: [
+				{ path: [0, '$type'], message: "No registration for $type 'put'. Register 'put' with the domain." },
+			],
+		});
 	});
 
 	test('reports every bad entry, not only the first', () => {

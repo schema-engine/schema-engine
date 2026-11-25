@@ -117,7 +117,10 @@ describe('validation issue paths', () => {
 		const issues = issuesOf(formWith([named('a')], { view: { $type: 'nope' } }));
 
 		expect(issues).toEqual([
-			{ path: ['view', '$type'], message: expect.stringContaining("Unknown view recipe 'nope'") },
+			{
+				path: ['view', '$type'],
+				message: "No registration for $type 'nope'. Register it with createFormEngine({ recipes: [...] }).",
+			},
 		]);
 	});
 
@@ -160,7 +163,7 @@ describe('validation issue paths', () => {
 		expect(issues).toEqual([
 			{
 				path: ['steps', 0, 'elements', 1, 'elements', 1, 'rules', 1, '$type'],
-				message: expect.stringMatching(/^Unknown validation rule 'unregistered'\./),
+				message: expect.stringMatching(/^No registration for \$type 'unregistered'\./),
 			},
 			{
 				path: ['steps', 0, 'elements', 1, 'elements', 1, 'rules', 2, 'value'],
@@ -252,13 +255,46 @@ describe('validation issue paths', () => {
 		expect(issues.map((issue) => issue.path)).toEqual([['view', '$type']]);
 	});
 
+	test('a standalone element that is not an object is an issue at the element, and one without a $type is at its $type', () => {
+		const issuesOfElement = (config: unknown) => {
+			try {
+				engine.validateElement(config);
+			} catch (error) {
+				if (error instanceof FormValidationError) return error.issues;
+				throw error;
+			}
+			throw new Error('expected the element to be invalid');
+		};
+
+		expect(issuesOfElement(null)).toEqual([{ path: [], message: 'Expected an object with a string $type.' }]);
+		expect(issuesOfElement({ id: 'x' })).toEqual([{ path: ['$type'], message: 'Expected a string $type.' }]);
+	});
+
+	test('an unknown element type says where to register it, inside a container too', () => {
+		const issues = issuesOf(
+			formWith([{ $type: 'fieldset', id: 'f', name: 'f', elements: [{ $type: 'phone', id: 'p', name: 'p' }] }]),
+		);
+
+		expect(issues).toEqual([
+			{
+				path: ['steps', 0, 'elements', 0, 'elements', 0, '$type'],
+				message: "No registration for $type 'phone'. Register it with createFormEngine({ elements: [...] }).",
+			},
+		]);
+	});
+
 	test('an unknown action points at its $type, inside a group too', () => {
 		const issues = issuesOf(
 			formWith([named('a')], {
 				actions: [{ $type: 'missing' }],
 			}),
 		);
-		expect(issues.map((issue) => issue.path)).toEqual([['actions', 0, '$type']]);
+		expect(issues).toEqual([
+			{
+				path: ['actions', 0, '$type'],
+				message: "No registration for $type 'missing'. Register it with createFormEngine({ actions: [...] }).",
+			},
+		]);
 
 		const grouped = issuesOf({
 			id: 'paths',
@@ -620,7 +656,7 @@ describe('FormValidationError', () => {
 
 		expect(lines).toHaveLength(2);
 		expect(lines[0]).toMatch(/^steps\[0\] \(main\)\.elements\[0\] \(a\)\.grid\.width: .*half/);
-		expect(lines[1]).toMatch(/^view\.\$type: Unknown view recipe 'nope'/);
+		expect(lines[1]).toMatch(/^view\.\$type: No registration for \$type 'nope'/);
 	});
 
 	test('prints an issue about the whole form without a path prefix', () => {

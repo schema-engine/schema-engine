@@ -40,6 +40,7 @@ function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
 
 interface ParseActionsOptions {
 	triggers?: readonly string[];
+	hint?(type: string): string;
 }
 
 type ParseActionsResult<TConfig> =
@@ -49,6 +50,8 @@ type ParseActionsResult<TConfig> =
 Validates each entry of a serialized sequence, inner arrays included. The engine checks the keys every entry carries: `id` (a non-empty string), `$type` (a registered one), `enabled` (a boolean when present) and `triggers` (an array of strings when present; each must be in `options.triggers` when that list is given). The remaining keys go to the schema of the registration its `$type` names, which lists the action's own arguments only. `data` holds the entry's base keys merged with what the schema returned, so defaults and transforms apply, and every entry is checked, so two bad entries report two issues.
 
 An issue is a Standard Schema issue whose `path` is the index of the entry, the index inside a group when the entry is one, then the path the issue reported: `[1, 0, 'endpoint']`. Each entry is checked with [`safeParseNode`](/docs/registry/api-reference#safeparsenode), so its issues sit where that function puts them: an entry that is not an object is an issue at its own path, and an entry without a string `$type` or with a `$type` no registration answers is an issue at `$type`. An empty group is an issue at its index.
+
+An unregistered `$type` reads `No registration for $type '<type>'. Register it in the action registry.`. `options.hint` replaces the last sentence, for a domain that registers actions through its own entry point: the forms engine says `Register it with createFormEngine({ actions: [...] }).`.
 
 `ParsedAction` is the entry type of `data`. Its brand exists in the type only and `parseActions` is the one function that produces it. `TConfig` is the caller's claim about what the registered schemas return; the parse checks the schemas and not that claim.
 

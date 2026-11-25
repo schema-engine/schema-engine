@@ -1,55 +1,19 @@
-import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormTaggedConfig } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
-import { safeParseStandardSchema } from '@schema-engine/registry';
+import { safeParseNode, type NodeLookup } from '@schema-engine/registry';
 import { markNormalizedElementConfig, type NormalizedElementConfig } from '@/lib/normalized-form-config';
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
 import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
 import { areaPlacementIssue, namedPlacementIssue } from './grid-checks';
-import { childPath, isTaggedConfig, issueAt, type FormValidationIssue, type ParseResult, type Path } from './issues';
-import type { ValidateFormOptions } from './options';
+import { childPath, isTaggedConfig, issueAt, type FormValidationIssue, type Path } from './issues';
+import type { ElementRegistration, ValidateFormOptions } from './options';
 import { fromSchemaIssues } from './schema-issues';
 import { containerKindOf } from '@/lib/container-kind-of';
 import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
 
-function parseRegistration(schema: StandardSchemaV1, config: object, path: Path): ParseResult<unknown> {
-	const result = safeParseStandardSchema(schema, config);
-	if (!result.success) {
-		return { ok: false, issues: fromSchemaIssues(result.error.issues, path) };
-	}
-	return { ok: true, data: result.data };
-}
-
-export function parseTypedConfig(
-	item: FormTaggedConfig,
-	getRegistration: (id: string) => { schema: StandardSchemaV1 } | undefined,
-	registerHint: string,
-	path: Path,
-): ParseResult<FormTaggedConfig> {
-	const registration = getRegistration(item.$type);
-	if (!registration) {
-		return {
-			ok: false,
-			issues: [
-				issueAt([...path, '$type'], `Unknown element type '${item.$type}'. Register it with ${registerHint}.`),
-			],
-		};
-	}
-
-	const parsed = parseRegistration(registration.schema, item, path);
-	if (!parsed.ok) return parsed;
-	if (!isTaggedConfig(parsed.data)) {
-		return {
-			ok: false,
-			issues: [
-				issueAt(
-					[...path, '$type'],
-					`Invalid element configuration for '${item.$type}': parsed output is missing $type.`,
-				),
-			],
-		};
-	}
-	return { ok: true, data: parsed.data };
+/** Finds an element by `$type` for `safeParseNode`, and says where to register one nothing answers. */
+function elementLookup(getElement: ValidateFormOptions['getElement']): NodeLookup<ElementRegistration> {
+	return { get: getElement, hint: () => 'Register it with createFormEngine({ elements: [...] }).' };
 }
 
 /**
@@ -102,25 +66,24 @@ export function parseElementNode(
 ): { issues: FormValidationIssue[]; item?: FormTaggedConfig } {
 	const fail = (message: string, relative: Path = []) => ({ issues: [issueAt([...path, ...relative], message)] });
 
-	if (!isTaggedConfig(item)) {
-		return fail('Invalid element configuration: missing $type.', ['$type']);
-	}
-	const reserved = reservedNameSegment(item);
-	if (reserved) {
+	const tagged = isTaggedConfig(item) ? item : undefined;
+	const reserved = tagged && reservedNameSegment(tagged);
+	if (tagged && reserved) {
 		return fail(
-			`Field name '${String(item.name)}' uses the reserved segment '${reserved}': a name cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
+			`Field name '${String(tagged.name)}' uses the reserved segment '${reserved}': a name cannot start with '${ENGINE_KEY_PREFIX}' or be one of __proto__, constructor and prototype.`,
 			['name'],
 		);
 	}
-	const { appearance: authoredAppearance, ...authored } = item;
-	const parsed = parseTypedConfig(
-		authored as FormTaggedConfig,
-		getElement,
-		'createFormEngine({ elements: [...] })',
-		path,
-	);
-	if (!parsed.ok) {
-		return { issues: parsed.issues };
+	const { appearance: authoredAppearance, ...authored } = tagged ?? { appearance: undefined };
+	const parsed = safeParseNode(elementLookup(getElement), tagged ? authored : item, path);
+	if (!parsed.success) {
+		return { issues: fromSchemaIssues(parsed.issues, []) };
+	}
+	if (!isTaggedConfig(parsed.data)) {
+		return fail(
+			`Invalid element configuration for '${parsed.registration.$type}': parsed output is missing $type.`,
+			['$type'],
+		);
 	}
 	const checkedRules = checkElementRules(parsed.data, checkRule, path);
 	if (checkedRules.issues.length > 0) return { issues: checkedRules.issues };
@@ -138,9 +101,9 @@ export function parseElementNode(
 	if (areaIssue) return fail(areaIssue.message, areaIssue.path);
 
 	const elementAppearance = resolveAppearance(authoredAppearance, appearance, {
-		subject: `Element '${item.$type}'`,
+		subject: `Element '${config.$type}'`,
 		path,
-		supported: getElement(item.$type)?.appearanceAxes ?? [],
+		supported: parsed.registration.appearanceAxes ?? [],
 	});
 	const issues = elementAppearance.issues;
 	const resolved = withAppearance(config, elementAppearance.selection);

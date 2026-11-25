@@ -7,6 +7,14 @@ import type { BaseRegistration } from './types.js';
  */
 export interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> {
 	get(key: string): TRegistration | undefined;
+	/**
+	 * A sentence that follows the message of a `$type` `get` does not answer, such as where to register it.
+	 *
+	 * @remarks
+	 * It is a function of the type so a message can name what is registered. It runs only for an unregistered
+	 * `$type`: the message is `No registration for $type 'x'. ` and what it returns.
+	 */
+	hint?(type: string): string;
 }
 
 /** What {@link safeParseNode} returns: the registration with the node's validated configuration, or every issue found. */
@@ -28,6 +36,7 @@ function isRecord(value: unknown): value is Record<PropertyKey, unknown> {
  * An issue points at the value that is wrong, as a schema reports it, so an editor can mark that value and a YAML
  * mapper finds its line: a node that is not an object is an issue at `path`; an object without a string `$type`, and
  * a `$type` no registration answers, are issues at `[...path, '$type']`, where a schema reports a missing required key.
+ * The lookup's `hint` adds to the message of the last.
  * Otherwise the issues are those of the registration's schema, with `path` in front of the path the schema reported.
  *
  * `data` is what the schema returned, so its defaults and transforms apply. It is `unknown` because the registration
@@ -50,9 +59,12 @@ export function safeParseNode<TRegistration extends Pick<BaseRegistration, 'sche
 	}
 	const registration = registry.get(type);
 	if (!registration) {
+		const message = `No registration for $type '${type}'.`;
 		return {
 			success: false,
-			issues: [{ message: `No registration for $type '${type}'.`, path: [...path, '$type'] }],
+			issues: [
+				{ message: registry.hint ? `${message} ${registry.hint(type)}` : message, path: [...path, '$type'] },
+			],
 		};
 	}
 	const parsed = safeParseStandardSchema(registration.schema, node);
