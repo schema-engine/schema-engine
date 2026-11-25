@@ -222,20 +222,31 @@ describe('FormController over the form instance container', () => {
 			stop();
 		});
 
-		test('stops listening to the runtime once unsubscribed', async () => {
+		test('stops listening to the runtime once its last subscriber leaves', () => {
 			const runtime = createWizardRuntime();
+			const unsubscribeRuntime = vi.fn();
+			const subscribe = runtime.subscribe;
+			const subscribeSpy = vi.spyOn(runtime, 'subscribe').mockImplementation((listener) => {
+				const stop = subscribe(listener);
+				return () => {
+					unsubscribeRuntime();
+					stop();
+				};
+			});
 			const element = document.createElement('div');
 			const host = document.createElement('div');
 			element.append(host);
 			provideTestRuntime(element, runtime);
 			const form = new FormController(host);
-			const listener = vi.fn();
-			form.wizard.subscribe(listener)();
-			listener.mockClear();
 
-			await runtime.next();
+			const stopFirst = form.wizard.subscribe(() => {});
+			const stopSecond = form.wizard.subscribe(() => {});
+			expect(subscribeSpy).toHaveBeenCalled();
 
-			expect(listener).not.toHaveBeenCalled();
+			stopFirst();
+			expect(unsubscribeRuntime).not.toHaveBeenCalled();
+			stopSecond();
+			expect(unsubscribeRuntime).toHaveBeenCalledTimes(subscribeSpy.mock.calls.length);
 		});
 	});
 

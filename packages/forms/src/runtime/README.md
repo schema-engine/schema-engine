@@ -17,7 +17,7 @@ const runtime = createFormRuntime({
 
 const unmount = runtime.mount(); // form_mount once per runtime, and the change watch; the cleanup revokes anything in flight
 runtime.container; // the form state
-runtime.getSnapshot(); // { submission: { status, failures, submitCount }, current, navigating, steps }
+runtime.getSnapshot(); // { submission: { status, failures, submitCount }, current, navigating, steps }; `FormWizard` is its `current`, `steps`, `navigating` and `next`/`back`/`goTo`
 runtime.getServerSnapshot();
 runtime.subscribe(listener);
 

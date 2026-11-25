@@ -17,4 +17,5 @@ assertType<
 	Equal<ContextType<typeof formEngineContext>, { engine?: FormEngineRuntime; formatIssue?: FormIssueFormatter }>
 >();
 
-assertType<FormInstanceContextValue extends FormWizard ? true : false>();
+type FieldsOf<T, K extends PropertyKey> = { [P in K & keyof T]: T[P] };
+assertType<Equal<FieldsOf<FormInstanceContextValue, keyof FormWizard>, FieldsOf<FormWizard, keyof FormWizard>>>();
