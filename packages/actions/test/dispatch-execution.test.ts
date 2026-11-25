@@ -785,14 +785,14 @@ describe('ActionDispatcher', () => {
 					defaultTriggers: ['submit'],
 				},
 				execute: async (context) => {
+					executionLog.push(`start ${context.config.name}`);
 					await new Promise((resolve) => setTimeout(resolve, 10));
-					executionLog.push(context.config.name);
+					executionLog.push(`end ${context.config.name}`);
 					return { success: true };
 				},
 			});
 
 			const executor = new ActionDispatcher<TestContext, TestTrigger>(registry);
-			const start = Date.now();
 			await executor.dispatch({
 				actions: parsed([
 					{ id: 'action-1', $type: 'delay-action', name: 'first' },
@@ -801,10 +801,8 @@ describe('ActionDispatcher', () => {
 				trigger: 'submit',
 				context: createContext(),
 			});
-			const duration = Date.now() - start;
 
-			expect(duration).toBeGreaterThanOrEqual(20);
-			expect(executionLog).toEqual(['first', 'second']);
+			expect(executionLog).toEqual(['start first', 'end first', 'start second', 'end second']);
 		});
 
 		test('should execute actions sequentially, not in parallel', async () => {
