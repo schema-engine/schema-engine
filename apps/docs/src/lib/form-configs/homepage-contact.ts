@@ -15,13 +15,6 @@ export const contactFormConfig = {
 			title: 'Contact Information',
 			elements: [
 				{
-					id: 'submission-status',
-					name: 'submissionStatus',
-					$type: 'submission-alert',
-					showOn: ['submitting'],
-					submittingMessage: 'Pending Submission',
-				},
-				{
 					id: 'email',
 					name: 'email',
 					$type: 'input',

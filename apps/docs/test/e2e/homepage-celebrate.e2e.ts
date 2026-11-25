@@ -24,16 +24,15 @@ async function submitValidForm(page: Page): Promise<void> {
 }
 
 /**
- * Expects the form to be reset and its pending alert gone while the confetti is still falling.
+ * Expects the form to be reset while the confetti is still falling.
  *
  * @remarks
  * The confetti takes about three seconds to fall, so a one second budget fails when `celebrate` holds back the reset
- * and the end of the submission until the animation is over.
+ * until the animation is over.
  */
 async function expectSettled(page: Page): Promise<void> {
 	const demo = page.locator('.docs-form-renderer-preview');
 	await pwExpect(demo.locator('input[name="email"]')).toHaveValue('', { timeout: 1000 });
-	await pwExpect(demo.locator('se-submission-alert rui-alert')).toHaveCount(0, { timeout: 1000 });
 }
 
 test('a valid submit of the homepage form shows a toast and loads the confetti only then', async () => {
