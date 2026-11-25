@@ -73,10 +73,10 @@ The `stack` schema accepts `children` as a list of anything. Its children are va
 
 ## The resolve step
 
-`resolve` walks the tree. At each node it finds the registration, validates the node, and keeps the registration with its validated configuration. It does not stop at the first problem: every issue is collected, with a `path` that starts at the root and runs through `children` and the index of each child.
+`resolve` walks the tree. At each node `safeParseNode` finds the registration, validates the node and returns the registration with its validated configuration, or the issues of that node. `resolve` hands each child its own `path`, so every issue starts at the root and runs through `children` and the index of each child, and it keeps going after a problem: every issue is collected. `safeParseNode` takes any object with a `get(key)`, so one lookup can answer for both kinds.
 
 ```ts title="resolve.ts"
-import { safeParseStandardSchema, type StandardSchemaIssue } from '@schema-engine/registry';
+import { safeParseNode, type NodeLookup, type StandardSchemaIssue } from '@schema-engine/registry';
 import { containers, leaves, type Block } from './kinds';
 
 export interface ResolvedNode {
@@ -87,32 +87,22 @@ export interface ResolvedNode {
 
 export type Resolution = { success: true; tree: ResolvedNode } | { success: false; issues: StandardSchemaIssue[] };
 
+const blocks: NodeLookup<Block> = { get: (type) => containers.get(type) ?? leaves.get(type) };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function resolveAt(node: unknown, path: PropertyKey[], issues: StandardSchemaIssue[]): ResolvedNode | undefined {
-	if (!isRecord(node) || typeof node.$type !== 'string') {
-		issues.push({ message: 'A node is an object with a string $type.', path });
-		return undefined;
-	}
-	const registration = containers.get(node.$type) ?? leaves.get(node.$type);
-	if (!registration) {
-		issues.push({
-			message: `No registration for $type '${node.$type}'. Register it first.`,
-			path: [...path, '$type'],
-		});
-		return undefined;
-	}
-	const parsed = safeParseStandardSchema(registration.schema, node);
+	const parsed = safeParseNode(blocks, node, path);
 	if (!parsed.success) {
-		issues.push(...parsed.error.issues.map((issue) => ({ ...issue, path: [...path, ...(issue.path ?? [])] })));
+		issues.push(...parsed.issues);
 		return undefined;
 	}
-	const children = Array.isArray(node.children) ? node.children : [];
+	const children = isRecord(node) && Array.isArray(node.children) ? node.children : [];
 	const resolved = children.map((child, index) => resolveAt(child, [...path, 'children', index], issues));
 	return {
-		registration,
+		registration: parsed.registration,
 		config: parsed.data,
 		children: resolved.filter((child): child is ResolvedNode => child !== undefined),
 	};
@@ -144,11 +134,9 @@ export function render({ registration, config, children }: ResolvedNode): string
 A valid document renders. An invalid one reports an unknown `$type` and a configuration that its schema rejects, each with its path:
 
 ```ts title="check.ts"
+import { formatIssuePath } from '@schema-engine/registry';
 import { render } from './render';
 import { resolve } from './resolve';
-
-const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
-	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
 
 const confirmation = {
 	$type: 'stack',
@@ -182,7 +170,7 @@ const broken = {
 for (const document of [confirmation, broken]) {
 	const resolution = resolve(document);
 	if (resolution.success) console.log(render(resolution.tree));
-	else for (const issue of resolution.issues) console.log(`${where(issue.path)}: ${issue.message}`);
+	else for (const issue of resolution.issues) console.log(`${formatIssuePath(issue.path)}: ${issue.message}`);
 }
 ```
 
@@ -198,11 +186,11 @@ for (const document of [confirmation, broken]) {
 ```
 
 ```text
-children.1.children.0.label: Invalid input: expected string, received number
-children.1.children.1.$type: No registration for $type 'chip'. Register it first.
+children[1].children[0].label: Invalid input: expected string, received number
+children[1].children[1].$type: No registration for $type 'chip'.
 ```
 
-Each issue names the node that failed: `children.1.children.0.label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix.
+Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way.
 
 ## Take it further
 

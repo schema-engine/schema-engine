@@ -1,4 +1,5 @@
-import { formatIssuePath, type FormEngineRuntime, type NormalizedFormConfig } from '@schema-engine/forms';
+import type { FormEngineRuntime, NormalizedFormConfig } from '@schema-engine/forms';
+import { formatIssuePath } from '@schema-engine/registry';
 
 export type LoadedForm = { success: true; config: NormalizedFormConfig } | { success: false; issues: string[] };
 

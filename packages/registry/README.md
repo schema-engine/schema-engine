@@ -14,7 +14,7 @@ Install the [Standard Schema](https://standardschema.dev/) validator you prefer.
 
 ```typescript
 import * as z from 'zod/mini';
-import { createRegistry, safeParseStandardSchema, type BaseRegistration } from '@schema-engine/registry';
+import { createRegistry, safeParseNode, type BaseRegistration } from '@schema-engine/registry';
 
 z.config(z.locales.en());
 
@@ -33,22 +33,20 @@ const badge: Badge = {
 
 const badges = createRegistry('Badge', [badge]);
 
-export function resolve(node: { $type: string }): string {
-	const registration = badges.get(node.$type);
-	if (!registration) return `No registration for $type '${node.$type}'.`;
-	const parsed = safeParseStandardSchema(registration.schema, node);
+export function resolve(node: unknown): string {
+	const parsed = safeParseNode(badges, node);
 	return parsed.success
-		? registration.render(parsed.data)
-		: parsed.error.issues.map((issue) => issue.message).join('; ');
+		? parsed.registration.render(parsed.data)
+		: parsed.issues.map((issue) => issue.message).join('; ');
 }
 ```
 
 ## Entry points
 
-| Import                         | Holds                                                                                                                               |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/registry`      | `createRegistry`, `BaseRegistry`, the registration types, `safeParseStandardSchema` and `assertStandardSchema`                      |
-| `@schema-engine/registry/yaml` | `parseYaml`, `safeParseYaml` and `stringifyYaml`, which report errors by line and column. Needs the optional peer dependency `yaml` |
+| Import                         | Holds                                                                                                                                              |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/registry`      | `createRegistry`, `BaseRegistry`, the registration types, `safeParseNode`, `safeParseStandardSchema`, `assertStandardSchema` and `formatIssuePath` |
+| `@schema-engine/registry/yaml` | `parseYaml`, `safeParseYaml` and `stringifyYaml`, which report errors by line and column. Needs the optional peer dependency `yaml`                |
 
 ## Documentation
 

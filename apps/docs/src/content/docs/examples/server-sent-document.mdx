@@ -1,17 +1,17 @@
 ---
 title: 'Render a server-sent document'
-description: 'A route handler answers with a JSON document, and the client renders the nodes it knows through a registry and reports the ones it cannot, with their paths.'
+description: 'A route handler answers with a JSON document, and a React component fetches it, draws each node with the component its $type names and shows the issues of a node that fails validation in its place.'
 order: 1
 ---
 
 # Render a server-sent document
 
-A server describes a page as data, and the client turns it into HTML. The server can ship a new layout without a client release, and the client does not trust what arrives: every node is checked against its registration. This example is the full round trip. A route handler answers with a JSON document, the client fetches it, renders the nodes it has a component for, and reports the nodes it does not, with their paths. The server in this example is newer than the client on purpose, so you see what the client does with a component it has never heard of.
+A server describes a page as data, and the client draws it with components. The server can ship a new layout without a client release, and the client does not trust what arrives: `safeParseNode` checks every node against its registration. This example is the full round trip. A route handler answers with a JSON document, a React component fetches it and draws each node with the component its `$type` names, and a node that fails validation is drawn as its issues in its own place, so the rest of the page still renders. The server in this example is newer than the client on purpose, so you see what the client does with a component it has never heard of.
 
 ## Install
 
 ```bash
-pnpm add @schema-engine/registry zod
+pnpm add @schema-engine/registry react react-dom zod
 ```
 
 ## The server
@@ -62,52 +62,24 @@ export function GET(request: Request): Response {
 }
 ```
 
-## The client
+## The components
 
-`loadDocument` fetches the document and renders it. A status that is not a success is a result the caller can show; a network failure or a body that is not JSON throws, like any `fetch` call. A document that arrives with nodes the client cannot render is not a failure: the client renders the rest and returns the `issues`.
+The client's design system is a registry of components. Each registration has a `$type`, the schema of its configuration and a `render` that draws it. The schema is the contract with the server: a `tone` or a link the schema does not allow never reaches `render`.
 
-```ts title="client.ts"
-import { createDesignSystem, renderDocument, type Rendered } from './design-system';
-
-const system = createDesignSystem();
-
-export type Loaded = ({ success: true } & Rendered) | { success: false; error: string };
-
-/**
- * Fetches a document and renders what the client knows how to render.
- *
- * @remarks
- * A status that is not a success is a result the caller can show. A network failure or a body that is not JSON
- * throws, as any `fetch` call does. A document that arrives but holds nodes the client cannot render is a success
- * with `issues`.
- */
-export async function loadDocument(url: string): Promise<Loaded> {
-	const response = await fetch(url, { headers: { Accept: 'application/json' } });
-	if (!response.ok) return { success: false, error: `The server answered ${response.status}.` };
-	return { success: true, ...renderDocument(system, await response.json()) };
-}
-```
-
-## The registry
-
-The client resolves nodes through the design system's registry: `components.ts` defines the components with the schema of their configuration, and `design-system.ts` builds the registry from them and renders a document.
-
-```ts title="components.ts"
+```tsx title="components.react.tsx"
+import type { ReactNode } from 'react';
 import * as z from 'zod/mini';
-import type { ComponentRegistration } from '@schema-engine/registry';
+import { createRegistry, type ComponentRegistration } from '@schema-engine/registry';
 
 z.config(z.locales.en());
 
-/** A registration of the design system: a `ComponentRegistration` whose `render` draws the component as HTML. */
+/** A registration of the design system: a `ComponentRegistration` whose `render` draws the component in React. */
 export interface Component extends ComponentRegistration {
-	render(config: unknown): string;
+	render(config: unknown): ReactNode;
 }
 
-/** Escapes the characters that end a text or an attribute value in HTML. */
-export const escape = (text: string) => text.replace(/[&<>"]/g, (character) => `&#${character.charCodeAt(0)};`);
-
 /** A link target the design system accepts: a path on this site or an http(s) URL, never `javascript:`. */
-export const hrefSchema = z.string().check(z.regex(/^(\/|https?:\/\/)/, 'Use a path or an http(s) URL'));
+const hrefSchema = z.string().check(z.regex(/^(\/|https?:\/\/)/, 'Use a path or an http(s) URL'));
 
 const buttonSchema = z.object({
 	$type: z.literal('button'),
@@ -116,14 +88,21 @@ const buttonSchema = z.object({
 	variant: z.optional(z.enum(['primary', 'secondary'])),
 });
 
-export const button: Component = {
+const button: Component = {
 	$type: 'button',
 	schema: buttonSchema,
 	metadata: { name: 'Button', description: 'An action. With an href it is a link.', tags: ['action'] },
 	render({ label, href, variant = 'primary' }: z.output<typeof buttonSchema>) {
-		return href === undefined
-			? `<button type="button" class="button button-${variant}">${escape(label)}</button>`
-			: `<a class="button button-${variant}" href="${escape(href)}">${escape(label)}</a>`;
+		const className = `button button-${variant}`;
+		return href === undefined ? (
+			<button type="button" className={className}>
+				{label}
+			</button>
+		) : (
+			<a className={className} href={href}>
+				{label}
+			</a>
+		);
 	},
 };
 
@@ -133,12 +112,12 @@ const badgeSchema = z.object({
 	tone: z.optional(z.enum(['info', 'success', 'danger'])),
 });
 
-export const badge: Component = {
+const badge: Component = {
 	$type: 'badge',
 	schema: badgeSchema,
 	metadata: { name: 'Badge', description: 'A short status label.', tags: ['status'] },
 	render({ label, tone = 'info' }: z.output<typeof badgeSchema>) {
-		return `<span class="badge badge-${tone}">${escape(label)}</span>`;
+		return <span className={`badge badge-${tone}`}>{label}</span>;
 	},
 };
 
@@ -149,93 +128,118 @@ const calloutSchema = z.object({
 	tone: z.optional(z.enum(['info', 'success', 'danger'])),
 });
 
-export const callout: Component = {
+const callout: Component = {
 	$type: 'callout',
 	schema: calloutSchema,
 	metadata: { name: 'Callout', description: 'A message that stands out from the page.', tags: ['status'] },
 	render({ title, text, tone = 'info' }: z.output<typeof calloutSchema>) {
-		const body = text === undefined ? '' : ` <span>${escape(text)}</span>`;
-		return `<aside class="callout callout-${tone}"><strong>${escape(title)}</strong>${body}</aside>`;
+		return (
+			<aside className={`callout callout-${tone}`}>
+				<strong>{title}</strong> {text && <span>{text}</span>}
+			</aside>
+		);
 	},
 };
 
-/** The components the design system ships. */
-export const defaults: readonly Component[] = [button, badge, callout];
+/** The components this client knows. A `$type` outside this registry is an issue, not an error. */
+export const components = createRegistry('Component', [button, badge, callout]);
 ```
 
-```ts title="design-system.ts"
-import { createRegistry, safeParseStandardSchema, type StandardSchemaIssue } from '@schema-engine/registry';
-import { defaults, type Component } from './components';
+## The document component
 
-/**
- * The design system's registry. Registrations after the defaults override a default with the same `$type`:
- * the last one wins and keeps the first one's position.
- */
-export function createDesignSystem(overrides: readonly Component[] = []) {
-	return createRegistry('Component', [...defaults, ...overrides]);
+`DocumentView` draws a list of nodes. For each node, `safeParseNode` looks the `$type` up in the registry and validates the node against the registration's schema, and it never throws. The third argument is where the node sits in the document, so every issue's `path` starts with the node's index. A node that passes is drawn by its registration. A node that fails is drawn as its issues, in its place.
+
+`ServerDocument` fetches the document and hands it to `DocumentView`. A status that is not a success, a network failure and a body that is not JSON are one message, and the request is aborted when the component unmounts or the `url` changes.
+
+```tsx title="server-document.react.tsx"
+import { Fragment, useEffect, useState } from 'react';
+import { formatIssuePath, safeParseNode, type StandardSchemaIssue } from '@schema-engine/registry';
+import { components } from './components.react';
+
+function Fallback({ issues }: { issues: StandardSchemaIssue[] }) {
+	return (
+		<ul role="alert">
+			{issues.map(({ path, message }, index) => {
+				const where = formatIssuePath(path);
+				return <li key={index}>{where ? `${where}: ${message}` : message}</li>;
+			})}
+		</ul>
+	);
 }
 
-export type DesignSystem = ReturnType<typeof createDesignSystem>;
-
-/** What rendering a document gives: the HTML of every valid node, and an issue for each node that is not. */
-export interface Rendered {
-	html: string[];
-	issues: StandardSchemaIssue[];
-}
-
 /**
- * Renders a document, a list of nodes that each name a component by `$type`.
+ * Draws each node of a document with the component its `$type` names.
  *
  * @remarks
- * A node that cannot be rendered does not stop the others. Its issues carry a path that starts with its index in
- * the document, so the caller can say which node to fix.
+ * A node that fails validation is drawn as its issues, in its place, and the other nodes still render. Each issue's
+ * path starts with the index of the node.
  */
-export function renderDocument(system: DesignSystem, document: unknown): Rendered {
-	if (!Array.isArray(document)) {
-		return { html: [], issues: [{ message: 'A document is a list of nodes.', path: [] }] };
-	}
-	const html: string[] = [];
-	const issues: StandardSchemaIssue[] = [];
-	document.forEach((node: unknown, index) => {
-		const type = typeof node === 'object' && node !== null && '$type' in node ? node.$type : undefined;
-		if (typeof type !== 'string') {
-			issues.push({ message: 'A node is an object with a string $type.', path: [index] });
-			return;
+export function DocumentView({ nodes }: { nodes: unknown }) {
+	if (!Array.isArray(nodes)) return <Fallback issues={[{ message: 'A document is a list of nodes.', path: [] }]} />;
+	return (
+		<>
+			{nodes.map((node: unknown, index) => {
+				const parsed = safeParseNode(components, node, [index]);
+				return parsed.success ? (
+					<Fragment key={index}>{parsed.registration.render(parsed.data)}</Fragment>
+				) : (
+					<Fallback key={index} issues={parsed.issues} />
+				);
+			})}
+		</>
+	);
+}
+
+/** What the fetch of `url` ended with. Without a result for the current `url`, the document is still loading. */
+type Loaded = { url: string } & ({ status: 'failed' } | { status: 'ready'; nodes: unknown });
+
+/**
+ * Fetches the document at `url` and draws it.
+ *
+ * @remarks
+ * A status that is not a success, a network failure and a body that is not JSON are one message.
+ */
+export function ServerDocument({ url }: { url: string }) {
+	const [loaded, setLoaded] = useState<Loaded>();
+	useEffect(() => {
+		const controller = new AbortController();
+		async function load() {
+			try {
+				const headers = { Accept: 'application/json' };
+				const response = await fetch(url, { headers, signal: controller.signal });
+				setLoaded(
+					response.ok ? { url, status: 'ready', nodes: await response.json() } : { url, status: 'failed' },
+				);
+			} catch {
+				if (!controller.signal.aborted) setLoaded({ url, status: 'failed' });
+			}
 		}
-		const component = system.get(type);
-		if (!component) {
-			issues.push({ message: `No component is registered for $type '${type}'.`, path: [index, '$type'] });
-			return;
-		}
-		const parsed = safeParseStandardSchema(component.schema, node);
-		if (parsed.success) html.push(component.render(parsed.data));
-		else issues.push(...parsed.error.issues.map((issue) => ({ ...issue, path: [index, ...(issue.path ?? [])] })));
-	});
-	return { html, issues };
+		void load();
+		return () => controller.abort();
+	}, [url]);
+
+	if (loaded?.url !== url) return <p>Loading the page</p>;
+	if (loaded.status === 'failed') return <p role="alert">The page could not be loaded.</p>;
+	return <DocumentView nodes={loaded.nodes} />;
 }
 ```
 
 ## Run it
 
-`main.ts` talks to the route handler without a network: `local-network.helper.ts`, a file this page does not show, answers every `fetch` with `GET` of `server.ts`. Leave out `useLocalServer()` to call a real server.
+`main.react.tsx` draws the page into `#root` and exports the root, so the page can be unmounted. It calls `routeFetchToLocalServer()` from `local-network.helper.ts`, a file this page does not show, which answers every `fetch` with `GET` of `server.ts`, so the example runs without a network. Leave the call out to use a real server.
 
-```ts title="main.ts"
-import { loadDocument } from './client';
-import { useLocalServer } from './local-network.helper';
+```tsx title="main.react.tsx"
+import { createRoot } from 'react-dom/client';
+import { routeFetchToLocalServer } from './local-network.helper';
+import { ServerDocument } from './server-document.react';
 
-const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
-	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
+routeFetchToLocalServer();
 
-useLocalServer();
-
-const result = await loadDocument('https://shop.example/orders/1042');
-
-if (!result.success) console.log(result.error);
-else {
-	for (const line of result.html) console.log(line);
-	for (const issue of result.issues) console.log(`issue ${where(issue.path)}: ${issue.message}`);
-}
+export const root = createRoot(document.getElementById('root')!);
+root.render(<ServerDocument url="https://shop.example/orders/1042" />);
 ```
+
+The callout and the button are drawn, and each node the client rejects is drawn as its issues:
 
 {/* prettier-ignore */}
 ```html
@@ -243,22 +247,27 @@ else {
 	<strong>Order 1042 confirmed</strong>
 	<span>Thanks for shopping with us.</span>
 </aside>
+<ul role="alert">
+	<li>
+		[1].tone: Invalid option: expected one of
+		&quot;info&quot;|&quot;success&quot;|&quot;danger&quot;
+	</li>
+</ul>
+<ul role="alert">
+	<li>[2].$type: No registration for $type &#x27;countdown&#x27;.</li>
+</ul>
 <a class="button button-primary" href="/parcels/1042">Track parcel</a>
 ```
 
-```text
-issue 1.tone: Invalid option: expected one of "info"|"success"|"danger"
-issue 2.$type: No component is registered for $type 'countdown'.
-```
+- **The callout and the button are drawn.** They are in the registry and their configuration is valid.
+- **`[1].tone` is a configuration the client rejects.** The badge is known, but its schema allows `info`, `success` and `danger`, so the server's `warning` is reported at the field. The badge is not drawn, because a half-valid node is not shown.
+- **`[2].$type` is a component the client has not registered.** The path names the node by its index, so a log or an error report says exactly which part of the document the client could not draw.
 
-- **The callout and the button render.** They are in the registry and their configuration is valid.
-- **`1.tone` is a configuration the client rejects.** The badge is known, but its schema allows `info`, `success` and `danger`, so the server's `warning` is reported at the field. The badge is not rendered, because a half-valid node is not shown.
-- **`2.$type` is a component the client has not registered.** The path names the node by its index, so a log or an error report says exactly which part of the document the client could not draw.
-
-The test of this example runs the same route handler against the client, then replaces the network with a failure, a 503 and a body that is not JSON.
+The tests run the same files: the document of each order drawn to markup, the issues of a bad node, then the component in a browser against the route handler, with a 404, a network failure and a body that is not JSON.
 
 ## Take it further
 
-- Show a fallback in place of each issue: the paths say which nodes failed.
+- Draw something better than a list in the fallback: the `path` and the `message` of each issue are data, so the fallback can name the component or offer a retry.
 - Validate what a document may contain on the server too: build it from the same registry, so a document the client would reject never leaves the server.
+- Draw a tree, not a list: [Resolve a document](/docs/registry/resolve-a-document) passes each child its own `path`.
 - Send workflows the same way, checked with `parseActions`: [Serialized workflows](/docs/actions/serialized-workflows).

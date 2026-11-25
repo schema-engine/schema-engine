@@ -3,6 +3,7 @@ import * as actionsPackage from '@schema-engine/actions';
 import * as registryPackage from '@schema-engine/registry';
 import * as registryYaml from '@schema-engine/registry/yaml';
 import * as react from 'react';
+import { createElement, type ReactElement } from 'react';
 import * as reactJsxRuntime from 'react/jsx-runtime';
 import * as reactServer from 'react-dom/server';
 import * as z from 'zod/mini';
@@ -57,7 +58,7 @@ describe(quickStart, () => {
 
 describe(serialized, () => {
 	test('a bad document and a bad workflow report the issues the page shows', async () => {
-		const lines = await runTitledFiles([quickStart, serialized], packages, 'bad-input.ts');
+		const lines = await runTitledFiles([quickStart, serialized], packages, 'bad-input.react.tsx');
 		expect(await outputBlocks(lines)).toEqual(shownOutput(serialized, 'See the issues'));
 	});
 
@@ -66,21 +67,20 @@ describe(serialized, () => {
 		expect(await outputBlocks(lines)).toEqual(shownOutput(serialized, 'YAML'));
 	});
 
-	test('the document the server sends passes the client check', async () => {
-		const server = titledRunner([quickStart, serialized], packages, { Response });
-		const { GET } = server.load('server.ts') as { GET: () => Response };
-		const client = titledRunner([quickStart, serialized], packages, { fetch: async () => GET() });
-		const { loadDocument } = client.load('client.ts') as {
-			loadDocument: (url: string) => Promise<{ success: boolean; data?: string[] }>;
+	test('the document the server sends is drawn by the component of the page', () => {
+		const runner = titledRunner([quickStart, serialized], packages, { Response });
+		const { GET } = runner.load('server.ts') as { GET: () => Response };
+		const { DocumentView } = runner.load('document.react.tsx') as {
+			DocumentView: (props: { nodes: unknown[] }) => ReactElement;
 		};
-		const result = await loadDocument('https://example.com/documents/order-1042');
-		expect(result).toEqual({
-			success: true,
-			data: [
-				'<aside class="callout"><strong>Order 1042 confirmed</strong> Thanks for shopping with us.</aside>',
-				'<span class="badge badge-success">Paid</span>',
-			],
-		});
+		return GET()
+			.json()
+			.then((nodes: unknown[]) => {
+				expect(reactServer.renderToStaticMarkup(createElement(DocumentView, { nodes }))).toBe(
+					'<aside class="callout"><strong>Order 1042 confirmed</strong> Thanks for shopping with us.</aside>' +
+						'<span class="badge badge-success">Paid</span>',
+				);
+			});
 	});
 });
 

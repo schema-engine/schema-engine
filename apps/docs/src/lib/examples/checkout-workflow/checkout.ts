@@ -1,10 +1,8 @@
 import { ActionDispatcher, parseActions, type ActionDispatchResult } from '@schema-engine/actions';
+import { formatIssuePath } from '@schema-engine/registry';
 import { registry, type CheckoutContext } from './actions';
 
 export type Checkout = { success: true; results: ActionDispatchResult[] } | { success: false; issues: string[] };
-
-const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
-	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
 
 /**
  * Parses a workflow and runs it on `submit`.
@@ -22,7 +20,10 @@ export async function runCheckout(text: string, context: CheckoutContext): Promi
 	}
 	const parsed = parseActions(registry, input);
 	if (!parsed.success) {
-		return { success: false, issues: parsed.issues.map((issue) => `${where(issue.path)}: ${issue.message}`) };
+		return {
+			success: false,
+			issues: parsed.issues.map((issue) => `${formatIssuePath(issue.path)}: ${issue.message}`),
+		};
 	}
 	const results = await new ActionDispatcher(registry).dispatch({ actions: parsed.data, trigger: 'submit', context });
 	return { success: true, results };

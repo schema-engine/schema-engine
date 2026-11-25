@@ -9,6 +9,7 @@ import {
 	getGridItemVariables,
 	getGridVariables,
 } from '@schema-engine/layout';
+import { formatIssuePath } from '@schema-engine/registry';
 import { placementOf, type Page } from './page';
 import { theme } from './theme';
 
@@ -25,7 +26,7 @@ export function renderPage(page: Page): ReactElement {
 	const grid = GridLayoutConfigSchema.safeParse(page.grid);
 	const issues = grid.success ? areaTemplateIssues(grid.data) : grid.error.issues;
 	if (!grid.success || issues.length > 0) {
-		throw new Error(issues.map((issue) => `${issue.path?.join('.')}: ${issue.message}`).join('\n'));
+		throw new Error(issues.map((issue) => `${formatIssuePath(issue.path)}: ${issue.message}`).join('\n'));
 	}
 	const items = page.regions.map((region) => ({ grid: placementOf(region) }));
 	return (

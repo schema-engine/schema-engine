@@ -1,3 +1,4 @@
+import { issuePath } from '@/engine/submission-schema';
 import { logger } from '@/lib/logger';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { buildSubmissionShape, type SubmissionShape } from '@/lib/submission-shape';
@@ -167,10 +168,7 @@ export function registerFormAgentTool(runtime: FormRuntime, options: FormAgentTo
 
 		const checked = submission.partial['~standard'].validate(input);
 		if (checked.issues) {
-			const lines = checked.issues.map(
-				(issue) =>
-					`- ${(issue.path ?? []).map((segment) => String(typeof segment === 'object' ? segment.key : segment)).join('.') || 'input'}: ${issue.message}`,
-			);
+			const lines = checked.issues.map((issue) => `- ${issuePath(issue) || 'input'}: ${issue.message}`);
 			return text(`The input does not match the form, so nothing was filled in:\n${lines.join('\n')}`);
 		}
 

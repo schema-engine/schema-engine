@@ -15,7 +15,7 @@ The example's `Page` shape, with its regions and their areas, is its own. The la
 ## Install
 
 ```bash
-pnpm add @schema-engine/layout zod react react-dom
+pnpm add @schema-engine/layout @schema-engine/registry zod react react-dom
 ```
 
 `zod` is a peer dependency: the grid and appearance schemas use `zod/mini`. The host is written in React JSX, but the layout package needs none of it: any code that can write a `class`, a `style` and a few attributes can host it. Copy the files below into one folder.
@@ -130,6 +130,7 @@ import {
 	getGridItemVariables,
 	getGridVariables,
 } from '@schema-engine/layout';
+import { formatIssuePath } from '@schema-engine/registry';
 import { placementOf, type Page } from './page';
 import { theme } from './theme';
 
@@ -146,7 +147,7 @@ export function renderPage(page: Page): ReactElement {
 	const grid = GridLayoutConfigSchema.safeParse(page.grid);
 	const issues = grid.success ? areaTemplateIssues(grid.data) : grid.error.issues;
 	if (!grid.success || issues.length > 0) {
-		throw new Error(issues.map((issue) => `${issue.path?.join('.')}: ${issue.message}`).join('\n'));
+		throw new Error(issues.map((issue) => `${formatIssuePath(issue.path)}: ${issue.message}`).join('\n'));
 	}
 	const items = page.regions.map((region) => ({ grid: placementOf(region) }));
 	return (

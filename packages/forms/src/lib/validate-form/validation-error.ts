@@ -1,31 +1,5 @@
-import type { FormValidationIssue, Path } from './issues';
-
-function childOf(node: unknown, key: PropertyKey): unknown {
-	return typeof node === 'object' && node !== null ? Reflect.get(node, key) : undefined;
-}
-
-/**
- * A path as it reads in an error message: object keys joined by dots, array indexes in brackets,
- * for example `steps[0].elements[2].grid.width`. The empty path is the empty string.
- *
- * @param source The config the path points into. With it, an array item that has a string `id` is
- * followed by the id in parentheses, `steps[0] (main).elements[2] (email).grid.width`, so a log of a
- * config with many fields names the one it means.
- */
-export function formatIssuePath(path: Path, source?: unknown): string {
-	let node = source;
-	let text = '';
-	for (const key of path) {
-		node = childOf(node, key);
-		if (typeof key === 'number') {
-			const id = childOf(node, 'id');
-			text += typeof id === 'string' && id ? `[${key}] (${id})` : `[${key}]`;
-		} else {
-			text += text ? `.${String(key)}` : String(key);
-		}
-	}
-	return text;
-}
+import { formatIssuePath } from '@schema-engine/registry';
+import type { FormValidationIssue } from './issues';
 
 /**
  * Thrown by {@link validateFormConfig} when a form does not validate.

@@ -1,6 +1,6 @@
 ---
 title: 'Serialized documents'
-description: 'A document is plain data in JSON or YAML. Validate it at the boundary with the registry and parseActions, send it from a server to a client, and read the issues a caller gets.'
+description: 'A document is plain data in JSON or YAML. Validate each node against the registry and each workflow with parseActions, draw it with React components, and read the issues a caller gets.'
 order: 5
 ---
 
@@ -8,7 +8,7 @@ order: 5
 
 A document is plain data: strings, numbers, booleans, arrays and objects. It names registered pieces by `$type`, so it carries no code. That is what lets a server build an interface and send it, a CMS store it and a tool generate it, and what lets the receiving side check it before it trusts it.
 
-The examples continue from the [Quick start](/docs/schema-engine/quick-start): its `components.ts` and `actions.ts` hold the two registries used here.
+The examples continue from the [Quick start](/docs/schema-engine/quick-start): its `actions.ts` holds the action registry used here. The nodes are drawn with React components, so this page registers them again as React components.
 
 ## What a document can hold
 
@@ -22,34 +22,79 @@ Two kinds of node cross the boundary, and each has one check.
 
 ### Nodes: the registry
 
-A node is checked against the schema of the registration its `$type` names. The function below renders a document and returns every issue instead of stopping at the first. Each issue carries a `path` that starts with the index of the node:
+A node is checked against the schema of the registration its `$type` names. A registration here is a `$type`, a schema and a `render` that draws the component in React:
 
-```ts title="render-document.ts"
-import { safeParseStandardSchema, type StandardSchemaIssue } from '@schema-engine/registry';
-import { components } from './components';
+```tsx title="components.react.tsx"
+import type { ReactNode } from 'react';
+import * as z from 'zod/mini';
+import { createRegistry, type ComponentRegistration } from '@schema-engine/registry';
 
-export type RenderResult = { success: true; data: string[] } | { success: false; issues: StandardSchemaIssue[] };
+z.config(z.locales.en());
 
-export function renderDocument(input: unknown): RenderResult {
-	if (!Array.isArray(input)) {
-		return { success: false, issues: [{ message: 'A document is an array of nodes.', path: [] }] };
-	}
-	const html: string[] = [];
-	const issues: StandardSchemaIssue[] = [];
-	input.forEach((node: { $type?: unknown }, index) => {
-		const component = typeof node?.$type === 'string' ? components.get(node.$type) : undefined;
-		if (!component) {
-			issues.push({
-				message: `No component is registered for $type '${String(node?.$type)}'.`,
-				path: [index, '$type'],
-			});
-			return;
-		}
-		const parsed = safeParseStandardSchema(component.schema, node);
-		if (parsed.success) html.push(component.render(parsed.data));
-		else issues.push(...parsed.error.issues.map((issue) => ({ ...issue, path: [index, ...(issue.path ?? [])] })));
-	});
-	return issues.length > 0 ? { success: false, issues } : { success: true, data: html };
+interface Component extends ComponentRegistration {
+	render(config: unknown): ReactNode;
+}
+
+const badgeSchema = z.object({
+	$type: z.literal('badge'),
+	label: z.string(),
+	tone: z.optional(z.enum(['info', 'success', 'warning'])),
+});
+
+const calloutSchema = z.object({
+	$type: z.literal('callout'),
+	title: z.string(),
+	text: z.string(),
+});
+
+const badge: Component = {
+	$type: 'badge',
+	schema: badgeSchema,
+	metadata: { name: 'Badge', description: 'A short status label.' },
+	render({ label, tone = 'info' }: z.output<typeof badgeSchema>) {
+		return <span className={`badge badge-${tone}`}>{label}</span>;
+	},
+};
+
+const callout: Component = {
+	$type: 'callout',
+	schema: calloutSchema,
+	metadata: { name: 'Callout', description: 'A boxed message with a title.' },
+	render({ title, text }: z.output<typeof calloutSchema>) {
+		return (
+			<aside className="callout">
+				<strong>{title}</strong> {text}
+			</aside>
+		);
+	},
+};
+
+export const components = createRegistry('Component', [badge, callout]);
+```
+
+`safeParseNode(registry, node, path)` looks the node's `$type` up and validates the node against the registration's schema, without throwing. It returns the registration with the validated configuration, or every issue. Pass the position of the node in its document as `path`, and the `path` of each issue starts there. `DocumentView` draws a list of nodes, and a node that fails is drawn as its issues, in its own place, so the others still render:
+
+```tsx title="document.react.tsx"
+import { Fragment } from 'react';
+import { formatIssuePath, safeParseNode } from '@schema-engine/registry';
+import { components } from './components.react';
+
+export function DocumentView({ nodes }: { nodes: unknown[] }) {
+	return (
+		<>
+			{nodes.map((node, index) => {
+				const parsed = safeParseNode(components, node, [index]);
+				if (parsed.success) return <Fragment key={index}>{parsed.registration.render(parsed.data)}</Fragment>;
+				return (
+					<ul key={index} role="alert">
+						{parsed.issues.map(({ path, message }, issue) => (
+							<li key={issue}>{`${formatIssuePath(path)}: ${message}`}</li>
+						))}
+					</ul>
+				);
+			})}
+		</>
+	);
 }
 ```
 
@@ -63,10 +108,12 @@ The `ActionDispatcher` takes only what `parseActions` returned, as a type, so di
 
 A document with a wrong `label`, an unregistered `$type` and a missing field, and a workflow with a bad address, a missing subject inside a group and an unregistered action:
 
-```ts title="bad-input.ts"
+```tsx title="bad-input.react.tsx"
+import { renderToStaticMarkup } from 'react-dom/server';
 import { parseActions } from '@schema-engine/actions';
+import { formatIssuePath } from '@schema-engine/registry';
 import { actions } from './actions';
-import { renderDocument } from './render-document';
+import { DocumentView } from './document.react';
 
 const badDocument = [
 	{ $type: 'badge', label: 5 },
@@ -82,32 +129,37 @@ const badWorkflow = [
 	],
 ];
 
-const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
-	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
-
-const document = renderDocument(badDocument);
-if (!document.success)
-	for (const issue of document.issues) console.log(`document ${where(issue.path)}: ${issue.message}`);
+console.log(renderToStaticMarkup(<DocumentView nodes={badDocument} />));
 
 const workflow = parseActions(actions, badWorkflow);
 if (!workflow.success)
-	for (const issue of workflow.issues) console.log(`workflow ${where(issue.path)}: ${issue.message}`);
+	for (const issue of workflow.issues) console.log(`workflow ${formatIssuePath(issue.path)}: ${issue.message}`);
+```
+
+{/* prettier-ignore */}
+```html
+<ul role="alert">
+	<li>[0].label: Invalid input: expected string, received number</li>
+</ul>
+<ul role="alert">
+	<li>[1].$type: No registration for $type &#x27;banner&#x27;.</li>
+</ul>
+<ul role="alert">
+	<li>[2].text: Invalid input: expected string, received undefined</li>
+</ul>
 ```
 
 ```text
-document 0.label: Invalid input: expected string, received number
-document 1.$type: No component is registered for $type 'banner'.
-document 2.text: Invalid input: expected string, received undefined
-workflow 0.to: Invalid email address
-workflow 1.0.subject: Invalid input: expected string, received undefined
-workflow 1.1.$type: Unknown action type 'refundCard'. Register it in the action registry.
+workflow [0].to: Invalid email address
+workflow [1][0].subject: Invalid input: expected string, received undefined
+workflow [1][1].$type: No registration for $type 'refundCard'.
 ```
 
 Every bad node and entry is reported, in the order it appears, so a caller can show all of them at once. `path` is the position in the document, so an editor can mark the node and a log can name it.
 
 ## From a server to a client
 
-A server builds the document and sends it as JSON. The client parses and validates it before it renders or dispatches anything:
+A server builds the document and sends it as JSON. The client parses it and hands it to the component above, which validates each node before it draws it:
 
 ```ts title="server.ts"
 const document = [
@@ -120,17 +172,7 @@ export function GET(): Response {
 }
 ```
 
-```ts title="client.ts"
-import { renderDocument } from './render-document';
-
-export async function loadDocument(url: string) {
-	const response = await fetch(url);
-	if (!response.ok) throw new Error(`${url}: ${response.status}`);
-	return renderDocument(await response.json());
-}
-```
-
-The client registers the components and actions, so the server decides what to show and the client decides how it is drawn and what the actions do. A `$type` the client has not registered is an issue, not a crash. A document is data, so a server can also store it and a test can replay it.
+The client registers the components and actions, so the server decides what to show and the client decides how it is drawn and what the actions do. A `$type` the client has not registered is an issue in that node's place, not a crash. A document is data, so a server can also store it and a test can replay it. [Render a server-sent document](/docs/examples/server-sent-document) is the full round trip, with a `ServerDocument` component that fetches the document and draws it.
 
 ## YAML
 
@@ -140,22 +182,20 @@ A document can be written as YAML. Install the optional peer dependency of the r
 pnpm add yaml
 ```
 
-The `@schema-engine/registry/yaml` subpath parses the text, hands the value to a validator of your choice and turns every issue into a file, line and column. A function that returns `{ success, data }` or `{ success: false, issues }`, such as `renderDocument` and `parseActions`, is that validator:
+The `@schema-engine/registry/yaml` subpath parses the text, hands the value to a validator of your choice and turns every issue into a file, line and column. A function that returns `{ success, data }` or `{ success: false, issues }`, such as `safeParseNode` and `parseActions`, is that validator:
 
 ```ts title="parse-welcome.ts"
+import { formatIssuePath, safeParseNode } from '@schema-engine/registry';
 import { parseYaml, YamlDocumentError } from '@schema-engine/registry/yaml';
-import { renderDocument } from './render-document';
+import { components } from './components.react';
 
-const text = `- $type: callout
-  title: Order 1042 confirmed
-  text: Thanks for shopping with us.
-- $type: badge
-  label: Paid
-  tone: succes
+const text = `$type: badge
+label: Paid
+tone: succes
 `;
 
 try {
-	parseYaml(text, renderDocument, { filename: 'welcome.yaml' });
+	parseYaml(text, (value) => safeParseNode(components, value), { filename: 'welcome.yaml' });
 } catch (error) {
 	if (!(error instanceof YamlDocumentError)) throw error;
 	console.log(error.message);
@@ -163,7 +203,7 @@ try {
 ```
 
 ```text
-welcome.yaml:6:9 [1].tone: Invalid option: expected one of "info"|"success"|"warning"
+welcome.yaml:3:7 tone: Invalid option: expected one of "info"|"success"|"warning"
 ```
 
 A `YamlDocumentError` lists every issue in `error.issues`, each with its `line`, `column` (counting from 1), `filename` and `path`. Its `message` has one line per issue, in the `file:line:column` form that terminals and editors turn into links. Use `safeParseYaml`, which takes the same arguments, to get `{ success: true, data }` or `{ success: false, issues }` without a throw. `stringifyYaml` writes a value back out as YAML.

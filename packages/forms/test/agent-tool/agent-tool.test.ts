@@ -206,6 +206,14 @@ describe('registerFormAgentTool', () => {
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
 
+	test('a refused value inside a row is reported at its list, by the dotted path the form knows the field by', async () => {
+		const { run } = setup();
+
+		const result = await run({ name: 'Ada', tags: ['a', 5] });
+
+		expect(said(result).split('\n').slice(1)).toEqual(['- tags: Invalid input']);
+	});
+
 	test('autoSubmit defaults to false: the form is filled and waits for the user', async () => {
 		const { run, runtime, onSubmit } = setup();
 

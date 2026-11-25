@@ -6,6 +6,6 @@ import { GET } from './server';
  * @remarks
  * Do not call it to talk to a real server.
  */
-export function useLocalServer(): void {
+export function routeFetchToLocalServer(): void {
 	globalThis.fetch = async (input, init) => GET(new Request(input, init));
 }
