@@ -117,6 +117,24 @@ describe('the theming playground', () => {
 		}
 	});
 
+	test('the pill shape rounds the controls fully and leaves the card its corners', async () => {
+		await open();
+		for (let round = 0; round < 40 && (await picks()).shape !== 'pill'; round += 1) await shuffle().click();
+		expect((await picks()).shape).toBe('pill');
+		for (const [name, renderer] of RENDERERS) {
+			await pwExpect(demo(renderer).locator('[data-se-shape="pill"]').first(), name).toBeAttached();
+			const corners = await demo(renderer).evaluate((panel) => {
+				const input = panel.querySelector('input[name="first"]')!;
+				const card = panel.querySelector('[data-se-surface]')!;
+				return {
+					input: getComputedStyle(input).borderTopLeftRadius,
+					card: getComputedStyle(card).borderTopLeftRadius,
+				};
+			});
+			expect(corners, name).toEqual({ input: '9999px', card: '24px' });
+		}
+	});
+
 	test('a shuffle changes nothing on another example page', async () => {
 		await page.goto(`${baseUrl}/docs/examples/contact-form`, { waitUntil: 'networkidle' });
 		await pwExpect(page.locator('[data-theming-playground]')).toHaveCount(0);

@@ -51,9 +51,10 @@ export const tone = defineAxis({
  * `--radius-button`, `--radius-container`) and a shadcn theme (`--radius`) read.
  *
  * @remarks
- * `rounded` sets nothing, so it is the radius the host theme already has. `pill` rounds past half the height of a
- * single-line control, so inputs, selects and buttons are fully round. It is a length, not `9999px`, because the card
- * shell of both renderers reads `--radius-control` as well, and a radius that large would turn a card into an ellipse.
+ * `rounded` sets nothing, so it is the radius the host theme already has. `pill` makes inputs, selects and buttons
+ * fully round, and a textarea, which reads `--radius-control` too, round at its ends. Cards and fieldsets read
+ * `--radius-container`, so they keep corners. A shadcn theme has one `--radius` for controls and cards alike, so that
+ * one stays a length: `9999px` there would turn a card into an ellipse.
  */
 export const shape = defineAxis({
 	$type: 'shape',
@@ -68,8 +69,8 @@ export const shape = defineAxis({
 		},
 		rounded: {},
 		pill: {
-			'--radius-control': '1.25rem',
-			'--radius-button': '1.25rem',
+			'--radius-control': '9999px',
+			'--radius-button': '9999px',
 			'--radius-container': '1.5rem',
 			'--radius': '1.25rem',
 		},
