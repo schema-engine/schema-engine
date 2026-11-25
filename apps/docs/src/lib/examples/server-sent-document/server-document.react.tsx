@@ -6,9 +6,10 @@ import { components } from './components.react';
 function Fallback({ issues }: { issues: StandardSchemaIssue[] }) {
 	return (
 		<ul role="alert">
-			{issues.map(({ path, message }, index) => (
-				<li key={index}>{`${formatIssuePath(path)}: ${message}`}</li>
-			))}
+			{issues.map(({ path, message }, index) => {
+				const where = formatIssuePath(path);
+				return <li key={index}>{where ? `${where}: ${message}` : message}</li>;
+			})}
 		</ul>
 	);
 }
@@ -53,8 +54,9 @@ export function ServerDocument({ url }: { url: string }) {
 			try {
 				const headers = { Accept: 'application/json' };
 				const response = await fetch(url, { headers, signal: controller.signal });
-				if (!response.ok) throw new Error(`The server answered ${response.status}.`);
-				setLoaded({ url, status: 'ready', nodes: await response.json() });
+				setLoaded(
+					response.ok ? { url, status: 'ready', nodes: await response.json() } : { url, status: 'failed' },
+				);
 			} catch {
 				if (!controller.signal.aborted) setLoaded({ url, status: 'failed' });
 			}

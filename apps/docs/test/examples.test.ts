@@ -26,15 +26,20 @@ describe('the Examples', () => {
 		},
 	);
 
-	test('checkout-workflow imports no UI framework and no forms package', () => {
-		const example = examples.find((candidate) => candidate.id === 'checkout-workflow');
+	test.each([
+		[
+			'checkout-workflow',
+			'no UI framework and no forms package',
+			/^(react|react-dom|@ecopages\/.+|@schema-engine\/forms.*)$/,
+		],
+		['server-sent-document', 'no forms package', /^@schema-engine\/forms.*$/],
+	])('%s imports %s', (id, _what, unwanted) => {
+		const example = examples.find((candidate) => candidate.id === id);
 		const packages = [...(example?.files ?? []), ...(example?.helpers ?? [])].flatMap((file) =>
 			importsOf(file.source).map(packageOf),
 		);
 		expect(packages.length).toBeGreaterThan(0);
-		expect(
-			packages.filter((name) => /^(react|react-dom|@ecopages\/.+|@schema-engine\/forms.*)$/.test(name)),
-		).toEqual([]);
+		expect(packages.filter((name) => unwanted.test(name))).toEqual([]);
 	});
 
 	test('every page of Examples is an example or is listed as another kind of page', () => {

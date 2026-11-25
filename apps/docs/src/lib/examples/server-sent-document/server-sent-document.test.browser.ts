@@ -8,7 +8,12 @@ import { ServerDocument } from './server-document.react';
 let root: Root | undefined;
 let host: HTMLElement;
 
-/** The client talking to the route handler of `server.ts`, without a network. */
+/**
+ * The client talking to the route handler of `server.ts`, without a network.
+ *
+ * @remarks
+ * It is stubbed before each test, so `vi.unstubAllGlobals` also puts back the `fetch` that `main.react` replaces.
+ */
 const network = vi.fn<typeof fetch>(async (input, init) => {
 	const href = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
 	return GET(new Request(new URL(href, location.origin), init));
@@ -96,9 +101,9 @@ describe('ServerDocument', () => {
 
 describe('main', () => {
 	test('draws the page into #root through the local server', async () => {
-		vi.stubGlobal('fetch', fetch);
-		await import('./main.react');
+		({ root } = await import('./main.react'));
 
 		await expect.poll(() => host.querySelector('.callout')?.textContent).toContain('Order 1042 confirmed');
+		expect(network).not.toHaveBeenCalled();
 	});
 });

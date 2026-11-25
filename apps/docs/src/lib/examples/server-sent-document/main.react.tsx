@@ -1,8 +1,9 @@
 /** @jsxImportSource react */
 import { createRoot } from 'react-dom/client';
-import { useLocalServer } from './local-network.helper';
+import { routeFetchToLocalServer } from './local-network.helper';
 import { ServerDocument } from './server-document.react';
 
-useLocalServer();
+routeFetchToLocalServer();
 
-createRoot(document.getElementById('root')!).render(<ServerDocument url="https://shop.example/orders/1042" />);
+export const root = createRoot(document.getElementById('root')!);
+root.render(<ServerDocument url="https://shop.example/orders/1042" />);

@@ -25,13 +25,13 @@ describe('DocumentView', () => {
 	});
 
 	test('a document that is not a list of nodes is one issue', () => {
-		expect(markup({ $type: 'badge' })).toBe('<ul role="alert"><li>: A document is a list of nodes.</li></ul>');
+		expect(markup({ $type: 'badge' })).toBe('<ul role="alert"><li>A document is a list of nodes.</li></ul>');
 	});
 
-	test('a node that is not an object with a string $type is an issue at its index', () => {
+	test('a node that is not an object is an issue at its index, and one without a $type at its $type', () => {
 		expect(markup([null, { label: 'x' }])).toBe(
-			'<ul role="alert"><li>[0]: A node is an object with a string $type.</li></ul>' +
-				'<ul role="alert"><li>[1]: A node is an object with a string $type.</li></ul>',
+			'<ul role="alert"><li>[0]: Expected an object with a string $type.</li></ul>' +
+				'<ul role="alert"><li>[1].$type: Expected a string $type.</li></ul>',
 		);
 	});
 
