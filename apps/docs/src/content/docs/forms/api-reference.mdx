@@ -175,7 +175,11 @@ for runtime validation. Their provider-specific JSON Schema is not introspected:
 mixed form config exports retain the registered `$type` envelope for those
 schemas.
 
-## createFormRuntime
+## For renderer authors
+
+An app draws a form with a renderer and does not call these: [Forms React](/docs/forms-react/overview) and [Forms Radiant](/docs/forms-radiant/overview) call them for you.
+
+### createFormRuntime
 
 One framework-free instance per rendered form, shared by React and Radiant. It builds the form's state container and
 owns the submission, the wizard's steps and navigation, `form_mount` and `form_change`, and every action dispatch. A

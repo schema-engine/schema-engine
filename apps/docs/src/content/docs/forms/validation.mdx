@@ -19,10 +19,11 @@ export const signup = engine.defineForm({
 			title: 'Create your account',
 			elements: [
 				{
-					$type: 'email',
+					$type: 'input',
 					id: 'email',
 					name: 'email',
 					label: 'Email',
+					inputType: 'email',
 					rules: [
 						{ $type: 'required', message: 'Email is required' },
 						{ $type: 'email', message: 'Enter a valid email address' },
@@ -30,7 +31,7 @@ export const signup = engine.defineForm({
 					],
 				},
 				{
-					$type: 'text',
+					$type: 'input',
 					id: 'username',
 					name: 'username',
 					label: 'Username',
@@ -133,12 +134,13 @@ export const resetPassword = engine.defineForm({
 			id: 'password',
 			title: 'Choose a password',
 			elements: [
-				{ $type: 'text', id: 'password', name: 'password', label: 'Password' },
+				{ $type: 'input', id: 'password', name: 'password', label: 'Password', inputType: 'password' },
 				{
-					$type: 'text',
+					$type: 'input',
 					id: 'confirm',
 					name: 'confirmPassword',
 					label: 'Confirm password',
+					inputType: 'password',
 					rules: [
 						{ $type: 'relate', fields: ['password'], assert: 'allEqual', message: 'Passwords must match' },
 					],

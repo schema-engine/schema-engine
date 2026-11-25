@@ -44,34 +44,13 @@ In React, keep the formatter's identity stable: define it at module level or mem
 
 ## A complete formatter
 
-This one looks a translation up by the most specific key first (the rule's `ruleId`, then the problem's type), fills the numbers from `params` and falls back to the issue's own `message`. Text a server already wrote for people is shown as it is. Swap `t` for your i18n library.
+This one looks a translation up by the most specific key first (the rule's `ruleId`, then the problem's type), fills the numbers from `params` and falls back to the issue's own `message`. Text a server already wrote for people is shown as it is. `t` looks the first of its keys up in a catalogue and fills its `{name}` placeholders; it lives in a helper that this page does not show, so swap it for your i18n library. The keys are `form.rules.<ruleId>`, `form.<source>.<type>` and `form.fields.<path>`, and the texts below come from the catalogue.
 
 ```ts title="format-issue.ts"
 import { createFormEngine } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import { textInput } from './engine';
-
-export const catalogue: Record<string, string> = {
-	'form.fields.email': 'Email',
-	'form.rules.password-min': 'Use at least {minLength} characters for your password',
-	'form.validation.minLength': 'Use at least {minLength} characters',
-	'form.validation.required': '{field} is required',
-	'form.native.typeMismatch': 'Enter a valid {inputType}',
-	'form.native.badInput': 'Enter a number',
-	'form.submission.actionFailed': 'Something went wrong. Please try again.',
-};
-
-/** The first catalogue entry among `keys`, with `{name}` filled from `values`. */
-function t(keys: string[], values: Record<string, unknown> = {}): string | undefined {
-	const key = keys.find((candidate) => candidate in catalogue);
-	return (
-		key &&
-		catalogue[key]!.replace(/\{(\w+)\}/g, (_, name: string) => {
-			const value = values[name];
-			return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
-		})
-	);
-}
+import { t } from './i18n.helper';
 
 export const formatIssue: FormIssueFormatter = (issue, { path }) => {
 	if (issue.source === 'server' && issue.message) return issue.message;

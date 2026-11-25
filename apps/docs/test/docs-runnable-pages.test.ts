@@ -2,6 +2,9 @@ import { describe, expect, test } from 'vitest';
 import * as actionsPackage from '@schema-engine/actions';
 import * as registryPackage from '@schema-engine/registry';
 import * as registryYaml from '@schema-engine/registry/yaml';
+import * as react from 'react';
+import * as reactJsxRuntime from 'react/jsx-runtime';
+import * as reactServer from 'react-dom/server';
 import * as z from 'zod/mini';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -19,8 +22,12 @@ const packages = {
 	'@schema-engine/registry/yaml': registryYaml,
 	'@schema-engine/forms': formsPackage,
 	'@schema-engine/forms/browser': browserPackage,
+	'@schema-engine/forms-radiant': radiantPackage,
 	'@schema-engine/layout': layoutPackage,
 	'zod/mini': z,
+	react,
+	'react/jsx-runtime': reactJsxRuntime,
+	'react-dom/server': reactServer,
 	'node:timers/promises': nodeTimers,
 };
 
@@ -140,14 +147,39 @@ describe('actions/serialized-workflows', () => {
 	});
 });
 
+/** Submits a form headlessly, as a renderer would: the runtime of the form, no host to draw it. */
+async function submitHeadless(config: formsPackage.NormalizedFormConfig, engine: formsPackage.FormEngine) {
+	const submitted: unknown[] = [];
+	const runtime = formsPackage.createFormRuntime({
+		engine,
+		config,
+		host: { focus: () => {} },
+		onSubmit: (values) => void submitted.push(values),
+	});
+	runtime.mount();
+	return { runtime, submitted };
+}
+
 describe('forms/getting-started', () => {
 	const page = 'forms/getting-started';
 
-	test('a broken config reports its issues and a submission prints its values', async () => {
+	test('a broken config reports the issues the page shows', async () => {
 		const lines = await runTitledFiles(page, packages, 'broken.ts');
-		expect(await outputBlocks(lines)).toEqual(shownOutput(page, '3. Check a form loaded as JSON'));
-		const run = await runTitledFiles(page, packages, 'submit.ts', { globals: { Response, FormData } });
-		expect(await outputBlocks(run)).toEqual(shownOutput(page, '4. Submit it'));
+		expect(await outputBlocks(lines)).toEqual(shownOutput(page, '2. Check a form loaded as JSON'));
+	});
+
+	test('the contact form blocks an empty submit and submits the values of the page', async () => {
+		const files = titledRunner(page, packages);
+		const { engine } = files.load('engine.ts') as { engine: formsPackage.FormEngine };
+		const { contact } = files.load('contact.ts') as { contact: formsPackage.NormalizedFormConfig };
+		const { runtime, submitted } = await submitHeadless(contact, engine);
+
+		expect(await runtime.submit()).toBe('invalid');
+		runtime.container.setValue('name', 'Ada Lovelace');
+		runtime.container.setValue('email', 'ada@example.com');
+		expect(await runtime.submit()).toBe('submitted');
+		expect(submitted).toEqual([{ name: 'Ada Lovelace', email: 'ada@example.com' }]);
+		expect(readPage(page)).toContain("`{ name: 'Ada Lovelace', email: 'ada@example.com' }`");
 	});
 
 	test('the overview rule count is the number of registered rules', () => {
@@ -161,10 +193,20 @@ describe('forms/constraints', () => {
 	const page = 'forms/constraints';
 
 	test('a hidden field leaves the submission, and a required one blocks it only while shown', async () => {
-		const lines = await runTitledFiles(['forms/getting-started', page], packages, 'submit-support.ts', {
-			globals: { Response, FormData },
-		});
-		expect(await outputBlocks(lines)).toEqual(shownOutput(page, 'Hidden and disabled fields do not submit'));
+		const files = titledRunner(['forms/getting-started', page], packages);
+		const { engine } = files.load('engine.ts') as { engine: formsPackage.FormEngine };
+		const { supportRequest } = files.load('support-request.ts') as {
+			supportRequest: formsPackage.NormalizedFormConfig;
+		};
+		const { runtime, submitted } = await submitHeadless(supportRequest, engine);
+
+		runtime.container.setValue('topic', 'billing');
+		expect(await runtime.submit()).toBe('submitted');
+		runtime.container.setValue('topic', 'order');
+		expect(await runtime.submit()).toBe('invalid');
+		runtime.container.setValue('orderNumber', '1042');
+		expect(await runtime.submit()).toBe('submitted');
+		expect(submitted).toEqual([{ topic: 'billing' }, { topic: 'order', orderNumber: '1042' }]);
 	});
 });
 
@@ -172,7 +214,7 @@ describe('forms/actions', () => {
 	const page = 'forms/actions';
 
 	test('the form validates with every registered action, and an unregistered one is a config issue', () => {
-		const { contact } = titledRunner(page, packages).load('contact-actions.ts') as {
+		const { contact } = titledRunner(['forms/getting-started', page], packages).load('contact-actions.ts') as {
 			contact: formsPackage.NormalizedFormConfig;
 		};
 		expect((contact.actions ?? []).flat().map((action) => action.$type)).toEqual([
@@ -192,7 +234,7 @@ describe('forms/actions', () => {
 	});
 
 	test('the auto-save example uses only options of its schema', () => {
-		const json = titledRunner(page, packages);
+		const json = titledRunner(['forms/getting-started', page], packages);
 		const { contact } = json.load('contact-actions.ts') as { contact: formsPackage.NormalizedFormConfig };
 		const draft = (contact.actions ?? []).flat().find((action) => action.$type === 'auto_save') as Record<
 			string,

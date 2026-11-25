@@ -1,10 +1,10 @@
 # @schema-engine/forms
 
-The engine, the config, validation timing, constraints, the container and the runtime. The terms are defined in the router (`SKILL.md`).
+The engine, the config, validation timing, constraints, the container and, for renderer authors, the runtime. The terms are defined in the router (`SKILL.md`).
 
 ## Engine
 
-`createFormEngine` takes `elements`, `recipes`, `actions`, `validations` (extra rules), `layout`, `formatIssue`, `fetch` and `csrf`. It builds read-only registries (a later `$type` replaces an earlier one) and returns an immutable engine: create it once and reuse it. `engine.extend({ ... })` adds registrations and inherits the layout theme. The package ships no field widgets; an element is registered with `defineInput({ $type, schema, metadata, value, render })` (see Registrations below), and renderer packages bring the widgets.
+`createFormEngine` takes `elements`, `recipes`, `actions`, `validations` (extra rules), `layout`, `formatIssue`, `fetch` and `csrf`. It builds read-only registries (a later `$type` replaces an earlier one) and returns an immutable engine: create it once and reuse it. `engine.extend({ ... })` adds registrations and inherits the layout theme. An app gives the engine and a config to a renderer: `FormRenderer` in `forms-react.md` or `forms-radiant.md`. The package ships no field widgets; an element is registered with `defineInput({ $type, schema, metadata, value, render })` (see Registrations below), and renderer packages bring the widgets.
 
 ```ts title="forms/engine.ts"
 import * as z from 'zod/mini';
@@ -139,9 +139,9 @@ export async function submitContact(name: string, email: string) {
 - `getSnapshot()` is stable until something changes. Read it with `selectValue` and `selectFieldState` (its `error` is the one of exactly that path), which return the same object while what they read is unchanged, so they are safe for `useSyncExternalStore`.
 - `toHydration(container.getServerSnapshot())` is the serializable part a server hands to a client, which passes it as `snapshot` so row ids survive.
 
-## Runtime
+## Runtime (for renderer authors)
 
-`createFormRuntime({ engine, config, host, onSubmit, ... })` wraps a container with the submission, the wizard and the actions. `host.focus(paths)` is the only required host member; a renderer adds `sync` and `submitNatively` when it needs them.
+An app does not create a runtime: a renderer creates one for each form it draws, and an app reaches it with a hook or a controller (`useFormRuntime`, `FormController`). `createFormRuntime({ engine, config, host, onSubmit, ... })` wraps a container with the submission, the wizard and the actions. `host.focus(paths)` is the only required host member; a renderer adds `sync` and `submitNatively` when it needs them.
 
 ```ts title="forms/runtime.ts"
 import { createFormRuntime, type FormValues } from '@schema-engine/forms';

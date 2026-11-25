@@ -25,22 +25,7 @@ It uses WebMCP's imperative API (`document.modelContext.registerTool(tool, { sig
 
 ## Register a form
 
-`registerFormAgentTool(runtime, options)` takes the form's runtime and returns the function that unregisters the tool. Register while the form is in use and unregister when it goes. The runtime is the one `createFormRuntime` returns, which a renderer creates for each form it draws:
-
-```ts
-import { createFormRuntime } from '@schema-engine/forms';
-import { registerFormAgentTool } from '@schema-engine/forms/agent-tool';
-import { contact } from './contact';
-import { engine } from './engine';
-
-const runtime = createFormRuntime({ engine, config: contact, host: { focus: () => {} } });
-runtime.mount();
-
-export const unregister = registerFormAgentTool(runtime, {
-	name: 'send_contact',
-	description: 'Fill in the contact form: the name and the email of the sender.',
-});
-```
+`registerFormAgentTool(runtime, options)` takes the runtime of the form that is on screen and returns the function that unregisters the tool. Register while the form is in use and unregister when it goes. You do not create the runtime: a renderer creates one for each form it draws and hands it to you, as the React and Radiant examples [below](#in-a-renderer) show.
 
 | Option        | Meaning                                                                                                                                                  |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -51,7 +36,7 @@ export const unregister = registerFormAgentTool(runtime, {
 
 ### In a renderer
 
-A renderer gives you the runtime of the form it draws, and the formatter of that form. The two examples below are renderer code: [Forms React](/docs/forms-react/overview) and [Forms Radiant](/docs/forms-radiant/overview) have the setup they need.
+A renderer gives you the runtime of the form it draws, and the formatter of that form. [Forms React](/docs/forms-react/overview) and [Forms Radiant](/docs/forms-radiant/overview) have the setup the two examples below need.
 
 #### React
 

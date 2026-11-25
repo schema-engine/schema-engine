@@ -38,7 +38,7 @@ const result = engine.safeValidateForm({
 });
 ```
 
-`result` is `{ success: true, data }` with the frozen, normalized config, or `{ success: false, issues }` with the `path` of every key to fix. `createFormRuntime` runs the form without a renderer: it owns the submission, the wizard steps and every action.
+`result` is `{ success: true, data }` with the frozen, normalized config, or `{ success: false, issues }` with the `path` of every key to fix. To draw the form, give the engine and the config to a renderer: `FormRenderer` of Forms React or Forms Radiant. A renderer creates a `createFormRuntime` for each form it draws, which owns the submission, the wizard steps and every action; only a renderer author calls it.
 
 ## Entry points
 
@@ -57,7 +57,7 @@ const result = engine.safeValidateForm({
 ## Documentation
 
 - [Forms](https://schema-engine.com/docs/forms/overview): what a form can do.
-- [Installation and quick start](https://schema-engine.com/docs/forms/getting-started): register elements, check JSON and submit with no renderer.
+- [Installation and quick start](https://schema-engine.com/docs/forms/getting-started): create the engine, check JSON and render it.
 - [Engine and registrations](https://schema-engine.com/docs/forms/engine): the engine, custom fields and configuration errors.
 - [Validation](https://schema-engine.com/docs/forms/validation) and [custom and async rules](https://schema-engine.com/docs/forms/validation-custom).
 - [Form state](https://schema-engine.com/docs/forms/form-state), [Wizard and runtime](https://schema-engine.com/docs/forms/wizard) and [Actions in forms](https://schema-engine.com/docs/forms/actions).

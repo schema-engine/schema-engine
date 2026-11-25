@@ -109,7 +109,7 @@ graph TD
 Each section of the docs starts with its installation and a quick start that runs:
 
 - [Schema Engine](https://schema-engine.com/docs/schema-engine/quick-start): a registry and a JSON workflow, with no UI.
-- [Forms](https://schema-engine.com/docs/forms/getting-started): a form checked and submitted with no renderer.
+- [Forms](https://schema-engine.com/docs/forms/getting-started): a form checked and rendered.
 - [Forms React](https://schema-engine.com/docs/forms-react/getting-started): a form with widgets of your own.
 - [Forms Radiant](https://schema-engine.com/docs/forms-radiant/getting-started): a form with the Radiant elements.
 
