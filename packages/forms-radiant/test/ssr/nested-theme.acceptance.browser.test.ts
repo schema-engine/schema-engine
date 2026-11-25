@@ -10,8 +10,8 @@ import {
 	expectPlainWrapperKeepsThemeTokens,
 	expectReenteredThemeFallsBackWithoutScope,
 	expectReenteredThemeUsesOwnTokens,
-	nestedHostTheme,
 } from '../../../../test-utils/nested-theme-acceptance';
+import { nestedHostTheme } from '../../../../test-utils/nested-theme-fixtures';
 
 describe('a form nested in another theme grid', () => {
 	test('uses its own theme tokens whichever stylesheet comes later', async () => {

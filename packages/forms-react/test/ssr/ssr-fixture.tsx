@@ -12,7 +12,7 @@ import {
 	ssrAreasForm,
 	ssrNestedFields,
 	ssrSteppedForm,
-} from '../../../../test-utils/ssr-grid-acceptance';
+} from '../../../../test-utils/ssr-grid-fixtures';
 import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
 import { FieldSetRegistration } from '@/components/schema-engine/forms/inputs/form-fieldset.registration';
 import { anyValue } from '../utils/any-value';

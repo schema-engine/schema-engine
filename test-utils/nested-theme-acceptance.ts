@@ -7,86 +7,13 @@
  * The nearest theme must win whichever stylesheet comes later. Both renderers render the guest
  * form; the host page around it is written here so the two tests cannot drift apart.
  */
-import { builtInAxes, createLayoutTheme, defineAxis, type LayoutInput } from '@schema-engine/layout';
 import { expect } from 'vitest';
 import { loadSsrFrame } from './ssr-grid-acceptance';
 import type { LayoutThemeLike } from './ssr-grid-acceptance';
-
-/** Where the `tone` values of each theme point, so a wrong theme or a wrong value shows as another color. */
-const ACCENTS = {
-	host: { brand: 'red', muted: 'orange' },
-	guest: { brand: 'blue', muted: 'purple' },
-} as const;
-
-/** The class the author's own stylesheet uses to set the accent token. */
-const NESTED_AUTHOR_CLASS = 'author-accent';
-const AUTHOR_ACCENT = 'green';
-
-function toneAxis(accents: { brand: string; muted: string }) {
-	return defineAxis({
-		$type: 'tone',
-		metadata: { name: 'Tone' },
-		default: 'neutral',
-		values: { neutral: {}, brand: { '--se-accent': accents.brand }, muted: { '--se-accent': accents.muted } },
-	});
-}
-
-/** The page's own theme, whose `tone: brand` accent is red and `tone: muted` accent is orange. */
-export const nestedHostTheme = createLayoutTheme({ appearance: [...builtInAxes, toneAxis(ACCENTS.host)] });
-
-/**
- * Layout input of the embedded form's theme, whose `tone: brand` accent is blue and `tone: muted` accent is purple.
- *
- * @remarks
- * Its `md` breakpoint is wider than the host's, so between the two widths the host's `md` slot
- * applies and the guest's does not.
- */
-export const nestedGuestLayout = {
-	grid: { breakpoints: { md: '60rem' } },
-	appearance: [...builtInAxes, toneAxis(ACCENTS.guest)],
-} satisfies LayoutInput;
+import { ACCENTS, AUTHOR_ACCENT, NESTED_AUTHOR_CLASS } from './nested-theme-fixtures';
 
 /** A viewport width past the host's `md` (48rem) and short of the guest's (60rem). */
 const BETWEEN_BREAKPOINTS_PX = 800;
-
-/** Which variant of the embedded form {@link nestedThemeForm} authors. */
-export interface NestedThemeFormOptions {
-	/**
-	 * Puts {@link NESTED_AUTHOR_CLASS} on the `step` (which carries a pick but no theme) or on the `form`
-	 * (the element that carries the theme and a pick together).
-	 */
-	authorClass?: 'step' | 'form';
-	/** Leaves the form and its step with no pick of their own, so only an outer pick can reach them. */
-	unpicked?: boolean;
-}
-
-/**
- * Config of the embedded form, authored once for both renderers.
- *
- * @param type The `$type` of the renderer's fixture input.
- * @remarks
- * The form picks `tone: brand` and its step picks `tone: muted`, so the form element carries the
- * theme and a pick on one element, and the step carries a different pick of its own but no theme.
- * The field host below it carries the theme and inherits the step's pick.
- */
-export function nestedThemeForm(type: string, options: NestedThemeFormOptions = {}) {
-	const picks = !options.unpicked;
-	return {
-		id: 'nested-theme-acceptance',
-		title: 'Nested theme acceptance',
-		...(picks ? { appearance: { tone: 'brand' } } : {}),
-		className: options.authorClass === 'form' ? NESTED_AUTHOR_CLASS : undefined,
-		steps: [
-			{
-				id: 'main',
-				title: 'Main',
-				...(picks ? { appearance: { tone: 'muted' } } : {}),
-				className: options.authorClass === 'step' ? NESTED_AUTHOR_CLASS : undefined,
-				elements: [{ $type: type, id: 'nested', name: 'nested', label: 'Nested field' }],
-			},
-		],
-	};
-}
 
 type StylesheetOrder = 'host-first' | 'host-last';
 
@@ -183,7 +110,7 @@ function describeOrder(what: string, order: StylesheetOrder): string {
 /**
  * Asserts that a form on one theme nested in a grid item of another picks its own theme's token.
  *
- * @param guestHtml The renderer's server output for {@link nestedThemeForm} on the guest theme.
+ * @param guestHtml The renderer's server output for `nestedThemeForm` on the guest theme.
  * @param host The theme of the page around the form.
  * @param guest The theme of the embedded form's engine.
  * @remarks
@@ -243,7 +170,7 @@ export async function expectNestedFormUsesOwnThemeTokensWithoutScope(
 /**
  * Asserts that a theme re-entered below another theme still uses its own tokens (A in B in A).
  *
- * @param hostFormHtml The renderer's server output for {@link nestedThemeForm} on the host theme.
+ * @param hostFormHtml The renderer's server output for `nestedThemeForm` on the host theme.
  * @param host The theme of the outer grid and of the form.
  * @param guest The theme of the item between them.
  * @remarks
@@ -273,7 +200,7 @@ export async function expectReenteredThemeUsesOwnTokens(
 /**
  * Asserts that an author's class outranks the axis token rules of both themes.
  *
- * @param guestHtml The renderer's server output for {@link nestedThemeForm} with the author class.
+ * @param guestHtml The renderer's server output for `nestedThemeForm` with the author class.
  * @remarks
  * The author's stylesheet comes first in the page, so only specificity can make it win: the token
  * rules sit in `:where()` and carry none.
@@ -319,7 +246,7 @@ function placedHostItemDocument(guestHtml: string, host: LayoutThemeLike): strin
  * Asserts that a form of a theme with other breakpoints, nested in a grid item of another theme,
  * does not read the placement that item's theme applied at a width the form's theme has not reached.
  *
- * @param guestHtml The renderer's server output for {@link nestedThemeForm} on {@link nestedGuestLayout}.
+ * @param guestHtml The renderer's server output for `nestedThemeForm` on `nestedGuestLayout`.
  * @remarks
  * At 800px the host's `md` slot applies and the guest's does not. Custom properties inherit, so a
  * guest field would take the host item's `span 6` if the stylesheet's private cascade variables
@@ -358,7 +285,7 @@ async function inFrame(html: string, run: (doc: Document) => void): Promise<void
 /**
  * Asserts that a form nested in a grid item of its own theme (A in A) still takes that theme's tokens.
  *
- * @param guestHtml The renderer's server output for {@link nestedThemeForm} on the guest theme.
+ * @param guestHtml The renderer's server output for `nestedThemeForm` on the guest theme.
  * @param guest The theme of the page's grid and of the form.
  * @remarks
  * The enclosing item picks `muted` itself, so a wrong result shows as the outer pick reaching the form
@@ -435,7 +362,7 @@ export async function expectPlainWrapperKeepsThemeTokens(host: LayoutThemeLike, 
 /**
  * Asserts that an outer host pick reaches a guest form that makes no pick of its own.
  *
- * @param unpickedHtml The renderer's server output for {@link nestedThemeForm} with `unpicked` on the guest theme.
+ * @param unpickedHtml The renderer's server output for `nestedThemeForm` with `unpicked` on the guest theme.
  * @remarks
  * Tokens are custom properties, so an outer pick on an axis inherits across a theme boundary until a
  * nested form picks a value that declares those tokens. Here the host item holding the form picks
@@ -470,7 +397,7 @@ export async function expectOuterPickReachesUnpickedGuest(
  * Asserts that an author class on the element that carries the theme and a pick together outranks the
  * token rules, and that the pick of a step below it still applies.
  *
- * @param formClassHtml The renderer's server output for {@link nestedThemeForm} with the author class on the `form`.
+ * @param formClassHtml The renderer's server output for `nestedThemeForm` with the author class on the `form`.
  * @remarks
  * The form element is where a token rule can match twice, as the theme root itself and as a descendant
  * selector of another theme's grid, so this is the place a specificity slip would show. The class sets
@@ -499,7 +426,7 @@ export async function expectAuthorClassOutranksTokensOnThemeRoot(
 /**
  * Pins what A in B in A reads without `@scope`: the documented limit of the plain rules.
  *
- * @param hostFormHtml The renderer's server output for {@link nestedThemeForm} on the host theme.
+ * @param hostFormHtml The renderer's server output for `nestedThemeForm` on the host theme.
  * @remarks
  * The plain rules cannot say "no other theme between" for a theme re-entered below another, so the
  * step, which sits below the guest theme's item, matches no host rule and inherits the form's `brand`

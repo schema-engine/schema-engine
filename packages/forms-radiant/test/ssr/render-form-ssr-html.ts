@@ -5,7 +5,7 @@ import { createFormEngine } from '@schema-engine/forms';
 import type { ElementGridConfig, LayoutInput } from '@schema-engine/layout';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { SSR_WIDTH_FIELDS, ssrAreasForm, ssrSteppedForm } from '../../../../test-utils/ssr-grid-acceptance';
+import { SSR_WIDTH_FIELDS, ssrAreasForm, ssrSteppedForm } from '../../../../test-utils/ssr-grid-fixtures';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),

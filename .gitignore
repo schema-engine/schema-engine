@@ -48,7 +48,7 @@ registry/**/*.d.ts
 
 # test artifacts
 **/__screenshots__
-**/.vitest-attachments
+**/.vitest
 
 # misc
 .agent

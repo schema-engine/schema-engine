@@ -59,7 +59,7 @@
 		"tsc-alias": "^1.8.16",
 		"typescript": "catalog:",
 		"valibot": "^1.4.2",
-		"vitest": "^4.0.13",
+		"vitest": "catalog:",
 		"yaml": "2.9.1"
 	},
 	"dependencies": {

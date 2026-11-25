@@ -10,8 +10,8 @@ import {
 	expectPlainWrapperKeepsThemeTokens,
 	expectReenteredThemeFallsBackWithoutScope,
 	expectReenteredThemeUsesOwnTokens,
-	nestedHostTheme,
 } from '../../../../test-utils/nested-theme-acceptance';
+import { nestedHostTheme } from '../../../../test-utils/nested-theme-fixtures';
 import { renderNestedThemeGuestHtml, renderReenteredThemeHtml } from './render-form-ssr-html';
 
 describe('a form nested in another theme grid', () => {

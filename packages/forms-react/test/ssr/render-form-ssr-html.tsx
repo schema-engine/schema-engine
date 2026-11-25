@@ -6,7 +6,7 @@ import {
 	nestedHostTheme,
 	nestedThemeForm,
 	type NestedThemeFormOptions,
-} from '../../../../test-utils/nested-theme-acceptance';
+} from '../../../../test-utils/nested-theme-fixtures';
 import type { LayoutThemeLike } from '../../../../test-utils/ssr-grid-acceptance';
 import {
 	createSsrAcceptanceEngine,
