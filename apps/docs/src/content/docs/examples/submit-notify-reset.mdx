@@ -20,6 +20,8 @@ For React:
 pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
 ```
 
+The React file imports the fields that the shadcn registry installs. Run `pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form` once, as the [Contact form](/docs/examples/contact-form#install) explains.
+
 For Radiant:
 
 ```bash
@@ -139,55 +141,10 @@ export const actions = [SubmitActionRegistration, NotificationRegistration, Rese
 
 ## The renderer
 
-Each tab builds an engine with the actions and renders the config. The status line shows the last notification: the React file reads it from `notices` in an effect, and the Radiant file has a `showNotices` function that does the same for the page it is on. React needs an input and a submit button as widgets, and Radiant ships them.
+Each tab builds an engine with the actions and renders the config. The status line shows the last notification: the React file reads it from `notices` in an effect, and the Radiant file has a `showNotices` function that does the same for the page it is on. React registers the installed fields, and Radiant ships its own.
 
 <RendererTabs name="submit-notify-reset">
 <div data-renderer="react">
-
-```tsx title="widgets.react.tsx"
-import * as z from 'zod/mini';
-import { BaseFieldSchema, defineInput, defineStatic } from '@schema-engine/forms';
-import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
-
-const InputSchema = z.extend(BaseFieldSchema, {
-	$type: z.literal('input'),
-	inputType: z.optional(z.enum(['text', 'email'])),
-});
-
-function InputField(config: z.output<typeof InputSchema>) {
-	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
-	return (
-		<div>
-			<label {...labelProps}>{config.label}</label>
-			<input {...fieldProps} type={config.inputType ?? 'text'} defaultValue={fieldText(defaultValue)} />
-			{errorProps && <p {...errorProps}>{error}</p>}
-		</div>
-	);
-}
-
-const SubmitSchema = z.extend(BaseFieldSchema, { $type: z.literal('submit') });
-
-function SubmitButton(config: z.output<typeof SubmitSchema>) {
-	return <button type="submit">{config.label}</button>;
-}
-
-const input = defineInput({
-	$type: 'input',
-	schema: InputSchema,
-	render: InputField,
-	value: () => z.string(),
-	metadata: { name: 'Input', category: 'input' },
-});
-
-const submit = defineStatic({
-	$type: 'submit',
-	schema: SubmitSchema,
-	render: SubmitButton,
-	metadata: { name: 'Submit', category: 'action' },
-});
-
-export const elements = [input, submit];
-```
 
 ```tsx title="submit-notify-reset.react.tsx"
 import { useEffect, useState } from 'react';
@@ -195,9 +152,9 @@ import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { actions, notices, type Notice } from './actions';
 import { newsletter } from './config';
-import { elements } from './widgets.react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-export const engine = createFormEngine({ elements, actions });
+export const engine = createFormEngine({ elements: schemaFormRegistrations, actions });
 
 /** The form, and a status line that shows what the notification actions announce. */
 export function Newsletter() {

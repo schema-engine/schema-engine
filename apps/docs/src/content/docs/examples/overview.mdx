@@ -6,11 +6,11 @@ order: 0
 
 # Examples
 
-An example is one use case, written as files you can copy into an app and run. Each example page shows every file word for word, and a test runs the same files, so a snippet cannot drift from the code that works. The one exception is a helper, a file named `<name>.helper.ts` that holds only what a demo run needs, such as fake services or a stand-in network. The page names it where an import points at it and does not show it: the files that carry the lesson run with your own services in its place.
+An example is one use case, written as files you can copy into an app and run. Each example page shows every file word for word, and a test runs the same files, so a snippet cannot drift from the code that works. The one exception is a helper, a file named `<name>.helper.ts` that holds only what a demo run needs, such as fake services or a stand-in network. The page names it where an import points at it and does not show it: the files that carry the lesson run with your own services in its place. A React forms example has one more import it does not show, `@/components/schema-engine/forms/registrations`, the barrel that installing the shadcn registry leaves in an app, so its files show the form and not the fields.
 
 ## What an example holds
 
-- **The files.** Each is a module that imports only packages and its sibling files (`./config`). It imports nothing else, so it runs where you paste it.
+- **The files.** Each is a module that imports only packages and its sibling files (`./config`). The one other import is the installed fields of a React forms example, which your app has once you run the command below, so it runs where you paste it.
 - **The page.** It states the install line, then shows every file under its name. An example that renders UI has a live demo, and a forms example shows its React and Radiant files in tabs side by side.
 - **The test.** It runs the files, including the failure paths, in a unit or browser test. An example that is not tested, or whose page differs from its files, fails a test.
 
@@ -40,7 +40,7 @@ Examples by domain, with what each shows and the install line it needs.
 
 Each forms example has React and Radiant tabs and the same two install lines, one for each renderer:
 
-- React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`
+- React: `pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod`, then `pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form` for the fields the files register
 - Radiant: `pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod`
 
 | Example                                                        | Shows                                                                                                           |

@@ -1,7 +1,16 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { checkExample, examplePagesRoot, importsOf, packageOf, readExamples, type Example } from './example-format';
+import {
+	checkExample,
+	examplePagesRoot,
+	examplesRoot,
+	importsOf,
+	INSTALLED_BARREL,
+	packageOf,
+	readExamples,
+	type Example,
+} from './example-format';
 
 /** Pages of Examples that are not a folder of `src/lib/examples`: `overview` explains the format. */
 const OTHER_PAGES = ['overview'];
@@ -39,6 +48,40 @@ describe('the Examples', () => {
 			).toEqual([]);
 		},
 	);
+
+	test('the React examples register the installed fields and write no widget of their own', () => {
+		const reactFiles = examples.flatMap((example) =>
+			example.files.filter((file) => file.name === `${example.id}.react.tsx`),
+		);
+		expect(reactFiles.map((file) => file.name)).toHaveLength(6);
+		for (const file of reactFiles) {
+			expect(importsOf(file.source), file.name).toContain(INSTALLED_BARREL);
+			expect(file.source, file.name).not.toMatch(/\b(defineInput|defineStatic|useFormField)\b/);
+		}
+		for (const example of examples) {
+			for (const file of example.files) {
+				expect(file.name, `${example.id} keeps its widgets in a file of its own`).not.toMatch(/^widgets\./);
+			}
+		}
+	});
+
+	test('the installed barrel resolves in the type-checker and lists the fields the examples use', async () => {
+		const docs = join(examplesRoot, '../../..');
+		const { compilerOptions } = JSON.parse(readFileSync(join(docs, 'tsconfig.json'), 'utf8')) as {
+			compilerOptions: { paths: Record<string, string[]> };
+		};
+		const target = compilerOptions.paths[INSTALLED_BARREL]?.[0];
+		expect(target).toBe('./src/lib/installed-components/registrations.ts');
+		const barrel = await import(join(docs, target!));
+		const types = (barrel.schemaFormRegistrations as Array<{ $type: string }>).map((entry) => entry.$type);
+		const used = new Set(
+			examples
+				.flatMap((example) => example.files)
+				.flatMap((file) => [...file.source.matchAll(/\$type: '([\w-]+)'/g)].map((match) => match[1])),
+		);
+		expect(types.toSorted()).toEqual(['input', 'select', 'submit', 'switch', 'textarea']);
+		expect(['input', 'select', 'submit', 'textarea'].filter((type) => used.has(type))).toHaveLength(4);
+	});
 
 	test('every page of Examples is an example or is listed as another kind of page', () => {
 		const ids = new Set(examples.map((example) => example.id));
@@ -107,6 +150,14 @@ describe('the example format checker', () => {
 			const [first] = problems(imports(specifier), goodPage);
 			expect(first, specifier).toContain(`main.ts imports ${specifier}`);
 		}
+	});
+
+	test('lets a file import the installed registration barrel, and no other path of the registry copy', () => {
+		expect(importProblems(INSTALLED_BARREL)).toEqual([]);
+		expect(importProblems(`${INSTALLED_BARREL}.react`)).toEqual([
+			`main.ts imports ${INSTALLED_BARREL}.react, which is not a package or a file of its own folder`,
+		]);
+		expect(importProblems('@/components/schema-engine/forms/inputs/form-input')).toHaveLength(1);
 	});
 
 	test('resolves a relative import to a file by its exact name, not by the start of it', () => {

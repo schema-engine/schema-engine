@@ -20,6 +20,8 @@ For React:
 pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
 ```
 
+The React file registers the fields of the shadcn registry. Run `pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form` once: it copies the fields into your app and writes the `registrations` barrel that the file imports as `@/components/schema-engine/forms/registrations` (adjust the alias to your `components.json`). The page does not show those files, because they are yours once copied: [Registry fields](/docs/forms-react/components) lists them and how to own them.
+
 For Radiant:
 
 ```bash
@@ -164,121 +166,22 @@ export async function sendMessage(values: FormValues, { fetch, setServerErrors }
 
 ## The renderer
 
-Each tab builds an engine, renders the config with `FormRenderer`, and calls `onSent` once the server accepted the message. The React renderer has no elements of its own, so the React tab starts with the widgets of the form: an input, a textarea, a select and a submit button, each a registration with a `$type` the config names. [Writing a widget](/docs/forms-react/widgets) explains them. Radiant ships these elements, so its engine registers the package's. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
+Each tab builds an engine, renders the config with `FormRenderer`, and calls `onSent` once the server accepted the message. The React engine registers the `schemaFormRegistrations` of the installed fields: an input, a textarea, a select and a submit button, each a registration with a `$type` the config names. Radiant ships these elements, so its engine registers the package's. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
 
 <RendererTabs name="contact-form">
 <div data-renderer="react">
-
-```tsx title="widgets.react.tsx"
-import * as z from 'zod/mini';
-import { BaseFieldSchema, defineInput, defineStatic } from '@schema-engine/forms';
-import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
-
-const InputSchema = z.extend(BaseFieldSchema, {
-	$type: z.literal('input'),
-	inputType: z.optional(z.enum(['text', 'email', 'password', 'url'])),
-});
-
-function InputField(config: z.output<typeof InputSchema>) {
-	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
-	return (
-		<div>
-			<label {...labelProps}>{config.label}</label>
-			<input
-				{...fieldProps}
-				type={config.inputType ?? 'text'}
-				placeholder={config.placeholder}
-				defaultValue={fieldText(defaultValue)}
-			/>
-			{errorProps && <p {...errorProps}>{error}</p>}
-		</div>
-	);
-}
-
-const TextareaSchema = z.extend(BaseFieldSchema, { $type: z.literal('textarea'), rows: z.optional(z.number()) });
-
-function TextareaField(config: z.output<typeof TextareaSchema>) {
-	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
-	return (
-		<div>
-			<label {...labelProps}>{config.label}</label>
-			<textarea {...fieldProps} rows={config.rows} defaultValue={fieldText(defaultValue)} />
-			{errorProps && <p {...errorProps}>{error}</p>}
-		</div>
-	);
-}
-
-const SelectSchema = z.extend(BaseFieldSchema, {
-	$type: z.literal('select'),
-	options: z.array(z.object({ value: z.string(), label: z.string() })),
-});
-
-function SelectField(config: z.output<typeof SelectSchema>) {
-	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
-	return (
-		<div>
-			<label {...labelProps}>{config.label}</label>
-			<select {...fieldProps} defaultValue={fieldText(defaultValue)}>
-				<option value="">{config.placeholder}</option>
-				{config.options.map((option) => (
-					<option key={option.value} value={option.value}>
-						{option.label}
-					</option>
-				))}
-			</select>
-			{errorProps && <p {...errorProps}>{error}</p>}
-		</div>
-	);
-}
-
-const SubmitSchema = z.extend(BaseFieldSchema, { $type: z.literal('submit') });
-
-function SubmitButton(config: z.output<typeof SubmitSchema>) {
-	return <button type="submit">{config.label}</button>;
-}
-
-const input = defineInput({
-	$type: 'input',
-	schema: InputSchema,
-	render: InputField,
-	value: () => z.string(),
-	metadata: { name: 'Input', category: 'input' },
-});
-
-const textarea = defineInput({
-	$type: 'textarea',
-	schema: TextareaSchema,
-	render: TextareaField,
-	value: () => z.string(),
-	metadata: { name: 'Textarea', category: 'input' },
-});
-
-const select = defineInput({
-	$type: 'select',
-	schema: SelectSchema,
-	render: SelectField,
-	value: ({ options }) => z.enum(options.map((option) => option.value)),
-	metadata: { name: 'Select', category: 'input' },
-});
-
-const submit = defineStatic({
-	$type: 'submit',
-	schema: SubmitSchema,
-	render: SubmitButton,
-	metadata: { name: 'Submit', category: 'action' },
-});
-
-export const elements = [input, textarea, select, submit];
-```
 
 ```tsx title="contact-form.react.tsx"
 import { createFormEngine, NotificationActionRegistration } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { contactForm } from './config';
 import { sendMessage } from './submit';
-import { elements } from './widgets.react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-export const engine = createFormEngine({ elements, actions: [NotificationActionRegistration] });
+export const engine = createFormEngine({
+	elements: schemaFormRegistrations,
+	actions: [NotificationActionRegistration],
+});
 
 /** Renders the form and calls `onSent` once the server has accepted the message. */
 export function ContactForm({ onSent }: { onSent: () => void }) {

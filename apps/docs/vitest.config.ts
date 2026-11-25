@@ -6,6 +6,22 @@ import { playwright } from '@vitest/browser-playwright';
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
+ * The aliases of the docs app, which the example files rely on.
+ *
+ * @remarks
+ * The Examples import `@/components/schema-engine/forms/registrations`, the barrel that installing the shadcn registry
+ * leaves in an app. The docs resolve it to `src/lib/installed-components/registrations.ts`, the same file as the
+ * `paths` of `tsconfig.json`. The exact specifier comes first so the `@` prefix does not claim it.
+ */
+const alias = {
+	'@/components/schema-engine/forms/registrations': path.resolve(
+		dirname,
+		'src/lib/installed-components/registrations.ts',
+	),
+	'@': path.resolve(dirname, 'src'),
+};
+
+/**
  * Dependencies the browser project pre-bundles before any test runs.
  *
  * @remarks
@@ -48,20 +64,12 @@ const browserOptimizedDeps = [
 
 export default defineConfig({
 	root: dirname,
-	resolve: {
-		alias: {
-			'@': path.resolve(dirname, 'src'),
-		},
-	},
+	resolve: { alias },
 	test: {
 		fileParallelism: false,
 		projects: [
 			{
-				resolve: {
-					alias: {
-						'@': path.resolve(dirname, 'src'),
-					},
-				},
+				resolve: { alias },
 				test: {
 					name: 'unit',
 					include: ['test/**/*.test.ts', 'scripts/**/*.test.ts', 'src/**/*.test.ts', 'src/**/*.test.tsx'],
@@ -71,6 +79,7 @@ export default defineConfig({
 				},
 			},
 			{
+				resolve: { alias },
 				optimizeDeps: { include: browserOptimizedDeps },
 				test: {
 					name: 'browser',

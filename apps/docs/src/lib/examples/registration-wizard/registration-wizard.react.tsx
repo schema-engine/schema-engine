@@ -3,11 +3,11 @@ import { createFormEngine, NotificationActionRegistration } from '@schema-engine
 import { FormRenderer } from '@schema-engine/forms-react';
 import { registration } from './config';
 import { register } from './submit';
-import { elements } from './widgets.react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { WizardRecipe } from './wizard.react';
 
 export const engine = createFormEngine({
-	elements,
+	elements: schemaFormRegistrations,
 	recipes: [WizardRecipe],
 	actions: [NotificationActionRegistration],
 });

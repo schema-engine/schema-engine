@@ -15,9 +15,18 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
+/** The labels of the subjects, which the options of the shadcn select show. */
+const subjects: Record<string, string> = { general: 'General question', support: 'Technical support' };
+
+/** An option of the open listbox, which the select renders in a portal outside the form. */
+const option = (label: string) =>
+	[...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+		(candidate) => candidate.textContent === label,
+	)!;
+
 interface Driver {
 	mount(onSent: () => void): Promise<HTMLElement>;
-	/** Picks a subject, the way a visitor does: a native select in React, the Radiant select's listbox in Radiant. */
+	/** Picks a subject, the way a visitor does: the trigger and the option of the listbox, in either renderer. */
 	choose(host: HTMLElement, value: string): Promise<void>;
 }
 
@@ -31,7 +40,8 @@ const react: Driver = {
 		return host;
 	},
 	async choose(host, value) {
-		await userEvent.selectOptions(host.querySelector<HTMLSelectElement>('select[name="subject"]')!, value);
+		await userEvent.click(host.querySelector<HTMLElement>('[data-slot="select-trigger"]')!);
+		await userEvent.click(option(subjects[value]!));
 	},
 };
 

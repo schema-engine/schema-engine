@@ -16,10 +16,18 @@ const repository = join(import.meta.dirname, '../../..');
 const SHADCN_PAGES: Record<string, string> = {
 	'forms-react/getting-started': 'The optional second path of the React quick start.',
 	'forms-react/components': 'The fields the shadcn registry installs and how to own them.',
+	'forms-react/other-react-state': 'The settings panel registers the fields the shadcn registry installs.',
 	'forms-react/layouts': 'The default view recipes the shadcn registry installs.',
 	'layout/theming': 'The colour roles the React registry controls read.',
 	'layout/appearance-axes': 'What the React registry controls read of the size and tone axes.',
-	'examples/theming': 'The colour roles a shadcn theme reads, which the tone axis sets.',
+	'examples/overview': 'Says where the fields of the React examples come from.',
+	'examples/contact-form': 'The React file registers the fields the shadcn registry installs.',
+	'examples/registration-wizard': 'The React file registers the fields the shadcn registry installs.',
+	'examples/branching-survey': 'The React file registers the fields the shadcn registry installs.',
+	'examples/submit-notify-reset': 'The React file registers the fields the shadcn registry installs.',
+	'examples/server-driven-form': 'The React file registers the fields the shadcn registry installs.',
+	'examples/theming':
+		'The colour roles a shadcn theme reads, which the tone axis sets, and the fields the registry installs.',
 };
 
 /** What the docs app's own MDX imports look like: `import { X } from '@/components/x'`. They are not prose. */

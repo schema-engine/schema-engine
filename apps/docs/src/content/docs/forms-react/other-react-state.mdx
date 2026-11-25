@@ -15,73 +15,15 @@ A form that is mounted is a `<form>` element, and HTML does not allow a form ins
 
 ## A settings panel
 
-The panel holds the notification settings. It mounts a form with a `switch` and a `select`, both widgets written with `useFormField`, prefilled from the saved settings. The form reports each change, and the panel keeps the latest values until the user saves:
+The panel holds the notification settings. It mounts a form with a `switch` and a `select`, the fields [the shadcn registry installs](/docs/forms-react/getting-started#optional-start-from-the-shadcn-registry) (`@/components/schema-engine/forms/registrations` is the barrel it leaves in your app), prefilled from the saved settings. The form reports each change, and the panel keeps the latest values until the user saves:
 
 ```tsx title="settings-panel.react.tsx"
 import { useState } from 'react';
-import * as z from 'zod/mini';
-import { BaseFieldSchema, createFormEngine, defineInput, type FormValues } from '@schema-engine/forms';
+import { createFormEngine, type FormValues } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
-import { fieldText, useFormField } from '@schema-engine/forms-react/hooks';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-const SwitchSchema = z.extend(BaseFieldSchema, { $type: z.literal('switch') });
-
-/** A component with no native value to read: controlled, so it renders with its value. */
-function SwitchField(config: z.output<typeof SwitchSchema>) {
-	const { value, onChange, onBlur, fieldProps } = useFormField(config, { controlled: true });
-	return (
-		<button
-			{...fieldProps}
-			type="button"
-			role="switch"
-			aria-checked={value === true}
-			aria-label={config.label}
-			onClick={() => onChange(value !== true)}
-			onBlur={onBlur}
-		>
-			{config.label}: {value === true ? 'on' : 'off'}
-		</button>
-	);
-}
-
-const SelectSchema = z.extend(BaseFieldSchema, {
-	$type: z.literal('select'),
-	options: z.array(z.object({ value: z.string(), label: z.string() })),
-});
-
-function SelectField(config: z.output<typeof SelectSchema>) {
-	const { defaultValue, fieldProps, labelProps } = useFormField(config);
-	return (
-		<div>
-			<label {...labelProps}>{config.label}</label>
-			<select {...fieldProps} defaultValue={fieldText(defaultValue)}>
-				{config.options.map((option) => (
-					<option key={option.value} value={option.value}>
-						{option.label}
-					</option>
-				))}
-			</select>
-		</div>
-	);
-}
-
-const switchElement = defineInput({
-	$type: 'switch',
-	schema: SwitchSchema,
-	render: SwitchField,
-	value: () => z.boolean(),
-	metadata: { name: 'Switch', category: 'input' },
-});
-
-const selectElement = defineInput({
-	$type: 'select',
-	schema: SelectSchema,
-	render: SelectField,
-	value: () => z.string(),
-	metadata: { name: 'Select', category: 'input' },
-});
-
-const engine = createFormEngine({ elements: [switchElement, selectElement] });
+const engine = createFormEngine({ elements: schemaFormRegistrations });
 
 const notificationsForm = engine.defineForm({
 	id: 'notifications',
@@ -157,7 +99,7 @@ export function SettingsPanel({
 }
 ```
 
-The switch has no native value to read, so it is controlled: `useFormField(config, { controlled: true })` gives it `value` and `onChange(value)`. The select is a native control, so it is uncontrolled and takes `defaultValue`. [Writing a widget](/docs/forms-react/widgets) covers both modes.
+The panel hands the fields only their values: the switch and the select read `defaultValues` when the form is created, and the form reports each change. [Writing a widget](/docs/forms-react/widgets) covers how a field reads and writes its value, for a field of your own.
 
 `onChange` receives `FormValues`, so the panel narrows each value before it trusts it. With `engine.defineForm()` of a literal config, `defaultValues` is typed from the config, and [Submitted values](/docs/forms/form-state#submitted-values) shows how to type the output too.
 

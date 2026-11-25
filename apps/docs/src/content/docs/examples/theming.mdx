@@ -23,6 +23,8 @@ For React:
 pnpm add @schema-engine/forms @schema-engine/forms-react @schema-engine/layout react react-dom zod
 ```
 
+The React file imports the fields that the shadcn registry installs. Run `pnpm dlx shadcn@latest add schema-engine/schema-engine/schema-form` once, as the [Contact form](/docs/examples/contact-form#install) explains.
+
 For Radiant:
 
 ```bash
@@ -198,44 +200,10 @@ export const themedForm: FormConfig = {
 
 ## The renderer
 
-Each tab builds an engine on the compiled theme, passed as `layout`: an engine that is not built on it rejects the form with `Unknown axis 'tone'`. How each renderer emits the shared stylesheet is in [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines). The React renderer has no elements or recipes of its own, so its tab starts with an input and a card recipe. Radiant ships both. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
+Each tab builds an engine on the compiled theme, passed as `layout`: an engine that is not built on it rejects the form with `Unknown axis 'tone'`. How each renderer emits the shared stylesheet is in [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines). The React renderer has no recipes of its own, so its tab starts with a card recipe, and it registers the installed fields. Radiant ships both. Both engines register `NotificationActionRegistration`, the package's own, which only logs the message because the package cannot know how an app shows one; the demos on this page register one that shows a toast, and [Submit, notify and reset](/docs/examples/submit-notify-reset) registers one of your own.
 
 <RendererTabs name="theming">
 <div data-renderer="react">
-
-```tsx title="widgets.react.tsx"
-import * as z from 'zod/mini';
-import { BaseFieldSchema, defineInput } from '@schema-engine/forms';
-import { fieldText, useFieldHost, useFormField } from '@schema-engine/forms-react/hooks';
-
-const InputSchema = z.extend(BaseFieldSchema, {
-	$type: z.literal('input'),
-	inputType: z.optional(z.enum(['text', 'email', 'password'])),
-});
-
-/** The host from `useFieldHost` carries the grid placement and the theme id, so `grid: { width: 'half' }` works. */
-function InputField(config: z.output<typeof InputSchema>) {
-	const { defaultValue, error, fieldProps, labelProps, errorProps } = useFormField(config);
-	const host = useFieldHost(config.grid, config.style);
-	return (
-		<div {...host}>
-			<label {...labelProps}>{config.label}</label>
-			<input {...fieldProps} type={config.inputType ?? 'text'} defaultValue={fieldText(defaultValue)} />
-			{errorProps && <p {...errorProps}>{error}</p>}
-		</div>
-	);
-}
-
-const input = defineInput({
-	$type: 'input',
-	schema: InputSchema,
-	render: InputField,
-	value: () => z.string(),
-	metadata: { name: 'Input', category: 'input' },
-});
-
-export const elements = [input];
-```
 
 ```tsx title="card.react.tsx"
 import { getAppearanceAttributes } from '@schema-engine/layout';
@@ -295,11 +263,11 @@ import { FormRenderer } from '@schema-engine/forms-react';
 import { CardRecipe } from './card.react';
 import { themedForm } from './config';
 import { theme } from './theme';
-import { elements } from './widgets.react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
 /** The compiled theme goes in as `layout`, so the form carries its `data-se-theme` and the stylesheet applies. */
 export const engine = createFormEngine({
-	elements,
+	elements: schemaFormRegistrations,
 	recipes: [CardRecipe],
 	layout: theme,
 	actions: [NotificationActionRegistration],
