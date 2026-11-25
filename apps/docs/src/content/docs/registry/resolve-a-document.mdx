@@ -134,11 +134,9 @@ export function render({ registration, config, children }: ResolvedNode): string
 A valid document renders. An invalid one reports an unknown `$type` and a configuration that its schema rejects, each with its path:
 
 ```ts title="check.ts"
+import { formatIssuePath } from '@schema-engine/registry';
 import { render } from './render';
 import { resolve } from './resolve';
-
-const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
-	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
 
 const confirmation = {
 	$type: 'stack',
@@ -172,7 +170,7 @@ const broken = {
 for (const document of [confirmation, broken]) {
 	const resolution = resolve(document);
 	if (resolution.success) console.log(render(resolution.tree));
-	else for (const issue of resolution.issues) console.log(`${where(issue.path)}: ${issue.message}`);
+	else for (const issue of resolution.issues) console.log(`${formatIssuePath(issue.path)}: ${issue.message}`);
 }
 ```
 
@@ -188,11 +186,11 @@ for (const document of [confirmation, broken]) {
 ```
 
 ```text
-children.1.children.0.label: Invalid input: expected string, received number
-children.1.children.1.$type: No registration for $type 'chip'.
+children[1].children[0].label: Invalid input: expected string, received number
+children[1].children[1].$type: No registration for $type 'chip'.
 ```
 
-Each issue names the node that failed: `children.1.children.0.label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix.
+Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way.
 
 ## Take it further
 

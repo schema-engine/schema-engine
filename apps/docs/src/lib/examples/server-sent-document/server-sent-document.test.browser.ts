@@ -45,8 +45,8 @@ describe('ServerDocument', () => {
 			.toBe('Order 1042 confirmed Thanks for shopping with us.');
 		expect(host.querySelector('a.button')?.getAttribute('href')).toBe('/parcels/1042');
 		expect([...host.querySelectorAll('[role="alert"] li')].map((item) => item.textContent)).toEqual([
-			'1.tone: Invalid option: expected one of "info"|"success"|"danger"',
-			"2.$type: No registration for $type 'countdown'.",
+			'[1].tone: Invalid option: expected one of "info"|"success"|"danger"',
+			"[2].$type: No registration for $type 'countdown'.",
 		]);
 	});
 

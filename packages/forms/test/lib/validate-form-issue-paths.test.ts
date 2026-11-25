@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
-import { FormValidationError, formatIssuePath, type FormValidationIssue } from '@/lib/validate-form';
+import { FormValidationError, type FormValidationIssue } from '@/lib/validate-form';
 import { elementChildrenSchema } from '@/lib/element-children';
 import { BaseFieldSchema } from '@/schemas/base-field';
 import { defineFormRecipe } from '@/recipes';
@@ -556,14 +556,6 @@ describe('error message ids', () => {
 		expect(error.issues[0]?.path).toEqual(['steps', 0, 'elements', 1, 'elements', 0, 'grid', 'width']);
 		expect(error.issues[0]?.message).not.toContain('email');
 	});
-
-	test('formatIssuePath adds ids only when it is given the config', () => {
-		const source = { steps: [{ id: 'main', elements: [{ id: 'email' }] }] };
-		const path = ['steps', 0, 'elements', 0, 'id'];
-
-		expect(formatIssuePath(path)).toBe('steps[0].elements[0].id');
-		expect(formatIssuePath(path, source)).toBe('steps[0] (main).elements[0] (email).id');
-	});
 });
 
 describe('safeValidateForm', () => {
@@ -636,17 +628,5 @@ describe('FormValidationError', () => {
 
 		expect(error.message).toBe('Form is broken.');
 		expect(error.name).toBe('FormValidationError');
-	});
-});
-
-describe('formatIssuePath', () => {
-	test.each([
-		[[], ''],
-		[['view', '$type'], 'view.$type'],
-		[['steps', 0, 'elements', 2, 'grid', 'width'], 'steps[0].elements[2].grid.width'],
-		[['actions', 1, 0, '$type'], 'actions[1][0].$type'],
-		[[0, 'id'], '[0].id'],
-	])('%j reads as %j', (path, text) => {
-		expect(formatIssuePath(path)).toBe(text);
 	});
 });

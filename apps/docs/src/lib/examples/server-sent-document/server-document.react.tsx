@@ -1,13 +1,13 @@
 /** @jsxImportSource react */
 import { Fragment, useEffect, useState } from 'react';
-import { safeParseNode, type StandardSchemaIssue } from '@schema-engine/registry';
+import { formatIssuePath, safeParseNode, type StandardSchemaIssue } from '@schema-engine/registry';
 import { components } from './components.react';
 
 function Fallback({ issues }: { issues: StandardSchemaIssue[] }) {
 	return (
 		<ul role="alert">
 			{issues.map(({ path, message }, index) => (
-				<li key={index}>{`${path?.join('.')}: ${message}`}</li>
+				<li key={index}>{`${formatIssuePath(path)}: ${message}`}</li>
 			))}
 		</ul>
 	);

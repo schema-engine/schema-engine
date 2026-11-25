@@ -33,7 +33,7 @@ export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } fr
 export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from '@/lib/form-view';
 export type { FormValidationIssue, FormValidationResult } from './validate-form/issues';
 export type { ValidateFormOptions } from './validate-form/options';
-export { FormValidationError, formatIssuePath } from './validate-form/validation-error';
+export { FormValidationError } from './validate-form/validation-error';
 
 /**
  * Validate a single element against its registration schema, including nested child elements.

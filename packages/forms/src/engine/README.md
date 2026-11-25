@@ -52,7 +52,7 @@ The public usage examples are in the [forms package README](../../README.md#engi
 
 `validateForm` and `safeValidateForm` share one pipeline (`safeValidateFormConfig` in `lib/validate-form.ts`, which also re-exports the public pieces). The checks it
 runs live next to it in `lib/validate-form/`: `step-checks.ts` (unique step ids; a step constraint reads only non-row fields of earlier steps, so the first step has none), `issues.ts` (issue types and path helpers), `validation-error.ts`
-(`FormValidationError`, `formatIssuePath`), `schema-issues.ts` (schema issues to form issues, including the
+(`FormValidationError`; `formatIssuePath` comes from `@schema-engine/registry`), `schema-issues.ts` (schema issues to form issues, including the
 closest-union-branch choice), `grid-checks.ts` (named placement, areas and template checks), `parse-elements.ts`
 (elements and actions) and `parse-view.ts` (the view recipe).
 `validateForm` throws a `FormValidationError`; `safeValidateForm` returns `{ success: true, data }` or

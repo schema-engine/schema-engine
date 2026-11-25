@@ -43,10 +43,10 @@ export function resolve(node: unknown): string {
 
 ## Entry points
 
-| Import                         | Holds                                                                                                                               |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/registry`      | `createRegistry`, `BaseRegistry`, the registration types, `safeParseNode`, `safeParseStandardSchema` and `assertStandardSchema`     |
-| `@schema-engine/registry/yaml` | `parseYaml`, `safeParseYaml` and `stringifyYaml`, which report errors by line and column. Needs the optional peer dependency `yaml` |
+| Import                         | Holds                                                                                                                                              |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/registry`      | `createRegistry`, `BaseRegistry`, the registration types, `safeParseNode`, `safeParseStandardSchema`, `assertStandardSchema` and `formatIssuePath` |
+| `@schema-engine/registry/yaml` | `parseYaml`, `safeParseYaml` and `stringifyYaml`, which report errors by line and column. Needs the optional peer dependency `yaml`                |
 
 ## Documentation
 

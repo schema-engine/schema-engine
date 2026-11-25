@@ -24,8 +24,8 @@ describe('the node example', () => {
 
 	test('an issue starts with the position of the node it is about', () => {
 		const node: unknown = JSON.parse('{ "$type": "card", "title": 5, "tone": "info" }');
-		expect(nodeIssues(node, 2)).toEqual(['children.2.title: Invalid input']);
-		expect(nodeIssues({ $type: 'chip' }, 3)).toEqual(["children.3.$type: No registration for $type 'chip'."]);
+		expect(nodeIssues(node, 2)).toEqual(['children[2].title: Invalid input']);
+		expect(nodeIssues({ $type: 'chip' }, 3)).toEqual(["children[3].$type: No registration for $type 'chip'."]);
 	});
 });
 

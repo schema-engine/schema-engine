@@ -38,14 +38,16 @@ export const widgets = createRegistry('Widget', [...defaults, custom]);
 `safeParseNode(registry, node, path?)` checks one node of a document: it looks `node.$type` up in the registry (anything with `get(key)`), validates the node with the registration's schema and returns `{ success: true, registration, data }` or `{ success: false, issues }`. A node that is not an object with a string `$type`, and a `$type` no registration answers, are issues, not throws. Every issue's `path` starts with `path`, the position of the node in its document, so a walk over a tree passes each child its own.
 
 ```ts title="registry/draw-node.ts"
-import { safeParseNode } from '@schema-engine/registry';
+import { formatIssuePath, safeParseNode } from '@schema-engine/registry';
 import { widgets } from './widgets';
 
 export function nodeIssues(node: unknown, index: number): string[] {
 	const parsed = safeParseNode(widgets, node, ['children', index]);
-	return parsed.success ? [] : parsed.issues.map((issue) => `${issue.path?.join('.')}: ${issue.message}`);
+	return parsed.success ? [] : parsed.issues.map((issue) => `${formatIssuePath(issue.path)}: ${issue.message}`);
 }
 ```
+
+`formatIssuePath(path, source?)` writes the `path` of an issue as text: keys joined by dots and indexes in brackets (`children[1].label`), the empty string for a missing or empty path. A segment may be a key or a Standard Schema `{ key }` object. Given the document as `source`, an array item with a string `id` is followed by it, `children[1] (hero).label`. `@schema-engine/forms` re-exports it.
 
 ## BaseRegistry
 

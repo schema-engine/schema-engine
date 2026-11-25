@@ -110,15 +110,13 @@ This is what a server sends: stock is reserved, then the card is charged while t
 
 ```ts title="run-workflow.ts"
 import { ActionDispatcher, parseActions } from '@schema-engine/actions';
+import { formatIssuePath } from '@schema-engine/registry';
 import { registry, type ShopContext } from './shop-actions';
-
-const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
-	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
 
 export async function runWorkflow(text: string, context: ShopContext): Promise<void> {
 	const parsed = parseActions(registry, JSON.parse(text));
 	if (!parsed.success) {
-		for (const issue of parsed.issues) console.log(`issue ${where(issue.path)}: ${issue.message}`);
+		for (const issue of parsed.issues) console.log(`issue ${formatIssuePath(issue.path)}: ${issue.message}`);
 		return;
 	}
 	const results = await new ActionDispatcher(registry).dispatch({
@@ -132,7 +130,7 @@ export async function runWorkflow(text: string, context: ShopContext): Promise<v
 }
 ```
 
-A workflow arrives as text, and `parseActions` takes its parsed value. When it returns `success: false`, nothing has run: `issues` lists every bad entry, in order. The `path` of an issue is explained in the [`parseActions` reference](/docs/actions/api-reference#parseactions): `1.0.amount` is the `amount` of the first member of the group at index 1.
+A workflow arrives as text, and `parseActions` takes its parsed value. When it returns `success: false`, nothing has run: `issues` lists every bad entry, in order. The `path` of an issue is explained in the [`parseActions` reference](/docs/actions/api-reference#parseactions): `[1][0].amount` is the `amount` of the first member of the group at index 1.
 
 ### Run three workflows
 
@@ -169,7 +167,7 @@ charge: succeeded, Charged 120
 warehouse: succeeded, Warehouse notified
 receipt: succeeded, Receipt sent
 a bad entry
-issue 0.quantity: Invalid input: expected number, received string
+issue [0].quantity: Invalid input: expected number, received string
 a declined card
 reserve: succeeded, Reserved 2 of tee-black-m
 charge: failed, The card was declined
