@@ -6,5 +6,5 @@ const page = readFileSync(join(import.meta.dirname, '../src/content/docs/forms/f
 
 test('the form state page documents the suite by the name the package exports', () => {
 	expect(page).toContain("import { formStateContainerConformance } from '@schema-engine/forms/testing';");
-	expect(page).toContain('formStateContainerConformance(createFormStateContainer);');
+	expect(page).toContain('formStateContainerConformance(createFormStateContainer, { describe, test });');
 });

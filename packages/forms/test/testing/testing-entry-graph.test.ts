@@ -38,16 +38,13 @@ function reachableFrom(entry: string, graph: ReturnType<typeof importsGraph>): s
 	return [...seen];
 }
 
-test('only the testing entry reaches vitest: no other entry imports it, directly or through a chunk', () => {
+test('no built entry reaches vitest, the testing entry included', () => {
 	const files = sourcesUnder(dist);
 	const graph = importsGraph(files);
-	const entries = files.filter(
-		(file) =>
-			!path.basename(file).startsWith('chunk-') && !path.relative(dist, file).startsWith(`testing${path.sep}`),
-	);
+	const entries = files.filter((file) => !path.basename(file).startsWith('chunk-'));
 	const reachingVitest = (file: string) => reachableFrom(file, graph).some((reached) => graph.get(reached)?.vitest);
 
 	expect(entries.length).toBeGreaterThan(10);
 	expect(entries.filter(reachingVitest).map((file) => path.relative(dist, file))).toEqual([]);
-	expect(reachingVitest(path.join(dist, 'testing', 'index.js'))).toBe(true);
+	expect(reachableFrom(path.join(dist, 'testing', 'index.js'), graph).length).toBeGreaterThan(0);
 });

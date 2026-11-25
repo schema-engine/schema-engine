@@ -2,6 +2,7 @@
  * The conformance suite of the form state container contract.
  *
  * @remarks
- * It imports `vitest`, an optional peer dependency of the package: import this entry only from a test file.
+ * It depends on no test runner: pass the `describe` and `test` of Vitest, Jest, Bun test, `node:test` or any runner
+ * with the same two functions. Import this entry only from a test file.
  */
-export { formStateContainerConformance } from './form-state-container-conformance';
+export { formStateContainerConformance, type ConformanceRunner } from './form-state-container-conformance';

@@ -2,7 +2,7 @@
  * The form state container: the contract, the factory and the reads a binding builds on.
  *
  * @remarks
- * The conformance suite is not exported here: it imports `vitest`, so it has its own entry,
+ * The conformance suite is not exported here: it is test tooling, so it has its own entry,
  * `@schema-engine/forms/testing`.
  */
 export { createFormStateContainer } from './create-form-state-container';

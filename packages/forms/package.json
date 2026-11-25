@@ -70,13 +70,7 @@
 		"@schema-engine/registry": "workspace:^"
 	},
 	"peerDependencies": {
-		"zod": "^4.0.17",
-		"vitest": "^4.0.13"
-	},
-	"peerDependenciesMeta": {
-		"vitest": {
-			"optional": true
-		}
+		"zod": "^4.0.17"
 	},
 	"exports": {
 		"./package.json": {

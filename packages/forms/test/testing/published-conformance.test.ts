@@ -6,10 +6,11 @@ await import('../../../../test-utils/skill-examples/forms/container-conformance.
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
-test('the testing entry is declared with built code and types, and vitest is an optional peer', () => {
+test('the testing entry is declared with built code and types, and vitest is no peer', () => {
 	const entry = pkg.exports['./testing'];
 	expect(entry).toEqual({ types: './dist/testing/index.d.ts', import: './dist/testing/index.js' });
 	expect(existsSync(`${root}${entry.import}`)).toBe(true);
 	expect(existsSync(`${root}${entry.types}`)).toBe(true);
-	expect(pkg.peerDependenciesMeta.vitest).toEqual({ optional: true });
+	expect(pkg.peerDependencies).not.toHaveProperty('vitest');
+	expect(pkg).not.toHaveProperty('peerDependenciesMeta');
 });
