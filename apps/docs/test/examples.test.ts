@@ -30,7 +30,9 @@ describe('the Examples', () => {
 		'%s imports no UI framework and no forms package',
 		(id) => {
 			const example = examples.find((candidate) => candidate.id === id);
-			const packages = example?.files.flatMap((file) => importsOf(file.source).map(packageOf)) ?? [];
+			const packages = [...(example?.files ?? []), ...(example?.helpers ?? [])].flatMap((file) =>
+				importsOf(file.source).map(packageOf),
+			);
 			expect(packages.length).toBeGreaterThan(0);
 			expect(
 				packages.filter((name) => /^(react|react-dom|@ecopages\/.+|@schema-engine\/forms.*)$/.test(name)),
@@ -69,6 +71,7 @@ describe('the example format checker', () => {
 				source: '/** @jsxImportSource react */\nexport const View = () => <p />;\n',
 			},
 		],
+		helpers: [],
 		tests: [{ name: 'demo.test.ts', source: "import { message } from './main';\n" }],
 	};
 	const goodPage = [
@@ -116,6 +119,45 @@ describe('the example format checker', () => {
 		expect(importsOf('import { a } from "./a";\nexport * from "../b";')).toEqual(['./a', '../b']);
 		const [first] = problems({ files: [{ name: 'main.ts', source: 'import { x } from "@/lib/x";\n' }] }, goodPage);
 		expect(first).toContain('main.ts imports @/lib/x');
+	});
+
+	test('lets a helper be imported without being shown, and fails what a hidden file would hide', () => {
+		const helper = {
+			name: 'clock.helper.ts',
+			source: "import * as z from 'zod/mini';\nexport const now = () => z.string();\n",
+		};
+		const withHelper = {
+			files: [
+				{ name: 'main.ts', source: "import { now } from './clock.helper';\nexport const message = now();\n" },
+			],
+			helpers: [helper],
+		};
+		const withPage = [
+			'## Install',
+			`\`\`\`bash\n${install}\n\`\`\``,
+			shown('main.ts', 'ts', withHelper.files[0]!.source.trimEnd()),
+		].join('\n\n');
+		expect(problems(withHelper, withPage)).toEqual([]);
+		expect(
+			problems(withHelper, `${withPage}\n\n${shown('clock.helper.ts', 'ts', helper.source.trimEnd())}`),
+		).toEqual(['the page shows clock.helper.ts, which is not one of the files']);
+		expect(
+			problems({ ...withHelper, files: [{ name: 'main.ts', source: 'export const message = 1;\n' }] }, withPage),
+		).toEqual([
+			'the helper clock.helper.ts is not imported by any file',
+			'the page does not show main.ts word for word',
+		]);
+		const plain = {
+			helpers: [],
+			files: [
+				{ name: 'main.ts', source: withHelper.files[0]!.source.replace('./clock.helper', './clock') },
+				{ name: 'clock.ts', source: helper.source },
+			],
+		};
+		expect(problems(plain, withPage)).toEqual([
+			'the page does not show main.ts word for word',
+			'the page does not show clock.ts word for word',
+		]);
 	});
 
 	test('fails a titled fence on the page for a file that is not in the folder', () => {

@@ -15,7 +15,6 @@ With it you can:
 - Author form configs in TypeScript with `engine.defineForm()`, typed from your registrations, or load them as JSON and check them with `engine.validateForm()`.
 - Register your own elements, view recipes, actions and validation rules.
 - Validate values with the 27 validation rules the engine registers, and with rules of your own.
-- Run a form without a renderer, with `createFormRuntime`, to test it or to write a renderer.
 - Generate JSON Schema from what the engine has registered, for editors and tools.
 
 ## What a form can do
@@ -42,11 +41,11 @@ A form's behavior is independent of the element that collects a value and the re
 pnpm add @schema-engine/forms zod
 ```
 
-[Installation and quick start](/docs/forms/getting-started) registers two elements, checks a form loaded as JSON and submits it with no renderer. The `zod` package provides the `zod/mini` entry point that first-party schemas use. Registrations may use any Standard Schema validator.
+[Installation and quick start](/docs/forms/getting-started) creates an engine with the elements of a renderer, checks a form loaded as JSON and renders it. The `zod` package provides the `zod/mini` entry point that first-party schemas use. Registrations may use any Standard Schema validator.
 
 ## Where to go next
 
-- [Installation and quick start](/docs/forms/getting-started) - Build a form engine and submit a form with no renderer
+- [Installation and quick start](/docs/forms/getting-started) - Create the engine, check a form loaded as JSON and render it
 - [Engine and registrations](/docs/forms/engine) - createFormEngine, registrations, typed authoring and configuration errors
 - [Constraints](/docs/forms/constraints) - Show, hide, enable, disable or require a field from another value
 - [Validation](/docs/forms/validation) - The 27 built-in rules and presets

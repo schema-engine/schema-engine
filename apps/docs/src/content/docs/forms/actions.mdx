@@ -31,31 +31,18 @@ An action runs only when the engine has its registration, and the config refers 
 | `gtm_event`         | `GTMActionRegistration`          | `@schema-engine/forms/browser` |
 | `reset`             | `ResetActionRegistration`        | `@schema-engine/forms/browser` |
 
+The engine of the [quick start](/docs/forms/getting-started) registers none of them. `engine.extend` derives an engine that also registers these:
+
 ```ts title="actions-engine.ts"
-import * as z from 'zod/mini';
-import {
-	BaseFieldSchema,
-	NotificationActionRegistration,
-	SubmitActionRegistration,
-	createFormEngine,
-	defineInput,
-} from '@schema-engine/forms';
+import { NotificationActionRegistration, SubmitActionRegistration } from '@schema-engine/forms';
 import {
 	AutoSaveActionRegistration,
 	GTMActionRegistration,
 	ResetActionRegistration,
 } from '@schema-engine/forms/browser';
+import { engine as base } from './engine';
 
-const text = defineInput({
-	$type: 'text',
-	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
-	metadata: { name: 'Text', category: 'input' },
-	value: () => z.string(),
-	render: () => null,
-});
-
-export const engine = createFormEngine({
-	elements: [text],
+export const engine = base.extend({
 	actions: [
 		SubmitActionRegistration,
 		NotificationActionRegistration,
@@ -81,7 +68,7 @@ export const contact = engine.defineForm({
 		{
 			id: 'message',
 			title: 'Your message',
-			elements: [{ $type: 'text', id: 'subject', name: 'subject', label: 'Subject' }],
+			elements: [{ $type: 'input', id: 'subject', name: 'subject', label: 'Subject' }],
 		},
 	],
 	actions: [

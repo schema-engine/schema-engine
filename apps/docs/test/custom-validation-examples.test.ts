@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { runInNewContext, runInThisContext } from 'node:vm';
 import * as ts from 'typescript';
+import { anyValue } from './any-value';
 import * as z from 'zod/mini';
 import { afterEach, expect, test, vi } from 'vitest';
 import {
@@ -99,12 +100,24 @@ test('the documented username rule reports a taken name, and a failed request is
 	).rejects.toBeInstanceOf(ValidationUnavailable);
 });
 
+const quickStartInput = defineInput({
+	value: anyValue,
+	$type: 'input',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('input') }),
+	metadata: { name: 'Input', category: 'input' },
+	render: () => null,
+});
+
+/** The engine of the quick start the page continues from, with a headless `input` in place of the renderer's. */
+const quickStartEngine = createFormEngine({ elements: [quickStartInput] });
+
 test('the documented form uses a registered rule in the rules of an element, and rejects an unregistered one', () => {
 	const { engine, form } = runInNewContext(`${example('## Register a rule')}\nexports;`, {
 		exports: {},
 		require: (name: string) => {
 			if (name === 'zod/mini') return z;
 			if (name === '@schema-engine/forms') return { createFormEngine, defineInput, BaseFieldSchema };
+			if (name === './engine') return { engine: quickStartEngine };
 			throw new Error(`Unexpected import ${name}`);
 		},
 	}) as {
@@ -122,7 +135,9 @@ test('the documented form uses a registered rule in the rules of an element, and
 	expect(schema?.safeParse('12345').success).toBe(false);
 	const field = (rule: unknown) => ({
 		id: 'address',
-		steps: [{ id: 'main', title: 'Address', elements: [{ $type: 'text', id: 'zip', name: 'zip', rules: [rule] }] }],
+		steps: [
+			{ id: 'main', title: 'Address', elements: [{ $type: 'input', id: 'zip', name: 'zip', rules: [rule] }] },
+		],
 	});
 	expect(engine.safeValidateForm(field({ $type: 'postalcode' }))).toMatchObject({
 		success: false,

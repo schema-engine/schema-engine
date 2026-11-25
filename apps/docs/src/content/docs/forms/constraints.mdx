@@ -31,9 +31,9 @@ export const supportRequest = engine.defineForm({
 			id: 'request',
 			title: 'Your request',
 			elements: [
-				{ $type: 'text', id: 'topic', name: 'topic', label: 'Topic' },
+				{ $type: 'input', id: 'topic', name: 'topic', label: 'Topic' },
 				{
-					$type: 'text',
+					$type: 'input',
 					id: 'order-number',
 					name: 'orderNumber',
 					label: 'Order number',
@@ -45,7 +45,6 @@ export const supportRequest = engine.defineForm({
 			],
 		},
 	],
-	actions: [{ id: 'send', $type: 'submit', endpoint: '/api/support' }],
 });
 ```
 
@@ -80,40 +79,24 @@ A field with several constraints combines them: its `show` constraints are alter
 
 A field that is hidden or disabled is absent from the submitted values: it is a missing key, not an empty one, and a hidden `required` field does not block the submit. The same holds for every field of a skipped step.
 
-```ts title="submit-support.ts"
-import { createFormRuntime } from '@schema-engine/forms';
+```tsx title="support-form.tsx"
+import type { FormValues } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-radiant';
 import { engine } from './engine';
 import { supportRequest } from './support-request';
 
-async function main() {
-	const runtime = createFormRuntime({
-		engine,
-		config: supportRequest,
-		host: { focus: () => {} },
-		onSubmit: (values) => console.log('submitted', JSON.stringify(values)),
-	});
-	runtime.mount();
-
-	runtime.container.setValue('topic', 'billing');
-	console.log('billing:', await runtime.submit());
-
-	runtime.container.setValue('topic', 'order');
-	console.log('order, no number:', await runtime.submit());
-
-	runtime.container.setValue('orderNumber', '1042');
-	console.log('order, with number:', await runtime.submit());
+export function SupportForm({ onSubmit }: { onSubmit: (values: FormValues) => void }) {
+	return <FormRenderer engine={engine} config={supportRequest} onSubmit={onSubmit} />;
 }
-
-main();
 ```
 
-```text
-submitted {"topic":"billing"}
-billing: submitted
-order, no number: invalid
-submitted {"topic":"order","orderNumber":"1042"}
-order, with number: submitted
-```
+What the visitor does decides what `onSubmit` receives:
+
+| The visitor                             | The order number   | The submit                                                         |
+| --------------------------------------- | ------------------ | ------------------------------------------------------------------ |
+| Types `billing` as the topic            | Hidden             | `onSubmit` receives `{ topic: 'billing' }`                         |
+| Types `order` and leaves the number out | Shown and required | `invalid`: the number shows its error and `onSubmit` is not called |
+| Types `order` and the number `1042`     | Shown              | `onSubmit` receives `{ topic: 'order', orderNumber: '1042' }`      |
 
 With the topic `billing` the order number is hidden, so the submission holds only `topic`. With `order` the field is shown and required, so an empty submit is `invalid` and nothing is sent. Once it has a value, the submission carries it.
 

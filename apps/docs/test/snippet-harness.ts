@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import * as ts from 'typescript';
+import { guideHelpers } from './helper-files';
 
 /** Root of the docs content, one folder per section. */
 export const docsRoot = join(import.meta.dirname, '../src/content/docs');
@@ -213,15 +214,19 @@ export interface TitledRunner {
  * @remarks
  * A relative import (`./components`) loads the titled file of that name from the pages, the last page winning;
  * any other import comes from `modules`. `globals` are visible to the files, for example `Response` and
- * `fetch`.
+ * `fetch`. A page may also import a helper it does not show (`./i18n.helper`): `helpers` maps the file names to
+ * their text, the guide-source helpers by default, and a titled file of the same name wins. A `tsx` file is
+ * compiled as React JSX when its name ends in `.react.tsx` and as Ecopages JSX otherwise, so `modules` holds the
+ * matching `jsx-runtime`.
  */
 export function titledRunner(
 	pages: string | string[],
 	modules: Record<string, unknown>,
 	globals: Record<string, unknown> = {},
+	helpers: Record<string, string> = guideHelpers(),
 ): TitledRunner {
 	const names = [pages].flat();
-	const files = Object.assign({}, ...names.map(titledFiles)) as Record<string, string>;
+	const files = Object.assign({}, helpers, ...names.map(titledFiles)) as Record<string, string>;
 	const lines: string[] = [];
 	const loaded = new Map<string, Record<string, unknown>>();
 	const load = (name: string): Record<string, unknown> => {
@@ -230,7 +235,12 @@ export function titledRunner(
 		const source = files[name];
 		if (source === undefined) throw new Error(`${names.join(', ')} has no file titled ${name}`);
 		const output = ts.transpileModule(source, {
-			compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+			compilerOptions: {
+				target: ts.ScriptTarget.ES2022,
+				module: ts.ModuleKind.CommonJS,
+				jsx: ts.JsxEmit.ReactJSX,
+				jsxImportSource: name.endsWith('.react.tsx') ? 'react' : '@ecopages/jsx',
+			},
 		}).outputText;
 		const exports: Record<string, unknown> = {};
 		loaded.set(name, exports);
@@ -239,7 +249,10 @@ export function titledRunner(
 			exports,
 			console: { log: (...args: unknown[]) => lines.push(args.join(' ')) },
 			require: (request: string) => {
-				if (request.startsWith('./')) return load(`${request.slice(2)}.ts`);
+				if (request.startsWith('./')) {
+					const file = request.slice(2);
+					return load([`${file}.ts`, `${file}.tsx`].find((candidate) => candidate in files) ?? `${file}.ts`);
+				}
 				if (!(request in modules)) throw new Error(`Unexpected import ${request}`);
 				return modules[request];
 			},

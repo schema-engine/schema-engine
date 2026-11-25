@@ -27,7 +27,7 @@ This file is the router. It defines the concepts once; the references assume the
 
 - **config**: a form is plain data, a `FormConfig` of steps holding elements, each with a `$type`, a `name`, `rules` and `constraints`. `engine.defineForm()` (typed, in TypeScript) or `engine.validateForm(unknown)` (portable JSON) checks it against the engine's registrations and returns a frozen `NormalizedFormConfig` that the engine owns.
 - **container**: the form's state, a `FormStateContainer` from `@schema-engine/forms/state-container`. It owns the nested values, errors, warnings, touched and dirty marks, field-array row ids and the validation in flight. Paths are dotted (`contacts.1.email`) and `FORM_ROOT` is the form itself. Every change is a command (`setValue`, `blur`, `reportNative`, `validate`, `submit`, `reset`, `fieldArray`), and every read is a pure selector over an immutable snapshot.
-- **runtime**: `createFormRuntime` is the lifecycle every renderer shares. It builds the container and owns the submission, the wizard steps and their navigation, `form_mount` and `form_change`, and every action dispatch. A renderer supplies only what an element can do, such as focus.
+- **runtime**: for renderer authors, `createFormRuntime` is the lifecycle every renderer shares, and a renderer creates one for each form it draws. It builds the container and owns the submission, the wizard steps and their navigation, `form_mount` and `form_change`, and every action dispatch. A renderer supplies only what an element can do, such as focus. An app does not create one: it gives the engine and a config to a renderer.
 - **issues and the formatter**: the engine reports what is wrong as an issue (`type`, `source`, `ruleId`, `params`, `message`) and never makes up text. `formatIssue`, a function of the application, turns an issue into the words shown, and falls back to the issue's own `message`.
 
 Outcomes use one vocabulary: a check or a submission ends `passed`, `invalid` or `overtaken`. `overtaken` means an edit or a reset outran the check, so there is no verdict and nothing to show.
@@ -49,19 +49,19 @@ A symbol has one import path. `@schema-engine/forms` has these entries: `.` (the
 
 Each package ships this router as its own `skill/SKILL.md` and its references in its `skill/reference/` folder, so a reference is `node_modules/@schema-engine/<package>/skill/reference/<file>`, and any installed package has the router. Read the rows of the packages the project depends on and skip the others: a package that is not installed has no file. The deployed site serves the latest version of the router and of every reference at `/skill/`, with the references flat at `/skill/reference/<file>`.
 
-| To do                                                                        | Package                        | Reference                            |
-| ---------------------------------------------------------------------------- | ------------------------------ | ------------------------------------ |
-| Register something, build a registry, or read a YAML document                | `@schema-engine/registry`      | `reference/registry.md`              |
-| Parse, dispatch or cancel actions outside a form                             | `@schema-engine/actions`       | `reference/actions.md`               |
-| Build a grid, an appearance axis or a layout theme                           | `@schema-engine/layout`        | `reference/layout.md`                |
-| Create an engine, author a config, use the container or the runtime directly | `@schema-engine/forms`         | `reference/forms.md`                 |
-| Add a rule, explain a validation result, or translate messages               | `@schema-engine/forms`         | `reference/forms-validation.md`      |
-| Handle submit, server errors, CSRF or wizard steps                           | `@schema-engine/forms`         | `reference/forms-submission.md`      |
-| Run code on a form event, or define a form action                            | `@schema-engine/forms`         | `reference/forms-actions.md`         |
-| Render a form in React, or use its hooks                                     | `@schema-engine/forms-react`   | `reference/forms-react.md`           |
-| Write or change a React field widget, and test it                            | `@schema-engine/forms-react`   | `reference/forms-react-widgets.md`   |
-| Render a form in Radiant, or reach the container from an element             | `@schema-engine/forms-radiant` | `reference/forms-radiant.md`         |
-| Write or change a Radiant field widget, and test it                          | `@schema-engine/forms-radiant` | `reference/forms-radiant-widgets.md` |
+| To do                                                            | Package                        | Reference                            |
+| ---------------------------------------------------------------- | ------------------------------ | ------------------------------------ |
+| Register something, build a registry, or read a YAML document    | `@schema-engine/registry`      | `reference/registry.md`              |
+| Parse, dispatch or cancel actions outside a form                 | `@schema-engine/actions`       | `reference/actions.md`               |
+| Build a grid, an appearance axis or a layout theme               | `@schema-engine/layout`        | `reference/layout.md`                |
+| Create an engine, author a config, or use the container directly | `@schema-engine/forms`         | `reference/forms.md`                 |
+| Add a rule, explain a validation result, or translate messages   | `@schema-engine/forms`         | `reference/forms-validation.md`      |
+| Handle submit, server errors, CSRF or wizard steps               | `@schema-engine/forms`         | `reference/forms-submission.md`      |
+| Run code on a form event, or define a form action                | `@schema-engine/forms`         | `reference/forms-actions.md`         |
+| Render a form in React, or use its hooks                         | `@schema-engine/forms-react`   | `reference/forms-react.md`           |
+| Write or change a React field widget, and test it                | `@schema-engine/forms-react`   | `reference/forms-react-widgets.md`   |
+| Render a form in Radiant, or reach the container from an element | `@schema-engine/forms-radiant` | `reference/forms-radiant.md`         |
+| Write or change a Radiant field widget, and test it              | `@schema-engine/forms-radiant` | `reference/forms-radiant-widgets.md` |
 
 ## Documentation map
 

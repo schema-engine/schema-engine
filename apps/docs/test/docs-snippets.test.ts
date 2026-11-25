@@ -10,6 +10,8 @@ import {
 	titledFiles,
 	type CodeBlock,
 } from './snippet-harness';
+import { readExamples } from './example-format';
+import { guideHelpers } from './helper-files';
 
 vi.setConfig({ testTimeout: 120_000 });
 
@@ -123,7 +125,8 @@ const ALLOWED_FENCES: AllowedFence[] = [
  *
  * @remarks
  * `registrations` and `engine` are the Radiant setup of the Forms Radiant getting started page; the others are files
- * that a guide page imports without defining them.
+ * that a guide page imports without defining them. Helpers (`*.helper.ts` in the guide sources) are added to every
+ * page by {@link appFor}.
  */
 const APP: Record<string, string> = {
 	'registrations.ts': "export { schemaFormRegistrations as elements } from '@schema-engine/forms-radiant';",
@@ -153,14 +156,24 @@ const CONTINUES: Record<string, string[]> = {
 	'actions/sequences-and-cancellation': ['actions/overview'],
 	'forms/constraints': ['forms/getting-started'],
 	'forms/validation': ['forms/getting-started'],
-	'forms/engine': ['forms/getting-started'],
-	'forms/agent-tool': ['forms/getting-started'],
+	'forms/actions': ['forms/getting-started'],
+	'forms/validation-custom': ['forms/getting-started'],
 	'forms/csrf': ['forms/form-state'],
 	'forms/issue-text': ['forms/form-state'],
 };
 
+/** The helpers of the example a page of Examples shows, which sit in the folder of the example. */
+const EXAMPLE_HELPERS = Object.fromEntries(
+	readExamples().map((example) => [
+		`examples/${example.id}`,
+		Object.fromEntries(example.helpers.map((helper) => [helper.name, helper.source])),
+	]),
+);
+
 const appFor = (page: string): Record<string, string> => ({
 	...APP,
+	...guideHelpers(),
+	...EXAMPLE_HELPERS[page],
 	...Object.assign({}, ...(CONTINUES[page] ?? []).map(titledFiles)),
 });
 

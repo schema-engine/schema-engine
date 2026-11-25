@@ -1,68 +1,32 @@
 ---
 title: 'Installation and quick start'
-description: 'Install the forms package, register two elements, check a form loaded as JSON and submit it with no renderer.'
+description: 'Install the forms package and the Radiant renderer, create the engine, check a form loaded as JSON and render it.'
 order: 2
 ---
 
 # Installation and quick start
 
-This page builds a contact form with no renderer: two registered elements, a form config loaded as JSON, the issues a bad config reports, and one submission that prints the submitted values. The same engine and config render with [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview) once you register elements that draw.
+This page builds a contact form: an engine with the elements of a renderer, a form config loaded as JSON, the issues a bad config reports, and the form drawn on the page with its values handed to your code. It renders with [Forms Radiant](/docs/forms-radiant/overview). The same engine and config render with [Forms React](/docs/forms-react/getting-started) once you register elements that draw with React.
 
 ## Install
 
 ```bash
-pnpm add @schema-engine/forms zod
+pnpm add @schema-engine/forms @schema-engine/forms-radiant @schema-engine/layout @ecopages/radiant-ui @ecopages/radiant @ecopages/jsx @ecopages/signals zod
 ```
 
-Zod provides the `zod/mini` entry point the first-party schemas use. Registrations may use any [Standard Schema](https://standardschema.dev/) validator.
+Zod provides the `zod/mini` entry point the first-party schemas use. Registrations may use any [Standard Schema](https://standardschema.dev/) validator. Radiant renders with its own JSX runtime and three stylesheets: [Forms Radiant](/docs/forms-radiant/getting-started) sets them up. The [React quick start](/docs/forms-react/getting-started) has the equivalent setup for React.
 
-## 1. Register two elements
+## 1. Create the engine
 
-An element is a registration with a `$type`, a schema for its config and a `value` declaration: the schema of what the element contributes to the submitted values. `defineInput` checks `render` against the schema. These elements render nothing, which is all a headless run needs. A renderer package supplies elements that draw.
-
-```ts title="registrations.ts"
-import * as z from 'zod/mini';
-import { BaseFieldSchema, defineInput } from '@schema-engine/forms';
-
-export const text = defineInput({
-	$type: 'text',
-	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
-	metadata: { name: 'Text', category: 'input' },
-	value: () => z.string(),
-	render: () => null,
-});
-
-export const email = defineInput({
-	$type: 'email',
-	schema: z.extend(BaseFieldSchema, { $type: z.literal('email') }),
-	metadata: { name: 'Email', category: 'input' },
-	value: () => z.string(),
-	render: () => null,
-});
-```
-
-## 2. Build the engine
-
-`createFormEngine` builds an engine from the lists you register. A form that names an action in `actions` fails validation until the action's registration is on the engine, so register `SubmitActionRegistration` here. The submit action sends the values with the engine's `fetch`, which defaults to the global one. This engine passes a function that answers instead of a server:
+`createFormEngine` builds an engine from lists of registrations: the elements a form may use, the recipes that frame it, the actions it may run and the validation rules. The engine has no UI, so a renderer supplies the elements that draw. `createRadiantFormEngine` is `createFormEngine` with the Radiant elements and view recipes registered, and `schemaFormRegistrations` is the list of elements. To write an element of your own, see [Engine and registrations](/docs/forms/engine).
 
 ```ts title="engine.ts"
-import { createFormEngine, SubmitActionRegistration } from '@schema-engine/forms';
-import { email, text } from './registrations';
+import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant';
 
-export const requests: string[] = [];
-
-export const engine = createFormEngine({
-	elements: [text, email],
-	actions: [SubmitActionRegistration],
-	fetch: async (url, init) => {
-		const fields = init?.body instanceof FormData ? [...init.body.keys()] : [];
-		requests.push(`${init?.method} ${url} with ${fields.join(', ')}`);
-		return new Response(JSON.stringify({ ok: true }), { status: 200 });
-	},
-});
+export const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 ```
 
-## 3. Check a form loaded as JSON
+## 2. Check a form loaded as JSON
 
 A form config is data, so it can come from a file or a server. `engine.validateForm` checks it and returns a frozen `NormalizedFormConfig`, or throws a `FormValidationError`. `engine.safeValidateForm` returns `{ success, data }` or `{ success: false, issues }` instead. Each issue has a `message` and the `path` of the config key it is about. See [Form configuration errors](/docs/forms/engine#form-configuration-errors).
 
@@ -76,18 +40,19 @@ const contactJson = `{
 			"id": "details",
 			"title": "Your details",
 			"elements": [
-				{ "$type": "text", "id": "name", "name": "name", "label": "Name", "rules": [{ "$type": "required" }] },
+				{ "$type": "input", "id": "name", "name": "name", "label": "Name", "rules": [{ "$type": "required" }] },
 				{
-					"$type": "email",
+					"$type": "input",
 					"id": "email",
 					"name": "email",
 					"label": "Email",
+					"inputType": "email",
 					"rules": [{ "$type": "required" }, { "$type": "email" }]
-				}
+				},
+				{ "$type": "submit", "id": "send", "name": "send", "label": "Send" }
 			]
 		}
-	],
-	"actions": [{ "id": "send", "$type": "submit", "endpoint": "/api/contact" }]
+	]
 }`;
 
 export const contact = engine.validateForm(JSON.parse(contactJson));
@@ -107,7 +72,7 @@ const brokenJson = `{
 			"title": "Your details",
 			"elements": [
 				{ "$type": "phone", "id": "phone", "name": "phone" },
-				{ "$type": "text", "id": "name" }
+				{ "$type": "input", "id": "name" }
 			]
 		}
 	]
@@ -126,48 +91,26 @@ steps[0].elements[1].name: Invalid input: expected string, received undefined
 
 Both problems are reported at once, each with the position of the key to fix.
 
-## 4. Submit it
+## 3. Render it
 
-`createFormRuntime` is the framework-free instance a renderer creates for each rendered form: it owns the form state, the submission and every action dispatch. Here it stands in for a renderer, so the form can be submitted and its values printed:
+The renderer draws the config and owns the form's state. `FormRenderer` validates the config, renders it and calls `onSubmit` with the values that passed validation:
 
-```ts title="submit.ts"
-import { createFormRuntime } from '@schema-engine/forms';
+```tsx title="render.tsx"
+import type { FormValues } from '@schema-engine/forms';
+import { FormRenderer } from '@schema-engine/forms-radiant';
 import { contact } from './contact';
-import { engine, requests } from './engine';
+import { engine } from './engine';
 
-async function main() {
-	const runtime = createFormRuntime({
-		engine,
-		config: contact,
-		host: { focus: () => {} },
-		onSubmit: (values) => console.log('submitted', JSON.stringify(values)),
-	});
-	runtime.mount();
-
-	console.log(await runtime.submit());
-
-	runtime.container.setValue('name', 'Ada Lovelace');
-	runtime.container.setValue('email', 'ada@example.com');
-
-	console.log(await runtime.submit());
-	console.log(requests.join('\n'));
+export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => void }) {
+	return <FormRenderer engine={engine} config={contact} onSubmit={onSubmit} />;
 }
-
-main();
 ```
 
-```text
-invalid
-submitted {"name":"Ada Lovelace","email":"ada@example.com"}
-submitted
-POST /api/contact with name, email, metadata
-```
-
-The first submit finds the required fields empty, so the outcome is `invalid` and nothing is sent. After the values are set, the submit passes: the submit action posts the values, with a `metadata` field the action adds, to its `endpoint` through the engine's `fetch`, `onSubmit` receives the values and the outcome is `submitted`. [Wizard and runtime](/docs/forms/wizard) lists every option, outcome and the host a renderer supplies.
+With both fields empty, a submit shows the `required` messages and `onSubmit` is not called. Once the visitor fills them in, `onSubmit` receives `{ name: 'Ada Lovelace', email: 'ada@example.com' }`. Send the values with the `fetch` that `onSubmit` is given, or name a [`submit` action](/docs/forms/actions) in the config and let the engine post them. [Forms Radiant](/docs/forms-radiant/getting-started#4-render-a-form) covers the styles, the server-side rendering and the controls.
 
 ## Where to go next
 
 - [Engine and registrations](/docs/forms/engine): authoring modes, configuration errors, view recipes.
-- [Forms React](/docs/forms-react/overview) or [Forms Radiant](/docs/forms-radiant/overview): draw this form.
+- [Forms React](/docs/forms-react/getting-started) or [Forms Radiant](/docs/forms-radiant/getting-started): draw this form with the renderer you use.
 - [Validation](/docs/forms/validation): the 27 rules and your own.
 - [Actions](/docs/forms/actions): the actions a form ships.

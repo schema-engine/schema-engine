@@ -1,13 +1,14 @@
 import { eco } from '@ecopages/core';
 import type { JsxRenderable } from '@ecopages/jsx';
-import { renderPage } from '@/lib/examples/layout-page/host';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { renderPage } from '@/lib/examples/layout-page/host.react';
 import { dashboard } from '@/lib/examples/layout-page/page';
 import { theme } from '@/lib/examples/layout-page/theme';
 import './layout-page-demo.css';
 
 const FRAME_STYLE = `:root{color-scheme:light dark}body{margin:0;padding:1rem;background:Canvas;color:CanvasText;font-family:system-ui,sans-serif}.se-grid-item{padding:.75rem;border:1px dashed GrayText;border-radius:.375rem}h1,h2,p{margin:0}h1{font-size:1.25rem}h2{font-size:1rem}`;
 
-const frame = `<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><style>${theme.css}</style><style>${FRAME_STYLE}</style>${renderPage(dashboard)}`;
+const frame = `<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><style>${theme.css}</style><style>${FRAME_STYLE}</style>${renderToStaticMarkup(renderPage(dashboard))}`;
 
 /**
  * The widths the frame can be shown at: a desktop, where the theme's `lg` breakpoint is crossed, a tablet, past `md`

@@ -19,13 +19,14 @@ A validation registration has the shape of every registration:
 - `metadata`: a `name` and an optional `description`.
 - `category` and `handler`: the handler returns the Zod Mini schema that checks the value. `params`, `dependsOn` and `defaultFor` are optional.
 
-Pass registrations to `createFormEngine({ validations: [...] })`. They come after the built-in rules, so a registration with a built-in `$type` replaces it, and a later one replaces an earlier one without a warning. Nothing can be registered or removed once the engine is built.
+Pass registrations to `createFormEngine({ validations: [...] })`, or to `engine.extend({ validations: [...] })` to add them to an engine you have, as the example below does with the engine of the [quick start](/docs/forms/getting-started). They come after the built-in rules, so a registration with a built-in `$type` replaces it, and a later one replaces an earlier one without a warning. Nothing can be registered or removed once the engine is built.
 
 Every element that extends `BaseFieldSchema` accepts a rule of any registered `$type`. When the engine validates a form config (`defineForm`, `validateForm`) it checks each rule against the registry: the `$type` must be registered and the rule must satisfy the registration's `schema`. The JSON Schema export (`generateFormConfigSchema`) lists each registered rule once, as the `validation-rule` definition that every element's `rules` refers to, so an editor offers custom rules too. A rule is listed with its options when its `schema` is Zod; a schema from another Standard Schema library is listed by its `$type` only.
 
 ```typescript
 import * as z from 'zod/mini';
-import { createFormEngine, defineInput, BaseFieldSchema, type ValidationRegistration } from '@schema-engine/forms';
+import type { ValidationRegistration } from '@schema-engine/forms';
+import { engine as base } from './engine';
 
 type PostalCodeRule = { $type: 'postalCode'; country?: 'us' | 'ca'; message?: string };
 
@@ -39,15 +40,7 @@ const postalCode: ValidationRegistration<PostalCodeRule> = {
 		z.string().check(z.regex(rule.country === 'ca' ? /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/ : /^\d{5}(?:-\d{4})?$/)),
 };
 
-const text = defineInput({
-	$type: 'text',
-	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
-	metadata: { name: 'Text', category: 'input' },
-	value: () => z.string(),
-	render: () => null,
-});
-
-export const engine = createFormEngine({ elements: [text], validations: [postalCode] });
+export const engine = base.extend({ validations: [postalCode] });
 
 export const form = engine.defineForm({
 	id: 'address',
@@ -57,7 +50,7 @@ export const form = engine.defineForm({
 			title: 'Address',
 			elements: [
 				{
-					$type: 'text',
+					$type: 'input',
 					id: 'postal-code',
 					name: 'postalCode',
 					rules: [{ $type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' }],

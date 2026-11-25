@@ -16,7 +16,32 @@ The engine has three independent registries:
 - **Recipes** compose the form shell and optional header, progress, and action blocks.
 - **Actions** respond to form and step lifecycle triggers.
 
-```ts
+An element is a registration with a `$type`, a schema for its config and a `value` declaration: the schema of what the element contributes to the submitted values. `defineInput` checks `render` against the schema. These two elements render nothing, which is enough to check a form config. A renderer package supplies elements that draw: [Forms React](/docs/forms-react/getting-started) writes the first one, and [Forms Radiant](/docs/forms-radiant/getting-started) ships them.
+
+```ts title="registrations.ts"
+import * as z from 'zod/mini';
+import { BaseFieldSchema, defineInput } from '@schema-engine/forms';
+
+export const text = defineInput({
+	$type: 'text',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('text') }),
+	metadata: { name: 'Text', category: 'input' },
+	value: () => z.string(),
+	render: () => null,
+});
+
+export const email = defineInput({
+	$type: 'email',
+	schema: z.extend(BaseFieldSchema, { $type: z.literal('email') }),
+	metadata: { name: 'Email', category: 'input' },
+	value: () => z.string(),
+	render: () => null,
+});
+```
+
+`createFormEngine` builds the engine from the lists:
+
+```ts title="engine.ts"
 import { createFormEngine, SubmitActionRegistration } from '@schema-engine/forms';
 import { email, text } from './registrations';
 
@@ -26,7 +51,7 @@ export const engine = createFormEngine({
 });
 ```
 
-The registrations are the ones the [quick start](/docs/forms/getting-started) writes. A form that names a `$type` the engine has not registered fails validation, and a form that names the `submit` action fails the same way until `SubmitActionRegistration` is registered.
+A form that names a `$type` the engine has not registered fails validation, and a form that names the `submit` action fails the same way until `SubmitActionRegistration` is registered.
 
 Registration IDs are the `$type` values used in serialized configuration. Each list is stored in a read-only registry from `@schema-engine/registry`. A registration whose schema is not a Standard Schema throws when the engine is built, naming its `$type`. Only the winning registration of each `$type` is checked. The engine stores a frozen shallow copy of each winner, taken when it is built. Your objects are left untouched, but changing or spying on them afterwards does not reach the engine: spy or patch before building, or build a new engine.
 

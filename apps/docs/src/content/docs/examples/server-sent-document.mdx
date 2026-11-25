@@ -64,7 +64,7 @@ export function GET(request: Request): Response {
 
 ## The client
 
-`loadDocument` fetches the document and renders it. It takes `request` so a test, or a runtime with its own `fetch`, can supply one. Each way the answer can go wrong is a result the caller can show: the network failed, the status is not a success, or the body is not JSON. A document that arrives with nodes the client cannot render is not a failure: the client renders the rest and returns the `issues`.
+`loadDocument` fetches the document and renders it. A status that is not a success is a result the caller can show; a network failure or a body that is not JSON throws, like any `fetch` call. A document that arrives with nodes the client cannot render is not a failure: the client renders the rest and returns the `issues`.
 
 ```ts title="client.ts"
 import { createDesignSystem, renderDocument, type Rendered } from './design-system';
@@ -77,25 +77,14 @@ export type Loaded = ({ success: true } & Rendered) | { success: false; error: s
  * Fetches a document and renders what the client knows how to render.
  *
  * @remarks
- * Each way the answer can fail is a result, not an exception: the server could not be reached, it answered with a
- * status that is not a success, or its body is not JSON. A document that arrives but holds nodes the client cannot
- * render is a success with `issues`.
+ * A status that is not a success is a result the caller can show. A network failure or a body that is not JSON
+ * throws, as any `fetch` call does. A document that arrives but holds nodes the client cannot render is a success
+ * with `issues`.
  */
-export async function loadDocument(url: string, request: typeof fetch = fetch): Promise<Loaded> {
-	let response: Response;
-	try {
-		response = await request(url, { headers: { Accept: 'application/json' } });
-	} catch {
-		return { success: false, error: 'The server could not be reached.' };
-	}
+export async function loadDocument(url: string): Promise<Loaded> {
+	const response = await fetch(url, { headers: { Accept: 'application/json' } });
 	if (!response.ok) return { success: false, error: `The server answered ${response.status}.` };
-	let body: unknown;
-	try {
-		body = await response.json();
-	} catch {
-		return { success: false, error: 'The answer is not JSON.' };
-	}
-	return { success: true, ...renderDocument(system, body) };
+	return { success: true, ...renderDocument(system, await response.json()) };
 }
 ```
 
@@ -228,16 +217,18 @@ export function renderDocument(system: DesignSystem, document: unknown): Rendere
 
 ## Run it
 
-`main.ts` talks to the route handler without a network: its `request` builds a `Request` and hands it to `GET`. Replace it with the global `fetch` to call a real server.
+`main.ts` talks to the route handler without a network: `local-network.helper.ts`, a file this page does not show, answers every `fetch` with `GET` of `server.ts`. Leave out `useLocalServer()` to call a real server.
 
 ```ts title="main.ts"
 import { loadDocument } from './client';
-import { GET } from './server';
+import { useLocalServer } from './local-network.helper';
 
 const where = (path: ReadonlyArray<PropertyKey | { key: PropertyKey }> = []) =>
 	path.map((segment) => (typeof segment === 'object' ? String(segment.key) : String(segment))).join('.');
 
-const result = await loadDocument('https://shop.example/orders/1042', async (url, init) => GET(new Request(url, init)));
+useLocalServer();
+
+const result = await loadDocument('https://shop.example/orders/1042');
 
 if (!result.success) console.log(result.error);
 else {
