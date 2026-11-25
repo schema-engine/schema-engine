@@ -28,7 +28,7 @@
 		"@ecopages/jsx": "^0.12.0",
 		"@ecopages/lightningcss-processor": "^0.10.3",
 		"@ecopages/radiant": "^0.12.0",
-		"@ecopages/radiant-ui": "0.6.1",
+		"@ecopages/radiant-ui": "0.6.2",
 		"@ecopages/react": "^0.10.3",
 		"@ecopages/scripts-injector": "^0.1.5",
 		"@ecopages/signals": "^0.12.0",

@@ -51,7 +51,7 @@
 	"peerDependencies": {
 		"@ecopages/jsx": ">=0.12.0",
 		"@ecopages/radiant": ">=0.12.0",
-		"@ecopages/radiant-ui": ">=0.6.1",
+		"@ecopages/radiant-ui": ">=0.6.2",
 		"@ecopages/signals": ">=0.12.0",
 		"@schema-engine/forms": "workspace:^",
 		"@schema-engine/layout": "workspace:^",
@@ -64,7 +64,7 @@
 		"@babel/plugin-transform-class-properties": "^7.28.0",
 		"@ecopages/jsx": "0.12.0",
 		"@ecopages/radiant": "0.12.0",
-		"@ecopages/radiant-ui": "0.6.1",
+		"@ecopages/radiant-ui": "0.6.2",
 		"@ecopages/signals": "0.12.0",
 		"@ecopages/storybook-radiant-vite": "0.2.3",
 		"@ecopages/vite-plugin-radiant": "0.2.3",
