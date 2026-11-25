@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { splitSources, unusedHelpers } from './helper-files';
 import { shownExactly } from './shown-exactly';
 
 /** One folder per example, each holding the files the example's page shows and the tests that run them. */
@@ -15,13 +16,14 @@ export interface ExampleFile {
 
 export interface Example {
 	id: string;
-	/** The files a reader copies: every file of the folder that is not a test. */
+	/** The files the page shows: every file of the folder that is not a test or a helper. */
 	files: ExampleFile[];
+	/** The helpers (`*.helper.ts`) the files import and the page does not show; a reader copies them from the repository. */
+	helpers: ExampleFile[];
 	/** The test files of the folder. */
 	tests: ExampleFile[];
 }
 
-const TEST_FILE = /\.test(\.browser)?\.tsx?$/;
 const PACKAGE_SPECIFIER = /^(@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*(\/.*)?$/;
 const RELATIVE_SPECIFIER = /^\.\/[\w.-]+$/;
 
@@ -31,13 +33,14 @@ export function readExamples(root = examplesRoot): Example[] {
 	return readdirSync(root, { withFileTypes: true })
 		.filter((entry) => entry.isDirectory())
 		.map((entry) => {
-			const files = readdirSync(join(root, entry.name))
-				.toSorted()
-				.map((name) => ({ name, source: readFileSync(join(root, entry.name, name), 'utf8') }));
+			const names = readdirSync(join(root, entry.name)).toSorted();
+			const { shown, helpers } = splitSources(names);
+			const read = (name: string) => ({ name, source: readFileSync(join(root, entry.name, name), 'utf8') });
 			return {
 				id: entry.name,
-				files: files.filter((file) => !TEST_FILE.test(file.name)),
-				tests: files.filter((file) => TEST_FILE.test(file.name)),
+				files: shown.map(read),
+				helpers: helpers.map(read),
+				tests: names.filter((name) => !shown.includes(name) && !helpers.includes(name)).map(read),
 			};
 		})
 		.toSorted((a, b) => a.id.localeCompare(b.id));
@@ -76,10 +79,10 @@ export function installLines(page: string): string[] {
  */
 export function checkExample(example: Example, page: string | undefined, overview: string): string[] {
 	const problems: string[] = [];
-	const names = example.files.map((file) => file.name);
+	const names = [...example.files, ...example.helpers].map((file) => file.name);
 	if (example.files.length === 0) problems.push('has no files');
 
-	for (const file of example.files) {
+	for (const file of [...example.files, ...example.helpers]) {
 		for (const specifier of importsOf(file.source)) {
 			if (PACKAGE_SPECIFIER.test(specifier)) continue;
 			if (!RELATIVE_SPECIFIER.test(specifier)) {
@@ -88,6 +91,14 @@ export function checkExample(example: Example, page: string | undefined, overvie
 				problems.push(`${file.name} imports ${specifier}, which is not a file of this example`);
 			}
 		}
+	}
+
+	const imported = [...example.files, ...example.helpers].flatMap((file) => importsOf(file.source));
+	for (const name of unusedHelpers(
+		example.helpers.map((helper) => helper.name),
+		[...imported, ...example.tests.flatMap((test) => importsOf(test.source))],
+	)) {
+		problems.push(`the helper ${name} is not imported by any file`);
 	}
 
 	if (!example.tests.some((test) => importsOf(test.source).some((specifier) => RELATIVE_SPECIFIER.test(specifier)))) {
@@ -106,8 +117,8 @@ export function checkExample(example: Example, page: string | undefined, overvie
 		problems.push('the page has no "Install" section with a pnpm add command');
 	} else {
 		const installed = new Set(installs.flatMap((install) => install.split(/\s+/)));
-		const imported = new Set(example.files.flatMap((file) => importsOf(file.source).map(packageOf)));
-		for (const name of [...imported].filter((specifier) => PACKAGE_SPECIFIER.test(specifier))) {
+		const importedPackages = new Set(imported.map(packageOf));
+		for (const name of [...importedPackages].filter((specifier) => PACKAGE_SPECIFIER.test(specifier))) {
 			if (!installed.has(name)) problems.push(`the install line lacks ${name}`);
 		}
 		if (installs.some((install) => !overview.includes(`\`${install}\``))) {

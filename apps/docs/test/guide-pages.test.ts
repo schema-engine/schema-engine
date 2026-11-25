@@ -1,6 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { importsOf } from './example-format';
+import { splitSources, unusedHelpers } from './helper-files';
+import { docsPageIds, parseCodeBlocks, readPage } from './snippet-harness';
 import { shownExactly } from './shown-exactly';
 
 describe('the pages show the guide sources they run', () => {
@@ -34,7 +37,14 @@ describe('the pages show the guide sources they run', () => {
 	);
 
 	test('every guide source is listed, so none is shown untested', () => {
-		const files = readdirSync(sourcesDir).filter((name) => !name.includes('.test.'));
-		expect(files.toSorted()).toEqual(Object.values(shown).flat().toSorted());
+		expect(splitSources(readdirSync(sourcesDir)).shown).toEqual(Object.values(shown).flat().toSorted());
+	});
+
+	test('every helper is imported by a guide source, another helper or a fence of a page', () => {
+		const { shown: sources, helpers } = splitSources(readdirSync(sourcesDir));
+		const texts = [...sources, ...helpers].map((name) => readFileSync(join(sourcesDir, name), 'utf8'));
+		const fences = docsPageIds().flatMap((page) => parseCodeBlocks(readPage(page)).map((block) => block.code));
+		const imported = [...texts, ...fences].flatMap(importsOf);
+		expect(unusedHelpers(helpers, imported)).toEqual([]);
 	});
 });

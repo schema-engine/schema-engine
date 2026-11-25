@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import * as ts from 'typescript';
+import { guideHelpers } from './helper-files';
 
 /** Root of the docs content, one folder per section. */
 export const docsRoot = join(import.meta.dirname, '../src/content/docs');
@@ -213,15 +214,17 @@ export interface TitledRunner {
  * @remarks
  * A relative import (`./components`) loads the titled file of that name from the pages, the last page winning;
  * any other import comes from `modules`. `globals` are visible to the files, for example `Response` and
- * `fetch`.
+ * `fetch`. A page may also import a helper it does not show (`./i18n.helper`): `helpers` maps the file names to
+ * their text, the guide-source helpers by default, and a titled file of the same name wins.
  */
 export function titledRunner(
 	pages: string | string[],
 	modules: Record<string, unknown>,
 	globals: Record<string, unknown> = {},
+	helpers: Record<string, string> = guideHelpers(),
 ): TitledRunner {
 	const names = [pages].flat();
-	const files = Object.assign({}, ...names.map(titledFiles)) as Record<string, string>;
+	const files = Object.assign({}, helpers, ...names.map(titledFiles)) as Record<string, string>;
 	const lines: string[] = [];
 	const loaded = new Map<string, Record<string, unknown>>();
 	const load = (name: string): Record<string, unknown> => {
