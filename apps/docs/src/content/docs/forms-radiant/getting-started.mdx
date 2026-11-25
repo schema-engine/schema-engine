@@ -46,7 +46,7 @@ Load one Radiant UI theme, its aggregate stylesheet and the renderer's styleshee
 
 Published JavaScript does not execute CSS, so the renderer's own styles (host display rules, the card, hero and split-screen shells, the fieldset, array and drop-zone CSS) come from `index.css`. An app with Tailwind imports `tailwindcss` first. An app without it imports `@ecopages/radiant-ui/radiant-ui-core.css` first, so headings, lists and controls are not left on user-agent margins. A bundler that loads CSS from JavaScript takes the same three lines as side-effect imports (`import '@ecopages/radiant-ui/styles.css';`).
 
-Import one theme, never two. Dark mode is a `dark` class on an ancestor, usually `<html class="dark">`; Radiant UI does not follow `prefers-color-scheme` by itself, so set the class from the visitor's preference. Colour, spacing and radius come from Radiant UI's semantic roles (`--primary`, `--space-*`, `--radius-control`), which a host retunes with [Theming](/docs/layout/theming).
+Import one theme, never two. Dark mode is a `dark` class on an ancestor, usually `<html class="dark">`; Radiant UI does not follow `prefers-color-scheme` by itself, so set the class from the visitor's preference. Colour, spacing and radius come from Radiant UI's semantic roles (`--primary`, `--space-*`, `--radius-control` for controls, `--radius-container` for cards and groups), which a host retunes with [Theming](/docs/layout/theming).
 
 ## 4. Render a form
 

@@ -20,7 +20,7 @@
 	background: var(--se-surface-background, var(--surface, #fff));
 	width: min(100%, var(--se-measure, 28rem));
 	border: var(--se-border-width, 1px) solid var(--border, currentColor);
-	border-radius: var(--radius-control, 0.75rem);
+	border-radius: var(--radius-container, 0.75rem);
 	box-shadow: var(--se-shadow, 0 8px 24px color-mix(in srgb, var(--on-surface, #000) 10%, transparent));
 }
 
