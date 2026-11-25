@@ -6,7 +6,7 @@
 	margin: 0;
 	padding: var(--space-4, 1rem);
 	border: 1px solid var(--border, currentColor);
-	border-radius: var(--radius-control, 0.5rem);
+	border-radius: var(--radius-container, 0.5rem);
 	min-inline-size: 0;
 }
 

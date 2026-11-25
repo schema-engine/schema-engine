@@ -155,3 +155,11 @@ test('an engine whose host sets the theme spacing is followed by the size tokens
 		document.documentElement.style.removeProperty('--space-6');
 	}
 });
+
+test('the card rounds with the container radius, so pill controls leave it a card', async () => {
+	const { element } = await card();
+	const scope = element.closest<HTMLElement>('[data-se-theme]')!;
+	scope.style.setProperty('--radius-control', '9999px');
+	scope.style.setProperty('--radius-container', '12px');
+	expect(getComputedStyle(element).borderTopLeftRadius).toBe('12px');
+});
