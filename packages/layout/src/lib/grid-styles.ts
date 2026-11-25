@@ -162,15 +162,20 @@ function gapTokenValue(token: GridGapToken): string {
 const DEFAULT_GAP_CSS = gapTokenValue('default');
 
 /**
- * Display a visible item falls back to.
+ * Variable a host sets on an item to choose the display the item rule applies.
  *
  * @remarks
  * The item rule outranks a component's own `display` (class plus attribute
- * beats a lone class), so a host that needs its own layout sets
- * `--se-item-display-mode` rather than `display`. Responsive `hidden` then
- * toggles between `none` and that mode instead of forcing `block`.
+ * beats a lone class), so a host that needs its own layout sets this variable
+ * rather than `display`. Responsive `hidden` then toggles between `none` and
+ * that mode instead of forcing `block`. Custom properties inherit, so the grid
+ * rule resets it: a fieldset that sets `grid` for itself must not turn the
+ * fields of its own grid into grids.
  */
-const ITEM_DISPLAY_MODE = 'var(--se-item-display-mode, block)';
+const ITEM_DISPLAY_MODE_VARIABLE = '--se-item-display-mode';
+
+/** Display a visible item falls back to. See {@link ITEM_DISPLAY_MODE_VARIABLE}. */
+const ITEM_DISPLAY_MODE = `var(${ITEM_DISPLAY_MODE_VARIABLE}, block)`;
 
 /** Root font size used when comparing `rem`/`em` breakpoint thresholds. */
 const ROOT_FONT_PX = 16;
@@ -471,7 +476,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 	const tokens = GridGapTokens.map((token) => `${gapBaseVariable(token)}:${theme.gap[token]};`).join('');
 	const lines: string[] = [
 		`${scope}{${tokens}}`,
-		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
+		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;${ITEM_DISPLAY_MODE_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
 		`${itemScope}{${inheritanceResets(ITEM_PROPERTIES, true)}${declarations(themeId, 'i', ITEM_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
