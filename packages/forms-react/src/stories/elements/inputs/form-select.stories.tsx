@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { StoryWrapper } from '@/stories/shared/story-wrapper';
 import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
+import { showsDefaultOptionLabelPlay, showsPickedOptionLabelPlay } from './form-select.play';
 
 const baseUIEngine = getEngine();
 
@@ -351,4 +352,62 @@ export const MultipleSelection: Story = {
 			],
 		}),
 	},
+};
+
+const frequencyOptions = [
+	{ value: 'daily', label: 'Daily' },
+	{ value: 'weekly', label: 'Weekly' },
+	{ value: 'monthly', label: 'Monthly' },
+];
+
+export const ShowsDefaultOptionLabel: Story = {
+	args: {
+		config: defineStoryForm({
+			id: 'select-default-label',
+			title: 'Digest',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Digest',
+					elements: [
+						{
+							$type: 'select',
+							id: 'frequency',
+							name: 'frequency',
+							label: 'Frequency',
+							options: frequencyOptions,
+							defaultValue: 'weekly',
+						},
+					],
+				},
+			],
+		}),
+	},
+	play: showsDefaultOptionLabelPlay,
+};
+
+export const ShowsPickedOptionLabel: Story = {
+	args: {
+		config: defineStoryForm({
+			id: 'select-picked-label',
+			title: 'Digest',
+			steps: [
+				{
+					id: 'step-1',
+					title: 'Digest',
+					elements: [
+						{
+							$type: 'select',
+							id: 'frequency',
+							name: 'frequency',
+							label: 'Frequency',
+							placeholder: 'Pick a frequency',
+							options: frequencyOptions,
+						},
+					],
+				},
+			],
+		}),
+	},
+	play: showsPickedOptionLabelPlay,
 };
