@@ -1,6 +1,8 @@
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 import { afterEach, describe, expect, test } from 'vitest';
 import { page as browserPage } from 'vitest/browser';
-import { renderPage } from './host';
+import { renderPage } from './host.react';
 import { dashboard } from './page';
 import { theme } from './theme';
 
@@ -12,8 +14,8 @@ function mount(width: number) {
 	style.textContent = theme.css;
 	const host = document.createElement('div');
 	host.style.width = `${width}px`;
-	host.innerHTML = renderPage(dashboard);
 	document.body.append(style, host);
+	flushSync(() => createRoot(host).render(renderPage(dashboard)));
 	const box = (tag: string) => host.querySelector(tag)!.getBoundingClientRect();
 	const shown = (tag: string) => getComputedStyle(host.querySelector(tag)!).display !== 'none';
 	return { box, shown, cleanup: () => style.remove() };

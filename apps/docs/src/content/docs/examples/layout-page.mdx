@@ -8,17 +8,17 @@ import { LayoutPageDemo } from '@/components/layout-page-demo';
 
 # A layout page
 
-`@schema-engine/layout` places items in a container and knows nothing about forms. This example uses it alone, to lay out a dashboard: a header, a navigation, a main area, an aside and a footer. On a phone the page is one column and the navigation is hidden. From `md` it has two columns with the navigation beside the content. From `lg` it has three. No form, no renderer and no framework is involved: the host is about forty lines.
+`@schema-engine/layout` places items in a container and knows nothing about forms. This example uses it alone, to lay out a dashboard: a header, a navigation, a main area, an aside and a footer. On a phone the page is one column and the navigation is hidden. From `md` it has two columns with the navigation beside the content. From `lg` it has three. No form and no renderer is involved: the host is a React component of about forty lines.
 
 The example's `Page` shape, with its regions and their areas, is its own. The layout package defines the grid, the placement and the appearance vocabulary, and nothing about what a page is.
 
 ## Install
 
 ```bash
-pnpm add @schema-engine/layout zod
+pnpm add @schema-engine/layout zod react react-dom
 ```
 
-`zod` is a peer dependency: the grid and appearance schemas use `zod/mini`. Copy the files below into one folder.
+`zod` is a peer dependency: the grid and appearance schemas use `zod/mini`. The host is written in React JSX, but the layout package needs none of it: any code that can write a `class`, a `style` and a few attributes can host it. Copy the files below into one folder.
 
 ## See it
 
@@ -115,11 +115,12 @@ export function placementOf({ area, showFrom }: Region): ElementGridConfig {
 
 ## The host
 
-A host does three things. It puts the neutral classes `se-grid` and `se-grid-item` and the theme id on its elements. It writes the custom properties that place them, with `getGridVariables` for the container and `getGridItemVariables` for each item. And it adds `theme.css` to the page once. `getAppearanceAttributes` turns a named appearance, such as `surface: 'outlined'`, into the `data-se-*` attributes the theme's token rules read.
+A host does three things. It puts the neutral classes `se-grid` and `se-grid-item` and the theme id on its elements. It writes the custom properties that place them, with `getGridVariables` for the container and `getGridItemVariables` for each item; both return a record that is assignable to React's `style`. And it adds `theme.css` to the page once. `getAppearanceAttributes` turns a named appearance, such as `surface: 'outlined'`, into the `data-se-*` attributes the theme's token rules read.
 
-The grid is checked first: `GridLayoutConfigSchema` checks the names, and `areaTemplateIssues` checks what CSS would drop, a template whose rows differ in length or whose area is not a rectangle. Either throws here and does not become a layout that silently breaks. The custom property that holds a template quotes its area names, so the `style` attribute escapes the quotes.
+The grid is checked first: `GridLayoutConfigSchema` checks the names, and `areaTemplateIssues` checks what CSS would drop, a template whose rows differ in length or whose area is not a rectangle. Either throws here and does not become a layout that silently breaks.
 
-```ts title="host.ts"
+```tsx title="host.react.tsx"
+import type { ReactElement } from 'react';
 import {
 	GRID_CLASS,
 	GRID_ITEM_CLASS,
@@ -128,26 +129,12 @@ import {
 	getAppearanceAttributes,
 	getGridItemVariables,
 	getGridVariables,
-	type AppearanceSelection,
-	type CssVariables,
 } from '@schema-engine/layout';
 import { placementOf, type Page } from './page';
 import { theme } from './theme';
 
-/** The value of a `style` attribute. A drawn template quotes its area names, so the quotes are escaped. */
-const style = (variables: CssVariables) =>
-	Object.entries(variables)
-		.map(([name, value]) => `${name}:${value}`)
-		.join(';')
-		.replaceAll('"', '&quot;');
-
-const attributes = (appearance?: AppearanceSelection) =>
-	Object.entries(getAppearanceAttributes(appearance))
-		.map(([name, value]) => ` ${name}="${value}"`)
-		.join('');
-
 /**
- * Lays a page out and returns its markup: a container that carries the grid, and one item for each region.
+ * Lays a page out: a container that carries the grid, and one item for each region.
  *
  * @remarks
  * A host does three things: it puts the grid and item classes and the theme id on its elements, writes the custom
@@ -155,36 +142,48 @@ const attributes = (appearance?: AppearanceSelection) =>
  * names, and `areaTemplateIssues` checks what CSS would drop, a template whose rows differ in length or whose area is
  * not a rectangle. Either throws here and not as a layout that silently breaks.
  */
-export function renderPage(page: Page): string {
+export function renderPage(page: Page): ReactElement {
 	const grid = GridLayoutConfigSchema.safeParse(page.grid);
 	const issues = grid.success ? areaTemplateIssues(grid.data) : grid.error.issues;
 	if (!grid.success || issues.length > 0) {
 		throw new Error(issues.map((issue) => `${issue.path?.join('.')}: ${issue.message}`).join('\n'));
 	}
 	const items = page.regions.map((region) => ({ grid: placementOf(region) }));
-	const regions = page.regions.map((region, index) => {
-		const marks = `data-se-theme="${theme.id}"${attributes(region.appearance)}`;
-		const open = `<${region.tag} class="${GRID_ITEM_CLASS}" ${marks}`;
-		return `${open} style="${style(getGridItemVariables(items[index]!.grid))}">${region.html}</${region.tag}>`;
-	});
-	const container = `<div class="${GRID_CLASS}" data-se-theme="${theme.id}"${attributes(page.appearance)}`;
-	return [
-		`${container} style="${style(getGridVariables(grid.data, theme.grid, items))}">`,
-		...regions,
-		'</div>',
-	].join('\n');
+	return (
+		<div
+			className={GRID_CLASS}
+			data-se-theme={theme.id}
+			{...getAppearanceAttributes(page.appearance)}
+			style={getGridVariables(grid.data, theme.grid, items)}
+		>
+			{page.regions.map((region, index) => {
+				const Tag = region.tag;
+				return (
+					<Tag
+						key={region.area}
+						className={GRID_ITEM_CLASS}
+						data-se-theme={theme.id}
+						{...getAppearanceAttributes(region.appearance)}
+						style={getGridItemVariables(items[index]!.grid)}
+						dangerouslySetInnerHTML={{ __html: region.html }}
+					/>
+				);
+			})}
+		</div>
+	);
 }
 ```
 
 ## Run it
 
-`main.ts` prints the markup of the dashboard:
+`main.ts` prints the markup of the dashboard, which `renderToStaticMarkup` writes from the host's element:
 
 ```ts title="main.ts"
-import { renderPage } from './host';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { renderPage } from './host.react';
 import { dashboard } from './page';
 
-console.log(renderPage(dashboard));
+console.log(renderToStaticMarkup(renderPage(dashboard)));
 ```
 
 {/* prettier-ignore */}

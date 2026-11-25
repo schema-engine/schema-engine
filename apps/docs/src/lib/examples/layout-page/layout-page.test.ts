@@ -1,15 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { formatHtml } from '../../../../test/format-html';
-import { renderPage } from './host';
+import { renderPage } from './host.react';
 import { dashboard, placementOf, type Page } from './page';
 import { theme } from './theme';
 
 describe('the layout page', () => {
 	test('the container carries the theme, the appearance and the drawn templates of every breakpoint', () => {
-		const html = renderPage(dashboard);
-		const container = html.split('\n')[0]!;
+		const html = renderToStaticMarkup(renderPage(dashboard));
+		const container = html.slice(0, html.indexOf('<header'));
 
 		expect(container).toContain(`class="se-grid" data-se-theme="${theme.id}" data-se-size="comfortable"`);
 		expect(container).toContain(
@@ -23,7 +24,7 @@ describe('the layout page', () => {
 	});
 
 	test('each region is an item that claims its area, and the navigation is hidden until md', () => {
-		const html = renderPage(dashboard);
+		const html = renderToStaticMarkup(renderPage(dashboard));
 
 		expect(html).toContain(
 			`<main class="se-grid-item" data-se-theme="${theme.id}" style="--se-item-grid-column:main;--se-item-grid-row:main">`,

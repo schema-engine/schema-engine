@@ -1,4 +1,5 @@
-import { renderPage } from './host';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { renderPage } from './host.react';
 import { dashboard } from './page';
 
-console.log(renderPage(dashboard));
+console.log(renderToStaticMarkup(renderPage(dashboard)));

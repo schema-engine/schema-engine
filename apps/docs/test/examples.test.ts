@@ -132,17 +132,17 @@ describe('the example format checker', () => {
 			],
 			helpers: [helper],
 		};
-		const page = [
+		const withPage = [
 			'## Install',
 			`\`\`\`bash\n${install}\n\`\`\``,
 			shown('main.ts', 'ts', withHelper.files[0]!.source.trimEnd()),
 		].join('\n\n');
-		expect(problems(withHelper, page)).toEqual([]);
-		expect(problems(withHelper, `${page}\n\n${shown('clock.helper.ts', 'ts', helper.source.trimEnd())}`)).toEqual([
-			'the page shows clock.helper.ts, which is not one of the files',
-		]);
+		expect(problems(withHelper, withPage)).toEqual([]);
 		expect(
-			problems({ ...withHelper, files: [{ name: 'main.ts', source: 'export const message = 1;\n' }] }, page),
+			problems(withHelper, `${withPage}\n\n${shown('clock.helper.ts', 'ts', helper.source.trimEnd())}`),
+		).toEqual(['the page shows clock.helper.ts, which is not one of the files']);
+		expect(
+			problems({ ...withHelper, files: [{ name: 'main.ts', source: 'export const message = 1;\n' }] }, withPage),
 		).toEqual([
 			'the helper clock.helper.ts is not imported by any file',
 			'the page does not show main.ts word for word',
@@ -154,7 +154,7 @@ describe('the example format checker', () => {
 				{ name: 'clock.ts', source: helper.source },
 			],
 		};
-		expect(problems(plain, page)).toEqual([
+		expect(problems(plain, withPage)).toEqual([
 			'the page does not show main.ts word for word',
 			'the page does not show clock.ts word for word',
 		]);
