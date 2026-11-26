@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, test } from 'vitest';
-import { getGridItemVariables, getGridVariables, type GridThemeOptions } from '@/lib/grid-styles';
+import * as z from 'zod/mini';
+import { GRID_SUBGRID_CLASS, getGridItemVariables, getGridVariables, type GridThemeOptions } from '@/lib/grid-styles';
 import { createLayoutTheme, getDefaultLayoutTheme } from '@/lib/layout-theme';
 import { usesGridWidths } from '@/lib/grid-placement';
 import { computeElement } from './resolve-stylesheet';
@@ -408,6 +409,91 @@ describe('getGridItemVariables', () => {
 		const variables = getGridItemVariables({ column: 'span 2' });
 		expect(variables).toEqual({ '--se-item-grid-column': 'span 2' });
 	});
+
+	test('a subgrid spans its parent row and sets nothing else', () => {
+		expect(getGridItemVariables({ subgrid: true })).toEqual({ '--se-item-grid-column': '1 / -1' });
+	});
+
+	test('a subgrid keeps its hidden state and spacing', () => {
+		const variables = getGridItemVariables({
+			subgrid: true,
+			marginBlockStart: 'loose',
+			responsive: { md: { hidden: true } },
+		});
+		expect(variables['--se-item-grid-column']).toBe('1 / -1');
+		expect(variables['--se-item-display-md']).toBe('none');
+		expect(variables['--se-item-margin-block-start']).toBeDefined();
+	});
+
+	test('subgrid false emits nothing', () => {
+		expect(getGridItemVariables({ subgrid: false })).toEqual({});
+	});
+});
+
+describe('the subgrid flag in the element grid schema', () => {
+	test('is accepted at the top level only', () => {
+		expect(ElementGridConfigSchema.safeParse({ subgrid: true }).success).toBe(true);
+		expect(ElementGridConfigSchema.safeParse({ subgrid: 'yes' }).success).toBe(false);
+		expect(ElementGridConfigSchema.safeParse({ responsive: { md: { subgrid: true } } }).success).toBe(false);
+	});
+
+	test('is described for the JSON Schema export, and absent from a breakpoint', () => {
+		const json = z.toJSONSchema(ElementGridConfigSchema, { io: 'input' }) as {
+			properties: Record<string, { type?: string; description?: string }>;
+		};
+		expect(json.properties.subgrid?.type).toBe('boolean');
+		expect(json.properties.subgrid?.description).toMatch(/parent/);
+		expect(JSON.stringify(json.properties.responsive)).not.toContain('subgrid');
+	});
+});
+
+describe('the subgrid stylesheet rules', () => {
+	const scope = (id: string) => `[data-se-theme="${id}"]`;
+	/** The rules are one per line, so a selector at a line start is that rule and not the end of a longer one. */
+	const body = (stylesheet: string, selector: string) => stylesheet.split(`\n${selector}{`)[1]?.split('}')[0];
+
+	test.each(['media', 'container'] as const)('%s mode declares each rule once, outside any query', (query) => {
+		const { css: stylesheet, id } = layout({ query });
+		const selectors = [
+			`.se-subgrid${scope(id)}`,
+			`.se-subgrid${scope(id)}>:not(.se-grid-item)`,
+			`.se-grid.se-subgrid${scope(id)}`,
+		];
+		for (const selector of selectors) expect(stylesheet.split(`\n${selector}{`)).toHaveLength(2);
+		const queries = stylesheet.split('\n').filter((line) => line.startsWith('@'));
+		expect(queries.length).toBeGreaterThan(0);
+		for (const line of queries) expect(line).not.toContain('subgrid');
+	});
+
+	test('the box rule turns a box into a column subgrid that uses its parent gap', () => {
+		const { css: stylesheet, id } = layout();
+		expect(body(stylesheet, `.se-subgrid${scope(id)}`)).toBe(
+			'--se-item-display-mode:grid;display:grid;grid-template-columns:subgrid;column-gap:normal;align-content:start;',
+		);
+	});
+
+	test('a child that is not an item spans the whole row', () => {
+		const { css: stylesheet, id } = layout();
+		expect(body(stylesheet, `.se-subgrid${scope(id)}>:not(.se-grid-item)`)).toBe('grid-column:1/-1;');
+	});
+
+	test('the grid rule takes the subgrid template, the parent gap and the parent default column', () => {
+		const { css: stylesheet, id } = layout();
+		expect(body(stylesheet, `.se-grid.se-subgrid${scope(id)}`)).toBe(
+			'--se-grid-template:subgrid;--se-grid-gap-x:normal;--se-grid-default-column:inherit;',
+		);
+	});
+
+	test('the box rule comes before the grid and item rules, which then win a tie on the same box', () => {
+		const { css: stylesheet, id } = layout();
+		const at = (selector: string) => stylesheet.indexOf(`${selector}${scope(id)}{`);
+		expect(at('.se-subgrid')).toBeLessThan(at('.se-grid'));
+		expect(at('.se-subgrid')).toBeLessThan(at('.se-grid-item'));
+	});
+
+	test('the class the rules key on is exported', () => {
+		expect(GRID_SUBGRID_CLASS).toBe('se-subgrid');
+	});
 });
 
 describe('responsive gap tokens', () => {
@@ -780,8 +866,21 @@ describe('the query mode of a layout theme', () => {
 	const queryBlock = (stylesheet: string, atRule: string, minWidth: string) =>
 		stylesheet.split('\n').find((line) => line.startsWith(`${atRule} (min-width:${minWidth})`)) ?? '';
 
+	/**
+	 * The pins are the stylesheet from before the option existed. The `se-subgrid` rules were added to it
+	 * afterwards, in both modes, so they are removed before hashing: every other rule stays byte for byte
+	 * what it was, and the subgrid rules are pinned by their own tests above.
+	 */
 	test('a theme without the option is the stylesheet it was before the option existed', () => {
-		const fingerprint = (stylesheet: string) => createHash('sha256').update(stylesheet).digest('hex');
+		const withoutSubgrid = (stylesheet: string) =>
+			stylesheet
+				.split('\n')
+				.filter(
+					(line) => !line.includes(`.${GRID_SUBGRID_CLASS}[`) && !line.includes(`.${GRID_SUBGRID_CLASS}>`),
+				)
+				.join('\n');
+		const fingerprint = (stylesheet: string) =>
+			createHash('sha256').update(withoutSubgrid(stylesheet)).digest('hex');
 		expect(layout().id).toBe('l1tvu4rv');
 		expect(fingerprint(layout().css)).toBe('f9328bc203ab311cf795d976c88d3859ff0eb40b3d775c9ecc9dc5d815e244d3');
 		expect(layout(ramped).id).toBe('l18hlk5k');

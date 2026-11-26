@@ -90,6 +90,36 @@ export function usesGridWidths(elements: readonly unknown[]): boolean {
 	return elements.some(elementUsesGridWidths);
 }
 
+/** Whether an element lays its children on its parent grid's tracks (`grid.subgrid`). */
+export function elementIsSubgrid(element: unknown): boolean {
+	return isRecord(element) && isRecord(element.grid) && element.grid.subgrid === true;
+}
+
+/** Placement keys a subgrid cannot set: it always spans its parent's full row and is stretched on it. */
+const SUBGRID_EXCLUSIVE_KEYS = ['width', 'offset', 'column', 'area', 'justifySelf', 'placeSelf'] as const;
+
+/**
+ * Why a subgrid's placement is invalid, or `undefined` when it is fine.
+ *
+ * @remarks
+ * A subgrid spans its parent's full row, so a `width`, `offset`, raw `column` or `area` would make it span
+ * less, and CSS ignores `justify-self` on a subgrid. The path is relative to the element and names the first
+ * conflicting key at the slot that sets it, as authored; the message is a clause the domain prefixes with
+ * the element's name.
+ */
+export function subgridPlacementIssue(element: unknown): LayoutIssue | undefined {
+	if (!elementIsSubgrid(element)) return undefined;
+	for (const { slot, entry } of elementGridSlots(element)) {
+		const key = SUBGRID_EXCLUSIVE_KEYS.find((name) => entry[name] !== undefined);
+		if (key === undefined) continue;
+		return {
+			path: slot === 'default' ? ['grid', key] : ['grid', 'responsive', slot, key],
+			message: `sets grid 'subgrid' and '${key}'; a subgrid spans its parent's full row, so it takes no 'width', 'offset', 'column', 'area', 'justifySelf' or 'placeSelf'.`,
+		};
+	}
+	return undefined;
+}
+
 /** Updates `carried` with the width and offset a slot authored; the other keeps its earlier value. */
 export function carryNamedPlacement(carried: NamedPlacement, entry: NamedPlacement): void {
 	carried.width = entry.width ?? carried.width;
