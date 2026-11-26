@@ -58,10 +58,6 @@ form.rui-form {
 	min-height: 100svh;
 }
 
-form.rui-form:has(> .se-form-elements) {
-	gap: 0;
-}
-
 form.rui-form:has(.card-shell),
 form.rui-form:has(.hero-shell),
 form.rui-form:has(.split-screen-shell) {

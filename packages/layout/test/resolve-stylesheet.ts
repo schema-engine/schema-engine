@@ -6,7 +6,8 @@
  * It models only what the generator emits: plain rules and `min-width` media queries keyed on
  * `.se-grid` / `.se-grid-item` plus the theme attribute, `var()` with fallbacks, `initial`, and
  * custom property inheritance from a parent. Same-specificity rules apply in source order, and
- * an inline value beats the stylesheet. The `rem` threshold is read at a 16px root.
+ * an inline value beats the stylesheet. The `rem` threshold is read at a 16px root. A `@container se-grid`
+ * query reads the width given as the container's, exactly as a `@media` query reads the viewport's.
  */
 
 export type Kind = 'grid' | 'item';
@@ -66,7 +67,7 @@ function parseRules(css: string): Rule[] {
 		const prelude = css.slice(index, open).trim();
 		const body = css.slice(open + 1, close);
 		index = close + 1;
-		const media = /^@media \(min-width:([^)]+)\)$/.exec(prelude);
+		const media = /^@(?:media|container se-grid) \(min-width:([^)]+)\)$/.exec(prelude);
 		if (media) {
 			const minWidthPx = toPx(media[1] as string);
 			let inner = 0;

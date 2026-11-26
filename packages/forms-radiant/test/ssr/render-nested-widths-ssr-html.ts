@@ -6,7 +6,12 @@ import {
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
-import { ssrNestedFields } from '../../../../test-utils/ssr-grid-fixtures';
+import {
+	SSR_CONTAINER_LAYOUT,
+	ssrNestedContainerForm,
+	ssrNestedFields,
+	type SsrNestedContainerVariant,
+} from '../../../../test-utils/ssr-grid-fixtures';
 
 const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
@@ -52,4 +57,28 @@ export function renderSsrNestedWidthsAcceptanceHtml(): string {
 			renderToString(FormRenderer({ config, engine, defaultValues: { rows: [{}] } }), { mode: 'hydrate' }),
 		),
 	);
+}
+
+/**
+ * SSR document of a fieldset that is narrow inside a wide step grid, under the container theme,
+ * produced by the real fieldset renderer, and the theme it renders under.
+ */
+export function renderSsrNestedContainerHtml(variant: SsrNestedContainerVariant): {
+	html: string;
+	layout: { id: string; css: string };
+} {
+	const containerEngine = createRadiantFormEngine({
+		elements: schemaFormRegistrations,
+		layout: SSR_CONTAINER_LAYOUT,
+	});
+	const containerConfig = containerEngine.validateForm(
+		ssrNestedContainerForm('input', variant, { inputType: 'text' }),
+	);
+	const html = withServerRadiantElementSsrRuntime(() =>
+		withRadiantServerCustomElementRenderBridge(() =>
+			renderToString(FormRenderer({ config: containerConfig, engine: containerEngine }), { mode: 'hydrate' }),
+		),
+	);
+	const { id, css } = containerEngine.getLayout();
+	return { html, layout: { id, css } };
 }

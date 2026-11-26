@@ -58,3 +58,11 @@ export function symbolsSharedByEntries(packageDir: string): string[] {
 		.filter(([, entries]) => entries.length > 1)
 		.map(([symbol, entries]) => `${symbol}: ${entries.join(', ')}`);
 }
+
+/** The names a package exports from any of its entries, values and types, sorted and without repeats. */
+export function exportedSymbolNames(packageDir: string): string[] {
+	const names = [...exportsByEntry(packageDir).values()]
+		.flat()
+		.map((symbol) => symbol.slice(symbol.indexOf('#') + 1));
+	return [...new Set(names)].toSorted();
+}

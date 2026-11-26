@@ -3,12 +3,13 @@ import type { TestProject } from 'vitest/node';
 import {
 	getSsrAcceptanceEngine,
 	renderSsrAreasAcceptanceHtml,
+	renderSsrContainerAcceptanceHtml,
 	renderSsrLayoutAcceptanceHtml,
 	renderSsrSteppedAcceptanceHtml,
 	renderSsrWidthsAcceptanceHtml,
 } from './render-form-ssr-html';
 import { renderNestedThemeGuestHtml, renderReenteredThemeHtml } from './render-nested-theme-ssr-html';
-import { renderSsrNestedWidthsAcceptanceHtml } from './render-nested-widths-ssr-html';
+import { renderSsrNestedContainerHtml, renderSsrNestedWidthsAcceptanceHtml } from './render-nested-widths-ssr-html';
 import { renderArrayObjectDefaultsHtml, renderArraySsrAcceptanceHtml } from './render-form-array-ssr-html';
 
 declare module 'vitest' {
@@ -17,7 +18,12 @@ declare module 'vitest' {
 		ssrWidthsHtml: string;
 		ssrAreasHtml: string;
 		ssrSteppedHtml: string;
+		ssrContainerHtml: string;
+		ssrContainerTheme: { id: string; css: string };
 		ssrNestedWidthsHtml: string;
+		ssrNestedContainerTemplateHtml: string;
+		ssrNestedContainerPlacementHtml: string;
+		ssrNestedContainerTheme: { id: string; css: string };
 		ssrHydrationHtml: string;
 		ssrLayoutTheme: { id: string; css: string };
 		ssrNestedThemeHtml: string;
@@ -47,9 +53,19 @@ export default function setup(project: TestProject): void {
 	project.provide('ssrWidthsHtml', renderSsrWidthsAcceptanceHtml());
 	project.provide('ssrAreasHtml', renderSsrAreasAcceptanceHtml());
 	project.provide('ssrSteppedHtml', renderSsrSteppedAcceptanceHtml());
+	const container = renderSsrContainerAcceptanceHtml();
+	project.provide('ssrContainerHtml', container.html);
+	project.provide('ssrContainerTheme', container.layout);
 	project.provide(
 		'ssrNestedWidthsHtml',
 		renderSsrNestedWidthsAcceptanceHtml().replaceAll('</script>', '<\\/script>'),
+	);
+	const nestedTemplate = renderSsrNestedContainerHtml('template');
+	project.provide('ssrNestedContainerTemplateHtml', nestedTemplate.html.replaceAll('</script>', '<\\/script>'));
+	project.provide('ssrNestedContainerTheme', nestedTemplate.layout);
+	project.provide(
+		'ssrNestedContainerPlacementHtml',
+		renderSsrNestedContainerHtml('placement').html.replaceAll('</script>', '<\\/script>'),
 	);
 	project.provide('ssrLayoutTheme', { id, css });
 	const nested = renderNestedThemeGuestHtml();

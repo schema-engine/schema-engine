@@ -5,7 +5,13 @@ import { createFormEngine } from '@schema-engine/forms';
 import type { ElementGridConfig, LayoutInput } from '@schema-engine/layout';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { SSR_WIDTH_FIELDS, ssrAreasForm, ssrSteppedForm } from '../../../../test-utils/ssr-grid-fixtures';
+import {
+	SSR_CONTAINER_LAYOUT,
+	SSR_WIDTH_FIELDS,
+	ssrAreasForm,
+	ssrContainerForm,
+	ssrSteppedForm,
+} from '../../../../test-utils/ssr-grid-fixtures';
 
 const ssrInputSchema = z.object({
 	$type: z.literal('ssr-input'),
@@ -136,6 +142,19 @@ export function renderSsrWidthsAcceptanceHtml(): string {
 	const body = renderToString(RecipeRenderer({ config, engine, recipe: undefined }), { mode: 'plain' });
 
 	return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`;
+}
+
+/** SSR document of the form that measures its grid's container, and the theme it renders under. */
+export function renderSsrContainerAcceptanceHtml(): { html: string; layout: { id: string; css: string } } {
+	const engine = createSsrAcceptanceEngine(SSR_CONTAINER_LAYOUT);
+	const config = engine.validateForm(ssrContainerForm('ssr-input'));
+	const body = renderToString(RecipeRenderer({ config, engine, recipe: undefined }), { mode: 'plain' });
+	const { id, css } = engine.getLayout();
+
+	return {
+		html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`,
+		layout: { id, css },
+	};
 }
 
 function renderForm(form: unknown): string {

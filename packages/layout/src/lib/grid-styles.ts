@@ -25,7 +25,7 @@ import {
  *
  * Compile once, with the rest of the layout theme ({@link createLayoutTheme}); renderers
  * emit the resulting stylesheet and per-container CSS variables inline. Breakpoint
- * behavior lives entirely in the generated media queries — no runtime
+ * behavior lives entirely in generated media or container queries — no runtime
  * observers, and layout is correct with JavaScript disabled.
  *
  * Cascade contract for sparse responsive entries (see tests): initialize from
@@ -96,7 +96,26 @@ export interface GridThemeOptions {
 	 * ```
 	 */
 	responsive?: Partial<Record<GridBreakpointToken, GridGapScale>>;
+	/**
+	 * What the breakpoints measure: the viewport (`'media'`, the default) or the grid's own available width (`'container'`).
+	 *
+	 * @remarks
+	 * Container mode emits `@container se-grid (min-width: ...)` where media mode emits `@media`, with
+	 * the same breakpoint tokens, gap ramps and cascade, so a document reads the same in both. The
+	 * rules query the nearest ancestor that carries {@link GRID_CONTAINER_CLASS}, which an element
+	 * cannot be for its own children's placement: the renderer wraps each grid in one, and markup you
+	 * write wraps each grid itself. A grid with no such ancestor never matches a breakpoint and keeps
+	 * its base layout.
+	 *
+	 * The theme decides how breakpoints are queried and the document says what changes at each, so a
+	 * document is unchanged by where it is mounted. In a container query `em` resolves against the
+	 * container's font size.
+	 */
+	query?: GridQueryMode;
 }
+
+/** How a theme's breakpoints are queried; see {@link GridThemeOptions.query}. */
+export type GridQueryMode = 'media' | 'container';
 
 /** Gap token values at one width. Unlisted tokens keep the value from the next narrower width. */
 export type GridGapScale = Partial<Record<GridGapToken, string>>;
@@ -107,6 +126,7 @@ export interface NormalizedGridTheme {
 	/** Token overrides per breakpoint; only the tokens a width changes. */
 	readonly responsive: Readonly<Partial<Record<GridBreakpointToken, Readonly<GridGapScale>>>>;
 	readonly minColumnWidth: string;
+	readonly query: GridQueryMode;
 }
 
 const DEFAULT_BREAKPOINTS: Record<GridBreakpointToken, string> = {
@@ -217,21 +237,31 @@ function resolveResponsiveGap(
  * Threshold overrides replace only the named breakpoint; the rest keep
  * library defaults. Thresholds accept `px`/`rem`/`em` lengths and must
  * preserve named cascade order. `rem`/`em` compare at a 16px root.
- * Media queries follow viewport width — a grid inside a narrow sidebar
- * still receives the desktop rules of the wide screen it lives on.
+ * Media queries (the default `query`) follow viewport width — a grid inside a
+ * narrow sidebar still receives the desktop rules of the wide screen it lives
+ * on; `query: 'container'` follows the grid's wrapper instead.
  */
 export function resolveGridTheme(options?: GridThemeOptions): NormalizedGridTheme {
 	const breakpoints = { ...DEFAULT_BREAKPOINTS, ...options?.breakpoints };
 	const gap = { ...DEFAULT_GAP, ...options?.gap };
 	const responsive = resolveResponsiveGap(options?.responsive);
 	const minColumnWidth = options?.minColumnWidth ?? DEFAULT_MIN_COLUMN_WIDTH;
+	const query = options?.query ?? 'media';
 	assertBreakpointOrder(breakpoints);
+	assertQueryMode(query);
 	return deepFreeze({
 		breakpoints,
 		gap,
 		responsive,
 		minColumnWidth,
+		query,
 	});
+}
+
+function assertQueryMode(query: string): asserts query is GridQueryMode {
+	if (query !== 'media' && query !== 'container') {
+		throw new Error(`Grid theme query must be 'media' or 'container'; received '${query}'.`);
+	}
 }
 
 function isCssLengthUnit(unit: string | undefined): unit is CssLengthUnit {
@@ -287,13 +317,19 @@ function canonicalResponsiveGap(
 	});
 }
 
-/** The normalized grid theme in a stable shape, for hashing into a layout theme id. */
+/**
+ * The normalized grid theme in a stable shape, for hashing into a layout theme id.
+ *
+ * @remarks
+ * The default query mode is left out, so a media theme keeps the id it had before the option existed.
+ */
 export function canonicalGridTheme(theme: NormalizedGridTheme) {
 	return {
 		breakpoints: theme.breakpoints,
 		gap: theme.gap,
 		responsive: canonicalResponsiveGap(theme.responsive),
 		minColumnWidth: theme.minColumnWidth,
+		...(theme.query === 'media' ? {} : { query: theme.query }),
 	};
 }
 
@@ -310,6 +346,23 @@ export const GRID_CLASS = 'se-grid';
 
 /** Class an element placed in a grid carries, and the stylesheet's hook for it. See {@link GRID_CLASS}. */
 export const GRID_ITEM_CLASS = 'se-grid-item';
+
+/**
+ * Class of the element a grid in a `query: 'container'` theme is measured against, and the stylesheet's hook for it.
+ *
+ * @remarks
+ * Put it, with `data-se-theme`, on an element that wraps one grid and fills its parent: the
+ * breakpoints then follow that element's width. It must be an ancestor of the grid, because the
+ * template of a grid and the placement of its items have to query one box, and an element cannot
+ * query its own size. The stylesheet declares it only in container mode, as a block with
+ * `container-type: inline-size`. Inline-size containment means it no longer sizes to its content, so
+ * it collapses in a shrink-to-fit parent (an inline-block, a flex item without a basis, an `auto` grid
+ * track). Wrap each grid, nested grids included, so an inner grid follows its own box.
+ */
+export const GRID_CONTAINER_CLASS = 'se-grid-container';
+
+/** Name of the container the container-mode rules query, so an unrelated container in between cannot capture them. */
+const GRID_CONTAINER_NAME = 'se-grid';
 
 /**
  * Grid container properties that change per breakpoint.
@@ -377,9 +430,11 @@ function tight(fallback: string): string {
  * outside that query it is the guaranteed-invalid value and the `var()` chain skips it. The names
  * are private to the stylesheet (a form never writes them, and they carry no contract) and carry
  * the theme id: custom properties inherit, so a gate named alike in two themes would let a theme
- * with a wider threshold read the gate its ancestor's narrower query declared. Within one theme
- * every element the rules reach declares its own gates wherever the query applies, so no reset
- * is needed.
+ * with a wider threshold read the gate its ancestor's narrower query declared. In a media theme
+ * every element of a theme shares the viewport, so one that is reached declares its own gates
+ * wherever the query applies and needs no reset. A container theme measures each grid against its
+ * own container, so a nested grid can sit below a breakpoint its ancestor is above and would read the
+ * ancestor's gate: its rules reset every gate ({@link gateResets}).
  *
  * Read a name in devtools as theme id, table (`g` grid, `i` item), the property's row in that
  * table, and the breakpoint token: `--l1abc-i1md` is the `md` gate of the item `grid-column`.
@@ -454,6 +509,22 @@ function inheritanceResets(properties: readonly ResponsiveProperty[], withSlots:
 }
 
 /**
+ * Resets every gate of a table, so an element reads only the gates its own container's query declares.
+ *
+ * @remarks
+ * A gate is declared on the element a query matches and inherits from there. Under a container query a
+ * nested grid or item sits in a narrower container than its ancestors, so the breakpoint they match
+ * can be one it does not, and it would take their resolved values over its own cascade. `initial`
+ * returns the gate to the guaranteed-invalid value, which the `var()` chain skips; the element's own
+ * matching query block comes later in the sheet at the same specificity and declares it again.
+ */
+function gateResets(themeId: string, table: string, properties: readonly ResponsiveProperty[]): string {
+	return properties
+		.flatMap((_, row) => BREAKPOINT_ORDER.map((slot) => `${gateName(themeId, table, row, slot)}:initial;`))
+		.join('');
+}
+
+/**
  * Generates the theme-scoped stylesheet.
  *
  * @remarks
@@ -465,6 +536,9 @@ function inheritanceResets(properties: readonly ResponsiveProperty[], withSlots:
  *
  * Each responsive property is declared once, in the base rule, as a `var()` chain over the
  * slot gates ({@link gateName}); a media query only declares the gates of its slot.
+ * A `query: 'container'` theme changes the at-rule, to `@container se-grid`, adds the rule of
+ * {@link GRID_CONTAINER_CLASS} and resets each grid's and item's gates in its base rule
+ * ({@link gateResets}); a media theme emits neither.
  *
  * @param theme The resolved grid vocabulary.
  * @param themeId The id of the layout theme the rules are scoped to.
@@ -474,10 +548,17 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 	const gridScope = `.${GRID_CLASS}${scope}`;
 	const itemScope = `.${GRID_ITEM_CLASS}${scope}`;
 	const tokens = GridGapTokens.map((token) => `${gapBaseVariable(token)}:${theme.gap[token]};`).join('');
+	const container = theme.query === 'container';
+	const atRule = container ? `@container ${GRID_CONTAINER_NAME}` : '@media';
 	const lines: string[] = [
 		`${scope}{${tokens}}`,
-		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;${ITEM_DISPLAY_MODE_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
-		`${itemScope}{${inheritanceResets(ITEM_PROPERTIES, true)}${declarations(themeId, 'i', ITEM_PROPERTIES)}}`,
+		...(container
+			? [
+					`.${GRID_CONTAINER_CLASS}${scope}{display:block;width:100%;min-width:0;container-type:inline-size;container-name:${GRID_CONTAINER_NAME};}`,
+				]
+			: []),
+		`${gridScope}{${container ? gateResets(themeId, 'g', GRID_PROPERTIES) : ''}${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;${ITEM_DISPLAY_MODE_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
+		`${itemScope}{${container ? gateResets(themeId, 'i', ITEM_PROPERTIES) : ''}${inheritanceResets(ITEM_PROPERTIES, true)}${declarations(themeId, 'i', ITEM_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
 		const ramped = theme.responsive[breakpoint];
@@ -487,7 +568,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 					.join('')
 			: '';
 		lines.push(
-			`@media (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${gates(themeId, 'g', GRID_PROPERTIES, breakpoint)}}${itemScope}{${gates(themeId, 'i', ITEM_PROPERTIES, breakpoint)}}}`,
+			`${atRule} (min-width:${theme.breakpoints[breakpoint]}){${rampedTokens ? `${scope}{${rampedTokens}}` : ''}${gridScope}{${gates(themeId, 'g', GRID_PROPERTIES, breakpoint)}}${itemScope}{${gates(themeId, 'i', ITEM_PROPERTIES, breakpoint)}}}`,
 		);
 	}
 	return lines.join('\n');

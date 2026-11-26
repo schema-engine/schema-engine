@@ -69,6 +69,17 @@ describe('createLayoutTheme', () => {
 		expect(a.id).toBe(b.id);
 	});
 
+	test('themes that differ only in how breakpoints are queried have different ids and stylesheets', () => {
+		const media = createLayoutTheme({ grid: { query: 'media' } });
+		const container = createLayoutTheme({ grid: { query: 'container' } });
+		expect(media.id).toBe(createLayoutTheme().id);
+		expect(container.id).not.toBe(media.id);
+		expect(container.grid.query).toBe('container');
+		expect(container.css).toContain('@container se-grid (min-width:');
+		expect(media.css).not.toContain('@container');
+		expect(createLayoutTheme({ grid: { query: 'container' } }).id).toBe(container.id);
+	});
+
 	test('a change to either half changes the id', () => {
 		const base = createLayoutTheme({ grid: { minColumnWidth: '10rem' }, appearance: [axis('tone', 'a', 'x')] });
 		expect(

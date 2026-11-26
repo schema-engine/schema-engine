@@ -103,3 +103,97 @@ export function ssrSteppedForm(type: string) {
 		],
 	};
 }
+
+/**
+ * Layout theme of the container query acceptance: breakpoints measure the grid's wrapper, and the
+ * default gap grows from `md`, so the gap ramp is under test with the template and the placement.
+ */
+export const SSR_CONTAINER_LAYOUT = {
+	grid: { query: 'container', gap: { default: '1rem' }, responsive: { md: { default: '2rem' } } },
+} as const;
+
+/**
+ * Config of a form whose grid has one column and two from `md`, authored once for both renderers.
+ *
+ * @param type The `$type` of the renderer's fixture input.
+ * @remarks
+ * `Spanning` takes one column by default and two from `md`, so its placement shows which width the
+ * items were measured against. `Plain` sets nothing.
+ */
+export function ssrContainerForm(type: string) {
+	return {
+		id: 'ssr-container-acceptance',
+		title: 'SSR container acceptance',
+		grid: { columns: 1, responsive: { md: { columns: 2 } } },
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{
+						$type: type,
+						id: 'spanning',
+						name: 'spanning',
+						label: 'Spanning field',
+						grid: { column: 'span 1', responsive: { md: { column: 'span 2' } } },
+					},
+					{ $type: type, id: 'plain', name: 'plain', label: 'Plain field' },
+				],
+			},
+		],
+	};
+}
+
+/** Which cascade a nested container fixture exercises: the outer grid's template, or its fieldset's placement. */
+export type SsrNestedContainerVariant = 'template' | 'placement';
+
+/**
+ * Config of a form whose responsive fieldset sits in a wide grid but is itself narrow, authored once for both renderers.
+ *
+ * @param type The `$type` of the renderer's input.
+ * @param inputProps Props the input needs besides its id, name, label and `grid` (Radiant's `inputType`).
+ * @param variant `template` makes the step grid one column and three from `md`, so the fieldset's grid
+ * could inherit its parent's template gate. `placement` keeps the step grid at three columns and gives the
+ * fieldset a placement from `md`, so the fieldset's items could inherit its placement gate.
+ * @remarks
+ * In a 900px container the fieldset spans one of three columns, about 290px, below `md` (48rem). The grid
+ * the fieldset draws has the same slot names as the one around it and must stay at its own width.
+ */
+export function ssrNestedContainerForm(
+	type: string,
+	variant: SsrNestedContainerVariant,
+	inputProps: Readonly<Record<string, unknown>> = {},
+) {
+	const child = (id: string, label: string) => ({
+		$type: type,
+		...inputProps,
+		id,
+		name: id,
+		label,
+		grid: { width: 'full', responsive: { md: { width: 'half' } } },
+	});
+	return {
+		id: `ssr-nested-container-${variant}`,
+		title: 'SSR nested container acceptance',
+		grid: variant === 'template' ? { columns: 1, responsive: { md: { columns: 3 } } } : { columns: 3 },
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{
+						$type: 'fieldSet',
+						id: 'group',
+						name: 'group',
+						legend: 'Group',
+						grid:
+							variant === 'placement'
+								? { column: 'span 1', responsive: { md: { column: 'span 1' } } }
+								: undefined,
+						elements: [child('nest-a', 'Nest A'), child('nest-b', 'Nest B')],
+					},
+				],
+			},
+		],
+	};
+}

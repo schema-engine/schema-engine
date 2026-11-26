@@ -9,6 +9,13 @@ import {
 } from '../../../../test-utils/nested-theme-fixtures';
 import type { LayoutThemeLike } from '../../../../test-utils/ssr-grid-acceptance';
 import {
+	SSR_CONTAINER_LAYOUT,
+	ssrContainerForm,
+	ssrNestedContainerForm,
+	ssrNestedFields,
+	type SsrNestedContainerVariant,
+} from '../../../../test-utils/ssr-grid-fixtures';
+import {
 	createSsrAcceptanceEngine,
 	getSsrAcceptanceFixture,
 	getSsrAreasFixture,
@@ -77,6 +84,84 @@ export function renderSsrSteppedAcceptanceHtml(): string {
 	);
 
 	return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`;
+}
+
+/** Markup-only document of the form that measures its grid's container, and the theme it renders under. */
+export function renderSsrContainerAcceptanceHtml(): { html: string; layout: LayoutThemeLike } {
+	const engine = createSsrAcceptanceEngine(SSR_CONTAINER_LAYOUT);
+	const body = renderToStaticMarkup(
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={engine.validateForm(ssrContainerForm('ssr-input'))} />
+		</FormEngineProvider>,
+	);
+
+	return {
+		html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`,
+		layout: engine.getLayout(),
+	};
+}
+
+/** Markup-only document of a fieldset that is narrow inside a wide step grid, under the container theme. */
+export function renderSsrNestedContainerHtml(variant: SsrNestedContainerVariant): {
+	html: string;
+	layout: LayoutThemeLike;
+} {
+	const engine = createSsrAcceptanceEngine(SSR_CONTAINER_LAYOUT);
+	const body = renderToStaticMarkup(
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={engine.validateForm(ssrNestedContainerForm('ssr-input', variant))} />
+		</FormEngineProvider>,
+	);
+	return {
+		html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`,
+		layout: engine.getLayout(),
+	};
+}
+
+/**
+ * Markup of a form with a step grid, a fieldset and an array row, so three grids, two of them nested in the first.
+ *
+ * @param layout The layout input of the engine, which decides whether the grids are wrapped.
+ */
+export function renderSsrNestedGridsHtml(layout?: Parameters<typeof createSsrAcceptanceEngine>[0]): {
+	html: string;
+	layout: LayoutThemeLike;
+} {
+	const engine = createSsrAcceptanceEngine(layout);
+	const children = ssrNestedFields('Nest').map(({ id, label, grid }) => ({
+		$type: 'ssr-input',
+		id,
+		name: id,
+		label,
+		grid,
+	}));
+	const config = engine.validateForm({
+		id: 'ssr-nested-grids',
+		title: 'SSR nested grids',
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{ $type: 'fieldSet', id: 'group', name: 'group', legend: 'Group', elements: children },
+					{
+						$type: 'arrayElements',
+						id: 'rows',
+						name: 'rows',
+						label: 'Rows',
+						minItems: 1,
+						elements: children,
+					},
+				],
+			},
+		],
+	});
+	const html = renderToStaticMarkup(
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={config} defaultValues={{ rows: [{}] }} />
+		</FormEngineProvider>,
+	);
+	return { html, layout: engine.getLayout() };
 }
 
 export function getSsrAcceptanceEngine() {
