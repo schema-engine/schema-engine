@@ -147,11 +147,11 @@ import { createLayoutTheme } from '@schema-engine/layout';
 
 /** The breakpoints measure the card, so `md` is a card 36rem wide, whatever the window. */
 export const cardTheme = createLayoutTheme({
-	grid: { query: 'container', breakpoints: { md: '36rem' } },
+	grid: { query: 'container', breakpoints: { sm: '24rem', md: '36rem' } },
 });
 ```
 
-The two modes are different themes: their `id` and their stylesheet differ, and a theme without the option is the media theme it always was. Container mode emits `@container se-grid (min-width: ...)` where media mode emits `@media`, with the same declarations inside, and adds one rule for the wrapper. The query is static CSS, with no observer and no script.
+`sm` comes down with `md` because a breakpoint may not be larger than the one above it, and `sm` defaults to `40rem`. The two modes are different themes: their `id` and their stylesheet differ, and a theme without the option is the media theme it always was. Container mode emits `@container se-grid (min-width: ...)` where media mode emits `@media`, with the same declarations inside, and adds one rule for the wrapper. The query is static CSS, with no observer and no script.
 
 ### Give each grid a wrapper
 

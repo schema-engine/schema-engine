@@ -14,7 +14,7 @@ import * as reactPrimitives from '@schema-engine/forms-react/primitives';
 import { BaseFieldSchema } from '@schema-engine/forms';
 import { slugifyHeadingText } from '../src/mdx/rehype-heading-ids';
 import { anyValue } from './any-value';
-import { docsRoot, readPage, run, tsBlock, typecheck } from './snippet-harness';
+import { docsRoot, readPage, run, titledRunner, tsBlock, typecheck } from './snippet-harness';
 
 vi.setConfig({ testTimeout: 15_000 });
 
@@ -113,6 +113,20 @@ describe('layout themes page', () => {
 			loose: 'var(--space-block-lg, 1.5rem)',
 			wide: 'var(--space-block-xl, 2rem)',
 		});
+	});
+
+	test('the container theme snippet compiles a theme that measures its grid wrapper', () => {
+		const { cardTheme } = run(tsBlock(page, 'Follow the container, not the window'), packages) as {
+			cardTheme: layout.LayoutTheme;
+		};
+		expect(cardTheme.grid.query).toBe('container');
+		expect(cardTheme.grid.breakpoints.md).toBe('36rem');
+		expect(cardTheme.css).toContain('@container se-grid (min-width:36rem)');
+	});
+
+	test('the card snippet wraps its grid in the container of the theme it imports', () => {
+		const { Card } = titledRunner(page, packages).load('card.react.tsx') as { Card: () => unknown };
+		expect(JSON.stringify(Card())).toContain(layout.GRID_CONTAINER_CLASS);
 	});
 
 	test('an engine takes inline options or a compiled theme and keeps the theme it is given', () => {
