@@ -4,22 +4,35 @@ import { gridTrackItems } from '@schema-engine/forms';
 import { useOptionalFormEngine } from '@/hooks/use-form-context';
 import { GridContainer } from './grid-container';
 
-export interface ChildGridProps {
-	/** The elements the grid places, which decide its tracks. Ignored when `subgrid` is set. */
-	elements: readonly unknown[];
+interface ChildGridBaseProps {
 	/** Classes added to the grid element, after `se-form-grid se-grid`. */
 	className?: string;
+	children?: React.ReactNode;
+}
+
+/** A grid with tracks of its own, decided by the elements it places. */
+interface OwnTracksChildGridProps extends ChildGridBaseProps {
+	/** The elements the grid places, which decide its tracks. */
+	elements: readonly unknown[];
+	subgrid?: false;
+}
+
+/** A grid on the tracks of the grid its container sits in, which has no `elements` to read. */
+interface SubgridChildGridProps extends ChildGridBaseProps {
 	/**
 	 * Lay the children out on the column tracks and gap of the grid this container sits in, instead of tracks of its own.
 	 *
 	 * @remarks
 	 * Set it when the container's own `grid` has `subgrid: true`. Every box between that container's item
 	 * and this grid must carry the `se-subgrid` class (`GRID_SUBGRID_CLASS` of `@schema-engine/layout`),
-	 * and none may be a query container, or the browser drops the tracks without a warning.
+	 * and none may be a query container or a `<fieldset>`, or the browser drops the tracks without a warning.
 	 */
-	subgrid?: boolean;
-	children?: React.ReactNode;
+	subgrid: true;
+	elements?: never;
 }
+
+/** Either `elements`, for tracks of its own, or `subgrid`, for the tracks of the grid around the container; never both. */
+export type ChildGridProps = OwnTracksChildGridProps | SubgridChildGridProps;
 
 /**
  * The grid of a container element's children, such as a fieldset's or an array row's.
@@ -35,17 +48,16 @@ export interface ChildGridProps {
  * With `subgrid` the grid has no tracks and no wrapper of its own: it carries the `se-subgrid` class, no
  * inline track variables, and queries the breakpoints of the grid around the container.
  */
-export function ChildGrid({ elements, className, subgrid = false, children }: ChildGridProps) {
+export function ChildGrid(props: ChildGridProps) {
+	const { className, children } = props;
 	const layout = useOptionalFormEngine()?.engine.getLayout() ?? getDefaultLayoutTheme();
-	const classes = [
-		'se-form-grid',
-		GRID_CLASS,
-		...(subgrid ? [GRID_SUBGRID_CLASS] : []),
-		...(className ? [className] : []),
-	];
-	if (subgrid) {
+	const classes = (subgrid: boolean) =>
+		['se-form-grid', GRID_CLASS, ...(subgrid ? [GRID_SUBGRID_CLASS] : []), ...(className ? [className] : [])].join(
+			' ',
+		);
+	if (props.subgrid) {
 		return (
-			<div className={classes.join(' ')} data-se-theme={layout.id}>
+			<div className={classes(true)} data-se-theme={layout.id}>
 				{children}
 			</div>
 		);
@@ -53,9 +65,9 @@ export function ChildGrid({ elements, className, subgrid = false, children }: Ch
 	return (
 		<GridContainer>
 			<div
-				className={classes.join(' ')}
+				className={classes(false)}
 				data-se-theme={layout.id}
-				style={getGridVariables(undefined, layout.grid, gridTrackItems(elements))}
+				style={getGridVariables(undefined, layout.grid, gridTrackItems(props.elements))}
 			>
 				{children}
 			</div>

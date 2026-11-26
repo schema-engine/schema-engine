@@ -356,13 +356,13 @@ export const GRID_ITEM_CLASS = 'se-grid-item';
  * {@link GRID_CLASS} grid itself must all carry this class. A box in the chain that does not (a plain
  * `div`) computes its template to `none` and the children fall back to one column, with nothing reported.
  *
- * A `<fieldset>` can never be a subgrid: the browser lays its content out in an anonymous box that is not
- * a grid item of the grid around it. A `fieldset` that carries this class is therefore `display: contents`,
- * which passes its children up to the box around it and draws no border or padding of its own, so give them
- * to that box. The `legend` of such a fieldset is an ordinary child. The grid of the children gets no tracks of its
- * own, so it takes no {@link GRID_CONTAINER_CLASS} wrapper either: layout containment would make it an
- * independent formatting context, and a subgrid inside one is `none`. Its breakpoints are queried against
- * the container of the grid the chain hangs from.
+ * Keep a `<fieldset>` out of the chain: Chromium lays a fieldset's content out in an anonymous box that does
+ * not take the subgrid, so its children fall back to one column there (Firefox and WebKit pass the tracks on).
+ * Use a box with `role="group"` and `aria-labelledby` its heading instead, which gives the same group and name
+ * to assistive technology in every engine. The grid of the children gets no tracks of its own, so it takes no
+ * {@link GRID_CONTAINER_CLASS} wrapper either: layout containment would make it an independent formatting
+ * context, and a subgrid inside one is `none`. Its breakpoints are queried against the container of the grid
+ * the chain hangs from.
  */
 export const GRID_SUBGRID_CLASS = 'se-subgrid';
 
@@ -578,7 +578,6 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 				]
 			: []),
 		`${subgridScope}{${ITEM_DISPLAY_MODE_VARIABLE}:grid;display:grid;grid-template-columns:subgrid;column-gap:normal;align-content:start;}`,
-		`fieldset${subgridScope}{display:contents;}`,
 		`${subgridScope}>:not(.${GRID_ITEM_CLASS}){grid-column:1/-1;}`,
 		`${gridScope}{${container ? gateResets(themeId, 'g', GRID_PROPERTIES) : ''}${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;${ITEM_DISPLAY_MODE_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
 		`.${GRID_CLASS}${subgridScope}{--se-grid-template:subgrid;--se-grid-gap-x:normal;${DEFAULT_COLUMN_VARIABLE}:inherit;}`,

@@ -602,8 +602,7 @@ export function boxOf(doc: Document, label: RegExp): DOMRect {
  *
  * @remarks
  * Interior lines of a subgrid are the parent's exactly, but its padding and border are added to the
- * items in its edge tracks as margin, so the first and last columns are inset by that much. A
- * `display: contents` box has no box to inset by.
+ * items in its edge tracks as margin, so the first and last columns are inset by that much.
  */
 export function trackInset(host: HTMLElement, side: 'Left' | 'Right'): number {
 	let inset = 0;
@@ -613,7 +612,6 @@ export function trackInset(host: HTMLElement, side: 'Left' | 'Right'): number {
 		node = node.parentElement
 	) {
 		const style = getComputedStyle(node);
-		if (style.display === 'contents') continue;
 		inset += Number.parseFloat(style[`padding${side}`]) + Number.parseFloat(style[`border${side}Width`]);
 	}
 	return inset;
@@ -813,7 +811,6 @@ export async function expectSsrSubgridNestedAcceptance(html: string): Promise<vo
 		const last = boxOf(doc, /Last/);
 		const street = placement(doc, /Street/);
 		const city = placement(doc, /City/);
-		expect(street.left, 'the fields are inset by every box of the chain').toBeGreaterThanOrEqual(0);
 		aligned(street.box.left, first.left + street.left);
 		aligned(street.box.right, first.right);
 		aligned(city.box.left, last.left);

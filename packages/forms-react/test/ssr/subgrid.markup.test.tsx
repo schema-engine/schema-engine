@@ -4,14 +4,21 @@ import { SSR_CONTAINER_LAYOUT } from '../../../../test-utils/ssr-grid-fixtures';
 import { renderSsrNestedGridsHtml, renderSsrSubgridHtml } from './render-form-ssr-html';
 
 describe('subgrid markup in React', () => {
-	test('the item, the fieldset and the inner grid carry the subgrid class, with no query container inside', () => {
+	test('the item and the inner grid carry the subgrid class, with no fieldset or query container between them', () => {
 		const html = renderSsrSubgridHtml('widths');
 		expectSubgridMarkup(html, false);
-		const boxes = Array.from(
-			html.matchAll(/<(div|fieldset)[^>]*class="([^"]*\bse-subgrid\b[^"]*)"/g),
-			(match) => match[1],
-		);
-		expect(boxes).toEqual(['div', 'fieldset', 'div']);
+		const boxes = Array.from(html.matchAll(/<(\w+)[^>]*class="([^"]*\bse-subgrid\b[^"]*)"/g), (match) => match[1]);
+		expect(boxes).toEqual(['div', 'div']);
+		expect(html).not.toContain('<fieldset');
+	});
+
+	test('the item is a group labelled by its legend', () => {
+		const html = renderSsrSubgridHtml('widths');
+		const item = html.match(/<div[^>]*class="se-form-field se-grid-item se-subgrid"[^>]*>/)?.[0] ?? '';
+		expect(item).toContain('role="group"');
+		const labelledBy = item.match(/aria-labelledby="([^"]+)"/)?.[1];
+		expect(labelledBy).toBeTruthy();
+		expect(html).toMatch(new RegExp(`<div class="[^"]*" id="${labelledBy}">Address</div>`));
 	});
 
 	test('in container mode only the step grid is wrapped', () => {

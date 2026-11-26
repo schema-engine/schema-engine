@@ -8,9 +8,14 @@ import {
 	expectSsrSubgridThroughAcceptance,
 	expectSsrSubgridWidthsAcceptance,
 } from '../../../../test-utils/ssr-grid-acceptance';
+import { expectSsrSubgridGroupAcceptance } from '../../../../test-utils/accessibility-tree';
 import { renderSsrSubgridHtml } from './render-form-ssr-html';
 
 describe('SSR subgrid acceptance', () => {
+	test('a subgrid fieldset is a group named by its legend in the browser accessibility tree', async () => {
+		await expectSsrSubgridGroupAcceptance(renderSsrSubgridHtml('widths'));
+	});
+
 	test('fields of a subgrid fieldset line up with the width grid around it', async () => {
 		await expectSsrSubgridWidthsAcceptance(renderSsrSubgridHtml('widths'));
 	});

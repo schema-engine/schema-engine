@@ -18,43 +18,46 @@ import './form-fieldset.css';
  * down, because no constraint host governs a field without a constraint wrapper
  * around it. Arrays pass both to their rows the same way.
  *
- * A fieldset with `grid.subgrid` is a `div` that carries the border and padding and holds a `fieldset` that
- * draws none, because a `<fieldset>` cannot be a subgrid: the browser lays its content out in an anonymous box
- * that is not an item of the grid around it. The stylesheet makes that inner `fieldset` `display: contents`, so
- * the legend is no longer drawn on the border.
+ * A fieldset with `grid.subgrid` is a `div` with `role="group"`, labelled by its legend text, because Chromium
+ * cannot make a `<fieldset>` a subgrid: it lays the fieldset's content out in an anonymous box that does not take
+ * the parent's tracks. The group keeps the fieldset's border and padding, so its legend is a heading row at the
+ * top instead of a gap in the border, and the first and last columns are inset by that border and padding.
  */
 export function FormFieldSet(config: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
 	const fieldHost = mergeFieldGridHost(config.grid, config.style);
 	const elements = withContainerState(config, config.elements);
-	const subgrid = elementIsSubgrid(config);
-
-	const content = (
-		<>
-			{config.legend ? <legend class="se-fieldset__legend">{config.legend}</legend> : null}
-			{config.description ? <p class="se-fieldset__description">{config.description}</p> : null}
-			<ChildGrid elements={config.elements} subgrid={subgrid} class="se-fieldset__fields">
-				<FormElements
-					elements={elements}
-					engine={resolveFormEngine()}
-					namePrefix={scope.namePrefix}
-					instanceId={scope.instanceId}
-				/>
-			</ChildGrid>
-		</>
+	const fields = (
+		<FormElements
+			elements={elements}
+			engine={resolveFormEngine()}
+			namePrefix={scope.namePrefix}
+			instanceId={scope.instanceId}
+		/>
 	);
+	const description = config.description ? <p class="se-fieldset__description">{config.description}</p> : null;
 
-	if (subgrid) {
+	if (elementIsSubgrid(config)) {
+		const legendId = `${config.id ?? config.name}-legend`;
 		return (
 			<div
 				classes={['se-form-field', GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, 'se-fieldset', config.className]}
+				// oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Chromium cannot make a fieldset a subgrid, see remarks
+				role="group"
+				aria-labelledby={config.legend ? legendId : undefined}
 				data-se-theme={fieldHost.themeId}
 				style={fieldHost.style}
 				{...getAppearanceAttributes(config.appearance)}
 			>
-				<fieldset classes={[GRID_SUBGRID_CLASS]} data-se-theme={fieldHost.themeId}>
-					{content}
-				</fieldset>
+				{config.legend ? (
+					<div class="se-fieldset__legend" id={legendId}>
+						{config.legend}
+					</div>
+				) : null}
+				{description}
+				<ChildGrid subgrid class="se-fieldset__fields">
+					{fields}
+				</ChildGrid>
 			</div>
 		);
 	}
@@ -66,7 +69,11 @@ export function FormFieldSet(config: FieldSetProps) {
 			style={fieldHost.style}
 			{...getAppearanceAttributes(config.appearance)}
 		>
-			{content}
+			{config.legend ? <legend class="se-fieldset__legend">{config.legend}</legend> : null}
+			{description}
+			<ChildGrid elements={config.elements} class="se-fieldset__fields">
+				{fields}
+			</ChildGrid>
 		</fieldset>
 	);
 }

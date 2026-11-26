@@ -64,7 +64,7 @@ describe('the query container in React markup', () => {
 			const engine = createSsrAcceptanceEngine(layout);
 			const html = renderToStaticMarkup(
 				<FormEngineProvider engine={engine}>
-					<ChildGrid elements={[{ grid: { width: 'half' } }]} className="rows" subgrid>
+					<ChildGrid className="rows" subgrid>
 						<span>child</span>
 					</ChildGrid>
 				</FormEngineProvider>,
@@ -76,6 +76,12 @@ describe('the query container in React markup', () => {
 			const grid = `<div class="se-form-grid se-grid se-subgrid rows" data-se-theme="${id}">`;
 			expect(html).toBe(`${grid}<span>child</span></div>`);
 		}
+	});
+
+	test('ChildGrid takes elements or subgrid, and passing both is a type error', () => {
+		// @ts-expect-error -- a subgrid has no tracks of its own, so it takes no elements
+		const both = <ChildGrid elements={[]} subgrid />;
+		expect(both.props).toMatchObject({ subgrid: true });
 	});
 
 	test('ChildGrid takes twelve tracks from widths that only a subgrid child sets', () => {

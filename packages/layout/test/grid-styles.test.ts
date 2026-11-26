@@ -456,7 +456,6 @@ describe('the subgrid stylesheet rules', () => {
 		const { css: stylesheet, id } = layout({ query });
 		const selectors = [
 			`.se-subgrid${scope(id)}`,
-			`fieldset.se-subgrid${scope(id)}`,
 			`.se-subgrid${scope(id)}>:not(.se-grid-item)`,
 			`.se-grid.se-subgrid${scope(id)}`,
 		];
@@ -471,13 +470,6 @@ describe('the subgrid stylesheet rules', () => {
 		expect(body(stylesheet, `.se-subgrid${scope(id)}`)).toBe(
 			'--se-item-display-mode:grid;display:grid;grid-template-columns:subgrid;column-gap:normal;align-content:start;',
 		);
-	});
-
-	test('a fieldset cannot be a subgrid, so one with the class passes its children up', () => {
-		const { css: stylesheet, id } = layout();
-		expect(body(stylesheet, `fieldset.se-subgrid${scope(id)}`)).toBe('display:contents;');
-		const at = (selector: string) => stylesheet.indexOf(`\n${selector}${scope(id)}{`);
-		expect(at('.se-subgrid')).toBeLessThan(at('fieldset.se-subgrid'));
 	});
 
 	test('a child that is not an item spans the whole row', () => {
@@ -875,26 +867,36 @@ describe('the query mode of a layout theme', () => {
 		stylesheet.split('\n').find((line) => line.startsWith(`${atRule} (min-width:${minWidth})`)) ?? '';
 
 	/**
-	 * The pins are the stylesheet from before the option existed. The `se-subgrid` rules were added to it
-	 * afterwards, in both modes, so they are removed before hashing: every other rule stays byte for byte
-	 * what it was, and the subgrid rules are pinned by their own tests above.
+	 * The theme stylesheet holds the `se-subgrid` rules in every theme, because it cannot know which documents
+	 * will set `grid.subgrid`. They are one line each, so this pins two things: the stylesheet as it is now, and
+	 * that removing exactly those lines gives back, byte for byte, the stylesheet from before the query option
+	 * existed, so adding subgrid changed no other rule.
 	 */
-	test('a theme without the option is the stylesheet it was before the option existed', () => {
-		const withoutSubgrid = (stylesheet: string) =>
-			stylesheet
-				.split('\n')
-				.filter(
-					(line) => !line.includes(`.${GRID_SUBGRID_CLASS}[`) && !line.includes(`.${GRID_SUBGRID_CLASS}>`),
-				)
-				.join('\n');
-		const fingerprint = (stylesheet: string) =>
-			createHash('sha256').update(withoutSubgrid(stylesheet)).digest('hex');
-		expect(layout().id).toBe('l1tvu4rv');
-		expect(fingerprint(layout().css)).toBe('f9328bc203ab311cf795d976c88d3859ff0eb40b3d775c9ecc9dc5d815e244d3');
-		expect(layout(ramped).id).toBe('l18hlk5k');
-		expect(fingerprint(layout(ramped).css)).toBe(
+	test('a theme without the option is the stylesheet it was before the option existed, plus the subgrid rules', () => {
+		const fingerprint = (stylesheet: string) => createHash('sha256').update(stylesheet).digest('hex');
+		const withoutSubgrid = (stylesheet: string, id: string) => {
+			const rules = [
+				`.se-subgrid[data-se-theme="${id}"]{`,
+				`.se-subgrid[data-se-theme="${id}"]>`,
+				`.se-grid.se-subgrid[`,
+			];
+			const lines = stylesheet.split('\n');
+			const kept = lines.filter((line) => !rules.some((rule) => line.startsWith(rule)));
+			expect(lines.length - kept.length, 'the subgrid rules are three lines').toBe(3);
+			return kept.join('\n');
+		};
+		const plain = layout();
+		const ramp = layout(ramped);
+		expect(plain.id).toBe('l1tvu4rv');
+		expect(ramp.id).toBe('l18hlk5k');
+		expect(fingerprint(withoutSubgrid(plain.css, plain.id))).toBe(
+			'f9328bc203ab311cf795d976c88d3859ff0eb40b3d775c9ecc9dc5d815e244d3',
+		);
+		expect(fingerprint(withoutSubgrid(ramp.css, ramp.id))).toBe(
 			'8037a078d6108414d8d7c2de8cb2860655eb5306db82c921cdc215d3042fe50a',
 		);
+		expect(fingerprint(plain.css)).toBe('8b429c941825c7e17a518868ab68c6a134b1448ea7dc2599fd1d05c570ec6a72');
+		expect(fingerprint(ramp.css)).toBe('b810c64e73b10a7ae854db03a49be7544ae436636ea18be3280ed5b76f538673');
 	});
 
 	test('media is the default, and naming it changes nothing', () => {

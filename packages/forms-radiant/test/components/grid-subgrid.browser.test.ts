@@ -3,6 +3,7 @@ import { createRoot } from '@ecopages/jsx/client';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
+import { accessibleGroups } from '../../../../test-utils/accessibility-tree';
 import { aligned, boxOf, expectSubgridOf, fieldHost, trackInset } from '../../../../test-utils/ssr-grid-acceptance';
 import '@/styles/hosts.css';
 import '@/elements/inputs/form-fieldset.css';
@@ -77,5 +78,10 @@ describe('a subgrid fieldset in a client-rendered Radiant form', () => {
 		const street = boxOf(document, /Street/);
 		aligned(street.left, first.left + trackInset(fieldHost(document, /Street/), 'Left'));
 		aligned(street.right, first.right);
+	});
+
+	test('is a group named by its legend in the browser accessibility tree, holding its fields', async () => {
+		await mount(form());
+		expect(await accessibleGroups()).toContainEqual({ name: 'Address', textboxes: ['Street', 'City'] });
 	});
 });

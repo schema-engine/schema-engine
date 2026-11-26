@@ -9,6 +9,7 @@ import {
 	expectSsrSubgridWidthsAcceptance,
 	expectSubgridMarkup,
 } from '../../../../test-utils/ssr-grid-acceptance';
+import { expectSsrSubgridGroupAcceptance } from '../../../../test-utils/accessibility-tree';
 import type { SsrSubgridVariant } from '../../../../test-utils/ssr-grid-fixtures';
 
 /** The provided markup escapes `</script>` so it can cross the browser boundary; undo it. */
@@ -19,8 +20,12 @@ const html = (variant: SsrSubgridVariant) => {
 };
 
 describe('SSR subgrid acceptance', () => {
-	test('the item, its fieldset and the inner grid carry the subgrid class, with no query container inside', () => {
+	test('the item and the inner grid carry the subgrid class, with no query container inside', () => {
 		expectSubgridMarkup(html('widths'), false);
+	});
+
+	test('a subgrid fieldset is a group named by its legend in the browser accessibility tree', async () => {
+		await expectSsrSubgridGroupAcceptance(html('widths'));
 	});
 
 	test('fields of a subgrid fieldset line up with the width grid around it', async () => {
