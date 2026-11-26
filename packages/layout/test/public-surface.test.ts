@@ -7,6 +7,7 @@ const SUPPORTED_VALUE_EXPORTS = [
 	'AppearanceConfigSchema',
 	'ElementGridConfigSchema',
 	'GRID_CLASS',
+	'GRID_CONTAINER_CLASS',
 	'GRID_ITEM_CLASS',
 	'GRID_TEMPLATE_KEYS',
 	'GridBreakpointConfigSchema',

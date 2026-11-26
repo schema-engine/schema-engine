@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, test } from 'vitest';
 import { getGridItemVariables, getGridVariables, type GridThemeOptions } from '@/lib/grid-styles';
 import { createLayoutTheme, getDefaultLayoutTheme } from '@/lib/layout-theme';
@@ -767,5 +768,97 @@ describe('named grid areas', () => {
 
 	test('areas are not a responsive grid key', () => {
 		expect(GridLayoutConfigSchema.safeParse({ responsive: { md: { areas: ['a'] } } }).success).toBe(false);
+	});
+});
+
+describe('the query mode of a layout theme', () => {
+	const ramped = {
+		responsive: { md: { default: '1.25rem' }, lg: { default: '1.5rem', loose: '2rem' } },
+		breakpoints: { md: '50rem' },
+	} as const;
+	const BREAKPOINT_WIDTHS = ['40rem', '50rem', '64rem', '80rem', '96rem'];
+	const queryBlock = (stylesheet: string, atRule: string, minWidth: string) =>
+		stylesheet.split('\n').find((line) => line.startsWith(`${atRule} (min-width:${minWidth})`)) ?? '';
+
+	test('a theme without the option is the stylesheet it was before the option existed', () => {
+		const fingerprint = (stylesheet: string) => createHash('sha256').update(stylesheet).digest('hex');
+		expect(layout().id).toBe('l1tvu4rv');
+		expect(fingerprint(layout().css)).toBe('f9328bc203ab311cf795d976c88d3859ff0eb40b3d775c9ecc9dc5d815e244d3');
+		expect(layout(ramped).id).toBe('l18hlk5k');
+		expect(fingerprint(layout(ramped).css)).toBe(
+			'8037a078d6108414d8d7c2de8cb2860655eb5306db82c921cdc215d3042fe50a',
+		);
+	});
+
+	test('media is the default, and naming it changes nothing', () => {
+		expect(theme().query).toBe('media');
+		expect(layout({ query: 'media' }).css).toBe(layout().css);
+		expect(layout({ query: 'media' }).id).toBe(layout().id);
+		expect(css(ramped)).not.toContain('@container');
+		expect(css(ramped)).not.toContain('container-type');
+	});
+
+	test('container mode emits @container for every breakpoint and no @media', () => {
+		const stylesheet = css({ ...ramped, query: 'container' });
+		expect(stylesheet).not.toContain('@media');
+		for (const width of BREAKPOINT_WIDTHS) {
+			expect(queryBlock(stylesheet, '@container se-grid', width)).not.toBe('');
+		}
+	});
+
+	test('container mode moves the gap ramp with the grid and item gates', () => {
+		const stylesheet = css({ ...ramped, query: 'container' });
+		const medium = queryBlock(stylesheet, '@container se-grid', '50rem');
+		expect(medium).toContain('--se-grid-gap-base-default:1.25rem;');
+		expect(queryBlock(stylesheet, '@container se-grid', '64rem')).toContain('--se-grid-gap-base-loose:2rem;');
+		expect(medium).toContain('.se-grid[data-se-theme=');
+		expect(medium).toContain('.se-grid-item[data-se-theme=');
+	});
+
+	test('container mode changes only the at-rule and adds the container rule', () => {
+		const media = layout(ramped);
+		const container = layout({ ...ramped, query: 'container' });
+		const rewritten = container.css
+			.split('\n')
+			.filter((line) => !line.startsWith('.se-grid-container'))
+			.map((line) => line.replace('@container se-grid', '@media').replaceAll(container.id, media.id))
+			.join('\n');
+		expect(rewritten).toBe(media.css);
+	});
+
+	test('the container rule is scoped to the theme and declares the named inline-size container', () => {
+		const sheet = layout({ query: 'container' });
+		expect(sheet.css).toContain(
+			`.se-grid-container[data-se-theme="${sheet.id}"]{display:block;width:100%;min-width:0;container-type:inline-size;container-name:se-grid;}`,
+		);
+		expect(sheet.css.match(/container-type/g)).toHaveLength(1);
+	});
+
+	test('the two modes are different themes with different stylesheets', () => {
+		expect(layout({ query: 'container' }).id).not.toBe(layout().id);
+		expect(layout({ query: 'container' }).css).not.toBe(layout().css);
+		expect(layout({ query: 'container' }).id).toBe(layout({ query: 'container' }).id);
+	});
+
+	test('rejects a query mode that is neither', () => {
+		expect(() => layout({ query: 'viewport' as unknown as 'media' })).toThrow(/'media' or 'container'/);
+	});
+
+	test('keeps the breakpoint validation in container mode', () => {
+		expect(() => layout({ query: 'container', breakpoints: { sm: '50rem', md: '700px' } })).toThrow(
+			/must preserve cascade order/,
+		);
+	});
+
+	test('a grid and its items resolve against the one width the query measures', () => {
+		const sheet = layout({ query: 'container' });
+		const gridInline = { '--se-grid-template': 'repeat(1, 1fr)', '--se-grid-template-md': 'repeat(2, 1fr)' };
+		const itemInline = { '--se-item-grid-column': 'span 1', '--se-item-grid-column-md': 'span 2' };
+		const grid = (width: number) =>
+			computeElement(sheet.css, sheet.id, 'grid', width, { inline: gridInline }).value('grid-template-columns');
+		const item = (width: number) =>
+			computeElement(sheet.css, sheet.id, 'item', width, { inline: itemInline }).value('grid-column');
+		expect([grid(600), item(600)]).toEqual(['repeat(1, 1fr)', 'span 1']);
+		expect([grid(800), item(800)]).toEqual(['repeat(2, 1fr)', 'span 2']);
 	});
 });

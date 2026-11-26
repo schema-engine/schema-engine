@@ -77,8 +77,20 @@ export {
 } from './lib/grid-placement';
 export type { CascadeSlot, GridAreaRows, GridAreaTemplates, GridBreakpointToken } from './lib/grid-placement';
 
-export { GRID_CLASS, GRID_ITEM_CLASS, getGridItemVariables, getGridVariables } from './lib/grid-styles';
-export type { CssVariables, GridGapScale, GridThemeOptions, NormalizedGridTheme } from './lib/grid-styles';
+export {
+	GRID_CLASS,
+	GRID_CONTAINER_CLASS,
+	GRID_ITEM_CLASS,
+	getGridItemVariables,
+	getGridVariables,
+} from './lib/grid-styles';
+export type {
+	CssVariables,
+	GridGapScale,
+	GridQueryMode,
+	GridThemeOptions,
+	NormalizedGridTheme,
+} from './lib/grid-styles';
 
 export { assertAxesNotReserved, createLayoutTheme, getDefaultLayoutTheme, isLayoutTheme } from './lib/layout-theme';
 export type { LayoutIssue } from './lib/layout-issue';
