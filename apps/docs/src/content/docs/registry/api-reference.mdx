@@ -58,6 +58,16 @@ type StandardSchemaSafeParseResult<T> =
 
 `StandardSchemaIssue` is the issue of the Standard Schema spec (`message` and an optional `path`), and `StandardSchemaSafeParseResult<T>` is what `safeParseStandardSchema` returns.
 
+## standardSchema
+
+```typescript
+function standardSchema<TOutput>(
+	validate: (value: unknown) => StandardSchemaV1.Result<TOutput>,
+): StandardSchemaV1<unknown, TOutput>;
+```
+
+Builds a Standard Schema from a function, for a registration whose check is not a schema library's. `validate` returns `{ value }` for an input that passes and `{ issues }` for one that does not, and it must be synchronous. The schema reports `schema-engine` as its vendor.
+
 ## safeParseNode
 
 ```typescript
@@ -73,6 +83,7 @@ Checks one node against the registration its `$type` names, without throwing. `r
 ```typescript
 interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> {
 	get(key: string): TRegistration | undefined;
+	hint?: string;
 }
 
 type SafeParseNodeResult<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> =
@@ -84,8 +95,12 @@ type SafeParseNodeResult<TRegistration extends Pick<BaseRegistration, 'schema'> 
 | Valid                              | `{ success: true, registration, data }`, where `data` is what the schema returned, defaults applied |
 | Not an object                      | One issue at `path`: `Expected an object with a string $type.`                                      |
 | An object without a string `$type` | One issue at `[...path, '$type']`: `Expected a string $type.`                                       |
-| A `$type` no registration answers  | One issue at `[...path, '$type']`: `No registration for $type '<type>'.`                            |
+| A `$type` no registration answers  | One issue at `[...path, '$type']`: `No registration for $type '<type>'.` and the lookup's `hint`    |
 | The schema refuses it              | The schema's issues, each with `path` in front of the path the schema reported                      |
+
+`hint` is optional: a sentence that follows the message of a `$type` `get` does not answer, such as where to register it. With `hint: 'Register it with defineBadge.'`, an unregistered `chip` is `No registration for $type 'chip'. Register it with defineBadge.`.
+
+`unregisteredTypeMessage(type, hint?)` writes that message, for a caller that has to throw for the same case instead of returning an issue.
 
 An issue points at the value that is wrong, the way a schema reports a missing required key at the key, so an editor can mark it and [`parseYaml`](/docs/schema-engine/serialized-documents#yaml) finds its line. [`parseActions`](/docs/actions/api-reference#parseactions) checks each entry of a workflow with it, so an entry reports these issues at the same places.
 

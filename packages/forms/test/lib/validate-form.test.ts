@@ -522,7 +522,7 @@ describe('validateFormConfig', () => {
 				id: 'unknown',
 				steps: [{ id: 'main', title: 'Notes', elements: [{ $type: 'missing', id: 'x', name: 'x' }] }],
 			}),
-		).toThrow(/^steps\[0\] \(main\)\.elements\[0\] \(x\)\.\$type: Unknown element type 'missing'/);
+		).toThrow(/^steps\[0\] \(main\)\.elements\[0\] \(x\)\.\$type: No registration for \$type 'missing'/);
 	});
 
 	test('rejects a field rule that has no validation handler', () => {
@@ -553,7 +553,7 @@ describe('validateFormConfig', () => {
 					},
 				],
 			}),
-		).toThrow(/\(quantity\)\.rules\[0\].\$type: Unknown validation rule 'unregistered'/);
+		).toThrow(/\(quantity\)\.rules\[0\].\$type: No registration for \$type 'unregistered'/);
 	});
 
 	test('rejects a rule its handler cannot build, rather than skipping it when a user types', () => {
@@ -767,7 +767,7 @@ describe('validateFormConfig', () => {
 		expect(isNormalizedElementConfig(normalized)).toBe(true);
 		expect(Object.isFrozen(normalized)).toBe(true);
 		expect(() => engine.validateElement({ $type: 'unknown', id: 'x', name: 'x' })).toThrow(
-			/Unknown element type 'unknown'/i,
+			/No registration for \$type 'unknown'/i,
 		);
 	});
 

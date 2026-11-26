@@ -117,7 +117,7 @@ describe('a rule type nothing registers', () => {
 			{
 				path: ['steps', 0, 'elements', 0, 'rules', 0, '$type'],
 				message: expect.stringMatching(
-					/^Unknown validation rule 'postalcode'\. Register it with createFormEngine\(\{ validations: \[\.\.\.\] \}\)\. Registered rules: required, .*postalCode\.$/,
+					/^No registration for \$type 'postalcode'\. Register it with createFormEngine\(\{ validations: \[\.\.\.\] \}\)\. Registered rules: required, .*postalCode\.$/,
 				),
 			},
 		]);
@@ -138,7 +138,7 @@ describe('a rule type nothing registers', () => {
 	test('is rejected in a standalone element too', () => {
 		expect(() =>
 			engine.validateElement({ $type: 'text', id: 'zip', name: 'zip', rules: [{ $type: 'nope' }] }),
-		).toThrow(/Unknown validation rule 'nope'/);
+		).toThrow(/No registration for \$type 'nope'/);
 	});
 });
 

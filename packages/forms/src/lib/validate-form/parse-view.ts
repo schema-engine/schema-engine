@@ -1,6 +1,9 @@
 import type { FormTaggedConfig } from '@/schemas/form-config';
 import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
-import { resolveRecipeView } from '@schema-engine/layout';
+import { resolveRecipeView, type RecipeViewInput } from '@schema-engine/layout';
+import { safeParseNode, standardSchema, type NodeLookup, type StandardSchemaIssue } from '@schema-engine/registry';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { AnyRecipeRegistration } from '@/types/registration';
 import { logger } from '@/lib/logger';
 import type { AppearanceScope } from '@/lib/resolve-appearance';
 import { issueAt, isTaggedConfig, type FormValidationIssue } from './issues';
@@ -15,6 +18,55 @@ import { fromSchemaIssues } from './schema-issues';
  * would otherwise repeat for the same form.
  */
 const warnedMissingWizardRecipe = new WeakMap<object, Set<string>>();
+
+/**
+ * Finds a recipe by the `$type` of the view, with what holds a view of that recipe ({@link viewSchema}).
+ *
+ * @remarks
+ * `safeParseNode` runs the schema only once it has found the recipe, so the view is an object with a registered
+ * `$type`. Its issues are relative to the view.
+ */
+function recipeLookup(
+	getRecipe: ValidateFormOptions['getRecipe'],
+	stepCount: number,
+	appearance: AppearanceScope,
+): NodeLookup<{ schema: StandardSchemaV1 }> {
+	return {
+		get(type) {
+			const recipe = getRecipe(type);
+			return recipe && { schema: viewSchema(recipe, stepCount, appearance) };
+		},
+		hint: 'Register it with createFormEngine({ recipes: [...] }).',
+	};
+}
+
+/**
+ * The schema of a view: the recipe's kind against the number of steps, then the view as `resolveRecipeView` resolves it.
+ *
+ * @remarks
+ * The `value as RecipeViewInput` cast relies on the lookup contract: {@link recipeLookup} hands this schema only to
+ * `safeParseNode`, which runs it after it has checked that the view is an object with a string `$type`.
+ */
+function viewSchema(recipe: AnyRecipeRegistration, stepCount: number, appearance: AppearanceScope): StandardSchemaV1 {
+	return standardSchema((value) => {
+		const issues: StandardSchemaIssue[] = [];
+		if (recipe.kind === 'single-step' && stepCount !== 1) {
+			issues.push({
+				path: ['$type'],
+				message: `Recipe '${recipe.$type}' is single-step only (kind: 'single-step') but the form has ${stepCount} steps.`,
+			});
+		}
+		if (recipe.kind === 'wizard' && stepCount < 2) {
+			issues.push({
+				path: ['$type'],
+				message: `Recipe '${recipe.$type}' requires at least 2 steps (kind: 'wizard') but the form has ${stepCount} step(s).`,
+			});
+		}
+		const resolved = resolveRecipeView(recipe, value as RecipeViewInput, appearance);
+		issues.push(...resolved.issues, ...(resolved.schemaIssues ?? []));
+		return issues.length > 0 ? { issues } : { value: resolved.view };
+	});
+}
 
 export function parseView(
 	authored: FormTaggedConfig | undefined,
@@ -42,45 +94,7 @@ export function parseView(
 		view = { $type: defaultRecipe };
 	}
 
-	const recipeType = view.$type;
-	if (!recipeType) {
-		return { issues: [issueAt(['view', '$type'], 'Must be a non-empty string.')] };
-	}
-
-	const recipe = getRecipe(recipeType);
-	if (!recipe) {
-		return {
-			issues: [
-				issueAt(
-					['view', '$type'],
-					`Unknown view recipe '${recipeType}'. Register it with createFormEngine({ recipes: [...] }).`,
-				),
-			],
-		};
-	}
-
-	const issues: FormValidationIssue[] = [];
-	if (recipe.kind === 'single-step' && stepCount !== 1) {
-		issues.push(
-			issueAt(
-				['view', '$type'],
-				`Recipe '${recipeType}' is single-step only (kind: 'single-step') but the form has ${stepCount} steps.`,
-			),
-		);
-	}
-	if (recipe.kind === 'wizard' && stepCount < 2) {
-		issues.push(
-			issueAt(
-				['view', '$type'],
-				`Recipe '${recipeType}' requires at least 2 steps (kind: 'wizard') but the form has ${stepCount} step(s).`,
-			),
-		);
-	}
-
-	const resolved = resolveRecipeView(recipe, view, appearance);
-	issues.push(...resolved.issues.map((issue) => issueAt(['view', ...issue.path], issue.message)));
-	if (resolved.schemaIssues) {
-		issues.push(...fromSchemaIssues(resolved.schemaIssues, ['view']));
-	}
-	return { issues, view: isTaggedConfig(resolved.view) ? resolved.view : view };
+	const parsed = safeParseNode(recipeLookup(getRecipe, form.stepCount, appearance), view, ['view']);
+	if (!parsed.success) return { issues: fromSchemaIssues(parsed.issues, []) };
+	return { issues: [], view: isTaggedConfig(parsed.data) ? parsed.data : view };
 }

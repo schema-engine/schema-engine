@@ -144,7 +144,7 @@ test('the documented form uses a registered rule in the rules of an element, and
 		issues: [
 			{
 				path: ['steps', 0, 'elements', 0, 'rules', 0, '$type'],
-				message: /^Unknown validation rule 'postalcode'\. Register it with/,
+				message: /^No registration for \$type 'postalcode'\. Register it with/,
 			},
 		],
 	});
