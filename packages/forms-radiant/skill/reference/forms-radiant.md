@@ -55,7 +55,7 @@ There is no global active form and no hooks: an element reads the form it belong
 
 ## FormController
 
-`new FormController(host)` resolves the nearest `se-form-instance` around a host element on each use, so it is safe across a config change. `container` is the form's `FormStateContainer`, `undefined` until the instance has one; every command and read goes through it. `select(selector)` returns a signal over a pure selector of the snapshot, and `formatIssue(issue, { path })` is the text the form shows for an issue.
+`new FormController(host)` resolves the nearest `se-form-instance` around a host element on each use, so it is safe across a config change. `container` is the form's `FormStateContainer`, `undefined` until the instance has one; every command and read goes through it. `select(selector)` returns a signal over a pure selector of the snapshot, `formatIssue(issue, { path })` is the text the form shows for an issue, `wizard` is a signal over the wizard (`current`, `steps`, `navigating`, `next()`, `back()`, `goTo(id)`), `submission` a signal over the submission, and `clearSubmission()` hides the outcome of the last submission. Both signals read `undefined` while the form has no runtime.
 
 ```ts title="radiant/controller.ts"
 import { FormController } from '@schema-engine/forms-radiant';
@@ -65,7 +65,7 @@ export function containerOf(host: HTMLElement) {
 }
 ```
 
-Create a signal once, as a field, and read it inside an `effect`; it reads `undefined` while the form has no container. `FormEngineController` does the same for the nearest renderer's engine (`engine`, `ready`, `connect`, `disconnect`).
+Create a signal once, as a field, and read it inside an `effect` or `subscribe` to it; `select` reads `undefined` while the form has no container. `FormEngineController` does the same for the nearest renderer's engine (`engine`, `ready`, `connect`, `disconnect`).
 
 `controller.watchRuntime(callback)` calls back with the runtime of the form the element sits in, now and each time the form replaces it, for `registerFormAgentTool` (`forms.md`).
 

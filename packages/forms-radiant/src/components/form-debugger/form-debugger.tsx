@@ -6,7 +6,7 @@ import type { JSX_PROPS } from '@ecopages/jsx';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveFormSteps, deriveNavigation } from '@/lib/instance-view';
+import { deriveFormSteps, deriveNavigation, type FormMeta } from '@/lib/instance-view';
 import { isSubmissionBusy } from '@schema-engine/forms';
 import type { ViewNavigation, ViewStep } from '@schema-engine/forms/recipes';
 import type { FormStateSnapshot } from '@schema-engine/forms/state-container';
@@ -247,19 +247,29 @@ export class FormDebuggerElement extends RadiantElement {
 
 	private readonly form = new FormController(this);
 	private readonly formState = this.form.select((snapshot) => snapshot);
-	private stopWatching?: () => void;
+	private readonly wizard = this.form.wizard;
+	private readonly submission = this.form.submission;
+	private stopWatching: Array<() => void> = [];
 
-	@contextSelector({ context: formInstanceContext })
-	private instance?: FormInstanceContextValue;
+	@contextSelector({
+		context: formInstanceContext,
+		select: (instance: FormInstanceContextValue | undefined) => instance?.meta,
+	})
+	private meta?: FormMeta;
 
 	protected override onConnected(): void {
 		this.open = this.defaultOpen;
-		this.stopWatching = this.formState.subscribe(() => this.requestUpdate());
+		const update = (): void => this.requestUpdate();
+		this.stopWatching = [
+			this.formState.subscribe(update),
+			this.wizard.subscribe(update),
+			this.submission.subscribe(update),
+		];
 	}
 
 	override disconnectedCallback(): void {
-		this.stopWatching?.();
-		this.stopWatching = undefined;
+		for (const stop of this.stopWatching) stop();
+		this.stopWatching = [];
 		super.disconnectedCallback();
 	}
 
@@ -272,15 +282,15 @@ export class FormDebuggerElement extends RadiantElement {
 	};
 
 	private readonly goPrevious = (): void => {
-		void this.instance?.back();
+		void this.wizard.get()?.back();
 	};
 
 	private readonly goNext = (): void => {
-		void this.instance?.next();
+		void this.wizard.get()?.next();
 	};
 
 	private readonly goToStep = (id: string): void => {
-		void this.instance?.goTo(id);
+		void this.wizard.get()?.goTo(id);
 	};
 
 	override render() {
@@ -289,10 +299,11 @@ export class FormDebuggerElement extends RadiantElement {
 		}
 
 		const formState = this.formState.get();
-		const { instance } = this;
-		const meta = instance?.meta;
-		const steps = meta && instance ? deriveFormSteps(meta, instance) : [];
-		const navigation = meta && instance ? deriveNavigation(meta, instance) : undefined;
+		const submission = this.submission.get();
+		const { meta } = this;
+		const wizard = this.wizard.get();
+		const steps = meta && wizard ? deriveFormSteps(meta, wizard) : [];
+		const navigation = meta && wizard ? deriveNavigation(meta, wizard) : undefined;
 		const currentStep = Math.max(
 			steps.findIndex(({ isActive }) => isActive),
 			0,
@@ -316,7 +327,7 @@ export class FormDebuggerElement extends RadiantElement {
 						{this.showFormState ? (
 							<DebuggerFormState
 								formState={formState}
-								isSubmitting={this.instance ? isSubmissionBusy(this.instance.submission.status) : false}
+								isSubmitting={submission ? isSubmissionBusy(submission.status) : false}
 								invalidSteps={steps.filter(({ isInvalid }) => isInvalid).map(({ id }) => id)}
 							/>
 						) : null}

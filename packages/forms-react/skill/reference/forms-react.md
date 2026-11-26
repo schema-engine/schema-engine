@@ -87,6 +87,6 @@ export function ResetButton() {
 }
 ```
 
-For a wizard, `useFormInstanceActions()` exposes `current` (the step id), `steps`, `navigating` and `next()`, `back()` and `goTo(id)`. `useFormEngine()` reads the engine the provider supplied. Recipe blocks read the active view with `useViewContext`, `useActiveStep`, `useFormNavigation` and `useViewConfig`.
+For a wizard, `useFormWizard()` exposes `current` (the step id), `steps`, `navigating` and `next()`, `back()` and `goTo(id)`. `useFormEngine()` reads the engine the provider supplied. Recipe blocks read the active view with `useViewContext`, `useActiveStep`, `useFormNavigation` and `useViewConfig`.
 
 `useFormRuntime()` gives the runtime of the form the component sits in, which `registerFormAgentTool` takes (`forms.md`).

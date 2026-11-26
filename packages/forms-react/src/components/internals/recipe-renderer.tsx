@@ -3,7 +3,7 @@ import type React from 'react';
 import { isSubmissionBusy, type FormConfigView, type RecipeRegistration } from '@schema-engine/forms';
 import { buildViewModel, createViewNavigation } from '@schema-engine/forms/recipes';
 import { useFormContext } from '@/hooks/form-state';
-import { useFormInstanceActions } from '@/hooks/use-form-context';
+import { useFormWizard } from '@/hooks/use-form-context';
 import { ViewProvider } from '@/contexts/view-context';
 import type { ReactRecipeAdapterPayload } from '@/primitives';
 
@@ -32,7 +32,7 @@ interface RecipeRendererProps {
 
 export function RecipeRenderer({ config, recipe, children, renderFields }: RecipeRendererProps) {
 	const { formState } = useFormContext();
-	const { current, steps, next, back, goTo } = useFormInstanceActions();
+	const { current, steps, next, back, goTo } = useFormWizard();
 	const isSubmitting = isSubmissionBusy(formState.submission.status);
 	const viewContext = useMemo(
 		() =>

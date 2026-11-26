@@ -88,6 +88,8 @@ interface FormStepState {
 
 The snapshot keeps its identity while nothing it reports changed, so it is safe in `useSyncExternalStore`. The runtime stores only `current`, `visited` and `complete`, by step id. `skipped`, `invalid` and `reachable` are derived from the container, so they cannot go stale.
 
+`FormWizard`, exported by `@schema-engine/forms`, is the part an app reads: `current`, `steps`, `navigating` and the commands `next`, `back` and `goTo`. A renderer hands it to its app its own way, as `useFormWizard()` in React and `FormController.wizard` in Radiant.
+
 ## Navigation
 
 - **`next()`** syncs the host, validates the current step's fields and moves to the next active step. If the step has errors it focuses them and returns `invalid`; on the last active step it returns `refused`. It never marks the form submitted.
@@ -223,7 +225,7 @@ Each `invalid` asked the host to focus the first field with an error: `email`, t
 
 ## How the renderers use it
 
-| Renderer | Host and state                                                                                                                                                                                                  |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| React    | `FormProvider` creates the runtime, with `focus` from its field registry and no `sync`, mounts it in an effect and shares it on a context. `useFormInstanceActions()` and `useFormContext()` read it.           |
-| Radiant  | `se-form-instance` creates it with `focus` and `sync` from `rui-form` and a `submitNatively` that posts when the app gave no `onSubmit`, mounts it on connect and publishes its state on `formInstanceContext`. |
+| Renderer | Host and state                                                                                                                                                                                                                                                                                                                                                       |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| React    | `FormProvider` creates the runtime, with `focus` from its field registry and no `sync`, mounts it in an effect and shares it on a context. `useFormWizard()` and `useFormContext()` read it.                                                                                                                                                                         |
+| Radiant  | `se-form-instance` creates it with `focus` and `sync` from `rui-form` and a `submitNatively` that posts when the app gave no `onSubmit`, mounts it on connect and publishes its state on `formInstanceContext`, which the renderer's own blocks and recipes read with `contextSelector`. An app reads the same state with `FormController.wizard` and `.submission`. |

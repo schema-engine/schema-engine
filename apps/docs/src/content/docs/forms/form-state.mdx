@@ -49,7 +49,7 @@ The hooks come from `@schema-engine/forms-react/hooks` and have to run inside th
 | `useWatch(path)`                               | The value at a path, a list of paths, or every value when called with none                                                                            |
 | `useFieldArray(path)`                          | `fields` with stable ids, and `append`, `prepend`, `insert`, `swap`, `move`, `update`, `replace` and `remove`                                         |
 | `useFormField(config)` or `useFormField(path)` | One field's state and props, for a [widget](/docs/forms-react/widgets)                                                                                |
-| `useFormInstanceActions()`                     | The wizard: see [Wizard](/docs/forms/wizard)                                                                                                          |
+| `useFormWizard()`                              | The wizard: see [Wizard](/docs/forms/wizard)                                                                                                          |
 
 A component renders again only for what it reads. Reading `formState.submission` renders it when the submission changes and not while the user types, and `isValid` reports the recorded errors and validates nothing. This status line reads one value and the submission, and starts over:
 
@@ -91,7 +91,7 @@ It renders the contact form of the [React quick start](/docs/forms-react/getting
 
 ## Read it in Radiant
 
-`new FormController(host)` for an element inside the form gives its `container` (the commands and reads: `getValue`, `setValue`, `validate`, `reset`, `fieldArray`), `select(selector)`, a signal over a selector of the snapshot, and `formatIssue(issue, { path })`. [Form controls](/docs/forms-radiant/form-controls#read-the-form-from-your-own-element) has an element that follows the rows of an array with it. Values are nested and paths are dotted (`contacts.0.email`).
+`new FormController(host)` for an element inside the form gives its `container` (the commands and reads: `getValue`, `setValue`, `validate`, `reset`, `fieldArray`), `select(selector)`, a signal over a selector of the snapshot, and `formatIssue(issue, { path })`. It also gives `submission`, a signal over the submission (`undefined` while the form has no runtime), `clearSubmission()`, which hides the outcome of the last submission, and `wizard`, a signal over the [wizard](/docs/forms/wizard#in-radiant). [Form controls](/docs/forms-radiant/form-controls#read-the-form-from-your-own-element) has an element that follows the rows of an array with it. Values are nested and paths are dotted (`contacts.0.email`).
 
 ## Write it
 

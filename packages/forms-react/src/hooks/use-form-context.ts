@@ -1,33 +1,16 @@
 import { useContext, useMemo, useSyncExternalStore } from 'react';
-import type { FormRuntime, FormStepState, EngineOutputMaps } from '@schema-engine/forms';
+import type { EngineOutputMaps, FormRuntime, FormWizard } from '@schema-engine/forms';
 import { useFormStateContext } from './form-state/context';
 import { GRID_CLASS, getDefaultLayoutTheme, getGridVariables, type CssVariables } from '@schema-engine/layout';
 import { FormEngineContext } from '../components/provider';
 import type { FormEngineContextValue } from '../components/provider';
 
 /**
- * What a component reads of the form's wizard: where it is, and the commands that move it.
+ * The form's wizard: where it is, and the commands that move it.
  *
- * @remarks
- * The commands are those of the form's runtime and end with an outcome (`'moved'`, `'invalid'`, `'busy'`, ...). `steps` lists every
- * step in order with `skipped`, `visited`, `complete` and `invalid`; a skipped step is passed over by `next` and `back` and refused by `goTo`.
+ * @remarks Must be used within a FormProvider. See {@link FormWizard} for the commands' outcomes and the steps' state.
  */
-export interface FormInstanceContextValue {
-	/** The id of the current step. */
-	current: string;
-	steps: readonly FormStepState[];
-	/** A `next`, `back` or `goTo` runs. */
-	navigating: boolean;
-	next: FormRuntime['next'];
-	back: FormRuntime['back'];
-	goTo: FormRuntime['goTo'];
-}
-
-/**
- * Hook to access the form's wizard state and navigation
- * Must be used within a FormProvider
- */
-export function useFormInstanceActions(): FormInstanceContextValue {
+export function useFormWizard(): FormWizard {
 	const { runtime } = useFormStateContext();
 	const { current, navigating, steps } = useSyncExternalStore(
 		runtime.subscribe,

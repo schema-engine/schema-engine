@@ -111,12 +111,12 @@ Both renderers give a component the same list, every step in the order of the co
 
 ## In React
 
-`useFormInstanceActions()` from `@schema-engine/forms-react/hooks` returns `current` (the id of the current step), `steps`, `navigating` (a command is running) and the commands `next()`, `back()` and `goTo(id)`. It has to run inside the form, so render the component as a child of `FormRenderer`. This stepper lists the steps that take part and jumps to one the form lets the visitor reach:
+`useFormWizard()` from `@schema-engine/forms-react/hooks` returns `current` (the id of the current step), `steps`, `navigating` (a command is running) and the commands `next()`, `back()` and `goTo(id)`. It has to run inside the form, so render the component as a child of `FormRenderer`. This stepper lists the steps that take part and jumps to one the form lets the visitor reach:
 
 ```tsx title="react-stepper.react.tsx"
 import type { FormValues } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
-import { useFormInstanceActions } from '@schema-engine/forms-react/hooks';
+import { useFormWizard } from '@schema-engine/forms-react/hooks';
 import { checkout } from './checkout';
 import { engine } from './react-wizard.helper.react';
 
@@ -124,7 +124,7 @@ const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.t
 
 /** Lists the steps that take part and jumps to one the form lets the visitor reach. */
 function Stepper() {
-	const { current, steps, goTo } = useFormInstanceActions();
+	const { current, steps, goTo } = useFormWizard();
 	return (
 		<ol aria-label="Steps">
 			{steps
@@ -160,15 +160,18 @@ A recipe's own blocks read the same state as `useViewContext().navigation`, as [
 
 ## In Radiant
 
-`FormRenderer` draws a `se-form-instance` element around the form. It publishes the wizard on `formInstanceContext`, which `@schema-engine/forms-radiant/contexts` exports: `current`, `steps`, `navigating`, `next()`, `back()`, `goTo(id)` and the `submission`. An element reads it with `contextSelector` from `@ecopages/radiant/context` and renders again when it changes. The element has to sit inside the form, so pass it to `FormRenderer` as a child:
+`new FormController(this)` in an element inside the form gives it `wizard`, a signal over the form's wizard: `current`, `steps`, `navigating` and the commands `next()`, `back()` and `goTo(id)`. It reads `undefined` while the form has no runtime and on the server. Subscribe to it to render again when the wizard changes, and stop in `disconnectedCallback`. The element has to sit inside the form, so pass it to `FormRenderer` as a child:
 
 ```tsx title="radiant-stepper.tsx"
 import { customElement, RadiantElement } from '@ecopages/radiant';
-import { contextSelector } from '@ecopages/radiant/context';
 import type { JsxRenderable } from '@ecopages/jsx';
 import type { FormValues } from '@schema-engine/forms';
-import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
-import { formInstanceContext, type FormInstanceContextValue } from '@schema-engine/forms-radiant/contexts';
+import {
+	createRadiantFormEngine,
+	FormController,
+	FormRenderer,
+	schemaFormRegistrations,
+} from '@schema-engine/forms-radiant';
 import { checkout } from './checkout';
 
 const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.title ?? id;
@@ -177,28 +180,38 @@ const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.t
  * Lists the steps that take part and jumps to one the form lets the visitor reach.
  *
  * @remarks
- * `se-form-instance` publishes the wizard on `formInstanceContext`, and the selector re-renders the element each
- * time it changes. The element has to sit inside the form, so it is passed to `FormRenderer` as a child.
+ * `FormController.wizard` is a signal over the form's wizard, and the element renders again each time it changes. The
+ * element has to sit inside the form, so it is passed to `FormRenderer` as a child.
  */
 @customElement('checkout-stepper')
 export class CheckoutStepper extends RadiantElement {
-	@contextSelector({ context: formInstanceContext })
-	protected instance?: FormInstanceContextValue;
+	private readonly form = new FormController(this);
+	private readonly wizard = this.form.wizard;
+	private stop?: () => void;
+
+	protected override onConnected(): void {
+		this.stop = this.wizard.subscribe(() => this.requestUpdate());
+	}
+
+	override disconnectedCallback(): void {
+		this.stop?.();
+		super.disconnectedCallback();
+	}
 
 	override render(): JsxRenderable {
-		const instance = this.instance;
-		if (!instance) return null;
+		const wizard = this.wizard.get();
+		if (!wizard) return null;
 		return (
 			<ol aria-label="Steps">
-				{instance.steps
+				{wizard.steps
 					.filter((step) => !step.skipped)
 					.map((step) => (
 						<li key={step.id}>
 							<button
 								type="button"
-								aria-current={step.id === instance.current ? 'step' : undefined}
+								aria-current={step.id === wizard.current ? 'step' : undefined}
 								prop:disabled={!step.reachable}
-								on:click={() => void instance.goTo(step.id)}
+								on:click={() => void wizard.goTo(step.id)}
 							>
 								{titleOf(step.id)}
 								{step.invalid ? ' (fix)' : ''}
@@ -222,7 +235,7 @@ export function Checkout({ onSubmit }: { onSubmit: (values: FormValues) => void 
 }
 ```
 
-`FormController` gives the same element the form's container and its signals, as [Form controls](/docs/forms-radiant/form-controls#read-the-form-from-your-own-element) shows. The instance also emits the `se-action-submit-start`, `se-action-submit-invalid` and `se-action-submit-complete` events for the submission.
+The same controller gives the element `submission`, a signal over the form's [submission](/docs/forms/form-state#submit), and `clearSubmission()` to hide its outcome, as the container and `select` do for the form's state in [Form controls](/docs/forms-radiant/form-controls#read-the-form-from-your-own-element). The instance also emits the `se-action-submit-start`, `se-action-submit-invalid` and `se-action-submit-complete` events for the submission.
 
 ## Reset
 

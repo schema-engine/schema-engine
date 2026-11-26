@@ -1,9 +1,12 @@
 import { customElement, RadiantElement } from '@ecopages/radiant';
-import { contextSelector } from '@ecopages/radiant/context';
 import type { JsxRenderable } from '@ecopages/jsx';
 import type { FormValues } from '@schema-engine/forms';
-import { createRadiantFormEngine, FormRenderer, schemaFormRegistrations } from '@schema-engine/forms-radiant';
-import { formInstanceContext, type FormInstanceContextValue } from '@schema-engine/forms-radiant/contexts';
+import {
+	createRadiantFormEngine,
+	FormController,
+	FormRenderer,
+	schemaFormRegistrations,
+} from '@schema-engine/forms-radiant';
 import { checkout } from './checkout';
 
 const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.title ?? id;
@@ -12,28 +15,38 @@ const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.t
  * Lists the steps that take part and jumps to one the form lets the visitor reach.
  *
  * @remarks
- * `se-form-instance` publishes the wizard on `formInstanceContext`, and the selector re-renders the element each
- * time it changes. The element has to sit inside the form, so it is passed to `FormRenderer` as a child.
+ * `FormController.wizard` is a signal over the form's wizard, and the element renders again each time it changes. The
+ * element has to sit inside the form, so it is passed to `FormRenderer` as a child.
  */
 @customElement('checkout-stepper')
 export class CheckoutStepper extends RadiantElement {
-	@contextSelector({ context: formInstanceContext })
-	protected instance?: FormInstanceContextValue;
+	private readonly form = new FormController(this);
+	private readonly wizard = this.form.wizard;
+	private stop?: () => void;
+
+	protected override onConnected(): void {
+		this.stop = this.wizard.subscribe(() => this.requestUpdate());
+	}
+
+	override disconnectedCallback(): void {
+		this.stop?.();
+		super.disconnectedCallback();
+	}
 
 	override render(): JsxRenderable {
-		const instance = this.instance;
-		if (!instance) return null;
+		const wizard = this.wizard.get();
+		if (!wizard) return null;
 		return (
 			<ol aria-label="Steps">
-				{instance.steps
+				{wizard.steps
 					.filter((step) => !step.skipped)
 					.map((step) => (
 						<li key={step.id}>
 							<button
 								type="button"
-								aria-current={step.id === instance.current ? 'step' : undefined}
+								aria-current={step.id === wizard.current ? 'step' : undefined}
 								prop:disabled={!step.reachable}
-								on:click={() => void instance.goTo(step.id)}
+								on:click={() => void wizard.goTo(step.id)}
 							>
 								{titleOf(step.id)}
 								{step.invalid ? ' (fix)' : ''}

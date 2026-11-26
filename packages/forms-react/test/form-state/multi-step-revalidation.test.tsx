@@ -5,7 +5,7 @@ import { userEvent } from 'vitest/browser';
 import type { FormConfig } from '@schema-engine/forms';
 import { useFormField } from '../../src/hooks/form-state';
 import { useFormStateContext } from '../../src/hooks/form-state/context';
-import { useFormInstanceActions } from '../../src/hooks/use-form-context';
+import { useFormWizard } from '../../src/hooks/use-form-context';
 import { renderProvider } from '../utils/form-harness';
 
 afterEach(cleanup);
@@ -48,7 +48,7 @@ function Field() {
 }
 
 function Controls() {
-	const { steps, current, next } = useFormInstanceActions();
+	const { steps, current, next } = useFormWizard();
 	const currentStep = steps.filter(({ skipped }) => !skipped).findIndex(({ id }) => id === current);
 	const { container } = useFormStateContext();
 	return (

@@ -43,7 +43,7 @@ The Radiant renderer for [Forms](/docs/forms/overview), for Ecopages apps that u
 
 ## Programmatic form access
 
-Import `FormController` and `FormEngineController` from `@schema-engine/forms-radiant`. Create `new FormController(host)` for a host inside the form's `se-form-instance`. It gives the host the form's `container`, `select` signals, `formatIssue` and, for the [agent tool](/docs/forms/agent-tool), `watchRuntime`.
+Import `FormController` and `FormEngineController` from `@schema-engine/forms-radiant`. Create `new FormController(host)` for a host inside the form's `se-form-instance`. It gives the host the form's `container`, `select` signals, the `wizard` and `submission` signals, `clearSubmission()`, `formatIssue` and, for the [agent tool](/docs/forms/agent-tool), `watchRuntime`.
 
 Create `new FormEngineController(host)` for a host inside `se-form-renderer`. Its `engine` and `ready` getters expose the nearest renderer engine, while `connect()` and `disconnect()` manage the context subscription.
 

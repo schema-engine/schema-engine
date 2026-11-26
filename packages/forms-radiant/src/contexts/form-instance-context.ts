@@ -1,29 +1,22 @@
 import { createContext } from '@ecopages/radiant/context';
 
-import type { FormRuntime, FormStepState, FormSubmissionState, NavigationOutcome } from '@schema-engine/forms';
+import type { FormRuntime, FormSubmissionState, FormWizard } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
 import type { FormMeta } from '@/lib/instance-view';
 
 /**
- * What a `se-form-instance` publishes to the hosts under it.
+ * What a `se-form-instance` publishes to the hosts under it, for the blocks and recipes of a renderer.
  *
  * @remarks
- * Step state and commands are those of the form's runtime. `steps` lists every step in order with `skipped`, `visited`, `complete` and `invalid`, and
- * the commands end with an outcome (`'moved'`, `'invalid'`, `'busy'`, ...).
+ * An application reads the wizard and the submission with `FormController`, which follows the instance and its runtime. This context
+ * is for a renderer author's custom block or recipe, which also needs the form chrome (`meta`), whether a wizard recipe owns navigation, and the formatter.
+ * The wizard fields are those of the form's runtime (see {@link FormWizard}).
  */
-export interface FormInstanceContextValue {
-	/** The id of the current step. */
-	current: string;
-	steps: readonly FormStepState[];
-	/** A `next`, `back` or `goTo` runs. */
-	navigating: boolean;
+export interface FormInstanceContextValue extends FormWizard {
 	/** True when a wizard recipe owns navigation and steps toggle visibility. */
 	isWizard: boolean;
 	/** Serializable form chrome, so a consumer needs no walk to the instance for its config. */
 	meta?: FormMeta;
-	next: () => Promise<NavigationOutcome>;
-	back: () => Promise<NavigationOutcome>;
-	goTo: (id: string) => Promise<NavigationOutcome>;
 	/** The runtime's submission: its status (`validating` while it is checked, `submitting` once it passed and its actions and `onSubmit` run), its failures and the submissions that ended, a failed validation included, since the form was created or reset. */
 	submission: FormSubmissionState;
 	/**

@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import type { FormValues } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
-import { useFormInstanceActions } from '@schema-engine/forms-react/hooks';
+import { useFormWizard } from '@schema-engine/forms-react/hooks';
 import { checkout } from './checkout';
 import { engine } from './react-wizard.helper.react';
 
@@ -9,7 +9,7 @@ const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.t
 
 /** Lists the steps that take part and jumps to one the form lets the visitor reach. */
 function Stepper() {
-	const { current, steps, goTo } = useFormInstanceActions();
+	const { current, steps, goTo } = useFormWizard();
 	return (
 		<ol aria-label="Steps">
 			{steps

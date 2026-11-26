@@ -12,7 +12,7 @@ import { useMemo } from 'react';
 import { FormProvider } from '../form-provider';
 import type { FormProviderProps } from '../../hooks/form-state/types';
 import { FormElements } from './form-elements';
-import { useFormInstanceActions, useOptionalFormEngine } from '@/hooks/use-form-context';
+import { useFormWizard, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormEngineProvider } from '../form-engine-provider';
 import {
 	type EngineOutputMaps,
@@ -79,7 +79,7 @@ function FormElementsRenderer<
 	layout: LayoutTheme;
 	children?: React.ReactNode;
 }) {
-	const { current } = useFormInstanceActions();
+	const { current } = useFormWizard();
 	const engineContext = useOptionalFormEngine<TElements, TRecipes, TActions, TOutputs>();
 	const recipe = engineContext ? getViewRecipe(engineContext.engine, config) : undefined;
 	const steps = getRenderableSteps(config, current);

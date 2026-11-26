@@ -113,6 +113,7 @@ export type {
 	FormSubmissionState,
 	FormSubmitHelpers,
 	FormValues,
+	FormWizard,
 	NavigationOutcome,
 	SubmissionStatus,
 	SubmitOutcome,
