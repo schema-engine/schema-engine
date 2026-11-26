@@ -29,9 +29,9 @@ import {
 import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
 import { isRenderedRequired, withContainerState } from '@/lib/field-rules';
 import { RequiredMarker } from '../field-group';
-import { mergeChildrenGridHost, mergeFieldGridHost } from '@/hooks/grid-styles';
-import { GridContainer } from '@/components/internals/grid-container';
-import { GRID_CLASS, GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
+import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { ChildGrid } from '@/components/internals/child-grid';
+import { GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
 
 function TrashIcon() {
 	return (
@@ -140,7 +140,6 @@ function renderArrayContent({ config, rows, initialValues, renderValues, fieldEr
 					const disabled = config.disabled === true;
 					const elements = withContainerState(config, config.elements);
 					const minItems = config.minItems ?? 0;
-					const childrenHost = mergeChildrenGridHost(config.elements, engine);
 					const isSingleField = usesScalarArrayItem(config, config.elements);
 					const scope = arrayItemScope(config.name, index, id, {
 						scalar: isSingleField,
@@ -148,23 +147,17 @@ function renderArrayContent({ config, rows, initialValues, renderValues, fieldEr
 					});
 					return (
 						<div class="se-form-array__item" key={id} data-se-row-id={id}>
-							<GridContainer engine={engine}>
-								<div
-									class={`se-form-array__fields se-form-grid ${GRID_CLASS}`}
-									data-se-theme={childrenHost.themeId}
-									style={childrenHost.style}
-								>
-									<FormElements
-										elements={elements}
-										engine={engine}
-										initialValues={initialValues}
-										values={renderValues}
-										namePrefix={scope.namePrefix}
-										nameStrategy={scope.nameStrategy}
-										instanceId={scope.instanceId}
-									/>
-								</div>
-							</GridContainer>
+							<ChildGrid elements={config.elements} engine={engine} class="se-form-array__fields">
+								<FormElements
+									elements={elements}
+									engine={engine}
+									initialValues={initialValues}
+									values={renderValues}
+									namePrefix={scope.namePrefix}
+									nameStrategy={scope.nameStrategy}
+									instanceId={scope.instanceId}
+								/>
+							</ChildGrid>
 							{computed(() =>
 								count.get() > minItems ? (
 									<RuiButton

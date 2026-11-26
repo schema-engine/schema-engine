@@ -8,9 +8,9 @@ import { resolveFormEngine } from '@/contexts/resolve-form-engine';
  *
  * @remarks
  * Renders only its children when the theme queries the viewport, so the markup of a media theme is
- * unchanged. Put it around each grid (a step's, a fieldset's, an array row's), nested grids
- * included, so every grid follows its own box. The theme comes from the given engine, else the
- * engine rendering this element, else the library default.
+ * unchanged. The step grid uses it directly; the grid of a container element gets it through
+ * `ChildGrid`. The theme comes from the given engine, else the engine rendering this element, else
+ * the library default.
  */
 export function GridContainer({ engine, children }: { engine?: FormEngine; children?: JsxRenderable }): JsxRenderable {
 	const layout = (engine ?? resolveFormEngine())?.getLayout() ?? getDefaultLayoutTheme();

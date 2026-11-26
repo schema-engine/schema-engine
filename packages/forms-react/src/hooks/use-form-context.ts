@@ -83,9 +83,9 @@ export function useLayoutThemeId(): string {
  * otherwise stays the engine's single column. The theme comes from the engine
  * context, with the library default outside a `FormEngineProvider`.
  *
- * @remarks
- * Under a `query: 'container'` theme the grid also needs its wrapper: put `GridContainer` of
- * `@schema-engine/forms-react/primitives` around the element that gets these props.
+ * `ChildGrid` of `@schema-engine/forms-react/primitives` renders this element and, under a
+ * `query: 'container'` theme, the wrapper its breakpoints measure. Under that theme an element
+ * with these props and no wrapper keeps its narrowest layout.
  */
 export function useChildGridProps(elements: readonly unknown[]): {
 	className: string;

@@ -1,8 +1,8 @@
 import type React from 'react';
-import { FormElements, GridContainer } from '@schema-engine/forms-react/primitives';
+import { ChildGrid, FormElements } from '@schema-engine/forms-react/primitives';
 import { objectFieldScope } from '@schema-engine/forms';
 import { GRID_ITEM_CLASS, getAppearanceAttributes, getGridItemVariables } from '@schema-engine/layout';
-import { useChildGridProps, useLayoutThemeId } from '@schema-engine/forms-react/hooks';
+import { useLayoutThemeId } from '@schema-engine/forms-react/hooks';
 import { FieldSet } from '@/components/ui/schema-engine/components/field';
 import type { FieldSetProps } from './form-fieldset.types';
 
@@ -14,7 +14,6 @@ import type { FieldSetProps } from './form-fieldset.types';
 export function FormFieldSet({ ...config }: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
 	const layoutThemeId = useLayoutThemeId();
-	const childGrid = useChildGridProps(config.elements);
 	const style: React.CSSProperties = { ...getGridItemVariables(config.grid), ...config.style };
 
 	return (
@@ -25,15 +24,13 @@ export function FormFieldSet({ ...config }: FieldSetProps) {
 			{...getAppearanceAttributes(config.appearance)}
 		>
 			<FieldSet legend={config.legend} description={config.description}>
-				<GridContainer>
-					<div {...childGrid}>
-						<FormElements
-							elements={config.elements}
-							namePrefix={scope.namePrefix}
-							instanceId={scope.instanceId}
-						/>
-					</div>
-				</GridContainer>
+				<ChildGrid elements={config.elements}>
+					<FormElements
+						elements={config.elements}
+						namePrefix={scope.namePrefix}
+						instanceId={scope.instanceId}
+					/>
+				</ChildGrid>
 			</FieldSet>
 		</div>
 	);

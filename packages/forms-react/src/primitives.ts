@@ -18,7 +18,8 @@ export { FormElement } from './components/internals/field-renderer';
 export type { FormElementProps } from './components/internals/field-renderer';
 export { FormElements } from './components/internals/form-elements';
 export type { FormElementsProps } from './components/internals/form-elements';
-export { GridContainer } from './components/internals/grid-container';
+export { ChildGrid } from './components/internals/child-grid';
+export type { ChildGridProps } from './components/internals/child-grid';
 
 /** Stable React recipe contracts for consumer-owned view implementations. */
 export type FormShellProps = FormShellLayout<React.ReactNode>;

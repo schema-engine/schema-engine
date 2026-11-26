@@ -40,6 +40,10 @@ export function mergeFieldGridHost(
  * sets `width` or `offset`, and otherwise stays the engine's single column. The
  * theme comes from the given engine, else the engine rendering this element,
  * else the library default.
+ *
+ * `ChildGrid` of `@schema-engine/forms-radiant/primitives` renders this element and,
+ * under a `query: 'container'` theme, the wrapper its breakpoints measure. Under that
+ * theme a grid with these values and no wrapper keeps its narrowest layout.
  */
 export function mergeChildrenGridHost(
 	elements: readonly unknown[],
