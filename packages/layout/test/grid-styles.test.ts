@@ -456,6 +456,7 @@ describe('the subgrid stylesheet rules', () => {
 		const { css: stylesheet, id } = layout({ query });
 		const selectors = [
 			`.se-subgrid${scope(id)}`,
+			`fieldset.se-subgrid${scope(id)}`,
 			`.se-subgrid${scope(id)}>:not(.se-grid-item)`,
 			`.se-grid.se-subgrid${scope(id)}`,
 		];
@@ -470,6 +471,13 @@ describe('the subgrid stylesheet rules', () => {
 		expect(body(stylesheet, `.se-subgrid${scope(id)}`)).toBe(
 			'--se-item-display-mode:grid;display:grid;grid-template-columns:subgrid;column-gap:normal;align-content:start;',
 		);
+	});
+
+	test('a fieldset cannot be a subgrid, so one with the class passes its children up', () => {
+		const { css: stylesheet, id } = layout();
+		expect(body(stylesheet, `fieldset.se-subgrid${scope(id)}`)).toBe('display:contents;');
+		const at = (selector: string) => stylesheet.indexOf(`\n${selector}${scope(id)}{`);
+		expect(at('.se-subgrid')).toBeLessThan(at('fieldset.se-subgrid'));
 	});
 
 	test('a child that is not an item spans the whole row', () => {
