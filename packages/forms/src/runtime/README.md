@@ -106,6 +106,7 @@ interface FormRuntimeSnapshot {
 }
 interface FormStepState {
 	id: string;
+	title?: string; // the step config's title, as authored; set for every step of a validated config
 	skipped: boolean;
 	visited: boolean;
 	complete: boolean;
@@ -118,7 +119,7 @@ interface FormStepState {
 `useSyncExternalStore`. `failures` are issues (`callbackFailed`, `triggerFailed`, `actionFailed`,
 `validationFailed`, `valueMismatch`), so the form's one formatter words them. `submitCount` counts submissions that passed or
 failed validation: a Next is not one, and neither is a validation that could not run or one an edit outran.
-`steps` holds every step in config order, and `reachable` says whether `goTo` can move there (a step before the current one, or after it when the form is `free` or the step was visited); only `visited` and `complete` are stored, by step id, and `skipped`
+`steps` holds every step in config order with its `id` and `title` from the config, and `reachable` says whether `goTo` can move there (a step before the current one, or after it when the form is `free` or the step was visited); only `visited` and `complete` are stored, by step id, and `skipped`
 (the step's constraints hide it) and `invalid` (an error at one of its fields) are derived from the container,
 so they cannot go stale.
 

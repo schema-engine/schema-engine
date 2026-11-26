@@ -104,7 +104,7 @@ export interface FormRuntimeSnapshot {
  *
  * @remarks
  * The commands are those of the form's runtime and end with an outcome (`'moved'`, `'invalid'`, `'busy'`, ...). `steps` lists every
- * step in order with `skipped`, `visited`, `complete` and `invalid`; a skipped step is passed over by `next` and `back` and refused by `goTo`.
+ * step in order with its `title`, `skipped`, `visited`, `complete` and `invalid`; a skipped step is passed over by `next` and `back` and refused by `goTo`.
  * Each renderer exposes it its own way: `useFormWizard` in React, `FormController.wizard` in Radiant.
  */
 export type FormWizard = Pick<FormRuntimeSnapshot, 'current' | 'steps' | 'navigating'> &
@@ -131,6 +131,8 @@ export interface FormRuntimeHost {
 /** A step of the config the runtime reads. */
 export interface FormRuntimeStep<TAction extends FormActionConfig = FormActionConfig> extends ValidationStep {
 	readonly id: string;
+	/** Carried to the step's {@link FormStepState.title}. */
+	readonly title?: string;
 	/** Actions dispatched after the form's on every trigger while this step is current. */
 	readonly actions?: ParsedActionSequence<TAction>;
 }

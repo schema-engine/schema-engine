@@ -174,6 +174,7 @@ describe('FormController over the form instance container', () => {
 			const first = form.wizard.get();
 			expect(first?.current).toBe('a');
 			expect(first?.steps.map(({ id }) => id)).toEqual(['a', 'b']);
+			expect(first?.steps.map(({ title }) => title)).toEqual(['A', 'B']);
 			expect(first?.next).toBe(runtime.next);
 			expect(first?.goTo).toBe(runtime.goTo);
 

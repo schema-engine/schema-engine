@@ -95,7 +95,7 @@ deterministic, and the server's snapshot carries them to the client.
 
 ## Context for renderer authors
 
-An app reads the form with `FormController`. A renderer author's own block or recipe can also read `formInstanceContext` (`@schema-engine/forms-radiant/contexts`, with `contextSelector`), which carries the wizard as `FormWizard` plus what the renderer's chrome needs: `isWizard`, `meta` (titles of the form and its steps), `submission`, `runtime` and `formatIssue`.
+An app reads the form with `FormController`. A renderer author's own block or recipe can also read `formInstanceContext` (`@schema-engine/forms-radiant/contexts`, with `contextSelector`), which carries the wizard as `FormWizard` plus what the renderer's chrome needs: `isWizard`, `meta` (titles and descriptions of the form and its steps; an app reads step titles from `wizard.steps` instead), `submission`, `runtime` and `formatIssue`.
 
 ## Runtime boundary
 

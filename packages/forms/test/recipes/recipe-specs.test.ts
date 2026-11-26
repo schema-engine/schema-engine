@@ -123,6 +123,7 @@ describe('built-in recipe specs', () => {
 
 const state = (id: string, extra: Partial<FormStepState> = {}): FormStepState => ({
 	id,
+	title: id,
 	skipped: false,
 	visited: false,
 	complete: false,

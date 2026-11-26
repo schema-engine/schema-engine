@@ -78,6 +78,7 @@ interface FormRuntimeSnapshot {
 
 interface FormStepState {
 	id: string;
+	title?: string; // the step config's title, as authored; set for every step of a validated config
 	skipped: boolean; // its constraints hide it
 	visited: boolean;
 	complete: boolean; // next() validated it and moved on
@@ -86,7 +87,7 @@ interface FormStepState {
 }
 ```
 
-The snapshot keeps its identity while nothing it reports changed, so it is safe in `useSyncExternalStore`. The runtime stores only `current`, `visited` and `complete`, by step id. `skipped`, `invalid` and `reachable` are derived from the container, so they cannot go stale.
+The snapshot keeps its identity while nothing it reports changed, so it is safe in `useSyncExternalStore`. `id` and `title` come from the step's config. The runtime stores only `current`, `visited` and `complete`, by step id. `skipped`, `invalid` and `reachable` are derived from the container, so they cannot go stale.
 
 `FormWizard`, exported by `@schema-engine/forms`, is the part an app reads: `current`, `steps`, `navigating` and the commands `next`, `back` and `goTo`. A renderer hands it to its app its own way, as `useFormWizard()` in React and `FormController.wizard` in Radiant.
 

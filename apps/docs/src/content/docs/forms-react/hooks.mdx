@@ -68,7 +68,7 @@ Import engine hooks from `@schema-engine/forms-react/hooks`.
 
 `useFormEngine` reads the `FormEngine` supplied by `FormEngineProvider`, while
 `useFormWizard` exposes the form's wizard: `current` (the id of the current step), `steps` (every step in
-order, each with `skipped`, `visited`, `complete`, `invalid` and `reachable`), `navigating`, and the commands `next()`, `back()`
+order, each with its `id`, `title`, `skipped`, `visited`, `complete`, `invalid` and `reachable`), `navigating`, and the commands `next()`, `back()`
 and `goTo(id)`. Each command resolves to one outcome string: `'moved'`, `'invalid'` (the step has errors, which are
 shown and focused), `'failed'` (a rule could not run, so the step has no verdict and the cause is logged), `'overtaken'` (an edit outran the check), `'refused'` (nowhere to go, or a skipped or
 unreachable step), `'busy'` (another command is running) or `'cancelled'` (a reset or an unmount revoked it).

@@ -15,9 +15,18 @@ export type StepNavigationMode = 'linear' | 'free';
  * @remarks
  * Only `visited` and `complete` are stored, by step id. `skipped` is derived from the values (the step's
  * constraints hide it) and `invalid` from the errors recorded at its fields, so neither can go stale.
+ * `title` is the step config's, so a stepper reused across forms reads it here instead of looking it up by `id`.
  */
 export interface FormStepState {
 	readonly id: string;
+	/**
+	 * The step config's `title`, as authored: the engine does not translate it.
+	 *
+	 * @remarks
+	 * `undefined` when the runtime was given a step with no title. A form config requires one, so every step of a
+	 * validated config has it; only a hand-built runtime config can leave it out, and a stepper may fall back to `id`.
+	 */
+	readonly title?: string;
 	/** Its constraints hide it: it is passed over and its fields take no part. */
 	readonly skipped: boolean;
 	readonly visited: boolean;
@@ -53,17 +62,18 @@ export function moveProgress(progress: StepProgress, to: string, completed: read
 
 /** The steps as renderers read them, from the stored progress and what the values and errors say. */
 export function deriveStepStates(
-	steps: readonly { readonly id: string }[],
+	steps: readonly { readonly id: string; readonly title?: string }[],
 	progress: StepProgress,
 	derived: { readonly skipped: readonly string[]; readonly invalid: readonly string[] },
 	mode: StepNavigationMode,
 ): FormStepState[] {
 	const at = steps.findIndex(({ id }) => id === progress.current);
-	return steps.map(({ id }, index) => {
+	return steps.map(({ id, title }, index) => {
 		const skipped = derived.skipped.includes(id);
 		const visited = progress.visited.includes(id);
 		return {
 			id,
+			title,
 			skipped,
 			visited,
 			complete: progress.complete.includes(id),

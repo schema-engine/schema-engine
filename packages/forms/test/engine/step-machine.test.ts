@@ -10,7 +10,12 @@ import {
 	type FormStepState,
 } from '@/engine/step-machine';
 
-const steps = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
+const steps = [
+	{ id: 'a', title: 'A' },
+	{ id: 'b', title: 'B' },
+	{ id: 'c', title: 'C' },
+	{ id: 'd', title: 'D' },
+];
 
 const states = (skipped: string[] = []): FormStepState[] =>
 	deriveStepStates(steps, startProgress('a'), { skipped, invalid: [] }, 'linear');
@@ -41,13 +46,23 @@ describe('moveProgress', () => {
 });
 
 describe('deriveStepStates', () => {
+	test('carries the title of each step, and leaves it undefined for a step that has none', () => {
+		const derived = deriveStepStates(
+			[{ id: 'a', title: 'A' }, { id: 'b' }],
+			startProgress('a'),
+			{ skipped: [], invalid: [] },
+			'linear',
+		);
+		expect(derived.map(({ title }) => title)).toEqual(['A', undefined]);
+	});
+
 	test('stores only visited and complete, and takes skipped and invalid from what it is given', () => {
 		const progress = moveProgress(startProgress('a'), 'c', ['a']);
 		expect(deriveStepStates(steps, progress, { skipped: ['b'], invalid: ['c'] }, 'linear')).toEqual([
-			{ id: 'a', skipped: false, visited: true, complete: true, invalid: false, reachable: true },
-			{ id: 'b', skipped: true, visited: false, complete: false, invalid: false, reachable: false },
-			{ id: 'c', skipped: false, visited: true, complete: false, invalid: true, reachable: false },
-			{ id: 'd', skipped: false, visited: false, complete: false, invalid: false, reachable: false },
+			{ id: 'a', title: 'A', skipped: false, visited: true, complete: true, invalid: false, reachable: true },
+			{ id: 'b', title: 'B', skipped: true, visited: false, complete: false, invalid: false, reachable: false },
+			{ id: 'c', title: 'C', skipped: false, visited: true, complete: false, invalid: true, reachable: false },
+			{ id: 'd', title: 'D', skipped: false, visited: false, complete: false, invalid: false, reachable: false },
 		]);
 	});
 
