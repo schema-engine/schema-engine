@@ -82,6 +82,10 @@ export function useLayoutThemeId(): string {
  * The grid takes twelve tracks when a child sets `width` or `offset`, and
  * otherwise stays the engine's single column. The theme comes from the engine
  * context, with the library default outside a `FormEngineProvider`.
+ *
+ * @remarks
+ * Under a `query: 'container'` theme the grid also needs its wrapper: put `GridContainer` of
+ * `@schema-engine/forms-react/primitives` around the element that gets these props.
  */
 export function useChildGridProps(elements: readonly unknown[]): {
 	className: string;

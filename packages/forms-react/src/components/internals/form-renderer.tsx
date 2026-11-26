@@ -12,6 +12,7 @@ import { useMemo } from 'react';
 import { FormProvider } from '../form-provider';
 import type { FormProviderProps } from '../../hooks/form-state/types';
 import { FormElements } from './form-elements';
+import { GridContainer } from './grid-container';
 import { useFormWizard, useOptionalFormEngine } from '@/hooks/use-form-context';
 import { FormEngineProvider } from '../form-engine-provider';
 import {
@@ -53,13 +54,15 @@ function StepFields({
 			{...getAppearanceAttributes(step.appearance)}
 		>
 			{step.elements.length > 0 && (
-				<div
-					className={`se-form-grid ${GRID_CLASS}`}
-					data-se-theme={layout.id}
-					style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
-				>
-					<FormElements elements={step.elements} />
-				</div>
+				<GridContainer>
+					<div
+						className={`se-form-grid ${GRID_CLASS}`}
+						data-se-theme={layout.id}
+						style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
+					>
+						<FormElements elements={step.elements} />
+					</div>
+				</GridContainer>
 			)}
 		</div>
 	);

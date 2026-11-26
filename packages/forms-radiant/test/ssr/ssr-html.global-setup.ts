@@ -3,6 +3,7 @@ import type { TestProject } from 'vitest/node';
 import {
 	getSsrAcceptanceEngine,
 	renderSsrAreasAcceptanceHtml,
+	renderSsrContainerAcceptanceHtml,
 	renderSsrLayoutAcceptanceHtml,
 	renderSsrSteppedAcceptanceHtml,
 	renderSsrWidthsAcceptanceHtml,
@@ -17,6 +18,8 @@ declare module 'vitest' {
 		ssrWidthsHtml: string;
 		ssrAreasHtml: string;
 		ssrSteppedHtml: string;
+		ssrContainerHtml: string;
+		ssrContainerTheme: { id: string; css: string };
 		ssrNestedWidthsHtml: string;
 		ssrHydrationHtml: string;
 		ssrLayoutTheme: { id: string; css: string };
@@ -47,6 +50,9 @@ export default function setup(project: TestProject): void {
 	project.provide('ssrWidthsHtml', renderSsrWidthsAcceptanceHtml());
 	project.provide('ssrAreasHtml', renderSsrAreasAcceptanceHtml());
 	project.provide('ssrSteppedHtml', renderSsrSteppedAcceptanceHtml());
+	const container = renderSsrContainerAcceptanceHtml();
+	project.provide('ssrContainerHtml', container.html);
+	project.provide('ssrContainerTheme', container.layout);
 	project.provide(
 		'ssrNestedWidthsHtml',
 		renderSsrNestedWidthsAcceptanceHtml().replaceAll('</script>', '<\\/script>'),

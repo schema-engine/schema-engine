@@ -103,3 +103,43 @@ export function ssrSteppedForm(type: string) {
 		],
 	};
 }
+
+/**
+ * Layout theme of the container query acceptance: breakpoints measure the grid's wrapper, and the
+ * default gap grows from `md`, so the gap ramp is under test with the template and the placement.
+ */
+export const SSR_CONTAINER_LAYOUT = {
+	grid: { query: 'container', gap: { default: '1rem' }, responsive: { md: { default: '2rem' } } },
+} as const;
+
+/**
+ * Config of a form whose grid has one column and two from `md`, authored once for both renderers.
+ *
+ * @param type The `$type` of the renderer's fixture input.
+ * @remarks
+ * `Spanning` takes one column by default and two from `md`, so its placement shows which width the
+ * items were measured against. `Plain` sets nothing.
+ */
+export function ssrContainerForm(type: string) {
+	return {
+		id: 'ssr-container-acceptance',
+		title: 'SSR container acceptance',
+		grid: { columns: 1, responsive: { md: { columns: 2 } } },
+		steps: [
+			{
+				id: 'main',
+				title: 'Main',
+				elements: [
+					{
+						$type: type,
+						id: 'spanning',
+						name: 'spanning',
+						label: 'Spanning field',
+						grid: { column: 'span 1', responsive: { md: { column: 'span 2' } } },
+					},
+					{ $type: type, id: 'plain', name: 'plain', label: 'Plain field' },
+				],
+			},
+		],
+	};
+}

@@ -12,6 +12,7 @@ import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '@/recipes/types';
 import { createFormMeta } from '@/lib/instance-view';
 import { FormElements } from './form-elements';
+import { GridContainer } from './grid-container';
 import { collectFormInitialValues } from '@/adapters/radiant/rui-form-shell';
 import { FormStep } from '@/components/form-step';
 
@@ -71,26 +72,28 @@ export function RecipeRenderer({
 					appearance={step.appearance}
 				>
 					{step.elements.length ? (
-						<div
-							class={`se-form-elements se-form-grid ${GRID_CLASS}`}
-							data-se-theme={layout.id}
-							style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
-						>
-							<FormElements
-								elements={step.elements}
-								engine={engine}
-								initialValues={initialValues}
-								values={values}
-								constraintContext={{
-									values,
-									initialValues,
-									rowIds,
-									participation: participation.skippedSteps.includes(step.id)
-										? resolveParticipation(config.steps, values, { shownStep: step.id })
-										: participation,
-								}}
-							/>
-						</div>
+						<GridContainer engine={engine}>
+							<div
+								class={`se-form-elements se-form-grid ${GRID_CLASS}`}
+								data-se-theme={layout.id}
+								style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
+							>
+								<FormElements
+									elements={step.elements}
+									engine={engine}
+									initialValues={initialValues}
+									values={values}
+									constraintContext={{
+										values,
+										initialValues,
+										rowIds,
+										participation: participation.skippedSteps.includes(step.id)
+											? resolveParticipation(config.steps, values, { shownStep: step.id })
+											: participation,
+									}}
+								/>
+							</div>
+						</GridContainer>
 					) : null}
 				</FormStep>
 			))}

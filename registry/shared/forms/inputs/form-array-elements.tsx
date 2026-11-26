@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/schema-engine/components/field';
 import { useChildGridProps, useFormField, useFieldArray } from '@schema-engine/forms-react/hooks';
-import { FormElements } from '@schema-engine/forms-react/primitives';
+import { FormElements, GridContainer } from '@schema-engine/forms-react/primitives';
 import { arrayItemScope, createArrayRowDefault, usesScalarArrayItem } from '@schema-engine/forms';
 import type { ArrayElementsProps } from './form-array-elements.types';
 import { cn } from '@/components/schema-engine/forms/lib/utils';
@@ -38,14 +38,16 @@ function ArrayItem({
 		<div className={cn('space-y-3 p-4 border border-border rounded-lg')}>
 			<div className="flex items-start justify-between gap-3">
 				<div className="flex-1">
-					<div {...childGrid}>
-						<FormElements
-							elements={config.elements}
-							namePrefix={scope.namePrefix}
-							nameStrategy={scope.nameStrategy}
-							instanceId={scope.instanceId}
-						/>
-					</div>
+					<GridContainer>
+						<div {...childGrid}>
+							<FormElements
+								elements={config.elements}
+								namePrefix={scope.namePrefix}
+								nameStrategy={scope.nameStrategy}
+								instanceId={scope.instanceId}
+							/>
+						</div>
+					</GridContainer>
 				</div>
 
 				{canRemove && (

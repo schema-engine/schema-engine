@@ -449,3 +449,97 @@ export async function expectSsrSteppedAcceptance(html: string, layout: LayoutThe
 		frame.remove();
 	}
 }
+
+/** Opening tags of the elements that carry a class, among the class tokens of their `class` attribute. */
+function elementsWithClass(html: string, name: string): string[] {
+	return html.match(new RegExp(`<[a-z][^>]*class="(?:[^"]*\\s)?${name}(?:\\s[^"]*)?"[^>]*>`, 'g')) ?? [];
+}
+
+/**
+ * Asserts a query container directly around every grid of a document, and none anywhere else.
+ *
+ * @param grids How many grids the document holds: a step's, and each fieldset's and array row's.
+ * @remarks
+ * Each wrapper must carry the theme id and open right before its grid, since an ancestor that is
+ * not the grid's own wrapper would make the template and the items query different boxes.
+ */
+export function expectGridContainers(html: string, layout: LayoutThemeLike, grids: number): void {
+	expect(elementsWithClass(html, 'se-grid')).toHaveLength(grids);
+	const containers = elementsWithClass(html, 'se-grid-container');
+	expect(containers).toHaveLength(grids);
+	for (const container of containers) expect(container).toContain(`data-se-theme="${layout.id}"`);
+	const wrapped = html.match(
+		/<[a-z][^>]*class="se-grid-container"[^>]*>\s*<[a-z][^>]*class="(?:[^"]*\s)?se-grid(?:\s[^"]*)?"/g,
+	);
+	expect(wrapped).toHaveLength(grids);
+}
+
+/** Asserts a document that has no query container and no rule for one, as a theme that queries the viewport renders. */
+export function expectNoGridContainers(html: string, layout: LayoutThemeLike): void {
+	expect(html).not.toContain('se-grid-container');
+	expect(html).not.toContain('@container');
+	expect(html).toContain('@media (min-width:');
+	expect(html).toContain(layout.css.slice(0, 48));
+}
+
+/**
+ * Asserts that a grid measures its container and not the window, at one window width and the other.
+ *
+ * @param html Server-rendered document for `ssrContainerForm` (`ssr-grid-fixtures.ts`) on
+ * `SSR_CONTAINER_LAYOUT`: one column, and two from `md` (48rem) with the default gap growing there.
+ * @remarks
+ * Resizes the element that holds the form, never the window: a wide window with a narrow container
+ * must lay out narrow, and a narrow window with a wide container wide.
+ */
+export async function expectSsrContainerAcceptance(html: string, layout: LayoutThemeLike): Promise<void> {
+	expect(html).not.toMatch(/<script\b/i);
+	expect(html).toContain(layout.css.slice(0, 48));
+	expect(html).toContain('@container se-grid (min-width:48rem)');
+	expect(html).toContain(`data-se-theme="${layout.id}"`);
+	const hosted = html
+		.replace('<body>', '<body><div id="se-test-host" style="width:300px">')
+		.replace('</body>', '</div></body>');
+
+	const { frame, doc } = await loadSsrFrame(hosted, 375);
+	try {
+		const host = doc.getElementById('se-test-host');
+		const grid = doc.querySelector<HTMLElement>('.se-grid[data-se-theme]');
+		if (!host || !grid) throw new Error('Expected the container host and the grid');
+		const spanning = fieldHost(doc, /spanning field/i);
+		const plain = fieldHost(doc, /plain field/i);
+		const columns = () => getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+		const layoutAt = async (viewport: number, container: number) => {
+			frame.style.width = `${viewport}px`;
+			host.style.width = `${container}px`;
+			await waitForFrameLayout();
+		};
+		const expectNarrow = () => {
+			expect(columns()).toBe(1);
+			expect(getComputedStyle(spanning).gridColumn).toBe('span 1');
+			near(Number.parseFloat(getComputedStyle(grid).columnGap), 16);
+			near(spanning.getBoundingClientRect().width, grid.getBoundingClientRect().width);
+			expect(plain.getBoundingClientRect().top).toBeGreaterThan(spanning.getBoundingClientRect().bottom - 1);
+		};
+		const expectWide = () => {
+			expect(columns()).toBe(2);
+			expect(getComputedStyle(spanning).gridColumn).toBe('span 2');
+			near(Number.parseFloat(getComputedStyle(grid).columnGap), 32);
+			near(spanning.getBoundingClientRect().width, grid.getBoundingClientRect().width);
+			expect(plain.getBoundingClientRect().top).toBeGreaterThan(spanning.getBoundingClientRect().bottom - 1);
+		};
+
+		await layoutAt(1400, 300);
+		expectNarrow();
+
+		await layoutAt(375, 900);
+		expectWide();
+
+		await layoutAt(1400, 900);
+		expectWide();
+
+		await layoutAt(375, 300);
+		expectNarrow();
+	} finally {
+		frame.remove();
+	}
+}

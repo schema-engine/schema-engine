@@ -1,6 +1,7 @@
 import { describe, test } from 'vitest';
 import {
 	expectSsrAreasAcceptance,
+	expectSsrContainerAcceptance,
 	expectSsrGridAcceptance,
 	expectSsrNestedWidthsAcceptance,
 	expectSsrSteppedAcceptance,
@@ -9,6 +10,7 @@ import {
 import {
 	getSsrAcceptanceEngine,
 	renderSsrAreasAcceptanceHtml,
+	renderSsrContainerAcceptanceHtml,
 	renderSsrLayoutAcceptanceHtml,
 	renderSsrNestedWidthsAcceptanceHtml,
 	renderSsrSteppedAcceptanceHtml,
@@ -38,5 +40,10 @@ describe('SSR grid layout acceptance', () => {
 
 	test('The template changes by breakpoint and each wizard step draws its own template', async () => {
 		await expectSsrSteppedAcceptance(renderSsrSteppedAcceptanceHtml(), getSsrAcceptanceEngine().getLayout());
+	});
+
+	test('a container theme follows the width of its container, not the window', async () => {
+		const { html, layout } = renderSsrContainerAcceptanceHtml();
+		await expectSsrContainerAcceptance(html, layout);
 	});
 });

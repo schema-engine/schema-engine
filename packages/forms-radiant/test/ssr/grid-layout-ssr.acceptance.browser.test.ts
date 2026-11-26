@@ -1,6 +1,7 @@
 import { describe, inject, test } from 'vitest';
 import {
 	expectSsrAreasAcceptance,
+	expectSsrContainerAcceptance,
 	expectSsrGridAcceptance,
 	expectSsrNestedWidthsAcceptance,
 	expectSsrSteppedAcceptance,
@@ -27,5 +28,9 @@ describe('SSR grid layout acceptance', () => {
 
 	test('The template changes by breakpoint and each wizard step draws its own template', async () => {
 		await expectSsrSteppedAcceptance(inject('ssrSteppedHtml'), inject('ssrLayoutTheme'));
+	});
+
+	test('a container theme follows the width of its container, not the window', async () => {
+		await expectSsrContainerAcceptance(inject('ssrContainerHtml'), inject('ssrContainerTheme'));
 	});
 });
