@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { safeParseStandardSchema, type StandardSchemaIssue } from './standard-schema.js';
 import type { BaseRegistration } from './types.js';
 
@@ -16,9 +17,26 @@ export interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema
 	hint?: string;
 }
 
-/** What {@link safeParseNode} returns: the registration with the node's validated configuration, or every issue found. */
+/**
+ * What {@link safeParseNode} returns: the registration with the node's validated configuration, or every issue found.
+ *
+ * @remarks
+ * The success branch has one member per registration of a typed registry, so checking `$type` (the node's, repeated at
+ * the top of the result because TypeScript narrows a union only by a property of the union itself) narrows
+ * `registration` and `data` together. A registration that does not declare its `$type`, such as a lookup typed by
+ * `{ schema }` alone, leaves it a `string`. A registry typed as plain `BaseRegistration` has no concrete schema to
+ * read, so its `data` is `unknown`.
+ */
 export type SafeParseNodeResult<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> =
-	{ success: true; registration: TRegistration; data: unknown } | { success: false; issues: StandardSchemaIssue[] };
+	| (TRegistration extends unknown
+			? {
+					success: true;
+					$type: TRegistration extends { $type: infer TType extends string } ? TType : string;
+					registration: TRegistration;
+					data: StandardSchemaV1.InferOutput<TRegistration['schema']>;
+				}
+			: never)
+	| { success: false; issues: StandardSchemaIssue[] };
 
 /**
  * The message for a `$type` no registration answers, as {@link safeParseNode} reports it.
@@ -52,9 +70,12 @@ function isRecord(value: unknown): value is Record<PropertyKey, unknown> {
  * The lookup's `hint` adds to the message of the last.
  * Otherwise the issues are those of the registration's schema, with `path` in front of the path the schema reported.
  *
- * `data` is what the schema returned, so its defaults and transforms apply. It is `unknown` because the registration
- * is found by a string at runtime. The node is checked on its own: walking a tree is the caller's, which passes each
- * child its own `path`.
+ * `data` is what the schema returned, so its defaults and transforms apply. Its type is the schema output of the
+ * registration that `registration.$type` names, for a registry typed by registrations with literal `$type`s, and
+ * `unknown` for one typed as `BaseRegistration`. TypeScript cannot follow the runtime lookup from the node's string
+ * `$type` to a registration, so the function returns `data` through one cast to that type: it is the value the matched
+ * registration's own schema returned. The node is checked on its own: walking a tree is the caller's, which passes
+ * each child its own `path`.
  *
  * @throws {Error} When the registration's schema validates asynchronously, as {@link safeParseStandardSchema} does.
  */
@@ -78,7 +99,14 @@ export function safeParseNode<TRegistration extends Pick<BaseRegistration, 'sche
 		};
 	}
 	const parsed = safeParseStandardSchema(registration.schema, node);
-	if (parsed.success) return { success: true, registration, data: parsed.data };
+	if (parsed.success) {
+		return {
+			success: true,
+			$type: type,
+			registration,
+			data: parsed.data,
+		} as SafeParseNodeResult<TRegistration>;
+	}
 	return {
 		success: false,
 		issues: parsed.error.issues.map((issue) => ({ ...issue, path: [...path, ...(issue.path ?? [])] })),

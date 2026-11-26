@@ -11,7 +11,7 @@ Complete API documentation for `@schema-engine/registry`.
 ## createRegistry
 
 ```typescript
-function createRegistry<TRegistration extends BaseRegistration>(
+function createRegistry<const TRegistration extends BaseRegistration>(
 	kind: string,
 	registrations: readonly TRegistration[],
 	options?: CreateRegistryOptions,
@@ -92,16 +92,48 @@ interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema'> = Ba
 }
 
 type SafeParseNodeResult<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> =
-	{ success: true; registration: TRegistration; data: unknown } | { success: false; issues: StandardSchemaIssue[] };
+	| (TRegistration extends unknown
+			? {
+					success: true;
+					$type: TRegistration extends { $type: infer TType extends string } ? TType : string;
+					registration: TRegistration;
+					data: StandardSchemaV1.InferOutput<TRegistration['schema']>;
+				}
+			: never)
+	| { success: false; issues: StandardSchemaIssue[] };
 ```
 
-| Node                               | Result                                                                                              |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Valid                              | `{ success: true, registration, data }`, where `data` is what the schema returned, defaults applied |
-| Not an object                      | One issue at `path`: `Expected an object with a string $type.`                                      |
-| An object without a string `$type` | One issue at `[...path, '$type']`: `Expected a string $type.`                                       |
-| A `$type` no registration answers  | One issue at `[...path, '$type']`: `No registration for $type '<type>'.` and the lookup's `hint`    |
-| The schema refuses it              | The schema's issues, each with `path` in front of the path the schema reported                      |
+The success branch has one member per registration of the registry, so a registry typed by its registrations gives `data` the schema output of the registration that `$type` names, with no cast. A registry typed as `ReadOnlyRegistry<BaseRegistration>` has no concrete schema to read, so its `data` is `unknown`. Narrow on `$type` of the result: TypeScript narrows a union only by a property of the union itself, so `result.registration.$type` alone does not narrow `data`.
+
+```ts
+import * as z from 'zod/mini';
+import { createRegistry, safeParseNode } from '@schema-engine/registry';
+
+const widgets = createRegistry('Widget', [
+	{ $type: 'card', schema: z.object({ title: z.string() }), metadata: { name: 'Card' } },
+	{
+		$type: 'badge',
+		schema: z.object({ label: z.string(), tone: z._default(z.string(), 'info') }),
+		metadata: { name: 'Badge' },
+	},
+]);
+
+export function describeNode(node: unknown): string {
+	const parsed = safeParseNode(widgets, node);
+	if (!parsed.success) return 'invalid';
+	return parsed.$type === 'card' ? parsed.data.title : `${parsed.data.label} (${parsed.data.tone})`;
+}
+```
+
+`createRegistry` keeps the literal `$type` of each inline registration, so the example needs no `as const`.
+
+| Node                               | Result                                                                                                     |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Valid                              | `{ success: true, $type, registration, data }`, where `data` is what the schema returned, defaults applied |
+| Not an object                      | One issue at `path`: `Expected an object with a string $type.`                                             |
+| An object without a string `$type` | One issue at `[...path, '$type']`: `Expected a string $type.`                                              |
+| A `$type` no registration answers  | One issue at `[...path, '$type']`: `No registration for $type '<type>'.` and the lookup's `hint`           |
+| The schema refuses it              | The schema's issues, each with `path` in front of the path the schema reported                             |
 
 `hint` is optional: a sentence that follows the message of a `$type` `get` does not answer, such as where to register it. With `hint: 'Register it with defineBadge.'`, an unregistered `chip` is `No registration for $type 'chip'. Register it with defineBadge.`.
 

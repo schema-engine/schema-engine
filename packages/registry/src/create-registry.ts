@@ -71,7 +71,7 @@ export interface CreateRegistryOptions {
  *
  * Use {@link BaseRegistry} instead when registrations arrive at runtime.
  */
-export function createRegistry<TRegistration extends BaseRegistration>(
+export function createRegistry<const TRegistration extends BaseRegistration>(
 	kind: string,
 	registrations: readonly TRegistration[],
 	options: CreateRegistryOptions = {},

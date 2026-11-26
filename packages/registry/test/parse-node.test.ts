@@ -18,6 +18,12 @@ describe('safeParseNode', () => {
 		expect(result).toMatchObject({ success: true, data: { $type: 'badge', label: 'Paid', tone: 'info' } });
 	});
 
+	it('repeats the $type of the registration at the top of a success, which narrows its data', () => {
+		const result = safeParseNode(badges, { $type: 'badge', label: 'Paid' });
+
+		expect(result.success && result.$type).toBe('badge');
+	});
+
 	it('puts the path of the node in front of the path of each schema issue', () => {
 		const node: unknown = JSON.parse('{ "$type": "badge", "label": 5, "tone": 1 }');
 		const result = safeParseNode(badges, node, ['children', 2]);
