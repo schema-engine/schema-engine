@@ -36,15 +36,31 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
 	return schema as StandardSchemaV1;
 }
 
+/** Options of {@link createRegistry}. */
+export interface CreateRegistryOptions {
+	/**
+	 * What a second registration of one `$type` does: replace the first (`'override'`, the default) or fail the build
+	 * (`'error'`).
+	 *
+	 * @remarks
+	 * `'override'` is how `[...defaults, custom]` replaces a built-in. Use `'error'` for a catalog where a repeated
+	 * key is always a mistake, such as component keys.
+	 */
+	readonly duplicates?: 'override' | 'error';
+}
+
 /**
  * Build a frozen, read-only registry from a list of registrations.
  *
  * @param kind - Label for errors, for example `Element`
  * @param registrations - Registrations to store, keyed by `$type`
+ * @param options - How to treat a repeated `$type`, see {@link CreateRegistryOptions}
+ * @throws {Error} `Widget 'card' is registered twice.` when `duplicates` is `'error'` and a `$type` repeats, before any
+ * schema is checked
  * @throws {Error} Naming the `$type` when a winning registration's schema is not a Standard Schema
  *
  * @remarks
- * A later registration with the same `$type` replaces the earlier one without a
+ * By default a later registration with the same `$type` replaces the earlier one without a
  * warning, so `[...defaults, custom]` is the way to override. A replaced key
  * keeps its first position. Only the winning registration of each key is
  * checked. The registry stores a frozen shallow copy of each winner, taken at
@@ -58,9 +74,13 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
 export function createRegistry<TRegistration extends BaseRegistration>(
 	kind: string,
 	registrations: readonly TRegistration[],
+	options: CreateRegistryOptions = {},
 ): ReadOnlyRegistry<TRegistration> {
 	const winners = new Map<string, TRegistration>();
 	for (const registration of registrations) {
+		if (options.duplicates === 'error' && winners.has(registration.$type)) {
+			throw new Error(`${kind} '${registration.$type}' is registered twice.`);
+		}
 		winners.set(registration.$type, registration);
 	}
 	const entries = new Map<string, Readonly<TRegistration>>();

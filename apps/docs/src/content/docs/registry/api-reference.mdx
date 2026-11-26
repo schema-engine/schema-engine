@@ -14,10 +14,15 @@ Complete API documentation for `@schema-engine/registry`.
 function createRegistry<TRegistration extends BaseRegistration>(
 	kind: string,
 	registrations: readonly TRegistration[],
+	options?: CreateRegistryOptions,
 ): ReadOnlyRegistry<TRegistration>;
+
+interface CreateRegistryOptions {
+	readonly duplicates?: 'override' | 'error';
+}
 ```
 
-Builds a frozen, read-only registry. A later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. Throws `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).` when a winning registration's schema is not a Standard Schema; an overridden registration is not checked. The registry stores a frozen shallow copy of each winner and leaves the objects you passed untouched.
+Builds a frozen, read-only registry. By default (`duplicates: 'override'`) a later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. With `duplicates: 'error'` a repeated `$type` throws `<kind> '<$type>' is registered twice.` before any schema is checked; use it for a catalog where a repeat is always a mistake. Throws `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).` when a winning registration's schema is not a Standard Schema; an overridden registration is not checked. The registry stores a frozen shallow copy of each winner and leaves the objects you passed untouched.
 
 ### ReadOnlyRegistry
 

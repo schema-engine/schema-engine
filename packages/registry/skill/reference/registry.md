@@ -8,7 +8,7 @@ Every registration is `{ $type, schema, metadata }`: `$type` is the stable key, 
 
 ## createRegistry
 
-`createRegistry(kind, registrations)` builds a frozen registry once, from a list. `kind` is the label in errors.
+`createRegistry(kind, registrations, options?)` builds a frozen registry once, from a list. `kind` is the label in errors.
 
 ```ts title="registry/widgets.ts"
 import * as z from 'zod/mini';
@@ -29,6 +29,7 @@ export const widgets = createRegistry('Widget', [...defaults, custom]);
 ```
 
 - A later registration with the same `$type` replaces the earlier one with no warning, so `[...defaults, custom]` is how you override. The key keeps its first position.
+- `createRegistry(kind, registrations, { duplicates: 'error' })` makes a repeated `$type` a build error instead (`Widget 'card' is registered twice.`, thrown before any schema is checked). Use it for a catalog where a repeat is always a mistake, such as component keys; the default is `'override'`.
 - Each winning `schema` is checked at build: a value without `~standard.validate` throws, naming the `kind` and the `$type`.
 - The result has `get`, `has`, `all`, `keys` and `size`, and no `register` or `clear`. It holds a frozen shallow copy of each winner taken at build, so patch a registration before building, or build a new registry from a new list.
 - Type it with `ReadOnlyRegistry<TRegistration>`.

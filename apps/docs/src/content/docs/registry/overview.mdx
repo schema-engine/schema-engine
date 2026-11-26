@@ -100,11 +100,11 @@ function createRegistry<TRegistration extends BaseRegistration>(
 ): ReadOnlyRegistry<TRegistration>;
 ```
 
-| Behavior         | Description                                                                                                      |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Last wins        | A later registration with the same `$type` replaces the earlier one, with no warning.                            |
-| Checked at build | A winning schema without `~standard.validate` throws, naming the `kind` and the registration's `$type`.          |
-| Frozen           | No `register` or `clear`. The registry, its arrays and its stored copies are frozen. Your objects are untouched. |
+| Behavior         | Description                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Last wins        | A later registration with the same `$type` replaces the earlier one, with no warning (`duplicates: 'error'` throws instead). |
+| Checked at build | A winning schema without `~standard.validate` throws, naming the `kind` and the registration's `$type`.                      |
+| Frozen           | No `register` or `clear`. The registry, its arrays and its stored copies are frozen. Your objects are untouched.             |
 
 `kind` is the label the registry uses in errors. The registry has `get`, `has`, `all`, `keys`, `size` and `kind`. [Read-only and mutable registries](/docs/registry/registries) compares it with `BaseRegistry`, the mutable form for registrations that arrive at runtime.
 
