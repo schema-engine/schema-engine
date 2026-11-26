@@ -364,6 +364,9 @@ importers:
       '@schema-engine/actions':
         specifier: workspace:^
         version: link:../actions
+      '@schema-engine/registry':
+        specifier: workspace:^
+        version: link:../registry
       country-flag-icons:
         specifier: ^1.6.20
         version: 1.6.20

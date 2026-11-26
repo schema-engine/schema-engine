@@ -1,16 +1,3 @@
-import { FormRadio } from './form-radio';
-import { RadioFieldConfigSchema, radioFieldValue } from './form-radio.types';
-import { defineInput } from '@schema-engine/forms';
+import { radiantElements } from '../radiant-elements';
 
-export const RadioElementRegistration = defineInput({
-	$type: 'radio',
-	appearanceAxes: ['size'],
-	render: FormRadio,
-	schema: RadioFieldConfigSchema,
-	value: radioFieldValue,
-	metadata: {
-		name: 'Radio Field',
-		description: 'Radio button group field',
-		category: 'input',
-	},
-});
+export const RadioElementRegistration = radiantElements.get('radio');

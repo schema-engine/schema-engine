@@ -1,16 +1,3 @@
-import { FormCheckboxGroup } from './form-checkbox-group';
-import { CheckboxGroupFieldConfigSchema, checkboxGroupFieldValue } from './form-checkbox-group.types';
-import { defineInput } from '@schema-engine/forms';
+import { radiantElements } from '../radiant-elements';
 
-export const CheckboxGroupElementRegistration = defineInput({
-	$type: 'checkbox-group',
-	appearanceAxes: ['size'],
-	render: FormCheckboxGroup,
-	schema: CheckboxGroupFieldConfigSchema,
-	value: checkboxGroupFieldValue,
-	metadata: {
-		name: 'Checkbox Group Field',
-		description: 'Multiple checkbox field for selecting multiple options',
-		category: 'input',
-	},
-});
+export const CheckboxGroupElementRegistration = radiantElements.get('checkbox-group');

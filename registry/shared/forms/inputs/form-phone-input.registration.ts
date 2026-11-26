@@ -14,22 +14,14 @@
  */
 
 import { FormPhoneInput } from './form-phone-input';
-import { PhoneInputFieldSchema, phoneInputFieldValue } from './form-phone-input.types';
 import { createPhoneValidationRegistration } from './form-phone-input.validation';
+import { PhoneInputElementContract } from '@schema-engine/forms/elements';
 import { defineInput } from '@schema-engine/forms';
 
 export { createPhoneValidationRegistration };
 
 export const PhoneInputElementRegistration = defineInput({
-	$type: 'phone-input',
-	appearanceAxes: ['size'],
+	...PhoneInputElementContract,
 	render: FormPhoneInput,
-	schema: PhoneInputFieldSchema,
-	value: phoneInputFieldValue,
 	validations: [createPhoneValidationRegistration()],
-	metadata: {
-		name: 'Phone Number Input Field',
-		description: 'International phone number input with country selection',
-		category: 'input',
-	},
 });

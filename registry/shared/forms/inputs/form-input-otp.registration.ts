@@ -1,16 +1,8 @@
 import { FormInputOTP } from './form-input-otp';
-import { InputOTPFieldConfigSchema, inputOTPFieldValue } from './form-input-otp.types';
+import { InputOTPElementContract } from '@schema-engine/forms/elements';
 import { defineInput } from '@schema-engine/forms';
 
 export const InputOTPElementRegistration = defineInput({
-	$type: 'input-otp',
-	appearanceAxes: ['size'],
+	...InputOTPElementContract,
 	render: FormInputOTP,
-	schema: InputOTPFieldConfigSchema,
-	value: inputOTPFieldValue,
-	metadata: {
-		name: 'Input OTP Field',
-		description: 'One-time password input field with multiple slots',
-		category: 'input',
-	},
 });

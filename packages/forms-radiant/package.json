@@ -93,6 +93,7 @@
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",
 		"@schema-engine/actions": "workspace:^",
+		"@schema-engine/registry": "workspace:^",
 		"country-flag-icons": "^1.6.20",
 		"imask": "^7.6.1",
 		"libphonenumber-js": "^1.13.12"

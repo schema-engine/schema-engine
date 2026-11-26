@@ -9,6 +9,7 @@ import * as reactServer from 'react-dom/server';
 import * as z from 'zod/mini';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { registrationType } from './element-contract-types';
 import { outputBlocks, type OutputBlock } from './format-html';
 import { codeBlocks, readPage, runTitledFiles, titledRunner } from './snippet-harness';
 import * as layoutPackage from '@schema-engine/layout';
@@ -262,9 +263,9 @@ describe('forms-react/components', () => {
 		return files.map((file) => {
 			const registration = readFileSync(join(registryRoot, `${file}.registration.ts`), 'utf8');
 			const types = readFileSync(join(registryRoot, `${file}.types.ts`), 'utf8');
-			const type = /\$type: '([^']+)'/.exec(registration) ?? /\$type: z\.literal\('([^']+)'\)/.exec(types);
+			const type = registrationType(registration) ?? /\$type: z\.literal\('([^']+)'\)/.exec(types)?.[1];
 			if (!type) throw new Error(`No $type found for ${file}`);
-			return type[1]!;
+			return type;
 		});
 	}
 
