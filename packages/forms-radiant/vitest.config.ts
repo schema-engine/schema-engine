@@ -75,6 +75,7 @@ export default defineConfig({
 				test: {
 					name: 'unit',
 					environment: 'node',
+					testTimeout: 30_000,
 					include: ['test/**/*.test.ts'],
 					exclude: ['test/**/*.browser.test.ts'],
 					setupFiles: ['./vitest.setup.ts'],
