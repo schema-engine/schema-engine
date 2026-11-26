@@ -9,6 +9,18 @@ import { withContainerState } from '@/lib/field-rules';
 import './form-fieldset.css';
 
 /**
+ * The element's identity as one id token, the same on the server and the client.
+ *
+ * @remarks
+ * `aria-labelledby` is a list of ids split at whitespace, so a name such as `Mailing address` would point at two
+ * ids that do not exist. Every character outside `[A-Za-z0-9-]`, `_` included, becomes `_<code point in hex>_`, so
+ * the result has no whitespace and two different names never give the same token.
+ */
+function idToken(identity: string): string {
+	return identity.replace(/[^A-Za-z0-9-]/gu, (character) => `_${character.codePointAt(0)?.toString(16)}_`);
+}
+
+/**
  * @remarks
  * A disabled fieldset, authored or by a constraint, renders its children
  * disabled. A fieldset with a matching `require` constraint, or inside one,
@@ -38,7 +50,7 @@ export function FormFieldSet(config: FieldSetProps) {
 	const description = config.description ? <p class="se-fieldset__description">{config.description}</p> : null;
 
 	if (elementIsSubgrid(config)) {
-		const legendId = `${config.id ?? config.name}-legend`;
+		const legendId = `${idToken(config.id ?? config.name)}-legend`;
 		return (
 			<div
 				classes={['se-form-field', GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, 'se-fieldset', config.className]}

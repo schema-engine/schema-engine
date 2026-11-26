@@ -84,4 +84,9 @@ describe('a subgrid fieldset in a client-rendered Radiant form', () => {
 		await mount(form());
 		expect(await accessibleGroups()).toContainEqual({ name: 'Address', textboxes: ['Street', 'City'] });
 	});
+
+	test('is named by its legend when its name has a space and it has no id', async () => {
+		await mount(form({ id: undefined, name: 'Mailing address' }));
+		expect(await accessibleGroups()).toContainEqual({ name: 'Address', textboxes: ['Street', 'City'] });
+	});
 });
