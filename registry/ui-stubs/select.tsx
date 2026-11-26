@@ -28,9 +28,9 @@ export function SelectTrigger({ children, ...props }: ComponentProps<'button'> &
 	);
 }
 
-export function SelectValue({ placeholder }: { placeholder?: ReactNode }) {
+export function SelectValue({ placeholder, children }: { placeholder?: ReactNode; children?: ReactNode }) {
 	const { value } = useContext(SelectContext);
-	return <span>{value ?? placeholder}</span>;
+	return <span>{children ?? value ?? placeholder}</span>;
 }
 
 export function SelectContent({ children, ...props }: ComponentProps<'div'> & StubExtras) {

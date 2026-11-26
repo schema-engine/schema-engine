@@ -1,5 +1,14 @@
 import * as z from 'zod/mini';
-import { createRegistry, safeParseStandardSchema, type ReadOnlyRegistry } from '@schema-engine/registry';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import {
+	createRegistry,
+	safeParseNode,
+	safeParseStandardSchema,
+	standardSchema,
+	unregisteredTypeMessage,
+	type NodeLookup,
+	type ReadOnlyRegistry,
+} from '@schema-engine/registry';
 import type {
 	AnyValidationRegistration,
 	BaseValidationRule,
@@ -11,7 +20,7 @@ import { defaultValidations } from './defaults.js';
 import { BaseValidationRuleSchema } from './types.js';
 import { ValidationRuleError } from './errors.js';
 import { globalFetch, type FormFetch } from '@/lib/form-fetch';
-import { issueAt, type FormValidationIssue } from '@/lib/validate-form/issues';
+import type { FormValidationIssue } from '@/lib/validate-form/issues';
 import { fromSchemaIssues } from '@/lib/validate-form/schema-issues';
 import { createValidationContext } from './utils.js';
 
@@ -147,10 +156,45 @@ function withCommonFields(parsed: BaseValidationRule, common: BaseValidationRule
 	return { ...parsed, ...kept };
 }
 
-/** Names the rule type nothing registers and the types that are, so a typo is easy to see. */
-function unknownRuleMessage(type: string, registrations: readonly AnyValidationRegistration[]): string {
+/** Says where to register a rule `$type` nothing registers, and lists the types that are, so a typo is easy to see. */
+function unknownRuleHint(registrations: readonly AnyValidationRegistration[]): string {
 	const registered = registrations.map((registration) => registration.$type).join(', ');
-	return `Unknown validation rule '${type}'. Register it with createFormEngine({ validations: [...] }). Registered rules: ${registered}.`;
+	return `Register it with createFormEngine({ validations: [...] }). Registered rules: ${registered}.`;
+}
+
+/**
+ * The schema of a whole rule: the keys every rule has, then the registration's own schema, merged into the parsed
+ * rule, then the handler, which must build a schema for it.
+ *
+ * @remarks
+ * `safeParseNode` runs it only once it has found the registration, so the rule is an object with a registered
+ * `$type`. Its issues are relative to the rule. A handler that throws is an issue at `$type`.
+ *
+ * The value it returns is a {@link BaseValidationRule}: `check` relies on that when it reads the `unknown` data of
+ * `safeParseNode` as one.
+ */
+function ruleSchema(registration: StoredValidationRegistration, fetch: FormFetch): StandardSchemaV1 {
+	return standardSchema((rule) => {
+		const common = safeParseStandardSchema(BaseValidationRuleSchema, rule);
+		if (!common.success) return { issues: common.error.issues };
+		const parsed = safeParseStandardSchema(registration.schema, rule);
+		if (!parsed.success) return { issues: parsed.error.issues };
+		const parsedRule = withCommonFields(parsed.data as BaseValidationRule, common.data);
+		try {
+			registration.handler(parsedRule, { ...createValidationContext(), fetch });
+		} catch (error) {
+			const reason = error instanceof Error ? error.message : String(error);
+			return {
+				issues: [
+					{
+						message: `Validation rule '${registration.$type}' could not be built: ${reason}`,
+						path: ['$type'],
+					},
+				],
+			};
+		}
+		return { value: parsedRule };
+	});
 }
 
 /**
@@ -178,6 +222,14 @@ export function createValidationRegistry(
 		registrations as readonly AnyValidationRegistration[],
 	);
 	const defaultRulesByFieldType = deriveDefaultRules(registry.all());
+	const unknownHint = unknownRuleHint(registry.all());
+	const rules: NodeLookup<{ schema: StandardSchemaV1 }> = {
+		get(type) {
+			const registration = registry.get(type) as StoredValidationRegistration | undefined;
+			return registration && { schema: ruleSchema(registration, fetch) };
+		},
+		hint: unknownHint,
+	};
 
 	const api: ValidationRegistry = {
 		...registry,
@@ -194,7 +246,7 @@ export function createValidationRegistry(
 		createSchema: (rule, context) => {
 			const registration = registry.get(rule.$type) as StoredValidationRegistration | undefined;
 			if (!registration) {
-				throw new ValidationRuleError(rule.$type, unknownRuleMessage(rule.$type, registry.all()));
+				throw new ValidationRuleError(rule.$type, unregisteredTypeMessage(rule.$type, unknownHint));
 			}
 
 			try {
@@ -206,29 +258,9 @@ export function createValidationRegistry(
 			}
 		},
 		check: (rule) => {
-			const registration = registry.get(rule.$type) as StoredValidationRegistration | undefined;
-			if (!registration) {
-				return { ok: false, issues: [issueAt(['$type'], unknownRuleMessage(rule.$type, registry.all()))] };
-			}
-			const common = safeParseStandardSchema(BaseValidationRuleSchema, rule);
-			if (!common.success) {
-				return { ok: false, issues: fromSchemaIssues(common.error.issues, []) };
-			}
-			const parsed = safeParseStandardSchema(registration.schema, rule);
-			if (!parsed.success) {
-				return { ok: false, issues: fromSchemaIssues(parsed.error.issues, []) };
-			}
-			const parsedRule = withCommonFields(parsed.data as BaseValidationRule, common.data);
-			try {
-				registration.handler(parsedRule, { ...createValidationContext(), fetch });
-			} catch (error) {
-				const reason = error instanceof Error ? error.message : String(error);
-				return {
-					ok: false,
-					issues: [issueAt(['$type'], `Validation rule '${rule.$type}' could not be built: ${reason}`)],
-				};
-			}
-			return { ok: true, rule: parsedRule };
+			const checked = safeParseNode(rules, rule);
+			if (!checked.success) return { ok: false, issues: fromSchemaIssues(checked.issues, []) };
+			return { ok: true, rule: checked.data as BaseValidationRule };
 		},
 	};
 	return Object.freeze(api);

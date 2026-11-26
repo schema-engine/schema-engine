@@ -32,6 +32,15 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
+/** The labels of the options, which the shadcn select shows. */
+const plans: Record<string, string> = { free: 'Free', team: 'Team' };
+
+/** An option of the open listbox, which the select renders in a portal outside the form. */
+const option = (label: string) =>
+	[...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+		(candidate) => candidate.textContent === label,
+	)!;
+
 interface Driver {
 	mount(path: string, onSignedUp: () => void): Promise<HTMLElement>;
 	choose(host: HTMLElement, value: string): Promise<void>;
@@ -47,7 +56,8 @@ const react: Driver = {
 		return host;
 	},
 	async choose(host, value) {
-		await userEvent.selectOptions(host.querySelector<HTMLSelectElement>('select[name="plan"]')!, value);
+		await userEvent.click(host.querySelector<HTMLElement>('[data-slot="select-trigger"]')!);
+		await userEvent.click(option(plans[value]!));
 	},
 };
 
@@ -120,7 +130,7 @@ describe.each([
 
 		expect(host.querySelector('form')).toBeNull();
 		expect(host.querySelector('[role="alert"]')?.textContent).toContain(
-			'steps[0].elements[4].$type: Unknown element type',
+			"steps[0].elements[4].$type: No registration for $type 'rating'. Register it with",
 		);
 	});
 });

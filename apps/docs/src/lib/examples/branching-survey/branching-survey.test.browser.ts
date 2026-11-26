@@ -21,12 +21,27 @@ const shown = (host: HTMLElement, selector: string) => {
 	return element !== null && element.closest('[hidden]') === null;
 };
 
+/** The labels of the options, which the shadcn select shows. */
+const labels: Record<string, string> = {
+	great: 'Great',
+	fine: 'Fine',
+	poor: 'Poor',
+	slow: 'It took too long',
+	unresolved: 'It was not solved',
+};
+
+/** An option of the open listbox, which the select renders in a portal outside the form. */
+const option = (label: string) =>
+	[...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+		(candidate) => candidate.textContent === label,
+	)!;
+
 interface Driver {
 	mount(onSent: () => void): Promise<HTMLElement>;
 	/** The submit button of the last step: React's own text, and the built-in recipe's text in Radiant. */
 	finish: string;
 	choose(host: HTMLElement, name: string, value: string): Promise<void>;
-	/** Whether a select is on screen: a native select in React, the field of the Radiant select in Radiant. */
+	/** Whether a select is on screen: the trigger of the shadcn select in React, the field of the Radiant select in Radiant. */
 	hasSelect(host: HTMLElement, name: string): boolean;
 }
 
@@ -41,9 +56,10 @@ const react: Driver = {
 		return host;
 	},
 	async choose(host, name, value) {
-		await userEvent.selectOptions(host.querySelector<HTMLSelectElement>(`select[name="${name}"]`)!, value);
+		await userEvent.click(host.querySelector<HTMLElement>(`[data-slot="select-trigger"][name="${name}"]`)!);
+		await userEvent.click(option(labels[value]!));
 	},
-	hasSelect: (host, name) => shown(host, `select[name="${name}"]`),
+	hasSelect: (host, name) => shown(host, `[data-slot="select-trigger"][name="${name}"]`),
 };
 
 const radiant: Driver = {

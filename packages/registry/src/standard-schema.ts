@@ -41,3 +41,17 @@ export function safeParseStandardSchema<TInput, TOutput>(
 
 	return { success: true, data: syncResult.value };
 }
+
+/**
+ * A Standard Schema that validates with a function, for a check that is not a schema library's.
+ *
+ * @param validate - Returns `{ value }` for an input that passes, or `{ issues }` for one that does not
+ *
+ * @remarks
+ * The schema reports `schema-engine` as its vendor and is synchronous, as {@link safeParseStandardSchema} requires.
+ */
+export function standardSchema<TOutput>(
+	validate: (value: unknown) => StandardSchemaV1.Result<TOutput>,
+): StandardSchemaV1<unknown, TOutput> {
+	return { '~standard': { version: 1, vendor: 'schema-engine', validate } };
+}

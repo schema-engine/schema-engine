@@ -75,8 +75,20 @@ export function tsBlock(page: string, heading: string, index = 0): string {
 /** Parsed library and package declaration files, kept across programs: parsing them dominates a type-check. */
 const sourceFileCache = new Map<string, ts.SourceFile | undefined>();
 
+/** The root of the docs app, which {@link InstalledModules} resolve against. */
+const docsApp = join(import.meta.dirname, '..');
+
+/**
+ * Modules a snippet may import that sit in the docs app, as `paths` of the docs' `tsconfig.json`: a specifier and the
+ * file it stands for, relative to the docs app.
+ *
+ * @remarks
+ * The files they import resolve `@/generated/*` into `src/generated/*`, the copy of the shadcn registry.
+ */
+export type InstalledModules = Record<string, string>;
+
 /** Type-checks virtual modules next to each other and returns the diagnostics per file. */
-export function typecheck(files: Record<string, string>): Record<string, string[]> {
+export function typecheck(files: Record<string, string>, installed: InstalledModules = {}): Record<string, string[]> {
 	const virtual = new Map(Object.entries(files).map(([name, text]) => [join(snippetDir, name), text]));
 	const options: ts.CompilerOptions = {
 		module: ts.ModuleKind.ESNext,
@@ -87,6 +99,13 @@ export function typecheck(files: Record<string, string>): Record<string, string[
 		strict: true,
 		skipLibCheck: true,
 		noEmit: true,
+		...(Object.keys(installed).length > 0 && {
+			baseUrl: docsApp,
+			paths: {
+				...Object.fromEntries(Object.entries(installed).map(([specifier, file]) => [specifier, [file]])),
+				'@/generated/*': ['src/generated/*'],
+			},
+		}),
 	};
 	const host = ts.createCompilerHost(options);
 	const getSourceFile = host.getSourceFile.bind(host);
@@ -140,13 +159,15 @@ export interface SnippetFailure {
  * with no import or export gets an empty export, so snippets that declare the same name do not collide. A fence
  * for which `skip` returns true is left out. A fence that holds JSX needs the `tsx` tag: under `ts` it fails to
  * parse. A `tsx` fence titled `*.react.tsx` is compiled as React JSX, as is an untitled one that imports React or
- * `@schema-engine/forms-react`.
+ * `@schema-engine/forms-react`. `installed` lets the page import modules of the docs app that stand for the files an
+ * install leaves in the reader's app.
  */
 export function checkPageSnippets(
 	page: string,
 	text: string,
 	app: Record<string, string>,
 	skip: (block: CodeBlock, fence: number) => boolean = () => false,
+	installed: InstalledModules = {},
 ): SnippetFailure[] {
 	const fences = parseCodeBlocks(text)
 		.filter(isTypeScriptFence)
@@ -162,7 +183,7 @@ export function checkPageSnippets(
 	}
 	const checked = fences.filter(({ block, fence }) => !skip(block, fence));
 	if (checked.length === 0) return [];
-	const diagnostics = typecheck(files);
+	const diagnostics = typecheck(files, installed);
 	return checked.flatMap(({ block, fence }) => {
 		const messages = diagnostics[names.get(fence)!] ?? [];
 		return messages.length > 0 ? [{ page, fence, heading: block.heading, messages }] : [];

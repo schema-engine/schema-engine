@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import * as z from 'zod/mini';
-import { safeParseStandardSchema } from '../src';
+import { safeParseStandardSchema, standardSchema } from '../src';
+
+describe('standardSchema', () => {
+	it('is a Standard Schema that runs the function', () => {
+		const positive = standardSchema((value) =>
+			typeof value === 'number' && value > 0
+				? { value }
+				: { issues: [{ message: 'Expected a positive number.' }] },
+		);
+
+		expect(safeParseStandardSchema(positive, 2)).toEqual({ success: true, data: 2 });
+		expect(safeParseStandardSchema(positive, -1)).toEqual({
+			success: false,
+			error: { issues: [{ message: 'Expected a positive number.' }] },
+		});
+	});
+});
 
 describe('safeParseStandardSchema', () => {
 	it('returns the parsed value of a schema that accepts the input', () => {

@@ -11,7 +11,7 @@ import './form-example-demo.css';
  *
  * @remarks
  * The demos render the object the example's config file exports, with the docs' styled kit for each renderer. The
- * example's own files, with their plain widgets, run in the browser tests of the example, so the demos do not run its
+ * example's own files, with the shadcn fields they register, run in the browser tests of the example, so the demos do not run its
  * submit code. The note under the demos says so once, for every page that uses them.
  *
  * Side by side when the content column is wide enough for two forms, and otherwise one at a time under the tabs of

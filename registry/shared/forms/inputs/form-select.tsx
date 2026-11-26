@@ -30,6 +30,7 @@ export function FormSelect({
 	const selectedValues = isMultiple ? (Array.isArray(value) ? value : []).map(String) : [];
 	const selectedOptions = config.options.filter((option) => selectedValues.includes(optionKey(option)));
 	const selectValue = fieldText(value);
+	const selectedLabel = config.options.find((option) => optionKey(option) === selectValue)?.label;
 
 	const commitMultiple = (next: string[]) => {
 		combineHandlers(onChange, propsOnChange)(next.map((key) => optionValueOf(config.options, key)));
@@ -117,7 +118,7 @@ export function FormSelect({
 							<span className="text-muted-foreground">{config.placeholder || 'Select options'}</span>
 						)
 					) : (
-						<SelectValue placeholder={config.placeholder} />
+						<SelectValue placeholder={config.placeholder}>{selectedLabel}</SelectValue>
 					)}
 				</SelectTrigger>
 				<SelectContent>

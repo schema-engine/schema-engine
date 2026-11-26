@@ -4,9 +4,9 @@ import { createFormEngine } from '@schema-engine/forms';
 import { FormRenderer } from '@schema-engine/forms-react';
 import { actions, notices, type Notice } from './actions';
 import { newsletter } from './config';
-import { elements } from './widgets.react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-export const engine = createFormEngine({ elements, actions });
+export const engine = createFormEngine({ elements: schemaFormRegistrations, actions });
 
 /** The form, and a status line that shows what the notification actions announce. */
 export function Newsletter() {

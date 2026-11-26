@@ -35,7 +35,7 @@ describe.each([
 		expect(loaded.success).toBe(false);
 		expect(!loaded.success && loaded.issues).toHaveLength(1);
 		expect(!loaded.success && loaded.issues[0]).toBe(
-			"steps[0].elements[4].$type: Unknown element type 'rating'. Register it with createFormEngine({ elements: [...] }).",
+			"steps[0].elements[4].$type: No registration for $type 'rating'. Register it with createFormEngine({ elements: [...] }).",
 		);
 	});
 

@@ -61,7 +61,7 @@ export const form = engine.defineForm({
 });
 ```
 
-A `$type` nothing registers is rejected when the form is validated, with the types that are registered: `Unknown validation rule 'postalcode'. Register it with createFormEngine({ validations: [...] }). Registered rules: required, minLength, ...`. The issue is at `steps[0].elements[0].rules[0].$type`. An option the registration's `schema` refuses is reported at its key, such as `steps[0].elements[0].rules[0].country`.
+A `$type` nothing registers is rejected when the form is validated, with the types that are registered: `No registration for $type 'postalcode'. Register it with createFormEngine({ validations: [...] }). Registered rules: required, minLength, ...`. The issue is at `steps[0].elements[0].rules[0].$type`. An option the registration's `schema` refuses is reported at its key, such as `steps[0].elements[0].rules[0].country`.
 
 ## What the form shows
 

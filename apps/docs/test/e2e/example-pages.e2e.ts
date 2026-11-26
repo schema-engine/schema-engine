@@ -236,7 +236,7 @@ describe('the forms example pages', () => {
 
 		await pwExpect(reactPanel).toBeVisible();
 		await pwExpect(radiantPanel).toBeHidden();
-		await pwExpect(reactPanel.locator('figure[data-title="widgets.react.tsx"]')).toBeVisible();
+		await pwExpect(reactPanel.locator('figure[data-title="contact-form.react.tsx"]')).toBeVisible();
 		await pwExpect(reactPanel).toContainText('createFormEngine');
 
 		await tabs.getByRole('radio', { name: 'Radiant' }).check();

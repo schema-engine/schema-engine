@@ -3,9 +3,12 @@ import { createFormEngine, NotificationActionRegistration } from '@schema-engine
 import { FormRenderer } from '@schema-engine/forms-react';
 import { contactForm } from './config';
 import { sendMessage } from './submit';
-import { elements } from './widgets.react';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 
-export const engine = createFormEngine({ elements, actions: [NotificationActionRegistration] });
+export const engine = createFormEngine({
+	elements: schemaFormRegistrations,
+	actions: [NotificationActionRegistration],
+});
 
 /** Renders the form and calls `onSent` once the server has accepted the message. */
 export function ContactForm({ onSent }: { onSent: () => void }) {
