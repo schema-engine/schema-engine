@@ -39,9 +39,11 @@ export const itemVariables = getGridItemVariables({ width: 'half' });
 
 Emit `theme.css` once on the page, give the container the `GRID_CLASS` class and `data-se-theme="${theme.id}"`, and write the variables of `getGridVariables` and `getGridItemVariables` as its custom properties and those of its items.
 
+Breakpoints measure the window by default. `createLayoutTheme({ grid: { query: 'container' } })` makes them measure the grid's own wrapper instead, so a grid in a card or a panel follows the room it has. The wrapper is an element with `GRID_CONTAINER_CLASS` and `data-se-theme="${theme.id}"` around each grid; a grid with no wrapper keeps its narrowest layout. The document is the same in both modes.
+
 ## Entry points
 
-The package has one entry, `@schema-engine/layout`: `createLayoutTheme`, `defineAxis` and `builtInAxes`, the grid helpers (`getGridVariables`, `getGridItemVariables`), `getAppearanceAttributes`, and the recipe protocol (`defineRecipeProtocol`, `resolveRecipeView`).
+The package has one entry, `@schema-engine/layout`: `createLayoutTheme`, `defineAxis` and `builtInAxes`, the grid helpers (`getGridVariables`, `getGridItemVariables`) and the hooks `GRID_CLASS`, `GRID_ITEM_CLASS` and `GRID_CONTAINER_CLASS`, `getAppearanceAttributes`, and the recipe protocol (`defineRecipeProtocol`, `resolveRecipeView`).
 
 ## Documentation
 

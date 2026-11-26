@@ -179,6 +179,18 @@ it starts the field at line 2. Use `column: 'span 2'` to span two columns, or
 width fields, but it counts tracks of the 12 the widths use there, so
 `column: 'span 2'` is two of twelve, a sixth of the row.
 
+## Breakpoints: the window or the container
+
+Every `responsive` map, `areas` record and gap ramp names breakpoints (`sm` to `2xl`), and the layout theme decides what they measure. By default it is the width of the window. For a form or a grid that lives in a card, a sidebar or a panel, the theme can measure the grid's own wrapper instead, with `grid: { query: 'container' }`. The config you write here does not change: `md` still means "from the `md` threshold up", only the width it is compared with differs.
+
+```ts
+import { createLayoutTheme } from '@schema-engine/layout';
+
+export const panelTheme = createLayoutTheme({ grid: { query: 'container' } });
+```
+
+The forms renderers wrap each grid for you; markup of your own needs the wrapper and has a few containment caveats. [Layout themes](/docs/layout/layout-themes#follow-the-container-not-the-window) has both.
+
 ## The layout theme and appearance
 
 The grid vocabulary (breakpoint thresholds, gap tokens, the default minimum column
@@ -208,7 +220,7 @@ rejects a pick on any other axis, an unknown axis and an unknown value.
 
 The full guides are in [Layout](/docs/layout/overview):
 
-- [Layout themes](/docs/layout/layout-themes): the options, sharing a theme, the neutral `.se-grid`, `.se-grid-item` and `[data-se-theme]` hooks, the `--se-item-*` properties and nested themes.
+- [Layout themes](/docs/layout/layout-themes): the options, sharing a theme, querying the container instead of the window, the neutral `.se-grid`, `.se-grid-item` and `[data-se-theme]` hooks, the `--se-item-*` properties and nested themes.
 - [Appearance axes](/docs/layout/appearance-axes): the definition, what makes a good axis, `size` and `surface`, `defineAxis` and host axes.
 - [Theming](/docs/layout/theming): the custom properties a host overrides.
 - [A themed form](/docs/examples/theming): a form config with its theme and CSS, rendered live.

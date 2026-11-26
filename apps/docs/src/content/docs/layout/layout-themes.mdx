@@ -46,12 +46,13 @@ export const theme = createLayoutTheme({
 
 Both halves are optional: `createLayoutTheme()` is the library default.
 
-| Grid option      | Default                                                                                                                                         | Notes                                                                                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `breakpoints`    | `sm` 40rem, `md` 48rem, `lg` 64rem, `xl` 80rem, `2xl` 96rem                                                                                     | Overrides only the names you give. Thresholds must keep the order `sm <= md <= lg <= xl <= 2xl`; `rem` and `em` are compared at a 16px root.              |
-| `gap`            | `none` 0, `compact` 0.5rem, `default` `var(--space-stack, 1rem)`, `loose` `var(--space-block-lg, 1.5rem)`, `wide` `var(--space-block-xl, 2rem)` | Overrides only the tokens you give. A form picks a token with `grid.gap`, `gapX` or `gapY`.                                                               |
-| `minColumnWidth` | `15.625rem`                                                                                                                                     | Used by `columns: 'auto'` grids.                                                                                                                          |
-| `responsive`     | none                                                                                                                                            | Gap tokens that change from a breakpoint up. Breakpoint-major, like a form's own `responsive`: one entry per width, listing the tokens that change there. |
+| Grid option      | Default                                                                                                                                         | Notes                                                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `breakpoints`    | `sm` 40rem, `md` 48rem, `lg` 64rem, `xl` 80rem, `2xl` 96rem                                                                                     | Overrides only the names you give. Thresholds must keep the order `sm <= md <= lg <= xl <= 2xl`; `rem` and `em` are compared at a 16px root.                      |
+| `gap`            | `none` 0, `compact` 0.5rem, `default` `var(--space-stack, 1rem)`, `loose` `var(--space-block-lg, 1.5rem)`, `wide` `var(--space-block-xl, 2rem)` | Overrides only the tokens you give. A form picks a token with `grid.gap`, `gapX` or `gapY`.                                                                       |
+| `minColumnWidth` | `15.625rem`                                                                                                                                     | Used by `columns: 'auto'` grids.                                                                                                                                  |
+| `responsive`     | none                                                                                                                                            | Gap tokens that change from a breakpoint up. Breakpoint-major, like a form's own `responsive`: one entry per width, listing the tokens that change there.         |
+| `query`          | `'media'`                                                                                                                                       | What the breakpoints measure: the window (`'media'`) or the grid's own wrapper (`'container'`). See [Follow the container](#follow-the-container-not-the-window). |
 
 `appearance` is the list of axes. It defaults to `builtInAxes` (`size` and `surface`); a list without `builtInAxes` has neither. A later axis with the same `$type` replaces the earlier one, so `[...builtInAxes, mine]` adds an axis and, when `mine` is named `size`, overrides the built-in one. Write the list inline, or `as const`: a list kept in a plain variable widens, and typed `defineForm` stops narrowing axis values.
 
@@ -106,13 +107,14 @@ The [themed form example](/docs/examples/theming) builds its engine on one compi
 
 ## The neutral hooks
 
-The stylesheet selects three things and nothing else: `.se-grid`, `.se-grid-item` and `[data-se-theme]`. There is no alias for another class name.
+The stylesheet selects three things and nothing else: `.se-grid`, `.se-grid-item` and `[data-se-theme]`. A theme that queries the container adds a fourth, `.se-grid-container`. There is no alias for another class name.
 
-| Hook              | A renderer puts it on                                                              |
-| ----------------- | ---------------------------------------------------------------------------------- |
-| `.se-grid`        | Every grid container: step grids, and the inner grids of fieldsets and array rows. |
-| `.se-grid-item`   | Every item placed in a grid: field hosts.                                          |
-| `[data-se-theme]` | The form element, each grid and each item, with the theme's `id` as its value.     |
+| Hook                 | A renderer puts it on                                                                                                                                     |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.se-grid`           | Every grid container: step grids, and the inner grids of fieldsets and array rows.                                                                        |
+| `.se-grid-item`      | Every item placed in a grid: field hosts.                                                                                                                 |
+| `.se-grid-container` | Only with `query: 'container'`: an element around each grid. `GRID_CONTAINER_CLASS` is its name. A media theme has no rule for it and renderers add none. |
+| `[data-se-theme]`    | The form element, each grid, each item and each container, with the theme's `id` as its value.                                                            |
 
 The forms renderers add these beside their own classes (`se-form-grid se-grid`, `se-form-field se-grid-item`). The forms classes stay as styling hooks of your own; the layout rules never read them.
 
@@ -135,6 +137,87 @@ Each property has a variant per breakpoint (`--se-item-grid-column-md`, `--se-gr
 An item that needs its own `display` (a flex field, for example) sets `--se-item-display-mode` instead of `display`. The item rule outranks a component's own class, and `--se-item-display-mode` is what a responsive `hidden` toggles against, so a hidden item comes back as the mode you set, not forced to `block`. The mode applies to that item only: each grid resets it, so the fields inside a fieldset that sets `grid` stay `block`.
 
 The gap tokens (`--se-grid-gap-none`, `-compact`, `-default`, `-loose`, `-wide`) are public: set them to restyle every grid. See [Theming](/docs/layout/theming).
+
+## Follow the container, not the window
+
+A breakpoint is a window width by default: the stylesheet emits `@media (min-width: ...)`. A grid in a card, a sidebar or a panel then keeps the layout of the screen it sits on, not of the room it has, so a card that is narrow on a wide screen still gets its wide layout. `grid: { query: 'container' }` makes the same breakpoints measure the grid's own wrapper instead. Everything else stays: the breakpoint names and thresholds, the gap ramp, the cascade from narrower widths, and the document, which says what changes at each breakpoint and never how the theme measures it. A document reads the same wherever it is mounted.
+
+```ts title="card-theme.ts"
+import { createLayoutTheme } from '@schema-engine/layout';
+
+/** The breakpoints measure the card, so `md` is a card 36rem wide, whatever the window. */
+export const cardTheme = createLayoutTheme({
+	grid: { query: 'container', breakpoints: { md: '36rem' } },
+});
+```
+
+The two modes are different themes: their `id` and their stylesheet differ, and a theme without the option is the media theme it always was. Container mode emits `@container se-grid (min-width: ...)` where media mode emits `@media`, with the same declarations inside, and adds one rule for the wrapper. The query is static CSS, with no observer and no script.
+
+### Give each grid a wrapper
+
+A grid's template and the placement of its items must measure the same box, and an element cannot query its own size. So the box is an ancestor of the grid: an element with `GRID_CONTAINER_CLASS` and the theme's `data-se-theme`, around the grid. The theme names its container (`se-grid`), so a container of your own between the wrapper and the grid never captures the query.
+
+```tsx title="card.react.tsx"
+import {
+	GRID_CLASS,
+	GRID_CONTAINER_CLASS,
+	GRID_ITEM_CLASS,
+	getGridItemVariables,
+	getGridVariables,
+	type ElementGridConfig,
+	type GridLayoutConfig,
+} from '@schema-engine/layout';
+import { cardTheme } from './card-theme';
+
+const grid: GridLayoutConfig = { columns: 1, responsive: { md: { columns: 2 } } };
+
+const fields: { label: string; grid?: ElementGridConfig }[] = [
+	{ label: 'Name', grid: { column: 'span 1', responsive: { md: { column: 'span 2' } } } },
+	{ label: 'Email' },
+	{ label: 'Phone' },
+];
+
+export function Card() {
+	return (
+		<aside className="card">
+			<div className={GRID_CONTAINER_CLASS} data-se-theme={cardTheme.id}>
+				<div
+					className={GRID_CLASS}
+					data-se-theme={cardTheme.id}
+					style={getGridVariables(grid, cardTheme.grid, fields)}
+				>
+					{fields.map((field) => (
+						<div
+							key={field.label}
+							className={GRID_ITEM_CLASS}
+							data-se-theme={cardTheme.id}
+							style={getGridItemVariables(field.grid)}
+						>
+							{field.label}
+						</div>
+					))}
+				</div>
+			</div>
+		</aside>
+	);
+}
+```
+
+In a 20rem card the grid has one column and the name field spans one; in a 40rem card, on a phone or on a desktop alike, it has two and the name field spans both. Resize the card, not the window.
+
+- **The forms renderers add the wrapper themselves**, around every grid: the step's, and the inner grid of each fieldset and array row, so a nested grid follows its own box. A theme that queries the window gets no wrapper and the markup it always had. An element you write for the React renderer puts `GridContainer` of `@schema-engine/forms-react/primitives` around the grid it builds with `useChildGridProps`; one for the Radiant renderer uses `GridContainer` of `@schema-engine/forms-radiant/primitives`. Both render nothing extra under a media theme.
+- **Your own markup wraps each grid**, as above, including a grid inside a grid.
+- **A grid with no wrapper is not an error.** No container matches the query, so it keeps its narrowest layout at every width.
+
+### What containment costs
+
+`container-type: inline-size` contains the wrapper's inline size, so three things change in a wrapped layout.
+
+- **The wrapper does not size to its content.** It is a block that fills its parent (`display: block; width: 100%`), which is what you want in a card or a panel. In a shrink-to-fit parent (an `inline-block`, a flex item without a flex basis, an `auto` grid track) it has no width of its own and collapses to zero. Give that parent a width, or make the track `1fr`.
+- **Fixed-position descendants stay inside it.** Containment makes the wrapper the containing block of `position: fixed` descendants, so a floating element that is not in the top layer positions against the wrapper and not the window. Popovers and dialogs in the top layer are not affected.
+- **`em` follows the container.** In a container query an `em` threshold resolves against the font size of the container, not the root. Use `rem` or `px` for a breakpoint that must not move with a card's font size. The order check still compares them at a 16px root.
+
+Container size queries are supported by every current browser (Baseline 2023), so media mode stays the default and has no fallback to maintain.
 
 ## Nested themes
 
