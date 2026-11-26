@@ -36,6 +36,20 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
 	return schema as StandardSchemaV1;
 }
 
+function assertChildPaths(childPaths: unknown, context: string): void {
+	if (childPaths === undefined) return;
+	if (!Array.isArray(childPaths)) throw new Error(`${context} childPaths must be a list of key paths.`);
+	const seen = new Set<string>();
+	for (const keys of childPaths as unknown[]) {
+		if (!Array.isArray(keys) || keys.length === 0 || keys.some((key) => typeof key !== 'string' || key === '')) {
+			throw new Error(`${context} childPaths must hold non-empty lists of non-empty keys.`);
+		}
+		const joined = keys.join('.');
+		if (seen.has(joined)) throw new Error(`${context} declares the child path '${joined}' twice.`);
+		seen.add(joined);
+	}
+}
+
 /** Options of {@link createRegistry}. */
 export interface CreateRegistryOptions {
 	/**
@@ -58,6 +72,7 @@ export interface CreateRegistryOptions {
  * @throws {Error} `Widget 'card' is registered twice.` when `duplicates` is `'error'` and a `$type` repeats, before any
  * schema is checked
  * @throws {Error} Naming the `$type` when a winning registration's schema is not a Standard Schema
+ * @throws {Error} Naming the `$type` when a winning registration's `childPaths` is not a list of non-empty key lists, or repeats a path
  *
  * @remarks
  * By default a later registration with the same `$type` replaces the earlier one without a
@@ -86,6 +101,7 @@ export function createRegistry<const TRegistration extends BaseRegistration>(
 	const entries = new Map<string, Readonly<TRegistration>>();
 	for (const [key, registration] of winners) {
 		assertStandardSchema(registration.schema, `${kind} '${key}' schema`);
+		assertChildPaths(registration.childPaths, `${kind} '${key}'`);
 		entries.set(key, Object.freeze({ ...registration }));
 	}
 	const all = Object.freeze([...entries.values()]);

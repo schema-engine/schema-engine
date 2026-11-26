@@ -4,4 +4,5 @@ export * from './create-registry.js';
 export * from './bind-registry.js';
 export * from './standard-schema.js';
 export * from './parse-node.js';
+export * from './parse-tree.js';
 export * from './format-issue-path.js';

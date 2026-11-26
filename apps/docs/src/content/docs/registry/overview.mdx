@@ -67,7 +67,7 @@ export function resolve(json: string): string {
 }
 ```
 
-`safeParseNode` never throws for a bad node, and it supports synchronous schemas only. Each issue has a `path`. Pass where the node sits in its document as a third argument and every path starts with it, which is how a walk over a tree reports [issues by position](/docs/registry/resolve-a-document).
+`safeParseNode` never throws for a bad node, and it supports synchronous schemas only. Each issue has a `path`. Pass where the node sits in its document as a third argument and every path starts with it, which is how [`safeParseTree`](/docs/registry/resolve-a-document) reports the issues of a whole tree by position.
 
 ### 3. Run it
 
@@ -94,9 +94,10 @@ The first node resolves and renders. The second names a registered `$type` with 
 ## What `createRegistry` guarantees
 
 ```ts
-function createRegistry<TRegistration extends BaseRegistration>(
+function createRegistry<const TRegistration extends BaseRegistration>(
 	kind: string,
 	registrations: readonly TRegistration[],
+	options?: CreateRegistryOptions,
 ): ReadOnlyRegistry<TRegistration>;
 ```
 
@@ -128,6 +129,7 @@ interface BaseRegistration<_TConfig = unknown, TMeta extends RegistrationMetadat
 	$type: string;
 	schema: StandardSchemaV1;
 	metadata: TMeta;
+	readonly childPaths?: readonly (readonly string[])[];
 }
 
 interface ComponentRegistration<
@@ -143,6 +145,7 @@ interface ComponentRegistration<
 
 - `$type` is the stable key. `schema` is any Standard Schema value, and Zod, Valibot and Effect Schema all qualify. `metadata` carries the human-readable part.
 - `BaseRegistration` takes a config type parameter, `_TConfig`, that the interface does not use today. `schema` is a plain `StandardSchemaV1`, so a registration's config type does not constrain it, and its input and output stay distinct.
+- `childPaths` says where a node of this `$type` holds child nodes: `[['blocks'], ['engine', 'controls']]` is `node.blocks` and `node.engine.controls`, each one node or an array of nodes. [`safeParseTree`](/docs/registry/resolve-a-document) reads it to validate a whole document; `createRegistry` checks it when it builds.
 - A `ComponentRegistration` adds a `render` function whose props you type with the third parameter. A registry that mixes several of them holds `render` functions of different props, so a kind of your own, as in the quick start, is often simpler.
 
 ## Where to go next

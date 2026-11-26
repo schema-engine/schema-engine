@@ -52,7 +52,7 @@ export function resolve(node: unknown): string {
 
 - [Registry](https://schema-engine.com/docs/registry/overview): install, build a registry and resolve a JSON node.
 - [Read-only and mutable registries](https://schema-engine.com/docs/registry/registries): `createRegistry` and `BaseRegistry`.
-- [Resolve a document](https://schema-engine.com/docs/registry/resolve-a-document): walk a tree of nodes through registries.
+- [Resolve a document](https://schema-engine.com/docs/registry/resolve-a-document): validate a whole tree of nodes with `safeParseTree` and render it.
 - [API reference](https://schema-engine.com/docs/registry/api-reference): every export.
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 

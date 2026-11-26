@@ -74,8 +74,8 @@ function isRecord(value: unknown): value is Record<PropertyKey, unknown> {
  * registration that `registration.$type` names, for a registry typed by registrations with literal `$type`s, and
  * `unknown` for one typed as `BaseRegistration`. TypeScript cannot follow the runtime lookup from the node's string
  * `$type` to a registration, so the function returns `data` through one cast to that type: it is the value the matched
- * registration's own schema returned. The node is checked on its own: walking a tree is the caller's, which passes
- * each child its own `path`.
+ * registration's own schema returned. The node is checked on its own: {@link safeParseTree} walks a tree with it,
+ * passing each child its own `path`.
  *
  * @throws {Error} When the registration's schema validates asynchronously, as {@link safeParseStandardSchema} does.
  */

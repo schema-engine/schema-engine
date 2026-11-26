@@ -173,7 +173,40 @@ export function describeNode(node: unknown): string {
 
 An issue points at the value that is wrong, the way a schema reports a missing required key at the key, so an editor can mark it and [`parseYaml`](/docs/schema-engine/serialized-documents#yaml) finds its line. [`parseActions`](/docs/actions/api-reference#parseactions) checks each entry of a workflow with it, so an entry reports these issues at the same places.
 
-It looks at one node. To walk a tree, call it for each node and pass each child its own `path`: [Resolve a document](/docs/registry/resolve-a-document). It throws, like `safeParseStandardSchema`, for a schema that validates asynchronously. The result has the `issues` shape of `parseActions`, so `(value) => safeParseNode(registry, value)` is a validator for [`parseYaml`](/docs/schema-engine/serialized-documents#yaml).
+It looks at one node; [`safeParseTree`](#safeparsetree) walks a whole tree with it. It throws, like `safeParseStandardSchema`, for a schema that validates asynchronously. The result has the `issues` shape of `parseActions`, so `(value) => safeParseNode(registry, value)` is a validator for [`parseYaml`](/docs/schema-engine/serialized-documents#yaml).
+
+## safeParseTree
+
+```typescript
+function safeParseTree<TRegistration extends Pick<BaseRegistration, 'schema' | 'childPaths'>>(
+	registry: NodeLookup<TRegistration>,
+	root: unknown,
+	path?: ReadonlyArray<PropertyKey | { key: PropertyKey }>,
+): SafeParseTreeResult<TRegistration>;
+
+type SafeParseTreeResult<TRegistration> =
+	{ success: true; tree: ParsedNode<TRegistration> } | { success: false; issues: StandardSchemaIssue[] };
+
+type ParsedNode<TRegistration> = {
+	$type: string;
+	registration: TRegistration;
+	data: StandardSchemaV1.InferOutput<TRegistration['schema']>;
+	path: ReadonlyArray<PropertyKey | { key: PropertyKey }>;
+	children: Readonly<Record<string, ParsedNode<TRegistration> | readonly ParsedNode<TRegistration>[]>>;
+};
+```
+
+Checks a whole document without throwing. Every node goes through `safeParseNode` with its full `path`, so an issue is the one `safeParseNode` reports, at the position the document has it, and `formatIssuePath(issue.path, root)` writes it as text. A registration says where its children are with `childPaths`, a list of key paths such as `[['blocks'], ['engine', 'controls']]`. Each path is read from the node as authored; a missing value is no children, an array is walked item by item (the index joins the path) and an object is one child. One lookup serves the whole tree, so which `$type`s a position accepts is the parent's schema to say.
+
+| Case                                            | Result                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Every node is valid                             | `{ success: true, tree }`, where `children` holds the nodes of each child path, in document order |
+| A node's own schema fails                       | Its issues; the node is not walked further, but its siblings still are                            |
+| A value at a child path that is no node or list | One issue at that path: `Expected a node or a list of nodes.`                                     |
+| A node that contains itself                     | One issue at the node reached again: `A node cannot contain itself.`                              |
+| Any issue anywhere                              | `{ success: false, issues }` with all of them, and no tree                                        |
+
+`children` is keyed by the child path with its keys joined by dots (`['engine', 'controls']` is `'engine.controls'`). `createRegistry` checks `childPaths` when it builds: each path must be a non-empty list of non-empty keys and none may repeat, or it throws `<kind> '<$type>' childPaths must hold non-empty lists of non-empty keys.` or `<kind> '<$type>' declares the child path '<path>' twice.` Like `safeParseNode`, `$type` of the tree narrows `registration` and `data` for a registry typed by its registrations. It throws, as `safeParseNode` does, for a schema that validates asynchronously.
 
 ## formatIssuePath
 

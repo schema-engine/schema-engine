@@ -73,6 +73,40 @@ export function nodeIssues(node: unknown, index: number): string[] {
 }
 ```
 
+`safeParseTree(registry, root, path?)` checks a whole document in one call. A registration says where its children are with `childPaths`, a list of key paths into the node (`[['sections']]`, or `[['blocks'], ['engine', 'controls']]`), each to one node or an array of nodes; `createRegistry` checks the paths when it builds. Every node goes through `safeParseNode` at its full path, a node whose schema fails is not walked further but its siblings still are, a value at a child path that is no node is `Expected a node or a list of nodes.` at that path, and a node that contains itself is an issue, not an overflow. It returns `{ success: true, tree }` or `{ success: false, issues }` with every issue and no tree. A `tree` node is `{ $type, registration, data, path, children }`, with `children` keyed by the child path joined with dots (`'engine.controls'`); checking `$type` narrows `data` as it does on `safeParseNode`.
+
+```ts title="registry/check-tree.ts"
+import * as z from 'zod/mini';
+import { createRegistry, formatIssuePath, safeParseTree } from '@schema-engine/registry';
+
+const nodes = createRegistry('Node', [
+	{
+		$type: 'page',
+		schema: z.looseObject({ $type: z.literal('page'), sections: z.array(z.looseObject({ $type: z.string() })) }),
+		metadata: { name: 'Page' },
+		childPaths: [['sections']],
+	},
+	{
+		$type: 'section',
+		schema: z.looseObject({ $type: z.literal('section'), title: z.string() }),
+		metadata: { name: 'Section' },
+	},
+]);
+
+export function documentIssues(document: unknown): string[] {
+	const parsed = safeParseTree(nodes, document);
+	return parsed.success
+		? []
+		: parsed.issues.map((issue) => `${formatIssuePath(issue.path, document)}: ${issue.message}`);
+}
+
+export function sectionTitles(document: unknown): string[] {
+	const parsed = safeParseTree(nodes, document);
+	const sections = parsed.success ? [parsed.tree.children.sections ?? []].flat() : [];
+	return sections.flatMap((section) => (section.$type === 'section' ? [section.data.title] : []));
+}
+```
+
 `formatIssuePath(path, source?)` writes the `path` of an issue as text: keys joined by dots and indexes in brackets (`children[1].label`), the empty string for a missing or empty path. A segment may be a key or a Standard Schema `{ key }` object. Given the document as `source`, an array item with a string `id` is followed by it, `children[1] (hero).label`.
 
 ## BaseRegistry

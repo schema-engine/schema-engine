@@ -114,6 +114,7 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		'safeParseStandardSchema',
 		'standardSchema',
 		'safeParseNode',
+		'safeParseTree',
 		'formatIssuePath',
 		'BaseRegistry',
 		'BaseRegistration',
