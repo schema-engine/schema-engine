@@ -1,7 +1,7 @@
 {
 	"name": "@schema-engine/forms-react",
 	"type": "module",
-	"version": "0.5.2",
+	"version": "0.5.3",
 	"description": "The React renderer for Schema Engine forms",
 	"keywords": [
 		"schema-engine",
