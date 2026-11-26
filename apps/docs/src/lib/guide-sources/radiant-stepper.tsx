@@ -9,8 +9,6 @@ import {
 } from '@schema-engine/forms-radiant';
 import { checkout } from './checkout';
 
-const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.title ?? id;
-
 /**
  * Lists the steps that take part and jumps to one the form lets the visitor reach.
  *
@@ -48,7 +46,7 @@ export class CheckoutStepper extends RadiantElement {
 								prop:disabled={!step.reachable}
 								on:click={() => void wizard.goTo(step.id)}
 							>
-								{titleOf(step.id)}
+								{step.title ?? step.id}
 								{step.invalid ? ' (fix)' : ''}
 							</button>
 						</li>

@@ -28,7 +28,15 @@ export function provideTestRuntime(
 			initialValue: {
 				current: 'main',
 				steps: [
-					{ id: 'main', skipped: false, visited: true, complete: false, invalid: false, reachable: false },
+					{
+						id: 'main',
+						title: 'Main',
+						skipped: false,
+						visited: true,
+						complete: false,
+						invalid: false,
+						reachable: false,
+					},
 				],
 				navigating: false,
 				isWizard: false,

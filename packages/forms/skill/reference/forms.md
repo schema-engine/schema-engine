@@ -159,7 +159,7 @@ export function createNotifyRuntime(onSubmit: (values: FormValues) => void) {
 }
 ```
 
-Every command resolves one string: `moved`, `submitted`, `failed`, `invalid`, `overtaken`, `refused`, `busy` or `cancelled`. One lock covers navigation and submission, so a command made while another runs is `busy`, and a reset or `unmount` revokes the one in flight (`cancelled`); a submission whose values were already captured is committed and still completes. `runtime.getSnapshot()` is `{ submission, current, navigating, steps }`, each step with `skipped`, `visited`, `complete`, `invalid` and `reachable` (`goTo` can move there); `runtime.container` is the state. Submitting is in `forms-submission.md`. The docs page is `/docs/renderer-authors/runtime`.
+Every command resolves one string: `moved`, `submitted`, `failed`, `invalid`, `overtaken`, `refused`, `busy` or `cancelled`. One lock covers navigation and submission, so a command made while another runs is `busy`, and a reset or `unmount` revokes the one in flight (`cancelled`); a submission whose values were already captured is committed and still completes. `runtime.getSnapshot()` is `{ submission, current, navigating, steps }`, each step with `id`, `title`, `skipped`, `visited`, `complete`, `invalid` and `reachable` (`goTo` can move there); `runtime.container` is the state. Submitting is in `forms-submission.md`. The docs page is `/docs/renderer-authors/runtime`.
 
 ## Testing a container
 

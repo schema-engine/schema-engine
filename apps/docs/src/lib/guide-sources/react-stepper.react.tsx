@@ -5,8 +5,6 @@ import { useFormWizard } from '@schema-engine/forms-react/hooks';
 import { checkout } from './checkout';
 import { engine } from './react-wizard.helper.react';
 
-const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.title ?? id;
-
 /** Lists the steps that take part and jumps to one the form lets the visitor reach. */
 function Stepper() {
 	const { current, steps, goTo } = useFormWizard();
@@ -22,7 +20,7 @@ function Stepper() {
 							disabled={!step.reachable}
 							onClick={() => void goTo(step.id)}
 						>
-							{titleOf(step.id)}
+							{step.title ?? step.id}
 							{step.invalid ? ' (fix)' : ''}
 						</button>
 					</li>

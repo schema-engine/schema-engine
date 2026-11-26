@@ -43,8 +43,9 @@ export function deriveNavigation(config: FormMeta, instance: FormWizard): ViewNa
 
 /** The steps before any runtime has them: none skipped, the first visited. */
 export const initialSteps = (config: FormMeta): FormStepState[] =>
-	config.steps.map(({ id }, index) => ({
+	config.steps.map(({ id, title }, index) => ({
 		id,
+		title,
 		skipped: false,
 		visited: index === 0,
 		complete: false,

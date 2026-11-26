@@ -18,8 +18,9 @@ export function instanceAt(
 	return {
 		...deriveInitialInstance(meta),
 		current: meta.steps[currentStep]?.id ?? '',
-		steps: meta.steps.map(({ id }, index) => ({
+		steps: meta.steps.map(({ id, title }, index) => ({
 			id,
+			title,
 			skipped: skipped.includes(id),
 			visited: visited[index] ?? false,
 			complete: completed[index] ?? false,

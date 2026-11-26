@@ -43,6 +43,19 @@ describe('useFormWizard', () => {
 		expect(seen.at(-1)).toBe(first);
 	});
 
+	test('lists every step with the title of its config, so a stepper needs no lookup of its own', async () => {
+		const { seen, runtime } = mount();
+
+		expect(seen.at(-1)?.steps.map(({ id, title }) => [id, title])).toEqual([
+			['a', 'A'],
+			['b', 'B'],
+		]);
+
+		await act(() => runtime().next());
+
+		expect(seen.at(-1)?.steps.map(({ title }) => title)).toEqual(['A', 'B']);
+	});
+
 	test('changes when the step moves', async () => {
 		const { seen, runtime } = mount();
 		const first = seen.at(-1);

@@ -95,6 +95,21 @@ describe('the snapshot', () => {
 		expect(runtime.getSnapshot()).toBe(before);
 	});
 
+	test('carries each step title from the config, in the live and the server snapshot, through moves and keystrokes', async () => {
+		const { runtime } = setup();
+		const titles = ['Contact', 'Company', 'Address', 'Payment'];
+		const before = runtime.getSnapshot();
+		expect(before.steps.map(({ title }) => title)).toEqual(titles);
+		expect(runtime.getServerSnapshot().steps.map(({ title }) => title)).toEqual(titles);
+		runtime.container.setValue('street', 'x');
+		expect(runtime.getSnapshot().steps).toBe(before.steps);
+		fill(runtime, { email: 'a@b.c' });
+		await runtime.next();
+		const after = runtime.getSnapshot();
+		expect(after.current).toBe('address');
+		expect(after.steps.map(({ title }) => title)).toEqual(titles);
+	});
+
 	test('notifies subscribers when the steps or the submission change', async () => {
 		const { runtime } = setup();
 		const listener = vi.fn();

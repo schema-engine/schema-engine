@@ -107,7 +107,7 @@ Next, Previous and a jump each resolve to one outcome string, and a submit adds 
 
 ## The step state
 
-Both renderers give a component the same list, every step in the order of the config. Each entry has the `id` of the step (it carries no title), and `skipped` (its constraints hide it), `visited`, `complete` (Next validated it and moved on), `invalid` (an error is recorded at one of its fields) and `reachable` (a jump can move there from the current step). The [Form runtime](/docs/renderer-authors/runtime#the-snapshot) page has the type.
+Both renderers give a component the same list, every step in the order of the config. Each entry has the `id` and the `title` of the step, as the config wrote it (a form config requires one, so `title` is set for every step it validated), and `skipped` (its constraints hide it), `visited`, `complete` (Next validated it and moved on), `invalid` (an error is recorded at one of its fields) and `reachable` (a jump can move there from the current step). The [Form runtime](/docs/renderer-authors/runtime#the-snapshot) page has the type.
 
 ## In React
 
@@ -119,8 +119,6 @@ import { FormRenderer } from '@schema-engine/forms-react';
 import { useFormWizard } from '@schema-engine/forms-react/hooks';
 import { checkout } from './checkout';
 import { engine } from './react-wizard.helper.react';
-
-const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.title ?? id;
 
 /** Lists the steps that take part and jumps to one the form lets the visitor reach. */
 function Stepper() {
@@ -137,7 +135,7 @@ function Stepper() {
 							disabled={!step.reachable}
 							onClick={() => void goTo(step.id)}
 						>
-							{titleOf(step.id)}
+							{step.title ?? step.id}
 							{step.invalid ? ' (fix)' : ''}
 						</button>
 					</li>
@@ -173,8 +171,6 @@ import {
 	schemaFormRegistrations,
 } from '@schema-engine/forms-radiant';
 import { checkout } from './checkout';
-
-const titleOf = (id: string) => checkout.steps.find((step) => step.id === id)?.title ?? id;
 
 /**
  * Lists the steps that take part and jumps to one the form lets the visitor reach.
@@ -213,7 +209,7 @@ export class CheckoutStepper extends RadiantElement {
 								prop:disabled={!step.reachable}
 								on:click={() => void wizard.goTo(step.id)}
 							>
-								{titleOf(step.id)}
+								{step.title ?? step.id}
 								{step.invalid ? ' (fix)' : ''}
 							</button>
 						</li>
