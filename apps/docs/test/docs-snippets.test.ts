@@ -109,6 +109,7 @@ const ALLOWED_FENCES: AllowedFence[] = [
 	]),
 	...declarations('registry/api-reference', [
 		'createRegistry',
+		'bindRegistry',
 		'assertStandardSchema',
 		'safeParseStandardSchema',
 		'standardSchema',

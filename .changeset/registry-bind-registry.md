@@ -1,0 +1,5 @@
+---
+'@schema-engine/registry': patch
+---
+
+Add `bindRegistry(contracts, bindings)`, which builds a renderer's registry from one registry of contracts (the `$type`, schema and metadata) and one binding per `$type` (a `render` function, a tag name: renderer-only data). It is built with `createRegistry`, so the result is frozen, keeps the contracts' order, checks every schema again and shares each `schema` with the other renderers by identity. For contracts typed by literal `$type`, a missing binding, a binding for a `$type` no contract has and a binding that sets a key of its contract are compile errors, and `get('card')` returns that registration without `undefined`; for contracts typed only as `BaseRegistration` the build throws naming the kind and the `$type` (`Widget 'badge' has no binding.`, `Widget binding 'crad' names no registration.`, `Widget 'card' binding sets 'schema', which the contract defines.`). `RegistryBindings`, `BoundRegistration` and `BoundRegistry` are exported; `RegistryBindings<typeof contracts, ReactBinding>` with `satisfies` fixes the binding shape of a renderer.

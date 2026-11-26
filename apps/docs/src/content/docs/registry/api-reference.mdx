@@ -35,6 +35,38 @@ Builds a frozen, read-only registry. By default (`duplicates: 'override'`) a lat
 | `all()`    | `readonly TRegistration[]`   | Frozen array in first-registration order |
 | `keys()`   | `readonly string[]`          | Frozen array of keys in the same order   |
 
+## bindRegistry
+
+```typescript
+function bindRegistry<TContract extends BaseRegistration, const TBindings>(
+	contracts: ReadOnlyRegistry<TContract>,
+	bindings: TBindings,
+): BoundRegistry<TContract, TBindings>;
+
+type RegistryBindings<TRegistry extends ReadOnlyRegistry, TBinding extends object = object> = {
+	readonly [K in TRegistry['$type']]: TBinding;
+};
+
+type BoundRegistration<TContract extends BaseRegistration, TBindings> = TContract & TBindings[TContract['$type']];
+
+interface BoundRegistry<TContract extends BaseRegistration, TBindings> extends ReadOnlyRegistry<
+	BoundRegistration<TContract, TBindings>
+> {
+	get<K extends TContract['$type']>(key: K): Extract<BoundRegistration<TContract, TBindings>, { $type: K }>;
+	get(key: string): BoundRegistration<TContract, TBindings> | undefined;
+}
+```
+
+Builds a renderer's registry from a registry of contracts and one binding per `$type`; `TBindings` is constrained to exactly one binding for each `$type` of the contracts, none of which may set a key its contract defines. A contract is a registration without the renderer's part (the `$type`, schema and metadata, plus what a domain fixes); a binding is renderer-only data such as a `render` function or a tag name, and never carries schema or metadata. The result is built with `createRegistry`, so it is frozen, keeps the order of the contracts and checks every schema again. Each registration is a shallow merge, so `schema` and every other value of a contract is shared by identity between the renderers that bind it.
+
+For contracts typed by literal `$type` (an inline list, which `createRegistry` types that way), a missing binding, a binding for a `$type` no contract has and a binding that sets a key of its contract are compile errors, `get(key)` with a known `$type` returns that registration without `undefined`, and `RegistryBindings<typeof contracts, ReactBinding>` with `satisfies` fixes the shape every binding of one renderer takes. For contracts typed only as `BaseRegistration` the same three mistakes throw when the registry is built:
+
+| Mistake                              | Error                                                                |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| A contract has no binding            | `<kind> '<$type>' has no binding.`                                   |
+| A binding names no contract          | `<kind> binding '<key>' names no registration.`                      |
+| A binding sets a key of its contract | `<kind> '<$type>' binding sets '<key>', which the contract defines.` |
+
 ## assertStandardSchema
 
 ```typescript

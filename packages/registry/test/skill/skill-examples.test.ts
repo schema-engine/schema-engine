@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { nodeIssues } from '../../../../test-utils/skill-examples/registry/draw-node';
+import { radiantWidgets, reactWidgets } from '../../../../test-utils/skill-examples/registry/bound-widgets';
 import { readSite } from '../../../../test-utils/skill-examples/registry/site-yaml';
 import { widgets } from '../../../../test-utils/skill-examples/registry/widgets';
 
@@ -14,6 +15,15 @@ describe('the registry of the skill', () => {
 	test('the registry is read-only', () => {
 		expect(Object.isFrozen(widgets)).toBe(true);
 		expect('register' in widgets).toBe(false);
+	});
+});
+
+describe('the bound registries of the skill', () => {
+	test('each renderer binds its part to the one contract, which they share', () => {
+		expect(reactWidgets.get('card').render({ title: 'Docs' })).toBe('<h1>Docs</h1>');
+		expect(radiantWidgets.get('badge').tag).toBe('se-badge');
+		expect(radiantWidgets.get('card').schema).toBe(reactWidgets.get('card').schema);
+		expect(radiantWidgets.keys()).toEqual(['card', 'badge']);
 	});
 });
 

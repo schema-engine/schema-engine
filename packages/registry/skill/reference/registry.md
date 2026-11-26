@@ -34,6 +34,31 @@ export const widgets = createRegistry('Widget', [...defaults, custom]);
 - The result has `get`, `has`, `all`, `keys` and `size`, and no `register` or `clear`. It holds a frozen shallow copy of each winner taken at build, so patch a registration before building, or build a new registry from a new list.
 - Type it with `ReadOnlyRegistry<TRegistration>`.
 
+`bindRegistry(contracts, bindings)` builds a renderer's registry from one registry of contracts (the `$type`, schema and metadata) and one binding per `$type` (a `render`, a tag name: renderer-only data). Two renderers bind the same contracts and share each `schema` by identity:
+
+```ts title="registry/bound-widgets.ts"
+import * as z from 'zod/mini';
+import { bindRegistry, createRegistry } from '@schema-engine/registry';
+
+const contracts = createRegistry('Widget', [
+	{ $type: 'card', schema: z.object({ title: z.string() }), metadata: { name: 'Card' } },
+	{ $type: 'badge', schema: z.object({ label: z.string() }), metadata: { name: 'Badge' } },
+]);
+
+export const reactWidgets = bindRegistry(contracts, {
+	card: { render: (props: { title: string }) => `<h1>${props.title}</h1>` },
+	badge: { render: (props: { label: string }) => `<b>${props.label}</b>` },
+});
+
+export const radiantWidgets = bindRegistry(contracts, {
+	card: { tag: 'se-card' },
+	badge: { tag: 'se-badge' },
+});
+```
+
+- The result is a frozen registry built with `createRegistry`: the contracts' order, every schema checked again. For contracts typed by literal `$type` (an inline list), `get('card')` returns that registration without `undefined`, and a missing binding, an extra one (`crad`) and a binding that sets a contract key (`schema`, `metadata`) are compile errors. `RegistryBindings<typeof contracts, ReactBinding>` with `satisfies` fixes the shape every binding of a renderer takes.
+- Whatever the typing, the build throws naming the `kind`: `Widget 'badge' has no binding.`, `Widget binding 'crad' names no registration.` and `Widget 'card' binding sets 'schema', which the contract defines.`
+
 `safeParseStandardSchema(schema, value)` runs a registration's schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }` (it throws for a schema that validates asynchronously). Form validation and `parseActions` both go through it; `assertStandardSchema` is the build-time check on its own. `standardSchema(validate)` builds a Standard Schema from a function that returns `{ value }` or `{ issues }`, for a registration whose check is not a schema library's.
 
 `safeParseNode(registry, node, path?)` checks one node of a document: it looks `node.$type` up in the registry (anything with `get(key)`, and optionally `hint`, a sentence added to the message of an unregistered `$type`, such as where to register it), validates the node with the registration's schema and returns `{ success: true, $type, registration, data }` or `{ success: false, issues }`. For a registry typed by its registrations (`createRegistry` keeps the literal `$type` of an inline list), checking `parsed.$type` narrows `registration` and `data` to that registration's schema output with no cast; `data` is `unknown` for a registry typed as `BaseRegistration`. A node that is not an object with a string `$type`, and a `$type` no registration answers, are issues, not throws. Every issue's `path` starts with `path`, the position of the node in its document, so a walk over a tree passes each child its own.
