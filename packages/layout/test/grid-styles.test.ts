@@ -815,15 +815,43 @@ describe('the query mode of a layout theme', () => {
 		expect(medium).toContain('.se-grid-item[data-se-theme=');
 	});
 
-	test('container mode changes only the at-rule and adds the container rule', () => {
+	test('container mode changes the at-rule and adds the container rule and the gate resets', () => {
 		const media = layout(ramped);
 		const container = layout({ ...ramped, query: 'container' });
+		const gateReset = new RegExp(`--${container.id}-[gi]\\d+(?:sm|md|lg|xl|2xl):initial;`, 'g');
 		const rewritten = container.css
 			.split('\n')
 			.filter((line) => !line.startsWith('.se-grid-container'))
-			.map((line) => line.replace('@container se-grid', '@media').replaceAll(container.id, media.id))
+			.map((line) =>
+				line.replace('@container se-grid', '@media').replace(gateReset, '').replaceAll(container.id, media.id),
+			)
 			.join('\n');
 		expect(rewritten).toBe(media.css);
+	});
+
+	test('container mode resets, on each grid and item, every gate a query block declares', () => {
+		const sheet = layout({ ...ramped, query: 'container' });
+		const lines = sheet.css.split('\n');
+		const declared = (rule: string) =>
+			new Set(
+				Array.from(rule.matchAll(new RegExp(`--${sheet.id}-[gi]\\d+(?:sm|md|lg|xl|2xl):`, 'g')), (m) => m[0]),
+			);
+		const base = (scope: string) => lines.find((line) => line.startsWith(`${scope}[data-se-theme=`)) ?? '';
+		const gates = Array.from(declared(lines.filter((line) => line.startsWith('@container')).join('')));
+		expect(gates.length).toBe(55);
+		for (const [scope, table] of [
+			['.se-grid', 'g'],
+			['.se-grid-item', 'i'],
+		] as const) {
+			const resets = base(scope);
+			const own = gates.filter((gate) => gate.startsWith(`--${sheet.id}-${table}`));
+			expect(own.length).toBeGreaterThan(0);
+			for (const gate of own) expect(resets).toContain(`${gate}initial;`);
+		}
+	});
+
+	test('a media theme resets no gate, since every grid shares the viewport', () => {
+		expect(css(ramped)).not.toMatch(/-[gi]\d+(?:sm|md|lg|xl|2xl):initial/);
 	});
 
 	test('the container rule is scoped to the theme and declares the named inline-size container', () => {

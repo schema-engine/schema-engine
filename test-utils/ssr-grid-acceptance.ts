@@ -543,3 +543,45 @@ export async function expectSsrContainerAcceptance(html: string, layout: LayoutT
 		frame.remove();
 	}
 }
+
+/**
+ * Asserts that a grid inside a narrow container keeps its own layout when the grid around it is wide.
+ *
+ * @param html Server-rendered document for `ssrNestedContainerForm` (`ssr-grid-fixtures.ts`) on
+ * `SSR_CONTAINER_LAYOUT`, of either variant.
+ * @remarks
+ * Both grids use the same breakpoint names, and the inner grid's container is below `md` while the outer's
+ * is above it. A responsive value that the outer grid or its fieldset resolved at `md` must not reach the
+ * inner grid, which draws twelve tracks and lays its children out full width.
+ */
+export async function expectSsrNestedContainerAcceptance(html: string, layout: LayoutThemeLike): Promise<void> {
+	expect(html).toContain(layout.css.slice(0, 48));
+	expect(html).toContain('@container se-grid (min-width:48rem)');
+	const hosted = html
+		.replace('<body>', '<body><div id="se-test-host" style="width:900px">')
+		.replace('</body>', '</div></body>');
+
+	const { frame, doc } = await loadSsrFrame(hosted, 1400);
+	try {
+		const outer = doc.querySelector<HTMLElement>('.se-grid[data-se-theme]');
+		const first = fieldHost(doc, /Nest A/);
+		const inner = first.parentElement?.closest<HTMLElement>('.se-grid[data-se-theme]');
+		if (!outer || !inner || outer === inner) throw new Error('Expected a step grid and the fieldset grid in it');
+
+		expect(getComputedStyle(outer).gridTemplateColumns.split(' '), 'the outer container is above md').toHaveLength(
+			3,
+		);
+		expect(inner.parentElement?.getBoundingClientRect().width, 'the inner container is below md').toBeLessThan(768);
+		const style = getComputedStyle(inner);
+		const track = Number.parseFloat(style.gridTemplateColumns.split(' ')[0] ?? '0');
+		const gap = Number.parseFloat(style.columnGap);
+		near(gap, 16);
+		near(track, (inner.getBoundingClientRect().width - 11 * gap) / 12);
+		near(first.getBoundingClientRect().width, inner.getBoundingClientRect().width);
+		expect(fieldHost(doc, /Nest B/).getBoundingClientRect().top).toBeGreaterThan(
+			first.getBoundingClientRect().bottom - 1,
+		);
+	} finally {
+		frame.remove();
+	}
+}

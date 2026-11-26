@@ -430,9 +430,11 @@ function tight(fallback: string): string {
  * outside that query it is the guaranteed-invalid value and the `var()` chain skips it. The names
  * are private to the stylesheet (a form never writes them, and they carry no contract) and carry
  * the theme id: custom properties inherit, so a gate named alike in two themes would let a theme
- * with a wider threshold read the gate its ancestor's narrower query declared. Within one theme
- * every element the rules reach declares its own gates wherever the query applies, so no reset
- * is needed.
+ * with a wider threshold read the gate its ancestor's narrower query declared. In a media theme
+ * every element of a theme shares the viewport, so one that is reached declares its own gates
+ * wherever the query applies and needs no reset. A container theme measures each grid against its
+ * own container, so a nested grid can sit below a breakpoint its ancestor is above and would read the
+ * ancestor's gate: its rules reset every gate ({@link gateResets}).
  *
  * Read a name in devtools as theme id, table (`g` grid, `i` item), the property's row in that
  * table, and the breakpoint token: `--l1abc-i1md` is the `md` gate of the item `grid-column`.
@@ -507,6 +509,22 @@ function inheritanceResets(properties: readonly ResponsiveProperty[], withSlots:
 }
 
 /**
+ * Resets every gate of a table, so an element reads only the gates its own container's query declares.
+ *
+ * @remarks
+ * A gate is declared on the element a query matches and inherits from there. Under a container query a
+ * nested grid or item sits in a narrower container than its ancestors, so the breakpoint they match
+ * can be one it does not, and it would take their resolved values over its own cascade. `initial`
+ * returns the gate to the guaranteed-invalid value, which the `var()` chain skips; the element's own
+ * matching query block comes later in the sheet at the same specificity and declares it again.
+ */
+function gateResets(themeId: string, table: string, properties: readonly ResponsiveProperty[]): string {
+	return properties
+		.flatMap((_, row) => BREAKPOINT_ORDER.map((slot) => `${gateName(themeId, table, row, slot)}:initial;`))
+		.join('');
+}
+
+/**
  * Generates the theme-scoped stylesheet.
  *
  * @remarks
@@ -518,8 +536,9 @@ function inheritanceResets(properties: readonly ResponsiveProperty[], withSlots:
  *
  * Each responsive property is declared once, in the base rule, as a `var()` chain over the
  * slot gates ({@link gateName}); a media query only declares the gates of its slot.
- * A `query: 'container'` theme changes only the at-rule, to `@container se-grid`, and adds the
- * rule of {@link GRID_CONTAINER_CLASS}; a media theme emits no container rule.
+ * A `query: 'container'` theme changes the at-rule, to `@container se-grid`, adds the rule of
+ * {@link GRID_CONTAINER_CLASS} and resets each grid's and item's gates in its base rule
+ * ({@link gateResets}); a media theme emits neither.
  *
  * @param theme The resolved grid vocabulary.
  * @param themeId The id of the layout theme the rules are scoped to.
@@ -538,8 +557,8 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 					`.${GRID_CONTAINER_CLASS}${scope}{display:block;width:100%;min-width:0;container-type:inline-size;container-name:${GRID_CONTAINER_NAME};}`,
 				]
 			: []),
-		`${gridScope}{${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;${ITEM_DISPLAY_MODE_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
-		`${itemScope}{${inheritanceResets(ITEM_PROPERTIES, true)}${declarations(themeId, 'i', ITEM_PROPERTIES)}}`,
+		`${gridScope}{${container ? gateResets(themeId, 'g', GRID_PROPERTIES) : ''}${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;${ITEM_DISPLAY_MODE_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
+		`${itemScope}{${container ? gateResets(themeId, 'i', ITEM_PROPERTIES) : ''}${inheritanceResets(ITEM_PROPERTIES, true)}${declarations(themeId, 'i', ITEM_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
 		const ramped = theme.responsive[breakpoint];

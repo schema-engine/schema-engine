@@ -8,7 +8,13 @@ import {
 	type NestedThemeFormOptions,
 } from '../../../../test-utils/nested-theme-fixtures';
 import type { LayoutThemeLike } from '../../../../test-utils/ssr-grid-acceptance';
-import { SSR_CONTAINER_LAYOUT, ssrContainerForm, ssrNestedFields } from '../../../../test-utils/ssr-grid-fixtures';
+import {
+	SSR_CONTAINER_LAYOUT,
+	ssrContainerForm,
+	ssrNestedContainerForm,
+	ssrNestedFields,
+	type SsrNestedContainerVariant,
+} from '../../../../test-utils/ssr-grid-fixtures';
 import {
 	createSsrAcceptanceEngine,
 	getSsrAcceptanceFixture,
@@ -89,6 +95,23 @@ export function renderSsrContainerAcceptanceHtml(): { html: string; layout: Layo
 		</FormEngineProvider>,
 	);
 
+	return {
+		html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`,
+		layout: engine.getLayout(),
+	};
+}
+
+/** Markup-only document of a fieldset that is narrow inside a wide step grid, under the container theme. */
+export function renderSsrNestedContainerHtml(variant: SsrNestedContainerVariant): {
+	html: string;
+	layout: LayoutThemeLike;
+} {
+	const engine = createSsrAcceptanceEngine(SSR_CONTAINER_LAYOUT);
+	const body = renderToStaticMarkup(
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={engine.validateForm(ssrNestedContainerForm('ssr-input', variant))} />
+		</FormEngineProvider>,
+	);
 	return {
 		html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`,
 		layout: engine.getLayout(),
