@@ -58,4 +58,37 @@ describe('the query container in React markup', () => {
 		);
 		expect(container.html).toContain('<span>child</span></div></div>');
 	});
+
+	test('ChildGrid with subgrid carries the subgrid class, no track variables, and no wrapper in any theme', () => {
+		const render = (layout?: typeof SSR_CONTAINER_LAYOUT) => {
+			const engine = createSsrAcceptanceEngine(layout);
+			const html = renderToStaticMarkup(
+				<FormEngineProvider engine={engine}>
+					<ChildGrid elements={[{ grid: { width: 'half' } }]} className="rows" subgrid>
+						<span>child</span>
+					</ChildGrid>
+				</FormEngineProvider>,
+			);
+			return { html, id: engine.getLayout().id };
+		};
+		for (const layout of [undefined, SSR_CONTAINER_LAYOUT]) {
+			const { html, id } = render(layout);
+			const grid = `<div class="se-form-grid se-grid se-subgrid rows" data-se-theme="${id}">`;
+			expect(html).toBe(`${grid}<span>child</span></div>`);
+		}
+	});
+
+	test('ChildGrid takes twelve tracks from widths that only a subgrid child sets', () => {
+		const engine = createSsrAcceptanceEngine();
+		const html = renderToStaticMarkup(
+			<FormEngineProvider engine={engine}>
+				<ChildGrid elements={[{ grid: { subgrid: true }, elements: [{ grid: { width: 'half' } }] }]} />
+				<ChildGrid elements={[{ elements: [{ grid: { width: 'half' } }] }]} />
+			</FormEngineProvider>,
+		);
+		const grids = html.match(/<div class="se-form-grid se-grid"[^>]*>/g) ?? [];
+		expect(grids).toHaveLength(2);
+		expect(grids[0]).toContain('--se-grid-template:repeat(12');
+		expect(grids[1]).not.toContain('style=');
+	});
 });

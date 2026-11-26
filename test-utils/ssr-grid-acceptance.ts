@@ -7,6 +7,7 @@
  * drift apart; it is imported by relative path because it is test-only.
  */
 import { expect } from 'vitest';
+import { SSR_SUBGRID_INSET, SSR_SUBGRID_INSET_CSS } from './ssr-grid-fixtures';
 
 /** The part of a compiled layout theme the markup assertions read. */
 export interface LayoutThemeLike {
@@ -170,7 +171,7 @@ export async function loadSsrFrame(html: string, width: number): Promise<{ frame
 	return { frame, doc };
 }
 
-function fieldHost(doc: Document, label: RegExp): HTMLElement {
+export function fieldHost(doc: Document, label: RegExp): HTMLElement {
 	const matches = Array.from(doc.querySelectorAll<HTMLElement>('.se-grid-item')).filter((node) =>
 		label.test(node.textContent ?? ''),
 	);
@@ -581,6 +582,281 @@ export async function expectSsrNestedContainerAcceptance(html: string, layout: L
 		expect(fieldHost(doc, /Nest B/).getBoundingClientRect().top).toBeGreaterThan(
 			first.getBoundingClientRect().bottom - 1,
 		);
+	} finally {
+		frame.remove();
+	}
+}
+
+/** Edges of two boxes are the same line when they are within half a pixel. */
+export function aligned(actual: number, expected: number): void {
+	expect(Math.abs(actual - expected)).toBeLessThan(0.5);
+}
+
+export function boxOf(doc: Document, label: RegExp): DOMRect {
+	return fieldHost(doc, label).getBoundingClientRect();
+}
+
+/**
+ * Space between the tracks a field is placed on and the edge of its box, on one side: the padding and
+ * border of every box of the subgrid chain around it.
+ *
+ * @remarks
+ * Interior lines of a subgrid are the parent's exactly, but its padding and border are added to the
+ * items in its edge tracks as margin, so the first and last columns are inset by that much. A
+ * `display: contents` box has no box to inset by.
+ */
+export function trackInset(host: HTMLElement, side: 'Left' | 'Right'): number {
+	let inset = 0;
+	for (
+		let node = host.parentElement;
+		node && !(node.classList.contains('se-grid') && !node.classList.contains('se-subgrid'));
+		node = node.parentElement
+	) {
+		const style = getComputedStyle(node);
+		if (style.display === 'contents') continue;
+		inset += Number.parseFloat(style[`padding${side}`]) + Number.parseFloat(style[`border${side}Width`]);
+	}
+	return inset;
+}
+
+/** The grid that lays out a field, which must be a subgrid taking `tracks` tracks from the grid around it. */
+export function expectSubgridOf(doc: Document, label: RegExp, tracks: number): HTMLElement {
+	const grid = fieldHost(doc, label).parentElement?.closest<HTMLElement>('.se-grid[data-se-theme]');
+	if (!grid) throw new Error(`Expected ${label} to sit in a grid`);
+	expect(grid.classList.contains('se-subgrid'), `${label} sits in a subgrid`).toBe(true);
+	const [keyword, ...lines] = getComputedStyle(grid).gridTemplateColumns.split(' ');
+	expect(keyword, `${label} takes its parent's tracks`).toBe('subgrid');
+	expect(lines, `${label} sees the parent's lines`).toHaveLength(tracks + 1);
+	return grid;
+}
+
+/** The step's own grid: the one grid of the document that is not a subgrid and not inside one. */
+function stepGridOf(doc: Document): HTMLElement {
+	const grid = doc.querySelector<HTMLElement>('.se-grid[data-se-theme]:not(.se-subgrid)');
+	if (!grid) throw new Error('Expected the step grid');
+	return grid;
+}
+
+/** Left and right inset of a field's tracks, and its box. */
+function placement(doc: Document, label: RegExp) {
+	const host = fieldHost(doc, label);
+	return {
+		box: host.getBoundingClientRect(),
+		left: trackInset(host, 'Left'),
+		right: trackInset(host, 'Right'),
+	};
+}
+
+/**
+ * Asserts the class chain of a subgrid in markup: the item carries `se-subgrid` and the `1 / -1` placement,
+ * the inner grid carries it beside `se-grid`, and no query container sits between them.
+ *
+ * @param html Server-rendered document of the `widths` variant.
+ * @param container Whether the theme queries its container, which then wraps the step's grid and no subgrid.
+ */
+export function expectSubgridMarkup(html: string, container: boolean): void {
+	expect(elementsWithClass(html, 'se-grid')).toHaveLength(2);
+	const inner = elementsWithClass(html, 'se-grid').filter((tag) => /\bse-subgrid\b/.test(tag));
+	expect(inner, 'the inner grid carries the subgrid class').toHaveLength(1);
+	expect(inner[0]).toContain('data-se-theme=');
+	expect(inner[0]).not.toContain('style=');
+	const items = elementsWithClass(html, 'se-grid-item').filter((tag) => /\bse-subgrid\b/.test(tag));
+	expect(items, 'the fieldset item carries the subgrid class').toHaveLength(1);
+	expect(items[0]).toMatch(/--se-item-grid-column:\s*1 \/ -1/);
+	expect(elementsWithClass(html, 'se-grid-container')).toHaveLength(container ? 1 : 0);
+	const fromItem = html.slice(html.indexOf(items[0] ?? ''));
+	expect(fromItem).not.toContain('se-grid-container');
+}
+
+/**
+ * Asserts that the fields of a subgrid fieldset line up with the width grid around it, at one wide viewport.
+ *
+ * @param html Server-rendered document of the `widths` variant: two halves, then a subgrid fieldset of two
+ * halves and a field with no width.
+ */
+export async function expectSsrSubgridWidthsAcceptance(html: string): Promise<void> {
+	expectNeutralHooksPaired(html);
+	const { frame, doc } = await loadSsrFrame(html, 1000);
+	try {
+		expectSubgridOf(doc, /Street/, 12);
+		const first = boxOf(doc, /First/);
+		const last = boxOf(doc, /Last/);
+		const street = placement(doc, /Street/);
+		const city = placement(doc, /City/);
+		const notes = placement(doc, /Notes/);
+		aligned(street.box.left, first.left + street.left);
+		aligned(street.box.right, first.right);
+		aligned(city.box.left, last.left);
+		aligned(city.box.right, last.right - city.right);
+		aligned(street.box.top, city.box.top);
+		aligned(notes.box.left, first.left + notes.left);
+		aligned(notes.box.right, last.right - notes.right);
+		expect(notes.box.top).toBeGreaterThan(street.box.bottom - 1);
+		expect(getComputedStyle(fieldHost(doc, /Address/)).display).toBe('grid');
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that widths only a subgrid sets still give the step twelve tracks.
+ *
+ * @param html Server-rendered document of the `through` variant.
+ */
+export async function expectSsrSubgridThroughAcceptance(html: string): Promise<void> {
+	const { frame, doc } = await loadSsrFrame(html, 1000);
+	try {
+		const step = stepGridOf(doc);
+		expect(getComputedStyle(step).gridTemplateColumns.split(' ')).toHaveLength(12);
+		expectSubgridOf(doc, /Street/, 12);
+		const bounds = step.getBoundingClientRect();
+		const gap = Number.parseFloat(getComputedStyle(step).columnGap);
+		const street = placement(doc, /Street/);
+		const city = placement(doc, /City/);
+		const half = ((bounds.width - 11 * gap) / 12) * 6 + 5 * gap;
+		aligned(street.box.top, city.box.top);
+		aligned(street.box.width, half - street.left);
+		aligned(city.box.width, half - city.right);
+		aligned(city.box.left - street.box.left, street.box.width + street.left + gap);
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that a subgrid of a columns grid places its children on the parent's columns, shares its gap, and is
+ * inset by its own padding and border on the outer sides only.
+ *
+ * @param html Server-rendered document of the `columns` variant, without the inset rule.
+ */
+export async function expectSsrSubgridColumnsAcceptance(html: string): Promise<void> {
+	const padded = html.replace('<body>', `<body><style>${SSR_SUBGRID_INSET_CSS}</style>`);
+	const { frame, doc } = await loadSsrFrame(padded, 1000);
+	try {
+		const step = stepGridOf(doc);
+		expectSubgridOf(doc, /Col C/, 2);
+		const a = boxOf(doc, /Col A/);
+		const b = boxOf(doc, /Col B/);
+		const c = placement(doc, /Col C/);
+		const d = placement(doc, /Col D/);
+		expect(c.left).toBe(SSR_SUBGRID_INSET);
+		expect(d.right).toBe(SSR_SUBGRID_INSET);
+		aligned(c.box.left, a.left + SSR_SUBGRID_INSET);
+		aligned(c.box.right, a.right);
+		aligned(d.box.left, b.left);
+		aligned(d.box.right, b.right - SSR_SUBGRID_INSET);
+		const gap = Number.parseFloat(getComputedStyle(step).columnGap);
+		expect(gap).toBeGreaterThan(16);
+		aligned(d.box.left - c.box.right, gap);
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that the fields of a subgrid follow the responsive tracks of the grid around it.
+ *
+ * @param html Server-rendered document of the `responsive` variant, on a theme that queries the window.
+ */
+export async function expectSsrSubgridResponsiveAcceptance(html: string): Promise<void> {
+	const { frame, doc } = await loadSsrFrame(html, 375);
+	try {
+		const first = () => boxOf(doc, /First/);
+		const last = () => boxOf(doc, /Last/);
+		const street = () => placement(doc, /Street/);
+		const city = () => placement(doc, /City/);
+
+		expectSubgridOf(doc, /Street/, 12);
+		aligned(street().box.left, first().left + street().left);
+		aligned(street().box.right, first().right - street().right);
+		aligned(city().box.left, street().box.left);
+		expect(city().box.top).toBeGreaterThan(street().box.bottom - 1);
+
+		frame.style.width = '1280px';
+		await waitForFrameLayout();
+		aligned(street().box.right, first().right);
+		aligned(city().box.left, last().left);
+		aligned(street().box.top, city().box.top);
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that a subgrid fieldset hidden from `md` is shown below it, as a grid, and not displayed from it.
+ *
+ * @param html Server-rendered document of the `hidden` variant.
+ */
+export async function expectSsrSubgridHiddenAcceptance(html: string): Promise<void> {
+	const { frame, doc } = await loadSsrFrame(html, 375);
+	try {
+		const fieldset = fieldHost(doc, /Address/);
+		expect(getComputedStyle(fieldset).display).toBe('grid');
+		frame.style.width = '1280px';
+		await waitForFrameLayout();
+		expect(getComputedStyle(fieldset).display).toBe('none');
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that subgrids nest: the innermost fields sit on the step's tracks.
+ *
+ * @param html Server-rendered document of the `nested` variant.
+ */
+export async function expectSsrSubgridNestedAcceptance(html: string): Promise<void> {
+	const { frame, doc } = await loadSsrFrame(html, 1000);
+	try {
+		expectSubgridOf(doc, /Street/, 12);
+		const first = boxOf(doc, /First/);
+		const last = boxOf(doc, /Last/);
+		const street = placement(doc, /Street/);
+		const city = placement(doc, /City/);
+		expect(street.left, 'the fields are inset by every box of the chain').toBeGreaterThanOrEqual(0);
+		aligned(street.box.left, first.left + street.left);
+		aligned(street.box.right, first.right);
+		aligned(city.box.left, last.left);
+		aligned(city.box.right, last.right - city.right);
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that a subgrid follows the width of its parent's container, and not the window or a container of its own.
+ *
+ * @param html Server-rendered document of the `container` variant on a `query: 'container'` theme.
+ * @remarks
+ * The window stays wider than `xl` and the element that holds the form is resized, below `md` and above it.
+ */
+export async function expectSsrSubgridContainerAcceptance(html: string): Promise<void> {
+	expectSubgridMarkup(html, true);
+	const hosted = html
+		.replace('<body>', '<body><div id="se-test-host" style="width:600px">')
+		.replace('</body>', '</div></body>');
+	const { frame, doc } = await loadSsrFrame(hosted, 1400);
+	try {
+		const host = doc.getElementById('se-test-host');
+		if (!host) throw new Error('Expected the container host');
+		const address = fieldHost(doc, /Address/);
+		expect(address.querySelector('.se-grid-container'), 'no query container inside the subgrid').toBeNull();
+		expect(doc.querySelectorAll('.se-grid-container')).toHaveLength(1);
+		expectSubgridOf(doc, /Street/, 12);
+		const first = () => boxOf(doc, /First/);
+		const last = () => boxOf(doc, /Last/);
+		const street = () => placement(doc, /Street/);
+		const city = () => placement(doc, /City/);
+
+		aligned(street().box.left, first().left + street().left);
+		aligned(street().box.right, first().right - street().right);
+		expect(city().box.top, 'below md the fields are stacked').toBeGreaterThan(street().box.bottom - 1);
+
+		host.style.width = '900px';
+		await waitForFrameLayout();
+		aligned(street().box.right, first().right);
+		aligned(city().box.left, last().left);
+		aligned(street().box.top, city().box.top);
 	} finally {
 		frame.remove();
 	}

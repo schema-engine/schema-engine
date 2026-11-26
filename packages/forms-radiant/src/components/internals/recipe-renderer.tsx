@@ -5,6 +5,7 @@ import {
 	type NormalizedFormConfig,
 	type RecipeRegistration,
 	type FormEngineRuntime as FormEngine,
+	gridTrackItems,
 	stepGrid,
 	resolveParticipation,
 } from '@schema-engine/forms';
@@ -76,7 +77,11 @@ export function RecipeRenderer({
 							<div
 								class={`se-form-elements se-form-grid ${GRID_CLASS}`}
 								data-se-theme={layout.id}
-								style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
+								style={getGridVariables(
+									stepGrid(config, step),
+									layout.grid,
+									gridTrackItems(step.elements),
+								)}
 							>
 								<FormElements
 									elements={step.elements}

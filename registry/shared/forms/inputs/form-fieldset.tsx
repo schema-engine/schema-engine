@@ -1,7 +1,13 @@
 import type React from 'react';
 import { ChildGrid, FormElements } from '@schema-engine/forms-react/primitives';
 import { objectFieldScope } from '@schema-engine/forms';
-import { GRID_ITEM_CLASS, getAppearanceAttributes, getGridItemVariables } from '@schema-engine/layout';
+import {
+	GRID_ITEM_CLASS,
+	GRID_SUBGRID_CLASS,
+	elementIsSubgrid,
+	getAppearanceAttributes,
+	getGridItemVariables,
+} from '@schema-engine/layout';
 import { useLayoutThemeId } from '@schema-engine/forms-react/hooks';
 import { FieldSet } from '@/components/ui/schema-engine/components/field';
 import type { FieldSetProps } from './form-fieldset.types';
@@ -14,17 +20,23 @@ import type { FieldSetProps } from './form-fieldset.types';
 export function FormFieldSet({ ...config }: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
 	const layoutThemeId = useLayoutThemeId();
+	const subgrid = elementIsSubgrid(config);
 	const style: React.CSSProperties = { ...getGridItemVariables(config.grid), ...config.style };
 
 	return (
 		<div
-			className={`se-form-field ${GRID_ITEM_CLASS} space-y-4 ${config.className ?? ''}`.trim()}
+			className={`se-form-field ${GRID_ITEM_CLASS}${subgrid ? ` ${GRID_SUBGRID_CLASS}` : ''} space-y-4 ${config.className ?? ''}`.trim()}
 			data-se-theme={layoutThemeId}
 			style={style}
 			{...getAppearanceAttributes(config.appearance)}
 		>
-			<FieldSet legend={config.legend} description={config.description}>
-				<ChildGrid elements={config.elements}>
+			<FieldSet
+				legend={config.legend}
+				description={config.description}
+				className={subgrid ? GRID_SUBGRID_CLASS : undefined}
+				data-se-theme={subgrid ? layoutThemeId : undefined}
+			>
+				<ChildGrid elements={config.elements} subgrid={subgrid}>
 					<FormElements
 						elements={config.elements}
 						namePrefix={scope.namePrefix}

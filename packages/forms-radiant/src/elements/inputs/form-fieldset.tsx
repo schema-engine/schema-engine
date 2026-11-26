@@ -1,4 +1,4 @@
-import { GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
+import { GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, elementIsSubgrid, getAppearanceAttributes } from '@schema-engine/layout';
 import { FormElements } from '@/components/internals/form-elements';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { ChildGrid } from '@/components/internals/child-grid';
@@ -17,11 +17,47 @@ import './form-fieldset.css';
  * fieldset whose only required source is its own required rule passes nothing
  * down, because no constraint host governs a field without a constraint wrapper
  * around it. Arrays pass both to their rows the same way.
+ *
+ * A fieldset with `grid.subgrid` is a `div` that carries the border and padding and holds a `fieldset` that
+ * draws none, because a `<fieldset>` cannot be a subgrid: the browser lays its content out in an anonymous box
+ * that is not an item of the grid around it. The stylesheet makes that inner `fieldset` `display: contents`, so
+ * the legend is no longer drawn on the border.
  */
 export function FormFieldSet(config: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);
 	const fieldHost = mergeFieldGridHost(config.grid, config.style);
 	const elements = withContainerState(config, config.elements);
+	const subgrid = elementIsSubgrid(config);
+
+	const content = (
+		<>
+			{config.legend ? <legend class="se-fieldset__legend">{config.legend}</legend> : null}
+			{config.description ? <p class="se-fieldset__description">{config.description}</p> : null}
+			<ChildGrid elements={config.elements} subgrid={subgrid} class="se-fieldset__fields">
+				<FormElements
+					elements={elements}
+					engine={resolveFormEngine()}
+					namePrefix={scope.namePrefix}
+					instanceId={scope.instanceId}
+				/>
+			</ChildGrid>
+		</>
+	);
+
+	if (subgrid) {
+		return (
+			<div
+				classes={['se-form-field', GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, 'se-fieldset', config.className]}
+				data-se-theme={fieldHost.themeId}
+				style={fieldHost.style}
+				{...getAppearanceAttributes(config.appearance)}
+			>
+				<fieldset classes={[GRID_SUBGRID_CLASS]} data-se-theme={fieldHost.themeId}>
+					{content}
+				</fieldset>
+			</div>
+		);
+	}
 
 	return (
 		<fieldset
@@ -30,16 +66,7 @@ export function FormFieldSet(config: FieldSetProps) {
 			style={fieldHost.style}
 			{...getAppearanceAttributes(config.appearance)}
 		>
-			{config.legend ? <legend class="se-fieldset__legend">{config.legend}</legend> : null}
-			{config.description ? <p class="se-fieldset__description">{config.description}</p> : null}
-			<ChildGrid elements={config.elements} class="se-fieldset__fields">
-				<FormElements
-					elements={elements}
-					engine={resolveFormEngine()}
-					namePrefix={scope.namePrefix}
-					instanceId={scope.instanceId}
-				/>
-			</ChildGrid>
+			{content}
 		</fieldset>
 	);
 }
