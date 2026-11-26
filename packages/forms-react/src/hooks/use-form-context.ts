@@ -1,7 +1,7 @@
 import { useContext, useMemo, useSyncExternalStore } from 'react';
 import type { EngineOutputMaps, FormRuntime, FormWizard } from '@schema-engine/forms';
 import { useFormStateContext } from './form-state/context';
-import { GRID_CLASS, getDefaultLayoutTheme, getGridVariables, type CssVariables } from '@schema-engine/layout';
+import { getDefaultLayoutTheme } from '@schema-engine/layout';
 import { FormEngineContext } from '../components/provider';
 import type { FormEngineContextValue } from '../components/provider';
 
@@ -71,31 +71,4 @@ export function useOptionalFormEngine<
  */
 export function useLayoutThemeId(): string {
 	return (useOptionalFormEngine()?.engine.getLayout() ?? getDefaultLayoutTheme()).id;
-}
-
-/**
- * Props that make an element's children a grid of their own.
- *
- * @remarks
- * A container (a fieldset, an array row) lays its direct children out in a grid
- * the way a step does: spread the result on the wrapper of its `FormElements`.
- * The grid takes twelve tracks when a child sets `width` or `offset`, and
- * otherwise stays the engine's single column. The theme comes from the engine
- * context, with the library default outside a `FormEngineProvider`.
- *
- * `ChildGrid` of `@schema-engine/forms-react/primitives` renders this element and, under a
- * `query: 'container'` theme, the wrapper its breakpoints measure. Under that theme an element
- * with these props and no wrapper keeps its narrowest layout.
- */
-export function useChildGridProps(elements: readonly unknown[]): {
-	className: string;
-	'data-se-theme': string;
-	style: CssVariables;
-} {
-	const layout = useOptionalFormEngine()?.engine.getLayout() ?? getDefaultLayoutTheme();
-	return {
-		className: `se-form-grid ${GRID_CLASS}`,
-		'data-se-theme': layout.id,
-		style: getGridVariables(undefined, layout.grid, elements),
-	};
 }
