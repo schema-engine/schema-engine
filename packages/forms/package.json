@@ -80,6 +80,10 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
+		"./default-elements": {
+			"types": "./dist/default-elements/index.d.ts",
+			"import": "./dist/default-elements/index.js"
+		},
 		"./browser": {
 			"types": "./dist/browser/index.d.ts",
 			"import": "./dist/browser/index.js"

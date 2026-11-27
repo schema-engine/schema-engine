@@ -37,14 +37,62 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
 }
 
 /**
+ * Check the `childPaths` of a registration.
+ *
+ * @remarks
+ * Two paths that read the same once joined with dots would share one key of `ParsedNode.children`, so they count as
+ * one path declared twice. A path that runs through another one would reach inside a child node, whose own
+ * registration says where its children are, so the walk would visit the same node from two parents.
+ */
+function assertChildPaths(childPaths: unknown, context: string): void {
+	if (childPaths === undefined) return;
+	if (!Array.isArray(childPaths)) throw new Error(`${context} childPaths must be a list of key paths.`);
+	const paths: string[][] = [];
+	for (const keys of childPaths as unknown[]) {
+		if (!Array.isArray(keys) || keys.length === 0 || keys.some((key) => typeof key !== 'string' || key === '')) {
+			throw new Error(`${context} childPaths must hold non-empty lists of non-empty keys.`);
+		}
+		paths.push(keys as string[]);
+	}
+	const joined = paths.map((keys) => keys.join('.'));
+	for (const [index, keys] of paths.entries()) {
+		const name = keys.join('.');
+		if (joined.indexOf(name) !== index) throw new Error(`${context} declares the child path '${name}' twice.`);
+		const outer = paths.find(
+			(other) => other.length < keys.length && other.every((key, position) => key === keys[position]),
+		);
+		if (outer) {
+			throw new Error(`${context} child path '${name}' runs through the child path '${outer.join('.')}'.`);
+		}
+	}
+}
+
+/** Options of {@link createRegistry}. */
+export interface CreateRegistryOptions {
+	/**
+	 * What a second registration of one `$type` does: replace the first (`'override'`, the default) or fail the build
+	 * (`'error'`).
+	 *
+	 * @remarks
+	 * `'override'` is how `[...defaults, custom]` replaces a built-in. Use `'error'` for a catalog where a repeated
+	 * key is always a mistake, such as component keys.
+	 */
+	readonly duplicates?: 'override' | 'error';
+}
+
+/**
  * Build a frozen, read-only registry from a list of registrations.
  *
  * @param kind - Label for errors, for example `Element`
  * @param registrations - Registrations to store, keyed by `$type`
+ * @param options - How to treat a repeated `$type`, see {@link CreateRegistryOptions}
+ * @throws {Error} `Widget 'card' is registered twice.` when `duplicates` is `'error'` and a `$type` repeats, before any
+ * schema is checked
  * @throws {Error} Naming the `$type` when a winning registration's schema is not a Standard Schema
+ * @throws {Error} Naming the `$type` when a winning registration's `childPaths` is not a list of non-empty key lists, repeats a path, or has a path that runs through another
  *
  * @remarks
- * A later registration with the same `$type` replaces the earlier one without a
+ * By default a later registration with the same `$type` replaces the earlier one without a
  * warning, so `[...defaults, custom]` is the way to override. A replaced key
  * keeps its first position. Only the winning registration of each key is
  * checked. The registry stores a frozen shallow copy of each winner, taken at
@@ -55,17 +103,22 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
  *
  * Use {@link BaseRegistry} instead when registrations arrive at runtime.
  */
-export function createRegistry<TRegistration extends BaseRegistration>(
+export function createRegistry<const TRegistration extends BaseRegistration>(
 	kind: string,
 	registrations: readonly TRegistration[],
+	options: CreateRegistryOptions = {},
 ): ReadOnlyRegistry<TRegistration> {
 	const winners = new Map<string, TRegistration>();
 	for (const registration of registrations) {
+		if (options.duplicates === 'error' && winners.has(registration.$type)) {
+			throw new Error(`${kind} '${registration.$type}' is registered twice.`);
+		}
 		winners.set(registration.$type, registration);
 	}
 	const entries = new Map<string, Readonly<TRegistration>>();
 	for (const [key, registration] of winners) {
 		assertStandardSchema(registration.schema, `${kind} '${key}' schema`);
+		assertChildPaths(registration.childPaths, `${kind} '${key}'`);
 		entries.set(key, Object.freeze({ ...registration }));
 	}
 	const all = Object.freeze([...entries.values()]);

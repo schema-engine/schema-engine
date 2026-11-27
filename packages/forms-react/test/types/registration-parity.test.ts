@@ -1,6 +1,7 @@
 /**
- * Walks registration files and asserts unique $type literals.
- * Form element registrations live in registry/shared/forms.
+ * Asserts that every registration file of the shared form elements is registered, under a unique $type.
+ * Form element registrations live in registry/shared/forms; their $type comes from the element contract of
+ * `@schema-engine/forms/default-elements` or, for the date elements, from the registration itself.
  * View recipe implementations live in the registry source.
  */
 
@@ -8,6 +9,7 @@ import { describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { schemaFormRegistrations } from '@/components/schema-engine/forms/registrations';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
@@ -27,35 +29,23 @@ function listRegistrationFiles(root: string, dir: string): string[] {
 	return out;
 }
 
-function extractTypeLiteral(source: string): string | null {
-	const match = source.match(/\$type:\s*['"]([^'"]+)['"]/);
-	return match ? match[1] : null;
-}
-
-function scan(root: string, dir: string, label: string) {
+function countRegistrationFiles(root: string, dir: string, label: string) {
 	const files = listRegistrationFiles(root, dir);
-	const types = new Set<string>();
-	for (const relative of files) {
-		const source = fs.readFileSync(path.join(root, relative), 'utf8');
-		const value = extractTypeLiteral(source);
-		if (!value) {
-			throw new Error(`Missing $type literal in ${label}/${relative}`);
-		}
-		types.add(value);
-	}
-	return { files: files.length, types };
+	if (files.length === 0) throw new Error(`No registration file in ${label}/${dir}`);
+	return files.length;
 }
 
 describe('registration parity', () => {
 	test('shared form element registrations declare unique $type values', () => {
-		const inputs = scan(SHARED_FORMS_ROOT, 'inputs', 'shared-forms');
-		const content = scan(SHARED_FORMS_ROOT, 'content', 'shared-forms');
-		const actions = scan(SHARED_FORMS_ROOT, 'actions', 'shared-forms');
-		const files = inputs.files + content.files + actions.files;
-		const types = new Set([...inputs.types, ...content.types, ...actions.types]);
+		const files = ['inputs', 'content', 'actions'].reduce(
+			(count, dir) => count + countRegistrationFiles(SHARED_FORMS_ROOT, dir, 'shared-forms'),
+			0,
+		);
+		const types = schemaFormRegistrations.map((registration) => registration.$type);
 
 		expect(files).toBeGreaterThan(0);
-		expect(types.size).toBe(files);
+		expect(new Set(types).size).toBe(types.length);
+		expect(types.length).toBe(files);
 	});
 
 	test('registry default recipes declare unique $type values', () => {

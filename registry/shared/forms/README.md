@@ -55,7 +55,7 @@ const engine = createFormEngine({ elements: schemaFormRegistrations, recipes: sc
 - Primitives: `registry/shared/primitives` (a base may override one in `registry/<base>/primitives`)
 - Catalog: root `registry.json` (generated from `scripts/generate-schema-engine-registry.ts`)
 
-Each copied field item includes its own `form-*.types.ts` Zod schema beside the widget and registration. After `shadcn add`, that schema is yours to change; bumping `@schema-engine/forms` alone does not update copied widgets. Re-add or patch the item when a wrapper must learn new configuration keys.
+Each copied field item holds its widget, its `form-*.types.ts` and its registration. The schema, metadata and value declaration of an element are its contract in `@schema-engine/forms/default-elements`, shared with every other renderer: `form-*.types.ts` re-exports them next to the item's props type, and the registration spreads the contract into `defineInput` with the item's `render`. Bumping `@schema-engine/forms` therefore updates the schema; the widgets are still yours to change. To change a schema, replace `schema` in the registration (`defineInput({ ...CheckboxElementContract, schema: MyCheckboxSchema, render })`) or write a registration of your own. `date` and `date-range` have no shared contract, so their schemas are still copied with the item.
 
 Field schemas are authoring contracts for the copied wrappers. Wrappers pass only supported control props to DOM primitives, so schema metadata such as `$type`, rules, and layout configuration stays in the form renderer. Forward extra control attributes (`data-testid`, `enterKeyHint`, and similar) through `htmlAttributes` on the field config rather than spreading the field object onto the control.
 

@@ -1,16 +1,3 @@
-import { FormSelect } from './form-select';
-import { SelectFieldConfigSchema, selectFieldValue } from './form-select.types';
-import { defineInput } from '@schema-engine/forms';
+import { radiantElements } from '../radiant-elements';
 
-export const SelectElementRegistration = defineInput({
-	$type: 'select',
-	appearanceAxes: ['size'],
-	render: FormSelect,
-	schema: SelectFieldConfigSchema,
-	value: selectFieldValue,
-	metadata: {
-		name: 'Select Field',
-		description: 'Dropdown select field',
-		category: 'input',
-	},
-});
+export const SelectElementRegistration = radiantElements.get('select');

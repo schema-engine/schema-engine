@@ -12,6 +12,7 @@
 - **Trigger.** The name of the event that starts a dispatch, such as `submit`. An entry answers it through its own `triggers`, else through the `defaultTriggers` of its registration.
 - **Context.** What the caller hands to a dispatch. The dispatcher adds the entry's `config`, the `trigger`, `triggeredBy` and a `signal`.
 - **Domain.** A job the language is given (forms is the first). It reuses the core and adds its own registrations and rules.
+- **Element contract.** A registration without the renderer's part: the `$type`, schema, metadata and what a domain fixes (an element's value declaration, container kind and appearance axes), but no `render`. A renderer **binds** it (`bindRegistry`), adding only renderer data, and shares the schema by identity with every other renderer of the same contracts.
 - **Renderer.** Turns a validated document into output with the registrations of its engine (Forms React, Forms Radiant). It does not own the rules for validating or dispatching.
 - **Vocabulary / reference vocabulary.** The components and actions a team registers inside a domain, and the built-in set Schema Engine ships as a starting point to copy and change. Working terms, not final.
 
@@ -23,10 +24,13 @@ The engine uses Zod Mini for its first-party schemas and keeps Standard Schema a
 | ---------------------- | ------------------------------------------------------------------------------------------------------- |
 | `registry` / `actions` | `StandardSchemaV1` on every `BaseRegistration.schema`                                                   |
 | `forms`                | Zod Mini for first-party authoring and JSON Schema export; `~standard.validate` at registration/runtime |
-| `forms-react`          | Headless renderer; copied registry widgets carry their own field schemas                                |
-| `forms-radiant`        | Radiant widgets and colocated field schemas; not required to match registry schemas                     |
+| `forms-react`          | Headless renderer; copied registry widgets bind the element contracts of `forms` to their components    |
+| `forms-radiant`        | Radiant widgets that bind the same element contracts, through `bindRegistry`                            |
 
-Default widget `$type` schemas (for example `input`, `drop-zone`) live beside each implementation — shadcn registry sources and `forms-radiant` — not in `forms`. Custom registrations use the engine contract only (`defineInput`, `BaseFieldSchema`, Standard Schema). Shared docs examples use the overlapping subset both renderers support; library-shaped keys (iMask, drop-zone `accept`) are implementation contracts and may differ.
+- **Element contract.** An element registration without the part one renderer adds (`render`, and an input's own `validations`): the `$type`, schema, metadata, value declaration, container kind and appearance axes.
+- **Default element contracts.** The contracts of the 18 default widget `$type`s (for example `input`, `drop-zone`), defined once in `@schema-engine/forms/default-elements` and held in the registry `defaultElementContracts`. Say "default element contracts", not "built-in elements": forms ships no widget, only the contracts.
+
+A renderer binds only its own part: `forms-radiant` binds every contract with `bindRegistry` (`radiantElements`), and each shadcn registry item spreads its contract into `defineInput` beside its component, because items are copied one at a time. `date` and `date-range` exist only in the shadcn registry and keep their schemas there. Custom registrations use the engine contract only (`defineInput`, `BaseFieldSchema`, Standard Schema). Library-shaped keys (iMask, drop-zone `accept`) are part of the contract; a renderer that cannot honour one ignores it.
 
 ### Rules
 

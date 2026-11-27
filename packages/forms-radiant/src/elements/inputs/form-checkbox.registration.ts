@@ -1,16 +1,3 @@
-import { FormCheckbox } from './form-checkbox';
-import { CheckboxFieldConfigSchema, checkboxFieldValue } from './form-checkbox.types';
-import { defineInput } from '@schema-engine/forms';
+import { radiantElements } from '../radiant-elements';
 
-export const CheckboxElementRegistration = defineInput({
-	$type: 'checkbox',
-	appearanceAxes: ['size'],
-	render: FormCheckbox,
-	schema: CheckboxFieldConfigSchema,
-	value: checkboxFieldValue,
-	metadata: {
-		name: 'Checkbox Field',
-		description: 'Single checkbox field',
-		category: 'input',
-	},
-});
+export const CheckboxElementRegistration = radiantElements.get('checkbox');

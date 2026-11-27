@@ -44,6 +44,41 @@ describe('createRegistry', () => {
 		});
 	});
 
+	describe('Scenario: A registry can refuse a repeated $type', () => {
+		it('throws naming the kind and the $type in error mode', () => {
+			expect(() =>
+				createRegistry('Widget', [createItem('card', 'First'), createItem('card', 'Second')], {
+					duplicates: 'error',
+				}),
+			).toThrow("Widget 'card' is registered twice.");
+		});
+
+		it('throws before the schema check, even when the schema is not a Standard Schema', () => {
+			const broken = { $type: 'card', metadata: { name: 'Broken' } } as unknown as BaseRegistration;
+
+			expect(() => createRegistry('Widget', [broken, broken], { duplicates: 'error' })).toThrow(
+				"Widget 'card' is registered twice.",
+			);
+		});
+
+		it('builds a list of distinct types in error mode', () => {
+			const registry = createRegistry('Widget', [createItem('a', 'A'), createItem('b', 'B')], {
+				duplicates: 'error',
+			});
+
+			expect(registry.keys()).toEqual(['a', 'b']);
+		});
+
+		it('overrides with an explicit override option, like the default', () => {
+			const registry = createRegistry('Widget', [createItem('card', 'First'), createItem('card', 'Second')], {
+				duplicates: 'override',
+			});
+
+			expect(registry.get('card')?.metadata.name).toBe('Second');
+			expect(registry.keys()).toEqual(['card']);
+		});
+	});
+
 	describe('Scenario: Only the winning registration is checked', () => {
 		it('accepts an overridden registration whose schema is not a Standard Schema', () => {
 			const broken = { $type: 'card', metadata: { name: 'Broken' } } as unknown as BaseRegistration;

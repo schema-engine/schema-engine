@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { nodeIssues } from '../../../../test-utils/skill-examples/registry/draw-node';
+import { radiantWidgets, reactWidgets } from '../../../../test-utils/skill-examples/registry/bound-widgets';
+import { documentIssues, sectionTitles } from '../../../../test-utils/skill-examples/registry/check-tree';
 import { readSite } from '../../../../test-utils/skill-examples/registry/site-yaml';
 import { widgets } from '../../../../test-utils/skill-examples/registry/widgets';
 
@@ -17,6 +19,15 @@ describe('the registry of the skill', () => {
 	});
 });
 
+describe('the bound registries of the skill', () => {
+	test('each renderer binds its part to the one contract, which they share', () => {
+		expect(reactWidgets.get('card').render({ title: 'Docs' })).toBe('<h1>Docs</h1>');
+		expect(radiantWidgets.get('badge').tag).toBe('se-badge');
+		expect(radiantWidgets.get('card').schema).toBe(reactWidgets.get('card').schema);
+		expect(radiantWidgets.keys()).toEqual(['card', 'badge']);
+	});
+});
+
 describe('the node example', () => {
 	test('a valid node has no issues', () => {
 		expect(nodeIssues({ $type: 'card', title: 'Docs', tone: 'info' }, 0)).toEqual([]);
@@ -26,6 +37,32 @@ describe('the node example', () => {
 		const node: unknown = JSON.parse('{ "$type": "card", "title": 5, "tone": "info" }');
 		expect(nodeIssues(node, 2)).toEqual(['children[2].title: Invalid input']);
 		expect(nodeIssues({ $type: 'chip' }, 3)).toEqual(["children[3].$type: No registration for $type 'chip'."]);
+	});
+});
+
+describe('the tree example', () => {
+	const page = {
+		$type: 'page',
+		sections: [
+			{ $type: 'section', title: 'Intro' },
+			{ $type: 'section', title: 'Usage' },
+		],
+	};
+
+	test('a valid document has no issues, and its tree holds typed data', () => {
+		expect(documentIssues(page)).toEqual([]);
+		expect(sectionTitles(page)).toEqual(['Intro', 'Usage']);
+	});
+
+	test('every issue of the document is at its own position', () => {
+		const document: unknown = JSON.parse(
+			'{ "$type": "page", "sections": [{ "$type": "section", "title": 5 }, { "$type": "part" }] }',
+		);
+
+		expect(documentIssues(document)).toEqual([
+			'sections[0].title: Invalid input',
+			"sections[1].$type: No registration for $type 'part'.",
+		]);
 	});
 });
 

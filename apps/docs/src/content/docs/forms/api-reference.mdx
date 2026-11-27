@@ -101,6 +101,26 @@ See [Submitted values](/docs/forms/form-state#submitted-values).
 against its registrations. The render function then receives frozen,
 normalized children, not authoring JSON.
 
+## Default element contracts
+
+`@schema-engine/forms/default-elements` holds the contract of each of the 18 default elements (`input`, `textarea`, `number`, `select`, `checkbox`, `checkbox-group`, `switch`, `radio`, `slider`, `combobox`, `drop-zone`, `fieldSet`, `input-otp`, `phone-input`, `masked-input`, `arrayElements`, `submit` and `submission-alert`): its schema (`CheckboxFieldConfigSchema`), the types and the `xFieldValue` declaration that go with it, and the contract itself (`CheckboxElementContract`). A contract is a registration without `render` and `validations`, the part of an element that belongs to one renderer, so every renderer of an element agrees on its schema and on the value its control writes. `defaultElementContracts` is the registry of all of them, built with `createRegistry` and `duplicates: 'error'`.
+
+A renderer binds `render` to a contract. For one element, spread the contract into `defineInput`, which checks `render` against the schema output as it does for any element:
+
+```ts
+import { createFormEngine, defineInput } from '@schema-engine/forms';
+import { CheckboxElementContract, type CheckboxFieldConfig } from '@schema-engine/forms/default-elements';
+
+const checkbox = defineInput({
+	...CheckboxElementContract,
+	render: (config: CheckboxFieldConfig) => `<input type="checkbox" name="${config.name}">`,
+});
+
+export const engine = createFormEngine({ elements: [checkbox] });
+```
+
+A renderer that draws every element binds the whole registry with `bindRegistry` from `@schema-engine/registry`: a contract without a binding fails to compile, and `ElementBindings<typeof defaultElementContracts>` with `satisfies` checks each `render` against its own schema. `@schema-engine/forms-radiant` does this; the registry items of Forms React spread one contract each, because they are copied one at a time. See [One contract, a binding per renderer](/docs/registry/registries#one-contract-a-binding-per-renderer).
+
 ## FormEngine
 
 `FormEngine` retrieves registered elements, recipes, and actions; validates

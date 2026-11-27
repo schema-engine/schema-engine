@@ -1,16 +1,3 @@
-import { FormDropZone } from './form-drop-zone';
-import { DropZoneFieldSchema, dropZoneFieldValue } from './form-drop-zone.types';
-import { defineInput } from '@schema-engine/forms';
+import { radiantElements } from '../radiant-elements';
 
-export const DropZoneElementRegistration = defineInput({
-	$type: 'drop-zone',
-	appearanceAxes: ['size'],
-	render: FormDropZone,
-	schema: DropZoneFieldSchema,
-	value: dropZoneFieldValue,
-	metadata: {
-		name: 'Drop Zone',
-		description: 'File upload drop-zone with drag-and-drop support and validation rules',
-		category: 'input',
-	},
-});
+export const DropZoneElementRegistration = radiantElements.get('drop-zone');

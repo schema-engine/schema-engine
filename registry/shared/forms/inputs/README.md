@@ -19,7 +19,7 @@ This directory contains form input field components built using [Base UI](https:
 
 Each component follows a consistent 3-file pattern:
 
-- `form-[name].types.ts` - TypeScript types and Zod schemas
+- `form-[name].types.ts` - the props type of the component, and a re-export of its schema and types from `@schema-engine/forms/default-elements` (`date` and `date-range` keep their own Zod schemas)
 - `form-[name].tsx` - React component implementation
 - `form-[name].registration.ts` - Element registration (`defineInput` / `defineStatic`); an input declares the value its control writes with `value` (the `xFieldValue` function of its types file)
 

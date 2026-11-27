@@ -1,16 +1,3 @@
-import { FormMaskedInput } from './form-masked-input';
-import { MaskedInputFieldSchema, maskedInputFieldValue } from './form-masked-input.types';
-import { defineInput } from '@schema-engine/forms';
+import { radiantElements } from '../radiant-elements';
 
-export const MaskedInputElementRegistration = defineInput({
-	$type: 'masked-input',
-	appearanceAxes: ['size'],
-	render: FormMaskedInput,
-	schema: MaskedInputFieldSchema,
-	value: maskedInputFieldValue,
-	metadata: {
-		name: 'Masked Input',
-		description: 'Text input with an IMask pattern',
-		category: 'input',
-	},
-});
+export const MaskedInputElementRegistration = radiantElements.get('masked-input');

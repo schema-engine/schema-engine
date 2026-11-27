@@ -19,7 +19,7 @@ This file is the router. It defines the concepts once; the references assume the
 ## Core concepts
 
 - **registration**: `{ $type, schema, metadata, ... }`, where `$type` is the stable key, `schema` is any Standard Schema that describes its config, and `metadata` names it. Elements, recipes, actions, validation rules and appearance axes are all registrations.
-- **registry**: a read-only registry, `createRegistry(kind, registrations)` from `@schema-engine/registry`, built once from a list. The last registration of a `$type` wins without a warning, which is how you replace a built-in.
+- **registry**: a read-only registry, `createRegistry(kind, registrations)` from `@schema-engine/registry`, built once from a list. The last registration of a `$type` wins without a warning, which is how you replace a built-in; pass `{ duplicates: 'error' }` to make a repeat a build error instead.
 - **document**: serializable data whose every node names a registration by `$type`. It is checked against the registrations at the boundary, so what is rendered or run has passed its schema.
 - **action**: a registration with `execute` that runs on a trigger. Actions run as a sequence, an inner array is a parallel group, and a failure that sets `shouldContinue: false` stops what follows and cancels the group's siblings through their `signal`.
 
