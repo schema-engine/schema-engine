@@ -112,7 +112,6 @@ export default defineConfig({
 				test: {
 					name: 'unit',
 					environment: 'node',
-					testTimeout: 30_000,
 					include: ['test/**/*.test.ts'],
 					exclude: ['test/form-state/action-context.test.ts'],
 				},
