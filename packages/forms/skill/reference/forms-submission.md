@@ -42,3 +42,11 @@ A submit command resolves `submitted`, `failed`, `invalid` (errors are shown and
 ## Wizard steps
 
 A form of several steps is a wizard. `next()` validates the current step and moves to the next active one (`refused` on the last), `back()` never validates, and `goTo(id)` refuses a skipped or unknown step, always allows going back and, going forward, follows `navigation`: `linear` needs the target visited and validates every step on the way, `free` reaches any active step. Submitting before the last step acts as `next()`. A step the answers skip is passed over by `next` and `back`, and its values are kept but not submitted. A reset returns the form to its first step with an idle submission and fires no step trigger; a submission whose values were already captured (`submitting`) is committed, runs to its end and publishes its outcome after the reset.
+
+## Runtime state
+
+A runtime's snapshot is `{ submission, current, navigating, steps }`. `submission` is `{ status, failures, submitCount }`, where `status` is `idle`, `validating`, `submitting`, `success` or `error`; disable a submit button on `isSubmissionBusy(status)`, which is true while `validating` or `submitting`. Each step is `{ id, title?, skipped, visited, complete, invalid, reachable }`, with the title as authored: the engine does not translate it. A renderer exposes the commands its own way (`useFormWizard()` in React, `FormController.wizard` in Radiant).
+
+A successful submission goes to a submit action's `redirectUrl` through the runtime's `navigate`, which is `defaultNavigate` when none is given: `location.assign(url)`, and nothing on a server.
+
+A renderer of its own adds the CSRF token to a native post with `csrfFieldFor(policy, { method, action })` from `@schema-engine/forms/csrf`: the `{ name, value }` of the hidden input, or `undefined` unless the method is `post`, the action is same-origin and the policy has a `field` and a token. Pass the method and action the submission uses, which a submit button's `formmethod` or `formaction` can change.

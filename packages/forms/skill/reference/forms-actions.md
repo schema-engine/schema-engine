@@ -40,6 +40,26 @@ export const notifyForm = notifyEngine.defineForm({
 });
 ```
 
+## Built-in actions
+
+The package ships five actions; none is registered until you pass it to `createFormEngine({ actions })`. Each `...Plugin(config)` builds a registration over the ports and callbacks you give it, and a ready registration is exported beside it.
+
+| `$type`             | Ready registration                           | Plugin and its config                                                                                | Instance keys (default)                                                                           | Runs by default on                         |
+| ------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `submit`            | `SubmitActionRegistration`                   | `formSubmitPlugin`: `request`, `transformData`, `onSuccess`, `onError`                               | `endpoint`, `method` (`POST`; or `PUT`, `PATCH`), `successMessage`, `errorMessage`, `redirectUrl` | `form_submit`                              |
+| `show_notification` | `NotificationActionRegistration`             | `notificationPlugin`: `onSuccess`, `onError`, `onWarning`, `onInfo`, `onNotification`                | `message`, `variant` (`info`; or `success`, `error`, `warning`), `duration` (3000)                | `form_submit_success`, `form_submit_error` |
+| `auto_save`         | `AutoSaveActionRegistration` from `/browser` | `autoSavePlugin`: `storage` (required), `shouldSave`, `onSave`, `onError`, `getStorageKey`           | `storageKey`, `includeSensitive` (`false`)                                                        | `form_change`                              |
+| `reset`             | `ResetActionRegistration` from `/browser`    | `formResetPlugin`: `storage` (required), `confirm`, `clearDraft`, `resetForm`, `onReset`             | `confirmMessage`, `resetToDefaults` (`true`)                                                      | `form_submit_success`                      |
+| `gtm_event`         | `GTMActionRegistration` from `/browser`      | `gtmPlugin`: `tracker` (required, any object with `push(eventName, eventData)`), `onPush`, `onError` | `eventName`, `eventData`, `includeFormData`                                                       | `form_submit`, `form_submit_success`       |
+
+The plugins and the first two registrations come from `@schema-engine/forms`. The three in `@schema-engine/forms/browser` are built over `localStorage`, `window.confirm` and the shared consent tool, and auto-save writes only while consent is granted; `createBrowserActionRegistrations({ storage?, consent?, confirm? })` builds the same three over ports you inject, for a test or a host with its own policy. The same entry holds those ports:
+
+- `GDPRConsent` is the consent tool over `localStorage`, and `createGDPRConsent(storage?)` builds one over another Web Storage. It has `hasConsent`, `grantConsent`, `revokeConsent`, `getConsent`, `needsConsentUpdate`, and `saveDraft`, `loadDraft` and `clearDraft`.
+- `localStorageAutoSaveStorage` is the `storage` port (`save`, `load`, `remove`) over `localStorage`, and `createLocalStorageAutoSaveStorage(storage)` builds one over another Web Storage. Both record each key they write, so `clearTrackedAutoSaveDrafts(storage)` removes every draft they saved and `removeTrackedAutoSaveDraftKey(storage, key)` removes one.
+- `GTMTracker` pushes events to `window.dataLayer`.
+
+A result may add `redirectUrl`: once the whole submission succeeded, the runtime navigates to the one the last successful action returned. `FormActionTriggerSchema` validates a trigger name.
+
 ## Triggers
 
 `form_mount`, `form_change`, `form_submit_start`, `form_submit`, `form_submit_success`, `form_submit_error`, `form_submit_complete`, `step_leave`, `step_change` and `step_enter`. Form-level `actions` are dispatched on every trigger, and an action runs when the trigger is one of its own; a step's own `actions` are dispatched too while that step is current. `actions` is a sequence: an inner array is a parallel group that starts together and joins before the next entry.
