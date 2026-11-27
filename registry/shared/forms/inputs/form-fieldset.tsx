@@ -19,8 +19,12 @@ import type { FieldSetProps } from './form-fieldset.types';
  * Field paths are composed at render time: children bind as `${name}.${child.name}`.
  *
  * @remarks
- * With `grid.subgrid` the group is the grid item itself, a `div` with `role="group"` labelled by its legend,
- * because Chromium cannot make a `<fieldset>` a CSS subgrid.
+ * With `grid.subgrid` the grid item itself is the group: a `div` with `role="group"` and `aria-labelledby` its
+ * legend, instead of a `<fieldset>`. Chromium lays a fieldset's content out in an anonymous box that is not a grid
+ * item, so it cannot be a subgrid; `display: contents` was rejected because engines expose its semantics
+ * inconsistently, while a role on a real box reads the same everywhere. Nothing relies on the native `disabled`.
+ * The legend id comes from `useId`, one token that matches between server and client. Without `grid.subgrid` it
+ * stays a native `<fieldset>`.
  */
 export function FormFieldSet({ ...config }: FieldSetProps) {
 	const scope = objectFieldScope(config.name, config);

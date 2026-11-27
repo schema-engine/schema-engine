@@ -359,7 +359,8 @@ export const GRID_ITEM_CLASS = 'se-grid-item';
  * Keep a `<fieldset>` out of the chain: Chromium lays a fieldset's content out in an anonymous box that does
  * not take the subgrid, so its children fall back to one column there (Firefox and WebKit pass the tracks on).
  * Use a box with `role="group"` and `aria-labelledby` its heading instead, which gives the same group and name
- * to assistive technology in every engine. The grid of the children gets no tracks of its own, so it takes no
+ * to assistive technology in every engine; `display: contents` on the fieldset is no answer, since engines expose
+ * its semantics inconsistently. The grid of the children gets no tracks of its own, so it takes no
  * {@link GRID_CONTAINER_CLASS} wrapper either: layout containment would make it an independent formatting
  * context, and a subgrid inside one is `none`. Its breakpoints are queried against the container of the grid
  * the chain hangs from.
