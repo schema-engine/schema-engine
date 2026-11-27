@@ -46,11 +46,17 @@ export type SafeParseTreeResult<TAll extends TreeRegistration, TRoot extends Tre
 /**
  * The registrations a root may be: those `accepts` names, but only when the options type has `accepts`, not when it
  * only may.
+ *
+ * @remarks
+ * A lookup whose registrations are typed by a widened `$type` (`string`, as `BaseRegistration` is) has no member to
+ * extract, so it keeps the whole union rather than narrowing to `never`.
  */
 type RootOf<TAll extends TreeRegistration, TOptions> = TOptions extends {
 	readonly accepts: readonly (infer TName)[];
 }
-	? Extract<TAll, { $type: TName }>
+	? [Extract<TAll, { $type: TName }>] extends [never]
+		? TAll
+		: Extract<TAll, { $type: TName }>
 	: TAll;
 
 interface RuntimeNode {
@@ -244,9 +250,11 @@ export function safeParseTree<
 				}
 			} else if (Array.isArray(slot)) {
 				if (!Array.isArray(held) || held.length !== slot.length) throw brokenSlot(type, keys);
-				const items = slot.map((item, index) => walk(item, [...childPath, index], trail, childAccepts));
-				nodes.push(...items.filter((item) => item !== undefined));
-				if (nodes.length === items.length) writes.push({ keys, value: nodes.map((item) => item.data) });
+				for (let index = 0; index < slot.length; index += 1) {
+					const child = walk(slot[index], [...childPath, index], trail, childAccepts);
+					if (child) nodes.push(child);
+				}
+				if (nodes.length === slot.length) writes.push({ keys, value: nodes.map((item) => item.data) });
 				else complete = false;
 			} else if (isRecord(slot)) {
 				if (!isRecord(held)) throw brokenSlot(type, keys);

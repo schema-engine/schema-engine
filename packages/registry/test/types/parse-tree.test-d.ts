@@ -85,6 +85,16 @@ describe('the root', () => {
 		if (pathOnly.success) expectTypeOf(pathOnly.tree.$type).toEqualTypeOf<NodeType>();
 	});
 
+	it('keeps a usable tree for a lookup typed by a widened $type, with a root accepts', () => {
+		const widened: ReadOnlyRegistry<BaseRegistration> = nodes;
+		const result = safeParseTree(widened, {}, { accepts: ['page'] });
+
+		if (result.success) {
+			expectTypeOf(result.tree.$type).toEqualTypeOf<string>();
+			expectTypeOf(result.tree.data).not.toBeNever();
+		}
+	});
+
 	it('rejects an accepts name the lookup lacks', () => {
 		// @ts-expect-error 'pgae' is no $type of the registry
 		safeParseTree(nodes, {}, { accepts: ['pgae'] });
