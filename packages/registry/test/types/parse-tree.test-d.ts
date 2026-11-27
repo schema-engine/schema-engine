@@ -112,7 +112,7 @@ describe('the root', () => {
 		const result = safeParseTree(mixed, {}, { accepts: ['page', 'widget'] });
 
 		if (result.success) {
-			expectTypeOf(result.tree.$type).toEqualTypeOf<'page' | string>();
+			expectTypeOf(result.tree.$type).toEqualTypeOf<string>();
 			// @ts-expect-error the root may be the widened widget, whose data has no title
 			result.tree.data.title.toUpperCase();
 		}
