@@ -1,4 +1,4 @@
-import { isPlainObject, type JSONSchemaObject } from './json-schema.js';
+import { isPlainObject, type JSONSchemaObject } from './standard.js';
 
 /** Where the JSON Schema being written keeps its definitions. */
 export type JSONSchemaPlacement =
@@ -28,7 +28,7 @@ const isLocalPointer = (ref: string): boolean => ref === '#' || ref.startsWith('
  * Whether a schema is the root of a resource of its own, which resolves its references against itself. A draft-07
  * `$id` that is only a fragment (`#node`) names an anchor instead.
  */
-const startsResource = (schema: Record<string, unknown>): boolean =>
+export const startsResource = (schema: Record<string, unknown>): boolean =>
 	typeof schema.$id === 'string' && !schema.$id.startsWith('#');
 
 /**

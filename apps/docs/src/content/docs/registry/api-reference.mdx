@@ -120,7 +120,7 @@ What `createRegistry` and `bindRegistry` throw when the registrations or binding
 | `'binding-overrides-contract'` | A binding sets a key its contract already defines                                                                                                                              | `key`, the key the binding sets     |
 | `'schema-changes-type'`        | `safeParseTree` parsed a node whose schema returned an output that is no plain object with the node's own `$type`                                                              |                                     |
 | `'schema-breaks-child-path'`   | `safeParseTree` parsed a node whose schema returned an output that does not keep a child path as the document has it                                                           | `childPath`                         |
-| `'unreachable-child-path'`     | `exportTreeSchema` found no slot for a child path in a registration's JSON Schema: not declared, behind `allOf`, a `$ref` or a union, or not an object, an array or open       | `childPath`                         |
+| `'unreachable-child-path'`     | `exportTreeSchema` found no slot for a child path in a registration's JSON Schema: not declared, behind `allOf`, a `$ref` or a union, inside an `$id` of its own, or not an object, an array or open | `childPath`                         |
 | `'unknown-accepted-type'`      | `exportTreeSchema` got a lookup that lacks a `$type` a child path accepts                                                                                                      | `childPath`, and `key`, the `$type` |
 | `'definition-name-clash'`      | A definition a schema brought along takes the name of a `$type` or of another definition                                                                                       | `key`, the name                     |
 
@@ -323,8 +323,8 @@ function exportTreeSchema(
 	options?: ExportTreeSchemaOptions,
 ): JSONSchemaObject;
 
-interface ExportLookup<TRegistration extends TreeRegistration = TreeRegistration> {
-	all(): readonly TRegistration[];
+interface ExportLookup {
+	all(): readonly TreeRegistration[];
 }
 
 interface ExportTreeSchemaOptions {
@@ -357,11 +357,11 @@ Then each child path is replaced, and only its slot, so `required`, `minItems`, 
 | an object                              | `U`                                                                          |
 | open (`{}`)                            | `{ anyOf: [U, { type: 'array', items: U }] }`, a child or a list of children |
 
-`U` is `{ anyOf: [{ $ref: '#/$defs/<$type>' }, ...] }` of the path's `accepts`, or of every `$type` without one; a slot that accepts its own `$type` refers to its own definition. A slot behind `allOf`, a `$ref` or a union, or one the schema does not declare, throws a `RegistryError` with code `'unreachable-child-path'`, naming the `$type` and `childPath`.
+`U` is `{ anyOf: [{ $ref: '#/$defs/<$type>' }, ...] }` of the path's `accepts`, or of every `$type` without one; a slot that accepts its own `$type` refers to its own definition. A slot behind `allOf`, a `$ref` or a union, one inside a schema with an `$id` of its own (where a `$ref` resolves against that `$id`, not the document), or one the schema does not declare, throws a `RegistryError` with code `'unreachable-child-path'`, naming the `$type` and `childPath`.
 
 A schema that was written as a document of its own is moved into the document. Its `$defs` are lifted to the top as `<$type>.<name>`, every local pointer (`#`, `#/$defs/name`) follows, and anchors are renamed under their owner. A `$type` named like a lifted definition throws `'definition-name-clash'`, and an `accepts` name the lookup lacks throws `'unknown-accepted-type'`: pass every registry of the vocabulary. An empty lookup, an empty `accepts` and a root `accepts` the lookup lacks throw a plain `Error`.
 
-`createJSONSchemaEmbedder(target, placement)` and `readStandardJSONSchema(schema)` are the pieces a domain package uses to compose JSON Schema itself, as the forms export does: the embedder drops `$schema`, moves a schema whose `$ref`s point into itself to where they resolve and renames anchors, and `readStandardJSONSchema` returns the `~standard.jsonSchema` converter of a schema, or `undefined`.
+A `resolve` that converts one library itself and keeps the default for the rest reads the default with [`readStandardJSONSchema`](#json-schema-subpath).
 
 ## formatIssuePath
 
@@ -490,6 +490,55 @@ Utility type for compile-time type discrimination (erased at runtime):
 
 ```typescript
 type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
+```
+
+## JSON Schema subpath
+
+`@schema-engine/registry/json-schema` holds the pieces for code that writes JSON Schema itself: a `resolve` for `exportTreeSchema` that falls back to Standard JSON Schema, or a domain package with an export of its own, as the forms export is. A registry user needs only `exportTreeSchema`.
+
+```typescript
+function readStandardJSONSchema(schema: unknown): StandardJSONSchemaV1.Converter | undefined;
+
+function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPlacement): JSONSchemaEmbedder;
+
+type JSONSchemaPlacement =
+	| { readonly kind: 'document' }
+	| { readonly kind: 'collection'; readonly uri: (id: string) => string };
+
+interface JSONSchemaEmbedder {
+	/** The schema to write in place of `own`, which is not changed. */
+	embed(own: JSONSchemaObject): JSONSchemaObject;
+	/** Adds the definitions `embed` hoisted to the finished document or collection, in place. */
+	finish(written: JSONSchemaObject): JSONSchemaObject;
+}
+```
+
+`createJSONSchemaEmbedder` embeds schemas that were written as documents of their own into one JSON Schema being written: it drops `$schema`, moves a schema whose `$ref`s point into itself to where they resolve (the document's definitions under `embedded-<n>`, or a collection entry of its own at `uri(id)`) and renames each anchor under that key. A schema with an `$id` of its own resolves itself and is kept as it is.
+
+### Fall back to Standard JSON Schema
+
+`readStandardJSONSchema` returns the `~standard.jsonSchema` converter of a schema, or `undefined` when it has none, which is what the default `resolve` of `exportTreeSchema` reads. A `resolve` that converts Zod Mini itself and keeps the default for every other library:
+
+```ts title="document-schema.ts"
+import * as z from 'zod/mini';
+import { createRegistry, exportTreeSchema } from '@schema-engine/registry';
+import { readStandardJSONSchema } from '@schema-engine/registry/json-schema';
+
+const blocks = createRegistry('Block', [
+	{
+		$type: 'stack',
+		schema: z.object({ $type: z.literal('stack'), children: z.array(z.unknown()) }),
+		metadata: { name: 'Stack' },
+		childPaths: [{ keys: ['children'] }],
+	},
+]);
+
+export const documentSchema = exportTreeSchema(blocks, {
+	resolve: (schema, { io, target }) =>
+		schema instanceof z.core.$ZodType
+			? z.toJSONSchema(schema, { io, target })
+			: readStandardJSONSchema(schema)?.[io]({ target }),
+});
 ```
 
 ## YAML subpath

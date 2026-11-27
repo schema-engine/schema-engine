@@ -122,6 +122,7 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		'ComponentRegistration',
 		'ComponentMetadata',
 		'Brand',
+		'JSON Schema subpath',
 		'YAML subpath',
 	]),
 ];

@@ -1,6 +1,11 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { definitionsKeyword, hoistDefinitions, pointerToken } from './json-schema-embedder.js';
-import { isPlainObject, readStandardJSONSchema, type JSONSchemaObject, type JSONSchemaTarget } from './json-schema.js';
+import { definitionsKeyword, hoistDefinitions, pointerToken, startsResource } from './json-schema/embedder.js';
+import {
+	isPlainObject,
+	readStandardJSONSchema,
+	type JSONSchemaObject,
+	type JSONSchemaTarget,
+} from './json-schema/standard.js';
 import { RegistryError } from './registry-error.js';
 import type { TreeRegistration } from './tree-types.js';
 
@@ -11,8 +16,8 @@ import type { TreeRegistration } from './tree-types.js';
  * Both registry kinds ({@link createRegistry}, {@link BaseRegistry}) provide it. A vocabulary spread over several
  * registries is passed as a list of them.
  */
-export interface ExportLookup<TRegistration extends TreeRegistration = TreeRegistration> {
-	all(): readonly TRegistration[];
+export interface ExportLookup {
+	all(): readonly TreeRegistration[];
 }
 
 /** What a `resolve` function is told about the export it takes part in. */
@@ -98,7 +103,8 @@ function openNode(registration: TreeRegistration): JSONSchemaObject {
  * `required`, list bounds and every sibling keyword of the slot's parent stay, since the registration's schema owns
  * them. The slot is read by what it is: an array (`type: 'array'` or `items`) gets its `items` replaced, an object
  * (`type: 'object'` or `properties`) becomes the union, and an open slot (no keyword but annotations) becomes the union
- * or a list of it, matching a child or a list of children. Annotations of the slot are kept.
+ * or a list of it, matching a child or a list of children. Annotations of the slot are kept. A slot inside a schema with
+ * an `$id` of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the document.
  */
 function replaceSlot(
 	definition: JSONSchemaObject,
@@ -109,13 +115,14 @@ function replaceSlot(
 	const unreachable = () =>
 		new RegistryError(
 			'unreachable-child-path',
-			`The JSON Schema of '${registration.$type}' has no slot the export can reach for the child path '${keys.join('.')}'. The slot must be a declared property, not behind a reference, allOf or a union, and an object, an array or open.`,
+			`The JSON Schema of '${registration.$type}' has no slot the export can reach for the child path '${keys.join('.')}'. The slot must be a declared property, not behind a reference, allOf or a union, nor inside a schema with an $id of its own, and an object, an array or open.`,
 			{ $type: registration.$type, childPath: keys },
 		);
+	if (startsResource(definition)) throw unreachable();
 	let parent: JSONSchemaObject = definition;
 	for (const key of keys.slice(0, -1)) {
 		const step: unknown = isPlainObject(parent.properties) ? parent.properties[key] : undefined;
-		if (!isPlainObject(step)) throw unreachable();
+		if (!isPlainObject(step) || startsResource(step)) throw unreachable();
 		parent = step;
 	}
 	const last = keys[keys.length - 1]!;
@@ -126,7 +133,7 @@ function replaceSlot(
 	const found = properties[last];
 	const slot = found === true ? {} : found;
 	if (!isPlainObject(slot)) throw unreachable();
-	if (SCHEMA_APPLICATORS.some((keyword) => keyword in slot) || Array.isArray(slot.type)) {
+	if (SCHEMA_APPLICATORS.some((keyword) => keyword in slot) || Array.isArray(slot.type) || startsResource(slot)) {
 		throw unreachable();
 	}
 	const annotations = Object.fromEntries(
@@ -174,8 +181,8 @@ function replaceSlot(
  * | an object | `U` |
  * | open (`{}`) | `{ anyOf: [U, { type: 'array', items: U }] }`, a child or a list of children |
  *
- * `U` is `{ anyOf: [{ $ref }, ...] }`. A slot the walk cannot reach (behind `allOf`, a `$ref` or a union) throws,
- * since guessing would write a document that disagrees with the registration.
+ * `U` is `{ anyOf: [{ $ref }, ...] }`. A slot the walk cannot reach (behind `allOf`, a `$ref` or a union, or inside
+ * a schema with an `$id` of its own) throws, since guessing would write a document that disagrees with the registration.
  *
  * A schema that was written as a document of its own is moved into the document: its `$defs` are lifted to the
  * top, named under their owner (`page.address` for the `address` definition of `page`), and every local pointer follows.

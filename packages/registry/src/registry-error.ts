@@ -23,7 +23,7 @@
  *   keep a child path (`childPath`) the document fills, or fills one the document leaves empty.
  * - `'unreachable-child-path'`: {@link exportTreeSchema} found no slot for a child path (`childPath`) in the JSON
  *   Schema of a registration, because the schema does not declare its keys, or it sits behind `allOf`, a `$ref` or a
- *   union.
+ *   union, or inside a schema with an `$id` of its own.
  * - `'unknown-accepted-type'`: {@link exportTreeSchema} was given a lookup that lacks a `$type` a child path
  *   (`childPath`) accepts (`key`).
  * - `'definition-name-clash'`: {@link exportTreeSchema} found that a definition a schema brought along (`key`) takes the

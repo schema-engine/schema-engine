@@ -1,6 +1,10 @@
 import * as z from 'zod/mini';
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
-import { createJSONSchemaEmbedder, readStandardJSONSchema } from '@schema-engine/registry';
+import {
+	createJSONSchemaEmbedder,
+	readStandardJSONSchema,
+	type JSONSchemaPlacement,
+} from '@schema-engine/registry/json-schema';
 import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-schema';
 import { isZodType } from '@/lib/is-zod-type';
 import { logger } from '@/lib/logger';
@@ -72,16 +76,12 @@ export function resolveExportSchema(schema: unknown, open: () => z.ZodMiniType):
 	return { kind: 'standard', schema: placeholder };
 }
 
-/** Where the JSON Schema being written keeps its definitions. */
-export type JSONSchemaPlacement =
-	| { readonly kind: 'document' }
-	| {
-			readonly kind: 'collection';
-			/** The URI the collection refers to an entry by. */
-			readonly uri: (id: string) => string;
-			/** The registry whose ids are the collection's entries. */
+/** The embedder's placement, where a collection also names the Zod registry whose ids are its entries. */
+export type ConversionPlacement =
+	| Extract<JSONSchemaPlacement, { kind: 'document' }>
+	| (Extract<JSONSchemaPlacement, { kind: 'collection' }> & {
 			readonly registry: { get(schema: z.core.$ZodType): { id?: string } | undefined };
-	  };
+	  });
 
 function withoutSchemaKeyword(schema: JSONSchemaObject): JSONSchemaObject {
 	const { $schema: _dropped, ...rest } = schema;
@@ -114,7 +114,7 @@ export interface ExportConversion {
 export function createExportConversion(options: {
 	io: 'input' | 'output';
 	target: JSONSchemaTarget;
-	placement: JSONSchemaPlacement;
+	placement: ConversionPlacement;
 }): ExportConversion {
 	const { io, target, placement } = options;
 	const embedder = createJSONSchemaEmbedder(target, placement);

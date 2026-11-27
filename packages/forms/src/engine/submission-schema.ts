@@ -4,7 +4,11 @@ import { frozenCopy } from '@/lib/frozen-copy';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { buildSubmissionShape, type ShapeElement, type ShapeStep, type SubmissionShape } from '@/lib/submission-shape';
 import { isZodType } from '@/lib/is-zod-type';
-import { createJSONSchemaEmbedder, readStandardJSONSchema, type JSONSchemaEmbedder } from '@schema-engine/registry';
+import {
+	createJSONSchemaEmbedder,
+	readStandardJSONSchema,
+	type JSONSchemaEmbedder,
+} from '@schema-engine/registry/json-schema';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import { getValidationRulesForElement, isFieldRequired } from '@/schemas/validation/utils';

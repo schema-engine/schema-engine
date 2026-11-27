@@ -17,6 +17,6 @@ const nodes = createRegistry('Node', [
 
 export const documentSchema = exportTreeSchema(nodes, {
 	accepts: ['page'],
-	resolve: (schema, { io }) =>
-		'_zod' in schema ? z.toJSONSchema(schema as z.ZodMiniType, { io, target: 'draft-2020-12' }) : undefined,
+	resolve: (schema, { io, target }) =>
+		schema instanceof z.core.$ZodType ? z.toJSONSchema(schema, { io, target }) : undefined,
 });

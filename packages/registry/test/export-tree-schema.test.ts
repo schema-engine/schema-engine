@@ -8,6 +8,7 @@ import {
 	type ExportSchemaContext,
 	type JSONSchemaObject,
 } from '../src';
+import { compileJSONSchema } from './helpers/compile-json-schema';
 import { jsonSchemaOf } from './helpers/json-schema-of';
 
 type Resolve = NonNullable<Parameters<typeof exportTreeSchema>[1]>['resolve'];
@@ -348,6 +349,11 @@ describe('exportTreeSchema', () => {
 				required: ['$type'],
 			});
 			expectEveryReferenceToResolve(open);
+			const validate = compileJSONSchema(open);
+			expect(
+				validate({ $type: 'machine', blocks: { $type: 'part' }, engine: { controls: [{ $type: 'knob' }] } }),
+			).toBe(true);
+			expect(validate({ $type: 'machine', blocks: [{ $type: 'knob' }] })).toBe(false);
 		});
 
 		it('lists the schemas the resolve function returns nothing for, beside the ones it reads', () => {
@@ -408,6 +414,9 @@ describe('exportTreeSchema', () => {
 			});
 			expect(properties(document, 'note').where).toEqual(ref('note.address'));
 			expectEveryReferenceToResolve(document);
+			const validate = compileJSONSchema(exportTreeSchema(nodes, { accepts: ['card'] }));
+			expect(validate({ $type: 'card', address: { line: 'Main St' }, children: [{ where: 'here' }] })).toBe(true);
+			expect(validate({ $type: 'card', address: { line: 1 } })).toBe(false);
 		});
 
 		it('does not change what the converter returned', () => {
@@ -441,6 +450,8 @@ describe('exportTreeSchema', () => {
 				'card.part': { type: 'string' },
 			});
 			expect(document).not.toHaveProperty('$defs');
+			expect(compileJSONSchema(document)({ part: 'x' })).toBe(true);
+			expect(compileJSONSchema(document)({ part: 1 })).toBe(false);
 		});
 
 		it('renames the anchors a schema declares under their owner', () => {
@@ -466,6 +477,9 @@ describe('exportTreeSchema', () => {
 				a: { $anchor: 'two-node', type: 'number' },
 				b: { $ref: '#two-node' },
 			});
+			const validate = compileJSONSchema(document);
+			expect(validate({ a: 'x', b: 'y' })).toBe(true);
+			expect(validate({ a: true })).toBe(false);
 		});
 
 		it('keeps a schema with an $id of its own as it is', () => {
@@ -482,6 +496,26 @@ describe('exportTreeSchema', () => {
 			);
 
 			expect((document.$defs as Record<string, unknown>).leaf).toEqual(resource);
+			expect(compileJSONSchema(document)({ x: 1 })).toBe(true);
+		});
+
+		it('throws for a slot inside a schema with an $id of its own, where a $ref would not reach the document', () => {
+			const inResource = (document: JSONSchemaObject, keys: string[]) =>
+				expect(unreachable(document, keys)).toMatchObject({ code: 'unreachable-child-path', childPath: keys });
+
+			inResource({ $id: 'https://example.com/box', type: 'object', properties: { kids: { type: 'array' } } }, [
+				'kids',
+			]);
+			inResource(
+				{
+					type: 'object',
+					properties: { inner: { $id: 'https://example.com/inner', properties: { kids: {} } } },
+				},
+				['inner', 'kids'],
+			);
+			inResource({ type: 'object', properties: { kids: { $id: 'https://example.com/kids', items: {} } } }, [
+				'kids',
+			]);
 		});
 
 		it('throws when a lifted definition takes the name of a $type', () => {
@@ -524,6 +558,7 @@ describe('exportTreeSchema', () => {
 			]);
 			expect(Object.keys(document.$defs as object)).toEqual(['ui/button', 'a~b', 'my type']);
 			expectEveryReferenceToResolve(document);
+			expect(compileJSONSchema(document)({})).toBe(true);
 		});
 	});
 
@@ -695,6 +730,61 @@ describe('exportTreeSchema', () => {
 
 			expect(properties(document, 'fieldset').elements).toEqual({ type: 'array', items: every, minItems: 1 });
 			expect(document.anyOf).toEqual(every.anyOf);
+		});
+	});
+
+	describe('Scenario: A JSON Schema validator reads the document as safeParseTree reads the tree', () => {
+		const page = {
+			$type: 'page',
+			title: 'Home',
+			sections: [
+				{
+					$type: 'section',
+					widgets: [
+						{ $type: 'chart', metric: 'cpu' },
+						{ $type: 'text', value: 'Hello' },
+					],
+					aside: { header: { $type: 'text', value: 'Aside' } },
+					nested: [{ $type: 'section', nested: [{ $type: 'section' }] }],
+				},
+			],
+		};
+
+		it.each(['draft-2020-12', 'draft-07'] as const)(
+			'accepts a valid tree and refuses a wrong child (%s)',
+			(target) => {
+				const validate = compileJSONSchema(
+					exportTreeSchema(zodNodes, { resolve: zodFirst, target, accepts: ['page'] }),
+				);
+
+				expect(validate(page)).toBe(true);
+				expect(validate({ ...page, sections: [{ $type: 'chart', metric: 'cpu' }] })).toBe(false);
+				expect(validate({ ...page, sections: [{ $type: 'section', widgets: [{ $type: 'section' }] }] })).toBe(
+					false,
+				);
+				expect(
+					validate({ ...page, sections: [{ $type: 'section', aside: { header: { $type: 'chart' } } }] }),
+				).toBe(false);
+				expect(validate({ $type: 'frame' })).toBe(false);
+			},
+		);
+
+		it('keeps the bounds and requiredness of the parent schema', () => {
+			const validate = compileJSONSchema(exportTreeSchema(zodNodes, { resolve: zodFirst }));
+
+			expect(validate({ $type: 'page', sections: [] })).toBe(false);
+			expect(validate({ $type: 'page', sections: Array.from({ length: 6 }, () => ({ $type: 'section' })) })).toBe(
+				false,
+			);
+			expect(validate({ $type: 'page' })).toBe(false);
+		});
+
+		it('takes a child or a list of children of any $type in an open slot', () => {
+			const validate = compileJSONSchema(exportTreeSchema(zodNodes, { resolve: zodFirst }));
+
+			expect(validate({ $type: 'frame', content: { $type: 'text', value: 'One' } })).toBe(true);
+			expect(validate({ $type: 'frame', content: [{ $type: 'text', value: 'One' }, page] })).toBe(true);
+			expect(validate({ $type: 'frame', content: { $type: 'nope' } })).toBe(false);
 		});
 	});
 });
