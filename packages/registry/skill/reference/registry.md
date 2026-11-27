@@ -59,15 +59,15 @@ export const radiantWidgets = bindRegistry(contracts, {
 - The result is a frozen registry built with `createRegistry`: the contracts' order, every schema checked again. For contracts typed by literal `$type` (an inline list), `get('card')` returns that registration without `undefined`, and a missing binding, an extra one (`crad`) and a binding that sets a contract key (`schema`, `metadata`) are compile errors. `RegistryBindings<typeof contracts, ReactBinding>` with `satisfies` fixes the shape every binding of a renderer takes.
 - Whatever the typing, the build throws a `RegistryError` (codes `'missing-binding'`, `'unknown-binding'` and `'binding-overrides-contract'`) naming the `kind`: `Widget 'badge' has no binding.`, `Widget binding 'crad' names no registration.` and `Widget 'card' binding sets 'schema', which the contract defines.`
 
-Errors while building or binding are a `RegistryError` (`error.code` of type `RegistryErrorCode`, plus `kind` and `$type` when known). Branch on the code, not on the message, which may be reworded:
+Errors while building or binding are a `RegistryError` (`error.code` of type `RegistryErrorCode`, always with `kind` and `$type`). Branch on the code, not on the message, which may be reworded:
 
-- `'invalid-schema'`: a `schema` without `~standard.validate` (from `createRegistry` and `assertStandardSchema`).
+- `'invalid-schema'`: a `schema` without `~standard.validate`.
 - `'invalid-child-paths'`: `childPaths` is not a list, or an entry is not a non-empty list of non-empty keys.
-- `'duplicate-child-path'`: the same child path twice. `'nested-child-path'`: a child path that runs through another.
+- `'duplicate-child-path'`: the same child path (`childPath`) twice. `'nested-child-path'`: a child path (`childPath`) that runs through another (`outerChildPath`).
 - `'duplicate-type'`: a repeated `$type` with `duplicates: 'error'`.
-- `'unknown-binding'`: a binding key no contract answers (`$type` is that key). `'missing-binding'`: a contract with no binding. `'binding-overrides-contract'`: a binding that sets a key its contract defines.
+- `'unknown-binding'`: a binding key no contract answers (`$type` is that key). `'missing-binding'`: a contract with no binding. `'binding-overrides-contract'`: a binding that sets a key (`key`) its contract defines.
 
-Errors while parsing (`safeParseStandardSchema` and `safeParseNode` with an asynchronous schema) are plain `Error`s, and `parseYaml` throws `YamlDocumentError`.
+`assertStandardSchema` on its own and errors while parsing (`safeParseStandardSchema` and `safeParseNode` with an asynchronous schema) are plain `Error`s, and `parseYaml` throws `YamlDocumentError`.
 
 `safeParseStandardSchema(schema, value)` runs a registration's schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }` (it throws for a schema that validates asynchronously). Form validation and `parseActions` both go through it; `assertStandardSchema` is the build-time check on its own. `standardSchema(validate)` builds a Standard Schema from a function that returns `{ value }` or `{ issues }`, for a registration whose check is not a schema library's.
 

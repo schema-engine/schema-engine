@@ -19,30 +19,31 @@ export interface ReadOnlyRegistry<TRegistration extends BaseRegistration = BaseR
 	keys(): readonly string[];
 }
 
+function isStandardSchema(schema: unknown): schema is StandardSchemaV1 {
+	const standard =
+		schema !== null && (typeof schema === 'object' || typeof schema === 'function')
+			? (schema as Partial<StandardSchemaV1>)['~standard']
+			: undefined;
+	return typeof standard?.validate === 'function';
+}
+
+const standardSchemaMessage = (context: string) => `${context} must implement Standard Schema (~standard.validate).`;
+
 /**
  * Require a registration schema to implement Standard Schema.
  *
  * @param schema - Value to check
  * @param context - Subject of the error message, for example `Element 'text' schema`
- * @throws {RegistryError} With code `'invalid-schema'` when `schema` has no `~standard.validate` function
+ * @throws {Error} When `schema` has no `~standard.validate` function
+ *
+ * @remarks
+ * A plain `Error`, not a {@link RegistryError}: the caller is not building a registry, so there is no `kind` or
+ * `$type` to report, only the free-form `context`. {@link createRegistry} runs the same check and throws a
+ * `RegistryError` with code `'invalid-schema'`.
  */
 export function assertStandardSchema(schema: unknown, context = 'Registration schema'): StandardSchemaV1 {
-	return checkStandardSchema(schema, context, {});
-}
-
-function checkStandardSchema(schema: unknown, context: string, details: RegistryErrorDetails): StandardSchemaV1 {
-	const standard =
-		schema !== null && (typeof schema === 'object' || typeof schema === 'function')
-			? (schema as Partial<StandardSchemaV1>)['~standard']
-			: undefined;
-	if (typeof standard?.validate !== 'function') {
-		throw new RegistryError(
-			'invalid-schema',
-			`${context} must implement Standard Schema (~standard.validate).`,
-			details,
-		);
-	}
-	return schema as StandardSchemaV1;
+	if (!isStandardSchema(schema)) throw new Error(standardSchemaMessage(context));
+	return schema;
 }
 
 /**
@@ -73,11 +74,10 @@ function assertChildPaths(childPaths: unknown, context: string, details: Registr
 	for (const [index, keys] of paths.entries()) {
 		const name = keys.join('.');
 		if (joined.indexOf(name) !== index) {
-			throw new RegistryError(
-				'duplicate-child-path',
-				`${context} declares the child path '${name}' twice.`,
-				details,
-			);
+			throw new RegistryError('duplicate-child-path', `${context} declares the child path '${name}' twice.`, {
+				...details,
+				childPath: [...keys],
+			});
 		}
 		const outer = paths.find(
 			(other) => other.length < keys.length && other.every((key, position) => key === keys[position]),
@@ -86,7 +86,7 @@ function assertChildPaths(childPaths: unknown, context: string, details: Registr
 			throw new RegistryError(
 				'nested-child-path',
 				`${context} child path '${name}' runs through the child path '${outer.join('.')}'.`,
-				details,
+				{ ...details, childPath: [...keys], outerChildPath: [...outer] },
 			);
 		}
 	}
@@ -116,8 +116,8 @@ export interface CreateRegistryOptions {
  * @throws {RegistryError} Code `'invalid-schema'`, naming the `$type`, when a winning registration's schema is not a
  * Standard Schema
  * @throws {RegistryError} Naming the `$type`, with code `'invalid-child-paths'` when a winning registration's
- * `childPaths` is not a list of non-empty key lists, `'duplicate-child-path'` when it repeats a path, or
- * `'nested-child-path'` when a path runs through another
+ * `childPaths` is not a list of non-empty key lists, `'duplicate-child-path'` when it repeats a path
+ * (`childPath`), or `'nested-child-path'` when a path (`childPath`) runs through another (`outerChildPath`)
  *
  * @remarks
  * By default a later registration with the same `$type` replaces the earlier one without a
@@ -149,7 +149,9 @@ export function createRegistry<const TRegistration extends BaseRegistration>(
 	const entries = new Map<string, Readonly<TRegistration>>();
 	for (const [key, registration] of winners) {
 		const details = { kind, $type: key };
-		checkStandardSchema(registration.schema, `${kind} '${key}' schema`, details);
+		if (!isStandardSchema(registration.schema)) {
+			throw new RegistryError('invalid-schema', standardSchemaMessage(`${kind} '${key}' schema`), details);
+		}
 		assertChildPaths(registration.childPaths, `${kind} '${key}'`, details);
 		entries.set(key, Object.freeze({ ...registration }));
 	}

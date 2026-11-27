@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as z from 'zod/mini';
 import {
 	RegistryError,
+	type RegistryErrorCode,
 	assertStandardSchema,
 	bindRegistry,
 	createRegistry,
@@ -80,6 +81,7 @@ describe('RegistryError', () => {
 				code: 'duplicate-child-path',
 				kind: 'Widget',
 				$type: 'card',
+				childPath: ['engine', 'controls'],
 				message: "Widget 'card' declares the child path 'engine.controls' twice.",
 			});
 		});
@@ -92,6 +94,8 @@ describe('RegistryError', () => {
 				code: 'nested-child-path',
 				kind: 'Widget',
 				$type: 'card',
+				childPath: ['engine', 'controls'],
+				outerChildPath: ['engine'],
 				message: "Widget 'card' child path 'engine.controls' runs through the child path 'engine'.",
 			});
 		});
@@ -140,7 +144,7 @@ describe('RegistryError', () => {
 			});
 		});
 
-		it("'binding-overrides-contract' names the contract whose key the binding sets", () => {
+		it("'binding-overrides-contract' names the contract and the key the binding sets", () => {
 			const error = thrown(() => bindUnchecked(contracts, { card: { schema: z.string() }, badge: {} }));
 
 			expect(error).toBeInstanceOf(RegistryError);
@@ -148,22 +152,67 @@ describe('RegistryError', () => {
 				code: 'binding-overrides-contract',
 				kind: 'Widget',
 				$type: 'card',
+				key: 'schema',
 				message: "Widget 'card' binding sets 'schema', which the contract defines.",
 			});
 		});
 	});
 
-	describe('Scenario: assertStandardSchema fails with a code but names no registry', () => {
-		it("throws 'invalid-schema' without kind or $type", () => {
-			const error = thrown(() => assertStandardSchema({}, "Registration 'x' schema"));
+	describe('Scenario: A consumer writes the message again from the code and the details', () => {
+		const contracts: ReadOnlyRegistry<BaseRegistration> = createRegistry<BaseRegistration>('Widget', [card, badge]);
+		const bindUnchecked: (
+			contracts: ReadOnlyRegistry,
+			bindings: Readonly<Record<string, Record<string, unknown>>>,
+		) => ReadOnlyRegistry = bindRegistry;
+		const templates: Record<RegistryErrorCode, (error: RegistryError) => string> = {
+			'invalid-schema': (e) =>
+				`${e.kind} '${e.$type}' schema must implement Standard Schema (~standard.validate).`,
+			'invalid-child-paths': (e) => `${e.kind} '${e.$type}' childPaths must be a list of key paths.`,
+			'duplicate-child-path': (e) =>
+				`${e.kind} '${e.$type}' declares the child path '${e.childPath?.join('.')}' twice.`,
+			'nested-child-path': (e) =>
+				`${e.kind} '${e.$type}' child path '${e.childPath?.join('.')}' runs through the child path '${e.outerChildPath?.join('.')}'.`,
+			'duplicate-type': (e) => `${e.kind} '${e.$type}' is registered twice.`,
+			'unknown-binding': (e) => `${e.kind} binding '${e.$type}' names no registration.`,
+			'missing-binding': (e) => `${e.kind} '${e.$type}' has no binding.`,
+			'binding-overrides-contract': (e) =>
+				`${e.kind} '${e.$type}' binding sets '${e.key}', which the contract defines.`,
+		};
+		const failures: Record<RegistryErrorCode, () => unknown> = {
+			'invalid-schema': () => createRegistry('Widget', [{ ...badge, schema: {} } as unknown as BaseRegistration]),
+			'invalid-child-paths': () => createRegistry('Widget', [withPaths('blocks')]),
+			'duplicate-child-path': () =>
+				createRegistry('Widget', [
+					withPaths([
+						['a', 'b'],
+						['a', 'b'],
+					]),
+				]),
+			'nested-child-path': () => createRegistry('Widget', [withPaths([['a'], ['a', 'b']])]),
+			'duplicate-type': () => createRegistry('Widget', [badge, badge], { duplicates: 'error' }),
+			'unknown-binding': () => bindUnchecked(contracts, { card: {}, badge: {}, crad: {} }),
+			'missing-binding': () => bindUnchecked(contracts, { card: {} }),
+			'binding-overrides-contract': () => bindUnchecked(contracts, { card: { metadata: {} }, badge: {} }),
+		};
+
+		it.each(Object.keys(failures) as RegistryErrorCode[])('%s', (code) => {
+			const error = thrown(failures[code]);
 
 			expect(error).toBeInstanceOf(RegistryError);
+			expect((error as RegistryError).code).toBe(code);
+			expect(templates[code](error as RegistryError)).toBe((error as RegistryError).message);
+		});
+	});
+
+	describe('Scenario: assertStandardSchema on its own is not building a registry', () => {
+		it('throws a plain Error with the context in the message', () => {
+			const error = thrown(() => assertStandardSchema({}, "Registration 'x' schema"));
+
+			expect(error).toBeInstanceOf(Error);
+			expect(error).not.toBeInstanceOf(RegistryError);
 			expect(error).toMatchObject({
-				code: 'invalid-schema',
 				message: "Registration 'x' schema must implement Standard Schema (~standard.validate).",
 			});
-			expect((error as RegistryError).kind).toBeUndefined();
-			expect((error as RegistryError).$type).toBeUndefined();
 		});
 	});
 

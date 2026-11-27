@@ -43,20 +43,20 @@ export function resolve(node: unknown): string {
 
 ## Errors
 
-Building or binding a registry from registrations that break a rule throws a `RegistryError`. Branch on its `code`, not on the message: the message is for people and may be reworded, the codes stay. `kind` is the registry's label (`Widget`) and `$type` the registration at fault, when the throw site knows them.
+Building or binding a registry from registrations that break a rule throws a `RegistryError`. Branch on its `code`, not on the message: the message is for people and may be reworded, the codes stay. Every `RegistryError` carries `kind`, the registry's label (`Widget`), and `$type`, the registration at fault; a code that needs more to describe the mistake sets it too, so a message can be written again, in another language say, from the error's fields alone.
 
-| Code                           | Thrown when                                                                       | Sets `kind` and `$type`                  |
-| ------------------------------ | --------------------------------------------------------------------------------- | ---------------------------------------- |
-| `'invalid-schema'`             | A registration's `schema` has no `~standard.validate` function                    | Both, except from `assertStandardSchema` |
-| `'invalid-child-paths'`        | `childPaths` is not a list, or an entry is not a non-empty list of non-empty keys | Both                                     |
-| `'duplicate-child-path'`       | A registration declares the same child path twice                                 | Both                                     |
-| `'nested-child-path'`          | A child path runs through another child path of the same registration             | Both                                     |
-| `'duplicate-type'`             | A `$type` is registered twice with `duplicates: 'error'`                          | Both                                     |
-| `'unknown-binding'`            | `bindRegistry` got a binding whose key is no contract's `$type`                   | Both, `$type` is the binding key         |
-| `'missing-binding'`            | `bindRegistry` got no binding for a contract                                      | Both                                     |
-| `'binding-overrides-contract'` | A binding sets a key its contract already defines                                 | Both                                     |
+| Code                           | Thrown when                                                                       | Details besides `kind` and `$type` |
+| ------------------------------ | --------------------------------------------------------------------------------- | ---------------------------------- |
+| `'invalid-schema'`             | A registration's `schema` has no `~standard.validate` function                    |                                    |
+| `'invalid-child-paths'`        | `childPaths` is not a list, or an entry is not a non-empty list of non-empty keys |                                    |
+| `'duplicate-child-path'`       | A registration declares the same child path twice                                 | `childPath`                        |
+| `'nested-child-path'`          | A child path runs through another child path of the same registration             | `childPath`, and `outerChildPath`  |
+| `'duplicate-type'`             | A `$type` is registered twice with `duplicates: 'error'`                          |                                    |
+| `'unknown-binding'`            | `bindRegistry` got a binding whose key is no contract's `$type`                   | None; `$type` is the binding key   |
+| `'missing-binding'`            | `bindRegistry` got no binding for a contract                                      |                                    |
+| `'binding-overrides-contract'` | A binding sets a key its contract already defines                                 | `key`, the key the binding sets    |
 
-Errors raised while parsing a node or a document, such as a Standard Schema that validates asynchronously, are plain `Error`s, and `parseYaml` still throws `YamlDocumentError`.
+`assertStandardSchema` on its own throws a plain `Error`: its caller is not building a registry. Errors raised while parsing a node or a document, such as a Standard Schema that validates asynchronously, are plain `Error`s too, and `parseYaml` still throws `YamlDocumentError`.
 
 ## Entry points
 

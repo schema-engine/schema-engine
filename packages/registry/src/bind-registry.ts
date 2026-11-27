@@ -57,9 +57,9 @@ export interface BoundRegistry<TContract extends BaseRegistration, TBindings> ex
  * @param bindings - What this renderer adds to each contract, keyed by `$type`, such as `render` or a tag name
  * @throws {RegistryError} Code `'missing-binding'`, `Widget 'card' has no binding.`, when a contract has no binding
  * @throws {RegistryError} Code `'unknown-binding'`, `Widget binding 'crad' names no registration.`, when a binding's
- * key is no contract's `$type`
+ * key, set as `$type`, is no contract's `$type`
  * @throws {RegistryError} Code `'binding-overrides-contract'`, `Widget 'card' binding sets 'schema', which the contract
- * defines.`, when a binding sets a contract key
+ * defines.`, when a binding sets a contract key, named by `key`
  * @throws {RegistryError} The errors of {@link createRegistry}, when a merged registration breaks one of its rules
  *
  * @remarks
@@ -101,7 +101,7 @@ export function bindRegistry(
 				throw new RegistryError(
 					'binding-overrides-contract',
 					`${kind} '${contract.$type}' binding sets '${key}', which the contract defines.`,
-					{ kind, $type: contract.$type },
+					{ kind, $type: contract.$type, key },
 				);
 			}
 		}
