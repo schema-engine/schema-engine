@@ -7,4 +7,7 @@ export * from './standard-schema.js';
 export * from './parse-node.js';
 export * from './parse-tree.js';
 export * from './format-issue-path.js';
+export * from './export-tree-schema.js';
+export { readStandardJSONSchema, type JSONSchemaObject, type JSONSchemaTarget } from './json-schema.js';
+export { createJSONSchemaEmbedder, type JSONSchemaEmbedder, type JSONSchemaPlacement } from './json-schema-embedder.js';
 export type { NodeData, TreeRegistration } from './tree-types.js';

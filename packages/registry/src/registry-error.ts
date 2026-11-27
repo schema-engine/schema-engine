@@ -21,6 +21,13 @@
  *   than the node's, or none.
  * - `'schema-breaks-child-path'`: {@link safeParseTree} parsed a node whose schema returned an output that does not
  *   keep a child path (`childPath`) the document fills, or fills one the document leaves empty.
+ * - `'unreachable-child-path'`: {@link exportTreeSchema} found no slot for a child path (`childPath`) in the JSON
+ *   Schema of a registration, because the schema does not declare its keys, or it sits behind `allOf`, a `$ref` or a
+ *   union.
+ * - `'unknown-accepted-type'`: {@link exportTreeSchema} was given a lookup that lacks a `$type` a child path
+ *   (`childPath`) accepts (`key`).
+ * - `'definition-name-clash'`: {@link exportTreeSchema} found that a definition a schema brought along (`key`) takes the
+ *   name of a `$type` or of another definition.
  */
 export type RegistryErrorCode =
 	| 'invalid-schema'
@@ -32,7 +39,10 @@ export type RegistryErrorCode =
 	| 'missing-binding'
 	| 'binding-overrides-contract'
 	| 'schema-changes-type'
-	| 'schema-breaks-child-path';
+	| 'schema-breaks-child-path'
+	| 'unreachable-child-path'
+	| 'unknown-accepted-type'
+	| 'definition-name-clash';
 
 /** Where a {@link RegistryError} happened, and what its code needs to be described without the message. */
 export interface RegistryErrorDetails {
@@ -45,11 +55,15 @@ export interface RegistryErrorDetails {
 	readonly kind?: string;
 	/** The `$type` of the registration at fault, or the key of a binding that names no registration. */
 	readonly $type: string;
-	/** The key a binding sets that its contract defines, for `'binding-overrides-contract'`. */
+	/**
+	 * The key a binding sets that its contract defines, for `'binding-overrides-contract'`, the `$type` a child path
+	 * accepts that the lookup lacks, for `'unknown-accepted-type'`, and the name of the definition that clashes, for
+	 * `'definition-name-clash'`.
+	 */
 	readonly key?: string;
 	/**
 	 * The keys of the child path at fault, for `'duplicate-child-path'`, `'nested-child-path'` and
-	 * `'schema-breaks-child-path'`.
+	 * `'schema-breaks-child-path'`, `'unreachable-child-path'` and `'unknown-accepted-type'`.
 	 */
 	readonly childPath?: readonly string[];
 	/** The keys of the child path that `childPath` runs through, for `'nested-child-path'`. */
