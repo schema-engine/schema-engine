@@ -15,6 +15,7 @@ Node `^24.22.0` or `>=26.0.0` and pnpm 10 are required (the `engines` field of `
 
 - **`next`** is the default branch. Every pull request targets it, and Cloudflare builds a preview of the docs from it.
 - **`main`** is what is released. Cloudflare deploys the docs from it, so the live docs always describe the versions on npm.
+- **All packages share one version.** They form one `fixed` group in `.changeset/config.json`, so a release bumps every package to the same version, even one with no changes. Two copies of `@schema-engine/registry` in an app split its types, and one number makes a mismatch visible.
 - **A user-facing change carries a changeset** (`pnpm changeset`). When changesets reach `next`, the release workflow opens or refreshes a Version Packages pull request against `next`.
 - **To release:** merge the Version Packages PR into `next`, then merge `next` into `main`. The push to `main` publishes the new versions to npm (trusted publishing) and pushes their tags; the docs deploy from the same push. The publish job refuses to run if a changeset reached `main` without being versioned.
 

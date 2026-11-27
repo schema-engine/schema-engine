@@ -82,6 +82,8 @@ pnpm list --depth 0 | grep schema-engine
 
 The output lists each Schema Engine package you installed, with its version.
 
+All Schema Engine packages are released together on one version number. Install the same version of every one you use: two versions of `@schema-engine/registry` in one app (for example yours and a copy nested under `@schema-engine/layout`) give two incompatible sets of registry types. If the list shows different versions, upgrade them together, or run `pnpm why @schema-engine/registry` to find the copy that differs.
+
 ## Where to go next
 
 - [Quick start](/docs/schema-engine/quick-start): a registry and a workflow, with no UI.
