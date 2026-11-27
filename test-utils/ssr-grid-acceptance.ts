@@ -7,6 +7,7 @@
  * drift apart; it is imported by relative path because it is test-only.
  */
 import { expect } from 'vitest';
+import { findSubgridChainBreaks } from '@schema-engine/layout/testing';
 import { SSR_SUBGRID_INSET, SSR_SUBGRID_INSET_CSS } from './ssr-grid-fixtures';
 
 /** The part of a compiled layout theme the markup assertions read. */
@@ -793,6 +794,21 @@ export async function expectSsrSubgridHiddenAcceptance(html: string): Promise<vo
 		frame.style.width = '1280px';
 		await waitForFrameLayout();
 		expect(getComputedStyle(fieldset).display).toBe('none');
+	} finally {
+		frame.remove();
+	}
+}
+
+/**
+ * Asserts that every subgrid of a rendered form has an unbroken chain of `se-subgrid` boxes up to its grid.
+ *
+ * @param html Server-rendered document that holds at least one subgrid.
+ */
+export async function expectSsrSubgridChainAcceptance(html: string): Promise<void> {
+	const { frame, doc } = await loadSsrFrame(html, 1000);
+	try {
+		expect(doc.querySelectorAll('.se-subgrid').length, 'the document holds a subgrid to check').toBeGreaterThan(0);
+		expect(findSubgridChainBreaks(doc)).toEqual([]);
 	} finally {
 		frame.remove();
 	}

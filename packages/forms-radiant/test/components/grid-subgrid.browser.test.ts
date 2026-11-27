@@ -1,3 +1,4 @@
+import { findSubgridChainBreaks } from '@schema-engine/layout/testing';
 import { afterEach, describe, expect, test } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormRenderer } from '@/components/internals/form-renderer';
@@ -70,9 +71,18 @@ describe('a subgrid fieldset in a client-rendered Radiant form', () => {
 		aligned(street.top, city.top);
 	});
 
+	test('has a subgrid class on every box between the fieldset and the step grid', async () => {
+		const host = await mount(form());
+		expect(host.querySelectorAll('.se-subgrid').length).toBeGreaterThan(0);
+		expect(findSubgridChainBreaks(host)).toEqual([]);
+	});
+
 	test('keeps its alignment when a constraint wraps the fieldset in a host', async () => {
-		await mount(form({ constraints: [{ field: 'first', operator: 'equals', value: 'never', $type: 'hide' }] }));
+		const host = await mount(
+			form({ constraints: [{ field: 'first', operator: 'equals', value: 'never', $type: 'hide' }] }),
+		);
 		await expect.poll(() => document.querySelector('se-constraint')).toBeTruthy();
+		expect(findSubgridChainBreaks(host)).toEqual([]);
 		expectSubgridOf(document, /Street/, 12);
 		const first = boxOf(document, /First/);
 		const street = boxOf(document, /Street/);

@@ -359,8 +359,11 @@ export const GRID_ITEM_CLASS = 'se-grid-item';
  * @remarks
  * `grid-template-columns: subgrid` only works on a grid item of the grid whose tracks it takes, so the
  * element with `grid.subgrid`, every box between it and the grid that lays out its children, and that
- * {@link GRID_CLASS} grid itself must all carry this class. A box in the chain that does not (a plain
- * `div`) computes its template to `none` and the children fall back to one column, with nothing reported.
+ * {@link GRID_CLASS} grid itself must all carry this class, with `data-se-theme`. Below a box in the chain
+ * that does not (a plain `div`) the subgrid has no parent grid to take tracks from, so its template is used
+ * as `none` and the children fall back to one column, with nothing reported at runtime. What
+ * `getComputedStyle` reports for that template differs by engine, so a test asserts on the layout or runs
+ * `findSubgridChainBreaks` from `@schema-engine/layout/testing`, which finds such a box.
  *
  * Keep a `<fieldset>` out of the chain: Chromium lays a fieldset's content out in an anonymous box that does
  * not take the subgrid, so its children fall back to one column there (Firefox and WebKit pass the tracks on).
@@ -368,7 +371,7 @@ export const GRID_ITEM_CLASS = 'se-grid-item';
  * to assistive technology in every engine; `display: contents` on the fieldset is no answer, since engines expose
  * its semantics inconsistently. The grid of the children gets no tracks of its own, so it takes no
  * {@link GRID_CONTAINER_CLASS} wrapper either: layout containment would make it an independent formatting
- * context, and a subgrid inside one is `none`. Its breakpoints are queried against the container of the grid
+ * context, and a subgrid inside one is used as `none`. Its breakpoints are queried against the container of the grid
  * the chain hangs from.
  */
 export const GRID_SUBGRID_CLASS = 'se-subgrid';
