@@ -173,12 +173,20 @@ describe('the layout page example', () => {
 			const left = async (tag: string) => (await inFrame.locator(tag).boundingBox())!.x;
 			const widthOf = async () => (await frame.boundingBox())!.width;
 			const columnWidth = async () => (await demo.boundingBox())!.width;
+			/**
+			 * How far the scaled frame is from the width of its column, in either direction.
+			 *
+			 * @remarks
+			 * The demo script rescales the frame from a ResizeObserver, after the column has already resized, so a
+			 * check that the frame is no wider than the column holds both when it fits and while it still has the
+			 * scale of a wider column. Only a fit to the column's current width shows the script has run.
+			 */
+			const misfit = async () => Math.abs((await widthOf()) - (await columnWidth()));
 			await pwExpect(inFrame.locator('nav')).toBeVisible();
 			expect(await left('nav')).toBeLessThan(await left('main'));
 			expect(await left('main')).toBeLessThan(await left('aside'));
 			expect(await frame.evaluate((element) => getComputedStyle(element).width)).toBe('1200px');
-			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
-			expect(await widthOf()).toBeLessThanOrEqual(await columnWidth());
+			await pwExpect.poll(misfit).toBeLessThan(1);
 
 			const pageHeight = () =>
 				inFrame.locator('html').evaluate((element) => element.getBoundingClientRect().height);
@@ -188,10 +196,11 @@ describe('the layout page example', () => {
 
 			const wide = await widthOf();
 			await page.setViewportSize({ width: 900, height: 900 });
-			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
-			expect(await widthOf()).toBeLessThan(wide);
+			await pwExpect.poll(widthOf).toBeLessThan(wide);
+			await pwExpect.poll(misfit).toBeLessThan(1);
 			await page.setViewportSize({ width: 1300, height: 900 });
-			await pwExpect.poll(async () => (await widthOf()) / (await columnWidth())).toBeGreaterThan(0.99);
+			await pwExpect.poll(widthOf).toBeCloseTo(wide, 0);
+			await pwExpect.poll(misfit).toBeLessThan(1);
 
 			await demo.getByLabel('Tablet 900px').check();
 			await pwExpect

@@ -182,12 +182,12 @@ width fields, but it counts tracks of the 12 the widths use there, so
 
 ### Sizes in tracks: `span` and `autoFlow`
 
-When a field's size comes from its content rather than from a share of the row, say how many tracks it takes. `span: 3` takes three tracks of the grid it sits in, and never more than the grid has, so a span wider than the grid is the whole row instead of an implicit column that overflows:
+When a field's size is a number of the grid's columns rather than a share of the row, say how many tracks it takes. `span: 3` takes three tracks of the grid it sits in, and never more than the grid has, so a span wider than the grid is the whole row instead of an implicit column that overflows:
 
 ```ts
-export const grid = { columns: 4, autoFlow: 'dense', responsive: { md: { columns: 12 } } };
+export const grid = { columns: 4, responsive: { md: { columns: 12 } } };
 
-export const cards = [
+export const fields = [
 	{ $type: 'input', id: 'osc', name: 'osc', grid: { span: 2 } },
 	{ $type: 'input', id: 'filter', name: 'filter', grid: { span: 7 } },
 	{ $type: 'input', id: 'amp', name: 'amp', grid: { span: 3, responsive: { lg: { span: 4 } } } },
@@ -196,7 +196,7 @@ export const cards = [
 
 Below `md` the grid has four tracks, so the `span: 7` field is the full row; from `md` it covers seven of twelve. The clamp reads the grid's track count at the same width the template switches, so a span and its tracks never disagree, in a media theme and in a container theme (`query: 'container'`, so a card narrower than `md` inside a wide window gets four tracks and a clamp of four). `span` also changes in `responsive`, and it takes the tracks of the grid you wrote: `columns: n` gives `n`, named widths give 12 and `areas` give the width of their rows. A subgrid fieldset passes its parent's count on, so a span inside it clamps to the parent's tracks.
 
-`autoFlow` on the grid sets how fields without a position fill it. `'row'` (the default) places them in source order; `'dense'` backfills gaps earlier in the grid with later, smaller fields, so a `span: 1` field after two `span: 3` fields in four tracks sits beside the first one instead of leaving a hole. It is part of the grid's structure, so it is not allowed in `responsive`. Dense packing changes the visual order, not the DOM or focus order: a keyboard user still tabs through the fields in source order, so use it for cards and tiles, not for fields a person fills in top to bottom.
+`autoFlow` on the grid sets how fields without a position fill it. `'row'` (the default) places them in source order; `'dense'` backfills gaps earlier in the grid with later, smaller fields, so a `span: 1` field after two `span: 3` fields in four tracks sits beside the first one instead of leaving a hole. It is part of the grid's structure, so it is not allowed in `responsive`. Dense packing changes the visual order, not the DOM, reading or focus order: a keyboard or screen reader user still meets the fields in source order, so a field that jumps up the page is reached after the fields it now sits above (WCAG 2.4.3, Focus Order). Use it for tiles whose order carries no meaning, and keep `'row'` for fields a person fills in top to bottom. If a dense layout moves a field that has to come in sequence, change the source order to match what you see.
 
 Validation enforces these rules:
 

@@ -53,19 +53,27 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null;
 }
 
+/** One authored entry of an element's grid: its cascade slot, its keys, and where it sits in the element. */
+interface GridSlotEntry {
+	slot: CascadeSlot;
+	entry: Record<string, unknown>;
+	/** `['grid']` for the top level, `['grid', 'responsive', slot]` for a responsive entry, `default` included. */
+	path: readonly string[];
+}
+
 /**
  * An element's grid entries in cascade order: the top level, `responsive.default`,
  * then each breakpoint that is set.
  */
-export function elementGridSlots(element: unknown): Array<{ slot: CascadeSlot; entry: Record<string, unknown> }> {
+export function elementGridSlots(element: unknown): GridSlotEntry[] {
 	if (!isRecord(element) || !isRecord(element.grid)) return [];
 	const grid = element.grid;
-	const slots: Array<{ slot: CascadeSlot; entry: Record<string, unknown> }> = [{ slot: 'default', entry: grid }];
+	const slots: GridSlotEntry[] = [{ slot: 'default', entry: grid, path: ['grid'] }];
 	const responsive = grid.responsive;
 	if (!isRecord(responsive)) return slots;
 	for (const slot of CASCADE_SLOTS) {
 		const entry = responsive[slot];
-		if (isRecord(entry)) slots.push({ slot, entry });
+		if (isRecord(entry)) slots.push({ slot, entry, path: ['grid', 'responsive', slot] });
 	}
 	return slots;
 }
@@ -109,11 +117,11 @@ const SUBGRID_EXCLUSIVE_KEYS = ['width', 'offset', 'column', 'area', 'span', 'ju
  */
 export function subgridPlacementIssue(element: unknown): LayoutIssue | undefined {
 	if (!elementIsSubgrid(element)) return undefined;
-	for (const { slot, entry } of elementGridSlots(element)) {
+	for (const { entry, path } of elementGridSlots(element)) {
 		const key = SUBGRID_EXCLUSIVE_KEYS.find((name) => entry[name] !== undefined);
 		if (key === undefined) continue;
 		return {
-			path: slot === 'default' ? ['grid', key] : ['grid', 'responsive', slot, key],
+			path: [...path, key],
 			message: `sets grid 'subgrid' and '${key}'; a subgrid spans its parent's full row, so it takes no 'width', 'offset', 'column', 'area', 'span', 'justifySelf' or 'placeSelf'.`,
 		};
 	}
@@ -134,12 +142,12 @@ const SPAN_EXCLUSIVE_KEYS = ['width', 'offset', 'column', 'area'] as const;
  * domain prefixes with the element's name.
  */
 export function spanPlacementIssue(element: unknown): LayoutIssue | undefined {
-	for (const { slot, entry } of elementGridSlots(element)) {
+	for (const { slot, entry, path } of elementGridSlots(element)) {
 		if (entry.span === undefined) continue;
 		const key = SPAN_EXCLUSIVE_KEYS.find((name) => entry[name] !== undefined);
 		if (key === undefined) continue;
 		return {
-			path: slot === 'default' ? ['grid', key] : ['grid', 'responsive', slot, key],
+			path: [...path, key],
 			message: `sets grid 'span' and '${key}'${slot === 'default' ? '' : ` at '${slot}'`}; a span is a placement of its own, so use 'span' or one of 'width', 'offset', 'column' and 'area' in a breakpoint, not together.`,
 		};
 	}
@@ -156,9 +164,9 @@ export function spanPlacementIssue(element: unknown): LayoutIssue | undefined {
  * `columns: 'auto'` makes as many tracks as fit, a count that depends on the container's width and the
  * minimum column width and cannot be computed in CSS, so a span there falls back to one track. Rather than
  * render that silently, each element is checked against every slot where the grid's cascaded `columns` is
- * `'auto'`, with the span in effect there (the last one a narrower or equal slot set). The first such slot
- * is reported per element. A grid that draws `areas` or whose items use named widths has a known count
- * and has no issue.
+ * `'auto'`, with the placement in effect there (the last one a narrower or equal slot set): a span counts, and
+ * a wider slot's raw `column` replaces it. The first such slot is reported per element. A grid that draws
+ * `areas` or whose items use named widths has a known count and has no issue.
  *
  * The path starts with the element's index in `elements`, then names the `span` key the author wrote at
  * the slot that sets the span in effect: `[2, 'grid', 'span']` or `[2, 'grid', 'responsive', 'md', 'span']`.
@@ -168,28 +176,27 @@ export function gridSpanIssues(grid: unknown, elements: readonly unknown[]): Lay
 	if (!isRecord(grid) || gridUsesAreas(grid) || usesGridWidths(elements)) return [];
 	const columns: Partial<Record<CascadeSlot, unknown>> = {};
 	for (const { slot, entry } of elementGridSlots({ grid })) columns[slot] = entry.columns ?? columns[slot];
-	const autoSlots = cascadeValues(columns)
-		.filter(({ value }) => value === 'auto')
-		.map(({ slot }) => slot);
-	if (autoSlots.length === 0) return [];
+	const autoSlots = new Set(
+		cascadeValues(columns)
+			.filter(({ value }) => value === 'auto')
+			.map(({ slot }) => slot),
+	);
+	if (autoSlots.size === 0) return [];
 
 	const issues: LayoutIssue[] = [];
 	elements.forEach((element, index) => {
-		const spans: Partial<Record<CascadeSlot, number>> = {};
-		for (const { slot, entry } of elementGridSlots(element)) {
-			if (typeof entry.span === 'number') spans[slot] = entry.span;
+		const placements: Partial<Record<CascadeSlot, { spanPath?: readonly string[] }>> = {};
+		for (const { slot, entry, path } of elementGridSlots(element)) {
+			if (entry.span !== undefined) placements[slot] = { spanPath: [...path, 'span'] };
+			else if (SPAN_EXCLUSIVE_KEYS.some((key) => entry[key] !== undefined)) placements[slot] = {};
 		}
-		for (const slot of autoSlots) {
-			const authoredAt = CASCADE_SLOTS.slice(0, CASCADE_SLOTS.indexOf(slot) + 1)
-				.reverse()
-				.find((candidate) => spans[candidate] !== undefined);
-			if (authoredAt === undefined) continue;
-			issues.push({
-				path: [index, 'grid', ...(authoredAt === 'default' ? [] : ['responsive', authoredAt]), 'span'],
-				message: `sets grid 'span' where the grid's columns are 'auto'${slot === 'default' ? '' : ` at '${slot}'`}; CSS cannot know how many tracks 'auto' makes, so the span falls back to one track. Set 'columns' to a number, per breakpoint if it changes, and use a theme with query 'container' so the breakpoints follow the card.`,
-			});
-			return;
-		}
+		const offending = cascadeValues(placements).find(({ slot, value }) => autoSlots.has(slot) && value?.spanPath);
+		const spanPath = offending?.value?.spanPath;
+		if (!offending || !spanPath) return;
+		issues.push({
+			path: [index, ...spanPath],
+			message: `sets grid 'span' where the grid's columns are 'auto'${offending.slot === 'default' ? '' : ` at '${offending.slot}'`}; CSS cannot know how many tracks 'auto' makes, so the span falls back to one track. Set 'columns' to a number, per breakpoint if it changes, and use a theme with query 'container' so the breakpoints follow the grid's container.`,
+		});
 	});
 	return issues;
 }

@@ -10,7 +10,7 @@ import {
 	subgridPlacementIssue,
 	type GridThemeOptions,
 } from '@/index';
-import { computeElement } from './resolve-stylesheet';
+import { computeElement, type ElementOptions } from './resolve-stylesheet';
 
 const layout = (grid?: GridThemeOptions) => createLayoutTheme({ grid });
 const CLAMP = 'span min(7,var(--se-grid-track-count,1))';
@@ -121,6 +121,31 @@ describe('the clamp in the stylesheet', () => {
 		expect(item.value('grid-column')).toBe('span min(3,1)');
 	});
 
+	/**
+	 * A media theme measures parent and nested grid on one viewport, so the nested grid sits at the parent's width;
+	 * a container theme can put it in a narrower container, below the breakpoint the parent's gates matched.
+	 */
+	test.each([
+		['media', 800],
+		['container', 400],
+	] as const)(
+		'%s mode: a nested grid at %ipx counts its own tracks, not the count it inherits from its parent',
+		(query, nestedWidth) => {
+			const sheet = layout({ query });
+			const parent = computeElement(sheet.css, sheet.id, 'grid', 800, {
+				inline: getGridVariables(gridConfig, sheet.grid, []),
+			});
+			expect(parent.custom['--se-grid-track-count']).toBe('12');
+			const nested = (inline: ElementOptions['inline'] = {}) =>
+				computeElement(sheet.css, sheet.id, 'grid', nestedWidth, { inherited: parent.custom, inline }).custom[
+					'--se-grid-track-count'
+				];
+			expect(nested()).toBe('1');
+			expect(nested(getGridVariables({ columns: 3 }, sheet.grid, []))).toBe('3');
+			expect(nested(getGridVariables({ columns: 'auto' }, sheet.grid, []))).toBe('1');
+		},
+	);
+
 	test('a subgrid takes the resolved count of the grid it sits in, not a slot variable the reset cleared', () => {
 		const sheet = layout({ query: 'container' });
 		const rule = sheet.css
@@ -184,6 +209,17 @@ describe('spanPlacementIssue', () => {
 		expect(issue?.message).toContain("at 'md'");
 	});
 
+	test('names responsive.default, not the top level, when the conflict is written there', () => {
+		const element = { grid: { responsive: { default: { span: 3, column: 2 } } } };
+		expect(spanPlacementIssue(element)?.path).toEqual(['grid', 'responsive', 'default', 'column']);
+		expect(subgridPlacementIssue({ grid: { subgrid: true, responsive: { default: { span: 3 } } } })?.path).toEqual([
+			'grid',
+			'responsive',
+			'default',
+			'span',
+		]);
+	});
+
 	test('allows a span in one slot and a width in another', () => {
 		expect(spanPlacementIssue({ grid: { span: 3, responsive: { md: { width: 'half' } } } })).toBeUndefined();
 		expect(spanPlacementIssue({ grid: { width: 'half', responsive: { md: { span: 3 } } } })).toBeUndefined();
@@ -221,6 +257,17 @@ describe('gridSpanIssues', () => {
 		expect(issues).toHaveLength(1);
 		expect(issues[0]?.path).toEqual([0, 'grid', 'responsive', 'md', 'span']);
 		expect(issues[0]?.message).toContain("at 'lg'");
+	});
+
+	test('names responsive.default when the span is written there', () => {
+		const issues = gridSpanIssues({ columns: 'auto' }, [{ grid: { responsive: { default: { span: 3 } } } }]);
+		expect(issues.map((issue) => issue.path)).toEqual([[0, 'grid', 'responsive', 'default', 'span']]);
+	});
+
+	test('a raw column at the auto slot replaces the narrower span, so it has no issue', () => {
+		const grid = { columns: 4, responsive: { lg: { columns: 'auto' } } };
+		const element = { grid: { span: 3, responsive: { lg: { column: '1 / -1' } } } };
+		expect(gridSpanIssues(grid, [element])).toEqual([]);
 	});
 
 	test('a span authored only after the auto slots has no issue there', () => {
