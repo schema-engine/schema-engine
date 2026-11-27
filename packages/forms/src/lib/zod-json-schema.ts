@@ -1,17 +1,6 @@
 import * as z from 'zod/mini';
 import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-schema';
-
-/**
- * Duck-type a Zod validator. Native Standard Schema objects only expose `~standard`.
- */
-export function isZodType(schema: unknown): schema is z.ZodMiniType {
-	return (
-		typeof schema === 'object' &&
-		schema !== null &&
-		typeof (schema as { parse?: unknown }).parse === 'function' &&
-		typeof (schema as { safeParse?: unknown }).safeParse === 'function'
-	);
-}
+import { createExportOverride } from '@/lib/export-schema';
 
 /**
  * Shared alias for the Zod registry type used during JSON Schema generation.
@@ -34,10 +23,13 @@ export function generateZodJSONSchemaCollection(
 		io?: 'input' | 'output';
 	},
 ): JSONSchemaObject {
+	const target = options?.target || 'draft-2020-12';
+	const io = options?.io || 'input';
 	return z.toJSONSchema(metadataRegistry, {
-		target: options?.target || 'draft-2020-12',
-		io: options?.io || 'input',
+		target,
+		io,
 		uri: options?.uri || ((id: string) => `#/definitions/${id}`),
+		override: createExportOverride({ io, target }),
 	}) as JSONSchemaObject;
 }
 
@@ -81,10 +73,13 @@ export function generateZodJSONSchemaDocument(
 		io?: 'input' | 'output';
 	},
 ): JSONSchemaObject {
+	const target = options?.target || 'draft-2020-12';
+	const io = options?.io || 'input';
 	const schema = z.toJSONSchema(validator, {
-		target: options?.target || 'draft-2020-12',
-		io: options?.io || 'input',
+		target,
+		io,
 		metadata: new LayeredMetadataRegistry(metadataRegistry),
+		override: createExportOverride({ io, target }),
 	}) as JSONSchemaObject & { $id?: string };
 
 	if (options?.schemaId) {

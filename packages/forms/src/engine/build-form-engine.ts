@@ -30,7 +30,8 @@ import {
 import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
-import { isZodType } from '@/lib/zod-json-schema';
+import { isZodType } from '@/lib/is-zod-type';
+import { resolveExportSchema } from '@/lib/export-schema';
 import { createExportedRecipeView } from '@/lib/exported-recipe-view';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
@@ -115,8 +116,13 @@ function createRegistrationSchema(
  * schema when that is Zod, and otherwise listed by its `$type` alone.
  */
 function exportedRecipeView(recipe: AnyRecipeRegistration, layout: LayoutTheme): unknown {
-	const view = recipe.slotSchemas ? createExportedRecipeView(recipe.$type, recipe.slotSchemas) : recipe.schema;
-	return isZodType(view) ? withSlotAppearanceAxes(view, layout.appearance, recipe.appearanceAxes) : recipe.schema;
+	if (recipe.slotSchemas) {
+		const view = createExportedRecipeView(recipe.$type, recipe.slotSchemas);
+		return withSlotAppearanceAxes(view, layout.appearance, recipe.appearanceAxes);
+	}
+	const source = resolveExportSchema(recipe.schema);
+	if (source.kind === 'zod') return withSlotAppearanceAxes(source.schema, layout.appearance, recipe.appearanceAxes);
+	return source.kind === 'standard' ? source.schema : recipe.schema;
 }
 
 /**
@@ -152,7 +158,12 @@ function toExportRegistrations(
 			exported.exportSchema = exportedRecipeView(registration as AnyRecipeRegistration, layout);
 			return exported;
 		}
-		if (!isZodType(registration.schema)) {
+		const source = resolveExportSchema(registration.schema);
+		if (source.kind === 'standard') {
+			exported.exportSchema = source.schema;
+			return exported;
+		}
+		if (source.kind === 'open') {
 			if (componentType === ComponentType.Element) {
 				exported.appearanceAxes = (registration as AnyElementRegistration).appearanceAxes ?? [];
 			}
@@ -187,13 +198,10 @@ const RULE_EXPORT_ID = 'validation-rule';
  */
 function createRuleExportSchema(validations: ValidationRegistry): z.ZodMiniType {
 	return createUnionSchema(
-		validations
-			.all()
-			.map((registration) =>
-				isZodType(registration.schema)
-					? registration.schema
-					: z.looseObject({ $type: z.literal(registration.$type) }),
-			),
+		validations.all().map((registration) => {
+			const source = resolveExportSchema(registration.schema);
+			return source.kind === 'open' ? z.looseObject({ $type: z.literal(registration.$type) }) : source.schema;
+		}),
 	);
 }
 

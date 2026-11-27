@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 import { frozenCopy } from '@/lib/frozen-copy';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { buildSubmissionShape, type ShapeElement, type ShapeStep, type SubmissionShape } from '@/lib/submission-shape';
-import { isZodType } from '@/lib/zod-json-schema';
+import { isZodType } from '@/lib/is-zod-type';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import { getValidationRulesForElement, isFieldRequired } from '@/schemas/validation/utils';
