@@ -147,7 +147,7 @@ type FormValidationResult<T> = { success: true; data: T } | { success: false; is
 [Form configuration errors](/docs/forms/engine#form-configuration-errors)
 for the paths and a copy-pasteable example.
 
-JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
+JSON Schema conversion is backed by Zod Mini for first-party schemas. A schema the export cannot read (not Zod) is listed by its shape: a registration by its `$type`, a recipe slot as an open object with its appearance axes. Use
 `io: 'input'` for authoring input (where defaulted fields are optional) or
 `io: 'output'` for parsed output. Every generator defaults to `'input'`, since the export describes
 what authors write. An element whose schema pipes a transform (Radiant's `input-otp`) has no
@@ -201,9 +201,13 @@ interface RecipeRegistration<TType, TSchema, TRender = unknown> {
 	slotDefaults?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', Record<string, unknown>>>;
 	/** Appearance axes each slot supports, for example `{ shell: ['size', 'surface'] }`. */
 	appearanceAxes?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', readonly string[]>>;
+	/** The schema of each declared slot, any Standard Schema; set by `defineFormRecipe`. */
+	slotSchemas?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', StandardSchemaV1>>;
 	render: TRender;
 }
 ```
+
+`slotSchemas` is what the JSON Schema export lists a recipe's slots from, and `schema` is what validates a view. A registration written by hand may leave `slotSchemas` out; when it sets them, they must list exactly its `slots`, each a Standard Schema, or `createFormEngine` throws.
 
 The recipe protocol (the slots, the kinds, the rules that check them) is declared once per domain with
 `defineRecipeProtocol` from `@schema-engine/layout`; forms declares `shell | header | progress | actions` and

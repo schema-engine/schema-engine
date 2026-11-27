@@ -1,4 +1,4 @@
-import type * as z from 'zod/mini';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 /**
  * What every recipe renderer receives, whatever the domain: the recipe's kind and the resolved view.
@@ -19,10 +19,10 @@ export interface RecipeViewModel<TKind extends string = string> {
  * block's own strict schema would reject a custom recipe whose slot schema extends the block's
  * with extra keys.
  */
-export function readSlotConfig<TSchema extends z.ZodMiniType>(
+export function readSlotConfig<TSchema extends StandardSchemaV1>(
 	viewConfig: Record<string, unknown>,
 	slot: string,
 	_schema: TSchema,
-): z.output<TSchema> {
-	return viewConfig[slot] as z.output<TSchema>;
+): StandardSchemaV1.InferOutput<TSchema> {
+	return viewConfig[slot] as StandardSchemaV1.InferOutput<TSchema>;
 }

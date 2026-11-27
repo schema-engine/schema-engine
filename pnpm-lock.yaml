@@ -364,6 +364,9 @@ importers:
       '@schema-engine/actions':
         specifier: workspace:^
         version: link:../actions
+      '@standard-schema/spec':
+        specifier: ^1.1.0
+        version: 1.1.0
       country-flag-icons:
         specifier: ^1.6.20
         version: 1.6.20
@@ -473,6 +476,9 @@ importers:
       '@ecopages/logger':
         specifier: ^0.2.3
         version: 0.2.3(typescript@5.9.3)
+      '@standard-schema/spec':
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       '@base-ui/react':
         specifier: ^1.1.0

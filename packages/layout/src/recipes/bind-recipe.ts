@@ -1,4 +1,4 @@
-import type * as z from 'zod/mini';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { SlotAppearanceAxes } from '../lib/appearance';
 import type { ProtocolRecipeRegistration, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from './types';
 
@@ -7,7 +7,7 @@ import type { ProtocolRecipeRegistration, ProtocolRecipeSlotSchemas, ProtocolRec
  * Typed by the spec, so the registration carries the protocol's slot and kind names. Domains wrap it
  * to type `render` for their renderers.
  *
- * The two casts widen `slotDefaults` and `appearanceAxes`: the spec types them by the slot schemas it
+ * The casts widen `slotDefaults` and `appearanceAxes`: the spec types them by the slot schemas it
  * was defined with (`RecipeSlotDefaults<TSlots>`, `SlotAppearanceAxes<keyof TSlots>`), and the
  * registration by the protocol's slot names, which cannot be derived from the schemas generically.
  */
@@ -15,7 +15,7 @@ export function bindRecipe<
 	TSlot extends string,
 	TKind extends string,
 	const TType extends string,
-	TSchema extends z.ZodMiniType,
+	TSchema extends StandardSchemaV1,
 	TSlots extends ProtocolRecipeSlotSchemas<TSlot>,
 	TRender,
 >(
@@ -30,6 +30,7 @@ export function bindRecipe<
 		metadata: spec.metadata,
 		slotDefaults: spec.slotDefaults as Partial<Record<TSlot, Record<string, unknown>>> | undefined,
 		appearanceAxes: spec.appearanceAxes as SlotAppearanceAxes<TSlot> | undefined,
+		slotSchemas: spec.slotSchemas,
 		render,
 	};
 }

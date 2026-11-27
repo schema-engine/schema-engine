@@ -1,4 +1,9 @@
-import { createRegistry, type BaseRegistration, type ReadOnlyRegistry } from '@schema-engine/registry';
+import {
+	assertStandardSchema,
+	createRegistry,
+	type BaseRegistration,
+	type ReadOnlyRegistry,
+} from '@schema-engine/registry';
 
 /** The part of a recipe that a protocol reads: its `$type`, kind and the slots it declares. */
 export interface RecipeShape<TSlot extends string = string, TKind extends string = string> {
@@ -112,9 +117,41 @@ export function assertRecipeRules<TSlot extends string, TKind extends string>(
 }
 
 /**
+ * Checks that the slot schemas a registration carries are exactly its declared slots, each a Standard Schema.
+ *
+ * @throws {Error} Naming the recipe, its kind and `$type`
+ *
+ * @remarks
+ * A registration without `slotSchemas` passes: a hand-written one need not state them.
+ */
+function assertSlotSchemas(
+	kind: string,
+	recipe: RecipeShape & { readonly slotSchemas?: Readonly<Partial<Record<string, unknown>>> },
+): void {
+	const { slotSchemas } = recipe;
+	if (slotSchemas === undefined) return;
+	const context = `${kind} '${recipe.$type}' slotSchemas`;
+	const listed = Object.keys(slotSchemas).filter((slot) => slotSchemas[slot] !== undefined);
+	const missing = recipe.slots.filter((slot) => !listed.includes(slot));
+	const extra = listed.filter((slot) => !recipe.slots.includes(slot));
+	if (missing.length > 0 || extra.length > 0) {
+		throw new Error(
+			`${context} must list exactly the recipe's slots (${recipe.slots.join(', ') || 'none'}): ${[
+				...missing.map((slot) => `'${slot}' has no schema`),
+				...extra.map((slot) => `'${slot}' is not a declared slot`),
+			].join(', ')}.`,
+		);
+	}
+	for (const slot of listed) {
+		assertStandardSchema(slotSchemas[slot], `${context}.${slot}`);
+	}
+}
+
+/**
  * Builds the read-only `Recipe` registry of a domain, with its protocol rules run at build.
  *
- * @throws {Error} Naming the recipe when a winning registration breaks the protocol or has no Standard Schema
+ * @throws {Error} Naming the recipe when a winning registration breaks the protocol, has no Standard Schema, or
+ * carries `slotSchemas` that differ from its slots or are not Standard Schemas
  *
  * @remarks
  * Only the winning registration of each `$type` is checked, the same as the registry's schema check: a
@@ -123,11 +160,13 @@ export function assertRecipeRules<TSlot extends string, TKind extends string>(
 export function createRecipeRegistry<
 	TSlot extends string,
 	TKind extends string,
-	TRecipe extends BaseRegistration & RecipeShape<TSlot, TKind>,
+	TRecipe extends BaseRegistration &
+		RecipeShape<TSlot, TKind> & { readonly slotSchemas?: Readonly<Partial<Record<string, unknown>>> },
 >(protocol: RecipeProtocol<TSlot, TKind>, recipes: readonly TRecipe[]): ReadOnlyRegistry<TRecipe> {
 	const registry = createRegistry('Recipe', recipes);
 	for (const recipe of registry.all()) {
 		assertRecipeRules(protocol, recipe);
+		assertSlotSchemas(registry.kind, recipe);
 	}
 	return registry;
 }

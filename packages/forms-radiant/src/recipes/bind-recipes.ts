@@ -1,4 +1,5 @@
-import { defineFormRecipe, type RecipeSlot, type RecipeSpec } from '@schema-engine/forms/recipes';
+import { defineFormRecipe, type RecipeSlotSchemas, type RecipeSpec } from '@schema-engine/forms/recipes';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	bareControlsSpec,
 	cardSpec,
@@ -10,7 +11,6 @@ import {
 	splitScreenWizardSpec,
 	wizardSpec,
 } from '@schema-engine/forms/recipes/built-in';
-import type * as z from 'zod/mini';
 import {
 	StepHeaderBlock,
 	MinimalProgressBlock,
@@ -26,8 +26,8 @@ import type { RadiantRecipePayload } from './types';
  */
 export function defineRecipe<
 	const TType extends string,
-	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>,
-	TSchema extends z.ZodMiniType,
+	TSlots extends RecipeSlotSchemas,
+	TSchema extends StandardSchemaV1,
 >(spec: RecipeSpec<TType, TSchema, TSlots>, payload: RadiantRecipePayload<TSlots>) {
 	return defineFormRecipe(spec, payload);
 }

@@ -1,0 +1,3783 @@
+{
+	"jsonSchemaCollection": {
+		"schemas": {
+			"recipe:card": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:card",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "card"
+					},
+					"shell": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {
+									"size": {
+										"type": "string",
+										"enum": ["compact", "default", "comfortable"]
+									},
+									"surface": {
+										"type": "string",
+										"enum": ["flat", "outlined", "elevated"]
+									}
+								},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"header": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showDescription": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepCounter": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"size": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg"]
+							},
+							"align": {
+								"default": "start",
+								"type": "string",
+								"enum": ["start", "center"]
+							},
+							"fallbackToFormTitle": {
+								"default": true,
+								"type": "boolean"
+							},
+							"titleAs": {
+								"default": "h2",
+								"type": "string",
+								"enum": ["h1", "h2"]
+							},
+							"inheritColor": {
+								"default": false,
+								"type": "boolean"
+							},
+							"counterPlacement": {
+								"default": "after",
+								"type": "string",
+								"enum": ["before", "after"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									}
+								},
+								"additionalProperties": false
+							},
+							"align": {
+								"default": "end",
+								"type": "string",
+								"enum": ["start", "center", "end"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"recipe:split-screen": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:split-screen",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "split-screen"
+					},
+					"shell": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {
+									"size": {
+										"type": "string",
+										"enum": ["compact", "default", "comfortable"]
+									}
+								},
+								"additionalProperties": false
+							},
+							"sideContent": {
+								"type": "string"
+							},
+							"sidePlacement": {
+								"default": "left",
+								"type": "string",
+								"enum": ["left", "right"]
+							},
+							"sideWidth": {
+								"default": "normal",
+								"type": "string",
+								"enum": ["narrow", "normal", "wide"]
+							},
+							"contentAlignment": {
+								"default": "center",
+								"type": "string",
+								"enum": ["top", "center", "bottom"]
+							}
+						},
+						"additionalProperties": false
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									}
+								},
+								"additionalProperties": false
+							},
+							"align": {
+								"default": "end",
+								"type": "string",
+								"enum": ["start", "center", "end"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"recipe:hero-background": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:hero-background",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "hero-background"
+					},
+					"shell": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {
+									"size": {
+										"type": "string",
+										"enum": ["compact", "default", "comfortable"]
+									}
+								},
+								"additionalProperties": false
+							},
+							"backgroundImage": {
+								"type": "string"
+							},
+							"backgroundVideo": {
+								"type": "string"
+							},
+							"contentWidth": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg", "xl"]
+							}
+						},
+						"additionalProperties": false
+					},
+					"header": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showDescription": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepCounter": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"size": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg"]
+							},
+							"align": {
+								"default": "start",
+								"type": "string",
+								"enum": ["start", "center"]
+							},
+							"fallbackToFormTitle": {
+								"default": true,
+								"type": "boolean"
+							},
+							"titleAs": {
+								"default": "h2",
+								"type": "string",
+								"enum": ["h1", "h2"]
+							},
+							"inheritColor": {
+								"default": false,
+								"type": "boolean"
+							},
+							"counterPlacement": {
+								"default": "after",
+								"type": "string",
+								"enum": ["before", "after"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									}
+								},
+								"additionalProperties": false
+							},
+							"align": {
+								"default": "end",
+								"type": "string",
+								"enum": ["start", "center", "end"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"recipe:bare-controls": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:bare-controls",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "bare-controls"
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"previous": {
+										"default": "Previous",
+										"type": "string"
+									},
+									"previousAriaLabel": {
+										"default": "Go to previous step",
+										"type": "string"
+									},
+									"next": {
+										"default": "Next",
+										"type": "string"
+									},
+									"nextAriaLabel": {
+										"default": "Go to next step",
+										"type": "string"
+									},
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									},
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"showStepCounter": {
+								"default": true,
+								"type": "boolean"
+							},
+							"variant": {
+								"default": "default",
+								"type": "string",
+								"enum": ["default", "minimal"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"recipe:card-wizard": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:card-wizard",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "card-wizard"
+					},
+					"shell": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {
+									"size": {
+										"type": "string",
+										"enum": ["compact", "default", "comfortable"]
+									},
+									"surface": {
+										"type": "string",
+										"enum": ["flat", "outlined", "elevated"]
+									}
+								},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"header": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showDescription": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepCounter": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"size": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg"]
+							},
+							"align": {
+								"default": "start",
+								"type": "string",
+								"enum": ["start", "center"]
+							},
+							"fallbackToFormTitle": {
+								"default": true,
+								"type": "boolean"
+							},
+							"titleAs": {
+								"default": "h2",
+								"type": "string",
+								"enum": ["h1", "h2"]
+							},
+							"inheritColor": {
+								"default": false,
+								"type": "boolean"
+							},
+							"counterPlacement": {
+								"default": "after",
+								"type": "string",
+								"enum": ["before", "after"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"progress": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showPercentage": {
+								"default": true,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"progress": {
+										"default": "Progress",
+										"type": "string"
+									},
+									"valueText": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}, read as the bar value"
+									}
+								},
+								"additionalProperties": false
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"previous": {
+										"default": "Previous",
+										"type": "string"
+									},
+									"previousAriaLabel": {
+										"default": "Go to previous step",
+										"type": "string"
+									},
+									"next": {
+										"default": "Next",
+										"type": "string"
+									},
+									"nextAriaLabel": {
+										"default": "Go to next step",
+										"type": "string"
+									},
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									},
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"showStepCounter": {
+								"default": true,
+								"type": "boolean"
+							},
+							"variant": {
+								"default": "default",
+								"type": "string",
+								"enum": ["default", "minimal"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"recipe:wizard": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:wizard",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "wizard"
+					},
+					"header": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showDescription": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepCounter": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"size": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg"]
+							},
+							"align": {
+								"default": "start",
+								"type": "string",
+								"enum": ["start", "center"]
+							},
+							"fallbackToFormTitle": {
+								"default": true,
+								"type": "boolean"
+							},
+							"titleAs": {
+								"default": "h2",
+								"type": "string",
+								"enum": ["h1", "h2"]
+							},
+							"inheritColor": {
+								"default": false,
+								"type": "boolean"
+							},
+							"counterPlacement": {
+								"default": "after",
+								"type": "string",
+								"enum": ["before", "after"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"progress": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"orientation": {
+								"default": "horizontal",
+								"type": "string",
+								"enum": ["horizontal", "sidebar"]
+							},
+							"showStepNumbers": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepTitles": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepDescriptions": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"regionAriaLabel": {
+										"default": "Form progress",
+										"type": "string"
+									},
+									"completed": {
+										"default": "Step {current}, completed",
+										"type": "string",
+										"description": "Template with {current} and {total}, the status of a finished step"
+									},
+									"untitledStep": {
+										"default": "Step {current}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"previous": {
+										"default": "Previous",
+										"type": "string"
+									},
+									"previousAriaLabel": {
+										"default": "Go to previous step",
+										"type": "string"
+									},
+									"next": {
+										"default": "Next",
+										"type": "string"
+									},
+									"nextAriaLabel": {
+										"default": "Go to next step",
+										"type": "string"
+									},
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									},
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"showStepCounter": {
+								"default": true,
+								"type": "boolean"
+							},
+							"variant": {
+								"default": "default",
+								"type": "string",
+								"enum": ["default", "minimal"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"recipe:sidebar-wizard": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:sidebar-wizard",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "sidebar-wizard"
+					},
+					"shell": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {
+									"size": {
+										"type": "string",
+										"enum": ["compact", "default", "comfortable"]
+									}
+								},
+								"additionalProperties": false
+							},
+							"showSeparator": {
+								"default": true,
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					},
+					"header": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showDescription": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepCounter": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"size": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg"]
+							},
+							"align": {
+								"default": "start",
+								"type": "string",
+								"enum": ["start", "center"]
+							},
+							"fallbackToFormTitle": {
+								"default": true,
+								"type": "boolean"
+							},
+							"titleAs": {
+								"default": "h2",
+								"type": "string",
+								"enum": ["h1", "h2"]
+							},
+							"inheritColor": {
+								"default": false,
+								"type": "boolean"
+							},
+							"counterPlacement": {
+								"default": "after",
+								"type": "string",
+								"enum": ["before", "after"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"progress": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"orientation": {
+								"default": "horizontal",
+								"type": "string",
+								"enum": ["horizontal", "sidebar"]
+							},
+							"showStepNumbers": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepTitles": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepDescriptions": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"regionAriaLabel": {
+										"default": "Form progress",
+										"type": "string"
+									},
+									"completed": {
+										"default": "Step {current}, completed",
+										"type": "string",
+										"description": "Template with {current} and {total}, the status of a finished step"
+									},
+									"untitledStep": {
+										"default": "Step {current}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"previous": {
+										"default": "Previous",
+										"type": "string"
+									},
+									"previousAriaLabel": {
+										"default": "Go to previous step",
+										"type": "string"
+									},
+									"next": {
+										"default": "Next",
+										"type": "string"
+									},
+									"nextAriaLabel": {
+										"default": "Go to next step",
+										"type": "string"
+									},
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									},
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"showStepCounter": {
+								"default": true,
+								"type": "boolean"
+							},
+							"variant": {
+								"default": "default",
+								"type": "string",
+								"enum": ["default", "minimal"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"recipe:hero-wizard": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:hero-wizard",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "hero-wizard"
+					},
+					"shell": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {
+									"size": {
+										"type": "string",
+										"enum": ["compact", "default", "comfortable"]
+									}
+								},
+								"additionalProperties": false
+							},
+							"backgroundImage": {
+								"type": "string"
+							},
+							"backgroundVideo": {
+								"type": "string"
+							},
+							"contentWidth": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg", "xl"]
+							}
+						},
+						"additionalProperties": false
+					},
+					"header": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showDescription": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepCounter": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"size": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg"]
+							},
+							"align": {
+								"default": "start",
+								"type": "string",
+								"enum": ["start", "center"]
+							},
+							"fallbackToFormTitle": {
+								"default": true,
+								"type": "boolean"
+							},
+							"titleAs": {
+								"default": "h2",
+								"type": "string",
+								"enum": ["h1", "h2"]
+							},
+							"inheritColor": {
+								"default": false,
+								"type": "boolean"
+							},
+							"counterPlacement": {
+								"default": "after",
+								"type": "string",
+								"enum": ["before", "after"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"progress": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showPercentage": {
+								"default": true,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"progress": {
+										"default": "Progress",
+										"type": "string"
+									},
+									"valueText": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}, read as the bar value"
+									}
+								},
+								"additionalProperties": false
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"previous": {
+										"default": "Previous",
+										"type": "string"
+									},
+									"previousAriaLabel": {
+										"default": "Go to previous step",
+										"type": "string"
+									},
+									"next": {
+										"default": "Next",
+										"type": "string"
+									},
+									"nextAriaLabel": {
+										"default": "Go to next step",
+										"type": "string"
+									},
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									},
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"showStepCounter": {
+								"default": true,
+								"type": "boolean"
+							},
+							"variant": {
+								"default": "default",
+								"type": "string",
+								"enum": ["default", "minimal"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"recipe:split-screen-wizard": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/recipe:split-screen-wizard",
+				"type": "object",
+				"properties": {
+					"$type": {
+						"type": "string",
+						"const": "split-screen-wizard"
+					},
+					"shell": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {
+									"size": {
+										"type": "string",
+										"enum": ["compact", "default", "comfortable"]
+									}
+								},
+								"additionalProperties": false
+							},
+							"sideContent": {
+								"type": "string"
+							},
+							"sidePlacement": {
+								"default": "left",
+								"type": "string",
+								"enum": ["left", "right"]
+							},
+							"sideWidth": {
+								"default": "normal",
+								"type": "string",
+								"enum": ["narrow", "normal", "wide"]
+							},
+							"contentAlignment": {
+								"default": "center",
+								"type": "string",
+								"enum": ["top", "center", "bottom"]
+							}
+						},
+						"additionalProperties": false
+					},
+					"header": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"showDescription": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepCounter": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"size": {
+								"default": "md",
+								"type": "string",
+								"enum": ["sm", "md", "lg"]
+							},
+							"align": {
+								"default": "start",
+								"type": "string",
+								"enum": ["start", "center"]
+							},
+							"fallbackToFormTitle": {
+								"default": true,
+								"type": "boolean"
+							},
+							"titleAs": {
+								"default": "h2",
+								"type": "string",
+								"enum": ["h1", "h2"]
+							},
+							"inheritColor": {
+								"default": false,
+								"type": "boolean"
+							},
+							"counterPlacement": {
+								"default": "after",
+								"type": "string",
+								"enum": ["before", "after"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"progress": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"orientation": {
+								"default": "horizontal",
+								"type": "string",
+								"enum": ["horizontal", "sidebar"]
+							},
+							"showStepNumbers": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepTitles": {
+								"default": true,
+								"type": "boolean"
+							},
+							"showStepDescriptions": {
+								"default": false,
+								"type": "boolean"
+							},
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"regionAriaLabel": {
+										"default": "Form progress",
+										"type": "string"
+									},
+									"completed": {
+										"default": "Step {current}, completed",
+										"type": "string",
+										"description": "Template with {current} and {total}, the status of a finished step"
+									},
+									"untitledStep": {
+										"default": "Step {current}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					},
+					"actions": {
+						"default": {},
+						"type": "object",
+						"properties": {
+							"labels": {
+								"default": {},
+								"type": "object",
+								"properties": {
+									"previous": {
+										"default": "Previous",
+										"type": "string"
+									},
+									"previousAriaLabel": {
+										"default": "Go to previous step",
+										"type": "string"
+									},
+									"next": {
+										"default": "Next",
+										"type": "string"
+									},
+									"nextAriaLabel": {
+										"default": "Go to next step",
+										"type": "string"
+									},
+									"submit": {
+										"default": "Submit",
+										"type": "string"
+									},
+									"submitAriaLabel": {
+										"default": "Submit form",
+										"type": "string"
+									},
+									"submitting": {
+										"default": "Submitting...",
+										"type": "string"
+									},
+									"stepCounter": {
+										"default": "Step {current} of {total}",
+										"type": "string",
+										"description": "Template with {current} and {total}"
+									}
+								},
+								"additionalProperties": false
+							},
+							"showStepCounter": {
+								"default": true,
+								"type": "boolean"
+							},
+							"variant": {
+								"default": "default",
+								"type": "string",
+								"enum": ["default", "minimal"]
+							},
+							"appearance": {
+								"description": "Named appearance values, one per declared axis",
+								"type": "object",
+								"properties": {},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": ["$type"],
+				"additionalProperties": false
+			},
+			"axis:size": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/axis:size",
+				"type": "string",
+				"enum": ["compact", "default", "comfortable"],
+				"description": "How much room components take: spacing, type size, control height and readable width."
+			},
+			"axis:surface": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/axis:surface",
+				"type": "string",
+				"enum": ["flat", "outlined", "elevated"],
+				"description": "How a container sets itself apart: border, shadow and background."
+			},
+			"validation-rule": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"$id": "#/definitions/validation-rule",
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "required"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "minLength"
+							},
+							"value": {
+								"type": "number"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "value"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "maxLength"
+							},
+							"value": {
+								"type": "number"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "value"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "email"
+							},
+							"pattern": {
+								"type": "string"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "pattern"
+							},
+							"value": {
+								"type": "string"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "value"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "url"
+							},
+							"protocol": {
+								"type": "string"
+							},
+							"hostname": {
+								"type": "string"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "uuid"
+							},
+							"version": {
+								"type": "string",
+								"enum": ["v1", "v2", "v3", "v4", "v5"]
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "phone"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "cidr"
+							},
+							"version": {
+								"type": "string",
+								"enum": ["v4", "v6"]
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "ipv4"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "ipv6"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "min"
+							},
+							"value": {
+								"type": "number"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "value"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "max"
+							},
+							"value": {
+								"type": "number"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "value"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "minItems"
+							},
+							"value": {
+								"type": "number"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "value"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "maxItems"
+							},
+							"value": {
+								"type": "number"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "value"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "jwt"
+							},
+							"alg": {
+								"type": "string"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "hash"
+							},
+							"algorithm": {
+								"type": "string",
+								"enum": ["md5", "sha1", "sha256", "sha384", "sha512"]
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "algorithm"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "base64"
+							},
+							"urlSafe": {
+								"type": "boolean"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "cuid"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "cuid2"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "ulid"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "hex"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "datetime"
+							},
+							"precision": {
+								"type": "number"
+							},
+							"offset": {
+								"type": "boolean"
+							},
+							"local": {
+								"type": "boolean"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "date"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "time"
+							},
+							"precision": {
+								"type": "number"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "async"
+							},
+							"url": {
+								"type": "string"
+							},
+							"method": {
+								"type": "string",
+								"enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+							},
+							"headers": {
+								"type": "object",
+								"propertyNames": {
+									"type": "string"
+								},
+								"additionalProperties": {
+									"type": "string"
+								}
+							},
+							"extraPayload": {
+								"type": "object",
+								"propertyNames": {
+									"type": "string"
+								},
+								"additionalProperties": {}
+							},
+							"expectedResponse": {
+								"type": "object",
+								"properties": {
+									"valid": {
+										"type": "boolean"
+									},
+									"success": {
+										"type": "boolean"
+									},
+									"message": {
+										"type": "string"
+									},
+									"error": {
+										"type": "string"
+									}
+								}
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							},
+							"dependencies": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"debounce": {
+								"type": "number"
+							},
+							"cacheTTL": {
+								"type": "number"
+							},
+							"disableCache": {
+								"type": "boolean"
+							}
+						},
+						"required": ["$type", "url"]
+					},
+					{
+						"type": "object",
+						"properties": {
+							"$type": {
+								"type": "string",
+								"const": "relate"
+							},
+							"fields": {
+								"minItems": 1,
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"description": "Field references, each resolved relative to the field declaring the rule."
+							},
+							"assert": {
+								"type": "string",
+								"enum": [
+									"allEqual",
+									"allDifferent",
+									"ascending",
+									"strictlyAscending",
+									"descending",
+									"strictlyDescending",
+									"atLeastOne",
+									"exactlyOne",
+									"allOrNone"
+								]
+							},
+							"includeSelf": {
+								"default": true,
+								"description": "Own value participates, first in the list. Off for assertions about a group.",
+								"type": "boolean"
+							},
+							"as": {
+								"default": "auto",
+								"description": "Comparison basis. `auto` compares values as they are.",
+								"type": "string",
+								"enum": ["auto", "string", "number", "date", "boolean"]
+							},
+							"skipWhenIncomplete": {
+								"default": true,
+								"description": "Stay quiet while any participating value is empty. Ignored by the assertions about emptiness: `atLeastOne`, `exactlyOne`, `allOrNone`.",
+								"type": "boolean"
+							},
+							"message": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"severity": {
+								"type": "string",
+								"enum": ["error", "warning"]
+							}
+						},
+						"required": ["$type", "fields", "assert"]
+					}
+				]
+			}
+		}
+	},
+	"viewCatalog": {
+		"recipes": [
+			{
+				"$type": "card",
+				"kind": "single-step",
+				"slots": ["shell", "header", "actions"],
+				"metadata": {
+					"name": "Card",
+					"description": "Single-step form in a centered card shell.",
+					"category": "layout"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:card",
+					"$defs": {
+						"recipe:card": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "card"
+								},
+								"shell": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {
+												"size": {
+													"type": "string",
+													"enum": ["compact", "default", "comfortable"]
+												},
+												"surface": {
+													"type": "string",
+													"enum": ["flat", "outlined", "elevated"]
+												}
+											},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"header": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showDescription": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepCounter": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"size": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg"]
+										},
+										"align": {
+											"default": "start",
+											"type": "string",
+											"enum": ["start", "center"]
+										},
+										"fallbackToFormTitle": {
+											"default": true,
+											"type": "boolean"
+										},
+										"titleAs": {
+											"default": "h2",
+											"type": "string",
+											"enum": ["h1", "h2"]
+										},
+										"inheritColor": {
+											"default": false,
+											"type": "boolean"
+										},
+										"counterPlacement": {
+											"default": "after",
+											"type": "string",
+											"enum": ["before", "after"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												}
+											},
+											"additionalProperties": false
+										},
+										"align": {
+											"default": "end",
+											"type": "string",
+											"enum": ["start", "center", "end"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Card",
+							"description": "Single-step form in a centered card shell.",
+							"componentType": "recipe",
+							"category": "layout"
+						}
+					},
+					"$id": "recipe:card"
+				}
+			},
+			{
+				"$type": "split-screen",
+				"kind": "single-step",
+				"slots": ["shell", "actions"],
+				"metadata": {
+					"name": "Split screen",
+					"description": "Single-step form with a side panel.",
+					"category": "layout"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:split-screen",
+					"$defs": {
+						"recipe:split-screen": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "split-screen"
+								},
+								"shell": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {
+												"size": {
+													"type": "string",
+													"enum": ["compact", "default", "comfortable"]
+												}
+											},
+											"additionalProperties": false
+										},
+										"sideContent": {
+											"type": "string"
+										},
+										"sidePlacement": {
+											"default": "left",
+											"type": "string",
+											"enum": ["left", "right"]
+										},
+										"sideWidth": {
+											"default": "normal",
+											"type": "string",
+											"enum": ["narrow", "normal", "wide"]
+										},
+										"contentAlignment": {
+											"default": "center",
+											"type": "string",
+											"enum": ["top", "center", "bottom"]
+										}
+									},
+									"additionalProperties": false
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												}
+											},
+											"additionalProperties": false
+										},
+										"align": {
+											"default": "end",
+											"type": "string",
+											"enum": ["start", "center", "end"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Split screen",
+							"description": "Single-step form with a side panel.",
+							"componentType": "recipe",
+							"category": "layout"
+						}
+					},
+					"$id": "recipe:split-screen"
+				}
+			},
+			{
+				"$type": "hero-background",
+				"kind": "single-step",
+				"slots": ["shell", "header", "actions"],
+				"metadata": {
+					"name": "Hero background",
+					"description": "Single-step form over a hero image or video.",
+					"category": "layout"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:hero-background",
+					"$defs": {
+						"recipe:hero-background": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "hero-background"
+								},
+								"shell": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {
+												"size": {
+													"type": "string",
+													"enum": ["compact", "default", "comfortable"]
+												}
+											},
+											"additionalProperties": false
+										},
+										"backgroundImage": {
+											"type": "string"
+										},
+										"backgroundVideo": {
+											"type": "string"
+										},
+										"contentWidth": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg", "xl"]
+										}
+									},
+									"additionalProperties": false
+								},
+								"header": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showDescription": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepCounter": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"size": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg"]
+										},
+										"align": {
+											"default": "start",
+											"type": "string",
+											"enum": ["start", "center"]
+										},
+										"fallbackToFormTitle": {
+											"default": true,
+											"type": "boolean"
+										},
+										"titleAs": {
+											"default": "h2",
+											"type": "string",
+											"enum": ["h1", "h2"]
+										},
+										"inheritColor": {
+											"default": false,
+											"type": "boolean"
+										},
+										"counterPlacement": {
+											"default": "after",
+											"type": "string",
+											"enum": ["before", "after"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												}
+											},
+											"additionalProperties": false
+										},
+										"align": {
+											"default": "end",
+											"type": "string",
+											"enum": ["start", "center", "end"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Hero background",
+							"description": "Single-step form over a hero image or video.",
+							"componentType": "recipe",
+							"category": "layout"
+						}
+					},
+					"$id": "recipe:hero-background"
+				}
+			},
+			{
+				"$type": "bare-controls",
+				"kind": "wizard",
+				"slots": ["actions"],
+				"metadata": {
+					"name": "Bare controls",
+					"description": "Multi-step form with previous, next, and submit controls only.",
+					"category": "wizard"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:bare-controls",
+					"$defs": {
+						"recipe:bare-controls": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "bare-controls"
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"previous": {
+													"default": "Previous",
+													"type": "string"
+												},
+												"previousAriaLabel": {
+													"default": "Go to previous step",
+													"type": "string"
+												},
+												"next": {
+													"default": "Next",
+													"type": "string"
+												},
+												"nextAriaLabel": {
+													"default": "Go to next step",
+													"type": "string"
+												},
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												},
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"showStepCounter": {
+											"default": true,
+											"type": "boolean"
+										},
+										"variant": {
+											"default": "default",
+											"type": "string",
+											"enum": ["default", "minimal"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Bare controls",
+							"description": "Multi-step form with previous, next, and submit controls only.",
+							"componentType": "recipe",
+							"category": "wizard"
+						}
+					},
+					"$id": "recipe:bare-controls"
+				}
+			},
+			{
+				"$type": "card-wizard",
+				"kind": "wizard",
+				"slots": ["shell", "header", "progress", "actions"],
+				"metadata": {
+					"name": "Card wizard",
+					"description": "Multi-step wizard inside a card shell with progress bar.",
+					"category": "wizard"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:card-wizard",
+					"$defs": {
+						"recipe:card-wizard": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "card-wizard"
+								},
+								"shell": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {
+												"size": {
+													"type": "string",
+													"enum": ["compact", "default", "comfortable"]
+												},
+												"surface": {
+													"type": "string",
+													"enum": ["flat", "outlined", "elevated"]
+												}
+											},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"header": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showDescription": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepCounter": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"size": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg"]
+										},
+										"align": {
+											"default": "start",
+											"type": "string",
+											"enum": ["start", "center"]
+										},
+										"fallbackToFormTitle": {
+											"default": true,
+											"type": "boolean"
+										},
+										"titleAs": {
+											"default": "h2",
+											"type": "string",
+											"enum": ["h1", "h2"]
+										},
+										"inheritColor": {
+											"default": false,
+											"type": "boolean"
+										},
+										"counterPlacement": {
+											"default": "after",
+											"type": "string",
+											"enum": ["before", "after"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"progress": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showPercentage": {
+											"default": true,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"progress": {
+													"default": "Progress",
+													"type": "string"
+												},
+												"valueText": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}, read as the bar value"
+												}
+											},
+											"additionalProperties": false
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"previous": {
+													"default": "Previous",
+													"type": "string"
+												},
+												"previousAriaLabel": {
+													"default": "Go to previous step",
+													"type": "string"
+												},
+												"next": {
+													"default": "Next",
+													"type": "string"
+												},
+												"nextAriaLabel": {
+													"default": "Go to next step",
+													"type": "string"
+												},
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												},
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"showStepCounter": {
+											"default": true,
+											"type": "boolean"
+										},
+										"variant": {
+											"default": "default",
+											"type": "string",
+											"enum": ["default", "minimal"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Card wizard",
+							"description": "Multi-step wizard inside a card shell with progress bar.",
+							"componentType": "recipe",
+							"category": "wizard"
+						}
+					},
+					"$id": "recipe:card-wizard"
+				}
+			},
+			{
+				"$type": "wizard",
+				"kind": "wizard",
+				"slots": ["header", "progress", "actions"],
+				"metadata": {
+					"name": "Wizard",
+					"description": "Multi-step wizard with horizontal step indicators.",
+					"category": "wizard"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:wizard",
+					"$defs": {
+						"recipe:wizard": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "wizard"
+								},
+								"header": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showDescription": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepCounter": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"size": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg"]
+										},
+										"align": {
+											"default": "start",
+											"type": "string",
+											"enum": ["start", "center"]
+										},
+										"fallbackToFormTitle": {
+											"default": true,
+											"type": "boolean"
+										},
+										"titleAs": {
+											"default": "h2",
+											"type": "string",
+											"enum": ["h1", "h2"]
+										},
+										"inheritColor": {
+											"default": false,
+											"type": "boolean"
+										},
+										"counterPlacement": {
+											"default": "after",
+											"type": "string",
+											"enum": ["before", "after"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"progress": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"orientation": {
+											"default": "horizontal",
+											"type": "string",
+											"enum": ["horizontal", "sidebar"]
+										},
+										"showStepNumbers": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepTitles": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepDescriptions": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"regionAriaLabel": {
+													"default": "Form progress",
+													"type": "string"
+												},
+												"completed": {
+													"default": "Step {current}, completed",
+													"type": "string",
+													"description": "Template with {current} and {total}, the status of a finished step"
+												},
+												"untitledStep": {
+													"default": "Step {current}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"previous": {
+													"default": "Previous",
+													"type": "string"
+												},
+												"previousAriaLabel": {
+													"default": "Go to previous step",
+													"type": "string"
+												},
+												"next": {
+													"default": "Next",
+													"type": "string"
+												},
+												"nextAriaLabel": {
+													"default": "Go to next step",
+													"type": "string"
+												},
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												},
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"showStepCounter": {
+											"default": true,
+											"type": "boolean"
+										},
+										"variant": {
+											"default": "default",
+											"type": "string",
+											"enum": ["default", "minimal"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Wizard",
+							"description": "Multi-step wizard with horizontal step indicators.",
+							"componentType": "recipe",
+							"category": "wizard"
+						}
+					},
+					"$id": "recipe:wizard"
+				}
+			},
+			{
+				"$type": "sidebar-wizard",
+				"kind": "wizard",
+				"slots": ["shell", "header", "progress", "actions"],
+				"metadata": {
+					"name": "Sidebar wizard",
+					"description": "Multi-step wizard with step indicators in a sidebar.",
+					"category": "wizard"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:sidebar-wizard",
+					"$defs": {
+						"recipe:sidebar-wizard": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "sidebar-wizard"
+								},
+								"shell": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {
+												"size": {
+													"type": "string",
+													"enum": ["compact", "default", "comfortable"]
+												}
+											},
+											"additionalProperties": false
+										},
+										"showSeparator": {
+											"default": true,
+											"type": "boolean"
+										}
+									},
+									"additionalProperties": false
+								},
+								"header": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showDescription": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepCounter": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"size": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg"]
+										},
+										"align": {
+											"default": "start",
+											"type": "string",
+											"enum": ["start", "center"]
+										},
+										"fallbackToFormTitle": {
+											"default": true,
+											"type": "boolean"
+										},
+										"titleAs": {
+											"default": "h2",
+											"type": "string",
+											"enum": ["h1", "h2"]
+										},
+										"inheritColor": {
+											"default": false,
+											"type": "boolean"
+										},
+										"counterPlacement": {
+											"default": "after",
+											"type": "string",
+											"enum": ["before", "after"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"progress": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"orientation": {
+											"default": "horizontal",
+											"type": "string",
+											"enum": ["horizontal", "sidebar"]
+										},
+										"showStepNumbers": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepTitles": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepDescriptions": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"regionAriaLabel": {
+													"default": "Form progress",
+													"type": "string"
+												},
+												"completed": {
+													"default": "Step {current}, completed",
+													"type": "string",
+													"description": "Template with {current} and {total}, the status of a finished step"
+												},
+												"untitledStep": {
+													"default": "Step {current}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"previous": {
+													"default": "Previous",
+													"type": "string"
+												},
+												"previousAriaLabel": {
+													"default": "Go to previous step",
+													"type": "string"
+												},
+												"next": {
+													"default": "Next",
+													"type": "string"
+												},
+												"nextAriaLabel": {
+													"default": "Go to next step",
+													"type": "string"
+												},
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												},
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"showStepCounter": {
+											"default": true,
+											"type": "boolean"
+										},
+										"variant": {
+											"default": "default",
+											"type": "string",
+											"enum": ["default", "minimal"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Sidebar wizard",
+							"description": "Multi-step wizard with step indicators in a sidebar.",
+							"componentType": "recipe",
+							"category": "wizard"
+						}
+					},
+					"$id": "recipe:sidebar-wizard"
+				}
+			},
+			{
+				"$type": "hero-wizard",
+				"kind": "wizard",
+				"slots": ["shell", "header", "progress", "actions"],
+				"metadata": {
+					"name": "Hero wizard",
+					"description": "Multi-step wizard over a hero background.",
+					"category": "wizard"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:hero-wizard",
+					"$defs": {
+						"recipe:hero-wizard": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "hero-wizard"
+								},
+								"shell": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {
+												"size": {
+													"type": "string",
+													"enum": ["compact", "default", "comfortable"]
+												}
+											},
+											"additionalProperties": false
+										},
+										"backgroundImage": {
+											"type": "string"
+										},
+										"backgroundVideo": {
+											"type": "string"
+										},
+										"contentWidth": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg", "xl"]
+										}
+									},
+									"additionalProperties": false
+								},
+								"header": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showDescription": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepCounter": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"size": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg"]
+										},
+										"align": {
+											"default": "start",
+											"type": "string",
+											"enum": ["start", "center"]
+										},
+										"fallbackToFormTitle": {
+											"default": true,
+											"type": "boolean"
+										},
+										"titleAs": {
+											"default": "h2",
+											"type": "string",
+											"enum": ["h1", "h2"]
+										},
+										"inheritColor": {
+											"default": false,
+											"type": "boolean"
+										},
+										"counterPlacement": {
+											"default": "after",
+											"type": "string",
+											"enum": ["before", "after"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"progress": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showPercentage": {
+											"default": true,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"progress": {
+													"default": "Progress",
+													"type": "string"
+												},
+												"valueText": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}, read as the bar value"
+												}
+											},
+											"additionalProperties": false
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"previous": {
+													"default": "Previous",
+													"type": "string"
+												},
+												"previousAriaLabel": {
+													"default": "Go to previous step",
+													"type": "string"
+												},
+												"next": {
+													"default": "Next",
+													"type": "string"
+												},
+												"nextAriaLabel": {
+													"default": "Go to next step",
+													"type": "string"
+												},
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												},
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"showStepCounter": {
+											"default": true,
+											"type": "boolean"
+										},
+										"variant": {
+											"default": "default",
+											"type": "string",
+											"enum": ["default", "minimal"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Hero wizard",
+							"description": "Multi-step wizard over a hero background.",
+							"componentType": "recipe",
+							"category": "wizard"
+						}
+					},
+					"$id": "recipe:hero-wizard"
+				}
+			},
+			{
+				"$type": "split-screen-wizard",
+				"kind": "wizard",
+				"slots": ["shell", "header", "progress", "actions"],
+				"metadata": {
+					"name": "Split screen wizard",
+					"description": "Multi-step wizard with a marketing side panel.",
+					"category": "wizard"
+				},
+				"viewSchema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"$ref": "#/$defs/recipe:split-screen-wizard",
+					"$defs": {
+						"recipe:split-screen-wizard": {
+							"type": "object",
+							"properties": {
+								"$type": {
+									"type": "string",
+									"const": "split-screen-wizard"
+								},
+								"shell": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {
+												"size": {
+													"type": "string",
+													"enum": ["compact", "default", "comfortable"]
+												}
+											},
+											"additionalProperties": false
+										},
+										"sideContent": {
+											"type": "string"
+										},
+										"sidePlacement": {
+											"default": "left",
+											"type": "string",
+											"enum": ["left", "right"]
+										},
+										"sideWidth": {
+											"default": "normal",
+											"type": "string",
+											"enum": ["narrow", "normal", "wide"]
+										},
+										"contentAlignment": {
+											"default": "center",
+											"type": "string",
+											"enum": ["top", "center", "bottom"]
+										}
+									},
+									"additionalProperties": false
+								},
+								"header": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"showDescription": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepCounter": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"size": {
+											"default": "md",
+											"type": "string",
+											"enum": ["sm", "md", "lg"]
+										},
+										"align": {
+											"default": "start",
+											"type": "string",
+											"enum": ["start", "center"]
+										},
+										"fallbackToFormTitle": {
+											"default": true,
+											"type": "boolean"
+										},
+										"titleAs": {
+											"default": "h2",
+											"type": "string",
+											"enum": ["h1", "h2"]
+										},
+										"inheritColor": {
+											"default": false,
+											"type": "boolean"
+										},
+										"counterPlacement": {
+											"default": "after",
+											"type": "string",
+											"enum": ["before", "after"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"progress": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"orientation": {
+											"default": "horizontal",
+											"type": "string",
+											"enum": ["horizontal", "sidebar"]
+										},
+										"showStepNumbers": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepTitles": {
+											"default": true,
+											"type": "boolean"
+										},
+										"showStepDescriptions": {
+											"default": false,
+											"type": "boolean"
+										},
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"regionAriaLabel": {
+													"default": "Form progress",
+													"type": "string"
+												},
+												"completed": {
+													"default": "Step {current}, completed",
+													"type": "string",
+													"description": "Template with {current} and {total}, the status of a finished step"
+												},
+												"untitledStep": {
+													"default": "Step {current}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								},
+								"actions": {
+									"default": {},
+									"type": "object",
+									"properties": {
+										"labels": {
+											"default": {},
+											"type": "object",
+											"properties": {
+												"previous": {
+													"default": "Previous",
+													"type": "string"
+												},
+												"previousAriaLabel": {
+													"default": "Go to previous step",
+													"type": "string"
+												},
+												"next": {
+													"default": "Next",
+													"type": "string"
+												},
+												"nextAriaLabel": {
+													"default": "Go to next step",
+													"type": "string"
+												},
+												"submit": {
+													"default": "Submit",
+													"type": "string"
+												},
+												"submitAriaLabel": {
+													"default": "Submit form",
+													"type": "string"
+												},
+												"submitting": {
+													"default": "Submitting...",
+													"type": "string"
+												},
+												"stepCounter": {
+													"default": "Step {current} of {total}",
+													"type": "string",
+													"description": "Template with {current} and {total}"
+												}
+											},
+											"additionalProperties": false
+										},
+										"showStepCounter": {
+											"default": true,
+											"type": "boolean"
+										},
+										"variant": {
+											"default": "default",
+											"type": "string",
+											"enum": ["default", "minimal"]
+										},
+										"appearance": {
+											"description": "Named appearance values, one per declared axis",
+											"type": "object",
+											"properties": {},
+											"additionalProperties": false
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"required": ["$type"],
+							"additionalProperties": false,
+							"title": "Split screen wizard",
+							"description": "Multi-step wizard with a marketing side panel.",
+							"componentType": "recipe",
+							"category": "wizard"
+						}
+					},
+					"$id": "recipe:split-screen-wizard"
+				}
+			}
+		],
+		"rules": {
+			"noViewSingleStep": "Omit view for a single-step form to render fields only.",
+			"noViewMultiStep": "Omit view for a multi-step form and validateForm writes the engine's default wizard recipe as its view (bare-controls unless createFormEngine({ defaultWizardRecipe }) names another). If that recipe is not registered, validateForm still succeeds and warns, then every step renders on a single page without chrome.",
+			"oneViewPerForm": "Each form has at most one view. Recipes are code-defined; forms select view.$type and pass slot config."
+		}
+	}
+}

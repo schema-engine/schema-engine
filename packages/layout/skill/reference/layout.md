@@ -49,4 +49,4 @@ Breakpoints measure the window by default (`@media`). `createLayoutTheme({ grid:
 
 ## Recipe protocol
 
-A recipe composes named slots into a view. `defineRecipeProtocol` declares a domain's slots and kinds once; `defineProtocolRecipeSpec`, `bindRecipe` and `createRecipeRegistry` build the recipes of that protocol. Forms is the first protocol.
+A recipe composes named slots into a view. `defineRecipeProtocol` declares a domain's slots and kinds once; `defineProtocolRecipeSpec`, `bindRecipe` and `createRecipeRegistry` build the recipes of that protocol. Forms is the first protocol. A spec's `slotSchemas` take any Standard Schema that validates synchronously, and `spec.schema` is a Standard Schema, not a Zod one: validate it with `safeParseStandardSchema` (`@schema-engine/registry`). A slot that declares `appearanceAxes` must take an `appearance` key in its schema input, which the types check. `bindRecipe` keeps the slot schemas on the registration as `slotSchemas`, which `createRecipeRegistry` checks against the recipe's `slots`.

@@ -118,6 +118,13 @@ export type RecipeRegistration<
 		slotDefaults?: Partial<Record<import('@/recipes/types').RecipeSlot, Record<string, unknown>>>;
 		/** Appearance axes each slot supports; see {@link import('@/recipes/types').RecipeSpec.appearanceAxes}. */
 		appearanceAxes?: SlotAppearanceAxes<import('@/recipes/types').RecipeSlot>;
+		/**
+		 * The schema of each declared slot; see {@link import('@schema-engine/layout').ProtocolRecipeRegistration.slotSchemas}.
+		 *
+		 * @remarks
+		 * The JSON Schema export reads it to list each slot. A registration written by hand may leave it out.
+		 */
+		slotSchemas?: Readonly<Partial<Record<import('@/recipes/types').RecipeSlot, StandardSchemaV1>>>;
 		/** Adapter render payload (shell + slot components). */
 		render: TRender;
 	},

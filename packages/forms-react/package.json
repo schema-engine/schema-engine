@@ -106,7 +106,8 @@
 		"zod": "^4.0.17"
 	},
 	"dependencies": {
-		"@ecopages/logger": "^0.2.3"
+		"@ecopages/logger": "^0.2.3",
+		"@standard-schema/spec": "^1.1.0"
 	},
 	"exports": {
 		"./package.json": {
