@@ -214,10 +214,11 @@ export function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPl
  */
 function anchorOwner(owner: string): string {
 	if (/^[A-Za-z][-A-Za-z0-9._]*$/.test(owner) && !owner.includes('__')) return owner;
-	const written = [...owner].map((char) =>
-		/[A-Za-z0-9.-]/.test(char) ? char : `__${char.codePointAt(0)!.toString(16)}__`,
-	);
-	return `a__${written.join('')}`;
+	let written = 'a__';
+	for (const char of owner) {
+		written += /[A-Za-z0-9.-]/.test(char) ? char : `__${char.codePointAt(0)!.toString(16)}__`;
+	}
+	return written;
 }
 
 /** A JSON Pointer reference token, written for a URI fragment: `~` and `/` escaped, then percent-encoded. */
