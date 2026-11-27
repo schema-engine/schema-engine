@@ -30,7 +30,7 @@ export const widgets = createRegistry('Widget', [...defaults, custom]);
 
 - A later registration with the same `$type` replaces the earlier one with no warning, so `[...defaults, custom]` is how you override. The key keeps its first position.
 - `createRegistry(kind, registrations, { duplicates: 'error' })` makes a repeated `$type` a build error instead (`Widget 'card' is registered twice.`, thrown before any schema is checked). Use it for a catalog where a repeat is always a mistake, such as component keys; the default is `'override'`.
-- Each winning `schema` is checked at build: a value without `~standard.validate` throws, naming the `kind` and the `$type`.
+- Each winning `schema` is checked at build: a value without `~standard.validate` throws a `RegistryError` with code `'invalid-schema'`, naming the `kind` and the `$type`.
 - The result has `get`, `has`, `all`, `keys` and `size`, and no `register` or `clear`. It holds a frozen shallow copy of each winner taken at build, so patch a registration before building, or build a new registry from a new list.
 - Type it with `ReadOnlyRegistry<TRegistration>`.
 
@@ -57,7 +57,17 @@ export const radiantWidgets = bindRegistry(contracts, {
 ```
 
 - The result is a `BoundRegistry`, a frozen registry built with `createRegistry`: the contracts' order, every schema checked again. For contracts typed by literal `$type` (an inline list), `get('card')` returns that registration (a `BoundRegistration`, the contract with its binding) without `undefined`, and a missing binding, an extra one (`crad`) and a binding that sets a contract key (`schema`, `metadata`) are compile errors. `RegistryBindings<typeof contracts, ReactBinding>` with `satisfies` fixes the shape every binding of a renderer takes.
-- Whatever the typing, the build throws naming the `kind`: `Widget 'badge' has no binding.`, `Widget binding 'crad' names no registration.` and `Widget 'card' binding sets 'schema', which the contract defines.`
+- Whatever the typing, the build throws a `RegistryError` (codes `'missing-binding'`, `'unknown-binding'` and `'binding-overrides-contract'`) naming the `kind`: `Widget 'badge' has no binding.`, `Widget binding 'crad' names no registration.` and `Widget 'card' binding sets 'schema', which the contract defines.`
+
+Errors while building or binding are a `RegistryError` (`error.code` of type `RegistryErrorCode`, always with `kind` and `$type`). Branch on the code, not on the message, which may be reworded:
+
+- `'invalid-schema'`: a `schema` without `~standard.validate`.
+- `'invalid-child-paths'`: `childPaths` is not a list, or an entry is not a non-empty list of non-empty keys.
+- `'duplicate-child-path'`: the same child path (`childPath`) twice. `'nested-child-path'`: a child path (`childPath`) that runs through another (`outerChildPath`).
+- `'duplicate-type'`: a repeated `$type` with `duplicates: 'error'`.
+- `'unknown-binding'`: a binding key no contract answers (`$type` is that key). `'missing-binding'`: a contract with no binding. `'binding-overrides-contract'`: a binding that sets a key (`key`) its contract defines.
+
+`assertStandardSchema` on its own and errors while parsing (`safeParseStandardSchema` and `safeParseNode` with an asynchronous schema) are plain `Error`s, and `parseYaml` throws `YamlDocumentError`.
 
 `safeParseStandardSchema(schema, value)` runs a registration's schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }` (it throws for a schema that validates asynchronously). Form validation and `parseActions` both go through it; `assertStandardSchema` is the build-time check on its own. `standardSchema(validate)` builds a Standard Schema from a function that returns `{ value }` or `{ issues }`, for a registration whose check is not a schema library's.
 
