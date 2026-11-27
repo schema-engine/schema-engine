@@ -808,7 +808,7 @@ export async function expectSsrSubgridChainAcceptance(html: string): Promise<voi
 	const { frame, doc } = await loadSsrFrame(html, 1000);
 	try {
 		expect(doc.querySelectorAll('.se-subgrid').length, 'the document holds a subgrid to check').toBeGreaterThan(0);
-		expect(findSubgridChainBreaks(doc).map((entry) => entry.description)).toEqual([]);
+		expect(findSubgridChainBreaks(doc)).toEqual([]);
 	} finally {
 		frame.remove();
 	}

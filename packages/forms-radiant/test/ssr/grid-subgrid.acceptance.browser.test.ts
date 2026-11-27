@@ -11,7 +11,7 @@ import {
 	expectSubgridMarkup,
 } from '../../../../test-utils/ssr-grid-acceptance';
 import { expectSsrSubgridGroupAcceptance } from '../../../../test-utils/accessibility-tree';
-import type { SsrSubgridVariant } from '../../../../test-utils/ssr-grid-fixtures';
+import { SSR_SUBGRID_VARIANTS, type SsrSubgridVariant } from '../../../../test-utils/ssr-grid-fixtures';
 
 /** The provided markup escapes `</script>` so it can cross the browser boundary; undo it. */
 const html = (variant: SsrSubgridVariant) => {
@@ -49,9 +49,12 @@ describe('SSR subgrid acceptance', () => {
 		await expectSsrSubgridHiddenAcceptance(html('hidden'));
 	});
 
-	test('every box between a subgrid and its grid carries the subgrid class', async () => {
-		await expectSsrSubgridChainAcceptance(html('nested'));
-	});
+	test.each(SSR_SUBGRID_VARIANTS)(
+		'every box between a subgrid and its grid carries the subgrid class (%s)',
+		async (variant) => {
+			await expectSsrSubgridChainAcceptance(html(variant));
+		},
+	);
 
 	test('subgrids nest', async () => {
 		await expectSsrSubgridNestedAcceptance(html('nested'));

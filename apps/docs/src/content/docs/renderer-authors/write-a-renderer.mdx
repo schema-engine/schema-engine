@@ -184,7 +184,7 @@ A renderer registers its elements and recipes on the engine, as [Engine and regi
 
 ## Test the subgrid chain
 
-A subgrid lines up with its grid only when every box between them carries the `se-subgrid` class. A wrapper without it, such as a label box or an ARIA wrapper, makes the children fall back to one column and nothing reports it. `findSubgridChainBreaks` from `@schema-engine/layout` walks up from every subgrid under a root and returns each box in the way, so a renderer's DOM test catches the wrapper:
+A subgrid lines up with its grid only when every box between them carries the `se-subgrid` class and `data-se-theme`. A wrapper without them, such as a label box or an ARIA wrapper, makes the children fall back to one column and nothing reports it. `findSubgridChainBreaks` from `@schema-engine/layout` walks up from every subgrid under a root and returns one sentence per box in the way, so a renderer's DOM test catches the wrapper:
 
 ```ts
 import { expect, test } from 'vitest';
@@ -193,8 +193,8 @@ import { findSubgridChainBreaks } from '@schema-engine/layout';
 test('every subgrid reaches its grid', () => {
 	const container = document.createElement('div');
 	// Render a form with a subgrid fieldset into `container`.
-	expect(findSubgridChainBreaks(container).map((entry) => entry.description)).toEqual([]);
+	expect(findSubgridChainBreaks(container)).toEqual([]);
 });
 ```
 
-Each entry names the subgrid, the box without the class (`div.field-wrapper`) and, for a subgrid with no grid above it, a `null` box. It reads classes only, so run it on a form with a subgrid fieldset in it, and keep the browser tests that measure the tracks for what it cannot see, such as a `container-type` or a `<fieldset>` in the chain. See [Layout themes](/docs/layout/layout-themes) for the rules of the chain.
+A failure lists each break, such as `div.field-wrapper sits between div.se-grid.se-subgrid and its grid without the se-subgrid class`, a subgrid without `data-se-theme`, or a subgrid with no `se-grid` grid above it. The walk up does not stop at the root, so a fragment can be checked inside the grid it is mounted in. It reads classes and attributes only, so run it on a form with a subgrid fieldset in it, and keep the browser tests that measure the tracks for what it cannot see, such as a `container-type` or a `<fieldset>` in the chain. See [Layout themes](/docs/layout/layout-themes) for the rules of the chain.
