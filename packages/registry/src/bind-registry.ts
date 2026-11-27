@@ -1,4 +1,5 @@
 import { createRegistry, type ReadOnlyRegistry } from './create-registry.js';
+import { RegistryError } from './registry-error.js';
 import type { BaseRegistration } from './types.js';
 
 /** What a binding may not set: the keys its contract already defines. */
@@ -54,9 +55,12 @@ export interface BoundRegistry<TContract extends BaseRegistration, TBindings> ex
  *
  * @param contracts - Registrations without the renderer's part: the `$type`, schema and metadata, plus what the domain fixes
  * @param bindings - What this renderer adds to each contract, keyed by `$type`, such as `render` or a tag name
- * @throws {Error} `Widget 'card' has no binding.` when a contract has no binding
- * @throws {Error} `Widget binding 'crad' names no registration.` when a binding's key is no contract's `$type`
- * @throws {Error} `Widget 'card' binding sets 'schema', which the contract defines.` when a binding sets a contract key
+ * @throws {RegistryError} Code `'missing-binding'`, `Widget 'card' has no binding.`, when a contract has no binding
+ * @throws {RegistryError} Code `'unknown-binding'`, `Widget binding 'crad' names no registration.`, when a binding's
+ * key is no contract's `$type`
+ * @throws {RegistryError} Code `'binding-overrides-contract'`, `Widget 'card' binding sets 'schema', which the contract
+ * defines.`, when a binding sets a contract key
+ * @throws {RegistryError} The errors of {@link createRegistry}, when a merged registration breaks one of its rules
  *
  * @remarks
  * The result is a frozen registry built with {@link createRegistry}, so it keeps the contracts' order and checks every
@@ -77,16 +81,28 @@ export function bindRegistry(
 ): ReadOnlyRegistry<BaseRegistration> {
 	const { kind } = contracts;
 	for (const key of Object.keys(bindings)) {
-		if (!contracts.has(key)) throw new Error(`${kind} binding '${key}' names no registration.`);
+		if (!contracts.has(key)) {
+			throw new RegistryError('unknown-binding', `${kind} binding '${key}' names no registration.`, {
+				kind,
+				$type: key,
+			});
+		}
 	}
 	const bound = contracts.all().map((contract) => {
 		const binding: unknown = Object.hasOwn(bindings, contract.$type) ? bindings[contract.$type] : undefined;
 		if (typeof binding !== 'object' || binding === null) {
-			throw new Error(`${kind} '${contract.$type}' has no binding.`);
+			throw new RegistryError('missing-binding', `${kind} '${contract.$type}' has no binding.`, {
+				kind,
+				$type: contract.$type,
+			});
 		}
 		for (const key of Object.keys(binding)) {
 			if (Object.hasOwn(contract, key)) {
-				throw new Error(`${kind} '${contract.$type}' binding sets '${key}', which the contract defines.`);
+				throw new RegistryError(
+					'binding-overrides-contract',
+					`${kind} '${contract.$type}' binding sets '${key}', which the contract defines.`,
+					{ kind, $type: contract.$type },
+				);
 			}
 		}
 		return { ...contract, ...binding };
