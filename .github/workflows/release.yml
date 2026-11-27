@@ -1,22 +1,24 @@
 name: Release
 
 # Publishes through npm trusted publishing: each package on npmjs.com trusts this workflow file.
+#
+# `next` is where pull requests merge; `main` is what is released, and Cloudflare deploys the docs from it.
+# - A push to `next` with pending changesets opens or refreshes the Version Packages PR against `next`.
+# - Merging `next` into `main` (after that PR is merged) publishes the versions not yet on npm, so the
+#   packages and the docs go live together.
 on:
     push:
-        branches: [main]
+        branches: [next, main]
     workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-    # With pending changesets it opens or refreshes the Version Packages PR (branch
-    # changeset-release/main); with none left, it publishes the versions not yet on npm.
-    release:
-        name: Release
-        if: github.ref_name == 'main'
+    version:
+        name: Version Packages PR
+        if: github.ref_name == 'next'
         permissions:
             contents: write
-            id-token: write
             pull-requests: write
 
         runs-on: ubuntu-latest
@@ -38,17 +40,59 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
+            # No publish script: on `next` the action only versions, it never publishes.
+            - name: Open or refresh the Version Packages PR
+              uses: changesets/action@v2
+              with:
+                  github-token: ${{ github.token }}
+                  version-script: pnpm run version-packages
+
+    publish:
+        name: Publish
+        if: github.ref_name == 'main'
+        permissions:
+            contents: write
+            id-token: write
+
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+              with:
+                  fetch-depth: 0
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v6
+
+            - name: Setup Node
+              uses: actions/setup-node@v5
+              with:
+                  node-version: '24'
+                  cache: 'pnpm'
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # Versions are bumped on `next`; a changeset reaching `main` means the Version Packages PR was skipped.
+            - name: Refuse unversioned changesets
+              run: |
+                  pending=$(find .changeset -name '*.md' ! -name 'README.md')
+                  if [ -n "$pending" ]; then
+                      echo "Changesets reached main without the Version Packages PR:"
+                      echo "$pending"
+                      exit 1
+                  fi
+
             - name: Build the packages
               run: pnpm build:lib
 
             - name: Configure npm for OIDC trusted publishing
               run: npm config delete //registry.npmjs.org/:_authToken --location=user || true
 
-            - name: Create the release PR or publish
-              uses: changesets/action@v2
-              with:
-                  github-token: ${{ github.token }}
-                  version-script: pnpm run version-packages
-                  publish-script: pnpm run release
+            - name: Publish the versions not yet on npm
+              run: pnpm run release
               env:
                   NPM_CONFIG_PROVENANCE: true
+
+            - name: Push the release tags
+              run: git push origin --tags
