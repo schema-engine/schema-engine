@@ -4,7 +4,7 @@ The registration contract and the read-only registry every other package builds 
 
 ## A registration
 
-Every registration is `{ $type, schema, metadata }`: `$type` is the stable key, `schema` is any Standard Schema (Zod, Zod Mini, Valibot, Effect Schema or a hand-written one) that describes the config, and `metadata` has a `name` and optionally a `description`. A package adds what it needs to the type (`BaseRegistration`): a renderable one is a `ComponentRegistration` with `render`, an action adds `execute`, a validation rule adds `category` and `handler`. The registry has no schema-library dependency: install the provider you prefer.
+Every registration is `{ $type, schema, metadata }`: `$type` is the stable key, `schema` is any Standard Schema (Zod, Zod Mini, Valibot, Effect Schema or a hand-written one) that describes the config, and `metadata` has a `name` and optionally a `description`. A package adds what it needs to the type (`BaseRegistration`, whose `metadata` is a `RegistrationMetadata`, or a `ComponentMetadata` with `icon`, `tags` and `version`): a renderable one is a `ComponentRegistration` with `render`, an action adds `execute`, a validation rule adds `category` and `handler`. The registry has no schema-library dependency: install the provider you prefer.
 
 ## createRegistry
 
@@ -32,7 +32,7 @@ export const widgets = createRegistry('Widget', [...defaults, custom]);
 - `createRegistry(kind, registrations, { duplicates: 'error' })` makes a repeated `$type` a build error instead (`Widget 'card' is registered twice.`, thrown before any schema is checked). Use it for a catalog where a repeat is always a mistake, such as component keys; the default is `'override'`.
 - Each winning `schema` is checked at build: a value without `~standard.validate` throws, naming the `kind` and the `$type`.
 - The result has `get`, `has`, `all`, `keys` and `size`, and no `register` or `clear`. It holds a frozen shallow copy of each winner taken at build, so patch a registration before building, or build a new registry from a new list.
-- Type it with `ReadOnlyRegistry<TRegistration>`.
+- Type it with `ReadOnlyRegistry<TRegistration>`. The options are `CreateRegistryOptions`. `Brand<T, TBrand>` is a compile-time-only tag for a type.
 
 `bindRegistry(contracts, bindings)` builds a renderer's registry from one registry of contracts (the `$type`, schema and metadata) and one binding per `$type` (a `render`, a tag name: renderer-only data). Two renderers bind the same contracts and share each `schema` by identity:
 
@@ -56,12 +56,12 @@ export const radiantWidgets = bindRegistry(contracts, {
 });
 ```
 
-- The result is a frozen registry built with `createRegistry`: the contracts' order, every schema checked again. For contracts typed by literal `$type` (an inline list), `get('card')` returns that registration without `undefined`, and a missing binding, an extra one (`crad`) and a binding that sets a contract key (`schema`, `metadata`) are compile errors. `RegistryBindings<typeof contracts, ReactBinding>` with `satisfies` fixes the shape every binding of a renderer takes.
+- The result is a `BoundRegistry`, a frozen registry built with `createRegistry`: the contracts' order, every schema checked again. For contracts typed by literal `$type` (an inline list), `get('card')` returns that registration (a `BoundRegistration`, the contract with its binding) without `undefined`, and a missing binding, an extra one (`crad`) and a binding that sets a contract key (`schema`, `metadata`) are compile errors. `RegistryBindings<typeof contracts, ReactBinding>` with `satisfies` fixes the shape every binding of a renderer takes.
 - Whatever the typing, the build throws naming the `kind`: `Widget 'badge' has no binding.`, `Widget binding 'crad' names no registration.` and `Widget 'card' binding sets 'schema', which the contract defines.`
 
-`safeParseStandardSchema(schema, value)` runs a registration's schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }` (it throws for a schema that validates asynchronously). Form validation and `parseActions` both go through it; `assertStandardSchema` is the build-time check on its own. `standardSchema(validate)` builds a Standard Schema from a function that returns `{ value }` or `{ issues }`, for a registration whose check is not a schema library's.
+`safeParseStandardSchema(schema, value)` runs a registration's schema without throwing and returns a `StandardSchemaSafeParseResult`, `{ success: true, data }` or `{ success: false, error: { issues } }` of `StandardSchemaIssue`s (it throws for a schema that validates asynchronously). Form validation and `parseActions` both go through it; `assertStandardSchema` is the build-time check on its own. `standardSchema(validate)` builds a Standard Schema from a function that returns `{ value }` or `{ issues }`, for a registration whose check is not a schema library's.
 
-`safeParseNode(registry, node, path?)` checks one node of a document: it looks `node.$type` up in the registry (anything with `get(key)`, and optionally `hint`, a sentence added to the message of an unregistered `$type`, such as where to register it), validates the node with the registration's schema and returns `{ success: true, $type, registration, data }` or `{ success: false, issues }`. For a registry typed by its registrations (`createRegistry` keeps the literal `$type` of an inline list), checking `parsed.$type` narrows `registration` and `data` to that registration's schema output with no cast; `data` is `unknown` for a registry typed as `BaseRegistration`. A node that is not an object with a string `$type`, and a `$type` no registration answers, are issues, not throws. Every issue's `path` starts with `path`, the position of the node in its document, so a walk over a tree passes each child its own.
+`safeParseNode(registry, node, path?)` checks one node of a document: it looks `node.$type` up in the registry (a `NodeLookup`: anything with `get(key)`, and optionally `hint`, a sentence added to the message of an unregistered `$type`, such as where to register it; `unregisteredTypeMessage(type, hint?)` writes that message, for a caller that throws instead), validates the node with the registration's schema and returns a `SafeParseNodeResult`, `{ success: true, $type, registration, data }` or `{ success: false, issues }`. For a registry typed by its registrations (`createRegistry` keeps the literal `$type` of an inline list), checking `parsed.$type` narrows `registration` and `data` to that registration's schema output with no cast; `data` is `unknown` for a registry typed as `BaseRegistration`. A node that is not an object with a string `$type`, and a `$type` no registration answers, are issues, not throws. Every issue's `path` starts with `path`, the position of the node in its document, so a walk over a tree passes each child its own.
 
 ```ts title="registry/draw-node.ts"
 import { formatIssuePath, safeParseNode } from '@schema-engine/registry';
@@ -73,7 +73,7 @@ export function nodeIssues(node: unknown, index: number): string[] {
 }
 ```
 
-`safeParseTree(registry, root, path?)` checks a whole document in one call. A registration says where its children are with `childPaths`, a list of key paths into the node (`[['sections']]`, or `[['blocks'], ['engine', 'controls']]`), each to one node or an array of nodes; `createRegistry` checks the paths when it builds. Every node goes through `safeParseNode` at its full path, a node whose schema fails is not walked further but its siblings still are, a value at a child path that is no node is `Expected a node or a list of nodes.` at that path, and a node that contains itself is an issue, not an overflow. It returns `{ success: true, tree }` or `{ success: false, issues }` with every issue and no tree. A `tree` node is `{ $type, registration, data, path, children }`, with `children` keyed by the child path joined with dots (`'engine.controls'`); checking `$type` narrows `data` as it does on `safeParseNode`.
+`safeParseTree(registry, root, path?)` checks a whole document in one call. A registration says where its children are with `childPaths`, a list of key paths into the node (`[['sections']]`, or `[['blocks'], ['engine', 'controls']]`), each to one node or an array of nodes; `createRegistry` checks the paths when it builds. Every node goes through `safeParseNode` at its full path, a node whose schema fails is not walked further but its siblings still are, a value at a child path that is no node is `Expected a node or a list of nodes.` at that path, and a node that contains itself is an issue, not an overflow. It returns a `SafeParseTreeResult`, `{ success: true, tree }` or `{ success: false, issues }` with every issue and no tree. A `tree` node is a `ParsedNode`, `{ $type, registration, data, path, children }`, with `children` keyed by the child path joined with dots (`'engine.controls'`); checking `$type` narrows `data` as it does on `safeParseNode`.
 
 ```ts title="registry/check-tree.ts"
 import * as z from 'zod/mini';
@@ -115,7 +115,7 @@ export function sectionTitles(document: unknown): string[] {
 
 ## YAML documents
 
-`@schema-engine/registry/yaml` parses a YAML text, validates the value and points each issue at a line and column. It needs the optional peer `yaml`, which the root entry never imports. `validate` is a synchronous `YamlValidate<T>`: the value in, `{ success: true, data }` or `{ success: false, issues }` out, each issue `{ message, path? }`. `engine.safeValidateForm` from `@schema-engine/forms` fits as it is.
+`@schema-engine/registry/yaml` parses a YAML text, validates the value and points each issue at a line and column. It needs the optional peer `yaml`, which the root entry never imports. `validate` is a synchronous `YamlValidate<T>`: the value in, `{ success: true, data }` or `{ success: false, issues }` out, each issue `{ message, path? }`. `safeParseYaml` and `parseYaml` take `YamlParseOptions` (`filename`) and `safeParseYaml` returns a `YamlParseResult`. `engine.safeValidateForm` from `@schema-engine/forms` fits as it is.
 
 ```ts title="registry/site-yaml.ts"
 import * as z from 'zod/mini';
@@ -134,4 +134,4 @@ export function readSite(text: string) {
 }
 ```
 
-`parseYaml` throws a `YamlDocumentError` (with `issues`) instead of returning, and `stringifyYaml(value, { schemaUrl? })` writes a value back. A `YamlIssue` is `{ message, path, line, column, filename? }`, counted from 1. The text is YAML 1.2 (core schema): `yes` and `no` stay strings, tags are issues, and duplicate keys and several documents are syntax errors.
+`parseYaml` throws a `YamlDocumentError` (with `issues`) instead of returning, and `stringifyYaml(value, { schemaUrl? })` (`StringifyYamlOptions`) writes a value back. A `YamlIssue` is `{ message, path, line, column, filename? }`, counted from 1. The text is YAML 1.2 (core schema): `yes` and `no` stay strings, tags are issues, and duplicate keys and several documents are syntax errors.
