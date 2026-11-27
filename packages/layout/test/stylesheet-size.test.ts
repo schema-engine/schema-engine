@@ -18,9 +18,16 @@ import { createLayoutTheme } from '@/lib/layout-theme';
  * stylesheet cannot know which documents will set `grid.subgrid`, and each is needed: the box rule makes a box a
  * column subgrid on its parent's gap, the child rule spans what is not an item, and the grid rule takes the parent's
  * template, gap and default column over the grid's own resets.
+ *
+ * Numeric spans then added 621 raw bytes and 78 gzipped (F6). The grid rule gained one row of the property table, the
+ * track count its items clamp a `span` to: a declared custom property over the five breakpoint gates, one gate and
+ * one reset per breakpoint, and in a container theme one more gate reset. The `grid-auto-flow` line and the subgrid's
+ * `inherit` are the rest. Each is emitted in every theme, because a stylesheet cannot know which documents will set
+ * `span` or `autoFlow`, and the row cannot be dropped: the count must follow the template through the same gates, or
+ * the clamp would switch at a different width than the tracks do.
  */
-const RAW_BUDGET_BYTES = 11_508;
-const GZIP_BUDGET_BYTES = 1_680;
+const RAW_BUDGET_BYTES = 12_135;
+const GZIP_BUDGET_BYTES = 1_765;
 
 describe('the default theme stylesheet size', () => {
 	const css = createLayoutTheme().css;

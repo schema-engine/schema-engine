@@ -73,8 +73,10 @@ export {
 	elementIsSubgrid,
 	elementUsesGridWidths,
 	gridAreaTemplates,
+	gridSpanIssues,
 	gridUsesAreas,
 	namedPlacementOverflow,
+	spanPlacementIssue,
 	subgridPlacementIssue,
 } from './lib/grid-placement';
 export type { CascadeSlot, GridAreaRows, GridAreaTemplates, GridBreakpointToken } from './lib/grid-placement';

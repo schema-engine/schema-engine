@@ -122,7 +122,7 @@ const GridAreasSchema = z
 
 const GridLayoutPropertiesSchema = z.strictObject({
 	areas: z.optional(GridAreasSchema),
-	columns: z.optional(z.union([z.number(), z.literal('auto')])),
+	columns: z.optional(z.union([z.int().check(z.positive()), z.literal('auto')])),
 	gap: z.optional(GridGapValueSchema),
 	gapX: z.optional(GridGapValueSchema),
 	gapY: z.optional(GridGapValueSchema),
@@ -137,6 +137,13 @@ const GridLayoutPropertiesSchema = z.strictObject({
 		z.enum(['start', 'end', 'center', 'stretch', 'space-around', 'space-between', 'space-evenly']),
 	),
 	placeContent: z.optional(z.string()),
+	autoFlow: z
+		.optional(z.enum(['row', 'dense']))
+		.check(
+			z.describe(
+				"How items without a position fill the tracks: 'row' in source order, 'dense' backfills earlier gaps with later, smaller items. Dense changes the visual order, not the DOM or focus order. Top level only.",
+			),
+		),
 });
 
 export const GridBreakpointConfigSchema = z.pick(GridLayoutPropertiesSchema, {
@@ -179,6 +186,13 @@ const ElementGridPropertiesSchema = z.strictObject({
 	offset: z
 		.optional(z.enum(GridOffsetNames))
 		.check(z.describe(`Named empty space before the item (${GridOffsetNames.join(' | ')}).`)),
+	span: z
+		.optional(z.int().check(z.positive()))
+		.check(
+			z.describe(
+				'Number of tracks to span, never more than the grid has. Needs a grid with a known track count, so not `columns: "auto"`.',
+			),
+		),
 	column: z.optional(z.union([z.number(), z.string()])),
 	row: z.optional(z.union([z.number(), z.string()])),
 	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
