@@ -111,24 +111,69 @@ const NAMED_SCHEMA_KEYWORDS = new Set([
 	'dependencies',
 ]);
 
-const isLocalPointer = (ref: unknown): ref is string =>
-	typeof ref === 'string' && (ref === '#' || ref.startsWith('#/'));
+const isLocalPointer = (ref: string): boolean => ref === '#' || ref.startsWith('#/');
 
-/** A copy of a schema with each local JSON Pointer `$ref` (`#`, `#/...`) passed through `rewrite`. */
-function mapLocalRefs(node: unknown, rewrite: (pointer: string) => string): unknown {
-	if (Array.isArray(node)) return node.map((item) => mapLocalRefs(item, rewrite));
+/**
+ * Whether a schema is the root of a resource of its own, which resolves its references against itself. A draft-07
+ * `$id` that is only a fragment (`#node`) names an anchor instead.
+ */
+const startsResource = (schema: Record<string, unknown>): boolean =>
+	typeof schema.$id === 'string' && !schema.$id.startsWith('#');
+
+/**
+ * A copy of a schema's root resource with `rewrite` applied to each string keyword of every schema in it. A keyword
+ * is replaced where `rewrite` returns another value.
+ *
+ * @remarks
+ * A subschema with its own `$id` is another resource: its references and anchors are relative to it, not to the
+ * schema being embedded, so it is copied as it is. The root is walked whatever its `$id`; the embedder embeds a root
+ * that starts a resource as it is.
+ */
+function mapResource(node: unknown, rewrite: (keyword: string, value: string) => string, isRoot = true): unknown {
+	if (Array.isArray(node)) return node.map((item) => mapResource(item, rewrite, false));
 	if (!isPlainObject(node)) return node;
+	if (!isRoot && startsResource(node)) return structuredClone(node);
 	const copy: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(node)) {
-		if (key === '$ref' && isLocalPointer(value)) copy[key] = rewrite(value);
+		if (typeof value === 'string') copy[key] = rewrite(key, value);
 		else if (DATA_KEYWORDS.has(key)) copy[key] = structuredClone(value);
 		else if (NAMED_SCHEMA_KEYWORDS.has(key) && isPlainObject(value)) {
 			copy[key] = Object.fromEntries(
-				Object.entries(value).map(([name, schema]) => [name, mapLocalRefs(schema, rewrite)]),
+				Object.entries(value).map(([name, schema]) => [name, mapResource(schema, rewrite, false)]),
 			);
-		} else copy[key] = mapLocalRefs(value, rewrite);
+		} else copy[key] = mapResource(value, rewrite, false);
 	}
 	return copy;
+}
+
+/** The anchor names a schema's root resource declares: `$anchor`, `$dynamicAnchor` and a draft-07 `$id: '#name'`. */
+function declaredAnchors(schema: JSONSchemaObject): Set<string> {
+	const names = new Set<string>();
+	mapResource(schema, (keyword, value) => {
+		if (keyword === '$anchor' || keyword === '$dynamicAnchor') names.add(value);
+		else if (keyword === '$id' && value.startsWith('#')) names.add(value.slice(1));
+		return value;
+	});
+	return names;
+}
+
+/**
+ * A copy of a schema's root resource with its local JSON Pointer references passed through `pointer`, and each
+ * anchor it declares, with the `#name` references to it, renamed by `anchor`.
+ */
+function rewriteResource(
+	schema: JSONSchemaObject,
+	rewrite: { readonly pointer?: (pointer: string) => string; readonly anchor?: (name: string) => string },
+): JSONSchemaObject {
+	const anchors = rewrite.anchor ? declaredAnchors(schema) : new Set<string>();
+	const renamed = (name: string) => (rewrite.anchor && anchors.has(name) ? rewrite.anchor(name) : name);
+	return mapResource(schema, (keyword, value) => {
+		if (keyword === '$anchor' || keyword === '$dynamicAnchor') return renamed(value);
+		if (keyword === '$id' && value.startsWith('#')) return `#${renamed(value.slice(1))}`;
+		if (keyword !== '$ref' && keyword !== '$dynamicRef') return value;
+		if (isLocalPointer(value)) return rewrite.pointer ? rewrite.pointer(value) : value;
+		return value.startsWith('#') ? `#${renamed(value.slice(1))}` : value;
+	}) as JSONSchemaObject;
 }
 
 function withoutSchemaKeyword(schema: JSONSchemaObject): JSONSchemaObject {
@@ -138,9 +183,9 @@ function withoutSchemaKeyword(schema: JSONSchemaObject): JSONSchemaObject {
 
 function hasLocalRef(schema: JSONSchemaObject): boolean {
 	let found = false;
-	mapLocalRefs(schema, (pointer) => {
-		found = true;
-		return pointer;
+	mapResource(schema, (keyword, value) => {
+		if (keyword === '$ref' && isLocalPointer(value)) found = true;
+		return value;
 	});
 	return found;
 }
@@ -170,9 +215,17 @@ export interface JSONSchemaEmbedder {
  * `$schema` is dropped, since the document being written declares the dialect. A schema whose `$ref` points into
  * itself from its root (`#`, `#/$defs/node`, as ArkType writes a recursive type) would point at the wrong root once
  * embedded, so it is hoisted: in a document, into its definitions under a key of its own (`embedded-1`), with each of
- * its local pointers prefixed by that place; in a collection, as an entry of its own, referred to by its URI. A
- * schema with its own `$id` resolves its pointers against that and is embedded as it is. A plain-name anchor
- * (`#node`) is left alone; it resolves anywhere in the document.
+ * its local pointers prefixed by that place; in a collection, as an entry of its own, referred to by its URI. The
+ * references stay `#/...` pointers and `#name` anchors, which is what AI tool APIs resolve, rather than `$id` URIs.
+ *
+ * A plain-name anchor (`$anchor`, `$dynamicAnchor`, a draft-07 `$id: '#node'`) resolves anywhere in the document, so
+ * two schemas that each declare `node` would declare it twice. Each embedded schema's anchors, and the `#node`
+ * references to them, are renamed to carry its key (`embedded-1-node`), whether it is hoisted into a document or
+ * embedded where it stands. A schema hoisted into a collection is a resource of its own by its `$id`, which scopes
+ * its anchors, so they keep their names.
+ *
+ * Only the schema's root resource is rewritten. A schema with its own `$id`, and any subschema that sets one, resolves
+ * its pointers and anchors against that and is left as it is.
  */
 export function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPlacement): JSONSchemaEmbedder {
 	const keyword = definitionsKeyword(target);
@@ -181,20 +234,27 @@ export function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPl
 	return {
 		embed(own) {
 			const body = withoutSchemaKeyword(own);
-			if (typeof body.$id === 'string' || !hasLocalRef(body)) return body;
+			if (startsResource(body)) return body;
+			const pointsIntoItself = hasLocalRef(body);
+			if (!pointsIntoItself && declaredAnchors(body).size === 0) return body;
 			count += 1;
 			const key = `embedded-${count}`;
-			if (placement.kind === 'collection') {
+			if (pointsIntoItself && placement.kind === 'collection') {
 				const ref = placement.uri(key);
 				hoisted[key] = { ...(own.$schema === undefined ? {} : { $schema: own.$schema }), $id: ref, ...body };
 				return { $ref: ref };
 			}
 			const ref = `#/${keyword}/${key}`;
-			hoisted[key] = mapLocalRefs(body, (pointer) => `${ref}${pointer.slice(1)}`) as JSONSchemaObject;
+			const rewritten = rewriteResource(body, {
+				pointer: pointsIntoItself ? (pointer) => `${ref}${pointer.slice(1)}` : undefined,
+				anchor: (name) => `${key}-${name}`,
+			});
+			if (!pointsIntoItself) return rewritten;
+			hoisted[key] = rewritten;
 			return { $ref: ref };
 		},
 		finish(written) {
-			if (count === 0) return written;
+			if (Object.keys(hoisted).length === 0) return written;
 			const field = placement.kind === 'collection' ? 'schemas' : keyword;
 			const existing: JSONSchemaObject = isPlainObject(written[field]) ? written[field] : {};
 			for (const key of Object.keys(hoisted)) {

@@ -360,6 +360,181 @@ describe('a schema that exports itself is embedded so its own references still r
 	});
 });
 
+/** The keywords whose value is data, so nothing inside it is a reference or an anchor. */
+const DATA_KEYS = new Set(['const', 'enum', 'default', 'examples']);
+
+/** Whether a schema is the root of a resource of its own: it sets an `$id` that is not a draft-07 fragment anchor. */
+const startsResource = (node: JSONSchema): boolean => typeof node.$id === 'string' && !node.$id.startsWith('#');
+
+/** Every local `$ref` of a document with the resource it sits in, which is what the reference is resolved against. */
+function localRefs(document: JSONSchema): { ref: string; resource: JSONSchema }[] {
+	const found: { ref: string; resource: JSONSchema }[] = [];
+	const visit = (node: unknown, resource: JSONSchema): void => {
+		if (Array.isArray(node)) return node.forEach((item) => visit(item, resource));
+		if (typeof node !== 'object' || node === null) return;
+		const schema = node as JSONSchema;
+		const scope = node !== document && startsResource(schema) ? schema : resource;
+		if (typeof schema.$ref === 'string' && schema.$ref.startsWith('#'))
+			found.push({ ref: schema.$ref, resource: scope });
+		for (const [key, value] of Object.entries(schema)) if (!DATA_KEYS.has(key)) visit(value, scope);
+	};
+	visit(document, document);
+	return found;
+}
+
+/** The anchors a resource declares (`$anchor`, `$dynamicAnchor`, a draft-07 `$id: '#name'`), without nested resources. */
+function anchorsOf(resource: JSONSchema): Map<string, JSONSchema[]> {
+	const found = new Map<string, JSONSchema[]>();
+	const visit = (node: unknown): void => {
+		if (Array.isArray(node)) return node.forEach(visit);
+		if (typeof node !== 'object' || node === null) return;
+		const schema = node as JSONSchema;
+		if (node !== resource && startsResource(schema)) return;
+		const fragment = typeof schema.$id === 'string' && schema.$id.startsWith('#') ? schema.$id.slice(1) : undefined;
+		for (const name of [schema.$anchor, schema.$dynamicAnchor, fragment]) {
+			if (typeof name === 'string') found.set(name, [...(found.get(name) ?? []), schema]);
+		}
+		for (const [key, value] of Object.entries(schema)) if (!DATA_KEYS.has(key)) visit(value);
+	};
+	visit(resource);
+	return found;
+}
+
+/** What a local `$ref` points at within the resource it sits in: a JSON Pointer from its root, or an anchor of it. */
+function resolveLocal(resource: JSONSchema, ref: string): JSONSchema | undefined {
+	if (ref.startsWith('#/') || ref === '#') {
+		const target = ref
+			.slice(1)
+			.split('/')
+			.filter((segment) => segment !== '')
+			.map((segment) => segment.replaceAll('~1', '/').replaceAll('~0', '~'))
+			.reduce<unknown>((node, segment) => (node as Record<string, unknown> | undefined)?.[segment], resource);
+		return typeof target === 'object' && target !== null ? (target as JSONSchema) : undefined;
+	}
+	return anchorsOf(resource).get(ref.slice(1))?.[0];
+}
+
+/** The local references of a document that point at nothing, and the anchors a resource of it declares twice. */
+function brokenLinks(document: JSONSchema): string[] {
+	const broken = localRefs(document)
+		.filter(({ ref, resource }) => resolveLocal(resource, ref) === undefined)
+		.map(({ ref }) => `unresolved ${ref}`);
+	const resources: JSONSchema[] = [document];
+	const collect = (node: unknown): void => {
+		if (Array.isArray(node)) return node.forEach(collect);
+		if (typeof node !== 'object' || node === null) return;
+		if (node !== document && startsResource(node as JSONSchema)) resources.push(node as JSONSchema);
+		for (const [key, value] of Object.entries(node)) if (!DATA_KEYS.has(key)) collect(value);
+	};
+	collect(document);
+	for (const resource of resources) {
+		for (const [name, declarations] of anchorsOf(resource)) {
+			if (declarations.length > 1) broken.push(`duplicate anchor ${name}`);
+		}
+	}
+	return broken;
+}
+
+describe('a schema that exports itself keeps its references inside the resource they belong to', () => {
+	const actionOf = (schema: JSONSchema, $type = 'nested') =>
+		createFormEngine({
+			actions: [
+				{
+					$type,
+					schema: exporting(schema),
+					metadata: { name: $type, description: $type },
+					execute: async () => ({ status: 'success' as const }),
+				},
+			],
+		});
+
+	test('a nested resource with its own $id is not rewritten, so its references resolve inside it', () => {
+		const child = {
+			$id: 'https://example.test/child',
+			$defs: { value: { type: 'string' } },
+			type: 'object',
+			properties: { name: { $ref: '#/$defs/value' } },
+		};
+		const document = actionOf({ $ref: '#/$defs/child', $defs: { child } }).generateActionConfigSchema(
+			'nested',
+		) as unknown as { $defs: Record<string, JSONSchema> };
+		const hoisted = resolve(document, document.$defs['action:nested']!.$ref as string);
+		const nested = (hoisted.$defs as Record<string, JSONSchema>).child!;
+		expect(hoisted.$ref).toBe('#/$defs/embedded-1/$defs/child');
+		expect((nested.properties as Record<string, JSONSchema>).name).toEqual({ $ref: '#/$defs/value' });
+		expect(brokenLinks(document)).toEqual([]);
+	});
+
+	test('a nested resource keeps its anchors, since they belong to it', () => {
+		const child = {
+			$id: 'https://example.test/child',
+			$anchor: 'node',
+			type: 'object',
+			properties: { next: { $ref: '#node' } },
+		};
+		const document = actionOf({ $ref: '#/$defs/child', $defs: { child } }).generateActionConfigSchema(
+			'nested',
+		) as unknown as { $defs: Record<string, JSONSchema> };
+		const hoisted = resolve(document, document.$defs['action:nested']!.$ref as string);
+		const nested = (hoisted.$defs as Record<string, JSONSchema>).child!;
+		expect(nested.$anchor).toBe('node');
+		expect((nested.properties as Record<string, JSONSchema>).next).toEqual({ $ref: '#node' });
+		expect(brokenLinks(document)).toEqual([]);
+	});
+
+	const tag = (name: string) => ({ $type: { const: name } });
+	const anchored = {
+		'inline, in draft-2020-12': {
+			target: 'draft-2020-12' as const,
+			schema: (name: string) => ({
+				$anchor: 'node',
+				type: 'object',
+				properties: { ...tag(name), next: { $ref: '#node' } },
+			}),
+			bodyOf: (root: JSONSchema) => root,
+		},
+		'hoisted, in draft-2020-12': {
+			target: 'draft-2020-12' as const,
+			schema: (name: string) => ({
+				$anchor: 'node',
+				$ref: '#/$defs/body',
+				$defs: { body: { type: 'object', properties: { ...tag(name), next: { $ref: '#node' } } } },
+			}),
+			bodyOf: (root: JSONSchema) => (root.$defs as Record<string, JSONSchema>).body!,
+		},
+		'hoisted, as a draft-07 fragment $id': {
+			target: 'draft-7' as const,
+			schema: (name: string) => ({
+				$id: '#node',
+				$ref: '#/definitions/body',
+				definitions: { body: { type: 'object', properties: { ...tag(name), next: { $ref: '#node' } } } },
+			}),
+			bodyOf: (root: JSONSchema) => (root.definitions as Record<string, JSONSchema>).body!,
+		},
+	};
+
+	test.each(Object.entries(anchored))('two schemas that declare the same anchor, %s, get one each', (_name, kind) => {
+		const twins = createFormEngine({
+			actions: ['first', 'second'].map(($type) => ({
+				$type,
+				schema: exporting(kind.schema($type)),
+				metadata: { name: $type, description: $type },
+				execute: async () => ({ status: 'success' as const }),
+			})),
+		});
+		const document = twins.generateFormConfigSchema({ target: kind.target }) as unknown as JSONSchema;
+		expect(brokenLinks(document)).toEqual([]);
+		const definitions = (document.$defs ?? document.definitions) as Record<string, JSONSchema>;
+		for (const $type of ['first', 'second']) {
+			const written = definitions[`action:${$type}`]!;
+			const root = typeof written.$ref === 'string' ? resolve(document, written.$ref) : written;
+			const next = (kind.bodyOf(root).properties as Record<string, JSONSchema>).next!;
+			expect(kind.bodyOf(root).properties).toMatchObject(tag($type));
+			expect(resolveLocal(document, next.$ref as string)).toBe(root);
+		}
+	});
+});
+
 describe('a schema whose converter throws for a target is listed by its shape', () => {
 	test('the export still succeeds, and warns with the vendor and target', () => {
 		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);

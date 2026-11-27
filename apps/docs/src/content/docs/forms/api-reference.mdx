@@ -215,7 +215,13 @@ How a rule 2 schema is embedded in the export:
   `$defs`) is moved to a place where those references still resolve. In a document it goes under the document's
   `$defs` (or `definitions`) as `embedded-1`, `embedded-2` and so on, with its references rewritten to that place. In
   `generateJSONSchemaCollection()` it becomes an entry of its own, referred to by its URI. A schema that is already the
-  root of a collection entry, or that sets its own `$id`, stays as it is.
+  root of a collection entry, or that sets its own `$id`, stays as it is. References stay `#/...` pointers, which AI
+  tool APIs resolve, rather than `$id` URIs. Only the schema's own resource is rewritten: a subschema that sets its own
+  `$id` is a resource of its own, so its references stay relative to it.
+- A plain-name anchor (`$anchor`, `$dynamicAnchor`, or a draft-07 `$id: '#node'`) is global to a document, so two rule 2
+  schemas that each declare `node` would declare it twice. Each schema's anchors, and the `#node` references to them,
+  are renamed to carry its place (`embedded-1-node`), whether it is moved to the definitions or embedded where it
+  stands.
 - A document (not the collection) lists catalog metadata (`title`, `description`, `componentType`, `category`) on every
   registration. It adds them beside a rule 2 schema's keywords where the schema does not set the same key. They are
   annotations, so what the schema accepts does not change.
