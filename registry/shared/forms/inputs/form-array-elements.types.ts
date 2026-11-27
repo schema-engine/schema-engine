@@ -1,8 +1,8 @@
 import type { ElementRenderProps } from '@schema-engine/forms';
-import type { ArrayElementConfigSchema } from '@schema-engine/forms/elements';
+import type { ArrayElementConfigSchema } from '@schema-engine/forms/default-elements';
 
-export { ArrayElementConfigSchema } from '@schema-engine/forms/elements';
-export type { ArrayElementsConfig, ArrayElementsInput } from '@schema-engine/forms/elements';
+export { ArrayElementConfigSchema } from '@schema-engine/forms/default-elements';
+export type { ArrayElementsConfig, ArrayElementsInput } from '@schema-engine/forms/default-elements';
 
 export type ArrayElementsProps = ElementRenderProps<
 	typeof ArrayElementConfigSchema,

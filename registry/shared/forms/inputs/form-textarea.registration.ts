@@ -1,5 +1,5 @@
 import { FormTextarea } from './form-textarea';
-import { TextareaElementContract } from '@schema-engine/forms/elements';
+import { TextareaElementContract } from '@schema-engine/forms/default-elements';
 import { defineInput } from '@schema-engine/forms';
 
 export const TextareaElementRegistration = defineInput({

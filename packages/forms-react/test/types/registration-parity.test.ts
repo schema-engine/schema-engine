@@ -1,7 +1,7 @@
 /**
  * Asserts that every registration file of the shared form elements is registered, under a unique $type.
  * Form element registrations live in registry/shared/forms; their $type comes from the element contract of
- * `@schema-engine/forms/elements` or, for the date elements, from the registration itself.
+ * `@schema-engine/forms/default-elements` or, for the date elements, from the registration itself.
  * View recipe implementations live in the registry source.
  */
 

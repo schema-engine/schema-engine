@@ -27,7 +27,10 @@ The engine uses Zod Mini for its first-party schemas and keeps Standard Schema a
 | `forms-react`          | Headless renderer; copied registry widgets bind the element contracts of `forms` to their components    |
 | `forms-radiant`        | Radiant widgets that bind the same element contracts, through `bindRegistry`                            |
 
-The default widget `$type`s (for example `input`, `drop-zone`) are **element contracts**, defined once in `@schema-engine/forms/elements`: the `$type`, schema, metadata, value declaration, container kind and appearance axes, with no `render`. A renderer binds only its own part: `forms-radiant` binds every contract with `bindRegistry` (`radiantElements`), and each shadcn registry item spreads its contract into `defineInput` beside its component, because items are copied one at a time. `date` and `date-range` exist only in the shadcn registry and keep their schemas there. Custom registrations use the engine contract only (`defineInput`, `BaseFieldSchema`, Standard Schema). Library-shaped keys (iMask, drop-zone `accept`) are part of the contract; a renderer that cannot honour one ignores it.
+- **Element contract.** An element registration without the part one renderer adds (`render`, and an input's own `validations`): the `$type`, schema, metadata, value declaration, container kind and appearance axes.
+- **Default element contracts.** The contracts of the 18 default widget `$type`s (for example `input`, `drop-zone`), defined once in `@schema-engine/forms/default-elements` and held in the registry `defaultElementContracts`. Say "default element contracts", not "built-in elements": forms ships no widget, only the contracts.
+
+A renderer binds only its own part: `forms-radiant` binds every contract with `bindRegistry` (`radiantElements`), and each shadcn registry item spreads its contract into `defineInput` beside its component, because items are copied one at a time. `date` and `date-range` exist only in the shadcn registry and keep their schemas there. Custom registrations use the engine contract only (`defineInput`, `BaseFieldSchema`, Standard Schema). Library-shaped keys (iMask, drop-zone `accept`) are part of the contract; a renderer that cannot honour one ignores it.
 
 ### Rules
 

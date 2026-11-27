@@ -1,11 +1,11 @@
-import type { CheckboxFieldConfig } from '@schema-engine/forms/elements';
+import type { CheckboxFieldConfig } from '@schema-engine/forms/default-elements';
 
 export {
 	CheckboxFieldExtensionSchema,
 	CheckboxFieldConfigSchema,
 	checkboxFieldValue,
-} from '@schema-engine/forms/elements';
-export type { CheckboxFieldExtension, CheckboxFieldConfig } from '@schema-engine/forms/elements';
+} from '@schema-engine/forms/default-elements';
+export type { CheckboxFieldExtension, CheckboxFieldConfig } from '@schema-engine/forms/default-elements';
 
 export type CheckboxFieldProps = CheckboxFieldConfig & {
 	onChange?: (checked: boolean) => void;

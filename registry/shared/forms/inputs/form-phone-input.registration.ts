@@ -15,7 +15,7 @@
 
 import { FormPhoneInput } from './form-phone-input';
 import { createPhoneValidationRegistration } from './form-phone-input.validation';
-import { PhoneInputElementContract } from '@schema-engine/forms/elements';
+import { PhoneInputElementContract } from '@schema-engine/forms/default-elements';
 import { defineInput } from '@schema-engine/forms';
 
 export { createPhoneValidationRegistration };

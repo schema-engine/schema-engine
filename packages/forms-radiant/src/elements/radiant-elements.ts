@@ -1,5 +1,5 @@
 import { bindRegistry } from '@schema-engine/registry';
-import { elementContracts, type ElementBindings } from '@schema-engine/forms/elements';
+import { defaultElementContracts, type ElementBindings } from '@schema-engine/forms/default-elements';
 import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
 import { SubmitButton } from './actions/submit-button';
 import { FormSubmissionAlert } from './content/form-submission-alert';
@@ -21,14 +21,14 @@ import { FormSwitch } from './inputs/form-switch';
 import { FormTextarea } from './inputs/form-textarea';
 
 /**
- * Every element of the package: the contracts of `@schema-engine/forms/elements` with the Radiant component of each.
+ * Every element of the package: the contracts of `@schema-engine/forms/default-elements` with the Radiant component of each.
  *
  * @remarks
  * The schema, metadata and value each element writes belong to its contract, shared with every other renderer. The
  * binding adds only the Radiant `render`, and the phone input's own `validations`. `bindRegistry` fails to compile, and
  * fails to build, when a contract has no binding here.
  */
-export const radiantElements = bindRegistry(elementContracts, {
+export const radiantElements = bindRegistry(defaultElementContracts, {
 	submit: { render: SubmitButton },
 	'submission-alert': { render: FormSubmissionAlert },
 	arrayElements: { render: FormArrayElements },
@@ -47,4 +47,4 @@ export const radiantElements = bindRegistry(elementContracts, {
 	slider: { render: FormSlider },
 	switch: { render: FormSwitch },
 	textarea: { render: FormTextarea },
-} satisfies ElementBindings<typeof elementContracts>);
+} satisfies ElementBindings<typeof defaultElementContracts>);

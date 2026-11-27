@@ -15,7 +15,7 @@
  */
 
 import { FormDropZone } from './form-drop-zone';
-import { DropZoneElementContract } from '@schema-engine/forms/elements';
+import { DropZoneElementContract } from '@schema-engine/forms/default-elements';
 import { defineInput } from '@schema-engine/forms';
 
 export const DropZoneElementRegistration = defineInput({

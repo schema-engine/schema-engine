@@ -15,7 +15,7 @@
  */
 
 import { FormMaskedInput } from './form-masked-input';
-import { MaskedInputElementContract } from '@schema-engine/forms/elements';
+import { MaskedInputElementContract } from '@schema-engine/forms/default-elements';
 import { defineInput } from '@schema-engine/forms';
 
 export const MaskedInputElementRegistration = defineInput({

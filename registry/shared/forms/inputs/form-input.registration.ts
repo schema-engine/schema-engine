@@ -15,7 +15,7 @@
  */
 
 import { FormInput } from './form-input';
-import { InputElementContract } from '@schema-engine/forms/elements';
+import { InputElementContract } from '@schema-engine/forms/default-elements';
 import { defineInput } from '@schema-engine/forms';
 
 export const InputElementRegistration = defineInput({

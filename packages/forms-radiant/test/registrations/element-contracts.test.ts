@@ -1,21 +1,28 @@
-import { elementContracts } from '@schema-engine/forms/elements';
+import { defaultElementContracts } from '@schema-engine/forms/default-elements';
 import { describe, expect, test } from 'vitest';
 import { schemaFormRegistrations } from '@/registrations';
 import { radiantElements } from '@/elements/radiant-elements';
 
+/** The value declaration of a registration or a contract; a container or a static element has none. */
+const valueOf = (registration: object | undefined): unknown =>
+	registration !== undefined && 'value' in registration ? registration.value : undefined;
+
 describe('the Radiant elements', () => {
 	test('bind every element contract, in the order of the contracts', () => {
-		expect(radiantElements.keys()).toEqual(elementContracts.keys());
-		expect(schemaFormRegistrations.map((registration) => registration.$type)).toEqual(elementContracts.keys());
+		expect(radiantElements.keys()).toEqual(defaultElementContracts.keys());
+		expect(schemaFormRegistrations.map((registration) => registration.$type)).toEqual(
+			defaultElementContracts.keys(),
+		);
 	});
 
 	test('share the schema, the value declaration and the metadata of each contract', () => {
-		for (const contract of elementContracts.all()) {
+		for (const contract of defaultElementContracts.all()) {
 			const registration = radiantElements.get(contract.$type);
 
 			expect(registration?.schema, contract.$type).toBe(contract.schema);
 			expect(registration?.metadata, contract.$type).toBe(contract.metadata);
 			expect(registration?.kind, contract.$type).toBe(contract.kind);
+			expect(valueOf(registration), contract.$type).toBe(valueOf(contract));
 			expect(typeof registration?.render, contract.$type).toBe('function');
 		}
 	});

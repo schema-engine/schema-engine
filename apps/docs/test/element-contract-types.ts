@@ -1,9 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const elementsFolder = join(import.meta.dirname, '../../../packages/forms/src/elements');
+const elementsFolder = join(import.meta.dirname, '../../../packages/forms/src/default-elements');
 
-/** The `$type` of each element contract of `@schema-engine/forms/elements`, by the name of its constant. */
+/** The `$type` of each element contract of `@schema-engine/forms/default-elements`, by the name of its constant. */
 export function contractTypes(): Map<string, string> {
 	const sources = readdirSync(elementsFolder)
 		.filter((file) => file.endsWith('.ts'))

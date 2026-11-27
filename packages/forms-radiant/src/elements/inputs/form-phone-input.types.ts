@@ -1,11 +1,11 @@
-import type { PhoneInputFieldOutput } from '@schema-engine/forms/elements';
+import type { PhoneInputFieldOutput } from '@schema-engine/forms/default-elements';
 
 export {
 	PhoneInputFieldExtensionSchema,
 	PhoneInputFieldSchema,
 	phoneInputFieldExample,
 	phoneInputFieldValue,
-} from '@schema-engine/forms/elements';
-export type { PhoneInputFieldConfig, PhoneInputFieldOutput } from '@schema-engine/forms/elements';
+} from '@schema-engine/forms/default-elements';
+export type { PhoneInputFieldConfig, PhoneInputFieldOutput } from '@schema-engine/forms/default-elements';
 
 export type PhoneInputFieldProps = PhoneInputFieldOutput;

@@ -1,5 +1,5 @@
 import { FormSlider } from './form-slider';
-import { SliderElementContract } from '@schema-engine/forms/elements';
+import { SliderElementContract } from '@schema-engine/forms/default-elements';
 import { defineInput } from '@schema-engine/forms';
 
 export const SliderElementRegistration = defineInput({
