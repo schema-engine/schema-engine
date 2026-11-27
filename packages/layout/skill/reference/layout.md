@@ -37,6 +37,8 @@ export const containerStyle = getGridVariables({ columns: 2 }, theme.grid, []);
 
 An axis is one independent dimension of appearance with 2 to 5 named values, each a set of semantic CSS tokens (`--` keys) that components read; components never read the value itself. `defineAxis({ $type, values, default, metadata })` builds one and throws on a bad name, a bad value count, a token that is not a custom property or a `default` that is not a value. `builtInAxes` is `size` (`compact`, `default`, `comfortable`) and `surface` (`flat`, `outlined`, `elevated`); axes are registrations, so a later axis of the same `$type` replaces the earlier one, and a list without `builtInAxes` has neither. An axis becomes a `data-se-<axis>` attribute, so a domain passes the attribute names it already writes as `reservedNames`.
 
+An axis is for a look an author picks among a few. A value that every entity of a domain has for itself (a colour per machine, per brand, per tenant) is domain data, so it is not an axis, and `defineAxis` refuses more than five values. Write the domain's own attribute from the data (`data-machine="sampler"`, never a `data-se-*` name, which the renderers own), and have the host stylesheet map each value to the semantic tokens that components already read (`[data-machine="sampler"] { --primary: #e4572e; }`), generated from the same data. An axis value may read such a token (`'--se-surface-background': 'color-mix(in srgb, var(--primary) 12%, transparent)'`), so the pick stays a choice among a few looks while the colour stays the entity's. Choose an axis when an author picks among 2 to 5 looks, and identity tokens when every entity has its own value.
+
 The pure helpers: `checkAppearance(authored, options)` validates a pick, `mergeAppearance(inherited, own)` lays a child over its parent, `pickSupportedAppearance(picks, axes)` keeps what an owner supports and `getAppearanceAttributes(selection)` produces the `data-se-*` attributes. Walking a document to inherit picks belongs to each domain. `createAppearanceSchema(registry)` is the closed schema of a pick, for JSON Schema export.
 
 ## Grid
@@ -51,4 +53,55 @@ Breakpoints measure the window by default (`@media`). `createLayoutTheme({ grid:
 
 ## Recipe protocol
 
-A recipe composes named slots into a view. `defineRecipeProtocol` declares a domain's slots and kinds once; `defineProtocolRecipeSpec`, `bindRecipe` and `createRecipeRegistry` build the recipes of that protocol. Forms is the first protocol. A spec's `slotSchemas` take any Standard Schema that validates synchronously, and `spec.schema` is a Standard Schema, not a Zod one: validate it with `safeParseStandardSchema` (`@schema-engine/registry`). A slot that declares `appearanceAxes` must take an `appearance` key in its schema input, which the types check. `bindRecipe` keeps the slot schemas on the registration as `slotSchemas`, which `createRecipeRegistry` checks against the recipe's `slots`.
+A recipe composes named slots into a view. `defineRecipeProtocol` declares a domain's slots and kinds once; `defineProtocolRecipeSpec`, `bindRecipe` and `createRecipeRegistry` build the recipes of that protocol. Forms is the first protocol, and nothing in the contract is form-specific. A spec's `slotSchemas` take any Standard Schema that validates synchronously (Zod Mini, Valibot or one you write), and `spec.schema` is a Standard Schema, not a Zod one: validate it with `safeParseStandardSchema` (`@schema-engine/registry`). A slot that declares `appearanceAxes` must take an `appearance` key in its schema input, which the types check. `bindRecipe` keeps the slot schemas on the registration as `slotSchemas`, which `createRecipeRegistry` checks against the recipe's `slots`.
+
+## Recipes outside forms
+
+The recipe holds the shell and the config of each slot: the slot schemas, `slotDefaults` and `appearanceAxes`, plus a render payload that `bindRecipe` attaches (a React component for one renderer, a Radiant one for another; the package never reads it). The document holds which recipe it takes, as a `view` (the recipe's `$type` and the config of its slots), and the content of the slots, which is plain data the recipe does not read. `resolveRecipeView(recipe, view, { axes, inherited })` lays the recipe's defaults under the view, resolves each slot's appearance and parses the result, returning `{ issues, view }` or `{ issues, schemaIssues }`; `readSlotConfig(view, slot, schema)` reads one slot typed. The same spec bound twice, once for each renderer, draws the same document in both.
+
+```ts title="layout/card-recipe.ts"
+import * as v from 'valibot';
+import {
+	bindRecipe,
+	createRecipeRegistry,
+	defineProtocolRecipeSpec,
+	defineRecipeProtocol,
+	getDefaultLayoutTheme,
+	readSlotConfig,
+	resolveRecipeView,
+} from '@schema-engine/layout';
+
+export const cardProtocol = defineRecipeProtocol({
+	slots: ['shell', 'header', 'body', 'footer'],
+	kinds: ['card'],
+});
+
+export const cardSpec = defineProtocolRecipeSpec(cardProtocol, {
+	$type: 'card',
+	kind: 'card',
+	metadata: { name: 'Card' },
+	slotSchemas: {
+		shell: v.strictObject({ appearance: v.optional(v.record(v.string(), v.string())) }),
+		header: v.strictObject({ level: v.optional(v.picklist([1, 2, 3, 4, 5, 6]), 2) }),
+		body: v.strictObject({ gap: v.optional(v.picklist(['sm', 'md']), 'md') }),
+		footer: v.strictObject({ align: v.optional(v.picklist(['start', 'end']), 'start') }),
+	},
+	slotDefaults: { header: { level: 3 } },
+	appearanceAxes: { shell: ['size', 'surface'] },
+});
+
+export const recipes = createRecipeRegistry(cardProtocol, [bindRecipe(cardSpec, { tag: 'article' })]);
+
+const recipe = recipes.get('card')!;
+const scope = { axes: getDefaultLayoutTheme().axes, inherited: {} };
+
+export const resolved = resolveRecipeView(
+	recipe,
+	{ $type: 'card', shell: { appearance: { surface: 'outlined' } }, footer: { align: 'end' } },
+	scope,
+);
+
+export const undeclared = resolveRecipeView(recipe, { $type: 'card', aside: {} }, scope);
+
+export const footer = resolved.view && readSlotConfig(resolved.view, 'footer', cardSpec.slotSchemas.footer);
+```

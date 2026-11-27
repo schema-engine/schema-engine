@@ -14,7 +14,7 @@ import * as reactPrimitives from '@schema-engine/forms-react/primitives';
 import { BaseFieldSchema } from '@schema-engine/forms';
 import { slugifyHeadingText } from '../src/mdx/rehype-heading-ids';
 import { anyValue } from './any-value';
-import { docsRoot, readPage, run, titledRunner, tsBlock, typecheck } from './snippet-harness';
+import { codeBlocks, docsRoot, readPage, run, titledRunner, tsBlock, typecheck } from './snippet-harness';
 
 vi.setConfig({ testTimeout: 15_000 });
 
@@ -276,6 +276,33 @@ describe('appearance axes page', () => {
 		expect(() => forms.createFormEngine({ elements: [notice] })).toThrow(
 			"Element 'notice' declares unknown appearance axis 'tone'. Declared axes: size, surface. Add it with createFormEngine({ layout: { appearance: [...builtInAxes, defineAxis({ $type: 'tone', ... })] } }).",
 		);
+	});
+
+	test('identity tokens: one rule for each of 17 machines that no axis could hold, with an axis reading the token', () => {
+		const files = titledRunner(page, packages);
+		const { machineCss, machineAttributes, theme } = files.load('machine-tokens.ts') as {
+			machineCss: string;
+			machineAttributes: (id: string) => Record<string, string>;
+			theme: layout.LayoutTheme;
+		};
+		const rules = machineCss.split('\n');
+		expect(rules).toHaveLength(17);
+		expect(rules[0]).toBe('[data-machine="sampler"] { --primary: #e4572e; }');
+
+		const squash = (css: string) => css.replace(/\s+/g, ' ').replaceAll("'", '"').trim();
+		const shown = codeBlocks(page).find((block) => block.lang === 'css' && block.heading.startsWith('Identity'));
+		expect(squash(machineCss)).toContain(squash(shown?.code ?? ''));
+
+		const { machines } = files.load('machines.helper.ts') as { machines: { id: string; color: string }[] };
+		const values = Object.fromEntries(machines.map(({ id }) => [id, {}]));
+		expect(() =>
+			layout.defineAxis({ $type: 'machine', metadata: { name: 'Machine' }, default: 'sampler', values }),
+		).toThrow(/2 to 5 values/);
+
+		expect(machineAttributes('sampler')).toEqual({ 'data-machine': 'sampler', 'data-se-tint': 'tinted' });
+		expect(theme.axes.tint).toEqual(['none', 'tinted']);
+		expect(theme.css).toContain('[data-se-tint="tinted"]');
+		expect(theme.css).toContain('--se-surface-background:color-mix(in srgb, var(--primary) 12%, transparent)');
 	});
 
 	test('defineAxis enforces the documented limits', () => {

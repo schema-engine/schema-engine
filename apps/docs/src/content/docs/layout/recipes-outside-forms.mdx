@@ -1,0 +1,271 @@
+---
+title: 'Recipes outside forms'
+description: 'A card recipe with a header, a body and a footer, bound for React and for Radiant: the recipe holds the shell and the slot config, the document holds the content.'
+order: 8
+---
+
+# Recipes outside forms
+
+A recipe is not a form feature. The [recipe protocol](/docs/layout/recipe-protocol) lives in `@schema-engine/layout` and knows no domain, so any host that draws a frame around content can use it: a panel in a music app, a dashboard widget, a marketing section. This page builds a `card` with a header, a body and a footer, and draws the same document with React and with Radiant.
+
+```bash
+pnpm add @schema-engine/layout @schema-engine/registry @standard-schema/spec valibot react react-dom @ecopages/jsx
+```
+
+## What the recipe holds and what the document holds
+
+| Part                                        | Held by      | Written as                                                         |
+| ------------------------------------------- | ------------ | ------------------------------------------------------------------ |
+| The shell: the component that frames a card | The recipe   | A render payload that `bindRecipe` attaches, one for each renderer |
+| The config of each slot, and its defaults   | The recipe   | A schema for each slot, and `slotDefaults`                         |
+| Which recipe a card uses, and its overrides | The document | `view`: the recipe's `$type` and the config of its slots           |
+| What the slots show: the title, the text    | The document | `content`: plain data, which the recipe never reads                |
+
+The recipe chooses how a card is framed and how each slot behaves. The document chooses which recipe it takes and fills the slots. A renderer reads both, so the same document draws with any renderer that binds the recipe.
+
+## Declare the protocol and the recipe
+
+The protocol names the slots and kinds of the domain once. The spec is one recipe of it: a `$type`, a kind and a schema for each slot. A slot schema is any Standard Schema that validates synchronously, so these are Valibot schemas (Zod Mini or a hand-written one works the same way).
+
+```ts title="card-recipe.ts"
+import * as v from 'valibot';
+import { defineProtocolRecipeSpec, defineRecipeProtocol } from '@schema-engine/layout';
+
+export const cardProtocol = defineRecipeProtocol({
+	slots: ['shell', 'header', 'body', 'footer'],
+	kinds: ['card'],
+	rules: [
+		{
+			name: 'card-needs-body',
+			check: (recipe) => (recipe.slots.includes('body') ? undefined : `kind 'card' must declare a body slot`),
+		},
+	],
+});
+
+export const cardSpec = defineProtocolRecipeSpec(cardProtocol, {
+	$type: 'card',
+	kind: 'card',
+	metadata: { name: 'Card', description: 'A shell with a header, a body and a footer' },
+	slotSchemas: {
+		shell: v.strictObject({ appearance: v.optional(v.record(v.string(), v.string())) }),
+		header: v.strictObject({ level: v.optional(v.picklist([1, 2, 3, 4, 5, 6]), 2) }),
+		body: v.strictObject({ gap: v.optional(v.picklist(['sm', 'md']), 'md') }),
+		footer: v.strictObject({ align: v.optional(v.picklist(['start', 'end']), 'start') }),
+	},
+	slotDefaults: { header: { level: 3 } },
+	appearanceAxes: { shell: ['size', 'surface'] },
+});
+```
+
+- `slotSchemas` is the config of each slot, not its content. A `header` is a heading level, a `footer` an alignment.
+- A schema fills its own defaults: an omitted slot parses from `{}`. `slotDefaults` is the recipe's own choice, laid under the document's config: here a level 3 heading.
+- `appearanceAxes` lists the axes a slot responds to, so a document can pick `size` or `surface` on the shell and on no other slot. A slot that declares axes must accept an `appearance` key, which the types check.
+
+## Resolve what a document selects
+
+`resolveRecipeView` lays the recipe's defaults under the document's `view`, resolves the appearance of each slot, parses the result and reports a key the recipe does not declare. `readSlotConfig` then reads one slot with its type. This step is the same for every renderer, so it is a file of its own:
+
+```ts title="resolve-card.ts"
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import {
+	getDefaultLayoutTheme,
+	readSlotConfig,
+	resolveRecipeView,
+	type ProtocolRecipeRegistration,
+} from '@schema-engine/layout';
+import type { ReadOnlyRegistry } from '@schema-engine/registry';
+import { cardSpec } from './card-recipe';
+
+export type CardView = StandardSchemaV1.InferInput<typeof cardSpec.schema>;
+
+export interface CardContent {
+	header: string;
+	body: string[];
+	footer: string[];
+}
+
+export interface CardDocument {
+	view: CardView;
+	content: CardContent;
+}
+
+function readCardConfig(view: Record<string, unknown>) {
+	const { slotSchemas } = cardSpec;
+	return {
+		shell: readSlotConfig(view, 'shell', slotSchemas.shell),
+		header: readSlotConfig(view, 'header', slotSchemas.header),
+		body: readSlotConfig(view, 'body', slotSchemas.body),
+		footer: readSlotConfig(view, 'footer', slotSchemas.footer),
+	};
+}
+
+export type CardConfig = ReturnType<typeof readCardConfig>;
+
+export function resolveCard<TRender>(
+	recipes: ReadOnlyRegistry<ProtocolRecipeRegistration<string, string, string, StandardSchemaV1, TRender>>,
+	document: CardDocument,
+) {
+	const recipe = recipes.get(document.view.$type);
+	if (!recipe) throw new Error(`No recipe '${document.view.$type}'.`);
+	const resolved = resolveRecipeView(recipe, document.view, {
+		axes: getDefaultLayoutTheme().axes,
+		inherited: {},
+	});
+	const problems = [...resolved.issues, ...(resolved.schemaIssues ?? [])];
+	if (!resolved.view || problems.length > 0) {
+		throw new Error(problems.map((problem) => problem.message).join(' '));
+	}
+	return { render: recipe.render, config: readCardConfig(resolved.view), content: document.content };
+}
+```
+
+A real host reports the problems to the author instead of throwing. `resolved.issues` are appearance picks and unknown keys, and `resolved.schemaIssues` are what a slot schema rejected: the [recipe protocol](/docs/layout/recipe-protocol) page describes both.
+
+## A document
+
+The document is plain data. It picks the recipe, overrides the config of two slots and fills the three slots that show content. It is written in TypeScript here so that it type-checks; the same object is the JSON a server sends.
+
+```ts title="sampler.ts"
+import type { CardDocument } from './resolve-card';
+
+export const sampler: CardDocument = {
+	view: {
+		$type: 'card',
+		shell: { appearance: { surface: 'outlined' } },
+		footer: { align: 'end' },
+	},
+	content: {
+		header: 'Sampler',
+		body: ['Sixteen pads, four voices.'],
+		footer: ['Save', 'Reset'],
+	},
+};
+```
+
+The content here is text. A host whose slots hold nodes of a registry of its own validates them with [`safeParseTree`](/docs/registry/resolve-a-document), which walks the `childPaths` of each registration.
+
+## Bind it for React
+
+`bindRecipe(spec, payload)` attaches what a renderer needs to draw the recipe. The layout package never reads the payload, so it is whatever your renderer takes: for React, the shell component. `createRecipeRegistry` checks each recipe against the protocol and returns the read-only registry that `resolveCard` reads.
+
+```tsx title="card.react.tsx"
+import type { ReactElement } from 'react';
+import { bindRecipe, createRecipeRegistry, getAppearanceAttributes } from '@schema-engine/layout';
+import { cardProtocol, cardSpec } from './card-recipe';
+import { resolveCard, type CardConfig, type CardContent, type CardDocument } from './resolve-card';
+
+function CardShell({ config, content }: { config: CardConfig; content: CardContent }) {
+	const Title = `h${config.header.level}` as const;
+	return (
+		<article className="card" {...getAppearanceAttributes(config.shell.appearance)}>
+			<header>
+				<Title>{content.header}</Title>
+			</header>
+			<div className="card-body" data-gap={config.body.gap}>
+				{content.body.map((text) => (
+					<p key={text}>{text}</p>
+				))}
+			</div>
+			<footer data-align={config.footer.align}>
+				{content.footer.map((label) => (
+					<button key={label} type="button">
+						{label}
+					</button>
+				))}
+			</footer>
+		</article>
+	);
+}
+
+const recipes = createRecipeRegistry(cardProtocol, [bindRecipe(cardSpec, CardShell)]);
+
+export function renderCard(document: CardDocument): ReactElement {
+	const { render: Shell, config, content } = resolveCard(recipes, document);
+	return <Shell config={config} content={content} />;
+}
+```
+
+## Bind it for Radiant
+
+The same spec, bound again with a shell that Radiant draws. Radiant renders Ecopages JSX, which writes `class` where React writes `className`. Nothing else changes: the schemas, the defaults and the axes belong to the spec, and `resolve-card.ts` is the file above.
+
+```tsx title="card.radiant.tsx"
+import type { JsxRenderable } from '@ecopages/jsx';
+import { bindRecipe, createRecipeRegistry, getAppearanceAttributes } from '@schema-engine/layout';
+import { cardProtocol, cardSpec } from './card-recipe';
+import { resolveCard, type CardConfig, type CardContent, type CardDocument } from './resolve-card';
+
+function CardShell({ config, content }: { config: CardConfig; content: CardContent }) {
+	const Title = `h${config.header.level}` as const;
+	return (
+		<article class="card" {...getAppearanceAttributes(config.shell.appearance)}>
+			<header>
+				<Title>{content.header}</Title>
+			</header>
+			<div class="card-body" data-gap={config.body.gap}>
+				{content.body.map((text) => (
+					<p>{text}</p>
+				))}
+			</div>
+			<footer data-align={config.footer.align}>
+				{content.footer.map((label) => (
+					<button type="button">{label}</button>
+				))}
+			</footer>
+		</article>
+	);
+}
+
+const recipes = createRecipeRegistry(cardProtocol, [bindRecipe(cardSpec, CardShell)]);
+
+export function renderCard(document: CardDocument): JsxRenderable {
+	const { render: Shell, config, content } = resolveCard(recipes, document);
+	return <Shell config={config} content={content} />;
+}
+```
+
+## Render it
+
+```ts title="page.ts"
+import { renderToString } from '@ecopages/jsx/server';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { renderCard as renderRadiantCard } from './card.radiant';
+import { renderCard as renderReactCard } from './card.react';
+import { sampler } from './sampler';
+
+const react = renderToStaticMarkup(renderReactCard(sampler));
+const radiant = renderToString(renderRadiantCard(sampler), { mode: 'plain' });
+
+console.log(react);
+console.log(`Radiant draws the same markup: ${radiant === react}`);
+```
+
+The page prints the markup of the React card and says whether the Radiant card is the same:
+
+{/* prettier-ignore */}
+```html
+<article class="card" data-se-surface="outlined">
+	<header><h3>Sampler</h3></header>
+	<div class="card-body" data-gap="md"><p>Sixteen pads, four voices.</p></div>
+	<footer data-align="end">
+		<button type="button">Save</button>
+		<button type="button">Reset</button>
+	</footer>
+</article>
+```
+
+```text
+Radiant draws the same markup: true
+```
+
+The card carries `data-se-surface="outlined"` from the document's pick, a level 3 heading from the recipe's `slotDefaults` and `data-align="end"` from the document's own override. The text comes from `content`.
+
+## Where the schemas matter
+
+The view schema is a Standard Schema typed by the slots, so a document is checked before it is drawn, whichever library wrote the slot schemas:
+
+- A key the recipe does not declare is an issue at that key: `Recipe 'card' does not accept view key 'aside'. Allowed: shell, header, body, footer.`
+- A bad value is reported at the slot and the key: `footer: { align: 'middle' }` fails at `['footer', 'align']`.
+- A pick on an axis a slot does not declare is reported at `['header', 'appearance', 'size']`.
+
+A hand-written registration needs no `bindRecipe`: it passes `createRecipeRegistry` with any Standard Schema as its `schema`, and it may leave out `slotSchemas`. The forms JSON Schema export lists a Zod slot in full and any other slot as an open object, with the appearance axes the recipe declares for it.
