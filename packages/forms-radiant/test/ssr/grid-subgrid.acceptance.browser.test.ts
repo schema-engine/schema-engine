@@ -1,5 +1,6 @@
 import { describe, expect, inject, test } from 'vitest';
 import {
+	expectSsrSubgridChainAcceptance,
 	expectSsrSubgridColumnsAcceptance,
 	expectSsrSubgridContainerAcceptance,
 	expectSsrSubgridHiddenAcceptance,
@@ -46,6 +47,10 @@ describe('SSR subgrid acceptance', () => {
 
 	test('a subgrid fieldset hides from its breakpoint', async () => {
 		await expectSsrSubgridHiddenAcceptance(html('hidden'));
+	});
+
+	test('every box between a subgrid and its grid carries the subgrid class', async () => {
+		await expectSsrSubgridChainAcceptance(html('nested'));
 	});
 
 	test('subgrids nest', async () => {

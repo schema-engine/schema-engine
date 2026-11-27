@@ -360,7 +360,8 @@ export const GRID_ITEM_CLASS = 'se-grid-item';
  * `grid-template-columns: subgrid` only works on a grid item of the grid whose tracks it takes, so the
  * element with `grid.subgrid`, every box between it and the grid that lays out its children, and that
  * {@link GRID_CLASS} grid itself must all carry this class. A box in the chain that does not (a plain
- * `div`) computes its template to `none` and the children fall back to one column, with nothing reported.
+ * `div`) computes its template to `none` and the children fall back to one column, with nothing reported
+ * at runtime. `findSubgridChainBreaks` finds such a box in a renderer's test.
  *
  * Keep a `<fieldset>` out of the chain: Chromium lays a fieldset's content out in an anonymous box that does
  * not take the subgrid, so its children fall back to one column there (Firefox and WebKit pass the tracks on).

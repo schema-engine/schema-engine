@@ -97,6 +97,9 @@ export type {
 	NormalizedGridTheme,
 } from './lib/grid-styles';
 
+export { findSubgridChainBreaks } from './lib/subgrid-chain';
+export type { SubgridChainBreak } from './lib/subgrid-chain';
+
 export { assertAxesNotReserved, createLayoutTheme, getDefaultLayoutTheme, isLayoutTheme } from './lib/layout-theme';
 export type { LayoutIssue } from './lib/layout-issue';
 export type {

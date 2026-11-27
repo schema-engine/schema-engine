@@ -37,6 +37,7 @@ const SUPPORTED_VALUE_EXPORTS = [
 	'elementHiddenSlots',
 	'elementIsSubgrid',
 	'elementUsesGridWidths',
+	'findSubgridChainBreaks',
 	'getAppearanceAttributes',
 	'getDefaultLayoutTheme',
 	'getGridItemVariables',
