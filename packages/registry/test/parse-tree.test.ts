@@ -183,6 +183,34 @@ describe('safeParseTree', () => {
 	});
 });
 
+describe('safeParseTree reads only the keys a document has', () => {
+	const box: BaseRegistration = {
+		$type: 'box',
+		schema: z.looseObject({ $type: z.literal('box') }),
+		metadata: { name: 'Box' },
+		childPaths: [['__proto__'], ['constructor'], ['toString']],
+	};
+	const boxes = createRegistry('Box', [box, knob]);
+
+	it('keeps a child authored under __proto__ as an entry of children', () => {
+		const result = safeParseTree(boxes, JSON.parse('{"$type":"box","__proto__":{"$type":"knob","value":1}}'));
+
+		expect(result.success).toBe(true);
+		const children = result.success ? result.tree.children : {};
+		expect(Object.keys(children)).toEqual(['__proto__']);
+		const json = JSON.stringify(children);
+		expect(json.startsWith('{"__proto__":{"$type":"knob"')).toBe(true);
+		const entry: unknown = Object.getOwnPropertyDescriptor(JSON.parse(json), '__proto__')?.value;
+		expect(entry).toMatchObject({ $type: 'knob', data: { $type: 'knob', value: 1 } });
+	});
+
+	it('finds no child where only Object.prototype has the key', () => {
+		const result = safeParseTree(boxes, { $type: 'box' });
+
+		expect(result).toEqual({ success: true, tree: expect.objectContaining({ children: {} }) });
+	});
+});
+
 describe('createRegistry childPaths', () => {
 	const withPaths = (childPaths: unknown) => ({ ...layout, childPaths }) as unknown as BaseRegistration;
 

@@ -42,13 +42,29 @@ function isRecord(value: unknown): value is Record<PropertyKey, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/**
+ * The value a document holds at a child path.
+ *
+ * @remarks
+ * Only the document's own keys count: a key a plain object inherits, such as `constructor`, is no child.
+ */
 function valueAt(node: Record<PropertyKey, unknown>, keys: readonly string[]): unknown {
 	let current: unknown = node;
 	for (const key of keys) {
-		if (!isRecord(current)) return undefined;
+		if (!isRecord(current) || !Object.hasOwn(current, key)) return undefined;
 		current = current[key];
 	}
 	return current;
+}
+
+/**
+ * Add a child under its path key as an own, enumerable entry.
+ *
+ * @remarks
+ * A plain assignment under the key `__proto__` would replace the object's prototype instead of adding an entry.
+ */
+function setChild<TValue>(children: Record<string, TValue>, key: string, value: TValue): void {
+	Object.defineProperty(children, key, { value, enumerable: true, writable: true, configurable: true });
 }
 
 /**
@@ -99,10 +115,14 @@ export function safeParseTree<TRegistration extends TreeRegistration>(
 				const trail = [...ancestors, node];
 				if (Array.isArray(value)) {
 					const items = value.map((item, index) => walk(item, [...childPath, index], trail));
-					children[keys.join('.')] = items.filter((item) => item !== undefined);
+					setChild(
+						children,
+						keys.join('.'),
+						items.filter((item) => item !== undefined),
+					);
 				} else if (isRecord(value)) {
 					const child = walk(value, childPath, trail);
-					if (child) children[keys.join('.')] = child;
+					if (child) setChild(children, keys.join('.'), child);
 				} else if (value !== undefined) {
 					issues.push({ message: 'Expected a node or a list of nodes.', path: childPath });
 				}
