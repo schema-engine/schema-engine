@@ -46,7 +46,7 @@ const result = engine.safeValidateForm({
 | --------------------------------------- | ------------------------------------------------------------------------------------- |
 | `@schema-engine/forms`                  | The engine, `defineInput` and `defineStatic`, the runtime, the actions and the types  |
 | `@schema-engine/forms/state-container`  | The form state container, its selectors and the issue formatter type                  |
-| `@schema-engine/forms/elements`         | The contract of each default element, for a renderer to bind its `render` to          |
+| `@schema-engine/forms/default-elements` | The contract of each default element, for a renderer to bind its `render` to          |
 | `@schema-engine/forms/csrf`             | CSRF policies for the engine's requests and native posts                              |
 | `@schema-engine/forms/server-errors`    | `fromProblemDetails` and `fromJsonApiErrors`, to show a server's answer on its fields |
 | `@schema-engine/forms/recipes`          | The forms recipe protocol, to write a view recipe                                     |

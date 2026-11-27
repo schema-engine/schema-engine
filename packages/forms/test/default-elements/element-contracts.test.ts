@@ -1,24 +1,24 @@
 import { safeParseStandardSchema } from '@schema-engine/registry';
 import { describe, expect, test } from 'vitest';
-import { elementContracts, maskedInputFieldValue, sliderFieldValue } from '../../src/elements';
+import { defaultElementContracts, maskedInputFieldValue, sliderFieldValue } from '../../src/default-elements';
 
 describe('the element contracts', () => {
 	test('name each element once, with the kind the engine reads', () => {
-		expect(elementContracts.size).toBe(18);
-		expect(elementContracts.get('submit')?.kind).toBe('static');
-		expect(elementContracts.get('arrayElements')).toMatchObject({ kind: 'input', containerKind: 'array' });
-		expect(elementContracts.get('input')?.kind).toBe('input');
+		expect(defaultElementContracts.size).toBe(18);
+		expect(defaultElementContracts.get('submit')?.kind).toBe('static');
+		expect(defaultElementContracts.get('arrayElements')).toMatchObject({ kind: 'input', containerKind: 'array' });
+		expect(defaultElementContracts.get('input')?.kind).toBe('input');
 	});
 
 	test('hold no part of a renderer', () => {
-		for (const contract of elementContracts.all()) {
+		for (const contract of defaultElementContracts.all()) {
 			expect(contract, contract.$type).not.toHaveProperty('render');
 			expect(contract, contract.$type).not.toHaveProperty('validations');
 		}
 	});
 
 	test('declare the value an input writes, and none for a container or a static element', () => {
-		const withoutValue = elementContracts
+		const withoutValue = defaultElementContracts
 			.all()
 			.filter((contract) => !('value' in contract))
 			.map((contract) => contract.$type);

@@ -51,7 +51,7 @@ export type { InputContract, StaticContract } from './define-contract';
  * a renderer that leaves one out fails to compile. Annotated with the contracts' own types: with the inferred union the
  * type is too long to write into a declaration file.
  */
-export const elementContracts: ReadOnlyRegistry<
+export const defaultElementContracts: ReadOnlyRegistry<
 	| typeof InputElementContract
 	| typeof TextareaElementContract
 	| typeof NumberElementContract
@@ -113,7 +113,7 @@ export type ElementBinding<TContract extends BaseRegistration> = TContract exten
  * @remarks
  * Use it with `satisfies` on the bindings passed to `bindRegistry`, so each `render` is checked against the output of
  * its own contract's schema, as `defineInput` checks it: `{ checkbox: { render: FormCheckbox } } satisfies
- * ElementBindings<typeof elementContracts>`.
+ * ElementBindings<typeof defaultElementContracts>`.
  */
 export type ElementBindings<TContracts extends ReadOnlyRegistry> =
 	TContracts extends ReadOnlyRegistry<infer TContract extends BaseRegistration>
