@@ -343,6 +343,26 @@ describe('safeParseTree', () => {
 			]);
 		});
 
+		it('reports a hole in a sparse array as the item it stands for, not as a silent failure', () => {
+			const sparse: unknown[] = [];
+			sparse[1] = { $type: 'text' };
+
+			expect(issuesOf(framed(sparse))).toEqual([
+				{
+					code: 'registry/not-an-object',
+					message: 'Expected an object with a string $type.',
+					path: ['content', 0],
+				},
+			]);
+		});
+
+		it('walks an array longer than the engine allows as call arguments', () => {
+			const items = Array.from({ length: 200_000 }, () => ({ $type: 'text' }));
+			const tree = treeOf(framed(items));
+
+			expect(tree.children[0]?.nodes).toHaveLength(items.length);
+		});
+
 		it('is no children for an empty array, and data holds []', () => {
 			const tree = treeOf(framed([]));
 
