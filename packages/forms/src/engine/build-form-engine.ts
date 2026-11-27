@@ -115,9 +115,7 @@ function createRegistrationSchema(
  * schema when that is Zod, and otherwise listed by its `$type` alone.
  */
 function exportedRecipeView(recipe: AnyRecipeRegistration, layout: LayoutTheme): unknown {
-	const view = recipe.slotSchemas
-		? createExportedRecipeView({ ...recipe, slotSchemas: recipe.slotSchemas })
-		: recipe.schema;
+	const view = recipe.slotSchemas ? createExportedRecipeView(recipe.$type, recipe.slotSchemas) : recipe.schema;
 	return isZodType(view) ? withSlotAppearanceAxes(view, layout.appearance, recipe.appearanceAxes) : recipe.schema;
 }
 

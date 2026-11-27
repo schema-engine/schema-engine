@@ -41,6 +41,16 @@ const valibotBody = v.strictObject({
 	appearance: v.optional(v.record(v.string(), v.string())),
 });
 
+/** Defines a card whose `body` default misspells `gap`, for the given body schema. */
+const defineWithMisspelledDefault = (body: StandardSchemaV1) => () =>
+	defineProtocolRecipeSpec(cardProtocol, {
+		$type: 'card',
+		kind: 'card',
+		metadata,
+		slotSchemas: { body },
+		slotDefaults: { body: { gapp: 'md' } },
+	});
+
 describe('recipe slot schemas from any Standard Schema library', () => {
 	test('resolves a hand-written Standard Schema slot end to end, with its default and an issue at the unknown slot', () => {
 		const card = bindRecipe(
@@ -135,18 +145,12 @@ describe('recipe slot schemas from any Standard Schema library', () => {
 	});
 
 	test('names an unknown key in a slot default, whichever library reports it', () => {
-		const define = (body: StandardSchemaV1) => () =>
-			defineProtocolRecipeSpec(cardProtocol, {
-				$type: 'card',
-				kind: 'card',
-				metadata,
-				slotSchemas: { body },
-				slotDefaults: { body: { gapp: 'md' } },
-			});
-		expect(define(valibotBody)).toThrow(/Recipe 'card' slotDefaults\.body is invalid: gapp: /);
+		expect(defineWithMisspelledDefault(valibotBody)).toThrow(/Recipe 'card' slotDefaults\.body is invalid: gapp: /);
 		const keysIssue = { message: 'Unknown keys', path: [], keys: ['gapp'] };
 		const reportsKeys = standardSchema(() => ({ issues: [keysIssue] }));
-		expect(define(reportsKeys)).toThrow("Recipe 'card' slotDefaults.body is invalid: gapp: Unknown keys");
+		expect(defineWithMisspelledDefault(reportsKeys)).toThrow(
+			"Recipe 'card' slotDefaults.body is invalid: gapp: Unknown keys",
+		);
 	});
 
 	test('refuses an async slot schema where a view is resolved', () => {
