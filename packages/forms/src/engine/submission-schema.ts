@@ -4,6 +4,7 @@ import { frozenCopy } from '@/lib/frozen-copy';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { buildSubmissionShape, type ShapeElement, type ShapeStep, type SubmissionShape } from '@/lib/submission-shape';
 import { isZodType } from '@/lib/is-zod-type';
+import { createJSONSchemaEmbedder, readStandardJSONSchema, type JSONSchemaEmbedder } from '@/lib/export-schema';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import { getValidationRulesForElement, isFieldRequired } from '@/schemas/validation/utils';
@@ -222,54 +223,64 @@ function standardOptions(options: StandardJSONSchemaV1.Options): {
 	}
 }
 
-const hasJsonSchema = (schema: StandardSchemaV1): schema is StandardSchemaV1 & StandardJSONSchemaV1 =>
-	'jsonSchema' in schema['~standard'];
+/** What writing the JSON Schema of a submission reads at every node. */
+interface JsonContext {
+	readonly io: 'input' | 'output';
+	readonly options: StandardJSONSchemaV1.Options;
+	readonly embedder: JSONSchemaEmbedder;
+}
 
-function leafJsonSchema(
-	name: string,
-	schema: StandardSchemaV1,
-	io: 'input' | 'output',
-	options: StandardJSONSchemaV1.Options,
-): JSONSchemaObject {
-	if (hasJsonSchema(schema)) return schema['~standard'].jsonSchema[io](options);
+/**
+ * The JSON Schema of a leaf's value schema, by the export's rule: Zod (classic or Mini) through the Zod converter,
+ * any other schema by its own `~standard.jsonSchema`.
+ *
+ * @remarks
+ * Zod comes first so a classic and a Mini value schema write the same JSON Schema, with an unrepresentable type (a
+ * date) as `{}` rather than an error. Each result is embedded by the export's {@link JSONSchemaEmbedder}.
+ */
+function leafJsonSchema(name: string, schema: StandardSchemaV1, context: JsonContext): JSONSchemaObject {
+	const { io, options, embedder } = context;
 	if (isZodType(schema)) {
-		const { $schema: _dropped, ...rest } = z.toJSONSchema(schema, {
-			...standardOptions(options),
-			io,
-			unrepresentable: 'any',
-		}) as JSONSchemaObject;
-		return rest;
+		return embedder.embed(
+			z.toJSONSchema(schema, { ...standardOptions(options), io, unrepresentable: 'any' }) as JSONSchemaObject,
+		);
 	}
+	const converter = readStandardJSONSchema(schema);
+	if (converter) return embedder.embed(converter[io](options));
 	throw new Error(`The value schema of '${name}' has no JSON Schema.`);
 }
 
-function toJsonSchema(node: Node, io: 'input' | 'output', options: StandardJSONSchemaV1.Options): JSONSchemaObject {
-	const schema = nodeJsonSchema(node, io, options);
+function toJsonSchema(node: Node, context: JsonContext): JSONSchemaObject {
+	const schema = nodeJsonSchema(node, context);
 	return node.kind !== 'any' && node.description ? { ...schema, description: node.description } : schema;
 }
 
-function nodeJsonSchema(node: Node, io: 'input' | 'output', options: StandardJSONSchemaV1.Options): JSONSchemaObject {
+function nodeJsonSchema(node: Node, context: JsonContext): JSONSchemaObject {
 	switch (node.kind) {
 		case 'any':
 			return {};
 		case 'leaf': {
-			const schema = leafJsonSchema(node.name, node.schema, io, options);
+			const schema = leafJsonSchema(node.name, node.schema, context);
 			return node.required ? schema : { anyOf: [schema, ...EMPTY.map((empty) => ({ const: empty }))] };
 		}
 		case 'array':
-			return { type: 'array', items: toJsonSchema(node.row, io, options) };
+			return { type: 'array', items: toJsonSchema(node.row, context) };
 		case 'object': {
 			const required = node.fields.flatMap(([key, child]) => (isRequired(child) ? [key] : []));
 			return {
 				type: 'object',
-				properties: Object.fromEntries(
-					node.fields.map(([key, child]) => [key, toJsonSchema(child, io, options)]),
-				),
+				properties: Object.fromEntries(node.fields.map(([key, child]) => [key, toJsonSchema(child, context)])),
 				...(required.length ? { required } : {}),
 				additionalProperties: false,
 			};
 		}
 	}
+}
+
+/** The JSON Schema of a submission tree, with the definitions its leaves hoisted at its root. */
+function treeJsonSchema(tree: Node, io: 'input' | 'output', options: StandardJSONSchemaV1.Options): JSONSchemaObject {
+	const embedder = createJSONSchemaEmbedder(options.target, { kind: 'document' });
+	return embedder.finish({ ...toJsonSchema(tree, { io, options, embedder }) });
 }
 
 /**
@@ -307,8 +318,8 @@ export function createSubmissionSchema(
 		validate: validator(partial),
 	});
 	const jsonSchema: StandardJSONSchemaV1.Converter = {
-		input: (options) => ({ ...toJsonSchema(tree, 'input', options) }),
-		output: (options) => ({ ...toJsonSchema(tree, 'output', options) }),
+		input: (options) => treeJsonSchema(tree, 'input', options),
+		output: (options) => treeJsonSchema(tree, 'output', options),
 	};
 	return {
 		'~standard': { ...props(false), jsonSchema },

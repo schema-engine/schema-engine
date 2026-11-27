@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/spec';
+import * as classic from 'zod';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { issuePath } from '@/engine/submission-schema';
@@ -58,6 +59,16 @@ const note = defineStatic({
 	metadata: { name: 'Note', category: 'content' },
 	render: () => null,
 });
+
+/** An input whose value is `value`. */
+const leaf = ($type: string, value: StandardSchemaV1) =>
+	defineInput({
+		$type,
+		schema: z.extend(BaseFieldSchema, { $type: z.literal($type) }),
+		metadata: { name: $type, category: 'input' },
+		value: () => value,
+		render: () => null,
+	});
 
 const engine = createFormEngine({ elements: [text, select, fieldSet, rows, note] });
 
@@ -343,6 +354,63 @@ describe('engine.submissionSchema', () => {
 		expect(properties.address.properties?.city.description).toBe('City');
 		expect(properties.tags.description).toBe('Tags');
 		expect(properties.tags.items?.description).toBe('Tag');
+	});
+
+	test('reads a value schema by the export rule: Zod through the converter, any other by its own JSON Schema', () => {
+		const tree = {
+			$schema: 'https://json-schema.org/draft/2020-12/schema',
+			$ref: '#/$defs/node',
+			$defs: {
+				node: { type: 'object', properties: { children: { type: 'array', items: { $ref: '#/$defs/node' } } } },
+			},
+		};
+		const recursive: StandardSchemaV1 & StandardJSONSchemaV1 = {
+			'~standard': {
+				version: 1,
+				vendor: 'test',
+				validate: (value) => ({ value }),
+				jsonSchema: { input: () => tree, output: () => tree },
+			},
+		};
+		const mixed = createFormEngine({
+			elements: [
+				leaf('mini', z.string().check(z.minLength(2))),
+				leaf('classic', classic.string().min(2)),
+				leaf('date', classic.date()),
+				leaf('tree', recursive),
+			],
+		});
+		const config = mixed.validateForm({
+			id: 'f',
+			steps: [
+				{
+					id: 's',
+					title: 'S',
+					elements: ['mini', 'classic', 'date', 'tree'].map(($type) => ({
+						$type,
+						name: $type,
+						rules: [{ $type: 'required' }],
+					})),
+				},
+			],
+		});
+		const schema = mixed.submissionSchema(config)['~standard'].jsonSchema.input({ target: 'draft-2020-12' }) as {
+			properties: Record<string, { $ref?: string }>;
+			$defs: Record<string, { $ref: string; $defs: Record<string, unknown> }>;
+		};
+		expect(schema.properties.classic).toEqual(schema.properties.mini);
+		expect(schema.properties.date).toEqual({});
+		const { $ref } = schema.properties.tree;
+		expect($ref).toBe('#/$defs/embedded-1');
+		expect(schema.$defs['embedded-1']).toEqual({
+			$ref: '#/$defs/embedded-1/$defs/node',
+			$defs: {
+				node: {
+					type: 'object',
+					properties: { children: { type: 'array', items: { $ref: '#/$defs/embedded-1/$defs/node' } } },
+				},
+			},
+		});
 	});
 });
 

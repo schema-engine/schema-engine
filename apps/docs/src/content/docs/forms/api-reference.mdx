@@ -193,31 +193,52 @@ the same input/output converters through the Standard JSON Schema contract.
 ### How each schema is exported
 
 Standard Schema is the contract for a definition; JSON Schema is what the export gives AI, agents and tools. One rule
-reads the schema of every registration kind the export lists: an element, an action, a validation rule and a recipe slot.
+reads the schema of every registration kind the export lists: an element, an action, a validation rule and a recipe
+slot.
 
-1. A Zod schema (classic or Mini) goes through the Zod converter. The export composes it first, closing `appearance`
-   over the axes its owner declares and typing the children and rules of an element, which a schema that has already
-   exported itself cannot take part in. This holds for classic Zod too, though it also provides Standard JSON Schema.
-2. Any other schema that provides Standard JSON Schema (`~standard.jsonSchema`) is exported as exactly what its
-   `input()` or `output()` returns for the `io` and `target` you ask for. The export adds no `appearance`, children or
-   catalog metadata to it, so state them in the schema.
+1. A Zod schema (classic or Mini) goes through the Zod converter. The export composes an element's, action's or
+   slot's Zod schema before converting it: it closes `appearance` over the axes the owner declares, types an
+   element's children and rules, and adds an action's envelope (`id`, `enabled`, `triggers`). Classic Zod also
+   provides `~standard.jsonSchema`, but its output is already final and cannot take part in that composition, so
+   reading it would drop those additions and export a classic Zod element differently from the same element written
+   in Zod Mini. Zod therefore always goes through the converter.
+2. Any other schema that provides Standard JSON Schema (`~standard.jsonSchema`) is exported as what its `input()` or
+   `output()` returns for the `io` and `target` you ask for, embedded as described below. The export adds no
+   `appearance`, children or rules to it, so state them in the schema.
 3. A schema that provides neither is listed by its shape: an element by its `$type` and its appearance axes, an action
    or a rule by its `$type`, a recipe slot as an open object with its appearance axes.
 
-The schema is embedded as returned, so a `$ref` in it must resolve inside the schema (inline its definitions). Which
-libraries export exactly today, checked against the versions installed here (ArkType is not a dependency of this repository; it was checked in a scratch install):
+How a rule 2 schema is embedded in the export:
 
-| Library                | Version | Exports exactly                                         |
-| ---------------------- | ------- | ------------------------------------------------------- |
-| Zod (classic and Mini) | 4.6.5   | Through the Zod converter (rule 1), the same either way |
-| ArkType                | 2.2.10  | Yes, `~standard.jsonSchema` (rule 2)                    |
-| Valibot                | 1.5.0   | No: listed by shape (rule 3)                            |
-| Effect Schema          | 3.22.2  | No: listed by shape (rule 3)                            |
-| A schema you write     | -       | Yes, when it sets `~standard.jsonSchema` (rule 2)       |
+- Its `$schema` is dropped, because the document it is embedded in already declares the dialect.
+- A schema whose `$ref`s point into itself from its root (ArkType writes a recursive type as a root `$ref` with
+  `$defs`) is moved to a place where those references still resolve. In a document it goes under the document's
+  `$defs` (or `definitions`) as `embedded-1`, `embedded-2` and so on, with its references rewritten to that place. In
+  `generateJSONSchemaCollection()` it becomes an entry of its own, referred to by its URI. A schema that is already the
+  root of a collection entry, or that sets its own `$id`, stays as it is.
+- A document (not the collection) lists catalog metadata (`title`, `description`, `componentType`, `category`) on every
+  registration. It adds them beside a rule 2 schema's keywords where the schema does not set the same key. They are
+  annotations, so what the schema accepts does not change.
+- A converter that throws for the target you ask for (ArkType supports only `draft-2020-12` and `draft-07`, so it
+  throws for `openapi-3.0`) does not stop the export. That schema is listed by its shape, as in rule 3, and a warning
+  names its vendor and the target.
 
-Zod Mini does not implement `~standard.jsonSchema` itself, and Valibot and Effect Schema do not without an adapter,
-so the Zod converter and the listing by shape stand in for them. A schema of your own that spreads a library's
-`~standard` and adds `jsonSchema` (built with that library's converter) is exported exactly.
+`submissionSchema(config)` reads each value schema by rules 1 and 2 and embeds it the same way. It throws for a value
+schema that has neither, rather than listing it by its shape.
+
+Which libraries export exactly, checked against these versions (ArkType is not a dependency of this repository):
+
+| Library                | Version | Exports exactly                                                          |
+| ---------------------- | ------- | ------------------------------------------------------------------------ |
+| Zod (classic and Mini) | 4.6.5   | Through the Zod converter (rule 1), the same either way                  |
+| ArkType                | 2.2.10  | Yes, `~standard.jsonSchema` (rule 2), for `draft-2020-12` and `draft-07` |
+| Valibot                | 1.5.0   | No: listed by shape (rule 3)                                             |
+| Effect Schema          | 3.22.2  | No: listed by shape (rule 3)                                             |
+| A schema you write     | -       | Yes, when it sets `~standard.jsonSchema` (rule 2)                        |
+
+Zod Mini does not implement `~standard.jsonSchema`, and Valibot and Effect Schema do not without an adapter, so the
+Zod converter and the listing by shape stand in for them. A schema of your own that spreads a library's `~standard`
+and adds `jsonSchema` (built with that library's converter) is exported exactly.
 
 ## State container, server errors and CSRF
 

@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-schema';
-import { createExportOverride } from '@/lib/export-schema';
+import { createExportConversion } from '@/lib/export-schema';
 
 /**
  * Shared alias for the Zod registry type used during JSON Schema generation.
@@ -25,12 +25,15 @@ export function generateZodJSONSchemaCollection(
 ): JSONSchemaObject {
 	const target = options?.target || 'draft-2020-12';
 	const io = options?.io || 'input';
-	return z.toJSONSchema(metadataRegistry, {
-		target,
+	const uri = options?.uri || ((id: string) => `#/definitions/${id}`);
+	const conversion = createExportConversion({
 		io,
-		uri: options?.uri || ((id: string) => `#/definitions/${id}`),
-		override: createExportOverride({ io, target }),
-	}) as JSONSchemaObject;
+		target,
+		placement: { kind: 'collection', uri, registry: metadataRegistry },
+	});
+	return conversion.finish(
+		z.toJSONSchema(metadataRegistry, { target, io, uri, override: conversion.override }) as JSONSchemaObject,
+	);
 }
 
 /**
@@ -75,12 +78,15 @@ export function generateZodJSONSchemaDocument(
 ): JSONSchemaObject {
 	const target = options?.target || 'draft-2020-12';
 	const io = options?.io || 'input';
-	const schema = z.toJSONSchema(validator, {
-		target,
-		io,
-		metadata: new LayeredMetadataRegistry(metadataRegistry),
-		override: createExportOverride({ io, target }),
-	}) as JSONSchemaObject & { $id?: string };
+	const conversion = createExportConversion({ io, target, placement: { kind: 'document' } });
+	const schema = conversion.finish(
+		z.toJSONSchema(validator, {
+			target,
+			io,
+			metadata: new LayeredMetadataRegistry(metadataRegistry),
+			override: conversion.override,
+		}) as JSONSchemaObject,
+	);
 
 	if (options?.schemaId) {
 		schema.$id = options.schemaId;
