@@ -13,7 +13,7 @@ Complete API documentation for `@schema-engine/registry`.
 ```typescript
 function createRegistry<const TRegistration extends BaseRegistration>(
 	kind: string,
-	registrations: readonly TRegistration[],
+	registrations: readonly TRegistration[] & CheckChildPaths<TRegistration>,
 	options?: CreateRegistryOptions,
 ): ReadOnlyRegistry<TRegistration>;
 
@@ -23,6 +23,8 @@ interface CreateRegistryOptions {
 ```
 
 Builds a frozen, read-only registry. By default (`duplicates: 'override'`) a later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. With `duplicates: 'error'` a repeated `$type` throws a [`RegistryError`](#registryerror) (`'duplicate-type'`) `<kind> '<$type>' is registered twice.` before any schema is checked; use it for a catalog where a repeat is always a mistake. Throws `'invalid-schema'`, `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).`, when a winning registration's schema is not a Standard Schema; an overridden registration is not checked. The registry stores a frozen shallow copy of each winner and leaves the objects you passed untouched.
+
+It also checks each winner's [`childPaths`](#childpath) as data and in the types. At run time, each entry must be an object with only `keys` and `accepts`; `keys` a non-empty list of non-empty strings; `accepts`, when present, a non-empty list of non-empty names without repeats, or it throws `'invalid-child-paths'`. Two entries with the same keys are `'duplicate-child-path'`, and a path that runs through another is `'nested-child-path'`. Paths are compared key by key, so `['a.b']` and `['a', 'b']` are two paths. No check asks whether an `accepts` name is registered: a registry is not always a document's whole vocabulary, so [`safeParseTree`](#safeparsetree) checks the names against the lookup it gets, in the types. In the types, a registration whose schema output does not declare a key of a child path is an error that names it (`Property 'childPathNotInSchema' is missing`, with the `$type` and the keys). A key that a loose schema allows only through its index signature does not count as declared, and a schema whose output type cannot be read (`unknown`, a plain `StandardSchemaV1`) is not checked. The parent schema declares every child key, so the exported JSON Schema shows the whole node.
 
 ### ReadOnlyRegistry
 
@@ -78,37 +80,41 @@ type RegistryErrorCode =
 	| 'duplicate-type'
 	| 'unknown-binding'
 	| 'missing-binding'
-	| 'binding-overrides-contract';
+	| 'binding-overrides-contract'
+	| 'schema-changes-type'
+	| 'schema-breaks-child-path';
 
 declare class RegistryError extends Error {
 	readonly code: RegistryErrorCode;
-	/** The registry's label, for example `Widget`. */
-	readonly kind: string;
+	/** The registry's label, for example `Widget`. Absent when a parse failed through a lookup that is no registry. */
+	readonly kind?: string;
 	/** The `$type` of the registration at fault, or the key of a binding that names no registration. */
 	readonly $type: string;
 	/** The key a binding sets that its contract defines, for `'binding-overrides-contract'`. */
 	readonly key?: string;
-	/** The keys of the child path at fault, for `'duplicate-child-path'` and `'nested-child-path'`. */
+	/** The keys of the child path at fault, for the child path and tree codes. */
 	readonly childPath?: readonly string[];
 	/** The keys of the child path that `childPath` runs through, for `'nested-child-path'`. */
 	readonly outerChildPath?: readonly string[];
 }
 ```
 
-What `createRegistry` and `bindRegistry` throw when the registrations or bindings break a rule. Branch on `code`, not on `message`: the message is written for people and may be reworded, the codes stay. Every error carries `kind` and `$type`, and a code that needs more to describe the mistake sets it too, so a tool can point at the registration, or write the message again in another language, without parsing the message.
+What `createRegistry` and `bindRegistry` throw when the registrations or bindings break a rule, and what `safeParseTree` throws when a schema contradicts its registration. Branch on `code`, not on `message`: the message is written for people and may be reworded, the codes stay. Every error carries `$type`, and `kind` too unless a parse went through a lookup that is no registry (a function over several registries has no label). A code that needs more to describe the mistake sets it as well, so a tool can point at the registration, or write the message again in another language, without parsing the message.
 
 | Code                           | Thrown when                                                                       | Details besides `kind` and `$type` |
 | ------------------------------ | --------------------------------------------------------------------------------- | ---------------------------------- |
 | `'invalid-schema'`             | A registration's `schema` has no `~standard.validate` function                    |                                    |
-| `'invalid-child-paths'`        | `childPaths` is not a list, or an entry is not a non-empty list of non-empty keys |                                    |
-| `'duplicate-child-path'`       | A registration declares the same child path twice                                 | `childPath`                        |
+| `'invalid-child-paths'`        | `childPaths` is not a list, or an entry is not `{ keys, accepts? }`: another property, empty or non-string `keys`, an empty `accepts`, or a name that is empty or listed twice |                                    |
+| `'duplicate-child-path'`       | A registration declares the same child path (the same keys) twice                 | `childPath`                        |
 | `'nested-child-path'`          | A child path runs through another child path of the same registration             | `childPath`, and `outerChildPath`  |
 | `'duplicate-type'`             | A `$type` is registered twice with `duplicates: 'error'`                          |                                    |
 | `'unknown-binding'`            | `bindRegistry` got a binding whose key is no contract's `$type`                   | None; `$type` is the binding key   |
 | `'missing-binding'`            | `bindRegistry` got no binding for a contract                                      |                                    |
 | `'binding-overrides-contract'` | A binding sets a key its contract already defines                                 | `key`, the key the binding sets    |
+| `'schema-changes-type'`        | `safeParseTree` parsed a node whose schema returned an output that is no plain object with the node's own `$type` |                                    |
+| `'schema-breaks-child-path'`   | `safeParseTree` parsed a node whose schema returned an output that does not keep a child path as the document has it | `childPath`                        |
 
-[`assertStandardSchema`](#assertstandardschema) on its own and errors raised while parsing, such as a Standard Schema that validates asynchronously, are plain `Error`s, and `parseYaml` throws [`YamlDocumentError`](#yaml-subpath).
+A parse throws a `RegistryError` only when a schema contradicts its registration, never for a bad document. [`assertStandardSchema`](#assertstandardschema) on its own and the other errors raised while parsing, such as a Standard Schema that validates asynchronously, are plain `Error`s, and `parseYaml` throws [`YamlDocumentError`](#yaml-subpath).
 
 ## assertStandardSchema
 
@@ -154,15 +160,21 @@ Builds a Standard Schema from a function, for a registration whose check is not 
 function safeParseNode<TRegistration extends Pick<BaseRegistration, 'schema'>>(
 	registry: NodeLookup<TRegistration>,
 	node: unknown,
-	path?: ReadonlyArray<PropertyKey | { key: PropertyKey }>,
+	options?: ParseOptions,
 ): SafeParseNodeResult<TRegistration>;
+
+interface ParseOptions<TType extends string = string> {
+	readonly path?: ReadonlyArray<PropertyKey | { key: PropertyKey }>;
+	readonly accepts?: readonly TType[];
+}
 ```
 
-Checks one node against the registration its `$type` names, without throwing. `registry` is anything whose `get(key)` returns a registration with a `schema`, so a `createRegistry` result, a `BaseRegistry` and a lookup over several registries all fit. `path` is where the node sits in its document, and every issue's `path` starts with it.
+Checks one node against the registration its `$type` names, without throwing. `registry` is anything whose `get(key)` returns a registration with a `schema`, so a `createRegistry` result, a `BaseRegistry` and a lookup over several registries all fit. `options.path` is where the node sits in its document, and every issue's `path` starts with it. `options.accepts` is the `$type`s the node may have, as a position of a document accepts them; an empty list throws an `Error`, a caller bug like an asynchronous schema.
 
 ```typescript
 interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> {
 	get(key: string): TRegistration | undefined;
+	kind?: string;
 	hint?: string;
 }
 
@@ -175,7 +187,7 @@ type SafeParseNodeResult<TRegistration extends Pick<BaseRegistration, 'schema'> 
 					data: StandardSchemaV1.InferOutput<TRegistration['schema']>;
 				}
 			: never)
-	| { success: false; issues: StandardSchemaIssue[] };
+	| { success: false; issues: RegistryIssue[] };
 ```
 
 The success branch has one member per registration of the registry, so a registry typed by its registrations gives `data` the schema output of the registration that `$type` names, with no cast. A registry typed as `ReadOnlyRegistry<BaseRegistration>` has no concrete schema to read, so its `data` is `unknown`. Narrow on `$type` of the result: TypeScript narrows a union only by a property of the union itself, so `result.registration.$type` alone does not narrow `data`.
@@ -202,54 +214,96 @@ export function describeNode(node: unknown): string {
 
 `createRegistry` keeps the literal `$type` of each inline registration, so the example needs no `as const`.
 
-| Node                               | Result                                                                                                     |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Valid                              | `{ success: true, $type, registration, data }`, where `data` is what the schema returned, defaults applied |
-| Not an object                      | One issue at `path`: `Expected an object with a string $type.`                                             |
-| An object without a string `$type` | One issue at `[...path, '$type']`: `Expected a string $type.`                                              |
-| A `$type` no registration answers  | One issue at `[...path, '$type']`: `No registration for $type '<type>'.` and the lookup's `hint`           |
-| The schema refuses it              | The schema's issues, each with `path` in front of the path the schema reported                             |
+| Node                               | Result                                                                                                                     |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Valid                              | `{ success: true, $type, registration, data }`, where `data` is what the schema returned, defaults applied                 |
+| Not an object                      | `registry/not-an-object` at `path`: `Expected an object with a string $type.`                                              |
+| An object without a string `$type` | `registry/missing-type` at `[...path, '$type']`: `Expected a string $type.`                                                |
+| A `$type` outside `accepts`        | `registry/not-accepted` at `[...path, '$type']`: `$type 'x' is not accepted here. Expected 'a'.` or `Expected one of 'a', 'b'.`, with `expected` and `received` |
+| A `$type` no registration answers  | `registry/unregistered-type` at `[...path, '$type']`: `No registration for $type '<type>'.` and the lookup's `hint`, with `received` |
+| The schema refuses it              | The schema's issues, each with `path` in front of the path the schema reported, and nothing else added                      |
 
-`hint` is optional: a sentence that follows the message of a `$type` `get` does not answer, such as where to register it. With `hint: 'Register it with defineBadge.'`, an unregistered `chip` is `No registration for $type 'chip'. Register it with defineBadge.`.
+`accepts` is checked before the lookup, so a `$type` outside the list is not accepted whether or not it is registered, and the issue names what would fit; an accepted `$type` nothing registers stays `registry/unregistered-type`.
+
+`hint` is optional: a sentence that follows the message of a `$type` `get` does not answer, such as where to register it. With `hint: 'Register it with defineBadge.'`, an unregistered `chip` is `No registration for $type 'chip'. Register it with defineBadge.`. `kind` is the registry's label, which `createRegistry` registries have; `safeParseTree` names it in the `RegistryError` it throws.
 
 `unregisteredTypeMessage(type, hint?)` writes that message, for a caller that has to throw for the same case instead of returning an issue.
 
 An issue points at the value that is wrong, the way a schema reports a missing required key at the key, so an editor can mark it and [`parseYaml`](/docs/schema-engine/serialized-documents#yaml) finds its line. [`parseActions`](/docs/actions/api-reference#parseactions) checks each entry of a workflow with it, so an entry reports these issues at the same places.
 
-It looks at one node; [`safeParseTree`](#safeparsetree) walks a whole tree with it. It throws, like `safeParseStandardSchema`, for a schema that validates asynchronously. The result has the `issues` shape of `parseActions`, so `(value) => safeParseNode(registry, value)` is a validator for [`parseYaml`](/docs/schema-engine/serialized-documents#yaml).
+```typescript
+interface RegistryIssue extends StandardSchemaIssue {
+	readonly code?: string;
+	readonly expected?: readonly string[];
+	readonly received?: string;
+}
+```
+
+The issues the engine creates carry a namespaced `code`, so it cannot be mistaken for a schema library's own `code`, which an issue from a schema keeps untouched: `registry/not-an-object`, `registry/missing-type`, `registry/unregistered-type` (`received`), `registry/not-accepted` (`expected` the `accepts` list, `received` the `$type`), `registry/not-a-node` and `registry/contains-itself`. The messages may be reworded; the codes stay. Some schema libraries have an `expected` or `received` of their own, so check `code` before reading them.
+
+It looks at one node; [`safeParseTree`](#safeparsetree) walks a whole tree with it. It throws, like `safeParseStandardSchema`, for a schema that validates asynchronously. The result has the `issues` shape of `parseActions`, so `(value) => safeParseNode(registry, value)` is a validator for [`parseYaml`](/docs/schema-engine/serialized-documents#yaml). A schema used with `safeParseNode` alone may omit `$type` from its output; the tree contract below is for `safeParseTree`.
 
 ## safeParseTree
 
 ```typescript
-function safeParseTree<TRegistration extends Pick<BaseRegistration, 'schema' | 'childPaths'>>(
-	registry: NodeLookup<TRegistration>,
+function safeParseTree<
+	TAll extends TreeRegistration,
+	const TOptions extends ParseOptions<TAll['$type']> = ParseOptions<TAll['$type']>,
+>(
+	registry: NodeLookup<TAll> & CheckLookup<TAll>,
 	root: unknown,
-	path?: ReadonlyArray<PropertyKey | { key: PropertyKey }>,
-): SafeParseTreeResult<TRegistration>;
+	options?: TOptions,
+): SafeParseTreeResult<TAll, RootOf<TAll, TOptions>>;
 
-type SafeParseTreeResult<TRegistration> =
-	{ success: true; tree: ParsedNode<TRegistration> } | { success: false; issues: StandardSchemaIssue[] };
+type TreeRegistration = Pick<BaseRegistration, '$type' | 'schema' | 'childPaths'>;
 
-type ParsedNode<TRegistration> = {
-	$type: string;
+type SafeParseTreeResult<TAll, TRoot = TAll> =
+	{ success: true; tree: ParsedNode<TAll, TRoot> } | { success: false; issues: RegistryIssue[] };
+
+type ParsedNode<TAll, TRegistration = TAll> = {
+	$type: TRegistration['$type'];
 	registration: TRegistration;
-	data: StandardSchemaV1.InferOutput<TRegistration['schema']>;
+	data: NodeData<TAll, TRegistration>;
 	path: ReadonlyArray<PropertyKey | { key: PropertyKey }>;
-	children: Readonly<Record<string, ParsedNode<TRegistration> | readonly ParsedNode<TRegistration>[]>>;
+	children: readonly { keys: readonly string[]; nodes: readonly ParsedNode<TAll>[] }[];
 };
 ```
 
-Checks a whole document without throwing. Every node goes through `safeParseNode` with its full `path`, so an issue is the one `safeParseNode` reports, at the position the document has it, and `formatIssuePath(issue.path, root)` writes it as text. A registration says where its children are with `childPaths`, a list of key paths such as `[['blocks'], ['engine', 'controls']]`. Each path is read from the node as authored; a missing value is no children, an array is walked item by item (the index joins the path) and an object is one child. One lookup serves the whole tree, so which `$type`s a position accepts is the parent's schema to say.
+Checks a whole document without throwing for a bad document. Every node goes through `safeParseNode` with its full `path` and the `accepts` of its position, so an issue is the one `safeParseNode` reports, at the position the document has it, and `formatIssuePath(issue.path, root)` writes it as text. `options.accepts` restricts the root and `options.path` is where the root sits in a larger document. A registration says where its children are with [`childPaths`](#childpath), each read from the node as authored.
 
-| Case                                            | Result                                                                                            |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Every node is valid                             | `{ success: true, tree }`, where `children` holds the nodes of each child path, in document order |
-| A node's own schema fails                       | Its issues; the node is not walked further, but its siblings still are                            |
-| A value at a child path that is no node or list | One issue at that path: `Expected a node or a list of nodes.`                                     |
-| A node that contains itself                     | One issue at the node reached again: `A node cannot contain itself.`                              |
-| Any issue anywhere                              | `{ success: false, issues }` with all of them, and no tree                                        |
+The result is `{ success: true, tree }` or `{ success: false, issues }` with every issue and no tree. There is no top-level `data`: `tree.data` is the whole parsed document, and the `data` of every `ParsedNode` is that node's composed data, the same object its parent's data holds at that position. `tree.data` is each node's schema output, defaults and transforms applied, with the children's data at each child path, in document order.
 
-`children` is keyed by the child path with its keys joined by dots (`['engine', 'controls']` is `'engine.controls'`). `createRegistry` checks `childPaths` when it builds: each path must be a non-empty list of non-empty keys, none may repeat and none may run through another (`[['engine'], ['engine', 'controls']]` would reach inside the `engine` child), or it throws `'invalid-child-paths'` (`<kind> '<$type>' childPaths must hold non-empty lists of non-empty keys.`), `'duplicate-child-path'` (`<kind> '<$type>' declares the child path '<path>' twice.`) or `'nested-child-path'` (`<kind> '<$type>' child path '<path>' runs through the child path '<other>'.`) A child may be of any registration of the lookup, so `children` holds nodes of the whole union. Like `safeParseNode`, `$type` of the tree narrows `registration` and `data` for a registry typed by its registrations. It throws, as `safeParseNode` does, for a schema that validates asynchronously.
+`children` has one entry per child path the registration declares, in declaration order, `nodes` empty when the node holds none there. Find an entry by its `keys` (`children.find(({ keys }) => keys.join() === 'engine.controls')?.nodes`), never by index; code that names a position reads `data`, which is typed per path. For a registry typed by its registrations, the root narrows when `accepts` is a literal list (not when the options type only may have `accepts`, and not for `{ path }` alone), `data` types each child path by what the path accepts (a list stays a list, optional stays optional, an `unknown` slot becomes `child | child[] | undefined`, and `null` is removed from a nullable slot), and the `nodes` of each `children` entry are typed by its `accepts`. A registry typed as `BaseRegistration` keeps `data: unknown`. An `accepts` name the lookup lacks is a type error (`acceptsUnknownType: 'knob'`), and so is a registration whose schema output declares no `$type` (`schemaOutputWithoutType: 'card'`). Two registries in one lookup share one `$type` namespace: the lookup decides which wins when both answer (`a.get(type) ?? b.get(type)` prefers `a`).
+
+| Value at the child path                                | Result                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| key absent, or an intermediate absent or not an object | no children; `data` keeps the schema output there (a default, say)                    |
+| `undefined`                                            | no children, as absent                                                                |
+| `null`                                                 | `registry/not-a-node` at the path: `Expected a node or a list of nodes.`              |
+| another primitive                                      | the same issue                                                                        |
+| an object                                              | one child, walked                                                                     |
+| an array                                               | each item walked at `[...path, index]`; an item that is not an object is `safeParseNode`'s issue |
+| an empty array                                         | no children; `data` holds `[]`                                                        |
+| a key only on the prototype (`constructor`)            | absent                                                                                |
+| an own key `__proto__`                                 | read and written as an own property                                                   |
+
+| Case                      | Result                                                                                        |
+| ------------------------- | --------------------------------------------------------------------------------------------- |
+| Every node is valid       | `{ success: true, tree }`                                                                     |
+| A node's own schema fails | Its issues; the node is not walked further, but its siblings still are                        |
+| A node that contains itself | `registry/contains-itself` at the node reached again: `A node cannot contain itself.`       |
+| Any issue anywhere        | `{ success: false, issues }` with all of them, and no tree                                    |
+
+The same object under two parents (not a cycle) is parsed twice, and a registration may accept itself (a section in a section). Each child is parsed once, from the authored value, and its data is written into a copy of the node's schema output, never into the authored document: the output shares references with the input (a loose object returns the authored array), so the root and each object on a path are copied once, and two paths with a shared prefix share one copy.
+
+### The structural contract of a tree schema
+
+The parent schema owns, at a child path, whether the value may be missing, list or single, and list bounds. It does not own the children, whose data replaces whatever the schema returned there, so keep slots opaque (`z.array(z.unknown())`, `z.unknown()`) and restrict them with `accepts`. For each node it parses, `safeParseTree` holds the schema to this and throws a `RegistryError` when it breaks it, because that is a bug of the registration, not an issue of the document:
+
+- `'schema-changes-type'`: the output is not a plain object whose own `$type` equals the node's.
+- `'schema-breaks-child-path'` with `childPath`: where the document fills a child path, the output lacks the keys down to it as plain objects, or its cardinality differs (an array of the same length for an array, an object for an object). A key stripped, renamed or turned into something else is caught here. Where the document leaves a child path absent, the output may be absent, `undefined` or `[]`; a default that holds nodes breaks the path too, because children come only from the document, so a default can never expand forever.
+
+A parent transform at a filled slot (a reorder, a preprocess) is discarded, not detected. It throws, as `safeParseNode` does, for a schema that validates asynchronously.
 
 ## formatIssuePath
 
@@ -320,10 +374,22 @@ interface BaseRegistration<_TConfig = unknown, TMeta extends RegistrationMetadat
 	$type: string;
 	schema: StandardSchemaV1;
 	metadata: TMeta;
+	readonly childPaths?: readonly ChildPath[];
 }
 ```
 
 Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
+
+### ChildPath
+
+```typescript
+interface ChildPath {
+	readonly keys: readonly string[];
+	readonly accepts?: readonly string[];
+}
+```
+
+`childPaths` says where a node of this `$type` holds child nodes. A child path is always an object, so a registration stays plain data. `keys` is the list of keys from the node to the slot (`['engine', 'controls']` is `node.engine.controls`), relative and without indexes: it is not called `path`, which names absolute document paths with indexes. The value there is one node or an array of nodes. `accepts` is a non-empty, closed list of `$type`s allowed at the slot, so adding a leaf to `[...defaults, custom]` means overriding each container that should take it; without `accepts`, any `$type` the lookup answers is accepted, which an open vocabulary (plugins, a `BaseRegistry` that grows at runtime) needs. `accepts` is the only way to restrict a slot: parent schemas keep slots opaque, and the docs say not to restrict `$type` in the parent schema. `BaseRegistry` checks no `childPaths`.
 
 ### RegistrationMetadata
 

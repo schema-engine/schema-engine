@@ -61,7 +61,7 @@ describe('the tree example', () => {
 
 		expect(documentIssues(document)).toEqual([
 			'sections[0].title: Invalid input',
-			"sections[1].$type: No registration for $type 'part'.",
+			"sections[1].$type: $type 'part' is not accepted here. Expected 'section'.",
 		]);
 	});
 });

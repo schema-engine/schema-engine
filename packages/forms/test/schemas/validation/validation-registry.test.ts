@@ -309,6 +309,8 @@ describe('ValidationRegistry', () => {
 						message: expect.stringMatching(
 							/No registration for \$type 'nonexistent'.*Registered rules: faulty, fine\./,
 						),
+						code: 'registry/unregistered-type',
+						params: { received: 'nonexistent' },
 					},
 				],
 			});

@@ -49,7 +49,7 @@
 		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "vitest run",
-		"check-types": "tsc --noEmit"
+		"check-types": "tsc --noEmit && node test/type-cost/check.ts"
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",

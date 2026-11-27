@@ -94,7 +94,7 @@ export function parseView(
 		view = { $type: defaultRecipe };
 	}
 
-	const parsed = safeParseNode(recipeLookup(getRecipe, form.stepCount, appearance), view, ['view']);
+	const parsed = safeParseNode(recipeLookup(getRecipe, form.stepCount, appearance), view, { path: ['view'] });
 	if (!parsed.success) return { issues: fromSchemaIssues(parsed.issues, []) };
 	return { issues: [], view: isTaggedConfig(parsed.data) ? parsed.data : view };
 }

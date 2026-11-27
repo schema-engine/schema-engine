@@ -26,7 +26,7 @@ export function DocumentView({ nodes }: { nodes: unknown }) {
 	return (
 		<>
 			{nodes.map((node: unknown, index) => {
-				const parsed = safeParseNode(components, node, [index]);
+				const parsed = safeParseNode(components, node, { path: [index] });
 				return parsed.success ? (
 					<Fragment key={index}>{parsed.registration.render(parsed.data)}</Fragment>
 				) : (

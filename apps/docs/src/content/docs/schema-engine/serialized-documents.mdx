@@ -72,7 +72,7 @@ const callout: Component = {
 export const components = createRegistry('Component', [badge, callout]);
 ```
 
-`safeParseNode(registry, node, path)` looks the node's `$type` up and validates the node against the registration's schema, without throwing. It returns the registration with the validated configuration, or every issue. Pass the position of the node in its document as `path`, and the `path` of each issue starts there. `DocumentView` draws a list of nodes, and a node that fails is drawn as its issues, in its own place, so the others still render:
+`safeParseNode(registry, node, { path })` looks the node's `$type` up and validates the node against the registration's schema, without throwing. It returns the registration with the validated configuration, or every issue. Pass the position of the node in its document as the `path` option, and the `path` of each issue starts there. `DocumentView` draws a list of nodes, and a node that fails is drawn as its issues, in its own place, so the others still render:
 
 ```tsx title="document.react.tsx"
 import { Fragment } from 'react';
@@ -83,7 +83,7 @@ export function DocumentView({ nodes }: { nodes: unknown[] }) {
 	return (
 		<>
 			{nodes.map((node, index) => {
-				const parsed = safeParseNode(components, node, [index]);
+				const parsed = safeParseNode(components, node, { path: [index] });
 				if (parsed.success) return <Fragment key={index}>{parsed.registration.render(parsed.data)}</Fragment>;
 				return (
 					<ul key={index} role="alert">

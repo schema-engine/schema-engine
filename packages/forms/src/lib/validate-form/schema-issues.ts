@@ -15,6 +15,7 @@ interface SchemaIssueDetails {
 	errors?: unknown;
 	values?: unknown;
 	expected?: unknown;
+	received?: unknown;
 	origin?: unknown;
 	minimum?: unknown;
 	maximum?: unknown;
@@ -88,6 +89,7 @@ function describeSchemaIssue(issue: StandardSchemaIssue, details: SchemaIssueDet
 const PARAM_NAMES = [
 	'values',
 	'expected',
+	'received',
 	'origin',
 	'minimum',
 	'maximum',

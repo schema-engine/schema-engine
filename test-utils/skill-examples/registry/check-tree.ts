@@ -4,26 +4,25 @@ import { createRegistry, formatIssuePath, safeParseTree } from '@schema-engine/r
 const nodes = createRegistry('Node', [
 	{
 		$type: 'page',
-		schema: z.looseObject({ $type: z.literal('page'), sections: z.array(z.looseObject({ $type: z.string() })) }),
+		schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
 		metadata: { name: 'Page' },
-		childPaths: [['sections']],
+		childPaths: [{ keys: ['sections'], accepts: ['section'] }],
 	},
 	{
 		$type: 'section',
-		schema: z.looseObject({ $type: z.literal('section'), title: z.string() }),
+		schema: z.object({ $type: z.literal('section'), title: z.string() }),
 		metadata: { name: 'Section' },
 	},
 ]);
 
 export function documentIssues(document: unknown): string[] {
-	const parsed = safeParseTree(nodes, document);
+	const parsed = safeParseTree(nodes, document, { accepts: ['page'] });
 	return parsed.success
 		? []
 		: parsed.issues.map((issue) => `${formatIssuePath(issue.path, document)}: ${issue.message}`);
 }
 
 export function sectionTitles(document: unknown): string[] {
-	const parsed = safeParseTree(nodes, document);
-	const sections = parsed.success ? [parsed.tree.children.sections ?? []].flat() : [];
-	return sections.flatMap((section) => (section.$type === 'section' ? [section.data.title] : []));
+	const parsed = safeParseTree(nodes, document, { accepts: ['page'] });
+	return parsed.success ? parsed.tree.data.sections.map((section) => section.title) : [];
 }

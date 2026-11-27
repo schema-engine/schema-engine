@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { RegistryError, type RegistryErrorDetails } from './registry-error.js';
+import type { CheckChildPaths } from './tree-types.js';
 import type { BaseRegistration } from './types.js';
 
 /**
@@ -46,34 +47,52 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
 	return schema;
 }
 
+function sameKeys(left: readonly string[], right: readonly string[]): boolean {
+	return left.length === right.length && left.every((key, position) => key === right[position]);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+	return typeof value === 'string' && value !== '';
+}
+
 /**
  * Check the `childPaths` of a registration.
  *
  * @remarks
- * Two paths that read the same once joined with dots would share one key of `ParsedNode.children`, so they count as
- * one path declared twice. A path that runs through another one would reach inside a child node, whose own
- * registration says where its children are, so the walk would visit the same node from two parents.
+ * Paths are compared key by key, so `['a.b']` and `['a', 'b']` are two different paths. Two equal paths are one path
+ * declared twice. A path that runs through another one would reach inside a child node, whose own registration says
+ * where its children are, so the walk would visit the same node from two parents. The shape of an entry is checked
+ * here as well as by the types, because a registration may arrive as parsed data.
  */
 function assertChildPaths(childPaths: unknown, context: string, details: RegistryErrorDetails): void {
 	if (childPaths === undefined) return;
-	if (!Array.isArray(childPaths)) {
-		throw new RegistryError('invalid-child-paths', `${context} childPaths must be a list of key paths.`, details);
-	}
+	const invalid = (message: string) => new RegistryError('invalid-child-paths', `${context} ${message}`, details);
+	if (!Array.isArray(childPaths)) throw invalid('childPaths must be a list of child paths.');
 	const paths: string[][] = [];
-	for (const keys of childPaths as unknown[]) {
-		if (!Array.isArray(keys) || keys.length === 0 || keys.some((key) => typeof key !== 'string' || key === '')) {
-			throw new RegistryError(
-				'invalid-child-paths',
-				`${context} childPaths must hold non-empty lists of non-empty keys.`,
-				details,
-			);
+	for (const [index, entry] of (childPaths as unknown[]).entries()) {
+		const name = `childPaths[${index}]`;
+		if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+			throw invalid(`${name} must be an object { keys, accepts? }.`);
+		}
+		const extra = Object.keys(entry).find((property) => property !== 'keys' && property !== 'accepts');
+		if (extra !== undefined)
+			throw invalid(`${name} has the property '${extra}', which a child path does not have.`);
+		const { keys, accepts } = entry as { keys?: unknown; accepts?: unknown };
+		if (!Array.isArray(keys) || keys.length === 0 || !keys.every(isNonEmptyString)) {
+			throw invalid(`${name}.keys must be a non-empty list of non-empty strings.`);
+		}
+		if (accepts !== undefined) {
+			if (!Array.isArray(accepts) || accepts.length === 0 || !accepts.every(isNonEmptyString)) {
+				throw invalid(`${name}.accepts must be a non-empty list of non-empty $types when present.`);
+			}
+			const repeated = (accepts as string[]).find((type, position) => accepts.indexOf(type) !== position);
+			if (repeated !== undefined) throw invalid(`${name}.accepts names '${repeated}' twice.`);
 		}
 		paths.push(keys as string[]);
 	}
-	const joined = paths.map((keys) => keys.join('.'));
 	for (const [index, keys] of paths.entries()) {
 		const name = keys.join('.');
-		if (joined.indexOf(name) !== index) {
+		if (paths.findIndex((other) => sameKeys(other, keys)) !== index) {
 			throw new RegistryError('duplicate-child-path', `${context} declares the child path '${name}' twice.`, {
 				...details,
 				childPath: [...keys],
@@ -116,10 +135,15 @@ export interface CreateRegistryOptions {
  * @throws {RegistryError} Code `'invalid-schema'`, naming the `$type`, when a winning registration's schema is not a
  * Standard Schema
  * @throws {RegistryError} Naming the `$type`, with code `'invalid-child-paths'` when a winning registration's
- * `childPaths` is not a list of non-empty key lists, `'duplicate-child-path'` when it repeats a path
- * (`childPath`), or `'nested-child-path'` when a path (`childPath`) runs through another (`outerChildPath`)
+ * `childPaths` is not a list of `{ keys, accepts? }` objects (a property other than those two, empty or non-string keys,
+ * an empty or repeating `accepts`), `'duplicate-child-path'` when it repeats a path (`childPath`), or
+ * `'nested-child-path'` when a path (`childPath`) runs through another (`outerChildPath`). Paths are compared key by
+ * key.
  *
  * @remarks
+ * The types check that the schema output declares every key of every child path (`childPathNotInSchema`), where the
+ * output type can be read.
+ *
  * By default a later registration with the same `$type` replaces the earlier one without a
  * warning, so `[...defaults, custom]` is the way to override. A replaced key
  * keeps its first position. Only the winning registration of each key is
@@ -133,7 +157,7 @@ export interface CreateRegistryOptions {
  */
 export function createRegistry<const TRegistration extends BaseRegistration>(
 	kind: string,
-	registrations: readonly TRegistration[],
+	registrations: readonly TRegistration[] & CheckChildPaths<TRegistration>,
 	options: CreateRegistryOptions = {},
 ): ReadOnlyRegistry<TRegistration> {
 	const winners = new Map<string, TRegistration>();

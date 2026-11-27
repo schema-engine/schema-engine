@@ -119,6 +119,8 @@ describe('a rule type nothing registers', () => {
 				message: expect.stringMatching(
 					/^No registration for \$type 'postalcode'\. Register it with createFormEngine\(\{ validations: \[\.\.\.\] \}\)\. Registered rules: required, .*postalCode\.$/,
 				),
+				code: 'registry/unregistered-type',
+				params: { received: 'postalcode' },
 			},
 		]);
 	});
