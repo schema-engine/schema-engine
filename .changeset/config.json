@@ -1,8 +1,22 @@
 {
 	"$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
-	"changelog": ["@changesets/changelog-github", { "repo": "schema-engine/schema-engine" }],
+	"changelog": [
+		"@changesets/changelog-github",
+		{
+			"repo": "schema-engine/schema-engine"
+		}
+	],
 	"commit": false,
-	"fixed": [["@schema-engine/forms", "@schema-engine/forms-react", "@schema-engine/forms-radiant"]],
+	"fixed": [
+		[
+			"@schema-engine/registry",
+			"@schema-engine/actions",
+			"@schema-engine/layout",
+			"@schema-engine/forms",
+			"@schema-engine/forms-react",
+			"@schema-engine/forms-radiant"
+		]
+	],
 	"linked": [],
 	"access": "public",
 	"baseBranch": "main",
