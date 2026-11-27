@@ -52,7 +52,7 @@ Every token rule sits inside `:where()`, so it adds no specificity and a class o
 | **A small closed set of named values**, 2 to 5 | A raw value is a token override, not a pick       | `compact`, `default`, `comfortable`                   | `color: '#f60'`: set a token in CSS. A `variant` with eleven values: split it or drop it     |
 | **Appearance only**                            | Structure belongs to slot config and the grid     | `surface`: border, shadow, background                 | `layout: inline`, `orientation: horizontal`: slot config. Which fields share a row: the grid |
 
-`defineAxis` enforces the part it can: 2 to 5 values, and tokens that are custom properties. The rest is design judgement. If an idea fits only one component, it is slot config.
+`defineAxis` enforces the part it can: 2 to 5 values, and tokens that are custom properties. The rest is design judgement. If an idea fits only one component, it is slot config. If every entity of your domain has its own value (a colour per machine, per brand), it is not an axis either: see [Identity tokens](#identity-tokens-when-not-to-use-an-axis).
 
 ## Built-in axes
 
@@ -232,6 +232,60 @@ export const theme = createLayoutTheme({ appearance: [...builtInAxes, size] });
 
 This replaces every token of `size`, so the card width (`--se-measure`) and control height (`--se-control-height`) of the built-in axis are gone. To retune only the numbers, set the hooks and token overrides in CSS instead; see [Theming](/docs/layout/theming#where-to-set-a-token) and the [themed form example](/docs/examples/theming).
 
+## Identity tokens: when not to use an axis
+
+An axis is a look that an author picks among a few. Some variation is not a pick: a colour per machine, per brand or per product follows from **which entity** a node is, and a domain can have seventeen of them or a hundred. That value is domain data. It does not belong in the theme, and `defineAxis` refuses it, because an axis holds at most five values.
+
+| Question                   | An axis                                       | Identity tokens                              |
+| -------------------------- | --------------------------------------------- | -------------------------------------------- |
+| Who decides the value      | The author of the document, among a few looks | The data: every entity has its own value     |
+| How many values            | 2 to 5                                        | As many as the domain has                    |
+| Where the values live      | The layout theme                              | The host's data and stylesheet               |
+| Which attribute carries it | `data-se-<axis>`, written by the renderer     | `data-<domain>`, written by the host         |
+| Examples                   | `size`, `surface`, `tone`                     | The colour of a machine, a brand or a tenant |
+
+The pattern has three parts, and the layout package needs no new concept for it:
+
+1. The host writes its own attribute from the data (`data-machine="sampler"`). A `data-se-*` name is reserved for the renderers, so it is never used for this.
+2. The host's stylesheet maps each value to the semantic tokens that components already read, here `--primary`. Generate it from the same data that renders the nodes, and scope it under `[data-se-theme="<id>"]` when you want it to apply to one theme only.
+3. Axes still apply on top. An axis value may read the identity token, so the pick stays a choice among a few looks while the colour stays the entity's.
+
+```ts title="machine-tokens.ts"
+import { builtInAxes, createLayoutTheme, defineAxis, getAppearanceAttributes } from '@schema-engine/layout';
+import { machines } from './machines.helper';
+
+export const machineCss = machines.map(({ id, color }) => `[data-machine="${id}"] { --primary: ${color}; }`).join('\n');
+
+const tint = defineAxis({
+	$type: 'tint',
+	metadata: { name: 'Tint' },
+	default: 'none',
+	values: {
+		none: {},
+		tinted: { '--se-surface-background': 'color-mix(in srgb, var(--primary) 12%, transparent)' },
+	},
+});
+
+export const theme = createLayoutTheme({ appearance: [...builtInAxes, tint] });
+
+export function machineAttributes(id: string): Record<string, string> {
+	return { 'data-machine': id, ...getAppearanceAttributes({ tint: 'tinted' }) };
+}
+```
+
+`machines` is the host's own list, one `{ id, color }` for each of the 17 machines. `machineCss` is one rule for each of them, which you ship as a stylesheet or generate at build time:
+
+```css
+[data-machine='sampler'] {
+	--primary: #e4572e;
+}
+[data-machine='synth'] {
+	--primary: #f2a541;
+}
+```
+
+A node of the sampler carries `data-machine="sampler"` and the `data-se-tint="tinted"` that the document picked, so it is the sampler's colour, tinted. Every component below it that reads `--primary` follows, with no axis value for the sampler. Choose by the rule of thumb: an axis when an author chooses among two to five looks, identity tokens when every entity has its own value.
+
 ## Style the attributes in CSS
 
 An axis value is a plain attribute, so CSS can key on it:
@@ -254,12 +308,13 @@ The catalog and the JSON Schema export list each axis and its values, so `appear
 
 ## When to use something else
 
-| You want                                                                   | Use                                                                                          |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| To hide the description, change labels or switch orientation of one recipe | Slot config: `view.header.showDescription`, `view.header.labels`                             |
-| A wider card, or a different media width                                   | Slot config that changes layout (`contentWidth`, `sideWidth`), or `--se-measure` in your CSS |
-| Fields on one row, a drawn layout, spacing between rows                    | The grid: `width`, `areas`, the gap tokens                                                   |
-| A one-off colour or size on one form                                       | `className` with a custom property, or `style: { '--primary': '#c2410c' }`                   |
-| A look no axis names, once                                                 | A class in `className`                                                                       |
+| You want                                                                   | Use                                                                                                                           |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| To hide the description, change labels or switch orientation of one recipe | Slot config: `view.header.showDescription`, `view.header.labels`                                                              |
+| A wider card, or a different media width                                   | Slot config that changes layout (`contentWidth`, `sideWidth`), or `--se-measure` in your CSS                                  |
+| Fields on one row, a drawn layout, spacing between rows                    | The grid: `width`, `areas`, the gap tokens                                                                                    |
+| A one-off colour or size on one form                                       | `className` with a custom property, or `style: { '--primary': '#c2410c' }`                                                    |
+| A colour for each of many entities (17 machines, every brand)              | Your own `data-<domain>` attribute and CSS that sets the tokens ([Identity tokens](#identity-tokens-when-not-to-use-an-axis)) |
+| A look no axis names, once                                                 | A class in `className`                                                                                                        |
 
 The `size` and `surface` tokens set the card's padding, border and shadow, and its width is `--se-measure`.

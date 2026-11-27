@@ -106,24 +106,25 @@ The theme id (`l1tvu4rv` here) is derived from the compiled vocabulary, so it ch
 
 The table names forms as the example consumer: its `grid`, `appearance` and `view` keys are the config of a form. Another domain reads the same keys from its own documents.
 
-| I want to                                                           | Use                                                                     | Read                                                                                          |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Put two fields on one row                                           | `grid.width: half` on each field                                        | [Placing fields in the grid](/docs/layout/grid-and-placement#rows-of-fields-width-and-offset) |
-| Centre or indent a field                                            | `grid.offset`                                                           | same                                                                                          |
-| Draw a layout where one field spans rows                            | `grid.areas` on the form or step, `grid.area` on each field             | [Drawn layouts](/docs/layout/grid-and-placement#drawn-layouts-areas)                          |
-| Change the layout at a breakpoint                                   | `grid.responsive`, or an `areas` record                                 | same                                                                                          |
-| Change the layout by the width of a card or panel, not the window   | `createLayoutTheme({ grid: { query: 'container' } })`                   | [Layout themes](/docs/layout/layout-themes#follow-the-container-not-the-window)               |
-| Place one field exactly                                             | Raw `column`, `row`, `placeSelf`                                        | [Raw grid lines](/docs/layout/grid-and-placement#raw-grid-lines)                              |
-| Make a form denser or roomier                                       | `appearance: { size: 'compact' }`                                       | [Appearance axes](/docs/layout/appearance-axes)                                               |
-| Change border, shadow or surface                                    | `appearance: { surface: 'outlined' }`                                   | same                                                                                          |
-| Add a brand colour that every form can pick by name                 | A host axis with `defineAxis`                                           | [Appearance axes](/docs/layout/appearance-axes#add-a-host-axis)                               |
-| Change the rhythm between fields everywhere                         | The `--se-grid-gap-*` tokens, or `createLayoutTheme({ grid: { gap } })` | [Theming](/docs/layout/theming)                                                               |
-| Set a size, a width or a gap for one form                           | A class in `className` that sets the token                              | [Theming](/docs/layout/theming#where-to-set-a-token)                                          |
-| Style one form, step or field once                                  | `className`, or `style` with custom properties                          | [Escape hatches](#escape-hatches)                                                             |
-| Show or hide a part of a recipe (descriptions, labels, orientation) | Slot config on `view`, for example `view.header.showDescription`        | [View recipes](/docs/forms-react/layouts)                                                     |
-| Use a different frame around the fields                             | A recipe, built in or your own                                          | [Custom recipes](/docs/forms-react/layouts#custom-recipes)                                    |
-| Make two engines or two renderers look the same                     | One compiled layout theme passed to both                                | [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines)                     |
-| Copy a working setup                                                | An example                                                              | [A themed form](/docs/examples/theming)                                                       |
+| I want to                                                            | Use                                                                     | Read                                                                                          |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Put two fields on one row                                            | `grid.width: half` on each field                                        | [Placing fields in the grid](/docs/layout/grid-and-placement#rows-of-fields-width-and-offset) |
+| Centre or indent a field                                             | `grid.offset`                                                           | same                                                                                          |
+| Draw a layout where one field spans rows                             | `grid.areas` on the form or step, `grid.area` on each field             | [Drawn layouts](/docs/layout/grid-and-placement#drawn-layouts-areas)                          |
+| Change the layout at a breakpoint                                    | `grid.responsive`, or an `areas` record                                 | same                                                                                          |
+| Change the layout by the width of a card or panel, not the window    | `createLayoutTheme({ grid: { query: 'container' } })`                   | [Layout themes](/docs/layout/layout-themes#follow-the-container-not-the-window)               |
+| Place one field exactly                                              | Raw `column`, `row`, `placeSelf`                                        | [Raw grid lines](/docs/layout/grid-and-placement#raw-grid-lines)                              |
+| Make a form denser or roomier                                        | `appearance: { size: 'compact' }`                                       | [Appearance axes](/docs/layout/appearance-axes)                                               |
+| Change border, shadow or surface                                     | `appearance: { surface: 'outlined' }`                                   | same                                                                                          |
+| Add a brand colour that every form can pick by name                  | A host axis with `defineAxis`                                           | [Appearance axes](/docs/layout/appearance-axes#add-a-host-axis)                               |
+| Give each of many entities its own colour (17 machines, every brand) | Your own `data-<domain>` attribute and CSS that sets the tokens         | [Identity tokens](/docs/layout/appearance-axes#identity-tokens-when-not-to-use-an-axis)       |
+| Change the rhythm between fields everywhere                          | The `--se-grid-gap-*` tokens, or `createLayoutTheme({ grid: { gap } })` | [Theming](/docs/layout/theming)                                                               |
+| Set a size, a width or a gap for one form                            | A class in `className` that sets the token                              | [Theming](/docs/layout/theming#where-to-set-a-token)                                          |
+| Style one form, step or field once                                   | `className`, or `style` with custom properties                          | [Escape hatches](#escape-hatches)                                                             |
+| Show or hide a part of a recipe (descriptions, labels, orientation)  | Slot config on `view`, for example `view.header.showDescription`        | [View recipes](/docs/forms-react/layouts)                                                     |
+| Use a different frame around the fields                              | A recipe, built in or your own                                          | [Custom recipes](/docs/forms-react/layouts#custom-recipes)                                    |
+| Make two engines or two renderers look the same                      | One compiled layout theme passed to both                                | [Layout themes](/docs/layout/layout-themes#share-a-theme-between-engines)                     |
+| Copy a working setup                                                 | An example                                                              | [A themed form](/docs/examples/theming)                                                       |
 
 When two tools fit, prefer them in this order: a named width before a raw line, an axis value before a token override, a token override before a class, a class before inline `style`.
 
@@ -139,7 +140,7 @@ Fieldsets and array rows lay their children out on a grid of their own, so the s
 
 ## Appearance
 
-An **appearance axis** is one independent dimension of appearance with 2 to 5 named values, such as `size` or `surface`. Each value stands for a set of CSS tokens that components read. A form, a step, a field or a recipe slot picks a value by name, and the renderer writes it as `data-se-<axis>="<value>"`. The engine ships `size` and `surface`; a host adds its own, such as `tone`. See [Appearance axes](/docs/layout/appearance-axes).
+An **appearance axis** is one independent dimension of appearance with 2 to 5 named values, such as `size` or `surface`. Each value stands for a set of CSS tokens that components read. A form, a step, a field or a recipe slot picks a value by name, and the renderer writes it as `data-se-<axis>="<value>"`. The engine ships `size` and `surface`; a host adds its own, such as `tone`. A value that every entity of a domain has for itself (a colour per machine) is not an axis: see [Identity tokens](/docs/layout/appearance-axes#identity-tokens-when-not-to-use-an-axis). See [Appearance axes](/docs/layout/appearance-axes).
 
 ## Escape hatches
 
@@ -165,6 +166,7 @@ Names cover the common cases. Three hatches stay open for the rest, and they wor
 - [Grid and placement](/docs/layout/grid-and-placement): widths, offsets, areas and breakpoints.
 - [Theming](/docs/layout/theming): the custom properties a host overrides, with a complete theme file.
 - [Recipe protocol](/docs/layout/recipe-protocol): declare the slots and kinds of a domain's view recipes.
+- [Recipes outside forms](/docs/layout/recipes-outside-forms): a card recipe, bound for React and for Radiant.
 - [A layout page](/docs/examples/layout-page): a page with no form, laid out by this package alone.
 - [A themed form](/docs/examples/theming): a form config with its theme and CSS, rendered live.
 - [YAML forms](/docs/forms/yaml): author any of these in a `.form.yaml` file.
