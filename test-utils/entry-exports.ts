@@ -7,6 +7,8 @@ interface EntrySymbol {
 	readonly declaration: string;
 	/** The name the entry exports it under, which an importer writes. */
 	readonly exportedAs: string;
+	/** Whether an importer gets a runtime binding (a function, class or constant), not only a type. */
+	readonly isValue: boolean;
 }
 
 const exportsByPackage = new Map<string, Map<string, EntrySymbol[]>>();
@@ -58,9 +60,12 @@ function readExportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 			checker.getExportsOfModule(moduleSymbol).map((exported) => {
 				const target = exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
 				const declaration = target.declarations?.[0]?.getSourceFile().fileName ?? 'unknown';
+				const typeOnly =
+					exported.declarations?.some((node) => ts.isTypeOnlyImportOrExportDeclaration(node)) ?? false;
 				return {
 					declaration: `${path.relative(packageDir, declaration)}#${target.name}`,
 					exportedAs: exported.name,
+					isValue: !typeOnly && (target.flags & ts.SymbolFlags.Value) !== 0,
 				};
 			}),
 		);
@@ -94,13 +99,17 @@ export function exportedSymbolNames(packageDir: string): string[] {
 }
 
 /**
- * The names a package's entries export, as an importer writes them, sorted and without repeats.
+ * The value exports of a package's entries (functions, classes, constants), by the name an importer writes, sorted and
+ * without repeats.
  *
  * @remarks
- * Differs from {@link exportedSymbolNames} for a re-export under another name (`export type { A as B }`), where the
- * declaration is `A` and the entry's public name is `B`.
+ * The name is the entry's, which differs from {@link exportedSymbolNames} for a re-export under another name
+ * (`export { a as b }`). A type-only export is left out.
  */
-export function publicExportNames(packageDir: string): string[] {
-	const names = [...exportsByEntry(packageDir).values()].flat().map(({ exportedAs }) => exportedAs);
+export function valueExportNames(packageDir: string): string[] {
+	const names = [...exportsByEntry(packageDir).values()]
+		.flat()
+		.filter(({ isValue }) => isValue)
+		.map(({ exportedAs }) => exportedAs);
 	return [...new Set(names)].toSorted();
 }

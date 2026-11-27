@@ -64,7 +64,7 @@ A form announces what its actions and its submission did as bubbling, composed e
 
 The schemas, metadata and value declarations of these elements are the default element contracts of [`@schema-engine/forms/default-elements`](/docs/forms/api-reference#default-element-contracts), which `radiantElements` binds with `bindRegistry`; each registration shares the contract's `schema` by identity, and the package adds only the Radiant component and, for the phone input, its own validation.
 
-`createRadiantPhoneValidationRegistration` builds the phone validation rule for a set of countries.
+`createRadiantPhoneValidationRegistration()` takes no arguments and builds the `phone` rule registration, the default rule of `phone-input`. Its check loads `libphonenumber-js` the first time it runs and accepts an empty value or a valid phone number in international format (`+` and the country code). `PhoneInputElementRegistration` already carries it, so call it only for an engine that registers `phone-input` some other way.
 
 ## Recipes
 
