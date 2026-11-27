@@ -2,15 +2,26 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 
+const exportsByPackage = new Map<string, Map<string, string[]>>();
+
 /**
  * Every symbol each entry of a package's `exports` map exposes, values and types, by the declaration it resolves to.
  *
  * @remarks
  * An entry is read at the source file its `dist` path is built from, so the check needs no build. A re-export
  * names the same declaration as the original, so a symbol exported under the same name from two entries
- * is found whichever file declares it.
+ * is found whichever file declares it. Building the TypeScript program is the whole cost, so it is built once
+ * per package and every check in a test file reads the same result.
  */
 function exportsByEntry(packageDir: string): Map<string, string[]> {
+	const cached = exportsByPackage.get(packageDir);
+	if (cached) return cached;
+	const symbols = readExportsByEntry(packageDir);
+	exportsByPackage.set(packageDir, symbols);
+	return symbols;
+}
+
+function readExportsByEntry(packageDir: string): Map<string, string[]> {
 	const { exports: exportMap } = JSON.parse(readFileSync(path.join(packageDir, 'package.json'), 'utf8')) as {
 		exports: Record<string, string | { import?: string }>;
 	};
