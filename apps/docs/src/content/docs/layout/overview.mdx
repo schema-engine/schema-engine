@@ -86,7 +86,11 @@ console.log(renderToStaticMarkup(renderSection()));
 	class="se-grid"
 	data-se-theme="l1tvu4rv"
 	data-se-size="compact"
-	style="--se-grid-template: repeat(12, minmax(0, 1fr)); --se-grid-default-column: 1 / -1"
+	style="
+		--se-grid-template: repeat(12, minmax(0, 1fr));
+		--se-grid-tracks: 12;
+		--se-grid-default-column: 1 / -1;
+	"
 >
 	<div class="se-grid-item" data-se-theme="l1tvu4rv" style="--se-item-grid-column: span 6">
 		First name
@@ -110,6 +114,7 @@ The table names forms as the example consumer: its `grid`, `appearance` and `vie
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | Put two fields on one row                                           | `grid.width: half` on each field                                        | [Placing fields in the grid](/docs/layout/grid-and-placement#rows-of-fields-width-and-offset) |
 | Centre or indent a field                                            | `grid.offset`                                                           | same                                                                                          |
+| Size a field in tracks and pack small ones into gaps                | `grid.span: n` on the field, `autoFlow: 'dense'` on the grid            | [Sizes in tracks](/docs/layout/grid-and-placement#sizes-in-tracks-span-and-autoflow)          |
 | Draw a layout where one field spans rows                            | `grid.areas` on the form or step, `grid.area` on each field             | [Drawn layouts](/docs/layout/grid-and-placement#drawn-layouts-areas)                          |
 | Change the layout at a breakpoint                                   | `grid.responsive`, or an `areas` record                                 | same                                                                                          |
 | Change the layout by the width of a card or panel, not the window   | `createLayoutTheme({ grid: { query: 'container' } })`                   | [Layout themes](/docs/layout/layout-themes#follow-the-container-not-the-window)               |
@@ -127,13 +132,14 @@ The table names forms as the example consumer: its `grid`, `appearance` and `vie
 
 When two tools fit, prefer them in this order: a named width before a raw line, an axis value before a token override, a token override before a class, a class before inline `style`.
 
-## Three levels of layout
+## Four levels of layout
 
 A form's `grid` and each element's own `grid` lay fields out. The levels run from the most to the least readable:
 
 1. `width` and `offset` for fields that flow in rows. Names are shares of 12 tracks: `full`, `three-quarters`, `two-thirds`, `half`, `third`, `quarter`.
-2. `areas` for a layout you draw as rows of names, with `area` on each field.
-3. Raw grid lines (`column`, `row`, `placeSelf`) as the escape hatch.
+2. `span` for fields sized in tracks of a grid with `columns`, clamped to the tracks the grid has, with `autoFlow: 'dense'` on the grid to backfill gaps.
+3. `areas` for a layout you draw as rows of names, with `area` on each field.
+4. Raw grid lines (`column`, `row`, `placeSelf`) as the escape hatch.
 
 Fieldsets and array rows lay their children out on a grid of their own, so the same names work inside a container. A fieldset with `grid: { subgrid: true }` lays them on its parent's tracks instead, so its fields line up with the fields around it. A step's `grid` replaces the form's grid for that step. The rules, the validation errors and the limits are on [Placing fields in the grid](/docs/layout/grid-and-placement#placing-fields-in-the-grid).
 

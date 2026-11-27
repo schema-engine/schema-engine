@@ -1,6 +1,6 @@
 ---
 title: 'Grid and placement'
-description: 'Place fields in a grid by width and offset, draw a layout with areas, line a fieldset up with subgrid, and use raw grid lines.'
+description: 'Place fields in a grid by width and offset or by a number of tracks, pack them densely, draw a layout with areas, line a fieldset up with subgrid, and use raw grid lines.'
 order: 2
 ---
 
@@ -9,15 +9,16 @@ order: 2
 ## Placing fields in the grid
 
 A form's `grid` sets its layout (`columns`, `gap`, `responsive`), and each
-element's own `grid` places it. There are three levels, from the most to the
+element's own `grid` places it. There are four levels, from the most to the
 least readable:
 
 1. `width` and `offset` for fields that flow in rows.
-2. `areas` for a layout you draw as rows of names.
-3. Raw grid lines (`column`, `row`) as the escape hatch.
+2. `span` for fields sized in tracks of a grid with `columns`.
+3. `areas` for a layout you draw as rows of names.
+4. Raw grid lines (`column`, `row`) as the escape hatch.
 
-A grid uses either `width`/`offset`, `areas` or `columns`; raw lines can sit
-next to widths or areas.
+A grid uses either `width`/`offset`, `areas` or `columns`; `span` goes with
+`columns`, and raw lines can sit next to widths or areas.
 
 ### Rows of fields: `width` and `offset`
 
@@ -179,6 +180,34 @@ it starts the field at line 2. Use `column: 'span 2'` to span two columns, or
 width fields, but it counts tracks of the 12 the widths use there, so
 `column: 'span 2'` is two of twelve, a sixth of the row.
 
+### Sizes in tracks: `span` and `autoFlow`
+
+When a field's size is a number of the grid's columns rather than a share of the row, say how many tracks it takes. `span: 3` takes three tracks of the grid it sits in, and never more than the grid has, so a span wider than the grid is the whole row instead of an implicit column that overflows:
+
+```ts
+export const grid = { columns: 4, responsive: { md: { columns: 12 } } };
+
+export const fields = [
+	{ $type: 'input', id: 'osc', name: 'osc', grid: { span: 2 } },
+	{ $type: 'input', id: 'filter', name: 'filter', grid: { span: 7 } },
+	{ $type: 'input', id: 'amp', name: 'amp', grid: { span: 3, responsive: { lg: { span: 4 } } } },
+];
+```
+
+Below `md` the grid has four tracks, so the `span: 7` field is the full row; from `md` it covers seven of twelve. The clamp reads the grid's track count at the same width the template switches, so a span and its tracks never disagree, in a media theme and in a container theme (`query: 'container'`, so a card narrower than `md` inside a wide window gets four tracks and a clamp of four). `span` also changes in `responsive`, and it takes the tracks of the grid you wrote: `columns: n` gives `n`, named widths give 12 and `areas` give the width of their rows. A subgrid fieldset passes its parent's count on, so a span inside it clamps to the parent's tracks.
+
+`autoFlow` on the grid sets how fields without a position fill it. `'row'` (the default) places them in source order; `'dense'` backfills gaps earlier in the grid with later, smaller fields, so a `span: 1` field after two `span: 3` fields in four tracks sits beside the first one instead of leaving a hole. It is part of the grid's structure, so it is not allowed in `responsive`. Dense packing changes the visual order, not the DOM, reading or focus order: a keyboard or screen reader user still meets the fields in source order, so a field that jumps up the page is reached after the fields it now sits above (WCAG 2.4.3, Focus Order). Use it for tiles whose order carries no meaning, and keep `'row'` for fields a person fills in top to bottom. If a dense layout moves a field that has to come in sequence, change the source order to match what you see.
+
+Validation enforces these rules:
+
+- `span` is a positive whole number; `0` and `1.5` are rejected.
+- A field cannot set `span` together with `width`, `offset`, `column` or `area` in the same slot. Different slots may differ, such as a `width` below `md` and a `span` from `md`.
+- A subgrid takes no `span`, because it spans its parent's full row.
+- `columns: 'auto'` cannot clamp a span. The number of tracks `auto` makes depends on the width and the minimum column width, and CSS cannot compute it, so a span there falls back to one track and validation rejects it at the `span` key, naming the breakpoint where the columns are `auto`. Give the grid a track count instead, per breakpoint, and measure the breakpoints against the card with a container theme: `columns: 4` with `responsive: { sm: { columns: 8 }, md: { columns: 12 } }` grows with the room the card has, which is what `auto` was for.
+- A container's own children (a fieldset or array row that is not a subgrid) sit on a grid of their own with one track unless they use `width`, so a `span` there is the whole row. Put `subgrid: true` on the container to size its children against the parent's tracks.
+
+There is no `width: 'auto'`. A field that takes the room its content needs is a track-sizing question, and `columns: 'auto'` with `minColumnWidth` already answers it for the grid.
+
 ### Subgrid: line up the fields of a fieldset
 
 A fieldset lays its children out on tracks of its own, so its fields do not share column lines with the fields around it. `subgrid: true` on the fieldset makes it span its parent's full row and lay its children on the parent's column tracks and column gap, with CSS subgrid and no script:
@@ -203,7 +232,7 @@ export const step = [
 
 The street sits under `first` and the city under `last`, and `half` inside the fieldset still means half of the row. The rules:
 
-- **It spans the full row.** A subgrid takes no `width`, `offset`, `column`, `area`, `justifySelf` or `placeSelf`, and validation rejects them at the key. `hidden` and the block margins in `responsive`, and `row` and `alignSelf`, work as on any element.
+- **It spans the full row.** A subgrid takes no `width`, `offset`, `column`, `area`, `span`, `justifySelf` or `placeSelf`, and validation rejects them at the key. `hidden` and the block margins in `responsive`, and `row` and `alignSelf`, work as on any element.
 - **Widths count the parent's tracks.** A grid whose fields, or the fields of a subgrid in it, use `width` or `offset` is laid out on 12 tracks, so the parent takes 12 when only the fieldset's children set a width. Under a parent with `columns: 3`, the children place on its three columns by flow, and a `width` inside is rejected like a direct one. With `columns: 'auto'` the fieldset spans every track the grid draws, so the children flow across them as in `auto-fill`.
 - **The edge columns are inset.** Interior column lines match the parent exactly, but the fieldset's own border and padding are added to the fields in its first and last columns. The Radiant fieldset has `1rem` of padding and a `1px` border, so those fields start `calc(1rem + 1px)` in from the lines above and below them; the forms-react fieldset has none.
 - **Subgrids nest.** Every level spans its parent's row and passes the tracks on.

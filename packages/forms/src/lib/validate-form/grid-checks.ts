@@ -13,8 +13,10 @@ import {
 	elementUsesGridWidths,
 	GRID_TEMPLATE_KEYS,
 	gridAreaTemplates,
+	gridSpanIssues,
 	gridUsesAreas,
 	namedPlacementOverflow,
+	spanPlacementIssue,
 	subgridPlacementIssue,
 	WIDTH_TRACKS,
 	type CascadeSlot,
@@ -130,6 +132,18 @@ export function areaPlacementIssue(item: FormTaggedConfig, nested: boolean): For
 		elementGridKeyPath(item, others),
 		`${label} sets grid ${quotedKeys(['area', ...others])}; use an area or a width, offset or raw line, not both.`,
 	);
+}
+
+/**
+ * Why a field's `span` cannot sit beside its other placement, or `undefined` when it is fine.
+ *
+ * @remarks
+ * A span is a placement of its own, so a `width`, `offset`, raw `column` or `area` in the same slot would give
+ * the field two answers; different slots may differ. Applies at every depth. The path is relative to the element.
+ */
+export function spanIssue(item: FormTaggedConfig): FormValidationIssue | undefined {
+	const issue = spanPlacementIssue(item);
+	return issue ? issueAt(issue.path, `${elementLabel(item)} ${issue.message}`) : undefined;
 }
 
 /**
@@ -261,6 +275,19 @@ export function fieldPlacementIssues(
 				path,
 				`${label} sets ${quotedKeys(exclusive)} but ${elementLabel(widths.element)} uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
 			),
+		);
+	}
+
+	const tracked = placedTrackItems(scope.elements);
+	for (const { path: relative, message } of gridSpanIssues(
+		grid,
+		tracked.map(({ element }) => element),
+	)) {
+		const [index, ...rest] = relative;
+		const target = typeof index === 'number' ? tracked[index] : undefined;
+		if (!target) continue;
+		issues.push(
+			issueAt([...target.path, ...rest], `${elementLabel(target.element as Record<string, unknown>)} ${message}`),
 		);
 	}
 
