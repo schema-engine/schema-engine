@@ -12,15 +12,25 @@ type TreeRegistration = Pick<BaseRegistration, 'schema' | 'childPaths'>;
  * `$type` is the node's own, repeated at the top for the same reason as on {@link SafeParseNodeResult}: checking it
  * narrows `registration` and `data` together. `children` has one entry per child path the registration declares that
  * the node has a value at, keyed by the keys of the path joined with dots (`['engine', 'controls']` is
- * `'engine.controls'`): a list of nodes for an array, one node otherwise, in document order.
+ * `'engine.controls'`): a list of nodes for an array, one node otherwise, in document order. A child may be of any
+ * registration of the lookup, so `children` holds nodes of the whole union, not of the parent's registration.
  */
-export type ParsedNode<TRegistration extends TreeRegistration> = TRegistration extends unknown
+export type ParsedNode<TRegistration extends TreeRegistration> = ParsedNodeOf<TRegistration, TRegistration>;
+
+/**
+ * One member of {@link ParsedNode} per registration.
+ *
+ * @remarks
+ * `TAll` carries the whole union past the distribution over `TMember`: inside the distributive branch `TMember` is one
+ * registration, which would type every child as a node of its parent's registration.
+ */
+type ParsedNodeOf<TMember extends TreeRegistration, TAll extends TreeRegistration> = TMember extends unknown
 	? {
-			$type: TRegistration extends { $type: infer TType extends string } ? TType : string;
-			registration: TRegistration;
-			data: StandardSchemaV1.InferOutput<TRegistration['schema']>;
+			$type: TMember extends { $type: infer TType extends string } ? TType : string;
+			registration: TMember;
+			data: StandardSchemaV1.InferOutput<TMember['schema']>;
 			path: NonNullable<StandardSchemaIssue['path']>;
-			children: Readonly<Record<string, ParsedNode<TRegistration> | readonly ParsedNode<TRegistration>[]>>;
+			children: Readonly<Record<string, ParsedNode<TAll> | readonly ParsedNode<TAll>[]>>;
 		}
 	: never;
 

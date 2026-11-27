@@ -36,17 +36,34 @@ export function assertStandardSchema(schema: unknown, context = 'Registration sc
 	return schema as StandardSchemaV1;
 }
 
+/**
+ * Check the `childPaths` of a registration.
+ *
+ * @remarks
+ * Two paths that read the same once joined with dots would share one key of `ParsedNode.children`, so they count as
+ * one path declared twice. A path that runs through another one would reach inside a child node, whose own
+ * registration says where its children are, so the walk would visit the same node from two parents.
+ */
 function assertChildPaths(childPaths: unknown, context: string): void {
 	if (childPaths === undefined) return;
 	if (!Array.isArray(childPaths)) throw new Error(`${context} childPaths must be a list of key paths.`);
-	const seen = new Set<string>();
+	const paths: string[][] = [];
 	for (const keys of childPaths as unknown[]) {
 		if (!Array.isArray(keys) || keys.length === 0 || keys.some((key) => typeof key !== 'string' || key === '')) {
 			throw new Error(`${context} childPaths must hold non-empty lists of non-empty keys.`);
 		}
-		const joined = keys.join('.');
-		if (seen.has(joined)) throw new Error(`${context} declares the child path '${joined}' twice.`);
-		seen.add(joined);
+		paths.push(keys as string[]);
+	}
+	const joined = paths.map((keys) => keys.join('.'));
+	for (const [index, keys] of paths.entries()) {
+		const name = keys.join('.');
+		if (joined.indexOf(name) !== index) throw new Error(`${context} declares the child path '${name}' twice.`);
+		const outer = paths.find(
+			(other) => other.length < keys.length && other.every((key, position) => key === keys[position]),
+		);
+		if (outer) {
+			throw new Error(`${context} child path '${name}' runs through the child path '${outer.join('.')}'.`);
+		}
 	}
 }
 
@@ -72,7 +89,7 @@ export interface CreateRegistryOptions {
  * @throws {Error} `Widget 'card' is registered twice.` when `duplicates` is `'error'` and a `$type` repeats, before any
  * schema is checked
  * @throws {Error} Naming the `$type` when a winning registration's schema is not a Standard Schema
- * @throws {Error} Naming the `$type` when a winning registration's `childPaths` is not a list of non-empty key lists, or repeats a path
+ * @throws {Error} Naming the `$type` when a winning registration's `childPaths` is not a list of non-empty key lists, repeats a path, or has a path that runs through another
  *
  * @remarks
  * By default a later registration with the same `$type` replaces the earlier one without a

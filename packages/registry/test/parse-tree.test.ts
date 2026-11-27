@@ -84,6 +84,25 @@ describe('safeParseTree', () => {
 		});
 	});
 
+	describe('Scenario: a child path that holds one node', () => {
+		it('gives that node, not a list, at the path it has in the document', () => {
+			const frame = createRegistry('Widget', [
+				{
+					$type: 'frame',
+					schema: z.looseObject({ $type: z.literal('frame') }),
+					metadata: { name: 'Frame' },
+					childPaths: [['content']],
+				},
+				knob,
+			]);
+			const result = safeParseTree(frame, { $type: 'frame', content: { $type: 'knob', value: 4 } });
+			const content = result.success ? result.tree.children.content : undefined;
+
+			expect(Array.isArray(content)).toBe(false);
+			expect(content).toMatchObject({ $type: 'knob', data: { value: 4 }, path: ['content'] });
+		});
+	});
+
 	describe('Scenario: every issue of a three-level document is reported at its full path', () => {
 		const broken: unknown = JSON.parse(
 			JSON.stringify({
@@ -182,6 +201,26 @@ describe('createRegistry childPaths', () => {
 		expect(() => createRegistry('Widget', [withPaths([['blocks'], ['blocks']])])).toThrow(
 			"Widget 'layout' declares the child path 'blocks' twice.",
 		);
+	});
+
+	it('throws for a path that runs through another, in either order', () => {
+		expect(() => createRegistry('Widget', [withPaths([['engine'], ['engine', 'controls']])])).toThrow(
+			"Widget 'layout' child path 'engine.controls' runs through the child path 'engine'.",
+		);
+		expect(() => createRegistry('Widget', [withPaths([['engine', 'controls'], ['engine']])])).toThrow(
+			"Widget 'layout' child path 'engine.controls' runs through the child path 'engine'.",
+		);
+	});
+
+	it('accepts paths that share a first key without one running through the other', () => {
+		expect(() =>
+			createRegistry('Widget', [
+				withPaths([
+					['engine', 'controls'],
+					['engine', 'meters'],
+				]),
+			]),
+		).not.toThrow();
 	});
 
 	it('accepts a registration with no child path', () => {
