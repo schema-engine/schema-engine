@@ -118,6 +118,21 @@ describe('the root', () => {
 		}
 	});
 
+	it('keeps a registration whose $type is a union of names when one of them is accepted', () => {
+		const either: BaseRegistration & { $type: 'page' | 'widget' } = {
+			$type: 'page',
+			schema: z.object({ $type: z.enum(['page', 'widget']), title: z.string() }),
+			metadata: { name: 'Either' },
+		};
+		const unioned = createRegistry('Unioned', [either]);
+		const result = safeParseTree(unioned, {}, { accepts: ['page'] });
+
+		if (result.success) {
+			expectTypeOf(result.tree).not.toBeNever();
+			expectTypeOf(result.tree.$type).toEqualTypeOf<'page' | 'widget'>();
+		}
+	});
+
 	it('rejects an accepts name the lookup lacks', () => {
 		// @ts-expect-error 'pgae' is no $type of the registry
 		safeParseTree(nodes, {}, { accepts: ['pgae'] });
