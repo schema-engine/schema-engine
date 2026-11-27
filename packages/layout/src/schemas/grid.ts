@@ -122,7 +122,7 @@ const GridAreasSchema = z
 
 const GridLayoutPropertiesSchema = z.strictObject({
 	areas: z.optional(GridAreasSchema),
-	columns: z.optional(z.union([z.number(), z.literal('auto')])),
+	columns: z.optional(z.union([z.int().check(z.positive()), z.literal('auto')])),
 	gap: z.optional(GridGapValueSchema),
 	gapX: z.optional(GridGapValueSchema),
 	gapY: z.optional(GridGapValueSchema),

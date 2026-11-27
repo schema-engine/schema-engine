@@ -40,6 +40,19 @@ describe('the span key', () => {
 		expect(variables['--se-item-grid-column-md']).toBe('span 6');
 	});
 
+	test.each([0, -1, 1.5, '3'])(
+		'the schema rejects columns %j, since it is the count a span is clamped to',
+		(columns) => {
+			expect(GridLayoutConfigSchema.safeParse({ columns }).success).toBe(false);
+			expect(GridLayoutConfigSchema.safeParse({ responsive: { md: { columns } } }).success).toBe(false);
+		},
+	);
+
+	test('the schema accepts a whole positive columns count and auto', () => {
+		expect(GridLayoutConfigSchema.safeParse({ columns: 4 }).success).toBe(true);
+		expect(GridLayoutConfigSchema.safeParse({ columns: 'auto' }).success).toBe(true);
+	});
+
 	test.each([0, -1, 1.5, '3'])('the schema rejects span %j', (span) => {
 		expect(ElementGridConfigSchema.safeParse({ span }).success).toBe(false);
 	});
