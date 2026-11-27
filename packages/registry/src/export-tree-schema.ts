@@ -72,6 +72,21 @@ function isLookupList(lookup: ExportLookup | readonly ExportLookup[]): lookup is
 }
 
 /**
+ * The own entry of `record` under `key`, or `undefined`.
+ *
+ * @remarks
+ * A child path key is data, and `__proto__` is a valid key. Reading and writing keys through these two functions keeps
+ * every one on the document's own properties, so none reaches the prototype chain, whatever its name.
+ */
+function getOwn(record: Record<string, unknown>, key: string): unknown {
+	return Object.hasOwn(record, key) ? record[key] : undefined;
+}
+
+function setOwn(record: Record<string, unknown>, key: string, value: unknown): void {
+	Object.defineProperty(record, key, { value, enumerable: true, writable: true, configurable: true });
+}
+
+/**
  * The object a schema is listed by when it cannot be read: a node of its `$type` with its child paths in place, each
  * slot left open for {@link exportTreeSchema} to fill.
  */
@@ -86,10 +101,10 @@ function openNode(registration: TreeRegistration): JSONSchemaObject {
 		keys.forEach((key, index) => {
 			const properties = current.properties as Record<string, unknown>;
 			const isLast = index === keys.length - 1;
-			const existing = properties[key];
+			const existing = getOwn(properties, key);
 			const next = isPlainObject(existing) ? existing : isLast ? {} : { type: 'object', properties: {} };
-			properties[key] = next;
-			if (!isLast && !isPlainObject(next.properties)) next.properties = {};
+			setOwn(properties, key, next);
+			if (!isLast && !isPlainObject(getOwn(next, 'properties'))) next.properties = {};
 			current = next;
 		});
 	}
@@ -101,10 +116,17 @@ function openNode(registration: TreeRegistration): JSONSchemaObject {
  *
  * @remarks
  * `required`, list bounds and every sibling keyword of the slot's parent stay, since the registration's schema owns
- * them. The slot is read by what it is: an array (`type: 'array'` or `items`) gets its `items` replaced, an object
- * (`type: 'object'` or `properties`) becomes the union, and an open slot (no keyword but annotations) becomes the union
- * or a list of it, matching a child or a list of children. Annotations of the slot are kept. A slot inside a schema with
- * an `$id` of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the document.
+ * them. The slot is read by what it is: an array (`type: 'array'`, `items` or `prefixItems`) gets its items replaced, an
+ * object (`type: 'object'` or `properties`) becomes the union, and an open slot (no keyword but annotations) becomes the
+ * union or a list of it, matching a child or a list of children. Annotations of the slot are kept. A slot inside a
+ * schema with an `$id` of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the
+ * document.
+ *
+ * A tuple is an array whose every item is a child, as `safeParseTree` reads it, so each position takes the union:
+ * every `prefixItems` entry (2020-12), every array-form `items` entry and `additionalItems` (draft-07), and the
+ * `items` that follows `prefixItems`. A rest that the schema closes with `false` stays closed, since the tuple's arity
+ * is the registration's to decide. Throwing instead would refuse a fixed-arity pair of children that is valid, while
+ * replacing only `items` would leave the prefix positions accepting any `$type`.
  */
 function replaceSlot(
 	definition: JSONSchemaObject,
@@ -121,7 +143,7 @@ function replaceSlot(
 	if (startsResource(definition)) throw unreachable();
 	let parent: JSONSchemaObject = definition;
 	for (const key of keys.slice(0, -1)) {
-		const step: unknown = isPlainObject(parent.properties) ? parent.properties[key] : undefined;
+		const step = isPlainObject(parent.properties) ? getOwn(parent.properties, key) : undefined;
 		if (!isPlainObject(step) || startsResource(step)) throw unreachable();
 		parent = step;
 	}
@@ -130,7 +152,7 @@ function replaceSlot(
 	if (!isPlainObject(properties) || !Object.hasOwn(properties, last)) {
 		throw unreachable();
 	}
-	const found = properties[last];
+	const found = getOwn(properties, last);
 	const slot = found === true ? {} : found;
 	if (!isPlainObject(slot)) throw unreachable();
 	if (SCHEMA_APPLICATORS.some((keyword) => keyword in slot) || Array.isArray(slot.type) || startsResource(slot)) {
@@ -139,12 +161,16 @@ function replaceSlot(
 	const annotations = Object.fromEntries(
 		SLOT_ANNOTATIONS.filter((key) => key in slot).map((key) => [key, slot[key]]),
 	);
-	if (slot.type === 'array' || 'items' in slot) {
-		slot.items = union();
+	if (slot.type === 'array' || 'items' in slot || 'prefixItems' in slot) {
+		const tupleItems = Array.isArray(slot.items);
+		const rest = tupleItems ? 'additionalItems' : 'items';
+		if (Array.isArray(slot.prefixItems)) slot.prefixItems = slot.prefixItems.map(union);
+		if (tupleItems) slot.items = (slot.items as unknown[]).map(union);
+		if (slot[rest] !== false) slot[rest] = union();
 	} else if (slot.type === 'object' || 'properties' in slot) {
-		properties[last] = { ...annotations, ...union() };
+		setOwn(properties, last, { ...annotations, ...union() });
 	} else if (slot.type === undefined && Object.keys(slot).every((key) => key in annotations)) {
-		properties[last] = { ...annotations, anyOf: [union(), { type: 'array', items: union() }] };
+		setOwn(properties, last, { ...annotations, anyOf: [union(), { type: 'array', items: union() }] });
 	} else {
 		throw unreachable();
 	}
@@ -177,7 +203,7 @@ function replaceSlot(
  *
  * | Slot in the registration's JSON Schema | Becomes |
  * | --- | --- |
- * | an array (`type: 'array'` or `items`) | the same array, `items: U` |
+ * | an array (`type: 'array'`, `items` or `prefixItems`) | the same array, `items: U`, and `U` at each tuple position |
  * | an object | `U` |
  * | open (`{}`) | `{ anyOf: [U, { type: 'array', items: U }] }`, a child or a list of children |
  *

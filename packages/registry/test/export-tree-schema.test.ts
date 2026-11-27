@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import * as z from 'zod/mini';
 import {
 	RegistryError,
@@ -704,6 +704,174 @@ describe('exportTreeSchema', () => {
 				many: { type: 'array', items: union('box'), default: [] },
 				either: { title: 'Either', anyOf: [union('box'), { type: 'array', items: union('box') }] },
 			});
+		});
+	});
+
+	describe('Scenario: A child path named after an Object.prototype member leaves the prototype alone', () => {
+		const nodes = createRegistry('Node', [
+			handWritten({ type: 'object' }, [{ keys: ['__proto__', 'kids'], accepts: ['box'] }], 'box'),
+		]);
+
+		afterEach(() => {
+			Reflect.deleteProperty(Object.prototype, 'properties');
+		});
+
+		it('writes the key as an own property of the open object and pollutes nothing', () => {
+			const document = exportTreeSchema(nodes, { resolve: () => undefined });
+			const box = (document.$defs as Record<string, JSONSchemaObject>).box!;
+			const properties = box.properties as Record<string, unknown>;
+
+			expect(Object.hasOwn({}, 'properties')).toBe(false);
+			expect('properties' in Object.prototype).toBe(false);
+			expect(Object.hasOwn(properties, '__proto__')).toBe(true);
+			expect(Object.getPrototypeOf(properties)).toBe(Object.prototype);
+			const inner = Object.getOwnPropertyDescriptor(properties, '__proto__')!.value as JSONSchemaObject;
+			expect(Object.hasOwn(inner, 'properties')).toBe(true);
+			expect(Object.hasOwn(inner.properties as object, 'kids')).toBe(true);
+			expect(JSON.parse(JSON.stringify(document)).$defs.box.properties).toEqual(
+				expect.objectContaining({ $type: { const: 'box' } }),
+			);
+		});
+
+		it('still compiles', () => {
+			expect(() => compileJSONSchema(exportTreeSchema(nodes, { resolve: () => undefined }))).not.toThrow();
+		});
+	});
+
+	describe('Scenario: A tuple slot holds children at every position', () => {
+		const tuple = (extra: JSONSchemaObject) =>
+			createRegistry('Node', [
+				{
+					$type: 'split',
+					schema: jsonSchemaOf({
+						type: 'object',
+						properties: { $type: { const: 'split' }, panes: { type: 'array', ...extra } },
+					}),
+					metadata,
+					childPaths: [{ keys: ['panes'], accepts: ['pane'] }],
+				} as BaseRegistration,
+				{ $type: 'pane', schema: z.object({ $type: typed('pane') }), metadata },
+			]);
+		const pane = { $type: 'pane' };
+
+		it('refuses a wrong $type at a prefix position of a 2020-12 tuple, and keeps it closed', () => {
+			const validate = compileJSONSchema(
+				exportTreeSchema(tuple({ prefixItems: [{}, {}], items: false, minItems: 2, maxItems: 2 }), {
+					accepts: ['split'],
+				}),
+			);
+
+			expect(validate({ $type: 'split', panes: [pane, pane] })).toBe(true);
+			expect(validate({ $type: 'split', panes: [{ $type: 'other' }, pane] })).toBe(false);
+			expect(validate({ $type: 'split', panes: [pane, { $type: 'other' }] })).toBe(false);
+			expect(validate({ $type: 'split', panes: [pane, pane, pane] })).toBe(false);
+		});
+
+		it('requires children in the rest of a 2020-12 tuple', () => {
+			const validate = compileJSONSchema(
+				exportTreeSchema(tuple({ prefixItems: [{}], items: {}, minItems: 1 }), { accepts: ['split'] }),
+			);
+
+			expect(validate({ $type: 'split', panes: [pane, pane, pane] })).toBe(true);
+			expect(validate({ $type: 'split', panes: [pane, pane, { $type: 'other' }] })).toBe(false);
+			expect(validate({ $type: 'split', panes: [{ $type: 'other' }] })).toBe(false);
+		});
+
+		it('refuses a wrong $type at a position of a draft-07 tuple, and keeps it closed', () => {
+			const validate = compileJSONSchema(
+				exportTreeSchema(tuple({ items: [{}, {}], additionalItems: false }), {
+					accepts: ['split'],
+					target: 'draft-07',
+				}),
+			);
+
+			expect(validate({ $type: 'split', panes: [pane, pane] })).toBe(true);
+			expect(validate({ $type: 'split', panes: [{ $type: 'other' }, pane] })).toBe(false);
+			expect(validate({ $type: 'split', panes: [pane, pane, pane] })).toBe(false);
+		});
+
+		it('refuses a wrong $type in the additional items of a draft-07 tuple', () => {
+			const validate = compileJSONSchema(
+				exportTreeSchema(tuple({ items: [{}], additionalItems: {}, minItems: 1 }), {
+					accepts: ['split'],
+					target: 'draft-07',
+				}),
+			);
+
+			expect(validate({ $type: 'split', panes: [pane, pane] })).toBe(true);
+			expect(validate({ $type: 'split', panes: [pane, { $type: 'other' }] })).toBe(false);
+		});
+
+		it('writes a Zod tuple the same way', () => {
+			const nodes = createRegistry('Node', [
+				{
+					$type: 'split',
+					schema: z.object({ $type: typed('split'), panes: z.tuple([z.unknown(), z.unknown()]) }),
+					metadata,
+					childPaths: [{ keys: ['panes'], accepts: ['pane'] }],
+				},
+				{ $type: 'pane', schema: z.object({ $type: typed('pane') }), metadata },
+			]);
+			const validate = compileJSONSchema(exportTreeSchema(nodes, { resolve: zodFirst, accepts: ['split'] }));
+
+			expect(validate({ $type: 'split', panes: [pane, pane] })).toBe(true);
+			expect(validate({ $type: 'split', panes: [{ $type: 'other' }, pane] })).toBe(false);
+		});
+	});
+
+	describe('Scenario: An owner $type outside the anchor grammar still gets valid anchors', () => {
+		it.each(['ui/button', '1abc', 'a b', '_x', 'café', 'a__b'])(
+			'compiles the anchors a schema of %j declares',
+			($type) => {
+				const nodes = createRegistry('Node', [
+					handWritten(
+						{
+							type: 'object',
+							properties: { a: { $anchor: 'node', type: 'string' }, b: { $ref: '#node' } },
+						},
+						undefined,
+						$type,
+					),
+				]);
+				const document = exportTreeSchema(nodes);
+				const anchor = (properties(document, $type).a as { $anchor: string }).$anchor;
+
+				expect(anchor).toMatch(/^[A-Za-z][-A-Za-z0-9._]*$/);
+				expect(properties(document, $type).b).toEqual({ $ref: `#${anchor}` });
+				const validate = compileJSONSchema(document);
+				expect(validate({ a: 'x', b: 'y' })).toBe(true);
+				expect(validate({ a: 1 })).toBe(false);
+			},
+		);
+
+		it('gives two $types that differ only by an invalid character different anchors', () => {
+			const schema = {
+				type: 'object',
+				properties: { a: { $anchor: 'node', type: 'string' }, b: { $ref: '#node' } },
+			};
+			const document = exportTreeSchema(
+				createRegistry('Node', [
+					handWritten(schema, undefined, 'ui/button'),
+					handWritten(schema, undefined, 'ui button'),
+					handWritten(schema, undefined, 'ui_2f_button'),
+				]),
+			);
+
+			const anchors = ['ui/button', 'ui button', 'ui_2f_button'].map(
+				($type) => (properties(document, $type).a as { $anchor: string }).$anchor,
+			);
+			expect(new Set(anchors).size).toBe(3);
+			expect(() => compileJSONSchema(document)).not.toThrow();
+		});
+
+		it('keeps the anchors of a valid owner as they are', () => {
+			const document = exportTreeSchema(
+				createRegistry('Node', [
+					handWritten({ type: 'object', properties: { a: { $anchor: 'node' } } }, undefined, 'my_button.v2'),
+				]),
+			);
+
+			expect(properties(document, 'my_button.v2').a).toEqual({ $anchor: 'my_button.v2-node' });
 		});
 	});
 

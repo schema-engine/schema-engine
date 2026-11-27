@@ -351,15 +351,15 @@ Each registration's schema is written by `resolve`, by default `readStandardJSON
 
 Then each child path is replaced, and only its slot, so `required`, `minItems`, `maxItems` and the sibling keys stay as the schema wrote them:
 
-| Slot in the registration's JSON Schema | Becomes                                                                      |
-| -------------------------------------- | ---------------------------------------------------------------------------- |
-| an array (`type: 'array'` or `items`)  | the same array with `items: U`                                               |
-| an object                              | `U`                                                                          |
-| open (`{}`)                            | `{ anyOf: [U, { type: 'array', items: U }] }`, a child or a list of children |
+| Slot in the registration's JSON Schema               | Becomes                                                                      |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| an array (`type: 'array'`, `items` or `prefixItems`) | the same array with `items: U`, and `U` at each tuple position               |
+| an object                                            | `U`                                                                          |
+| open (`{}`)                                          | `{ anyOf: [U, { type: 'array', items: U }] }`, a child or a list of children |
 
 `U` is `{ anyOf: [{ $ref: '#/$defs/<$type>' }, ...] }` of the path's `accepts`, or of every `$type` without one; a slot that accepts its own `$type` refers to its own definition. A slot behind `allOf`, a `$ref` or a union, one inside a schema with an `$id` of its own (where a `$ref` resolves against that `$id`, not the document), or one the schema does not declare, throws a `RegistryError` with code `'unreachable-child-path'`, naming the `$type` and `childPath`.
 
-A schema that was written as a document of its own is moved into the document. Its `$defs` are lifted to the top as `<$type>.<name>`, every local pointer (`#`, `#/$defs/name`) follows, and anchors are renamed under their owner. A `$type` named like a lifted definition throws `'definition-name-clash'`, and an `accepts` name the lookup lacks throws `'unknown-accepted-type'`: pass every registry of the vocabulary. An empty lookup, an empty `accepts` and a root `accepts` the lookup lacks throw a plain `Error`.
+A schema that was written as a document of its own is moved into the document. Its `$defs` are lifted to the top as `<$type>.<name>`, every local pointer (`#`, `#/$defs/name`) follows, and anchors are renamed under their owner (`ui/button` writes `a__ui__2f__button`, since an anchor name takes only letters, digits, `-`, `.` and `_`). A `$type` named like a lifted definition throws `'definition-name-clash'`, and an `accepts` name the lookup lacks throws `'unknown-accepted-type'`: pass every registry of the vocabulary. An empty lookup, an empty `accepts` and a root `accepts` the lookup lacks throw a plain `Error`.
 
 A `resolve` that converts one library itself and keeps the default for the rest reads the default with [`readStandardJSONSchema`](#json-schema-subpath).
 

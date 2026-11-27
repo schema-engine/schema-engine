@@ -201,6 +201,25 @@ export function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPl
 	};
 }
 
+/**
+ * The name of an owner as the first part of an anchor name, which stays within the anchor grammar of every dialect
+ * (`^[A-Za-z][-A-Za-z0-9._]*$`) whatever the owner is called.
+ *
+ * @remarks
+ * An owner that is already such a name, and has no `__` in it, is used as it is, so the anchors of the names that were
+ * valid before do not change. Any other owner is written as `a__` followed by its characters, each one outside
+ * `[A-Za-z0-9.-]` as `__` and its code point in hex and `__` again (`ui/button` becomes `a__ui__2f__button`). A written
+ * owner always holds `__` and a kept one never does, and `_` is escaped like the other characters, so two owners never
+ * share a name.
+ */
+function anchorOwner(owner: string): string {
+	if (/^[A-Za-z][-A-Za-z0-9._]*$/.test(owner) && !owner.includes('__')) return owner;
+	const written = [...owner].map((char) =>
+		/[A-Za-z0-9.-]/.test(char) ? char : `__${char.codePointAt(0)!.toString(16)}__`,
+	);
+	return `a__${written.join('')}`;
+}
+
 /** A JSON Pointer reference token, written for a URI fragment: `~` and `/` escaped, then percent-encoded. */
 export function pointerToken(name: string): string {
 	return encodeURIComponent(name.replaceAll('~', '~0').replaceAll('/', '~1'));
@@ -233,7 +252,8 @@ export interface HoistedDefinitions {
  * The schema's own definitions (`$defs`, or `definitions` for a draft-07 target) are lifted out and named under their
  * owner (`owner.name`), so the document's definitions stay one flat list. Every local pointer follows: `#` points at
  * the owner's definition, `#/$defs/name` at the lifted one, and any other `#/...` pointer into the owner's definition.
- * Anchors and `$schema` are handled as {@link createJSONSchemaEmbedder} does. The caller checks the names it gets back
+ * Anchors and `$schema` are handled as {@link createJSONSchemaEmbedder} does, each anchor named `owner-name` with the
+ * owner written as {@link anchorOwner} does when it is not a valid anchor name itself. The caller checks the names it gets back
  * against the ones it already holds. A schema with an `$id` of its own is a resource that resolves itself, so it is
  * kept as it is.
  */
@@ -253,7 +273,7 @@ export function hoistDefinitions(own: JSONSchemaObject, owner: string, target: s
 			}
 			return `${place(owner)}/${tokens.join('/')}`;
 		},
-		anchor: (name) => `${owner}-${name}`,
+		anchor: (name) => `${anchorOwner(owner)}-${name}`,
 	});
 	const nested: Record<string, JSONSchemaObject> = {};
 	for (const field of ['$defs', 'definitions']) {
