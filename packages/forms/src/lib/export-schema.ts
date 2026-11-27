@@ -190,6 +190,24 @@ function hasLocalRef(schema: JSONSchemaObject): boolean {
 	return found;
 }
 
+/**
+ * A copy of a schema without its root's draft-07 fragment `$id` (`#node`), with the `#node` references to it pointing
+ * at the root as `#`. A schema without one is returned as it is.
+ *
+ * @remarks
+ * A fragment `$id` is an anchor, and a draft-07 root has only one `$id`, which an entry of a collection needs for its
+ * URI. The anchor can only name the root, so `#` says the same within the entry, which is a resource of its own by
+ * that URI. Anchors below the root are kept, and the root's other keywords are untouched.
+ */
+function withoutRootAnchor(schema: JSONSchemaObject): JSONSchemaObject {
+	if (typeof schema.$id !== 'string' || !schema.$id.startsWith('#')) return schema;
+	const root = schema.$id;
+	const { $id: _anchor, ...rest } = mapResource(schema, (keyword, value) =>
+		(keyword === '$ref' || keyword === '$dynamicRef') && value === root ? '#' : value,
+	) as JSONSchemaObject;
+	return rest;
+}
+
 /** The keyword a document keeps its definitions under, as Zod writes it for the target. */
 const definitionsKeyword = (target: string): '$defs' | 'definitions' =>
 	target === 'draft-2020-12' ? '$defs' : 'definitions';
@@ -222,7 +240,9 @@ export interface JSONSchemaEmbedder {
  * two schemas that each declare `node` would declare it twice. Each embedded schema's anchors, and the `#node`
  * references to them, are renamed to carry its key (`embedded-1-node`), whether it is hoisted into a document or
  * embedded where it stands. A schema hoisted into a collection is a resource of its own by its `$id`, which scopes
- * its anchors, so they keep their names.
+ * its anchors, so they keep their names. Only a draft-07 root `$id: '#node'` cannot stay: the entry's `$id` is its
+ * assigned URI, so the root's anchor is dropped and its `#node` references become `#`, as
+ * {@link withoutRootAnchor} explains.
  *
  * Only the schema's root resource is rewritten. A schema with its own `$id`, and any subschema that sets one, resolves
  * its pointers and anchors against that and is left as it is.
@@ -241,7 +261,11 @@ export function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPl
 			const key = `embedded-${count}`;
 			if (pointsIntoItself && placement.kind === 'collection') {
 				const ref = placement.uri(key);
-				hoisted[key] = { ...(own.$schema === undefined ? {} : { $schema: own.$schema }), $id: ref, ...body };
+				hoisted[key] = {
+					...(own.$schema === undefined ? {} : { $schema: own.$schema }),
+					...withoutRootAnchor(body),
+					$id: ref,
+				};
 				return { $ref: ref };
 			}
 			const ref = `#/${keyword}/${key}`;

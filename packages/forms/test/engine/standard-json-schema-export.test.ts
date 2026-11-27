@@ -535,6 +535,55 @@ describe('a schema that exports itself keeps its references inside the resource 
 	});
 });
 
+describe('a draft-07 schema whose root $id is a fragment, hoisted into a collection', () => {
+	const rule = (name: string): JSONSchema => ({
+		$id: '#node',
+		$ref: '#/definitions/body',
+		definitions: {
+			body: { type: 'object', properties: { $type: { const: name }, next: { $ref: '#node' } } },
+		},
+	});
+	const twins = createFormEngine({
+		validations: ['first', 'second'].map(
+			($type) =>
+				({
+					$type,
+					schema: exporting(rule($type)),
+					metadata: { name: $type },
+					category: 'string',
+					handler: () => z.string(),
+				}) as ValidationRegistration,
+		),
+	});
+	const { schemas } = twins.generateJSONSchemaCollection({
+		target: 'draft-7',
+		uri: (id) => `https://example.test/${id}`,
+	}) as unknown as Collection;
+	const references = (schemas['validation-rule']!.anyOf as JSONSchema[]).flatMap((member) =>
+		typeof member.$ref === 'string' ? [member.$ref] : [],
+	);
+
+	const entryOf = (reference: string): JSONSchema => schemas[reference.replace('https://example.test/', '')]!;
+
+	test('refers to each entry by its assigned URI, and each entry has that URI as its $id', () => {
+		expect([...references].sort()).toEqual(['https://example.test/embedded-1', 'https://example.test/embedded-2']);
+		for (const reference of references) expect(entryOf(reference).$id).toBe(reference);
+	});
+
+	test('keeps the references inside each entry resolving, and its body its own', () => {
+		const bodies = references.map((reference) => {
+			const written = entryOf(reference);
+			expect(brokenLinks(written)).toEqual([]);
+			const body = resolveLocal(written, written.$ref as string)!;
+			const next = (body.properties as Record<string, JSONSchema>).next!;
+			expect(resolveLocal(written, next.$ref as string)).toBe(written);
+			return body.properties;
+		});
+		expect(bodies).toContainEqual(expect.objectContaining({ $type: { const: 'first' } }));
+		expect(bodies).toContainEqual(expect.objectContaining({ $type: { const: 'second' } }));
+	});
+});
+
 describe('a schema whose converter throws for a target is listed by its shape', () => {
 	test('the export still succeeds, and warns with the vendor and target', () => {
 		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
