@@ -13,7 +13,7 @@ import type { ChildPath } from './types.js';
  * path replaced by the data of the children found there, so it is the same object the parent's data holds at that
  * position, and `tree.data` is the whole parsed document. `children` has one entry per child path the registration
  * declares, in declaration order, each `{ keys, nodes }` with `nodes` empty when the node holds none there, in document
- * order. Find an entry by its `keys`, never by index (`children.find(({ keys }) => keys.join() === 'sections')`), or
+ * order. Find an entry by its `keys`, never by index (`children.find(({ keys }) => keys.join('.') === 'sections')`), or
  * read `data`, which is typed per path. `TAll` is the whole union of registrations, so a child is typed by what its
  * path accepts, or by the whole union without `accepts`.
  */
@@ -249,7 +249,7 @@ export function safeParseTree<
 				if (nodes.length === items.length) writes.push({ keys, value: nodes.map((item) => item.data) });
 				else complete = false;
 			} else if (isRecord(slot)) {
-				if (!isPlainObject(held)) throw brokenSlot(type, keys);
+				if (!isRecord(held)) throw brokenSlot(type, keys);
 				const child = walk(slot, childPath, trail, childAccepts);
 				if (child) {
 					nodes.push(child);

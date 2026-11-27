@@ -6,8 +6,12 @@ import { fileURLToPath } from 'node:url';
  *
  * @remarks
  * The fixture holds 60 registrations that accept each other in a cycle, accept themselves and nest slots two keys deep.
- * It measured about 59,600 instantiations and a check time of 0.15 s when the budget was set. A regression is fixed at
+ * It measured about 61,800 instantiations and a check time of 0.15 s when the budget was set. A regression is fixed at
  * its cause, in the types of `tree-types.ts` and `parse-tree.ts`, not by raising this number.
+ *
+ * The count is the checker's own, not a time, so it is the same on every machine and every run. It depends on the
+ * TypeScript and Zod versions of the lockfile: an upgrade of either that moves it is measured on the commit before the
+ * upgrade and after it, and the budget follows that difference alone.
  */
 const BUDGET = 70_000;
 

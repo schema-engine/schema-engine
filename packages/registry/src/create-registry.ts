@@ -142,7 +142,8 @@ export interface CreateRegistryOptions {
  *
  * @remarks
  * The types check that the schema output declares every key of every child path (`childPathNotInSchema`), where the
- * output type can be read.
+ * output type can be read, and that a child path written inline has no property other than `keys` and `accepts`
+ * (`childPathUnknownProperty`).
  *
  * By default a later registration with the same `$type` replaces the earlier one without a
  * warning, so `[...defaults, custom]` is the way to override. A replaced key

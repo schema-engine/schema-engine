@@ -65,9 +65,8 @@ const nodes = createRegistry('Node', [
 
 export function titles(document: unknown): string[] {
 	const parsed = safeParseTree(nodes, document, { accepts: ['page'] });
-	return parsed.success
-		? parsed.tree.data.sections.map((section) => section.title)
-		: parsed.issues.map((issue) => `${issue.code}: ${issue.message}`);
+	if (!parsed.success) throw new Error(parsed.issues.map((issue) => issue.message).join('\n'));
+	return parsed.tree.data.sections.map((section) => section.title);
 }
 ```
 

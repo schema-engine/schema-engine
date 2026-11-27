@@ -327,6 +327,12 @@ describe('safeParseTree', () => {
 			});
 		});
 
+		it('walks an object that is not plain, the schema passing it through, into the issue of safeParseNode', () => {
+			expect(issuesOf(framed(new Map()))).toEqual([
+				{ code: 'registry/missing-type', message: 'Expected a string $type.', path: ['content', '$type'] },
+			]);
+		});
+
 		it('leaves an item that is not an object to the issue of safeParseNode', () => {
 			expect(issuesOf(framed([{ $type: 'text' }, 3]))).toEqual([
 				{
@@ -793,11 +799,11 @@ describe('safeParseTree', () => {
 					nested: [{ $type: 'section', nested: [{ $type: 'section', widgets: [{ $type: 'text' }] }] }],
 				}),
 			);
-			const entry = tree.children.find(({ keys }) => keys.join() === 'nested');
-			const deepest = entry?.nodes[0]?.children.find(({ keys }) => keys.join() === 'nested')?.nodes[0];
+			const entry = tree.children.find(({ keys }) => keys.join('.') === 'nested');
+			const deepest = entry?.nodes[0]?.children.find(({ keys }) => keys.join('.') === 'nested')?.nodes[0];
 
 			expect(deepest?.path).toEqual(['nested', 0, 'nested', 0]);
-			expect(deepest?.children.find(({ keys }) => keys.join() === 'widgets')?.nodes[0]?.$type).toBe('text');
+			expect(deepest?.children.find(({ keys }) => keys.join('.') === 'widgets')?.nodes[0]?.$type).toBe('text');
 		});
 
 		it('keeps the registration of each node, for a tool that reads its metadata', () => {
