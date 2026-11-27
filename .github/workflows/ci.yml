@@ -31,8 +31,8 @@ jobs:
             - name: Install
               run: pnpm install --frozen-lockfile
 
-            - name: Install Chromium
-              run: pnpm exec playwright install --with-deps chromium
+            - name: Install browsers
+              run: pnpm exec playwright install --with-deps chromium firefox webkit
 
             - name: Type-check the scripts
               run: pnpm check-types:scripts

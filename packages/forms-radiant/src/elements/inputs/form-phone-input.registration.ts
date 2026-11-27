@@ -1,20 +1,6 @@
-import { FormPhoneInput } from './form-phone-input';
-import { PhoneInputFieldSchema, phoneInputFieldValue } from './form-phone-input.types';
+import { radiantElements } from '../radiant-elements';
 import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
-import { defineInput } from '@schema-engine/forms';
 
 export { createRadiantPhoneValidationRegistration };
 
-export const PhoneInputElementRegistration = defineInput({
-	$type: 'phone-input',
-	appearanceAxes: ['size'],
-	render: FormPhoneInput,
-	schema: PhoneInputFieldSchema,
-	value: phoneInputFieldValue,
-	validations: [createRadiantPhoneValidationRegistration()],
-	metadata: {
-		name: 'Phone Input',
-		description: 'Telephone input field',
-		category: 'input',
-	},
-});
+export const PhoneInputElementRegistration = radiantElements.get('phone-input');

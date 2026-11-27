@@ -1,4 +1,4 @@
-import * as z from 'zod/mini';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import { stepAfter, stepBefore, type FormStepState } from '@/engine/step-machine';
 import type { AnyRecipeRegistration } from '@/types/registration';
@@ -58,11 +58,11 @@ export interface ViewModel extends RecipeViewModel<RecipeKind> {
  * Reads one slot's complete config from a normalized view; see the layout `readSlotConfig`, which this
  * types by the forms slot names.
  */
-export function getSlotConfig<TSchema extends z.ZodMiniType>(
+export function getSlotConfig<TSchema extends StandardSchemaV1>(
 	viewConfig: Record<string, unknown>,
 	slot: RecipeSlot,
 	schema: TSchema,
-): z.output<TSchema> {
+): StandardSchemaV1.InferOutput<TSchema> {
 	return readSlotConfig(viewConfig, slot, schema);
 }
 

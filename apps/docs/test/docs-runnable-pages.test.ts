@@ -6,9 +6,13 @@ import * as react from 'react';
 import { createElement, type ReactElement } from 'react';
 import * as reactJsxRuntime from 'react/jsx-runtime';
 import * as reactServer from 'react-dom/server';
+import * as v from 'valibot';
 import * as z from 'zod/mini';
+import * as jsxRuntime from '@ecopages/jsx/jsx-runtime';
+import * as jsxServer from '@ecopages/jsx/server';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { registrationType } from './element-contract-types';
 import { outputBlocks, type OutputBlock } from './format-html';
 import { codeBlocks, readPage, runTitledFiles, titledRunner } from './snippet-harness';
 import * as layoutPackage from '@schema-engine/layout';
@@ -26,6 +30,9 @@ const packages = {
 	'@schema-engine/forms-radiant': radiantPackage,
 	'@schema-engine/layout': layoutPackage,
 	'zod/mini': z,
+	valibot: v,
+	'@ecopages/jsx/jsx-runtime': jsxRuntime,
+	'@ecopages/jsx/server': jsxServer,
 	react,
 	'react/jsx-runtime': reactJsxRuntime,
 	'react-dom/server': reactServer,
@@ -262,9 +269,9 @@ describe('forms-react/components', () => {
 		return files.map((file) => {
 			const registration = readFileSync(join(registryRoot, `${file}.registration.ts`), 'utf8');
 			const types = readFileSync(join(registryRoot, `${file}.types.ts`), 'utf8');
-			const type = /\$type: '([^']+)'/.exec(registration) ?? /\$type: z\.literal\('([^']+)'\)/.exec(types);
+			const type = registrationType(registration) ?? /\$type: z\.literal\('([^']+)'\)/.exec(types)?.[1];
 			if (!type) throw new Error(`No $type found for ${file}`);
-			return type[1]!;
+			return type;
 		});
 	}
 
@@ -296,5 +303,49 @@ describe('layout/overview', () => {
 		const page = 'layout/overview';
 		const lines = await runTitledFiles(page, packages, 'page.ts');
 		expect(await outputBlocks(lines)).toEqual(shownOutput(page, 'Quick start'));
+	});
+});
+
+describe('layout/recipes-outside-forms', () => {
+	const page = 'layout/recipes-outside-forms';
+
+	test('one document draws with the React and the Radiant binding of the same spec, as the page shows', async () => {
+		const lines = await runTitledFiles(page, packages, 'page.ts');
+		expect(await outputBlocks(lines)).toEqual(shownOutput(page, 'Render it'));
+	});
+
+	test('a bad document reports the issues the page lists, at the places it names', () => {
+		const files = titledRunner(page, packages);
+		const { cardSpec } = files.load('card-recipe.ts') as { cardSpec: layoutPackage.ProtocolRecipeSpec };
+		const card = layoutPackage.bindRecipe(cardSpec, null);
+		const scope = { axes: layoutPackage.getDefaultLayoutTheme().axes, inherited: {} };
+
+		const unknown = layoutPackage.resolveRecipeView(card, { $type: 'card', aside: {} }, scope);
+		expect(unknown.schemaIssues?.[0]).toMatchObject({
+			path: ['aside'],
+			message: "Recipe 'card' does not accept view key 'aside'. Allowed: shell, header, body, footer.",
+		});
+
+		const bad = layoutPackage.resolveRecipeView(card, { $type: 'card', footer: { align: 'middle' } }, scope);
+		expect(
+			bad.schemaIssues?.map((issue) =>
+				(issue.path ?? []).map((key) => (typeof key === 'object' ? key.key : key)),
+			),
+		).toEqual([['footer', 'align']]);
+
+		const axis = layoutPackage.resolveRecipeView(
+			card,
+			{ $type: 'card', header: { appearance: { size: 'compact' } } },
+			scope,
+		);
+		expect(axis.issues.map((issue) => issue.path)).toEqual([['header', 'appearance', 'size']]);
+	});
+
+	test('the recipe defaults sit under the document: a level 3 heading unless the document says otherwise', () => {
+		const { cardSpec } = titledRunner(page, packages).load('card-recipe.ts') as {
+			cardSpec: layoutPackage.ProtocolRecipeSpec;
+		};
+		expect(cardSpec.slotDefaults).toEqual({ header: { level: 3 } });
+		expect(cardSpec.appearanceAxes).toEqual({ shell: ['size', 'surface'] });
 	});
 });

@@ -30,7 +30,9 @@ import {
 import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
-import { isZodType } from '@/lib/zod-json-schema';
+import { isZodType } from '@/lib/is-zod-type';
+import { resolveExportSchema } from '@/lib/export-schema';
+import { createExportedRecipeView } from '@/lib/exported-recipe-view';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
@@ -86,8 +88,8 @@ type ExportRegistration = {
 };
 
 /**
- * JSON Schema / authoring union. Zod registrations keep their full schema.
- * Native Standard Schema registrations contribute a literal `$type` envelope
+ * JSON Schema / authoring union. A registration the export can read keeps its export schema.
+ * One it cannot read contributes a literal `$type` envelope
  * so mixed engines do not silently drop supported types; an element's envelope
  * also lists the axes it declares, because a pick is checked whatever the schema.
  */
@@ -97,12 +99,38 @@ function createRegistrationSchema(
 ): z.ZodMiniType {
 	const parts = registrations.map((registration) => {
 		if (isZodType(registration.exportSchema)) return registration.exportSchema;
-		return z.looseObject({
-			$type: z.literal(registration.$type),
-			...(envelopeAppearance ? { appearance: z.optional(envelopeAppearance(registration)) } : {}),
-		});
+		return createOpenEnvelope(registration.$type, envelopeAppearance?.(registration));
 	});
 	return createUnionSchema(parts);
+}
+
+/**
+ * The open object the export lists a registration by when it cannot read its schema: its `$type`, and the
+ * `appearance` it may pick, when it has one.
+ */
+function createOpenEnvelope($type: string, appearance?: z.ZodMiniType): z.ZodMiniType {
+	return z.looseObject({ $type: z.literal($type), ...(appearance ? { appearance: z.optional(appearance) } : {}) });
+}
+
+/**
+ * The schema the JSON Schema export lists a recipe by, with each slot's `appearance` closed over the axes it declares.
+ *
+ * @remarks
+ * A recipe with `slotSchemas` is exported from them, because its own schema is a Standard Schema that can come from
+ * any library; see {@link createExportedRecipeView}. One without them (written by hand) is read from its own schema
+ * by {@link resolveExportSchema}, and listed by its `$type` alone when the export cannot read it.
+ */
+function exportedRecipeView(recipe: AnyRecipeRegistration, layout: LayoutTheme): unknown {
+	const slotAxes: Readonly<Record<string, readonly string[] | undefined>> = recipe.appearanceAxes ?? {};
+	if (recipe.slotSchemas) {
+		const view = createExportedRecipeView(recipe.$type, recipe.slotSchemas, (slot) =>
+			withAppearanceAxes(z.looseObject({}), layout.appearance, slotAxes[slot]),
+		);
+		return withSlotAppearanceAxes(view, layout.appearance, slotAxes);
+	}
+	const source = resolveExportSchema(recipe.schema, () => createOpenEnvelope(recipe.$type));
+	if (source.kind === 'zod') return withSlotAppearanceAxes(source.schema, layout.appearance, recipe.appearanceAxes);
+	return source.kind === 'standard' ? source.schema : recipe.schema;
 }
 
 /**
@@ -134,7 +162,26 @@ function toExportRegistrations(
 			exportSchema: registration.schema,
 			metadata: registration.metadata,
 		};
-		if (!isZodType(registration.schema)) {
+		if (componentType === ComponentType.Recipe) {
+			exported.exportSchema = exportedRecipeView(registration as AnyRecipeRegistration, layout);
+			return exported;
+		}
+		const source = resolveExportSchema(registration.schema, () =>
+			componentType === ComponentType.Element
+				? createOpenEnvelope(
+						registration.$type,
+						createAppearanceSchema(
+							layout.appearance,
+							(registration as AnyElementRegistration).appearanceAxes ?? [],
+						),
+					)
+				: createOpenEnvelope(registration.$type),
+		);
+		if (source.kind === 'standard') {
+			exported.exportSchema = source.schema;
+			return exported;
+		}
+		if (source.kind === 'open') {
 			if (componentType === ComponentType.Element) {
 				exported.appearanceAxes = (registration as AnyElementRegistration).appearanceAxes ?? [];
 			}
@@ -148,12 +195,6 @@ function toExportRegistrations(
 			);
 			const withChildren = childSchema ? withExportedChildren(withAppearance, childSchema) : withAppearance;
 			exported.exportSchema = ruleSchema ? withExportedRules(withChildren, ruleSchema) : withChildren;
-		} else if (componentType === ComponentType.Recipe) {
-			exported.exportSchema = withSlotAppearanceAxes(
-				registration.schema,
-				layout.appearance,
-				(registration as AnyRecipeRegistration).appearanceAxes,
-			);
 		} else {
 			exported.exportSchema = withActionEnvelope(registration.schema, registration.$type);
 		}
@@ -169,19 +210,17 @@ const RULE_EXPORT_ID = 'validation-rule';
  * its own schema, so a custom rule and a replaced built-in show the options their registration declares.
  *
  * @remarks
- * Only a Zod schema can be written out as JSON Schema here: a registration whose schema comes from another
- * Standard Schema library is listed by its `$type` alone, with no options. The union is built once and carries
- * an id in the metadata registry, so the export defines it once and each element refers to it.
+ * Each rule's schema is read by {@link resolveExportSchema}: one the export cannot read is listed by its `$type`
+ * alone, with no options. The union is built once and carries an id in the metadata registry, so the export defines
+ * it once and each element refers to it.
  */
 function createRuleExportSchema(validations: ValidationRegistry): z.ZodMiniType {
 	return createUnionSchema(
-		validations
-			.all()
-			.map((registration) =>
-				isZodType(registration.schema)
-					? registration.schema
-					: z.looseObject({ $type: z.literal(registration.$type) }),
-			),
+		validations.all().map((registration) => {
+			const open = () => createOpenEnvelope(registration.$type);
+			const source = resolveExportSchema(registration.schema, open);
+			return source.kind === 'open' ? open() : source.schema;
+		}),
 	);
 }
 

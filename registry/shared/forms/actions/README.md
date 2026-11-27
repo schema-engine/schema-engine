@@ -10,7 +10,7 @@ This directory contains form action components built using [Base UI](https://bas
 
 Each action follows a consistent 3-file pattern:
 
-- `[name].types.ts` - TypeScript types and Zod schemas
+- `[name].types.ts` - the props type of the component, and a re-export of its schema and types from `@schema-engine/forms/default-elements`
 - `[name].tsx` - React component implementation
 - `[name].registration.ts` - Element registration (`defineStatic`)
 

@@ -480,7 +480,7 @@ describe('the subgrid stylesheet rules', () => {
 	test('the grid rule takes the subgrid template, the parent gap and the parent default column', () => {
 		const { css: stylesheet, id } = layout();
 		expect(body(stylesheet, `.se-grid.se-subgrid${scope(id)}`)).toBe(
-			'--se-grid-template:subgrid;--se-grid-gap-x:normal;--se-grid-default-column:inherit;',
+			'--se-grid-template:subgrid;--se-grid-gap-x:normal;--se-grid-default-column:inherit;--se-grid-track-count:inherit;',
 		);
 	});
 
@@ -867,13 +867,28 @@ describe('the query mode of a layout theme', () => {
 		stylesheet.split('\n').find((line) => line.startsWith(`${atRule} (min-width:${minWidth})`)) ?? '';
 
 	/**
-	 * The theme stylesheet holds the `se-subgrid` rules in every theme, because it cannot know which documents
-	 * will set `grid.subgrid`. They are one line each, so this pins two things: the stylesheet as it is now, and
-	 * that removing exactly those lines gives back, byte for byte, the stylesheet from before the query option
-	 * existed, so adding subgrid changed no other rule.
+	 * The theme stylesheet holds the `se-subgrid` rules and the track-count row in every theme, because it cannot
+	 * know which documents will set `grid.subgrid` or a `span`. Removing exactly those lines and declarations gives
+	 * back, byte for byte, the stylesheet from before the query option existed, so neither feature changed any other
+	 * rule. The two fingerprints of the whole stylesheet are the current output, re-pinned when the track-count row
+	 * and `grid-auto-flow` joined the grid rule (F6).
 	 */
-	test('a theme without the option is the stylesheet it was before the option existed, plus the subgrid rules', () => {
+	test('a theme without the option is the stylesheet it was before the option existed, plus the subgrid and span rules', () => {
 		const fingerprint = (stylesheet: string) => createHash('sha256').update(stylesheet).digest('hex');
+		const withoutSpan = (stylesheet: string, id: string) => {
+			const slots = '(?:sm|md|lg|xl|2xl)';
+			const patterns = [
+				/--se-grid-tracks(?:-(?:sm|md|lg|xl|2xl))?:initial;/g,
+				/--se-grid-auto-flow:initial;/g,
+				/--se-grid-track-count:(?:var\(--[\w-]+,){5}var\(--se-grid-tracks,1\)\)\)\)\)\);/g,
+				/--se-grid-track-count:inherit;/g,
+				/grid-auto-flow:var\(--se-grid-auto-flow,row\);/g,
+				new RegExp(`--${id}-g4${slots}:var\\(--se-grid-tracks-${slots}\\);`, 'g'),
+			];
+			const stripped = patterns.reduce((sheet, pattern) => sheet.replace(pattern, ''), stylesheet);
+			expect(stylesheet.length - stripped.length, 'the span additions are removed').toBeGreaterThan(400);
+			return stripped;
+		};
 		const withoutSubgrid = (stylesheet: string, id: string) => {
 			const rules = [
 				`.se-subgrid[data-se-theme="${id}"]{`,
@@ -885,18 +900,19 @@ describe('the query mode of a layout theme', () => {
 			expect(lines.length - kept.length, 'the subgrid rules are three lines').toBe(3);
 			return kept.join('\n');
 		};
+		const original = (stylesheet: string, id: string) => withoutSubgrid(withoutSpan(stylesheet, id), id);
 		const plain = layout();
 		const ramp = layout(ramped);
 		expect(plain.id).toBe('l1tvu4rv');
 		expect(ramp.id).toBe('l18hlk5k');
-		expect(fingerprint(withoutSubgrid(plain.css, plain.id))).toBe(
+		expect(fingerprint(original(plain.css, plain.id))).toBe(
 			'f9328bc203ab311cf795d976c88d3859ff0eb40b3d775c9ecc9dc5d815e244d3',
 		);
-		expect(fingerprint(withoutSubgrid(ramp.css, ramp.id))).toBe(
+		expect(fingerprint(original(ramp.css, ramp.id))).toBe(
 			'8037a078d6108414d8d7c2de8cb2860655eb5306db82c921cdc215d3042fe50a',
 		);
-		expect(fingerprint(plain.css)).toBe('8b429c941825c7e17a518868ab68c6a134b1448ea7dc2599fd1d05c570ec6a72');
-		expect(fingerprint(ramp.css)).toBe('b810c64e73b10a7ae854db03a49be7544ae436636ea18be3280ed5b76f538673');
+		expect(fingerprint(plain.css)).toBe('9bca0daa047b867b334806b1788ce565bb7b5e10b11b8a0550331be1aca6aab4');
+		expect(fingerprint(ramp.css)).toBe('3fe6c06233aec7d9c221e22cb38fa86b1a404ecf729988801742c9ad9180fd83');
 	});
 
 	test('media is the default, and naming it changes nothing', () => {
@@ -947,7 +963,7 @@ describe('the query mode of a layout theme', () => {
 			);
 		const base = (scope: string) => lines.find((line) => line.startsWith(`${scope}[data-se-theme=`)) ?? '';
 		const gates = Array.from(declared(lines.filter((line) => line.startsWith('@container')).join('')));
-		expect(gates.length).toBe(55);
+		expect(gates.length).toBe(60);
 		for (const [scope, table] of [
 			['.se-grid', 'g'],
 			['.se-grid-item', 'i'],

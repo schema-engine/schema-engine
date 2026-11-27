@@ -1,14 +1,8 @@
 import { SubmitButton } from './submit-button';
-import { SubmitButtonSchema } from './submit-button.types';
+import { SubmitButtonElementContract } from '@schema-engine/forms/default-elements';
 import { defineStatic } from '@schema-engine/forms';
 
 export const SubmitButtonElementRegistration = defineStatic({
-	$type: 'submit',
+	...SubmitButtonElementContract,
 	render: SubmitButton,
-	schema: SubmitButtonSchema,
-	metadata: {
-		name: 'Submit Button',
-		description: 'Form submission button that handles submitting state',
-		category: 'action',
-	},
 });

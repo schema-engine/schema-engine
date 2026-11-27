@@ -62,6 +62,8 @@ A form announces what its actions and its submission did as bubbling, composed e
 
 `schemaFormRegistrations` lists the 18 element registrations of the package, in registration order. Each is also exported by name from `@schema-engine/forms-radiant/registrations`: `InputElementRegistration`, `TextareaElementRegistration`, `NumberElementRegistration`, `SelectElementRegistration`, `CheckboxElementRegistration`, `CheckboxGroupElementRegistration`, `SwitchElementRegistration`, `RadioElementRegistration`, `SliderElementRegistration`, `ComboboxElementRegistration`, `DropZoneElementRegistration`, `FieldSetRegistration`, `InputOTPElementRegistration`, `PhoneInputElementRegistration`, `MaskedInputElementRegistration`, `ArrayElementRegistration`, `SubmitButtonElementRegistration` and `SubmissionAlertElementRegistration`. [Overview](/docs/forms-radiant/overview#what-ships) maps them to their `$type`.
 
+The schemas, metadata and value declarations of these elements are the default element contracts of [`@schema-engine/forms/default-elements`](/docs/forms/api-reference#default-element-contracts), which `radiantElements` binds with `bindRegistry`; each registration shares the contract's `schema` by identity, and the package adds only the Radiant component and, for the phone input, its own validation.
+
 `createRadiantPhoneValidationRegistration` builds the phone validation rule for a set of countries.
 
 ## Recipes

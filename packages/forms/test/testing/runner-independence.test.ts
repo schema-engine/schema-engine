@@ -10,7 +10,14 @@ interface Registered {
 	readonly run: () => void | Promise<void>;
 }
 
-/** A runner with only `describe` and `test`, written by hand: it collects the tests, then runs them one by one. */
+/**
+ * A runner with only `describe` and `test`, written by hand: it collects the tests, so a spec can run them itself.
+ *
+ * @remarks
+ * Every case already passes under Vitest in `published-conformance.test.ts`, so this file does not run the whole suite
+ * again inside one test, which only adds up the real-time waits of every case. It proves what a runner that is not
+ * Vitest relies on: registration needs nothing but `describe` and `test`, and a test it registered fails a broken store.
+ */
 function createHandWrittenRunner() {
 	const registered: Registered[] = [];
 	const groups: string[] = [];
@@ -27,16 +34,15 @@ function createHandWrittenRunner() {
 	return {
 		runner,
 		registered,
-		failures: async (): Promise<string[]> => {
-			const failed: string[] = [];
+		firstFailure: async (): Promise<string | undefined> => {
 			for (const { path, run } of registered) {
 				try {
 					await run();
 				} catch {
-					failed.push(path);
+					return path;
 				}
 			}
-			return failed;
+			return undefined;
 		},
 	};
 }
@@ -51,18 +57,20 @@ const failingValidate: FormStateContainerFactory = (options) => ({
 	validate: () => Promise.reject(new Error('plain')),
 });
 
-test('the suite registers and passes every case through a runner that is not Vitest', async () => {
-	const { runner, registered, failures } = createHandWrittenRunner();
+test('the suite registers every case under its rule through a runner that is not Vitest', () => {
+	const { runner, registered } = createHandWrittenRunner();
 	formStateContainerConformance(createFormStateContainer, runner);
-	expect(registered).toHaveLength(formStateContainerCases.length);
-	expect(registered[0]?.path.startsWith('form state container conformance > ')).toBe(true);
-	expect(await failures()).toEqual([]);
+	expect(registered.map(({ path }) => path).toSorted()).toEqual(
+		formStateContainerCases
+			.map(({ rule, name }) => `form state container conformance > ${rule} > ${name}`)
+			.toSorted(),
+	);
 });
 
-test('the suite fails at least one case for a store that breaks the contract', async () => {
-	const { runner, failures } = createHandWrittenRunner();
+test('a test registered through that runner fails a store that breaks the contract', async () => {
+	const { runner, firstFailure } = createHandWrittenRunner();
 	formStateContainerConformance(unstableSnapshots, runner);
-	expect((await failures()).length).toBeGreaterThan(0);
+	expect(await firstFailure()).toMatch(/^form state container conformance > snapshot stability > /);
 });
 
 test('a failing case that stubs fetch puts it back', async () => {

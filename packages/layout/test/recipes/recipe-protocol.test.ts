@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import * as z from 'zod/mini';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 import { bindRecipe } from '@/recipes/bind-recipe';
 import { defineRecipeProtocol, createRecipeRegistry } from '@/recipes/protocol';
 import { defineProtocolRecipeSpec } from '@/recipes/define-recipe-spec';
@@ -49,8 +50,12 @@ describe('defineProtocolRecipeSpec against a protocol', () => {
 			metadata,
 			slotSchemas: { content: ContentConfigSchema },
 		});
-		expect(spec.schema.parse({ $type: 'hero' })).toEqual({ $type: 'hero', content: {} });
-		expect(spec.schema.safeParse({ $type: 'hero', media: {} }).success).toBe(false);
+		const schema: StandardSchemaV1 = spec.schema;
+		expect(safeParseStandardSchema(schema, { $type: 'hero' })).toEqual({
+			success: true,
+			data: { $type: 'hero', content: {} },
+		});
+		expect(safeParseStandardSchema(schema, { $type: 'hero', media: {} }).success).toBe(false);
 	});
 
 	test('runs the protocol rules, naming the recipe and the rule', () => {
@@ -110,26 +115,16 @@ describe('defineProtocolRecipeSpec against a protocol', () => {
 		).toThrow(/slotDefaults.media: the recipe does not declare a 'media' slot/);
 	});
 
-	test('requires a slot that declares appearance axes to accept an appearance key', () => {
+	test('requires a slot that declares appearance axes to be a declared slot', () => {
 		expect(() =>
 			defineProtocolRecipeSpec(sectionProtocol, {
 				$type: 'hero',
 				kind: 'section',
 				metadata,
-				slotSchemas: { content: z.strictObject({ columns: z.optional(z.number()) }) },
-				appearanceAxes: { content: ['size'] },
+				slotSchemas: { content: ContentConfigSchema },
+				appearanceAxes: { media: ['size'] } as never,
 			}),
-		).toThrow(/appearanceAxes.content: the 'content' slot schema must accept an 'appearance' key/);
-
-		expect(() =>
-			defineProtocolRecipeSpec(sectionProtocol, {
-				$type: 'hero',
-				kind: 'section',
-				metadata,
-				slotSchemas: { content: ContentConfigSchema, media: MediaConfigSchema },
-				appearanceAxes: { media: ['size'] },
-			}),
-		).not.toThrow();
+		).toThrow(/appearanceAxes.media: the recipe does not declare a 'media' slot/);
 	});
 });
 
@@ -160,7 +155,8 @@ describe('createRecipeRegistry', () => {
 	});
 
 	test('checks only the winning registration of a $type', () => {
-		const withoutContent = { ...valid, slots: ['media' as const] };
+		const { slotSchemas: _slotSchemas, ...handWritten } = valid;
+		const withoutContent = { ...handWritten, slots: ['media' as const] };
 		expect(() => createRecipeRegistry(sectionProtocol, [withoutContent, valid])).not.toThrow();
 		expect(() => createRecipeRegistry(sectionProtocol, [valid, withoutContent])).toThrow(/section-needs-content/);
 	});
@@ -194,7 +190,8 @@ describe('createRecipeRegistry', () => {
 
 	test('applies the rules of the protocol it was given, not another domain', () => {
 		const lenient = defineRecipeProtocol({ slots: ['shell', 'media', 'content'], kinds: ['section'] });
-		const withoutContent = { ...valid, slots: ['media' as const] };
+		const { slotSchemas: _slotSchemas, ...handWritten } = valid;
+		const withoutContent = { ...handWritten, slots: ['media' as const] };
 		expect(() => createRecipeRegistry(lenient, [withoutContent])).not.toThrow();
 	});
 });

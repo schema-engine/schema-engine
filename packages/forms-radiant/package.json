@@ -1,7 +1,7 @@
 {
 	"name": "@schema-engine/forms-radiant",
 	"type": "module",
-	"version": "0.5.2",
+	"version": "0.5.3",
 	"description": "The Radiant renderer for Schema Engine forms, with 18 ready elements built on Radiant UI",
 	"keywords": [
 		"schema-engine",
@@ -93,6 +93,8 @@
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",
 		"@schema-engine/actions": "workspace:^",
+		"@schema-engine/registry": "workspace:^",
+		"@standard-schema/spec": "^1.1.0",
 		"country-flag-icons": "^1.6.20",
 		"imask": "^7.6.1",
 		"libphonenumber-js": "^1.13.12"

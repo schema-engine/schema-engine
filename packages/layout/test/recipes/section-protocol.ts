@@ -16,6 +16,9 @@ export const sectionProtocol = defineRecipeProtocol({
 	],
 });
 
-export const ContentConfigSchema = z.object({ columns: z.optional(z.number()) });
+export const ContentConfigSchema = z.object({
+	columns: z.optional(z.number()),
+	appearance: z.optional(z.object({})),
+});
 export const MediaConfigSchema = z.object({ ratio: z.optional(z.string()), appearance: z.optional(z.object({})) });
-export const ShellConfigSchema = z.object({ maxWidth: z.optional(z.string()) });
+export const ShellConfigSchema = z.object({ maxWidth: z.optional(z.string()), appearance: z.optional(z.object({})) });

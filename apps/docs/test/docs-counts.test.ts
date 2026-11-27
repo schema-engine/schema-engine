@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import { schemaFormRegistrations } from '@schema-engine/forms-radiant';
+import { registrationType } from './element-contract-types';
 import { readPage } from './snippet-harness';
 
 const repository = join(import.meta.dirname, '../../..');
@@ -39,8 +40,7 @@ function registryElementTypes(): string[] {
 	const folder = join(repository, 'registry/shared/forms');
 	const barrel = readFileSync(join(folder, 'registrations.ts'), 'utf8');
 	return [...barrel.matchAll(/from '(\.\/[^']+)'/g)].map((match) => {
-		const source = readFileSync(join(folder, `${match[1]}.ts`), 'utf8');
-		return source.match(/\$type:\s*'([^']+)'/)![1]!;
+		return registrationType(readFileSync(join(folder, `${match[1]}.ts`), 'utf8'))!;
 	});
 }
 

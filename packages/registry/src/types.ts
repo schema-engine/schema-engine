@@ -44,6 +44,17 @@ export interface BaseRegistration<_TConfig = unknown, TMeta extends Registration
 	schema: StandardSchemaV1;
 	/** Registration metadata (display name, description, and type-specific fields) */
 	metadata: TMeta;
+	/**
+	 * Where a node of this `$type` holds child nodes: key paths into the node, each to one node or to an array of nodes.
+	 *
+	 * @remarks
+	 * `[['blocks'], ['engine', 'controls']]` says a node has children at `node.blocks` and at `node.engine.controls`.
+	 * A path is read from the node as authored, so the issues {@link safeParseTree} reports point at the document. A
+	 * missing value is no children, and the schema decides whether it may be missing. An array holds nodes only;
+	 * what is not a node is reached by its keys, which is why a path is a list of keys. `createRegistry` checks each
+	 * path when it builds the registry.
+	 */
+	readonly childPaths?: readonly (readonly string[])[];
 }
 
 /**

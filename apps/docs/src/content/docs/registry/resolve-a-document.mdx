@@ -1,12 +1,12 @@
 ---
 title: 'Resolve a document'
-description: 'Walk a tree of $type nodes through a registry per kind, collect every issue with its path, and render the validated tree to output.'
+description: 'Validate a tree of $type nodes through a registry per kind with safeParseTree, collect every issue with its path, and render the validated tree to output.'
 order: 3
 ---
 
 # Resolve a document
 
-A document is a tree of nodes, and each node names a registration by `$type`. Resolving it is the same pattern in every domain: look each `$type` up in the registry for its kind, validate the node against the registration's schema, collect what is wrong with its path, and, only when nothing is, render. This page builds that pattern with no framework: the output is a string. A renderer for a UI does the same with its own output.
+A document is a tree of nodes, and each node names a registration by `$type`. Resolving it is the same pattern in every domain: look each `$type` up in the registry for its kind, validate the node against the registration's schema, collect what is wrong with its path, and, only when nothing is, render. `safeParseTree` does the first three for the whole document in one call. This page builds that pattern with no framework: the output is a string. A renderer for a UI does the same with its own output.
 
 Start from the [Overview and quick start](/docs/registry/overview) if registrations and registries are new.
 
@@ -14,7 +14,7 @@ Start from the [Overview and quick start](/docs/registry/overview) if registrati
 
 A kind is a group of registrations that play the same role. This document has two: leaves, which draw themselves, and containers, which draw their children. Each kind is its own registry, so a `$type` is looked up where it belongs and a leaf cannot be used where a container is meant.
 
-Both kinds share one registration shape. A node's `render` receives its validated configuration and the already rendered children, which a leaf ignores:
+Both kinds share one registration shape. A node's `render` receives its validated configuration and the already rendered children, which a leaf ignores. A registration says where its children are with `childPaths`, a list of key paths into the node: the `stack` keeps its children in `children`, so its path is `['children']`; a leaf has none.
 
 ```ts title="kinds.ts"
 import * as z from 'zod/mini';
@@ -60,6 +60,7 @@ const stack: Block = {
 	$type: 'stack',
 	schema: stackSchema,
 	metadata: { name: 'Stack' },
+	childPaths: [['children']],
 	render({ gap = 'small' }: z.output<typeof stackSchema>, children: string[]) {
 		return `<div class="stack stack-${gap}">${children.join('')}</div>`;
 	},
@@ -69,63 +70,39 @@ export const leaves = createRegistry('Leaf', [text, badge]);
 export const containers = createRegistry('Container', [stack]);
 ```
 
-The `stack` schema accepts `children` as a list of anything. Its children are validated one by one when the walk reaches them, each against its own registration.
+The `stack` schema accepts `children` as a list of anything. Its children are validated one by one when `safeParseTree` reaches them, each against its own registration.
 
 ## The resolve step
 
-`resolve` walks the tree. At each node `safeParseNode` finds the registration, validates the node and returns the registration with its validated configuration, or the issues of that node. `resolve` hands each child its own `path`, so every issue starts at the root and runs through `children` and the index of each child, and it keeps going after a problem: every issue is collected. `safeParseNode` takes any object with a `get(key)`, so one lookup can answer for both kinds.
+`resolve` is one call. `safeParseTree` reads each node's `childPaths`, validates the node with `safeParseNode` at its full path, walks into its children and keeps going after a problem, so every issue is collected and starts at the root. `safeParseNode` takes any object with a `get(key)`, so one lookup can answer for both kinds.
 
 ```ts title="resolve.ts"
-import { safeParseNode, type NodeLookup, type StandardSchemaIssue } from '@schema-engine/registry';
+import { safeParseTree, type NodeLookup, type SafeParseTreeResult } from '@schema-engine/registry';
 import { containers, leaves, type Block } from './kinds';
 
-export interface ResolvedNode {
-	registration: Block;
-	config: unknown;
-	children: ResolvedNode[];
-}
-
-export type Resolution = { success: true; tree: ResolvedNode } | { success: false; issues: StandardSchemaIssue[] };
+export type Resolution = SafeParseTreeResult<Block>;
 
 const blocks: NodeLookup<Block> = { get: (type) => containers.get(type) ?? leaves.get(type) };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function resolveAt(node: unknown, path: PropertyKey[], issues: StandardSchemaIssue[]): ResolvedNode | undefined {
-	const parsed = safeParseNode(blocks, node, path);
-	if (!parsed.success) {
-		issues.push(...parsed.issues);
-		return undefined;
-	}
-	const children = isRecord(node) && Array.isArray(node.children) ? node.children : [];
-	const resolved = children.map((child, index) => resolveAt(child, [...path, 'children', index], issues));
-	return {
-		registration: parsed.registration,
-		config: parsed.data,
-		children: resolved.filter((child): child is ResolvedNode => child !== undefined),
-	};
-}
-
 export function resolve(document: unknown): Resolution {
-	const issues: StandardSchemaIssue[] = [];
-	const tree = resolveAt(document, [], issues);
-	return tree && issues.length === 0 ? { success: true, tree } : { success: false, issues };
+	return safeParseTree(blocks, document);
 }
 ```
 
-A node whose own schema fails reports its issues and is not walked further. The result is either a tree that is safe to render or every issue found, never a half-valid tree.
+A node whose own schema fails reports its issues and is not walked further, but its siblings still are. The result is either a tree that is safe to render or every issue found, never a half-valid tree. A value at a child path that is not a node, and a node that contains itself, are issues too, at the path where they sit.
 
 ## The render step
 
-Rendering takes a resolved tree and maps each node to output. It does no validation, because resolving has already done it:
+Rendering takes a resolved tree and maps each node to output. It does no validation, because resolving has already done it. A `ParsedNode` holds the `registration`, the `data` its schema returned, the `path` of the node in the document and its `children`, keyed by the child path (`'children'` here; `['engine', 'controls']` would be `'engine.controls'`), a list of nodes for an array:
 
 ```ts title="render.ts"
-import type { ResolvedNode } from './resolve';
+import type { ParsedNode } from '@schema-engine/registry';
+import type { Block } from './kinds';
 
-export function render({ registration, config, children }: ResolvedNode): string {
-	return registration.render(config, children.map(render));
+export function render({ registration, data, children }: ParsedNode<Block>): string {
+	const inner = children.children;
+	const nodes = inner === undefined ? [] : [inner].flat();
+	return registration.render(data, nodes.map(render));
 }
 ```
 

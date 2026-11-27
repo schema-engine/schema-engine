@@ -1,7 +1,7 @@
 {
 	"name": "@schema-engine/forms",
 	"type": "module",
-	"version": "0.5.2",
+	"version": "0.5.3",
 	"description": "The forms domain of Schema Engine: JSON forms with elements, validation, constraints, steps, form state and submission, with no renderer",
 	"keywords": [
 		"schema-engine",
@@ -79,6 +79,10 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
+		},
+		"./default-elements": {
+			"types": "./dist/default-elements/index.d.ts",
+			"import": "./dist/default-elements/index.js"
 		},
 		"./browser": {
 			"types": "./dist/browser/index.d.ts",

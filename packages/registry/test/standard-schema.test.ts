@@ -1,8 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import * as z from 'zod/mini';
 import { safeParseStandardSchema, standardSchema } from '../src';
 
 describe('standardSchema', () => {
+	it('types the input it accepts when asked to, and leaves it unknown otherwise', () => {
+		const withInput = standardSchema<{ gap: string }, { gap?: string }>((value) => ({
+			value: { gap: (value as { gap?: string }).gap ?? 'sm' },
+		}));
+		const withoutInput = standardSchema<number>((value) => ({ value: Number(value) }));
+
+		expectTypeOf<StandardSchemaV1.InferInput<typeof withInput>>().toEqualTypeOf<{ gap?: string }>();
+		expectTypeOf<StandardSchemaV1.InferOutput<typeof withInput>>().toEqualTypeOf<{ gap: string }>();
+		expectTypeOf<StandardSchemaV1.InferInput<typeof withoutInput>>().toEqualTypeOf<unknown>();
+		expect(safeParseStandardSchema(withInput, {})).toEqual({ success: true, data: { gap: 'sm' } });
+	});
+
 	it('is a Standard Schema that runs the function', () => {
 		const positive = standardSchema((value) =>
 			typeof value === 'number' && value > 0

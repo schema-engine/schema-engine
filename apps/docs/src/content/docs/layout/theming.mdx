@@ -20,6 +20,8 @@ Theming is CSS: you set custom properties, and the grid, the appearance axes and
 
 A card shell keeps the look of an unstyled card as the fallback of each token it reads (`var(--se-space, 1.5rem)`), so with no token set it looks as it does without a theme.
 
+A colour that every entity of your domain has for itself (a colour per machine, per brand) is data, not a theme setting: write your own `data-<domain>` attribute and set the colour roles from it in your stylesheet. [Identity tokens](/docs/layout/appearance-axes#identity-tokens-when-not-to-use-an-axis) shows the pattern.
+
 ## Where to set a token
 
 Custom properties inherit, so most tokens can be set on any element above the one that reads them. The rule for the size hooks is one line: **set them on `:root`, on any ancestor of the form or on the form's own `className`**, which works the same in both renderers for a pick on the card shell, a step or a field. The table says what else works.

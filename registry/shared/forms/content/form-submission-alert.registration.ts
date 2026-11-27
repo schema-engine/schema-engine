@@ -1,14 +1,8 @@
 import { FormSubmissionAlert } from './form-submission-alert';
-import { SubmissionAlertConfigSchema } from './form-submission-alert.types';
+import { SubmissionAlertElementContract } from '@schema-engine/forms/default-elements';
 import { defineStatic } from '@schema-engine/forms';
 
 export const SubmissionAlertElementRegistration = defineStatic({
-	$type: 'submission-alert',
+	...SubmissionAlertElementContract,
 	render: FormSubmissionAlert,
-	schema: SubmissionAlertConfigSchema,
-	metadata: {
-		name: 'Submission Alert',
-		description: 'Displays form submission status (submitting, success, error)',
-		category: 'content',
-	},
 });

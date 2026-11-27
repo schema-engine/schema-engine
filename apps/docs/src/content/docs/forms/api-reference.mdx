@@ -101,6 +101,26 @@ See [Submitted values](/docs/forms/form-state#submitted-values).
 against its registrations. The render function then receives frozen,
 normalized children, not authoring JSON.
 
+## Default element contracts
+
+`@schema-engine/forms/default-elements` holds the contract of each of the 18 default elements (`input`, `textarea`, `number`, `select`, `checkbox`, `checkbox-group`, `switch`, `radio`, `slider`, `combobox`, `drop-zone`, `fieldSet`, `input-otp`, `phone-input`, `masked-input`, `arrayElements`, `submit` and `submission-alert`): its schema (`CheckboxFieldConfigSchema`), the types and the `xFieldValue` declaration that go with it, and the contract itself (`CheckboxElementContract`). A contract is a registration without `render` and `validations`, the part of an element that belongs to one renderer, so every renderer of an element agrees on its schema and on the value its control writes. `defaultElementContracts` is the registry of all of them, built with `createRegistry` and `duplicates: 'error'`.
+
+A renderer binds `render` to a contract. For one element, spread the contract into `defineInput`, which checks `render` against the schema output as it does for any element:
+
+```ts
+import { createFormEngine, defineInput } from '@schema-engine/forms';
+import { CheckboxElementContract, type CheckboxFieldConfig } from '@schema-engine/forms/default-elements';
+
+const checkbox = defineInput({
+	...CheckboxElementContract,
+	render: (config: CheckboxFieldConfig) => `<input type="checkbox" name="${config.name}">`,
+});
+
+export const engine = createFormEngine({ elements: [checkbox] });
+```
+
+A renderer that draws every element binds the whole registry with `bindRegistry` from `@schema-engine/registry`: a contract without a binding fails to compile, and `ElementBindings<typeof defaultElementContracts>` with `satisfies` checks each `render` against its own schema. `@schema-engine/forms-radiant` does this; the registry items of Forms React spread one contract each, because they are copied one at a time. See [One contract, a binding per renderer](/docs/registry/registries#one-contract-a-binding-per-renderer).
+
 ## FormEngine
 
 `FormEngine` retrieves registered elements, recipes, and actions; validates
@@ -147,8 +167,7 @@ type FormValidationResult<T> = { success: true; data: T } | { success: false; is
 [Form configuration errors](/docs/forms/engine#form-configuration-errors)
 for the paths and a copy-pasteable example.
 
-JSON Schema conversion is backed by Zod Mini for first-party schemas. Use
-`io: 'input'` for authoring input (where defaulted fields are optional) or
+Use `io: 'input'` for authoring input (where defaulted fields are optional) or
 `io: 'output'` for parsed output. Every generator defaults to `'input'`, since the export describes
 what authors write. An element whose schema pipes a transform (Radiant's `input-otp`) has no
 JSON Schema for its output side, so `io: 'output'` throws for an engine that registers one.
@@ -170,10 +189,62 @@ slots. It does not check the `appearance` of an element whose schema is lazy; `v
 
 `getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` expose
 the same input/output converters through the Standard JSON Schema contract.
-Consumer schemas from other Standard Schema providers remain fully supported
-for runtime validation. Their provider-specific JSON Schema is not introspected:
-mixed form config exports retain the registered `$type` envelope for those
-schemas.
+
+### How each schema is exported
+
+Standard Schema is the contract for a definition; JSON Schema is what the export gives AI, agents and tools. One rule
+reads the schema of every registration kind the export lists: an element, an action, a validation rule and a recipe
+slot.
+
+1. A Zod schema (classic or Mini) goes through the Zod converter. The export composes an element's, action's or
+   slot's Zod schema before converting it: it closes `appearance` over the axes the owner declares, types an
+   element's children and rules, and adds an action's envelope (`id`, `enabled`, `triggers`). Classic Zod also
+   provides `~standard.jsonSchema`, but its output is already final and cannot take part in that composition, so
+   reading it would drop those additions and export a classic Zod element differently from the same element written
+   in Zod Mini. Zod therefore always goes through the converter.
+2. Any other schema that provides Standard JSON Schema (`~standard.jsonSchema`) is exported as what its `input()` or
+   `output()` returns for the `io` and `target` you ask for, embedded as described below. The export adds no
+   `appearance`, children or rules to it, so state them in the schema.
+3. A schema that provides neither is listed by its shape: an element by its `$type` and its appearance axes, an action
+   or a rule by its `$type`, a recipe slot as an open object with its appearance axes.
+
+How a rule 2 schema is embedded in the export:
+
+- Its `$schema` is dropped, because the document it is embedded in already declares the dialect.
+- A schema whose `$ref`s point into itself from its root (ArkType writes a recursive type as a root `$ref` with
+  `$defs`) is moved to a place where those references still resolve. In a document it goes under the document's
+  `$defs` (or `definitions`) as `embedded-1`, `embedded-2` and so on, with its references rewritten to that place. In
+  `generateJSONSchemaCollection()` it becomes an entry of its own, referred to by its URI. A schema that is already the
+  root of a collection entry, or that sets its own `$id`, stays as it is. References stay `#/...` pointers, which AI
+  tool APIs resolve, rather than `$id` URIs. Only the schema's own resource is rewritten: a subschema that sets its own
+  `$id` is a resource of its own, so its references stay relative to it.
+- A plain-name anchor (`$anchor`, `$dynamicAnchor`, or a draft-07 `$id: '#node'`) is global to a document, so two rule 2
+  schemas that each declare `node` would declare it twice. Each schema's anchors, and the `#node` references to them,
+  are renamed to carry its place (`embedded-1-node`), whether it is moved to the definitions or embedded where it
+  stands.
+- A document (not the collection) lists catalog metadata (`title`, `description`, `componentType`, `category`) on every
+  registration. It adds them beside a rule 2 schema's keywords where the schema does not set the same key. They are
+  annotations, so what the schema accepts does not change.
+- A converter that throws for the target you ask for (ArkType supports only `draft-2020-12` and `draft-07`, so it
+  throws for `openapi-3.0`) does not stop the export. That schema is listed by its shape, as in rule 3, and a warning
+  names its vendor and the target.
+
+`submissionSchema(config)` reads each value schema by rules 1 and 2 and embeds it the same way. It throws for a value
+schema that has neither, rather than listing it by its shape.
+
+Which libraries export exactly, checked against these versions (ArkType is not a dependency of this repository):
+
+| Library                | Version | Exports exactly                                                          |
+| ---------------------- | ------- | ------------------------------------------------------------------------ |
+| Zod (classic and Mini) | 4.6.5   | Through the Zod converter (rule 1), the same either way                  |
+| ArkType                | 2.2.10  | Yes, `~standard.jsonSchema` (rule 2), for `draft-2020-12` and `draft-07` |
+| Valibot                | 1.5.0   | No: listed by shape (rule 3)                                             |
+| Effect Schema          | 3.22.2  | No: listed by shape (rule 3)                                             |
+| A schema you write     | -       | Yes, when it sets `~standard.jsonSchema` (rule 2)                        |
+
+Zod Mini does not implement `~standard.jsonSchema`, and Valibot and Effect Schema do not without an adapter, so the
+Zod converter and the listing by shape stand in for them. A schema of your own that spreads a library's `~standard`
+and adds `jsonSchema` (built with that library's converter) is exported exactly.
 
 ## State container, server errors and CSRF
 
@@ -201,9 +272,13 @@ interface RecipeRegistration<TType, TSchema, TRender = unknown> {
 	slotDefaults?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', Record<string, unknown>>>;
 	/** Appearance axes each slot supports, for example `{ shell: ['size', 'surface'] }`. */
 	appearanceAxes?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', readonly string[]>>;
+	/** The schema of each declared slot, any Standard Schema; set by `defineFormRecipe`. */
+	slotSchemas?: Partial<Record<'shell' | 'header' | 'progress' | 'actions', StandardSchemaV1>>;
 	render: TRender;
 }
 ```
+
+`slotSchemas` is what the JSON Schema export lists a recipe's slots from, and `schema` is what validates a view. A registration written by hand may leave `slotSchemas` out; when it sets them, they must list exactly its `slots`, each a Standard Schema, or `createFormEngine` throws.
 
 The recipe protocol (the slots, the kinds, the rules that check them) is declared once per domain with
 `defineRecipeProtocol` from `@schema-engine/layout`; forms declares `shell | header | progress | actions` and

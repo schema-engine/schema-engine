@@ -8,7 +8,7 @@ The forms domain of Schema Engine: elements, validation rules, constraints, step
 pnpm add @schema-engine/forms zod
 ```
 
-First-party schemas use the `zod/mini` entry point. Registrations may use any [Standard Schema](https://standardschema.dev/) validator.
+First-party schemas use the `zod/mini` entry point. Registrations may use any [Standard Schema](https://standardschema.dev/) validator, and so may the slot schemas of a recipe spec. The JSON Schema export reads each schema the same way for an element, an action, a rule and a recipe slot: a Zod schema through the Zod converter, any other schema that sets `~standard.jsonSchema` (ArkType, or a schema you write) as what it returns, and any other schema by its shape (a registration by its `$type`, a recipe slot as an open object with its appearance axes).
 
 ## Example
 
@@ -46,6 +46,7 @@ const result = engine.safeValidateForm({
 | --------------------------------------- | ------------------------------------------------------------------------------------- |
 | `@schema-engine/forms`                  | The engine, `defineInput` and `defineStatic`, the runtime, the actions and the types  |
 | `@schema-engine/forms/state-container`  | The form state container, its selectors and the issue formatter type                  |
+| `@schema-engine/forms/default-elements` | The contract of each default element, for a renderer to bind its `render` to          |
 | `@schema-engine/forms/csrf`             | CSRF policies for the engine's requests and native posts                              |
 | `@schema-engine/forms/server-errors`    | `fromProblemDetails` and `fromJsonApiErrors`, to show a server's answer on its fields |
 | `@schema-engine/forms/recipes`          | The forms recipe protocol, to write a view recipe                                     |

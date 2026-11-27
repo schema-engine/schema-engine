@@ -160,6 +160,7 @@ describe('createLayoutTheme', () => {
 		const theme = createLayoutTheme({ grid: { minColumnWidth: '10rem' } });
 		expect(getGridVariables({ columns: 'auto' }, theme.grid, [])).toEqual({
 			'--se-grid-template': 'repeat(auto-fit, minmax(min(10rem, 100%), 1fr))',
+			'--se-grid-tracks': '1',
 		});
 		expect(getGridItemVariables({ column: 2 })).toEqual({ '--se-item-grid-column': '2' });
 	});

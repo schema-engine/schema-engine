@@ -120,6 +120,7 @@ describe('subgrid validation', () => {
 		['offset', { offset: 'quarter' }, ['grid', 'offset']],
 		['column', { column: 2 }, ['grid', 'column']],
 		['area', { area: 'a' }, ['grid', 'area']],
+		['span', { span: 2 }, ['grid', 'span']],
 		['justifySelf', { justifySelf: 'start' }, ['grid', 'justifySelf']],
 		['placeSelf', { placeSelf: 'center' }, ['grid', 'placeSelf']],
 		['a responsive width', { responsive: { md: { width: 'half' } } }, ['grid', 'responsive', 'md', 'width']],

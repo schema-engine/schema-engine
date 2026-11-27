@@ -1,4 +1,5 @@
-/** Each element registration of the package by name; `schemaFormRegistrations` lists them all and is exported from the package root. */
+/** Each element registration of the package by name, and `radiantElements`, the registry of them all; `schemaFormRegistrations` lists them too and is exported from the package root. */
+export { radiantElements } from '@/elements/radiant-elements';
 export { InputElementRegistration } from '@/elements/inputs/form-input.registration';
 export { TextareaElementRegistration } from '@/elements/inputs/form-textarea.registration';
 export { NumberElementRegistration } from '@/elements/inputs/form-number.registration';

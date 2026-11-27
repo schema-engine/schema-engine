@@ -22,7 +22,7 @@ export type ElementRenderProps<TSchema extends StandardSchemaV1, THandlers = unk
 	instanceId?: string;
 } & THandlers;
 
-type DefineElementRegistration<
+export type DefineElementRegistration<
 	TType extends string,
 	TSchema extends StandardSchemaV1,
 	TProps,
@@ -45,7 +45,7 @@ type DefineElementRegistration<
  * `value`, which is how a registration whose control writes a value the engine cannot check is a type error. A schema
  * that merely allows any key (an index signature) does not declare `elements`.
  */
-type InputValueDeclaration<TSchema extends StandardSchemaV1, TValue extends StandardSchemaV1> =
+export type InputValueDeclaration<TSchema extends StandardSchemaV1, TValue extends StandardSchemaV1> =
 	DeclaresChildren<InferOutput<TSchema>> extends true
 		? { containerKind?: ContainerKind; value?: never }
 		: { containerKind?: undefined; value: ValueDeclaration<WithNormalizedChildren<InferOutput<TSchema>>, TValue> };
