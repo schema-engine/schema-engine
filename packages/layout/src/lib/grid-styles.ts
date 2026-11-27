@@ -344,7 +344,13 @@ export function canonicalGridTheme(theme: NormalizedGridTheme) {
  */
 export const GRID_CLASS = 'se-grid';
 
-/** Class an element placed in a grid carries, and the stylesheet's hook for it. See {@link GRID_CLASS}. */
+/**
+ * Class an element placed in a grid carries, and the stylesheet's hook for it. See {@link GRID_CLASS}.
+ *
+ * @remarks
+ * An item and the grid it contains must be different elements, as they are in both renderers. An item's
+ * `span` reads the track count its parent grid computed, and an element that is both would read its own.
+ */
 export const GRID_ITEM_CLASS = 'se-grid-item';
 
 /**
@@ -385,6 +391,18 @@ export const GRID_CONTAINER_CLASS = 'se-grid-container';
 const GRID_CONTAINER_NAME = 'se-grid';
 
 /**
+ * Custom property a grid declares with the number of column tracks its template draws, which its items read to clamp a `span`.
+ *
+ * @remarks
+ * It is a row of {@link GRID_PROPERTIES}, so it follows the template through the same gated cascade, per
+ * slot and in both query modes, and a `span` clamps at the width the template switches at. The renderer
+ * writes the count beside each template as `--se-grid-tracks[-slot]` ({@link getGridVariables}); an
+ * unauthored grid draws one track. A subgrid inherits the resolved count of the grid it sits in, since
+ * its children are placed on that grid's tracks.
+ */
+const TRACK_COUNT_VARIABLE = '--se-grid-track-count';
+
+/**
  * Grid container properties that change per breakpoint.
  *
  * @remarks
@@ -397,6 +415,7 @@ const GRID_PROPERTIES: readonly ResponsiveProperty[] = [
 	['grid-template-areas', 'se-grid-areas', 'none'],
 	['row-gap', 'se-grid-gap-y', DEFAULT_GAP_CSS],
 	['column-gap', 'se-grid-gap-x', DEFAULT_GAP_CSS],
+	[TRACK_COUNT_VARIABLE, 'se-grid-tracks', '1'],
 ];
 
 /**
@@ -435,6 +454,7 @@ const GRID_ALIGNMENT_PROPERTIES: readonly ResponsiveProperty[] = [
 	['align-items', 'se-grid-align-items', 'normal'],
 	['justify-content', 'se-grid-justify-content', 'normal'],
 	['align-content', 'se-grid-align-content', 'start'],
+	['grid-auto-flow', 'se-grid-auto-flow', 'row'],
 ];
 
 /** Removes the space after each comma of a stylesheet-only fallback, which `var()` ignores. */
@@ -581,7 +601,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 		`${subgridScope}{${ITEM_DISPLAY_MODE_VARIABLE}:grid;display:grid;grid-template-columns:subgrid;column-gap:normal;align-content:start;}`,
 		`${subgridScope}>:not(.${GRID_ITEM_CLASS}){grid-column:1/-1;}`,
 		`${gridScope}{${container ? gateResets(themeId, 'g', GRID_PROPERTIES) : ''}${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;${ITEM_DISPLAY_MODE_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
-		`.${GRID_CLASS}${subgridScope}{--se-grid-template:subgrid;--se-grid-gap-x:normal;${DEFAULT_COLUMN_VARIABLE}:inherit;}`,
+		`.${GRID_CLASS}${subgridScope}{--se-grid-template:subgrid;--se-grid-gap-x:normal;${DEFAULT_COLUMN_VARIABLE}:inherit;${TRACK_COUNT_VARIABLE}:inherit;}`,
 		`${itemScope}{${container ? gateResets(themeId, 'i', ITEM_PROPERTIES) : ''}${inheritanceResets(ITEM_PROPERTIES, true)}${declarations(themeId, 'i', ITEM_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
@@ -665,6 +685,7 @@ interface GridItemEntry {
 	area?: string;
 	width?: GridWidthName;
 	offset?: GridOffsetName;
+	span?: number;
 	column?: number | string;
 	row?: number | string;
 	justifySelf?: string;
@@ -717,6 +738,7 @@ export function getGridVariables(
 		'--se-grid-align-items': grid?.alignItems ?? placeAlignItems,
 		'--se-grid-justify-content': grid?.justifyContent ?? placeJustifyContent,
 		'--se-grid-align-content': grid?.alignContent ?? placeAlignContent,
+		'--se-grid-auto-flow': grid?.autoFlow,
 	};
 	for (const [name, value] of Object.entries(alignment)) {
 		if (value !== undefined) variables[name as `--${string}`] = value;
@@ -730,10 +752,12 @@ export function getGridVariables(
 		if (entry.columns !== undefined) columns = entry.columns;
 		if (entry.minColumnWidth !== undefined) minColumnWidth = entry.minColumnWidth;
 		variables[customProperty('se-grid-template', slot)] = toGridTemplate(columns, minColumnWidth);
+		variables[customProperty('se-grid-tracks', slot)] = String(columns === 'auto' ? 1 : columns);
 	};
 
 	if (usesGridWidths(elements)) {
 		variables['--se-grid-template'] = `repeat(${WIDTH_TRACKS}, minmax(0, 1fr))`;
+		variables['--se-grid-tracks'] = String(WIDTH_TRACKS);
 		variables[DEFAULT_COLUMN_VARIABLE] = '1 / -1';
 	}
 
@@ -746,6 +770,7 @@ export function getGridVariables(
 			rows[0]?.length ?? 1,
 			theme.minColumnWidth,
 		);
+		variables[customProperty('se-grid-tracks', slot)] = String(rows[0]?.length ?? 1);
 	}
 
 	const responsive = grid?.responsive;
@@ -777,6 +802,19 @@ function namedColumn({ width, offset }: NamedPlacement): string {
 	return start === undefined ? span : `${start} / ${span}`;
 }
 
+/**
+ * `grid-column` for a numeric span: `n` tracks, or the grid's own track count when that is fewer.
+ *
+ * @remarks
+ * The count is {@link TRACK_COUNT_VARIABLE}, which the item inherits from the grid it sits in, so the clamp
+ * changes at the width the grid's template does. `var()` inside `min()` inside a grid line is valid in Chromium,
+ * Firefox and WebKit (the browser test of this package measures it); a grid that publishes no count gives
+ * one track, never an implicit column.
+ */
+function spanColumn(span: number): string {
+	return `span min(${span},var(${TRACK_COUNT_VARIABLE},1))`;
+}
+
 function formatGridLine(value: number | string): string {
 	return typeof value === 'number' ? String(value) : value;
 }
@@ -791,6 +829,9 @@ function emitItemEntry(
 	if (entry.width !== undefined || entry.offset !== undefined) {
 		carryNamedPlacement(named, entry);
 		variables[customProperty('se-item-grid-column', slot)] = namedColumn(named);
+	}
+	if (entry.span !== undefined) {
+		variables[customProperty('se-item-grid-column', slot)] = spanColumn(entry.span);
 	}
 	if (entry.area !== undefined) {
 		variables[customProperty('se-item-grid-column', slot)] = entry.area;

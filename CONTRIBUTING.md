@@ -6,10 +6,10 @@ Agent and coding standards live in [AGENTS.md](./AGENTS.md); domain vocabulary i
 
 ```sh
 pnpm install
-pnpm exec playwright install chromium
+pnpm exec playwright install chromium firefox webkit
 ```
 
-Node `^24.22.0` or `>=26.0.0` and pnpm 10 are required (the `engines` field of `package.json`). The browser tests of `forms-react`, `forms-radiant` and `docs` run in headless Chromium through Vitest browser mode, which is why Playwright's Chromium is installed.
+Node `^24.22.0` or `>=26.0.0` and pnpm 10 are required (the `engines` field of `package.json`). The browser tests of `forms-react`, `forms-radiant` and `docs` run in headless Chromium through Vitest browser mode, which is why Playwright's Chromium is installed. The browser tests of `layout` also run in Firefox and WebKit, because they assert which CSS a browser accepts.
 
 ## Branches and releases
 

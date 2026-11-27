@@ -96,14 +96,14 @@ export function elementIsSubgrid(element: unknown): boolean {
 }
 
 /** Placement keys a subgrid cannot set: it always spans its parent's full row and is stretched on it. */
-const SUBGRID_EXCLUSIVE_KEYS = ['width', 'offset', 'column', 'area', 'justifySelf', 'placeSelf'] as const;
+const SUBGRID_EXCLUSIVE_KEYS = ['width', 'offset', 'column', 'area', 'span', 'justifySelf', 'placeSelf'] as const;
 
 /**
  * Why a subgrid's placement is invalid, or `undefined` when it is fine.
  *
  * @remarks
- * A subgrid spans its parent's full row, so a `width`, `offset`, raw `column` or `area` would make it span
- * less, and CSS ignores `justify-self` on a subgrid. The path is relative to the element and names the first
+ * A subgrid spans its parent's full row, so a `width`, `offset`, `span`, raw `column` or `area` would make it
+ * span less, and CSS ignores `justify-self` on a subgrid. The path is relative to the element and names the first
  * conflicting key at the slot that sets it, as authored; the message is a clause the domain prefixes with
  * the element's name.
  */
@@ -114,10 +114,84 @@ export function subgridPlacementIssue(element: unknown): LayoutIssue | undefined
 		if (key === undefined) continue;
 		return {
 			path: slot === 'default' ? ['grid', key] : ['grid', 'responsive', slot, key],
-			message: `sets grid 'subgrid' and '${key}'; a subgrid spans its parent's full row, so it takes no 'width', 'offset', 'column', 'area', 'justifySelf' or 'placeSelf'.`,
+			message: `sets grid 'subgrid' and '${key}'; a subgrid spans its parent's full row, so it takes no 'width', 'offset', 'column', 'area', 'span', 'justifySelf' or 'placeSelf'.`,
 		};
 	}
 	return undefined;
+}
+
+/** Placement keys that `span` cannot share a slot with, because each sets the item's `grid-column` too. */
+const SPAN_EXCLUSIVE_KEYS = ['width', 'offset', 'column', 'area'] as const;
+
+/**
+ * Why an element's `span` cannot sit beside its other placement, or `undefined` when it is fine.
+ *
+ * @remarks
+ * `span` sets the item's column like `width`, `offset`, a raw `column` and an `area` do, so a slot that
+ * sets it and one of them would have two answers. Slots may differ: a narrower slot's `width` and a
+ * wider slot's `span` is the usual way to change sizing mode. The path is relative to the element and
+ * names the first conflicting key at the slot that sets it, as authored; the message is a clause the
+ * domain prefixes with the element's name.
+ */
+export function spanPlacementIssue(element: unknown): LayoutIssue | undefined {
+	for (const { slot, entry } of elementGridSlots(element)) {
+		if (entry.span === undefined) continue;
+		const key = SPAN_EXCLUSIVE_KEYS.find((name) => entry[name] !== undefined);
+		if (key === undefined) continue;
+		return {
+			path: slot === 'default' ? ['grid', key] : ['grid', 'responsive', slot, key],
+			message: `sets grid 'span' and '${key}'${slot === 'default' ? '' : ` at '${slot}'`}; a span is a placement of its own, so use 'span' or one of 'width', 'offset', 'column' and 'area' in a breakpoint, not together.`,
+		};
+	}
+	return undefined;
+}
+
+/**
+ * Where each element's `span` meets a grid whose track count CSS cannot know.
+ *
+ * @param grid The grid that places `elements`; one with no `columns: 'auto'` has no issue.
+ * @param elements The elements the grid places: its items, and the children of every subgrid among them.
+ *
+ * @remarks
+ * `columns: 'auto'` makes as many tracks as fit, a count that depends on the container's width and the
+ * minimum column width and cannot be computed in CSS, so a span there falls back to one track. Rather than
+ * render that silently, each element is checked against every slot where the grid's cascaded `columns` is
+ * `'auto'`, with the span in effect there (the last one a narrower or equal slot set). The first such slot
+ * is reported per element. A grid that draws `areas` or whose items use named widths has a known count
+ * and has no issue.
+ *
+ * The path starts with the element's index in `elements`, then names the `span` key the author wrote at
+ * the slot that sets the span in effect: `[2, 'grid', 'span']` or `[2, 'grid', 'responsive', 'md', 'span']`.
+ * The message is a clause the domain prefixes with the element's name.
+ */
+export function gridSpanIssues(grid: unknown, elements: readonly unknown[]): LayoutIssue[] {
+	if (!isRecord(grid) || gridUsesAreas(grid) || usesGridWidths(elements)) return [];
+	const columns: Partial<Record<CascadeSlot, unknown>> = {};
+	for (const { slot, entry } of elementGridSlots({ grid })) columns[slot] = entry.columns ?? columns[slot];
+	const autoSlots = cascadeValues(columns)
+		.filter(({ value }) => value === 'auto')
+		.map(({ slot }) => slot);
+	if (autoSlots.length === 0) return [];
+
+	const issues: LayoutIssue[] = [];
+	elements.forEach((element, index) => {
+		const spans: Partial<Record<CascadeSlot, number>> = {};
+		for (const { slot, entry } of elementGridSlots(element)) {
+			if (typeof entry.span === 'number') spans[slot] = entry.span;
+		}
+		for (const slot of autoSlots) {
+			const authoredAt = CASCADE_SLOTS.slice(0, CASCADE_SLOTS.indexOf(slot) + 1)
+				.reverse()
+				.find((candidate) => spans[candidate] !== undefined);
+			if (authoredAt === undefined) continue;
+			issues.push({
+				path: [index, 'grid', ...(authoredAt === 'default' ? [] : ['responsive', authoredAt]), 'span'],
+				message: `sets grid 'span' where the grid's columns are 'auto'${slot === 'default' ? '' : ` at '${slot}'`}; CSS cannot know how many tracks 'auto' makes, so the span falls back to one track. Set 'columns' to a number, per breakpoint if it changes, and use a theme with query 'container' so the breakpoints follow the card.`,
+			});
+			return;
+		}
+	});
+	return issues;
 }
 
 /** Updates `carried` with the width and offset a slot authored; the other keeps its earlier value. */
