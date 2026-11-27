@@ -2,7 +2,8 @@ import * as z from 'zod/mini';
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument, isZodType } from '@/lib/zod-json-schema';
+import { isZodType } from '@/lib/is-zod-type';
+import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
 import {
 	createStandardJSONSchema,
 	createStandardJSONSchemaRecord,

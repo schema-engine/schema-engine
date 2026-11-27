@@ -1,17 +1,6 @@
 import * as z from 'zod/mini';
 import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-schema';
-
-/**
- * Duck-type a Zod validator. Native Standard Schema objects only expose `~standard`.
- */
-export function isZodType(schema: unknown): schema is z.ZodMiniType {
-	return (
-		typeof schema === 'object' &&
-		schema !== null &&
-		typeof (schema as { parse?: unknown }).parse === 'function' &&
-		typeof (schema as { safeParse?: unknown }).safeParse === 'function'
-	);
-}
+import { createExportConversion } from '@/lib/export-schema';
 
 /**
  * Shared alias for the Zod registry type used during JSON Schema generation.
@@ -34,11 +23,17 @@ export function generateZodJSONSchemaCollection(
 		io?: 'input' | 'output';
 	},
 ): JSONSchemaObject {
-	return z.toJSONSchema(metadataRegistry, {
-		target: options?.target || 'draft-2020-12',
-		io: options?.io || 'input',
-		uri: options?.uri || ((id: string) => `#/definitions/${id}`),
-	}) as JSONSchemaObject;
+	const target = options?.target || 'draft-2020-12';
+	const io = options?.io || 'input';
+	const uri = options?.uri || ((id: string) => `#/definitions/${id}`);
+	const conversion = createExportConversion({
+		io,
+		target,
+		placement: { kind: 'collection', uri, registry: metadataRegistry },
+	});
+	return conversion.finish(
+		z.toJSONSchema(metadataRegistry, { target, io, uri, override: conversion.override }) as JSONSchemaObject,
+	);
 }
 
 /**
@@ -81,11 +76,17 @@ export function generateZodJSONSchemaDocument(
 		io?: 'input' | 'output';
 	},
 ): JSONSchemaObject {
-	const schema = z.toJSONSchema(validator, {
-		target: options?.target || 'draft-2020-12',
-		io: options?.io || 'input',
-		metadata: new LayeredMetadataRegistry(metadataRegistry),
-	}) as JSONSchemaObject & { $id?: string };
+	const target = options?.target || 'draft-2020-12';
+	const io = options?.io || 'input';
+	const conversion = createExportConversion({ io, target, placement: { kind: 'document' } });
+	const schema = conversion.finish(
+		z.toJSONSchema(validator, {
+			target,
+			io,
+			metadata: new LayeredMetadataRegistry(metadataRegistry),
+			override: conversion.override,
+		}) as JSONSchemaObject,
+	);
 
 	if (options?.schemaId) {
 		schema.$id = options.schemaId;
