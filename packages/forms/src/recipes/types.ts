@@ -1,4 +1,4 @@
-import type * as z from 'zod/mini';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { RecipeMetadata, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './protocol';
 
@@ -32,7 +32,7 @@ export interface ViewCatalog {
  */
 export type RecipeSpec<
 	TType extends string = string,
-	TSchema extends z.ZodMiniType = z.ZodMiniType,
+	TSchema extends StandardSchemaV1 = StandardSchemaV1,
 	TSlots extends RecipeSlotSchemas = RecipeSlotSchemas,
 > = ProtocolRecipeSpec<RecipeSlot, RecipeKind, TType, TSchema, TSlots>;
 

@@ -158,17 +158,21 @@ After `shadcn add`, the files land under `@/components/schema-engine/forms/recip
 
 ## Custom recipes
 
-A recipe is a registration: a spec bound to your components. This one binds a custom shell:
+A recipe is a registration: a spec bound to your components. A slot schema is any Standard Schema that validates synchronously, so this one uses Valibot for the shell config (Zod Mini works the same way). It binds a custom shell that reads its own config with `useViewConfig`:
 
 ```tsx
-import * as z from 'zod/mini';
+import * as v from 'valibot';
 import { createFormEngine } from '@schema-engine/forms';
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
+import { useViewConfig } from '@schema-engine/forms-react/hooks';
 import { defineRecipe, type FormShellProps } from '@schema-engine/forms-react/primitives';
 
+const BrandShellSchema = v.strictObject({ accent: v.optional(v.string(), '#000000') });
+
 function BrandShell({ slots }: FormShellProps) {
+	const { accent } = useViewConfig('shell', BrandShellSchema);
 	return (
-		<div>
+		<div style={{ borderColor: accent }}>
 			{slots.header}
 			{slots.content}
 			{slots.actions}
@@ -180,7 +184,7 @@ const BrandRecipe = defineRecipe(
 	defineRecipeSpec({
 		$type: 'brand',
 		kind: 'single-step',
-		slotSchemas: { shell: z.strictObject({ accent: z.optional(z.string()) }) },
+		slotSchemas: { shell: BrandShellSchema },
 		metadata: { name: 'Brand', description: 'Branded form shell' },
 	}),
 	{ shell: BrandShell, slots: {} },
@@ -188,3 +192,5 @@ const BrandRecipe = defineRecipe(
 
 const engine = createFormEngine({ recipes: [BrandRecipe] });
 ```
+
+`defineRecipeSpec` returns a spec whose `schema` is the view schema as a Standard Schema, typed by the slots. It is not a Zod schema, so it has no `.parse` or `.shape`: validate with `engine.validateForm`, or with `safeParseStandardSchema` from `@schema-engine/registry`. The JSON Schema export lists a Zod slot in full. A slot from another library appears as an open object whose `appearance` lists the axes the recipe declares for it, so an editor knows the slot exists and offers its appearance values, but not the keys inside it.

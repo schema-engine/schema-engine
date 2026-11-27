@@ -8,7 +8,7 @@ Domain-neutral layout for Schema Engine: a 12-track grid with named widths and d
 pnpm add @schema-engine/layout zod
 ```
 
-The grid, axis and recipe schemas use `zod/mini`, so `zod` is a peer dependency.
+The grid and axis schemas use `zod/mini`, so `zod` is a peer dependency. A recipe's slot schemas take any [Standard Schema](https://standardschema.dev/) that validates synchronously (Zod, Valibot, or one you write); the spec's view schema, `spec.schema`, is a Standard Schema too, so validate with `safeParseStandardSchema` from `@schema-engine/registry`, not `.parse`.
 
 ## Example
 

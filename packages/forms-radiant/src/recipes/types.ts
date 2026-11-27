@@ -1,7 +1,6 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import type { FormMeta } from '@/lib/instance-view';
-import type { FormShellLayout, RecipeRenderPayload, RecipeSlot } from '@schema-engine/forms/recipes';
-import type * as z from 'zod/mini';
+import type { FormShellLayout, RecipeRenderPayload, RecipeSlot, RecipeSlotSchemas } from '@schema-engine/forms/recipes';
 
 /** Serializable render inputs handed to recipe slot factories. */
 export interface RecipeSlotContext<TConfig = Record<string, unknown>> {
@@ -35,7 +34,7 @@ export interface RadiantRecipeAdapterPayload {
 export type RadiantRecipeSlotFactory = (context?: RecipeSlotContext<never>) => JsxRenderable;
 
 /** Radiant payload for a spec declaring `TSlots`; `RadiantRecipeAdapterPayload` is the loose form the renderer reads. */
-export type RadiantRecipePayload<TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>> = RecipeRenderPayload<
+export type RadiantRecipePayload<TSlots extends RecipeSlotSchemas> = RecipeRenderPayload<
 	TSlots,
 	FormShellComponent,
 	RadiantRecipeSlotFactory

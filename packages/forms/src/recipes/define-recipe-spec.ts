@@ -14,12 +14,10 @@ export type { RecipeViewSchema } from '@schema-engine/layout';
  * @remarks
  * `defineProtocolRecipeSpec` from `@schema-engine/layout` on {@link formRecipeProtocol}: single-step
  * recipes cannot declare `progress` (their `actions` slot is the submit-only bar), and wizard
- * recipes must declare `actions`.
+ * recipes must declare `actions`. A spec that leaves out `slotSchemas` declares no slots, so `TSlots` defaults to
+ * the empty object type.
  */
-export function defineRecipeSpec<
-	const TType extends string,
-	const TSlots extends RecipeSlotSchemas = Record<never, never>,
->(
+export function defineRecipeSpec<const TType extends string, const TSlots extends RecipeSlotSchemas = {}>(
 	definition: ProtocolRecipeSpecDefinition<RecipeSlot, RecipeKind, TType, TSlots>,
 ): RecipeSpec<TType, RecipeViewSchema<TType, TSlots>, TSlots> {
 	return defineProtocolRecipeSpec(formRecipeProtocol, definition);
