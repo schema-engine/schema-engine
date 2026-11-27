@@ -134,6 +134,21 @@ describe('recipe slot schemas from any Standard Schema library', () => {
 		).toThrow(/Recipe 'card' slotDefaults\.body is invalid: gap: /);
 	});
 
+	test('names an unknown key in a slot default, whichever library reports it', () => {
+		const define = (body: StandardSchemaV1) => () =>
+			defineProtocolRecipeSpec(cardProtocol, {
+				$type: 'card',
+				kind: 'card',
+				metadata,
+				slotSchemas: { body },
+				slotDefaults: { body: { gapp: 'md' } },
+			});
+		expect(define(valibotBody)).toThrow(/Recipe 'card' slotDefaults\.body is invalid: gapp: /);
+		const keysIssue = { message: 'Unknown keys', path: [], keys: ['gapp'] };
+		const reportsKeys = standardSchema(() => ({ issues: [keysIssue] }));
+		expect(define(reportsKeys)).toThrow("Recipe 'card' slotDefaults.body is invalid: gapp: Unknown keys");
+	});
+
 	test('refuses an async slot schema where a view is resolved', () => {
 		const asyncBody: StandardSchemaV1 = {
 			'~standard': { version: 1, vendor: 'test', validate: () => Promise.resolve({ value: {} }) },

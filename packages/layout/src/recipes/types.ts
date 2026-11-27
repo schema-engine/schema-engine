@@ -6,6 +6,13 @@ export interface RecipeMetadata extends ComponentMetadata {
 	category?: string;
 }
 
+/**
+ * The schema of each slot a spec declares: any Standard Schema that validates synchronously.
+ *
+ * @remarks
+ * The view schema runs each slot schema synchronously, as `resolveRecipeView` and the registry's `safeParseNode` need
+ * an immediate result, so a slot schema that returns a Promise throws where a view is parsed.
+ */
 export type ProtocolRecipeSlotSchemas<TSlot extends string = string> = Partial<Record<TSlot, StandardSchemaV1>>;
 
 /**

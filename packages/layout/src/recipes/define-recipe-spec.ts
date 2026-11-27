@@ -108,6 +108,23 @@ function createRecipeViewSchema<const TType extends string, const TSlots extends
 }
 
 /**
+ * One `<path>: <message>` line per location a slot schema issue points at, so a message names the offending key.
+ *
+ * @remarks
+ * A Standard Schema issue carries a message and a path. A library may also report the offending `keys` of the object
+ * at that path (Zod's unknown keys do, with the generic `Invalid input` when no locale is loaded), so each reported
+ * key gets its own line at the key, the same place forms' validation points such an issue at. An empty path reads `(value)`.
+ */
+function describeSlotIssue(issue: StandardSchemaV1.Issue): string[] {
+	const reported: unknown = (issue as StandardSchemaV1.Issue & { keys?: unknown }).keys;
+	const keys = Array.isArray(reported)
+		? reported.filter((key): key is string | number => typeof key === 'string' || typeof key === 'number')
+		: [];
+	const paths = keys.length > 0 ? keys.map((key) => [...(issue.path ?? []), key]) : [issue.path];
+	return paths.map((path) => `${formatIssuePath(path) || '(value)'}: ${issue.message}`);
+}
+
+/**
  * @remarks
  * Validation only: the parsed output is discarded. The defaults are merged under the author's
  * slot config before the view schema parses, so schema defaults still fill what they leave unset.
@@ -124,9 +141,7 @@ function assertSlotDefaults(
 		}
 		const result = safeParseStandardSchema(schema, value);
 		if (!result.success) {
-			const problems = result.error.issues.map(
-				(issue) => `${formatIssuePath(issue.path) || '(value)'}: ${issue.message}`,
-			);
+			const problems = result.error.issues.flatMap(describeSlotIssue);
 			throw new Error(`Recipe '${$type}' slotDefaults.${slot} is invalid: ${problems.join('; ')}`);
 		}
 	}
@@ -162,13 +177,14 @@ function assertAppearanceSlots(
  * The rules run before the slots are listed, because listing filters the protocol's slots and would
  * otherwise drop a slot the protocol does not declare without a word.
  *
- * A slot schema is any Standard Schema that validates synchronously.
+ * A slot schema is any Standard Schema that validates synchronously. A spec that leaves out `slotSchemas` declares
+ * no slots, so `TSlots` defaults to the empty object type.
  */
 export function defineProtocolRecipeSpec<
 	TSlot extends string,
 	TKind extends string,
 	const TType extends string,
-	const TSlots extends ProtocolRecipeSlotSchemas<TSlot> = Record<never, never>,
+	const TSlots extends ProtocolRecipeSlotSchemas<TSlot> = {},
 >(
 	protocol: RecipeProtocol<TSlot, TKind>,
 	definition: ProtocolRecipeSpecDefinition<TSlot, TKind, TType, TSlots>,

@@ -81,7 +81,7 @@ describe('defineRecipeSpec slotDefaults', () => {
 				// @ts-expect-error -- 'sizee' is not a header key
 				slotDefaults: { header: { sizee: 'sm' } },
 			}),
-		).toThrow(/'defaults' slotDefaults\.header is invalid/);
+		).toThrow("Recipe 'defaults' slotDefaults.header is invalid: sizee: Invalid input");
 	});
 
 	test('fails on a default for an undeclared slot', () => {
