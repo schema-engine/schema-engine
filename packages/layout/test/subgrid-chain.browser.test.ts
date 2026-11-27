@@ -1,12 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import {
-	GRID_CLASS,
-	GRID_CONTAINER_CLASS,
-	GRID_ITEM_CLASS,
-	GRID_SUBGRID_CLASS,
-	createLayoutTheme,
-	findSubgridChainBreaks,
-} from '@/index';
+import { GRID_CLASS, GRID_CONTAINER_CLASS, GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, createLayoutTheme } from '@/index';
+import { findSubgridChainBreaks } from '@/testing';
 
 const theme = createLayoutTheme({});
 const containerTheme = createLayoutTheme({ grid: { query: 'container' } });

@@ -363,7 +363,7 @@ export const GRID_ITEM_CLASS = 'se-grid-item';
  * that does not (a plain `div`) the subgrid has no parent grid to take tracks from, so its template is used
  * as `none` and the children fall back to one column, with nothing reported at runtime. What
  * `getComputedStyle` reports for that template differs by engine, so a test asserts on the layout or runs
- * `findSubgridChainBreaks`, which finds such a box.
+ * `findSubgridChainBreaks` from `@schema-engine/layout/testing`, which finds such a box.
  *
  * Keep a `<fieldset>` out of the chain: Chromium lays a fieldset's content out in an anonymous box that does
  * not take the subgrid, so its children fall back to one column there (Firefox and WebKit pass the tracks on).

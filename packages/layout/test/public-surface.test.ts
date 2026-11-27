@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
+import ts from 'typescript';
 import * as layout from '@/index';
+import * as layoutTesting from '@/testing';
 
 const SUPPORTED_VALUE_EXPORTS = [
 	'AppearanceConfigSchema',
@@ -37,7 +39,6 @@ const SUPPORTED_VALUE_EXPORTS = [
 	'elementHiddenSlots',
 	'elementIsSubgrid',
 	'elementUsesGridWidths',
-	'findSubgridChainBreaks',
 	'getAppearanceAttributes',
 	'getDefaultLayoutTheme',
 	'getGridItemVariables',
@@ -90,10 +91,44 @@ describe('the layout public surface', () => {
 		expect(source).not.toMatch(/export\s+(?:type\s+)?\*/);
 	});
 
-	test('the package publishes one entry, so nothing else is reachable', () => {
+	test('the package publishes the root entry and the testing entry, so nothing else is reachable', () => {
 		const manifest = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')) as {
 			exports: Record<string, unknown>;
 		};
-		expect(Object.keys(manifest.exports).sort()).toEqual(['.', './package.json']);
+		expect(Object.keys(manifest.exports).sort()).toEqual(['.', './package.json', './testing']);
+	});
+
+	test('the root entry leaves the DOM check to the testing entry', () => {
+		expect(layout).not.toHaveProperty('findSubgridChainBreaks');
+		expect(Object.keys(layoutTesting)).toEqual(['findSubgridChainBreaks']);
+	});
+});
+
+describe('the layout root entry on a server', () => {
+	const DOM_TYPE_NAMES =
+		/\b(?:ParentNode|Node|NodeList|Element|HTMLElement|SVGElement|Document|DocumentFragment|ShadowRoot|Window|Event|EventTarget)\b/;
+
+	/** The declarations the root entry emits, as a consumer's compiler reads them, without comments. */
+	function emittedDeclarations(): Map<string, string> {
+		const root = resolve(__dirname, '..');
+		const configFile = ts.readConfigFile(resolve(root, 'tsconfig.json'), (file) => ts.sys.readFile(file));
+		const { options } = ts.parseJsonConfigFileContent(configFile.config, ts.sys, root);
+		const program = ts.createProgram([resolve(root, 'src/index.ts')], {
+			...options,
+			noEmit: false,
+			declaration: true,
+			emitDeclarationOnly: true,
+			removeComments: true,
+		});
+		const declarations = new Map<string, string>();
+		program.emit(undefined, (file, text) => declarations.set(file, text), undefined, true);
+		return declarations;
+	}
+
+	test('emits declarations that name no DOM type, so a server compiles without the DOM lib', () => {
+		const declarations = emittedDeclarations();
+		expect(declarations.size).toBeGreaterThan(10);
+		const naming = [...declarations].filter(([, text]) => DOM_TYPE_NAMES.test(text)).map(([file]) => file);
+		expect(naming).toEqual([]);
 	});
 });

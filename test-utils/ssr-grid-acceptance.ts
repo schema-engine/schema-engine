@@ -7,7 +7,7 @@
  * drift apart; it is imported by relative path because it is test-only.
  */
 import { expect } from 'vitest';
-import { findSubgridChainBreaks } from '@schema-engine/layout';
+import { findSubgridChainBreaks } from '@schema-engine/layout/testing';
 import { SSR_SUBGRID_INSET, SSR_SUBGRID_INSET_CSS } from './ssr-grid-fixtures';
 
 /** The part of a compiled layout theme the markup assertions read. */

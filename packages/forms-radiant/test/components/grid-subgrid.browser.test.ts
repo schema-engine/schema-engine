@@ -1,4 +1,4 @@
-import { findSubgridChainBreaks } from '@schema-engine/layout';
+import { findSubgridChainBreaks } from '@schema-engine/layout/testing';
 import { afterEach, describe, expect, test } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormRenderer } from '@/components/internals/form-renderer';
