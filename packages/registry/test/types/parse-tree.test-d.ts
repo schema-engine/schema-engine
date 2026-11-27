@@ -95,6 +95,29 @@ describe('the root', () => {
 		}
 	});
 
+	it('keeps a widened registration beside the literal ones a root accepts names', () => {
+		const widget: BaseRegistration = {
+			$type: 'widget' as string,
+			schema: z.object({ $type: z.string(), value: z.number() }),
+			metadata: { name: 'Widget' },
+		};
+		const mixed = createRegistry('Mixed', [
+			{
+				$type: 'page',
+				schema: z.object({ $type: z.literal('page'), title: z.string() }),
+				metadata: { name: 'Page' },
+			},
+			widget,
+		]);
+		const result = safeParseTree(mixed, {}, { accepts: ['page', 'widget'] });
+
+		if (result.success) {
+			expectTypeOf(result.tree.$type).toEqualTypeOf<'page' | string>();
+			// @ts-expect-error the root may be the widened widget, whose data has no title
+			result.tree.data.title.toUpperCase();
+		}
+	});
+
 	it('rejects an accepts name the lookup lacks', () => {
 		// @ts-expect-error 'pgae' is no $type of the registry
 		safeParseTree(nodes, {}, { accepts: ['pgae'] });

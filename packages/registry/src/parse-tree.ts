@@ -43,20 +43,25 @@ type ParsedChildren<TAll extends TreeRegistration, TPaths> = TPaths extends read
 export type SafeParseTreeResult<TAll extends TreeRegistration, TRoot extends TreeRegistration = TAll> =
 	{ success: true; tree: ParsedNode<TAll, TRoot> } | { success: false; issues: RegistryIssue[] };
 
+/** The registrations of a union whose `$type` is not a literal (`string`, as `BaseRegistration` has), or missing. */
+type WidenedOf<TAll extends TreeRegistration> = TAll extends { $type: infer TType }
+	? string extends TType
+		? TAll
+		: never
+	: TAll;
+
 /**
  * The registrations a root may be: those `accepts` names, but only when the options type has `accepts`, not when it
  * only may.
  *
  * @remarks
- * A lookup whose registrations are typed by a widened `$type` (`string`, as `BaseRegistration` is) has no member to
- * extract, so it keeps the whole union rather than narrowing to `never`.
+ * A registration typed by a widened `$type` may answer any accepted name at run time, so it always stays in the
+ * union, beside the literal registrations `accepts` names.
  */
 type RootOf<TAll extends TreeRegistration, TOptions> = TOptions extends {
 	readonly accepts: readonly (infer TName)[];
 }
-	? [Extract<TAll, { $type: TName }>] extends [never]
-		? TAll
-		: Extract<TAll, { $type: TName }>
+	? Extract<TAll, { $type: TName }> | WidenedOf<TAll>
 	: TAll;
 
 interface RuntimeNode {
