@@ -7,6 +7,7 @@ import {
 	bindRegistry,
 	createRegistry,
 	safeParseStandardSchema,
+	safeParseTree,
 	type BaseRegistration,
 	type ReadOnlyRegistry,
 } from '../src';
@@ -24,6 +25,23 @@ function thrown(build: () => unknown): unknown {
 }
 
 const withPaths = (childPaths: unknown) => ({ ...card, childPaths }) as unknown as BaseRegistration;
+
+/** A registry of one tree node, `card`, whose schema returns whatever `transform` makes of the input. */
+function parsing(transform: (input: Record<string, unknown>) => unknown) {
+	return createRegistry('Widget', [
+		{
+			...card,
+			schema: {
+				'~standard': {
+					version: 1,
+					vendor: 'test',
+					validate: (value: unknown) => ({ value: transform(value as Record<string, unknown>) }),
+				},
+			},
+			childPaths: [{ keys: ['items'] }],
+		} as unknown as BaseRegistration,
+	]);
+}
 
 describe('RegistryError', () => {
 	describe('Scenario: Building a registry fails with a code', () => {
@@ -50,29 +68,26 @@ describe('RegistryError', () => {
 				code: 'invalid-child-paths',
 				kind: 'Widget',
 				$type: 'card',
-				message: "Widget 'card' childPaths must be a list of key paths.",
+				message: "Widget 'card' childPaths must be a list of child paths.",
 			});
 		});
 
-		it("'invalid-child-paths' covers an entry that is not a non-empty list of non-empty keys", () => {
-			const error = thrown(() => createRegistry('Widget', [withPaths([['blocks', '']])]));
+		it("'invalid-child-paths' covers an entry whose keys are not a non-empty list of non-empty strings", () => {
+			const error = thrown(() => createRegistry('Widget', [withPaths([{ keys: ['blocks', ''] }])]));
 
 			expect(error).toBeInstanceOf(RegistryError);
 			expect(error).toMatchObject({
 				code: 'invalid-child-paths',
 				kind: 'Widget',
 				$type: 'card',
-				message: "Widget 'card' childPaths must hold non-empty lists of non-empty keys.",
+				message: "Widget 'card' childPaths[0].keys must be a non-empty list of non-empty strings.",
 			});
 		});
 
 		it("'duplicate-child-path' names the repeated path", () => {
 			const error = thrown(() =>
 				createRegistry('Widget', [
-					withPaths([
-						['engine', 'controls'],
-						['engine', 'controls'],
-					]),
+					withPaths([{ keys: ['engine', 'controls'] }, { keys: ['engine', 'controls'] }]),
 				]),
 			);
 
@@ -87,7 +102,9 @@ describe('RegistryError', () => {
 		});
 
 		it("'nested-child-path' names the path and the one it runs through", () => {
-			const error = thrown(() => createRegistry('Widget', [withPaths([['engine'], ['engine', 'controls']])]));
+			const error = thrown(() =>
+				createRegistry('Widget', [withPaths([{ keys: ['engine'] }, { keys: ['engine', 'controls'] }])]),
+			);
 
 			expect(error).toBeInstanceOf(RegistryError);
 			expect(error).toMatchObject({
@@ -110,6 +127,52 @@ describe('RegistryError', () => {
 				$type: 'card',
 				message: "Widget 'card' is registered twice.",
 			});
+		});
+	});
+
+	describe('Scenario: Parsing a tree fails with a code when a schema contradicts its registration', () => {
+		it("'schema-changes-type' names the kind and the $type", () => {
+			const error = thrown(() =>
+				safeParseTree(
+					parsing(() => ({})),
+					{ $type: 'card' },
+				),
+			);
+
+			expect(error).toBeInstanceOf(RegistryError);
+			expect(error).toMatchObject({
+				code: 'schema-changes-type',
+				kind: 'Widget',
+				$type: 'card',
+				message: "Widget 'card' schema output must keep its $type 'card'.",
+			});
+		});
+
+		it("'schema-breaks-child-path' names the kind, the $type and the child path", () => {
+			const error = thrown(() =>
+				safeParseTree(
+					parsing((input) => ({ $type: input.$type })),
+					{ $type: 'card', items: [{ $type: 'card' }] },
+				),
+			);
+
+			expect(error).toBeInstanceOf(RegistryError);
+			expect(error).toMatchObject({
+				code: 'schema-breaks-child-path',
+				kind: 'Widget',
+				$type: 'card',
+				childPath: ['items'],
+				message: "Widget 'card' schema output does not keep the child path 'items' as the document has it.",
+			});
+		});
+
+		it('leaves kind out when the lookup is no registry, since a function has no label', () => {
+			const registry = parsing(() => ({}));
+			const error = thrown(() => safeParseTree({ get: (type: string) => registry.get(type) }, { $type: 'card' }));
+
+			expect(error).toBeInstanceOf(RegistryError);
+			expect((error as RegistryError).kind).toBeUndefined();
+			expect((error as RegistryError).message).toBe("'card' schema output must keep its $type 'card'.");
 		});
 	});
 
@@ -167,7 +230,7 @@ describe('RegistryError', () => {
 		const templates: Record<RegistryErrorCode, (error: RegistryError) => string> = {
 			'invalid-schema': (e) =>
 				`${e.kind} '${e.$type}' schema must implement Standard Schema (~standard.validate).`,
-			'invalid-child-paths': (e) => `${e.kind} '${e.$type}' childPaths must be a list of key paths.`,
+			'invalid-child-paths': (e) => `${e.kind} '${e.$type}' childPaths must be a list of child paths.`,
 			'duplicate-child-path': (e) =>
 				`${e.kind} '${e.$type}' declares the child path '${e.childPath?.join('.')}' twice.`,
 			'nested-child-path': (e) =>
@@ -177,22 +240,30 @@ describe('RegistryError', () => {
 			'missing-binding': (e) => `${e.kind} '${e.$type}' has no binding.`,
 			'binding-overrides-contract': (e) =>
 				`${e.kind} '${e.$type}' binding sets '${e.key}', which the contract defines.`,
+			'schema-changes-type': (e) => `${e.kind} '${e.$type}' schema output must keep its $type '${e.$type}'.`,
+			'schema-breaks-child-path': (e) =>
+				`${e.kind} '${e.$type}' schema output does not keep the child path '${e.childPath?.join('.')}' as the document has it.`,
 		};
 		const failures: Record<RegistryErrorCode, () => unknown> = {
 			'invalid-schema': () => createRegistry('Widget', [{ ...badge, schema: {} } as unknown as BaseRegistration]),
 			'invalid-child-paths': () => createRegistry('Widget', [withPaths('blocks')]),
 			'duplicate-child-path': () =>
-				createRegistry('Widget', [
-					withPaths([
-						['a', 'b'],
-						['a', 'b'],
-					]),
-				]),
-			'nested-child-path': () => createRegistry('Widget', [withPaths([['a'], ['a', 'b']])]),
+				createRegistry('Widget', [withPaths([{ keys: ['a', 'b'] }, { keys: ['a', 'b'] }])]),
+			'nested-child-path': () => createRegistry('Widget', [withPaths([{ keys: ['a'] }, { keys: ['a', 'b'] }])]),
 			'duplicate-type': () => createRegistry('Widget', [badge, badge], { duplicates: 'error' }),
 			'unknown-binding': () => bindUnchecked(contracts, { card: {}, badge: {}, crad: {} }),
 			'missing-binding': () => bindUnchecked(contracts, { card: {} }),
 			'binding-overrides-contract': () => bindUnchecked(contracts, { card: { metadata: {} }, badge: {} }),
+			'schema-changes-type': () =>
+				safeParseTree(
+					parsing(() => ({})),
+					{ $type: 'card' },
+				),
+			'schema-breaks-child-path': () =>
+				safeParseTree(
+					parsing((input) => ({ $type: input.$type })),
+					{ $type: 'card', items: [{ $type: 'card' }] },
+				),
 		};
 
 		it.each(Object.keys(failures) as RegistryErrorCode[])('%s', (code) => {
@@ -216,7 +287,7 @@ describe('RegistryError', () => {
 		});
 	});
 
-	describe('Scenario: Parsing is not building', () => {
+	describe('Scenario: Parsing a document is not building', () => {
 		it('leaves an asynchronous Standard Schema a plain Error', () => {
 			const asyncSchema = {
 				'~standard': { version: 1, vendor: 'test', validate: async () => ({ value: 1 }) },

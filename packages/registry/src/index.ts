@@ -7,3 +7,4 @@ export * from './standard-schema.js';
 export * from './parse-node.js';
 export * from './parse-tree.js';
 export * from './format-issue-path.js';
+export type { NodeData, TreeRegistration } from './tree-types.js';

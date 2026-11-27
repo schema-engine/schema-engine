@@ -67,7 +67,7 @@ export function resolve(json: string): string {
 }
 ```
 
-`safeParseNode` never throws for a bad node, and it supports synchronous schemas only. Each issue has a `path`. Pass where the node sits in its document as a third argument and every path starts with it, which is how [`safeParseTree`](/docs/registry/resolve-a-document) reports the issues of a whole tree by position.
+`safeParseNode` never throws for a bad node, and it supports synchronous schemas only. Each issue has a `path`. Pass where the node sits in its document as the `path` option, `safeParseNode(badges, node, { path: [index] })`, and every path starts with it, which is how [`safeParseTree`](/docs/registry/resolve-a-document) reports the issues of a whole tree by position.
 
 ### 3. Run it
 
@@ -129,7 +129,12 @@ interface BaseRegistration<_TConfig = unknown, TMeta extends RegistrationMetadat
 	$type: string;
 	schema: StandardSchemaV1;
 	metadata: TMeta;
-	readonly childPaths?: readonly (readonly string[])[];
+	readonly childPaths?: readonly ChildPath[];
+}
+
+interface ChildPath {
+	readonly keys: readonly string[];
+	readonly accepts?: readonly string[];
 }
 
 interface ComponentRegistration<
@@ -145,11 +150,11 @@ interface ComponentRegistration<
 
 - `$type` is the stable key. `schema` is any Standard Schema value, and Zod, Valibot and Effect Schema all qualify. `metadata` carries the human-readable part.
 - `BaseRegistration` takes a config type parameter, `_TConfig`, that the interface does not use today. `schema` is a plain `StandardSchemaV1`, so a registration's config type does not constrain it, and its input and output stay distinct.
-- `childPaths` says where a node of this `$type` holds child nodes: `[['blocks'], ['engine', 'controls']]` is `node.blocks` and `node.engine.controls`, each one node or an array of nodes. [`safeParseTree`](/docs/registry/resolve-a-document) reads it to validate a whole document; `createRegistry` checks it when it builds.
+- `childPaths` says where a node of this `$type` holds child nodes, and which `$type`s each place accepts: `[{ keys: ['blocks'], accepts: ['block'] }, { keys: ['engine', 'controls'] }]` is `node.blocks`, which takes only `block` nodes, and `node.engine.controls`, which takes any registered `$type`. Each place holds one node or an array of nodes. [`safeParseTree`](/docs/registry/resolve-a-document) reads it to validate a whole document; `createRegistry` checks it when it builds.
 - A `ComponentRegistration` adds a `render` function whose props you type with the third parameter. A registry that mixes several of them holds `render` functions of different props, so a kind of your own, as in the quick start, is often simpler.
 
 ## Where to go next
 
 - [Read-only and mutable registries](/docs/registry/registries): `createRegistry` against `BaseRegistry`, and overriding a default.
-- [Resolve a document](/docs/registry/resolve-a-document): a tree of nodes, a registry per kind, issues with paths.
+- [Resolve a document](/docs/registry/resolve-a-document): a tree of nodes, the `$type`s each position accepts, the parsed document, issues with paths.
 - [API reference](/docs/registry/api-reference): every export.

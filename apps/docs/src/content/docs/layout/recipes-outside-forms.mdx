@@ -142,7 +142,7 @@ export const sampler: CardDocument = {
 };
 ```
 
-The content here is text. A host whose slots hold nodes of a registry of its own validates them with [`safeParseTree`](/docs/registry/resolve-a-document), which walks the `childPaths` of each registration.
+The content here is text. A host whose slots hold nodes of a registry of its own validates them with [`safeParseTree`](/docs/registry/resolve-a-document), which walks the `childPaths` of each registration and checks each slot against the `accepts` list it declares.
 
 ## Bind it for React
 

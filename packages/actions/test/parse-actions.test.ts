@@ -80,7 +80,12 @@ describe('parseActions', () => {
 		expect(result.success).toBe(false);
 		if (result.success) return;
 		expect(result.issues).toEqual([
-			{ path: [0, 0, '$type'], message: "No registration for $type 'put'. Register it in the action registry." },
+			{
+				path: [0, 0, '$type'],
+				message: "No registration for $type 'put'. Register it in the action registry.",
+				code: 'registry/unregistered-type',
+				received: 'put',
+			},
 		]);
 	});
 
@@ -91,7 +96,14 @@ describe('parseActions', () => {
 
 		expect(result).toEqual({
 			success: false,
-			issues: [{ path: [0, '$type'], message: "No registration for $type 'put'. Register it with the domain." }],
+			issues: [
+				{
+					path: [0, '$type'],
+					message: "No registration for $type 'put'. Register it with the domain.",
+					code: 'registry/unregistered-type',
+					received: 'put',
+				},
+			],
 		});
 	});
 
@@ -116,9 +128,9 @@ describe('parseActions', () => {
 		expect(parseActions(registry, [null, 'post', { id: 'x' }])).toEqual({
 			success: false,
 			issues: [
-				{ path: [0], message: 'Expected an object with a string $type.' },
-				{ path: [1], message: 'Expected an object with a string $type.' },
-				{ path: [2, '$type'], message: 'Expected a string $type.' },
+				{ path: [0], message: 'Expected an object with a string $type.', code: 'registry/not-an-object' },
+				{ path: [1], message: 'Expected an object with a string $type.', code: 'registry/not-an-object' },
+				{ path: [2, '$type'], message: 'Expected a string $type.', code: 'registry/missing-type' },
 			],
 		});
 		expect(parseActions(registry, { $type: 'post' })).toMatchObject({

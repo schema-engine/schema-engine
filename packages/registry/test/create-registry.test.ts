@@ -183,3 +183,92 @@ describe('createRegistry', () => {
 		});
 	});
 });
+
+describe('createRegistry childPaths', () => {
+	const layout: BaseRegistration = {
+		$type: 'layout',
+		schema: z.looseObject({ $type: z.literal('layout') }),
+		metadata: { name: 'Layout' },
+	};
+	const withPaths = (childPaths: unknown) => ({ ...layout, childPaths }) as unknown as BaseRegistration;
+	const build = (childPaths: unknown) => () => createRegistry('Widget', [withPaths(childPaths)]);
+	const keysMessage = "Widget 'layout' childPaths[0].keys must be a non-empty list of non-empty strings.";
+	const acceptsMessage =
+		"Widget 'layout' childPaths[0].accepts must be a non-empty list of non-empty $types when present.";
+	const entryMessage = "Widget 'layout' childPaths[0] must be an object { keys, accepts? }.";
+
+	it('builds a path as { keys } and as { keys, accepts }', () => {
+		const registry = createRegistry('Widget', [
+			withPaths([{ keys: ['blocks'] }, { keys: ['engine', 'controls'], accepts: ['knob', 'dial'] }]),
+		]);
+
+		expect(registry.get('layout')?.childPaths).toEqual([
+			{ keys: ['blocks'] },
+			{ keys: ['engine', 'controls'], accepts: ['knob', 'dial'] },
+		]);
+	});
+
+	it('builds a registration with no child path', () => {
+		expect(createRegistry('Widget', [layout]).get('layout')).not.toHaveProperty('childPaths');
+	});
+
+	it.each([
+		['a childPaths that is not a list', 'blocks', "Widget 'layout' childPaths must be a list of child paths."],
+		['an entry that is a list of keys', [['blocks']], entryMessage],
+		['an entry that is a string', ['blocks'], entryMessage],
+		['an entry that is null', [null], entryMessage],
+		[
+			'a property other than keys and accepts, such as accept',
+			[{ keys: ['blocks'], accept: ['block'] }],
+			"Widget 'layout' childPaths[0] has the property 'accept', which a child path does not have.",
+		],
+		['no keys', [{}], keysMessage],
+		['empty keys', [{ keys: [] }], keysMessage],
+		['a key that is not a string', [{ keys: [1] }], keysMessage],
+		['an empty key', [{ keys: ['blocks', ''] }], keysMessage],
+		['an empty accepts', [{ keys: ['blocks'], accepts: [] }], acceptsMessage],
+		['an accepts that is not a list', [{ keys: ['blocks'], accepts: 'block' }], acceptsMessage],
+		['a name that is not a non-empty string', [{ keys: ['blocks'], accepts: ['block', ''] }], acceptsMessage],
+		[
+			'a name listed twice',
+			[{ keys: ['blocks'], accepts: ['block', 'block'] }],
+			"Widget 'layout' childPaths[0].accepts names 'block' twice.",
+		],
+	])('throws invalid-child-paths for %s', (_name, childPaths, message) => {
+		expect(build(childPaths)).toThrow(
+			expect.objectContaining({ code: 'invalid-child-paths', kind: 'Widget', $type: 'layout', message }),
+		);
+	});
+
+	it('throws duplicate-child-path for the same keys twice, whatever accepts says', () => {
+		expect(build([{ keys: ['blocks'] }, { keys: ['blocks'], accepts: ['block'] }])).toThrow(
+			expect.objectContaining({
+				code: 'duplicate-child-path',
+				childPath: ['blocks'],
+				message: "Widget 'layout' declares the child path 'blocks' twice.",
+			}),
+		);
+	});
+
+	it('throws nested-child-path for a path that runs through another, in either order', () => {
+		const message = "Widget 'layout' child path 'engine.controls' runs through the child path 'engine'.";
+
+		expect(build([{ keys: ['engine'] }, { keys: ['engine', 'controls'] }])).toThrow(
+			expect.objectContaining({
+				code: 'nested-child-path',
+				childPath: ['engine', 'controls'],
+				outerChildPath: ['engine'],
+				message,
+			}),
+		);
+		expect(build([{ keys: ['engine', 'controls'] }, { keys: ['engine'] }])).toThrow(message);
+	});
+
+	it('builds paths that share a first key without one running through the other', () => {
+		expect(build([{ keys: ['engine', 'controls'] }, { keys: ['engine', 'meters'] }])).not.toThrow();
+	});
+
+	it('compares paths key by key, so [a.b] and [a, b] are two paths', () => {
+		expect(build([{ keys: ['a.b'] }, { keys: ['a', 'b'] }])).not.toThrow();
+	});
+});

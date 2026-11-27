@@ -59,31 +59,32 @@ export const radiantWidgets = bindRegistry(contracts, {
 - The result is a `BoundRegistry`, a frozen registry built with `createRegistry`: the contracts' order, every schema checked again. For contracts typed by literal `$type` (an inline list), `get('card')` returns that registration (a `BoundRegistration`, the contract with its binding) without `undefined`, and a missing binding, an extra one (`crad`) and a binding that sets a contract key (`schema`, `metadata`) are compile errors. `RegistryBindings<typeof contracts, ReactBinding>` with `satisfies` fixes the shape every binding of a renderer takes.
 - Whatever the typing, the build throws a `RegistryError` (codes `'missing-binding'`, `'unknown-binding'` and `'binding-overrides-contract'`) naming the `kind`: `Widget 'badge' has no binding.`, `Widget binding 'crad' names no registration.` and `Widget 'card' binding sets 'schema', which the contract defines.`
 
-Errors while building or binding are a `RegistryError` (`error.code` of type `RegistryErrorCode`, always with `kind` and `$type`). Branch on the code, not on the message, which may be reworded:
+Errors while building or binding, and a tree parse whose schema contradicts its registration, are a `RegistryError` (`error.code` of type `RegistryErrorCode`, always with `$type`, and `kind` unless a parse went through a lookup that is no registry). Branch on the code, not on the message, which may be reworded:
 
 - `'invalid-schema'`: a `schema` without `~standard.validate`.
-- `'invalid-child-paths'`: `childPaths` is not a list, or an entry is not a non-empty list of non-empty keys.
-- `'duplicate-child-path'`: the same child path (`childPath`) twice. `'nested-child-path'`: a child path (`childPath`) that runs through another (`outerChildPath`).
+- `'invalid-child-paths'`: `childPaths` is not a list, or an entry is not `{ keys, accepts? }` (another property such as `accept`, empty or non-string `keys`, an empty `accepts`, a name that is empty or listed twice).
+- `'duplicate-child-path'`: the same child path (`childPath`, the same keys) twice. `'nested-child-path'`: a child path (`childPath`) that runs through another (`outerChildPath`).
 - `'duplicate-type'`: a repeated `$type` with `duplicates: 'error'`.
 - `'unknown-binding'`: a binding key no contract answers (`$type` is that key). `'missing-binding'`: a contract with no binding. `'binding-overrides-contract'`: a binding that sets a key (`key`) its contract defines.
+- `'schema-changes-type'` and `'schema-breaks-child-path'` (`childPath`): `safeParseTree` parsed a node whose schema returned an output without the node's own `$type`, or that does not keep a child path as the document has it. They are bugs of the registration, never issues of the document.
 
 `assertStandardSchema` on its own and errors while parsing (`safeParseStandardSchema` and `safeParseNode` with an asynchronous schema) are plain `Error`s, and `parseYaml` throws `YamlDocumentError`.
 
 `safeParseStandardSchema(schema, value)` runs a registration's schema without throwing and returns `{ success: true, data }` or `{ success: false, error: { issues } }` (it throws for a schema that validates asynchronously). Form validation and `parseActions` both go through it; `assertStandardSchema` is the build-time check on its own. `standardSchema(validate)` builds a Standard Schema from a function that returns `{ value }` or `{ issues }`, for a registration whose check is not a schema library's.
 
-`safeParseNode(registry, node, path?)` checks one node of a document: it looks `node.$type` up in the registry (anything with `get(key)`, and optionally `hint`, a sentence added to the message of an unregistered `$type`, such as where to register it), validates the node with the registration's schema and returns `{ success: true, $type, registration, data }` or `{ success: false, issues }`. For a registry typed by its registrations (`createRegistry` keeps the literal `$type` of an inline list), checking `parsed.$type` narrows `registration` and `data` to that registration's schema output with no cast; `data` is `unknown` for a registry typed as `BaseRegistration`. A node that is not an object with a string `$type`, and a `$type` no registration answers, are issues, not throws; the second reads `No registration for $type '<type>'.` and then the hint, and `unregisteredTypeMessage(type, hint?)` writes the same text for a caller that throws instead. Every issue's `path` starts with `path`, the position of the node in its document, so a walk over a tree passes each child its own.
+`safeParseNode(registry, node, options?)` checks one node of a document: it looks `node.$type` up in the registry (anything with `get(key)`, and optionally `hint`, a sentence added to the message of an unregistered `$type`, such as where to register it), validates the node with the registration's schema and returns `{ success: true, $type, registration, data }` or `{ success: false, issues }`. For a registry typed by its registrations (`createRegistry` keeps the literal `$type` of an inline list), checking `parsed.$type` narrows `registration` and `data` to that registration's schema output with no cast; `data` is `unknown` for a registry typed as `BaseRegistration`. A node that is not an object with a string `$type`, and a `$type` no registration answers, are issues, not throws; the second reads `No registration for $type '<type>'.` and then the hint, and `unregisteredTypeMessage(type, hint?)` writes the same text for a caller that throws instead. Every issue's `path` starts with `options.path`, the position of the node in its document, so a walk over a tree passes each child its own. `options.accepts` is a non-empty list of the `$type`s the node may have: another `$type` is the issue `registry/not-accepted` (with `expected` and `received`), checked before the lookup. The issues the engine creates carry a namespaced `code`: `registry/not-an-object`, `registry/missing-type`, `registry/unregistered-type`, `registry/not-accepted`, `registry/not-a-node` and `registry/contains-itself`; an issue from a schema is its library's own.
 
 ```ts title="registry/draw-node.ts"
 import { formatIssuePath, safeParseNode } from '@schema-engine/registry';
 import { widgets } from './widgets';
 
 export function nodeIssues(node: unknown, index: number): string[] {
-	const parsed = safeParseNode(widgets, node, ['children', index]);
+	const parsed = safeParseNode(widgets, node, { path: ['children', index] });
 	return parsed.success ? [] : parsed.issues.map((issue) => `${formatIssuePath(issue.path)}: ${issue.message}`);
 }
 ```
 
-`safeParseTree(registry, root, path?)` checks a whole document in one call. A registration says where its children are with `childPaths`, a list of key paths into the node (`[['sections']]`, or `[['blocks'], ['engine', 'controls']]`), each to one node or an array of nodes; `createRegistry` checks the paths when it builds. Every node goes through `safeParseNode` at its full path, a node whose schema fails is not walked further but its siblings still are, a value at a child path that is no node is `Expected a node or a list of nodes.` at that path, and a node that contains itself is an issue, not an overflow. It returns `{ success: true, tree }` or `{ success: false, issues }` with every issue and no tree. A `tree` node is a `ParsedNode`, `{ $type, registration, data, path, children }`, with `children` keyed by the child path joined with dots (`'engine.controls'`); checking `$type` narrows `data` as it does on `safeParseNode`.
+`safeParseTree(registry, root, options?)` checks a whole document in one call. A registration says where its children are with `childPaths`, a list of `{ keys, accepts? }`: `keys` is the list of keys from the node to the slot (`['sections']`, or `['engine', 'controls']`), relative and without indexes, and `accepts` is a closed, non-empty list of the `$type`s allowed there (leave it out for any `$type` the lookup answers). The slot holds one node or an array of nodes. Keep the slot opaque in the parent's schema (`z.array(z.unknown())`) and declare every child key there: `accepts` is the only way to restrict a slot, and `createRegistry` fails to compile a child path whose key the schema output does not declare. `options.accepts` restricts the root and `options.path` is where it sits in a larger document. Every node goes through `safeParseNode` at its full path and the `accepts` of its position, a node whose schema fails is not walked further but its siblings still are, a value at a child path that is no node (`null`, a primitive) is `registry/not-a-node` at that path, and a node that contains itself is `registry/contains-itself`, not an overflow. It returns `{ success: true, tree }` or `{ success: false, issues }` with every issue and no tree. `tree.data` is the parsed document, typed per child path, with defaults and transforms of every level applied; a `tree` node is a `ParsedNode`, `{ $type, registration, data, path, children }`, whose `data` is that node's composed data and whose `children` is a list of `{ keys, nodes }`, one per declared path in declaration order (find one with `children.find(({ keys }) => ...)`, never by index). The parent schema must keep `$type` and the slot the way the document has it, or `safeParseTree` throws a `RegistryError`. The root narrows from a literal `accepts`. Two registries in one parse go through one lookup: `{ get: (type) => a.get(type) ?? b.get(type) }`, and the first that answers wins.
 
 ```ts title="registry/check-tree.ts"
 import * as z from 'zod/mini';
@@ -92,28 +93,27 @@ import { createRegistry, formatIssuePath, safeParseTree } from '@schema-engine/r
 const nodes = createRegistry('Node', [
 	{
 		$type: 'page',
-		schema: z.looseObject({ $type: z.literal('page'), sections: z.array(z.looseObject({ $type: z.string() })) }),
+		schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
 		metadata: { name: 'Page' },
-		childPaths: [['sections']],
+		childPaths: [{ keys: ['sections'], accepts: ['section'] }],
 	},
 	{
 		$type: 'section',
-		schema: z.looseObject({ $type: z.literal('section'), title: z.string() }),
+		schema: z.object({ $type: z.literal('section'), title: z.string() }),
 		metadata: { name: 'Section' },
 	},
 ]);
 
 export function documentIssues(document: unknown): string[] {
-	const parsed = safeParseTree(nodes, document);
+	const parsed = safeParseTree(nodes, document, { accepts: ['page'] });
 	return parsed.success
 		? []
 		: parsed.issues.map((issue) => `${formatIssuePath(issue.path, document)}: ${issue.message}`);
 }
 
 export function sectionTitles(document: unknown): string[] {
-	const parsed = safeParseTree(nodes, document);
-	const sections = parsed.success ? [parsed.tree.children.sections ?? []].flat() : [];
-	return sections.flatMap((section) => (section.$type === 'section' ? [section.data.title] : []));
+	const parsed = safeParseTree(nodes, document, { accepts: ['page'] });
+	return parsed.success ? parsed.tree.data.sections.map((section) => section.title) : [];
 }
 ```
 

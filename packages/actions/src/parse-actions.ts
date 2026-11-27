@@ -4,6 +4,7 @@ import {
 	standardSchema,
 	type BaseRegistration,
 	type NodeLookup,
+	type RegistryIssue,
 	type StandardSchemaIssue,
 } from '@schema-engine/registry';
 import type { ActionConfigBase, ParsedAction, ParsedActionSequence } from './types';
@@ -37,9 +38,11 @@ export interface ParseActionsOptions {
  * a group, then the path the schema reported (`[1, 0, 'endpoint']`). Each entry is checked by `safeParseNode`, so its
  * issues sit where that function puts them: an entry that is not an object at the entry, and a missing or unregistered
  * `$type` at `$type`. An unregistered `$type` says where to register it ({@link ParseActionsOptions.hint}). An empty group is an issue at its index.
+ * An issue the registry creates has its namespaced `code` (`registry/unregistered-type` with `received`, say); the ones
+ * of the engine's own checks have none.
  */
 export type ParseActionsResult<TConfig extends ActionConfigBase = ActionConfigBase> =
-	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: StandardSchemaIssue[] };
+	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: RegistryIssue[] };
 
 function isRecord(value: unknown): value is Record<PropertyKey, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -158,7 +161,7 @@ export function parseActions<TConfig extends ActionConfigBase = ActionConfigBase
 	const issues: StandardSchemaIssue[] = [];
 	const sequence: Array<ParsedAction<TConfig> | Array<ParsedAction<TConfig>>> = [];
 	const collect = (entry: unknown, path: ReadonlyArray<PropertyKey>): ParsedAction<TConfig> | undefined => {
-		const parsed = safeParseNode(entries, entry, path);
+		const parsed = safeParseNode(entries, entry, { path });
 		if (parsed.success) return parsed.data as ParsedAction<TConfig>;
 		issues.push(...parsed.issues);
 		return undefined;

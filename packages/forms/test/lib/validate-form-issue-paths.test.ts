@@ -120,6 +120,8 @@ describe('validation issue paths', () => {
 			{
 				path: ['view', '$type'],
 				message: "No registration for $type 'nope'. Register it with createFormEngine({ recipes: [...] }).",
+				code: 'registry/unregistered-type',
+				params: { received: 'nope' },
 			},
 		]);
 	});
@@ -131,6 +133,8 @@ describe('validation issue paths', () => {
 			{
 				path: ['view', '$type'],
 				message: "No registration for $type ''. Register it with createFormEngine({ recipes: [...] }).",
+				code: 'registry/unregistered-type',
+				params: { received: '' },
 			},
 		]);
 	});
@@ -175,6 +179,8 @@ describe('validation issue paths', () => {
 			{
 				path: ['steps', 0, 'elements', 1, 'elements', 1, 'rules', 1, '$type'],
 				message: expect.stringMatching(/^No registration for \$type 'unregistered'\./),
+				code: 'registry/unregistered-type',
+				params: { received: 'unregistered' },
 			},
 			{
 				path: ['steps', 0, 'elements', 1, 'elements', 1, 'rules', 2, 'value'],
@@ -277,8 +283,17 @@ describe('validation issue paths', () => {
 			throw new Error('expected the element to be invalid');
 		};
 
-		expect(issuesOfElement(null)).toEqual([{ path: [], message: 'Expected an object with a string $type.' }]);
-		expect(issuesOfElement({ id: 'x' })).toEqual([{ path: ['$type'], message: 'Expected a string $type.' }]);
+		expect(issuesOfElement(null)).toEqual([
+			{
+				path: [],
+				message: 'Expected an object with a string $type.',
+				code: 'registry/not-an-object',
+				params: {},
+			},
+		]);
+		expect(issuesOfElement({ id: 'x' })).toEqual([
+			{ path: ['$type'], message: 'Expected a string $type.', code: 'registry/missing-type', params: {} },
+		]);
 	});
 
 	test('an unknown element type says where to register it, inside a container too', () => {
@@ -290,6 +305,8 @@ describe('validation issue paths', () => {
 			{
 				path: ['steps', 0, 'elements', 0, 'elements', 0, '$type'],
 				message: "No registration for $type 'phone'. Register it with createFormEngine({ elements: [...] }).",
+				code: 'registry/unregistered-type',
+				params: { received: 'phone' },
 			},
 		]);
 	});
@@ -304,6 +321,8 @@ describe('validation issue paths', () => {
 			{
 				path: ['actions', 0, '$type'],
 				message: "No registration for $type 'missing'. Register it with createFormEngine({ actions: [...] }).",
+				code: 'registry/unregistered-type',
+				params: { received: 'missing' },
 			},
 		]);
 
@@ -534,11 +553,20 @@ describe('issue codes', () => {
 		expect(issues[0]).toMatchObject({ code: 'unrecognized_keys', params: { keys: ['bogus'] } });
 	});
 
-	test('an issue the engine finds itself has no code', () => {
+	test('an issue the registry finds carries its namespaced code and what it received', () => {
 		const issues = issuesOf(formWith([named('a')], { view: { $type: 'nope' } }));
 
-		expect(issues[0]).not.toHaveProperty('code');
-		expect(issues[0]).not.toHaveProperty('params');
+		expect(issues[0]).toMatchObject({ code: 'registry/unregistered-type', params: { received: 'nope' } });
+	});
+
+	test('an issue the forms engine finds itself has no code', () => {
+		const issues = issuesOf(formWith([named('a')], { payload: { a: 1 } }));
+
+		expect(issues.length).toBeGreaterThan(0);
+		for (const issue of issues) {
+			expect(issue).not.toHaveProperty('code');
+			expect(issue).not.toHaveProperty('params');
+		}
 	});
 });
 

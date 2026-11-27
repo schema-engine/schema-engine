@@ -147,7 +147,7 @@ export const components = createRegistry('Component', [button, badge, callout]);
 
 ## The document component
 
-`DocumentView` draws a list of nodes. For each node, `safeParseNode` looks the `$type` up in the registry and validates the node against the registration's schema, and it never throws. The third argument is where the node sits in the document, so every issue's `path` starts with the node's index. A node that passes is drawn by its registration. A node that fails is drawn as its issues, in its place.
+`DocumentView` draws a list of nodes. For each node, `safeParseNode` looks the `$type` up in the registry and validates the node against the registration's schema, and it never throws. Its `path` option is where the node sits in the document, so every issue's `path` starts with the node's index. A node that passes is drawn by its registration. A node that fails is drawn as its issues, in its place.
 
 `ServerDocument` fetches the document and hands it to `DocumentView`. A status that is not a success, a network failure and a body that is not JSON are one message, and the request is aborted when the component unmounts or the `url` changes.
 
@@ -179,7 +179,7 @@ export function DocumentView({ nodes }: { nodes: unknown }) {
 	return (
 		<>
 			{nodes.map((node: unknown, index) => {
-				const parsed = safeParseNode(components, node, [index]);
+				const parsed = safeParseNode(components, node, { path: [index] });
 				return parsed.success ? (
 					<Fragment key={index}>{parsed.registration.render(parsed.data)}</Fragment>
 				) : (

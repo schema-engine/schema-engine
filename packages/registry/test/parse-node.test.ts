@@ -26,7 +26,7 @@ describe('safeParseNode', () => {
 
 	it('puts the path of the node in front of the path of each schema issue', () => {
 		const node: unknown = JSON.parse('{ "$type": "badge", "label": 5, "tone": 1 }');
-		const result = safeParseNode(badges, node, ['children', 2]);
+		const result = safeParseNode(badges, node, { path: ['children', 2] });
 
 		expect(!result.success && result.issues.map((issue) => issue.path)).toEqual([
 			['children', 2, 'label'],
@@ -42,19 +42,31 @@ describe('safeParseNode', () => {
 	});
 
 	it('reports a $type no registration answers at its $type', () => {
-		expect(safeParseNode(badges, { $type: 'chip' }, [1])).toEqual({
+		expect(safeParseNode(badges, { $type: 'chip' }, { path: [1] })).toEqual({
 			success: false,
-			issues: [{ message: "No registration for $type 'chip'.", path: [1, '$type'] }],
+			issues: [
+				{
+					code: 'registry/unregistered-type',
+					message: "No registration for $type 'chip'.",
+					path: [1, '$type'],
+					received: 'chip',
+				},
+			],
 		});
 	});
 
 	it('adds the hint of the lookup to the message of a $type no registration answers', () => {
 		const lookup = { get: (type: string) => badges.get(type), hint: 'Register it with defineBadge.' };
 
-		expect(safeParseNode(lookup, { $type: 'chip' }, [1])).toEqual({
+		expect(safeParseNode(lookup, { $type: 'chip' }, { path: [1] })).toEqual({
 			success: false,
 			issues: [
-				{ message: "No registration for $type 'chip'. Register it with defineBadge.", path: [1, '$type'] },
+				{
+					code: 'registry/unregistered-type',
+					message: "No registration for $type 'chip'. Register it with defineBadge.",
+					path: [1, '$type'],
+					received: 'chip',
+				},
 			],
 		});
 	});
@@ -81,18 +93,99 @@ describe('safeParseNode', () => {
 	it.each([null, undefined, 'badge', 7, []])(
 		'reports %j, which is not an object, at the path of the node',
 		(node) => {
-			expect(safeParseNode(badges, node, [3])).toEqual({
+			expect(safeParseNode(badges, node, { path: [3] })).toEqual({
 				success: false,
-				issues: [{ message: 'Expected an object with a string $type.', path: [3] }],
+				issues: [
+					{ code: 'registry/not-an-object', message: 'Expected an object with a string $type.', path: [3] },
+				],
 			});
 		},
 	);
 
 	it.each([{}, { $type: 7 }])('reports %j, an object without a string $type, at its $type', (node) => {
-		expect(safeParseNode(badges, node, [3])).toEqual({
+		expect(safeParseNode(badges, node, { path: [3] })).toEqual({
 			success: false,
-			issues: [{ message: 'Expected a string $type.', path: [3, '$type'] }],
+			issues: [{ code: 'registry/missing-type', message: 'Expected a string $type.', path: [3, '$type'] }],
 		});
+	});
+
+	describe('accepts', () => {
+		it('lets a $type of the list through to the schema', () => {
+			expect(
+				safeParseNode(badges, { $type: 'badge', label: 'Paid' }, { accepts: ['badge', 'chip'] }).success,
+			).toBe(true);
+		});
+
+		it('gives a $type outside the list the issue registry/not-accepted at its $type, with expected and received', () => {
+			const result = safeParseNode(
+				badges,
+				{ $type: 'badge', label: 'Paid' },
+				{ accepts: ['chip'], path: ['items', 0] },
+			);
+
+			expect(result).toEqual({
+				success: false,
+				issues: [
+					{
+						code: 'registry/not-accepted',
+						message: "$type 'badge' is not accepted here. Expected 'chip'.",
+						path: ['items', 0, '$type'],
+						expected: ['chip'],
+						received: 'badge',
+					},
+				],
+			});
+		});
+
+		it('reads Expected one of for a list of several', () => {
+			const result = safeParseNode(badges, { $type: 'badge' }, { accepts: ['chip', 'tag'] });
+
+			expect(!result.success && result.issues[0]?.message).toBe(
+				"$type 'badge' is not accepted here. Expected one of 'chip', 'tag'.",
+			);
+		});
+
+		it('is checked before the lookup, so a $type nothing registers is not accepted, not unregistered', () => {
+			const result = safeParseNode(badges, { $type: 'chip' }, { accepts: ['badge'] });
+
+			expect(!result.success && result.issues).toMatchObject([
+				{ code: 'registry/not-accepted', received: 'chip' },
+			]);
+		});
+
+		it('leaves the issues of an accepted but unregistered $type, a missing $type and a non-object as they are', () => {
+			const lookup = { get: (type: string) => badges.get(type), hint: 'Register it with defineBadge.' };
+
+			expect(safeParseNode(lookup, { $type: 'chip' }, { accepts: ['chip'] })).toMatchObject({
+				issues: [
+					{
+						code: 'registry/unregistered-type',
+						message: "No registration for $type 'chip'. Register it with defineBadge.",
+					},
+				],
+			});
+			expect(safeParseNode(badges, {}, { accepts: ['badge'] })).toMatchObject({
+				issues: [{ code: 'registry/missing-type' }],
+			});
+			expect(safeParseNode(badges, 7, { accepts: ['badge'] })).toMatchObject({
+				issues: [{ code: 'registry/not-an-object' }],
+			});
+		});
+
+		it('throws for an empty list, a caller bug', () => {
+			expect(() => safeParseNode(badges, { $type: 'badge' }, { accepts: [] })).toThrow(
+				'accepts must name at least one $type.',
+			);
+		});
+	});
+
+	it('leaves the code and the fields of an issue of the schema as the schema library wrote them', () => {
+		const node: unknown = JSON.parse('{ "$type": "badge", "label": 5 }');
+		const own = badge.schema['~standard'].validate(node) as unknown as { issues: { code?: string }[] };
+		const result = safeParseNode(badges, node);
+
+		expect(!result.success && result.issues[0]).toEqual({ ...own.issues[0], path: ['label'] });
+		expect(!result.success && result.issues[0]?.code).toBe('invalid_type');
 	});
 
 	it('works with a mutable registry', () => {

@@ -1,22 +1,22 @@
 ---
 title: 'Resolve a document'
-description: 'Validate a tree of $type nodes through a registry per kind with safeParseTree, collect every issue with its path, and render the validated tree to output.'
+description: 'Validate a tree of $type nodes with safeParseTree, say which $types each position accepts, collect every issue with its path, read the parsed document and render it.'
 order: 3
 ---
 
 # Resolve a document
 
-A document is a tree of nodes, and each node names a registration by `$type`. Resolving it is the same pattern in every domain: look each `$type` up in the registry for its kind, validate the node against the registration's schema, collect what is wrong with its path, and, only when nothing is, render. `safeParseTree` does the first three for the whole document in one call. This page builds that pattern with no framework: the output is a string. A renderer for a UI does the same with its own output.
+A document is a tree of nodes, and each node names a registration by `$type`. Resolving it is the same pattern in every domain: look each `$type` up in the registry, validate the node against the registration's schema, collect what is wrong with its path, and, only when nothing is, read or render the result. `safeParseTree` does the first three for the whole document in one call. This page builds that pattern with no framework: the output is a string. A renderer for a UI does the same with its own output.
 
 Start from the [Overview and quick start](/docs/registry/overview) if registrations and registries are new.
 
-## A registry per kind
+## One registry, positions that say what they hold
 
-A kind is a group of registrations that play the same role. This document has two: leaves, which draw themselves, and containers, which draw their children. Each kind is its own registry, so a `$type` is looked up where it belongs and a leaf cannot be used where a container is meant.
+This document has leaves, which draw themselves, and a container, the `stack`, which draws its children. They share one registry, and a position says what it accepts: the `stack` accepts `text`, `badge` and other stacks, and the document's root must be a `stack`. A leaf cannot be used where a container is meant, because the root and the `stack`'s `children` name the `$type`s they take.
 
-Both kinds share one registration shape. A node's `render` receives its validated configuration and the already rendered children, which a leaf ignores. A registration says where its children are with `childPaths`, a list of key paths into the node: the `stack` keeps its children in `children`, so its path is `['children']`; a leaf has none.
+Every registration has one shape. A node's `render` receives its validated configuration and the already rendered children, which a leaf ignores. A registration says where its children are with `childPaths`, a list of `{ keys, accepts? }`: the `stack` keeps its children in `children`, so its path is `{ keys: ['children'], accepts: [...] }`; a leaf has none.
 
-```ts title="kinds.ts"
+```ts title="blocks.ts"
 import * as z from 'zod/mini';
 import { createRegistry, type BaseRegistration } from '@schema-engine/registry';
 
@@ -26,89 +26,100 @@ export interface Block extends BaseRegistration {
 	render(config: unknown, children: string[]): string;
 }
 
-const textSchema = z.object({ $type: z.literal('text'), value: z.string() });
-const badgeSchema = z.object({
-	$type: z.literal('badge'),
-	label: z.string(),
-	tone: z.optional(z.enum(['info', 'success'])),
-});
-const stackSchema = z.object({
-	$type: z.literal('stack'),
-	gap: z.optional(z.enum(['small', 'large'])),
-	children: z.array(z.unknown()),
-});
-
-const text: Block = {
-	$type: 'text',
-	schema: textSchema,
-	metadata: { name: 'Text' },
-	render({ value }: z.output<typeof textSchema>) {
-		return `<p>${value}</p>`;
+export const blocks = createRegistry('Block', [
+	{
+		$type: 'text',
+		schema: z.object({ $type: z.literal('text'), value: z.string() }),
+		metadata: { name: 'Text' },
+		render: ({ value }: { value: string }) => `<p>${value}</p>`,
 	},
-};
-
-const badge: Block = {
-	$type: 'badge',
-	schema: badgeSchema,
-	metadata: { name: 'Badge' },
-	render({ label, tone = 'info' }: z.output<typeof badgeSchema>) {
-		return `<span class="badge badge-${tone}">${label}</span>`;
+	{
+		$type: 'badge',
+		schema: z.object({
+			$type: z.literal('badge'),
+			label: z.string(),
+			tone: z.optional(z.enum(['info', 'success'])),
+		}),
+		metadata: { name: 'Badge' },
+		render: ({ label, tone = 'info' }: { label: string; tone?: 'info' | 'success' }) =>
+			`<span class="badge badge-${tone}">${label}</span>`,
 	},
-};
-
-const stack: Block = {
-	$type: 'stack',
-	schema: stackSchema,
-	metadata: { name: 'Stack' },
-	childPaths: [['children']],
-	render({ gap = 'small' }: z.output<typeof stackSchema>, children: string[]) {
-		return `<div class="stack stack-${gap}">${children.join('')}</div>`;
+	{
+		$type: 'stack',
+		schema: z.object({
+			$type: z.literal('stack'),
+			gap: z.optional(z.enum(['small', 'large'])),
+			children: z.array(z.unknown()),
+		}),
+		metadata: { name: 'Stack' },
+		childPaths: [{ keys: ['children'], accepts: ['text', 'badge', 'stack'] }],
+		render: ({ gap = 'small' }: { gap?: 'small' | 'large' }, children: string[]) =>
+			`<div class="stack stack-${gap}">${children.join('')}</div>`,
 	},
-};
+]);
 
-export const leaves = createRegistry('Leaf', [text, badge]);
-export const containers = createRegistry('Container', [stack]);
+export type Registration = NonNullable<ReturnType<typeof blocks.get>>;
 ```
 
-The `stack` schema accepts `children` as a list of anything. Its children are validated one by one when `safeParseTree` reaches them, each against its own registration.
+Three rules keep the registrations simple:
+
+- **The slot stays open in the schema.** The `stack` schema accepts `children` as a list of anything (`z.array(z.unknown())`) and `accepts` is the only place that restricts it. Do not restrict `$type` in the parent schema: each child is validated against its own registration when `safeParseTree` reaches it. The schema declares the key, so the exported JSON Schema shows the whole node, and `createRegistry` fails to compile a child path whose key the schema output does not declare.
+- **An `accepts` list is closed.** It names `$type`s, so a leaf you add later to `[...defaults, custom]` has to be added to each container that should take it, by overriding that container. Leave `accepts` out and a position takes any `$type` the lookup answers, which an open vocabulary that grows at runtime needs.
+- **A tree schema keeps `$type`.** It must return the node's own `$type` and keep the slot the way the document has it: an array stays an array of the same length, an object stays an object. A schema that breaks this is a bug of the registration, and `safeParseTree` throws a [`RegistryError`](/docs/registry/api-reference#registryerror) (`'schema-changes-type'` or `'schema-breaks-child-path'`) instead of reporting an issue of the document.
 
 ## The resolve step
 
-`resolve` is one call. `safeParseTree` reads each node's `childPaths`, validates the node with `safeParseNode` at its full path, walks into its children and keeps going after a problem, so every issue is collected and starts at the root. `safeParseNode` takes any object with a `get(key)`, so one lookup can answer for both kinds.
+`resolve` is one call. `safeParseTree` reads each node's `childPaths`, validates the node with `safeParseNode` at its full path and the `accepts` of its position, walks into its children and keeps going after a problem, so every issue is collected and starts at the root. The `accepts` option restricts the root.
 
 ```ts title="resolve.ts"
-import { safeParseTree, type NodeLookup, type SafeParseTreeResult } from '@schema-engine/registry';
-import { containers, leaves, type Block } from './kinds';
+import { safeParseTree } from '@schema-engine/registry';
+import { blocks } from './blocks';
 
-export type Resolution = SafeParseTreeResult<Block>;
-
-const blocks: NodeLookup<Block> = { get: (type) => containers.get(type) ?? leaves.get(type) };
-
-export function resolve(document: unknown): Resolution {
-	return safeParseTree(blocks, document);
+export function resolve(document: unknown) {
+	return safeParseTree(blocks, document, { accepts: ['stack'] });
 }
 ```
 
-A node whose own schema fails reports its issues and is not walked further, but its siblings still are. The result is either a tree that is safe to render or every issue found, never a half-valid tree. A value at a child path that is not a node, and a node that contains itself, are issues too, at the path where they sit.
+A node whose own schema fails reports its issues and is not walked further, but its siblings still are. The result is either a tree that is safe to render or every issue found, never a half-valid tree. A value at a child path that is not a node, a `$type` a position does not accept and a node that contains itself are issues too, at the path where they sit. `'stack'` in `accepts` is checked against the registry's `$type`s, so a name it lacks is a type error, and the root of the tree is typed as a `stack`.
+
+## Read the parsed document
+
+`tree.data` is the whole parsed document: each node's data with its defaults and transforms applied, and each child path holding the data of its children, typed by what the path accepts. A tool that needs a type-checked read of the document uses it as it is:
+
+```ts title="read.ts"
+import { resolve } from './resolve';
+
+export function badgeLabels(document: unknown): string[] {
+	const resolution = resolve(document);
+	if (!resolution.success) return [];
+	return resolution.tree.data.children.flatMap((child) => (child.$type === 'badge' ? [child.label] : []));
+}
+```
+
+`child` is the data of a `text`, a `badge` or a `stack`, so checking `$type` narrows it. A slot typed `z.unknown()` becomes `child | child[] | undefined`, and a nullable slot loses its `null`: a `null` at a child path is an issue, not a node.
 
 ## The render step
 
-Rendering takes a resolved tree and maps each node to output. It does no validation, because resolving has already done it. A `ParsedNode` holds the `registration`, the `data` its schema returned, the `path` of the node in the document and its `children`, keyed by the child path (`'children'` here; `['engine', 'controls']` would be `'engine.controls'`), a list of nodes for an array:
+Rendering takes a resolved tree and maps each node to output. It does no validation, because resolving has already done it. A `ParsedNode` holds the `registration`, the `data` its schema returned with its children's data in place, the `path` of the node in the document and its `children`: one `{ keys, nodes }` per child path the registration declares, in declaration order, with `nodes` empty when the node holds none there. A tool that wants one path finds its entry by `keys`, never by index:
 
 ```ts title="render.ts"
 import type { ParsedNode } from '@schema-engine/registry';
-import type { Block } from './kinds';
+import type { Block, Registration } from './blocks';
 
-export function render({ registration, data, children }: ParsedNode<Block>): string {
-	const inner = children.children;
-	const nodes = inner === undefined ? [] : [inner].flat();
-	return registration.render(data, nodes.map(render));
+export function render(node: ParsedNode<Registration>): string {
+	const block: Block = node.registration;
+	const children = node.children.flatMap(({ nodes }) => nodes.map(render));
+	return block.render(node.data, children);
+}
+
+export function childrenAt(node: ParsedNode<Registration>, dottedKeys: string): ParsedNode<Registration>[] {
+	return node.children.find(({ keys }) => keys.join('.') === dottedKeys)?.nodes.slice() ?? [];
 }
 ```
 
 ## Use it
 
-A valid document renders. An invalid one reports an unknown `$type` and a configuration that its schema rejects, each with its path:
+A valid document renders. An invalid one reports a `$type` that a position does not accept and a configuration that its schema rejects, each with its path:
 
 ```ts title="check.ts"
 import { formatIssuePath } from '@schema-engine/registry';
@@ -164,10 +175,48 @@ for (const document of [confirmation, broken]) {
 
 ```text
 children[1].children[0].label: Invalid input: expected string, received number
-children[1].children[1].$type: No registration for $type 'chip'.
+children[1].children[1].$type: $type 'chip' is not accepted here. Expected one of 'text', 'badge', 'stack'.
 ```
 
-Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way.
+Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way. An issue the engine creates has a `code` (`registry/not-accepted` here, with `expected` the list and `received` the `$type`), so a UI can branch on it without reading the message; an issue from a schema is the schema library's own.
+
+## When the vocabulary is in two registries
+
+A document may name `$type`s from more than one registry, a layout registry and a registry of the components that fill its slots, say. Hand `safeParseTree` one lookup over both: a layout's `accepts` names components the layout registry does not hold, and the lookup does.
+
+```ts title="two-registries.ts"
+import * as z from 'zod/mini';
+import { createRegistry, safeParseTree } from '@schema-engine/registry';
+
+const layouts = createRegistry('Layout', [
+	{
+		$type: 'machine-layout',
+		schema: z.object({
+			$type: z.literal('machine-layout'),
+			slots: z.object({ controls: z.array(z.unknown()) }),
+		}),
+		metadata: { name: 'Machine layout' },
+		childPaths: [{ keys: ['slots', 'controls'], accepts: ['knob'] }],
+	},
+]);
+
+const components = createRegistry('Component', [
+	{
+		$type: 'knob',
+		schema: z.object({ $type: z.literal('knob'), value: z.number() }),
+		metadata: { name: 'Knob' },
+	},
+]);
+
+const lookup = { get: (type: string) => layouts.get(type) ?? components.get(type) };
+
+export function knobValues(document: unknown): number[] {
+	const parsed = safeParseTree(lookup, document, { accepts: ['machine-layout'] });
+	return parsed.success ? parsed.tree.data.slots.controls.map((knob) => knob.value) : [];
+}
+```
+
+The two registries share one `$type` namespace: the lookup decides which wins when both hold one (`layouts.get(type) ?? components.get(type)` prefers the layout). `safeParseTree(layouts, document)` alone does not compile, because the layout accepts `knob` and that lookup does not have it.
 
 ## Take it further
 

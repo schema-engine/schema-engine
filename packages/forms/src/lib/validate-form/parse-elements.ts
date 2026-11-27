@@ -84,7 +84,7 @@ export function parseElementNode(
 		authoredAppearance = taggedAppearance;
 		node = withoutAppearance;
 	}
-	const parsed = safeParseNode(elementLookup(getElement), node, path);
+	const parsed = safeParseNode(elementLookup(getElement), node, { path });
 	if (!parsed.success) {
 		return { issues: fromSchemaIssues(parsed.issues, []) };
 	}

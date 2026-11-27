@@ -31,6 +31,24 @@ declare const __brand: unique symbol;
 export type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
 
 /**
+ * One place where a node holds child nodes, as a registration declares it in `childPaths`.
+ *
+ * @remarks
+ * Plain data, so a registration stays serializable. `keys` is relative to the node and holds no indexes, which is why
+ * it is not called `path`: a `path` in this package is an absolute document path with indexes. The value there is one
+ * node or an array of nodes. `accepts` is a closed list: adding a leaf to `[...defaults, custom]` means overriding
+ * each container that should take it. Without `accepts`, any `$type` the lookup answers is accepted, which an open
+ * vocabulary needs. The parent's schema keeps the slot opaque (`z.array(z.unknown())`, `z.unknown()`), and `accepts`
+ * is the only way to restrict it.
+ */
+export interface ChildPath {
+	/** The keys from the node to the slot, for example `['engine', 'controls']` for `node.engine.controls`. */
+	readonly keys: readonly string[];
+	/** The `$type`s allowed at the slot, at least one when present. Absent: any `$type` the lookup answers. */
+	readonly accepts?: readonly string[];
+}
+
+/**
  * Base registration interface - common fields for all registration types.
  *
  * `schema` is the concrete Standard Schema value. Do not collapse it to
@@ -45,16 +63,17 @@ export interface BaseRegistration<_TConfig = unknown, TMeta extends Registration
 	/** Registration metadata (display name, description, and type-specific fields) */
 	metadata: TMeta;
 	/**
-	 * Where a node of this `$type` holds child nodes: key paths into the node, each to one node or to an array of nodes.
+	 * Where a node of this `$type` holds child nodes, and which `$type`s each place accepts.
 	 *
 	 * @remarks
-	 * `[['blocks'], ['engine', 'controls']]` says a node has children at `node.blocks` and at `node.engine.controls`.
-	 * A path is read from the node as authored, so the issues {@link safeParseTree} reports point at the document. A
-	 * missing value is no children, and the schema decides whether it may be missing. An array holds nodes only;
-	 * what is not a node is reached by its keys, which is why a path is a list of keys. `createRegistry` checks each
-	 * path when it builds the registry.
+	 * `[{ keys: ['blocks'], accepts: ['block'] }, { keys: ['engine', 'controls'] }]` says a node has children at
+	 * `node.blocks` and at `node.engine.controls`. A path is read from the node as authored, so the issues
+	 * {@link safeParseTree} reports point at the document. A missing value is no children, and the schema decides
+	 * whether it may be missing. An array holds nodes only; what is not a node is reached by its keys, which is why a
+	 * path is a list of keys. `createRegistry` checks each path when it builds the registry, and at the type level that
+	 * the schema declares every key of it.
 	 */
-	readonly childPaths?: readonly (readonly string[])[];
+	readonly childPaths?: readonly ChildPath[];
 }
 
 /**
