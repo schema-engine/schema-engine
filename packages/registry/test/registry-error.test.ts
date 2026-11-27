@@ -7,10 +7,12 @@ import {
 	bindRegistry,
 	createRegistry,
 	safeParseStandardSchema,
+	exportTreeSchema,
 	safeParseTree,
 	type BaseRegistration,
 	type ReadOnlyRegistry,
 } from '../src';
+import { jsonSchemaOf } from './helpers/json-schema-of';
 
 const card = { $type: 'card', schema: z.object({ title: z.string() }), metadata: { name: 'Card' } };
 const badge = { $type: 'badge', schema: z.object({ label: z.string() }), metadata: { name: 'Badge' } };
@@ -243,6 +245,12 @@ describe('RegistryError', () => {
 			'schema-changes-type': (e) => `${e.kind} '${e.$type}' schema output must keep its $type '${e.$type}'.`,
 			'schema-breaks-child-path': (e) =>
 				`${e.kind} '${e.$type}' schema output does not keep the child path '${e.childPath?.join('.')}' as the document has it.`,
+			'unreachable-child-path': (e) =>
+				`The JSON Schema of '${e.$type}' has no slot the export can reach for the child path '${e.childPath?.join('.')}'. The slot must be a declared property, not behind a reference, allOf or a union, nor inside a schema with an $id of its own, and an object, an array or open.`,
+			'unknown-accepted-type': (e) =>
+				`The child path '${e.childPath?.join('.')}' of '${e.$type}' accepts '${e.key}', which the lookup does not list. Pass every registry of the vocabulary.`,
+			'definition-name-clash': (e) =>
+				`The definition '${e.key}' that '${e.$type}' brought along takes the name of another definition of the export.`,
 		};
 		const failures: Record<RegistryErrorCode, () => unknown> = {
 			'invalid-schema': () => createRegistry('Widget', [{ ...badge, schema: {} } as unknown as BaseRegistration]),
@@ -263,6 +271,29 @@ describe('RegistryError', () => {
 				safeParseTree(
 					parsing((input) => ({ $type: input.$type })),
 					{ $type: 'card', items: [{ $type: 'card' }] },
+				),
+			'unreachable-child-path': () =>
+				exportTreeSchema(
+					createRegistry('Widget', [
+						{
+							...card,
+							schema: jsonSchemaOf({ type: 'object', properties: {} }),
+							childPaths: [{ keys: ['a'] }],
+						} as unknown as BaseRegistration,
+					]),
+				),
+			'unknown-accepted-type': () =>
+				exportTreeSchema(createRegistry('Widget', [withPaths([{ keys: ['a'], accepts: ['nope'] }])])),
+			'definition-name-clash': () =>
+				exportTreeSchema(
+					createRegistry('Widget', [
+						{ ...badge, $type: 'badge.part' } as BaseRegistration,
+						{
+							...card,
+							$type: 'badge',
+							schema: jsonSchemaOf({ type: 'object', $defs: { part: { type: 'string' } } }),
+						},
+					]),
 				),
 		};
 

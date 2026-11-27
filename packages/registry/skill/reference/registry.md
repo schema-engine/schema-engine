@@ -66,6 +66,7 @@ Errors while building or binding, and a tree parse whose schema contradicts its 
 - `'duplicate-child-path'`: the same child path (`childPath`, the same keys) twice. `'nested-child-path'`: a child path (`childPath`) that runs through another (`outerChildPath`).
 - `'duplicate-type'`: a repeated `$type` with `duplicates: 'error'`.
 - `'unknown-binding'`: a binding key no contract answers (`$type` is that key). `'missing-binding'`: a contract with no binding. `'binding-overrides-contract'`: a binding that sets a key (`key`) its contract defines.
+- `'unreachable-child-path'` (`childPath`): `exportTreeSchema` found no slot for a child path in a registration's JSON Schema. `'unknown-accepted-type'` (`childPath`, `key`): a child path accepts a `$type` the lookup lacks. `'definition-name-clash'` (`key`): a definition a schema brought along takes the name of a `$type`.
 - `'schema-changes-type'` and `'schema-breaks-child-path'` (`childPath`): `safeParseTree` parsed a node whose schema returned an output without the node's own `$type`, or that does not keep a child path as the document has it. They are bugs of the registration, never issues of the document.
 
 `assertStandardSchema` on its own and errors while parsing (`safeParseStandardSchema` and `safeParseNode` with an asynchronous schema) are plain `Error`s, and `parseYaml` throws `YamlDocumentError`.
@@ -118,6 +119,33 @@ export function sectionTitles(document: unknown): string[] {
 ```
 
 `formatIssuePath(path, source?)` writes the `path` of an issue as text: keys joined by dots and indexes in brackets (`children[1].label`), the empty string for a missing or empty path. A segment may be a key or a Standard Schema `{ key }` object. Given the document as `source`, an array item with a string `id` is followed by it, `children[1] (hero).label`.
+
+`exportTreeSchema(lookup, options?)` writes the JSON Schema of the whole tree, composed at the JSON Schema level so it does not depend on the validator. `lookup` is a registry (anything with `all()`) or a list of registries, the first winning a `$type` both list. It returns `{ $schema, $defs, anyOf }`: one definition per `$type` under `$defs` (`definitions` for target `'draft-07'`), referred to by `#/$defs/<$type>` with `~` and `/` escaped as `~0` and `~1`, and the root as the union of `options.accepts`, or of every `$type`. Each schema is read by `options.resolve(schema, { io, target })`, by default its `~standard.jsonSchema`, and a schema it returns `undefined` for is listed by an open object that holds its `$type` and its child paths. `options.io` is `'input'` (the authored shape, the default) or `'output'`, and `options.target` the dialect (`'draft-2020-12'` by default). Each child path is then replaced, and only its slot, so `required`, `minItems`, `maxItems` and sibling keys stay: an array slot gets `items: U`, an object slot becomes `U`, an open slot (`{}`) becomes `{ anyOf: [U, { type: 'array', items: U }] }`, where `U` is `{ anyOf: [{ $ref }, ...] }` of the path's `accepts`, or of every `$type` without it. A slot behind `allOf`, a `$ref` or a union, inside a schema with an `$id` of its own, or one a schema does not declare, throws `RegistryError` `'unreachable-child-path'`. Definitions a schema wrote into its own `$defs` are lifted to the top as `<$type>.<name>` and their pointers follow; a `$type` with that name throws `'definition-name-clash'`. `@schema-engine/registry/json-schema` holds the pieces for code that writes JSON Schema itself: `readStandardJSONSchema(schema)` returns a schema's `~standard.jsonSchema` converter or `undefined` (what the default `resolve` reads, so a custom `resolve` can fall back to it: `readStandardJSONSchema(schema)?.[io]({ target })`), and `createJSONSchemaEmbedder(target, placement)` embeds schemas written as documents of their own into one being written, as the forms export does. A registry user needs only `exportTreeSchema`.
+
+```ts title="registry/export-tree.ts"
+import * as z from 'zod/mini';
+import { createRegistry, exportTreeSchema } from '@schema-engine/registry';
+
+const nodes = createRegistry('Node', [
+	{
+		$type: 'page',
+		schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
+		metadata: { name: 'Page' },
+		childPaths: [{ keys: ['sections'], accepts: ['section'] }],
+	},
+	{
+		$type: 'section',
+		schema: z.object({ $type: z.literal('section'), title: z.string() }),
+		metadata: { name: 'Section' },
+	},
+]);
+
+export const documentSchema = exportTreeSchema(nodes, {
+	accepts: ['page'],
+	resolve: (schema, { io, target }) =>
+		schema instanceof z.core.$ZodType ? z.toJSONSchema(schema, { io, target }) : undefined,
+});
+```
 
 ## BaseRegistry
 

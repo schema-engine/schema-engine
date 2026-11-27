@@ -82,7 +82,10 @@ type RegistryErrorCode =
 	| 'missing-binding'
 	| 'binding-overrides-contract'
 	| 'schema-changes-type'
-	| 'schema-breaks-child-path';
+	| 'schema-breaks-child-path'
+	| 'unreachable-child-path'
+	| 'unknown-accepted-type'
+	| 'definition-name-clash';
 
 declare class RegistryError extends Error {
 	readonly code: RegistryErrorCode;
@@ -90,7 +93,11 @@ declare class RegistryError extends Error {
 	readonly kind?: string;
 	/** The `$type` of the registration at fault, or the key of a binding that names no registration. */
 	readonly $type: string;
-	/** The key a binding sets that its contract defines, for `'binding-overrides-contract'`. */
+	/**
+	 * The key a binding sets that its contract defines, for `'binding-overrides-contract'`, the `$type` a child path
+	 * accepts that the lookup lacks, for `'unknown-accepted-type'`, and the name of the clashing definition, for
+	 * `'definition-name-clash'`.
+	 */
 	readonly key?: string;
 	/** The keys of the child path at fault, for the child path and tree codes. */
 	readonly childPath?: readonly string[];
@@ -99,20 +106,23 @@ declare class RegistryError extends Error {
 }
 ```
 
-What `createRegistry` and `bindRegistry` throw when the registrations or bindings break a rule, and what `safeParseTree` throws when a schema contradicts its registration. Branch on `code`, not on `message`: the message is written for people and may be reworded, the codes stay. Every error carries `$type`, and `kind` too unless a parse went through a lookup that is no registry (a function over several registries has no label). A code that needs more to describe the mistake sets it as well, so a tool can point at the registration, or write the message again in another language, without parsing the message.
+What `createRegistry` and `bindRegistry` throw when the registrations or bindings break a rule, what `safeParseTree` throws when a schema contradicts its registration, and what `exportTreeSchema` throws when it cannot write a slot. Branch on `code`, not on `message`: the message is written for people and may be reworded, the codes stay. Every error carries `$type`, and `kind` too unless a parse went through a lookup that is no registry (a function over several registries has no label). A code that needs more to describe the mistake sets it as well, so a tool can point at the registration, or write the message again in another language, without parsing the message.
 
-| Code                           | Thrown when                                                                                                                                                                    | Details besides `kind` and `$type` |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
-| `'invalid-schema'`             | A registration's `schema` has no `~standard.validate` function                                                                                                                 |                                    |
-| `'invalid-child-paths'`        | `childPaths` is not a list, or an entry is not `{ keys, accepts? }`: another property, empty or non-string `keys`, an empty `accepts`, or a name that is empty or listed twice |                                    |
-| `'duplicate-child-path'`       | A registration declares the same child path (the same keys) twice                                                                                                              | `childPath`                        |
-| `'nested-child-path'`          | A child path runs through another child path of the same registration                                                                                                          | `childPath`, and `outerChildPath`  |
-| `'duplicate-type'`             | A `$type` is registered twice with `duplicates: 'error'`                                                                                                                       |                                    |
-| `'unknown-binding'`            | `bindRegistry` got a binding whose key is no contract's `$type`                                                                                                                | None; `$type` is the binding key   |
-| `'missing-binding'`            | `bindRegistry` got no binding for a contract                                                                                                                                   |                                    |
-| `'binding-overrides-contract'` | A binding sets a key its contract already defines                                                                                                                              | `key`, the key the binding sets    |
-| `'schema-changes-type'`        | `safeParseTree` parsed a node whose schema returned an output that is no plain object with the node's own `$type`                                                              |                                    |
-| `'schema-breaks-child-path'`   | `safeParseTree` parsed a node whose schema returned an output that does not keep a child path as the document has it                                                           | `childPath`                        |
+| Code                           | Thrown when                                                                                                                                                                                          | Details besides `kind` and `$type`  |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `'invalid-schema'`             | A registration's `schema` has no `~standard.validate` function                                                                                                                                       |                                     |
+| `'invalid-child-paths'`        | `childPaths` is not a list, or an entry is not `{ keys, accepts? }`: another property, empty or non-string `keys`, an empty `accepts`, or a name that is empty or listed twice                       |                                     |
+| `'duplicate-child-path'`       | A registration declares the same child path (the same keys) twice                                                                                                                                    | `childPath`                         |
+| `'nested-child-path'`          | A child path runs through another child path of the same registration                                                                                                                                | `childPath`, and `outerChildPath`   |
+| `'duplicate-type'`             | A `$type` is registered twice with `duplicates: 'error'`                                                                                                                                             |                                     |
+| `'unknown-binding'`            | `bindRegistry` got a binding whose key is no contract's `$type`                                                                                                                                      | None; `$type` is the binding key    |
+| `'missing-binding'`            | `bindRegistry` got no binding for a contract                                                                                                                                                         |                                     |
+| `'binding-overrides-contract'` | A binding sets a key its contract already defines                                                                                                                                                    | `key`, the key the binding sets     |
+| `'schema-changes-type'`        | `safeParseTree` parsed a node whose schema returned an output that is no plain object with the node's own `$type`                                                                                    |                                     |
+| `'schema-breaks-child-path'`   | `safeParseTree` parsed a node whose schema returned an output that does not keep a child path as the document has it                                                                                 | `childPath`                         |
+| `'unreachable-child-path'`     | `exportTreeSchema` found no slot for a child path in a registration's JSON Schema: not declared, behind `allOf`, a `$ref` or a union, inside an `$id` of its own, or not an object, an array or open | `childPath`                         |
+| `'unknown-accepted-type'`      | `exportTreeSchema` got a lookup that lacks a `$type` a child path accepts                                                                                                                            | `childPath`, and `key`, the `$type` |
+| `'definition-name-clash'`      | A definition a schema brought along takes the name of a `$type` or of another definition                                                                                                             | `key`, the name                     |
 
 A parse throws a `RegistryError` only when a schema contradicts its registration, never for a bad document. [`assertStandardSchema`](#assertstandardschema) on its own and the other errors raised while parsing, such as a Standard Schema that validates asynchronously, are plain `Error`s, and `parseYaml` throws [`YamlDocumentError`](#yaml-subpath).
 
@@ -305,6 +315,54 @@ The parent schema owns, at a child path, whether the value may be missing, list 
 
 A parent transform at a filled slot (a reorder, a preprocess) is discarded, not detected. It throws, as `safeParseNode` does, for a schema that validates asynchronously.
 
+## exportTreeSchema
+
+```typescript
+function exportTreeSchema(
+	lookup: ExportLookup | readonly ExportLookup[],
+	options?: ExportTreeSchemaOptions,
+): JSONSchemaObject;
+
+interface ExportLookup {
+	all(): readonly TreeRegistration[];
+}
+
+interface ExportTreeSchemaOptions {
+	/** The `$type`s the root may have. Absent: every `$type` of the lookup. */
+	readonly accepts?: readonly string[];
+	/** Which shape of each schema to write. Default `'input'`, the authored shape. */
+	readonly io?: 'input' | 'output';
+	/** The JSON Schema dialect. Default `'draft-2020-12'`. */
+	readonly target?: JSONSchemaTarget;
+	/** Writes one registration's schema as JSON Schema, or returns `undefined`. Default: its `~standard.jsonSchema`. */
+	readonly resolve?: (
+		schema: StandardSchemaV1,
+		context: { io: 'input' | 'output'; target: JSONSchemaTarget },
+	) => JSONSchemaObject | undefined;
+}
+
+type JSONSchemaObject = Record<string, unknown>;
+type JSONSchemaTarget = StandardJSONSchemaV1.Target;
+```
+
+Writes the JSON Schema of a whole tree of registrations, composed at the JSON Schema level, independent of the validator. `lookup` is a registry of either kind or a list of registries; when two list a `$type`, the first wins. The result is `{ $schema, $defs, anyOf }`: one definition per `$type` under `$defs` (`definitions` for a `'draft-07'` target), and the root as the union of `accepts`, or of every `$type`. A `$ref` writes the `$type` as a JSON Pointer token: `~` as `~0`, `/` as `~1`, and the rest percent-encoded.
+
+Each registration's schema is written by `resolve`, by default `readStandardJSONSchema(schema)?.[io]({ target })`, so a schema library that implements Standard JSON Schema needs nothing here, and the registry depends on no validator. A schema `resolve` returns `undefined` for (Zod Mini, by default) is the open fallback: an object with its `$type` and the `properties` chain of each child path, ending in the open form of a slot.
+
+Then each child path is replaced, and only its slot, so `required`, `minItems`, `maxItems` and the sibling keys stay as the schema wrote them:
+
+| Slot in the registration's JSON Schema               | Becomes                                                                      |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| an array (`type: 'array'`, `items` or `prefixItems`) | the same array with `items: U`, and `U` at each tuple position               |
+| an object                                            | `U`                                                                          |
+| open (`{}`)                                          | `{ anyOf: [U, { type: 'array', items: U }] }`, a child or a list of children |
+
+`U` is `{ anyOf: [{ $ref: '#/$defs/<$type>' }, ...] }` of the path's `accepts`, or of every `$type` without one; a slot that accepts its own `$type` refers to its own definition. A slot behind `allOf`, a `$ref` or a union, one inside a schema with an `$id` of its own (where a `$ref` resolves against that `$id`, not the document), or one the schema does not declare, throws a `RegistryError` with code `'unreachable-child-path'`, naming the `$type` and `childPath`.
+
+A schema that was written as a document of its own is moved into the document. Its `$defs` are lifted to the top as `<$type>.<name>`, every local pointer (`#`, `#/$defs/name`) follows, and anchors are renamed under their owner (`ui/button` writes `a__ui__2f__button`, since an anchor name takes only letters, digits, `-`, `.` and `_`). A `$type` named like a lifted definition throws `'definition-name-clash'`, and an `accepts` name the lookup lacks throws `'unknown-accepted-type'`: pass every registry of the vocabulary. An empty lookup, an empty `accepts` and a root `accepts` the lookup lacks throw a plain `Error`.
+
+A `resolve` that converts one library itself and keeps the default for the rest reads the default with [`readStandardJSONSchema`](#json-schema-subpath).
+
 ## formatIssuePath
 
 ```typescript
@@ -432,6 +490,54 @@ Utility type for compile-time type discrimination (erased at runtime):
 
 ```typescript
 type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
+```
+
+## JSON Schema subpath
+
+`@schema-engine/registry/json-schema` holds the pieces for code that writes JSON Schema itself: a `resolve` for `exportTreeSchema` that falls back to Standard JSON Schema, or a domain package with an export of its own, as the forms export is. A registry user needs only `exportTreeSchema`.
+
+```typescript
+function readStandardJSONSchema(schema: unknown): StandardJSONSchemaV1.Converter | undefined;
+
+function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPlacement): JSONSchemaEmbedder;
+
+type JSONSchemaPlacement =
+	{ readonly kind: 'document' } | { readonly kind: 'collection'; readonly uri: (id: string) => string };
+
+interface JSONSchemaEmbedder {
+	/** The schema to write in place of `own`, which is not changed. */
+	embed(own: JSONSchemaObject): JSONSchemaObject;
+	/** Adds the definitions `embed` hoisted to the finished document or collection, in place. */
+	finish(written: JSONSchemaObject): JSONSchemaObject;
+}
+```
+
+`createJSONSchemaEmbedder` embeds schemas that were written as documents of their own into one JSON Schema being written: it drops `$schema`, moves a schema whose `$ref`s point into itself to where they resolve (the document's definitions under `embedded-<n>`, or a collection entry of its own at `uri(id)`) and renames each anchor under that key. A schema with an `$id` of its own resolves itself and is kept as it is.
+
+### Fall back to Standard JSON Schema
+
+`readStandardJSONSchema` returns the `~standard.jsonSchema` converter of a schema, or `undefined` when it has none, which is what the default `resolve` of `exportTreeSchema` reads. A `resolve` that converts Zod Mini itself and keeps the default for every other library:
+
+```ts title="document-schema.ts"
+import * as z from 'zod/mini';
+import { createRegistry, exportTreeSchema } from '@schema-engine/registry';
+import { readStandardJSONSchema } from '@schema-engine/registry/json-schema';
+
+const blocks = createRegistry('Block', [
+	{
+		$type: 'stack',
+		schema: z.object({ $type: z.literal('stack'), children: z.array(z.unknown()) }),
+		metadata: { name: 'Stack' },
+		childPaths: [{ keys: ['children'] }],
+	},
+]);
+
+export const documentSchema = exportTreeSchema(blocks, {
+	resolve: (schema, { io, target }) =>
+		schema instanceof z.core.$ZodType
+			? z.toJSONSchema(schema, { io, target })
+			: readStandardJSONSchema(schema)?.[io]({ target }),
+});
 ```
 
 ## YAML subpath

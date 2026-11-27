@@ -180,6 +180,51 @@ children[1].children[1].$type: $type 'chip' is not accepted here. Expected one o
 
 Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way. An issue the engine creates has a `code` (`registry/not-accepted` here, with `expected` the list and `received` the `$type`), so a UI can branch on it without reading the message; an issue from a schema is the schema library's own.
 
+## The JSON Schema of the document
+
+The same registrations describe the document to a tool that is not TypeScript: an editor that completes it, a server that validates what it receives, an AI tool API. `exportTreeSchema` composes the JSON Schema of the whole tree from the registrations' own, so it does not depend on the validator. It reads each schema through `~standard.jsonSchema`, which a schema library that implements Standard JSON Schema and a hand-written schema provide; pass `resolve` for a library that does not, as here for Zod Mini.
+
+```ts title="document-schema.ts"
+import * as z from 'zod/mini';
+import { exportTreeSchema } from '@schema-engine/registry';
+import { blocks } from './blocks';
+
+export const documentSchema = exportTreeSchema(blocks, {
+	accepts: ['stack'],
+	resolve: (schema, { io, target }) =>
+		schema instanceof z.core.$ZodType ? z.toJSONSchema(schema, { io, target }) : undefined,
+});
+```
+
+The document has one definition per `$type` under `$defs`, and the root is the union of `accepts`. Only the slot of each child path is replaced, by the union of what it accepts, so what the schema says about the list (`required`, `minItems`, `maxItems`) stays. The `stack` of this page exports as:
+
+```json
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$defs": {
+		"text": { "type": "object", "properties": { "...": "..." }, "required": ["$type", "value"] },
+		"badge": { "...": "..." },
+		"stack": {
+			"type": "object",
+			"properties": {
+				"$type": { "type": "string", "const": "stack" },
+				"gap": { "type": "string", "enum": ["small", "large"] },
+				"children": {
+					"type": "array",
+					"items": {
+						"anyOf": [{ "$ref": "#/$defs/text" }, { "$ref": "#/$defs/badge" }, { "$ref": "#/$defs/stack" }]
+					}
+				}
+			},
+			"required": ["$type", "children"]
+		}
+	},
+	"anyOf": [{ "$ref": "#/$defs/stack" }]
+}
+```
+
+A slot is replaced by what it is: an array slot gets its `items` replaced, an object slot becomes the union, and an open slot (`z.unknown()`, which exports as `{}`) becomes `{ anyOf: [U, { type: 'array', items: U }] }`, a child or a list of children, where `U` is the union. A path without `accepts` takes every `$type` of the lookup. A schema the export cannot read (`resolve` returns `undefined`) is listed by an open object that holds its `$type` and its child paths. A slot it cannot reach, behind `allOf`, a `$ref` or a union, throws a [`RegistryError`](/docs/registry/api-reference#registryerror) with code `'unreachable-child-path'`, naming the `$type` and the child path, because guessing would write a document that disagrees with the registration. [`exportTreeSchema`](/docs/registry/api-reference#exporttreeschema) lists the options.
+
 ## When the vocabulary is in two registries
 
 A document may name `$type`s from more than one registry, a layout registry and a registry of the components that fill its slots, say. Hand `safeParseTree` one lookup over both: a layout's `accepts` names components the layout registry does not hold, and the lookup does.
@@ -216,7 +261,7 @@ export function knobValues(document: unknown): number[] {
 }
 ```
 
-The two registries share one `$type` namespace: the lookup decides which wins when both hold one (`layouts.get(type) ?? components.get(type)` prefers the layout). `safeParseTree(layouts, document)` alone does not compile, because the layout accepts `knob` and that lookup does not have it.
+The two registries share one `$type` namespace: the lookup decides which wins when both hold one (`layouts.get(type) ?? components.get(type)` prefers the layout). `safeParseTree(layouts, document)` alone does not compile, because the layout accepts `knob` and that lookup does not have it. `exportTreeSchema` takes the registries as a list, `exportTreeSchema([layouts, components], { accepts: ['machine-layout'] })`, and the first that lists a `$type` wins; given `layouts` alone it throws, because the definition of `knob` is missing.
 
 ## Take it further
 

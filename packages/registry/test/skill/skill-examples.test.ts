@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { nodeIssues } from '../../../../test-utils/skill-examples/registry/draw-node';
 import { radiantWidgets, reactWidgets } from '../../../../test-utils/skill-examples/registry/bound-widgets';
 import { documentIssues, sectionTitles } from '../../../../test-utils/skill-examples/registry/check-tree';
+import { documentSchema } from '../../../../test-utils/skill-examples/registry/export-tree';
 import { readSite } from '../../../../test-utils/skill-examples/registry/site-yaml';
 import { widgets } from '../../../../test-utils/skill-examples/registry/widgets';
 
@@ -63,6 +64,30 @@ describe('the tree example', () => {
 			'sections[0].title: Invalid input',
 			"sections[1].$type: $type 'part' is not accepted here. Expected 'section'.",
 		]);
+	});
+});
+
+describe('the export example', () => {
+	test('writes the document as a definition per $type, rooted at the page', () => {
+		expect(documentSchema).toEqual({
+			$schema: 'https://json-schema.org/draft/2020-12/schema',
+			$defs: {
+				page: {
+					type: 'object',
+					properties: {
+						$type: { type: 'string', const: 'page' },
+						sections: { type: 'array', items: { anyOf: [{ $ref: '#/$defs/section' }] } },
+					},
+					required: ['$type', 'sections'],
+				},
+				section: {
+					type: 'object',
+					properties: { $type: { type: 'string', const: 'section' }, title: { type: 'string' } },
+					required: ['$type', 'title'],
+				},
+			},
+			anyOf: [{ $ref: '#/$defs/page' }],
+		});
 	});
 });
 
