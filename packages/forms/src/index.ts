@@ -78,6 +78,7 @@ export {
 } from './lib/field-scope';
 export type { FieldOverlay, FieldScope } from './lib/field-scope';
 export type { FormFetch } from './lib/form-fetch';
+export { gridTrackItems } from './lib/grid-track-items';
 export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from './lib/form-view';
 export {
 	getElementContainerKind,

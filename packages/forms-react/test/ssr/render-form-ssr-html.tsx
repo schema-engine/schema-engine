@@ -13,7 +13,10 @@ import {
 	ssrContainerForm,
 	ssrNestedContainerForm,
 	ssrNestedFields,
+	ssrSubgridForm,
+	ssrSubgridLayout,
 	type SsrNestedContainerVariant,
+	type SsrSubgridVariant,
 } from '../../../../test-utils/ssr-grid-fixtures';
 import {
 	createSsrAcceptanceEngine,
@@ -198,6 +201,17 @@ const THEMED_FORM = {
 	id: 'themed',
 	steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'ssr-input', id: 'a', name: 'a', label: 'A' }] }],
 };
+
+/** Markup-only document of a subgrid acceptance form, on the theme its variant needs. */
+export function renderSsrSubgridHtml(variant: SsrSubgridVariant): string {
+	const engine = createSsrAcceptanceEngine(ssrSubgridLayout(variant));
+	const body = renderToStaticMarkup(
+		<FormEngineProvider engine={engine}>
+			<FormRenderer engine={engine} config={engine.validateForm(ssrSubgridForm(variant, 'ssr-input'))} />
+		</FormEngineProvider>,
+	);
+	return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`;
+}
 
 /** One page holding a form per engine, to see how engines on shared or separate layout themes render together. */
 export function renderSsrFormsOnOnePage(engines: Array<ReturnType<typeof createSsrAcceptanceEngine>>): string {

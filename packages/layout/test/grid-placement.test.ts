@@ -1,5 +1,46 @@
 import { describe, expect, test } from 'vitest';
-import { areaTemplateIssues } from '@/index';
+import { areaTemplateIssues, elementIsSubgrid, subgridPlacementIssue } from '@/index';
+
+describe('subgrid placement', () => {
+	test('elementIsSubgrid reads only the top-level flag', () => {
+		expect(elementIsSubgrid({ grid: { subgrid: true } })).toBe(true);
+		expect(elementIsSubgrid({ grid: { subgrid: false } })).toBe(false);
+		expect(elementIsSubgrid({ grid: { width: 'half' } })).toBe(false);
+		expect(elementIsSubgrid({})).toBe(false);
+		expect(elementIsSubgrid(undefined)).toBe(false);
+	});
+
+	test('a subgrid that only hides or spaces itself has no issue', () => {
+		const element = {
+			grid: {
+				subgrid: true,
+				row: 2,
+				alignSelf: 'start',
+				marginBlockStart: 'loose',
+				responsive: { md: { hidden: true } },
+			},
+		};
+		expect(subgridPlacementIssue(element)).toBeUndefined();
+	});
+
+	test('an element that is not a subgrid has no issue whatever it places', () => {
+		expect(subgridPlacementIssue({ grid: { width: 'half', column: 2 } })).toBeUndefined();
+	});
+
+	test.each(['width', 'offset', 'column', 'area', 'justifySelf', 'placeSelf'] as const)(
+		'a subgrid that sets %s points at that key',
+		(key) => {
+			const issue = subgridPlacementIssue({ grid: { subgrid: true, [key]: 'x' } });
+			expect(issue?.path).toEqual(['grid', key]);
+			expect(issue?.message).toContain(`'subgrid' and '${key}'`);
+		},
+	);
+
+	test('a conflicting key of a breakpoint points at the breakpoint', () => {
+		const issue = subgridPlacementIssue({ grid: { subgrid: true, responsive: { md: { width: 'half' } } } });
+		expect(issue?.path).toEqual(['grid', 'responsive', 'md', 'width']);
+	});
+});
 
 describe('areaTemplateIssues reports issues with paths relative to the grid', () => {
 	test('a grid with sound templates has no issue', () => {

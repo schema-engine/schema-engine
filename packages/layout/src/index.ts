@@ -70,10 +70,12 @@ export {
 	elementAreaSlots,
 	elementGridKeys,
 	elementHiddenSlots,
+	elementIsSubgrid,
 	elementUsesGridWidths,
 	gridAreaTemplates,
 	gridUsesAreas,
 	namedPlacementOverflow,
+	subgridPlacementIssue,
 } from './lib/grid-placement';
 export type { CascadeSlot, GridAreaRows, GridAreaTemplates, GridBreakpointToken } from './lib/grid-placement';
 
@@ -81,6 +83,7 @@ export {
 	GRID_CLASS,
 	GRID_CONTAINER_CLASS,
 	GRID_ITEM_CLASS,
+	GRID_SUBGRID_CLASS,
 	getGridItemVariables,
 	getGridVariables,
 } from './lib/grid-styles';

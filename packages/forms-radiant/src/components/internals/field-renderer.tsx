@@ -11,7 +11,7 @@ import { constraintsFromParticipation, standaloneConstraints } from '@/lib/parti
 import type { ConstraintEvaluationContext } from './render-registered-element';
 import { mergeFieldGridHost } from '@/hooks/grid-styles';
 import { ConstraintElement } from './constraint-element';
-import { GRID_ITEM_CLASS } from '@schema-engine/layout';
+import { GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, elementIsSubgrid } from '@schema-engine/layout';
 
 export interface FormElementProps {
 	/**
@@ -92,7 +92,13 @@ export function FormElement({
 
 	return (
 		<ConstraintElement
-			classes={['se-form-field', GRID_ITEM_CLASS, 'se-form-constraint', className]}
+			classes={[
+				'se-form-field',
+				GRID_ITEM_CLASS,
+				elementIsSubgrid(config) && GRID_SUBGRID_CLASS,
+				'se-form-constraint',
+				className,
+			]}
 			data-se-constraint-field={fieldPath}
 			data-se-theme={fieldHost.themeId}
 			style={fieldHost.style}

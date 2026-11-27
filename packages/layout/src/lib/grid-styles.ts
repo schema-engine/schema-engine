@@ -348,6 +348,26 @@ export const GRID_CLASS = 'se-grid';
 export const GRID_ITEM_CLASS = 'se-grid-item';
 
 /**
+ * Class of every box that passes its parent grid's column tracks down to a nested grid, and the stylesheet's hook for it.
+ *
+ * @remarks
+ * `grid-template-columns: subgrid` only works on a grid item of the grid whose tracks it takes, so the
+ * element with `grid.subgrid`, every box between it and the grid that lays out its children, and that
+ * {@link GRID_CLASS} grid itself must all carry this class. A box in the chain that does not (a plain
+ * `div`) computes its template to `none` and the children fall back to one column, with nothing reported.
+ *
+ * Keep a `<fieldset>` out of the chain: Chromium lays a fieldset's content out in an anonymous box that does
+ * not take the subgrid, so its children fall back to one column there (Firefox and WebKit pass the tracks on).
+ * Use a box with `role="group"` and `aria-labelledby` its heading instead, which gives the same group and name
+ * to assistive technology in every engine; `display: contents` on the fieldset is no answer, since engines expose
+ * its semantics inconsistently. The grid of the children gets no tracks of its own, so it takes no
+ * {@link GRID_CONTAINER_CLASS} wrapper either: layout containment would make it an independent formatting
+ * context, and a subgrid inside one is `none`. Its breakpoints are queried against the container of the grid
+ * the chain hangs from.
+ */
+export const GRID_SUBGRID_CLASS = 'se-subgrid';
+
+/**
  * Class of the element a grid in a `query: 'container'` theme is measured against, and the stylesheet's hook for it.
  *
  * @remarks
@@ -547,6 +567,7 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 	const scope = `[data-se-theme="${themeId}"]`;
 	const gridScope = `.${GRID_CLASS}${scope}`;
 	const itemScope = `.${GRID_ITEM_CLASS}${scope}`;
+	const subgridScope = `.${GRID_SUBGRID_CLASS}${scope}`;
 	const tokens = GridGapTokens.map((token) => `${gapBaseVariable(token)}:${theme.gap[token]};`).join('');
 	const container = theme.query === 'container';
 	const atRule = container ? `@container ${GRID_CONTAINER_NAME}` : '@media';
@@ -557,7 +578,10 @@ export function getGridThemeCss(theme: NormalizedGridTheme, themeId: string): st
 					`.${GRID_CONTAINER_CLASS}${scope}{display:block;width:100%;min-width:0;container-type:inline-size;container-name:${GRID_CONTAINER_NAME};}`,
 				]
 			: []),
+		`${subgridScope}{${ITEM_DISPLAY_MODE_VARIABLE}:grid;display:grid;grid-template-columns:subgrid;column-gap:normal;align-content:start;}`,
+		`${subgridScope}>:not(.${GRID_ITEM_CLASS}){grid-column:1/-1;}`,
 		`${gridScope}{${container ? gateResets(themeId, 'g', GRID_PROPERTIES) : ''}${inheritanceResets(GRID_PROPERTIES, true)}${inheritanceResets(GRID_ALIGNMENT_PROPERTIES, false)}${DEFAULT_COLUMN_VARIABLE}:initial;${ITEM_DISPLAY_MODE_VARIABLE}:initial;display:grid;${declarations(themeId, 'g', GRID_PROPERTIES)}${flatDeclarations(GRID_ALIGNMENT_PROPERTIES)}}`,
+		`.${GRID_CLASS}${subgridScope}{--se-grid-template:subgrid;--se-grid-gap-x:normal;${DEFAULT_COLUMN_VARIABLE}:inherit;}`,
 		`${itemScope}{${container ? gateResets(themeId, 'i', ITEM_PROPERTIES) : ''}${inheritanceResets(ITEM_PROPERTIES, true)}${declarations(themeId, 'i', ITEM_PROPERTIES)}}`,
 	];
 	for (const breakpoint of BREAKPOINT_ORDER) {
@@ -671,6 +695,9 @@ function emitGapEntry(variables: CssVariables, slot: CascadeSlot, entry: GridEnt
  *
  * When `elements` (the items this grid places) use named widths, the grid
  * gets 12 tracks and a `1 / -1` default placement for items that set no width. Validation keeps that from meeting `columns`.
+ * The items include the children of every subgrid element, however deep, because a subgrid places
+ * them on this grid's tracks; a domain walks its children and passes them in. The grid of a subgrid
+ * has no tracks of its own, so its renderer does not call this.
  *
  * A grid with `areas` gets the template of each slot that sets one: the quoted
  * rows as `--se-grid-areas` and the track count they draw as `--se-grid-template`,
@@ -801,6 +828,10 @@ function emitItemEntry(
  * no inline style.
  * `placeSelf` is applied before the axis properties, so those win.
  *
+ * `subgrid` makes the element span `1 / -1`, its parent's whole row. It is the only placement a
+ * subgrid takes, so validation rejects the other column keys beside it, and the stylesheet does the rest
+ * under {@link GRID_SUBGRID_CLASS}.
+ *
  * `marginBlockStart`/`marginBlockEnd` accept the same gap tokens as the grid, so
  * a one-off rhythm around a non-input element reads in the same vocabulary as
  * the grid's spacing. They ride the shared item property table rather than a
@@ -812,6 +843,7 @@ export function getGridItemVariables(grid?: ElementGridConfig): CssVariables {
 	const variables: CssVariables = {};
 	const [alignSelf, justifySelf] = splitPlaceShorthand(grid?.placeSelf);
 
+	if (grid?.subgrid) variables['--se-item-grid-column'] = '1 / -1';
 	const named: NamedPlacement = {};
 	emitItemEntry(variables, 'default', { alignSelf, justifySelf });
 	emitItemEntry(variables, 'default', grid, named);

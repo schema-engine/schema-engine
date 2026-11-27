@@ -10,6 +10,8 @@ import {
 } from './render-form-ssr-html';
 import { renderNestedThemeGuestHtml, renderReenteredThemeHtml } from './render-nested-theme-ssr-html';
 import { renderSsrNestedContainerHtml, renderSsrNestedWidthsAcceptanceHtml } from './render-nested-widths-ssr-html';
+import { renderSsrSubgridHtml } from './render-subgrid-ssr-html';
+import { SSR_SUBGRID_VARIANTS } from '../../../../test-utils/ssr-grid-fixtures';
 import { renderArrayObjectDefaultsHtml, renderArraySsrAcceptanceHtml } from './render-form-array-ssr-html';
 
 declare module 'vitest' {
@@ -24,6 +26,8 @@ declare module 'vitest' {
 		ssrNestedContainerTemplateHtml: string;
 		ssrNestedContainerPlacementHtml: string;
 		ssrNestedContainerTheme: { id: string; css: string };
+		/** Server markup of each subgrid acceptance variant, by name. */
+		ssrSubgridHtml: Record<string, string>;
 		ssrHydrationHtml: string;
 		ssrLayoutTheme: { id: string; css: string };
 		ssrNestedThemeHtml: string;
@@ -66,6 +70,15 @@ export default function setup(project: TestProject): void {
 	project.provide(
 		'ssrNestedContainerPlacementHtml',
 		renderSsrNestedContainerHtml('placement').html.replaceAll('</script>', '<\\/script>'),
+	);
+	project.provide(
+		'ssrSubgridHtml',
+		Object.fromEntries(
+			SSR_SUBGRID_VARIANTS.map((variant) => [
+				variant,
+				renderSsrSubgridHtml(variant).replaceAll('</script>', '<\\/script>'),
+			]),
+		),
 	);
 	project.provide('ssrLayoutTheme', { id, css });
 	const nested = renderNestedThemeGuestHtml();
