@@ -89,10 +89,13 @@ jobs:
             - name: Configure npm for OIDC trusted publishing
               run: npm config delete //registry.npmjs.org/:_authToken --location=user || true
 
+            # The action sets the git identity `changeset publish` needs to create its annotated tags,
+            # pushes those tags and opens a GitHub Release per published package. With no changesets
+            # left (checked above) it only publishes.
             - name: Publish the versions not yet on npm
-              run: pnpm run release
+              uses: changesets/action@v2
+              with:
+                  github-token: ${{ github.token }}
+                  publish-script: pnpm run release
               env:
                   NPM_CONFIG_PROVENANCE: true
-
-            - name: Push the release tags
-              run: git push origin --tags
