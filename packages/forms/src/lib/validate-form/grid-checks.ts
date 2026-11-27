@@ -1,4 +1,7 @@
 import type { FormTaggedConfig } from '@/schemas/form-config';
+import type { ContainerKind } from '@/types/registration';
+import { getElementChildren } from '@/lib/element-children';
+import { placedTrackItems } from '@/lib/grid-track-items';
 import {
 	areaNames,
 	areaTemplateIssues,
@@ -6,16 +9,18 @@ import {
 	elementAreaSlots,
 	elementHiddenSlots,
 	elementGridKeys,
+	elementIsSubgrid,
 	elementUsesGridWidths,
 	GRID_TEMPLATE_KEYS,
 	gridAreaTemplates,
 	gridUsesAreas,
 	namedPlacementOverflow,
+	subgridPlacementIssue,
 	WIDTH_TRACKS,
 	type CascadeSlot,
 	type GridLayoutConfig,
 } from '@schema-engine/layout';
-import { issueAt, isRecord, type FormValidationIssue, type Path } from './issues';
+import { isTaggedConfig, issueAt, isRecord, type FormValidationIssue, type Path } from './issues';
 
 /**
  * Where a grid sets the first of `keys`, relative to the grid: `['columns']` or
@@ -127,6 +132,36 @@ export function areaPlacementIssue(item: FormTaggedConfig, nested: boolean): For
 	);
 }
 
+/**
+ * Why an element cannot be a subgrid, or `undefined` when it can or is not one.
+ *
+ * @param kind The container semantics the element's registration declares.
+ *
+ * @remarks
+ * A subgrid lays its children on its parent's tracks, so it needs children, and its own placement must
+ * leave it spanning the parent's full row (see `subgridPlacementIssue`). An array is rejected for now:
+ * its rows are each a box of their own and do not pass the tracks on. The path is relative to the element.
+ */
+export function subgridIssue(item: FormTaggedConfig, kind: ContainerKind | undefined): FormValidationIssue | undefined {
+	if (!elementIsSubgrid(item)) return undefined;
+	const label = elementLabel(item);
+	const path = elementGridKeyPath(item, ['subgrid']);
+	if (kind === 'array') {
+		return issueAt(
+			path,
+			`${label} sets grid 'subgrid' but is an array; subgrid rows are not supported yet, so only a container that lays its children out as one group can use 'subgrid'.`,
+		);
+	}
+	if (!getElementChildren(item)) {
+		return issueAt(
+			path,
+			`${label} sets grid 'subgrid' but has no elements; only a container can lay its children on its parent's tracks.`,
+		);
+	}
+	const placement = subgridPlacementIssue(item);
+	return placement ? issueAt(placement.path, `${label} ${placement.message}`) : undefined;
+}
+
 /** An element of a step that validated, with where it sits in the form. */
 export interface PlacedElement {
 	element: FormTaggedConfig;
@@ -196,6 +231,10 @@ export function templateIssues(
  * at a breakpoint is the last one set at or below it, and so is the template.
  * That is what a viewport gets, and it catches a template that changes at `md`
  * under a field that kept its `default` area.
+ *
+ * The widths check reads the grid's track items, which include the children of a subgrid, since they sit
+ * on this grid's tracks. When the offender is such a child the issue is at its own `width` or `offset`,
+ * the key to remove; for a direct child it stays at the grid's tracks, as it always was.
  */
 export function fieldPlacementIssues(
 	label: string,
@@ -207,16 +246,33 @@ export function fieldPlacementIssues(
 	const usesAreas = gridUsesAreas(grid);
 	const issues: FormValidationIssue[] = [];
 
-	const widths = scope.elements.find(({ element }) => elementUsesGridWidths(element));
+	const widths = placedTrackItems(scope.elements)
+		.filter((item): item is PlacedElement => isTaggedConfig(item.element))
+		.find(({ element }) => elementUsesGridWidths(element));
 	const exclusive = usesAreas ? ['areas'] : templateTrackKeys(grid);
 	if (widths && exclusive.length > 0) {
 		const tracksPath = gridKeyPath(grid, GRID_TEMPLATE_KEYS) ?? [];
+		const inSubgrid = !scope.elements.some(({ element }) => element === widths.element);
+		const path = inSubgrid
+			? [...widths.path, ...elementGridKeyPath(widths.element, ['width', 'offset'])]
+			: [...scope.gridPath, ...(usesAreas ? ['areas'] : tracksPath)];
 		issues.push(
 			issueAt(
-				[...scope.gridPath, ...(usesAreas ? ['areas'] : tracksPath)],
+				path,
 				`${label} sets ${quotedKeys(exclusive)} but ${elementLabel(widths.element)} uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
 			),
 		);
+	}
+
+	if (usesAreas) {
+		for (const { element, path } of scope.elements.filter(({ element }) => elementIsSubgrid(element))) {
+			issues.push(
+				issueAt(
+					[...path, ...elementGridKeyPath(element, ['subgrid'])],
+					`${elementLabel(element)} sets grid 'subgrid' but the ${label.toLowerCase()} draws 'areas'; a subgrid spans its parent's full row and cannot claim an area.`,
+				),
+			);
+		}
 	}
 
 	const claimants = scope.elements.filter(({ element }) => Object.keys(elementAreaSlots(element)).length > 0);

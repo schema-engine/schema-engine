@@ -24,6 +24,7 @@ import {
 	type FormConfig,
 	getRenderableSteps,
 	assertFormEngine,
+	gridTrackItems,
 	stepGrid,
 } from '@schema-engine/forms';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
@@ -58,7 +59,7 @@ function StepFields({
 					<div
 						className={`se-form-grid ${GRID_CLASS}`}
 						data-se-theme={layout.id}
-						style={getGridVariables(stepGrid(config, step), layout.grid, step.elements)}
+						style={getGridVariables(stepGrid(config, step), layout.grid, gridTrackItems(step.elements))}
 					>
 						<FormElements elements={step.elements} />
 					</div>

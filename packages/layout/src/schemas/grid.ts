@@ -184,6 +184,13 @@ const ElementGridPropertiesSchema = z.strictObject({
 	justifySelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	alignSelf: z.optional(z.enum(['start', 'end', 'center', 'stretch'])),
 	placeSelf: z.optional(z.string()),
+	subgrid: z
+		.optional(z.boolean())
+		.check(
+			z.describe(
+				"Spans the parent grid's full row and lays this element's children on the parent's column tracks and gap. Set on a container element, never per breakpoint.",
+			),
+		),
 	marginBlockStart: z
 		.optional(GridGapValueSchema)
 		.check(z.describe('Extra space before this element, on top of the grid row gap.')),
@@ -192,9 +199,12 @@ const ElementGridPropertiesSchema = z.strictObject({
 		.check(z.describe('Extra space after this element, on top of the grid row gap.')),
 });
 
-export const ItemGridBreakpointSchema = z.extend(z.omit(ElementGridPropertiesSchema, { placeSelf: true }), {
-	hidden: z.optional(z.boolean()),
-});
+export const ItemGridBreakpointSchema = z.extend(
+	z.omit(ElementGridPropertiesSchema, { placeSelf: true, subgrid: true }),
+	{
+		hidden: z.optional(z.boolean()),
+	},
+);
 
 export const ElementGridConfigSchema = z.extend(ElementGridPropertiesSchema, {
 	responsive: responsiveSchema(ItemGridBreakpointSchema),

@@ -1,6 +1,6 @@
 ---
 title: 'Grid and placement'
-description: 'Place fields in a grid by width and offset, draw a layout with areas, and use raw grid lines.'
+description: 'Place fields in a grid by width and offset, draw a layout with areas, line a fieldset up with subgrid, and use raw grid lines.'
 order: 2
 ---
 
@@ -74,8 +74,8 @@ The street fills its row, the city and the ZIP code share the next one, and the 
 Validation enforces these rules for named widths:
 
 - A form grid that sets `columns` or `minColumnWidth` (at any breakpoint) cannot
-  contain a top-level field that uses `width` or `offset`: a grid uses areas,
-  widths or columns.
+  contain a top-level field that uses `width` or `offset`, nor one inside a
+  subgrid fieldset: a grid uses areas, widths or columns.
 - A field that sets `width` or `offset` cannot also set a raw `column`.
 - A field's `offset` plus `width` must fit in 12 tracks, counting the value
   each carries from a narrower breakpoint: `two-thirds` after a `half` offset
@@ -178,6 +178,39 @@ it starts the field at line 2. Use `column: 'span 2'` to span two columns, or
 `column: '4 / 10'` for explicit lines. A raw `column` field may sit next to
 width fields, but it counts tracks of the 12 the widths use there, so
 `column: 'span 2'` is two of twelve, a sixth of the row.
+
+### Subgrid: line up the fields of a fieldset
+
+A fieldset lays its children out on tracks of its own, so its fields do not share column lines with the fields around it. `subgrid: true` on the fieldset makes it span its parent's full row and lay its children on the parent's column tracks and column gap, with CSS subgrid and no script:
+
+```ts
+export const step = [
+	{ $type: 'input', id: 'first', name: 'first', grid: { width: 'half' } },
+	{ $type: 'input', id: 'last', name: 'last', grid: { width: 'half' } },
+	{
+		$type: 'fieldSet',
+		id: 'address',
+		name: 'address',
+		legend: 'Address',
+		grid: { subgrid: true },
+		elements: [
+			{ $type: 'input', id: 'street', name: 'street', grid: { width: 'half' } },
+			{ $type: 'input', id: 'city', name: 'city', grid: { width: 'half' } },
+		],
+	},
+];
+```
+
+The street sits under `first` and the city under `last`, and `half` inside the fieldset still means half of the row. The rules:
+
+- **It spans the full row.** A subgrid takes no `width`, `offset`, `column`, `area`, `justifySelf` or `placeSelf`, and validation rejects them at the key. `hidden` and the block margins in `responsive`, and `row` and `alignSelf`, work as on any element.
+- **Widths count the parent's tracks.** A grid whose fields, or the fields of a subgrid in it, use `width` or `offset` is laid out on 12 tracks, so the parent takes 12 when only the fieldset's children set a width. Under a parent with `columns: 3`, the children place on its three columns by flow, and a `width` inside is rejected like a direct one. With `columns: 'auto'` the fieldset spans every track the grid draws, so the children flow across them as in `auto-fill`.
+- **The edge columns are inset.** Interior column lines match the parent exactly, but the fieldset's own border and padding are added to the fields in its first and last columns. The Radiant fieldset has `1rem` of padding and a `1px` border, so those fields start `calc(1rem + 1px)` in from the lines above and below them; the forms-react fieldset has none.
+- **Subgrids nest.** Every level spans its parent's row and passes the tracks on.
+- **It is structure, not a breakpoint.** `subgrid` is not allowed in `responsive`. The tracks it takes still change with the parent's `columns` and `width` at each breakpoint, and the children keep their own `responsive` placement.
+- **Not supported.** A parent that draws `areas` rejects a subgrid. An array rejects `subgrid`, since subgrid rows are not supported yet. Rows are never subgridded: each field is one grid item.
+
+Both renderers draw a subgrid fieldset as a `div` with `role="group"`, labelled by its legend through `aria-labelledby`, instead of a `<fieldset>`: Chromium lays a fieldset's content out in an anonymous box that does not take the parent's tracks. Assistive technology gets the same named group, and the legend is a heading row at the top of the box rather than a gap in its border. Browsers have supported subgrid since 2023 (Chrome and Edge 117, Safari 16, Firefox 71). Under a layout theme that queries the container, a subgrid has no wrapper of its own and its breakpoints follow the container of the grid it sits in; [Layout themes](/docs/layout/layout-themes#follow-the-container-not-the-window) has the markup rules for hand-written containers.
 
 ## Breakpoints: the window or the container
 

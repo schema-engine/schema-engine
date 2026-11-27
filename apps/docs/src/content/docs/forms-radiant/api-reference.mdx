@@ -8,14 +8,14 @@ order: 6
 
 ## Entry points
 
-| Import                                       | Holds                                                                                                                                         |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms-radiant`               | `createRadiantFormEngine`, `FormRenderer`, `schemaFormRegistrations`, the recipes, `FormController` and `FormEngineController`, and the hosts |
-| `@schema-engine/forms-radiant/index.css`     | The renderer's stylesheet                                                                                                                     |
-| `@schema-engine/forms-radiant/registrations` | Each element registration by name, such as `InputElementRegistration`                                                                         |
-| `@schema-engine/forms-radiant/hooks`         | Helpers for building elements: `combineHandlers` and `mergeFieldGridHost`                                                                     |
-| `@schema-engine/forms-radiant/primitives`    | The rendering primitives: `FormField`, `FormFieldElement`, `FormElement` and `ChildGrid`                                                      |
-| `@schema-engine/forms-radiant/contexts`      | `formInstanceContext`, which the hosts publish to the blocks and recipes of a renderer; an app reads the form with `FormController`           |
+| Import                                       | Holds                                                                                                                                                                         |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-radiant`               | `createRadiantFormEngine`, `FormRenderer`, `schemaFormRegistrations`, the recipes, `FormController` and `FormEngineController`, and the hosts                                 |
+| `@schema-engine/forms-radiant/index.css`     | The renderer's stylesheet                                                                                                                                                     |
+| `@schema-engine/forms-radiant/registrations` | Each element registration by name, such as `InputElementRegistration`                                                                                                         |
+| `@schema-engine/forms-radiant/hooks`         | Helpers for building elements: `combineHandlers` and `mergeFieldGridHost`                                                                                                     |
+| `@schema-engine/forms-radiant/primitives`    | The rendering primitives: `FormField`, `FormFieldElement`, `FormElement` and `ChildGrid` (its `subgrid` prop lays a container's children on the tracks of the grid around it) |
+| `@schema-engine/forms-radiant/contexts`      | `formInstanceContext`, which the hosts publish to the blocks and recipes of a renderer; an app reads the form with `FormController`                                           |
 
 ## createRadiantFormEngine
 
