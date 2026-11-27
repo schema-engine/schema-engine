@@ -78,7 +78,7 @@
 			"oxlint",
 			"prettier --write"
 		],
-		"**/*.{json,jsonc,md,yml,yaml}": [
+		"**/*.{json,jsonc,md,mdx,css,yml,yaml}": [
 			"prettier --write"
 		]
 	},
