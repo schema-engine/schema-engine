@@ -33,6 +33,18 @@ describe('createRegistry child paths', () => {
 		]);
 	});
 
+	it('errors, naming the $type and the property, for a child path property other than keys and accepts', () => {
+		// @ts-expect-error 'accept' is no property of a child path (childPathUnknownProperty: { $type: 'page'; property: 'accept' })
+		createRegistry('Bad', [
+			{
+				$type: 'page',
+				schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
+				metadata: { name: 'Page' },
+				childPaths: [{ keys: ['sections'], accept: ['section'] }],
+			},
+		]);
+	});
+
 	it('errors for a key that only a loose schema allows through its index signature', () => {
 		// @ts-expect-error a loose schema allows 'content' but does not declare it
 		createRegistry('Bad', [

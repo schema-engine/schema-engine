@@ -112,8 +112,8 @@ export function render(node: ParsedNode<Registration>): string {
 	return block.render(node.data, children);
 }
 
-export function childrenOf(node: ParsedNode<Registration>, key: string): ParsedNode<Registration>[] {
-	return node.children.find(({ keys }) => keys.join() === key)?.nodes.slice() ?? [];
+export function childrenAt(node: ParsedNode<Registration>, dottedKeys: string): ParsedNode<Registration>[] {
+	return node.children.find(({ keys }) => keys.join('.') === dottedKeys)?.nodes.slice() ?? [];
 }
 ```
 

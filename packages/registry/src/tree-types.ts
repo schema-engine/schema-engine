@@ -55,16 +55,37 @@ type UndeclaredChildPaths<T> = T extends {
 	: never;
 
 /**
- * What `createRegistry` intersects with its `registrations` parameter, so a child path the schema does not declare is
- * an error that names it: `Property 'childPathNotInSchema' is missing`, with the `$type` and the keys.
+ * The properties of a child path entry other than `keys` and `accepts`, as `{ $type, property }`.
  *
  * @remarks
- * `unknown` when every path is declared, which is the identity of an intersection. A schema whose output type cannot
- * be read (`unknown`, a plain `StandardSchemaV1`) is not checked here; `safeParseTree` checks it at runtime.
+ * `createRegistry` infers its registrations with a `const` type parameter, which keeps a property the constraint does
+ * not know (`accept` for `accepts`) instead of rejecting it as an excess property.
  */
-export type CheckChildPaths<T> = [UndeclaredChildPaths<T>] extends [never]
+type UnknownChildPathProperties<T> = T extends { $type: infer TType; readonly childPaths: readonly (infer TPath)[] }
+	? TPath extends unknown
+		? [Exclude<keyof TPath, keyof ChildPath>] extends [never]
+			? never
+			: { $type: TType; property: Exclude<keyof TPath, keyof ChildPath> }
+		: never
+	: never;
+
+/**
+ * What `createRegistry` intersects with its `registrations` parameter, so a child path the schema does not declare is
+ * an error that names it: `Property 'childPathNotInSchema' is missing`, with the `$type` and the keys. A child path
+ * entry with a property other than `keys` and `accepts` is `childPathUnknownProperty`, with the `$type` and the
+ * property.
+ *
+ * @remarks
+ * `unknown` when every path is declared and well formed, which is the identity of an intersection. A schema whose
+ * output type cannot be read (`unknown`, a plain `StandardSchemaV1`) is not checked here; `safeParseTree` checks it at
+ * runtime.
+ */
+export type CheckChildPaths<T> = ([UndeclaredChildPaths<T>] extends [never]
 	? unknown
-	: { readonly childPathNotInSchema: UndeclaredChildPaths<T> };
+	: { readonly childPathNotInSchema: UndeclaredChildPaths<T> }) &
+	([UnknownChildPathProperties<T>] extends [never]
+		? unknown
+		: { readonly childPathUnknownProperty: UnknownChildPathProperties<T> });
 
 type AcceptedNames<T extends TreeRegistration> = T extends { readonly childPaths: readonly (infer TPath)[] }
 	? TPath extends { readonly accepts: readonly (infer TName)[] }
