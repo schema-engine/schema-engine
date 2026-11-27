@@ -31,6 +31,7 @@ import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
 import { isZodType } from '@/lib/zod-json-schema';
+import { createExportedRecipeView } from '@/lib/exported-recipe-view';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
@@ -106,6 +107,21 @@ function createRegistrationSchema(
 }
 
 /**
+ * The schema the JSON Schema export lists a recipe by, with each slot's `appearance` closed over the axes it declares.
+ *
+ * @remarks
+ * A recipe with `slotSchemas` is exported from them, because its own schema is a Standard Schema that can come from
+ * any library; see {@link createExportedRecipeView}. One without them (written by hand) is exported as its own
+ * schema when that is Zod, and otherwise listed by its `$type` alone.
+ */
+function exportedRecipeView(recipe: AnyRecipeRegistration, layout: LayoutTheme): unknown {
+	const view = recipe.slotSchemas
+		? createExportedRecipeView({ ...recipe, slotSchemas: recipe.slotSchemas })
+		: recipe.schema;
+	return isZodType(view) ? withSlotAppearanceAxes(view, layout.appearance, recipe.appearanceAxes) : recipe.schema;
+}
+
+/**
  * The registrations of one registry as the JSON Schema export lists them: the schema of an element
  * or recipe is closed over the axes it declares, built from the layout theme's axes.
  *
@@ -134,6 +150,10 @@ function toExportRegistrations(
 			exportSchema: registration.schema,
 			metadata: registration.metadata,
 		};
+		if (componentType === ComponentType.Recipe) {
+			exported.exportSchema = exportedRecipeView(registration as AnyRecipeRegistration, layout);
+			return exported;
+		}
 		if (!isZodType(registration.schema)) {
 			if (componentType === ComponentType.Element) {
 				exported.appearanceAxes = (registration as AnyElementRegistration).appearanceAxes ?? [];
@@ -148,12 +168,6 @@ function toExportRegistrations(
 			);
 			const withChildren = childSchema ? withExportedChildren(withAppearance, childSchema) : withAppearance;
 			exported.exportSchema = ruleSchema ? withExportedRules(withChildren, ruleSchema) : withChildren;
-		} else if (componentType === ComponentType.Recipe) {
-			exported.exportSchema = withSlotAppearanceAxes(
-				registration.schema,
-				layout.appearance,
-				(registration as AnyRecipeRegistration).appearanceAxes,
-			);
 		} else {
 			exported.exportSchema = withActionEnvelope(registration.schema, registration.$type);
 		}

@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 import { checkAppearance, mergeAppearance, pickSupportedAppearance, type SlotAppearanceAxes } from '../lib/appearance';
 import type { LayoutIssue } from '../lib/layout-issue';
 import type { LayoutTheme } from '../lib/layout-theme';
@@ -50,15 +51,9 @@ function withoutAppearance(config: Record<string, unknown>): Record<string, unkn
 	return rest;
 }
 
-function parseSync(schema: StandardSchemaV1, value: unknown): StandardSchemaV1.Result<unknown> {
-	const result = schema['~standard'].validate(value);
-	if (result && typeof (result as Promise<unknown>).then === 'function') {
-		throw new Error('Async Standard Schema validation is not supported in this context');
-	}
-	if (result === null || typeof result !== 'object') {
-		throw new Error('Standard Schema validation returned an invalid result');
-	}
-	return result as StandardSchemaV1.Result<unknown>;
+/** The issue message for a view key that the recipe does not declare, shared by the view schema and {@link resolveRecipeView}. */
+export function unknownViewKeyMessage($type: string, key: string, allowed: readonly string[]): string {
+	return `Recipe '${$type}' does not accept view key '${key}'. Allowed: ${allowed.join(', ') || '(none)'}.`;
 }
 
 /**
@@ -98,9 +93,9 @@ export function resolveRecipeView(
 		if (isPlainRecord(authoredSlot)) stripped[slot] = withoutAppearance(authoredSlot);
 	}
 
-	const parsed = parseSync(recipe.schema, mergeSlotDefaults(stripped, recipe.slotDefaults));
-	if (parsed.issues !== undefined) return { issues, schemaIssues: [...parsed.issues] };
-	const output = parsed.value;
+	const parsed = safeParseStandardSchema(recipe.schema, mergeSlotDefaults(stripped, recipe.slotDefaults));
+	if (!parsed.success) return { issues, schemaIssues: parsed.error.issues };
+	const output = parsed.data;
 	if (typeof output !== 'object' || output === null || !('$type' in output) || typeof output.$type !== 'string') {
 		issues.push({
 			path: ['$type'],
@@ -112,10 +107,7 @@ export function resolveRecipeView(
 	const allowedSlots = new Set<string>(recipe.slots);
 	for (const key of Object.keys(view)) {
 		if (key !== '$type' && !allowedSlots.has(key)) {
-			issues.push({
-				path: [key],
-				message: `Recipe '${recipe.$type}' does not accept view key '${key}'. Allowed: ${[...allowedSlots].join(', ') || '(none)'}.`,
-			});
+			issues.push({ path: [key], message: unknownViewKeyMessage(recipe.$type, key, recipe.slots) });
 		}
 	}
 

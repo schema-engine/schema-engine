@@ -9,10 +9,10 @@ import {
 	defineFormRecipe,
 	type FormShellLayout,
 	type RecipeRenderPayload,
-	type RecipeSlot,
+	type RecipeSlotSchemas,
 	type RecipeSpec,
 } from '@schema-engine/forms/recipes';
-import type * as z from 'zod/mini';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 export { FormElement } from './components/internals/field-renderer';
 export type { FormElementProps } from './components/internals/field-renderer';
@@ -38,8 +38,8 @@ export interface ReactRecipeAdapterPayload {
  */
 export function defineRecipe<
 	const TType extends string,
-	TSlots extends Partial<Record<RecipeSlot, z.ZodMiniType>>,
-	TSchema extends z.ZodMiniType,
+	TSlots extends RecipeSlotSchemas,
+	TSchema extends StandardSchemaV1,
 >(spec: RecipeSpec<TType, TSchema, TSlots>, payload: RecipeRenderPayload<TSlots, FormShellComponent, React.FC>) {
 	return defineFormRecipe(spec, payload);
 }

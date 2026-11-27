@@ -1,3 +1,5 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 import { describe, expect, test, vi } from 'vitest';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
 import { cardSpec, wizardSpec, builtInRecipeSpecs } from '@/recipes/built-in-specs';
@@ -11,6 +13,8 @@ import {
 } from '@/recipes/slot-schemas';
 import { buildViewModel, createViewNavigation, getSlotConfig, projectViewSteps } from '@/recipes/view-model';
 import type { FormStepState } from '@/engine/step-machine';
+
+const accepts = (schema: StandardSchemaV1, value: unknown) => safeParseStandardSchema(schema, value).success;
 
 describe('defineRecipeSpec', () => {
 	test('rejects wizard recipes without actions', () => {
@@ -48,7 +52,7 @@ describe('defineRecipeSpec', () => {
 
 	test('omits empty shell slots from the view schema', () => {
 		expect(wizardSpec.slots).toEqual(['header', 'progress', 'actions']);
-		expect(wizardSpec.schema.safeParse({ $type: 'wizard', shell: {} }).success).toBe(false);
+		expect(accepts(wizardSpec.schema, { $type: 'wizard', shell: {} })).toBe(false);
 	});
 });
 
@@ -77,7 +81,7 @@ describe('defineRecipeSpec slotDefaults', () => {
 				// @ts-expect-error -- 'sizee' is not a header key
 				slotDefaults: { header: { sizee: 'sm' } },
 			}),
-		).toThrow(/'defaults' slotDefaults\.header.*sizee/);
+		).toThrow(/'defaults' slotDefaults\.header is invalid/);
 	});
 
 	test('fails on a default for an undeclared slot', () => {
@@ -103,20 +107,18 @@ describe('built-in recipe specs', () => {
 	});
 
 	test('card schema accepts shell config without nested $type', () => {
-		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { appearance: { size: 'compact' } } }).success).toBe(
-			true,
-		);
-		expect(cardSpec.schema.safeParse({ $type: 'card', shell: { $type: 'card' } }).success).toBe(false);
+		expect(accepts(cardSpec.schema, { $type: 'card', shell: { appearance: { size: 'compact' } } })).toBe(true);
+		expect(accepts(cardSpec.schema, { $type: 'card', shell: { $type: 'card' } })).toBe(false);
 	});
 
 	test('sidebar wizard accepts optional shell separator', () => {
 		expect(builtInRecipeSpecs['sidebar-wizard'].slots).toContain('shell');
-		expect(builtInRecipeSpecs['sidebar-wizard'].schema.safeParse({ $type: 'sidebar-wizard' }).success).toBe(true);
+		expect(accepts(builtInRecipeSpecs['sidebar-wizard'].schema, { $type: 'sidebar-wizard' })).toBe(true);
 		expect(
-			builtInRecipeSpecs['sidebar-wizard'].schema.safeParse({
+			accepts(builtInRecipeSpecs['sidebar-wizard'].schema, {
 				$type: 'sidebar-wizard',
 				shell: { showSeparator: false },
-			}).success,
+			}),
 		).toBe(true);
 	});
 });

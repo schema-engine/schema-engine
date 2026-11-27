@@ -49,9 +49,10 @@ export function safeParseStandardSchema<TInput, TOutput>(
  *
  * @remarks
  * The schema reports `schema-engine` as its vendor and is synchronous, as {@link safeParseStandardSchema} requires.
+ * `TInput` only types what the schema accepts, so an authoring type can be inferred from it; `validate` still receives `unknown`.
  */
-export function standardSchema<TOutput>(
+export function standardSchema<TOutput, TInput = unknown>(
 	validate: (value: unknown) => StandardSchemaV1.Result<TOutput>,
-): StandardSchemaV1<unknown, TOutput> {
+): StandardSchemaV1<TInput, TOutput> {
 	return { '~standard': { version: 1, vendor: 'schema-engine', validate } };
 }

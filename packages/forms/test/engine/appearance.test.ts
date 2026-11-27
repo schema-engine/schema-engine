@@ -450,18 +450,6 @@ describe('recipe slot appearance', () => {
 		);
 	});
 
-	test('a slot that declares axes must accept the appearance key', () => {
-		expect(() =>
-			defineRecipeSpec({
-				$type: 'bad',
-				kind: 'single-step',
-				metadata: { name: 'Bad' },
-				slotSchemas: { shell: z.strictObject({}) },
-				appearanceAxes: { shell: ['size'] },
-			}),
-		).toThrowError(/shell.*appearance/);
-	});
-
 	test('a slot may not declare axes for a slot the recipe lacks', () => {
 		expect(() =>
 			defineRecipeSpec({

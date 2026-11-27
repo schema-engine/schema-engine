@@ -8,7 +8,7 @@ The forms domain of Schema Engine: elements, validation rules, constraints, step
 pnpm add @schema-engine/forms zod
 ```
 
-First-party schemas use the `zod/mini` entry point. Registrations may use any [Standard Schema](https://standardschema.dev/) validator.
+First-party schemas use the `zod/mini` entry point. Registrations may use any [Standard Schema](https://standardschema.dev/) validator, and so may the slot schemas of a recipe spec. The JSON Schema export lists a schema it cannot read (not Zod) by its shape: a registration by its `$type`, a recipe slot as an open object with its appearance axes.
 
 ## Example
 

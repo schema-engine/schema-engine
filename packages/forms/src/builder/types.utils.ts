@@ -149,6 +149,7 @@ export type RecipeRegistrationConstraint = {
 	readonly kind: 'single-step' | 'wizard';
 	readonly slots: readonly string[];
 	readonly appearanceAxes?: SlotAppearanceAxes;
+	readonly slotSchemas?: Readonly<Partial<Record<string, StandardSchemaConstraint>>>;
 	readonly metadata: { readonly name: string };
 	readonly render: unknown;
 };
