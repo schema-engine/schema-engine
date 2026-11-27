@@ -13,9 +13,14 @@ import { createLayoutTheme } from '@/lib/layout-theme';
  * `--se-item-display-mode` (31 raw bytes), so a fieldset's own `grid` mode stops leaking into its fields. The sizes are
  * measured at the longest theme id (8 characters), so the headroom of the raw budget, 6 bytes, is a fixed ceiling and not
  * slack that a shorter id leaves.
+ *
+ * The three `se-subgrid` rules then added 357 raw bytes. They are emitted in every theme, because a
+ * stylesheet cannot know which documents will set `grid.subgrid`, and each is needed: the box rule makes a box a
+ * column subgrid on its parent's gap, the child rule spans what is not an item, and the grid rule takes the parent's
+ * template, gap and default column over the grid's own resets.
  */
-const RAW_BUDGET_BYTES = 11_151;
-const GZIP_BUDGET_BYTES = 1_600;
+const RAW_BUDGET_BYTES = 11_508;
+const GZIP_BUDGET_BYTES = 1_680;
 
 describe('the default theme stylesheet size', () => {
 	const css = createLayoutTheme().css;

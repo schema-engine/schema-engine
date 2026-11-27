@@ -41,9 +41,11 @@ Emit `theme.css` once on the page, give the container the `GRID_CLASS` class and
 
 Breakpoints measure the window by default. `createLayoutTheme({ grid: { query: 'container' } })` makes them measure the grid's own wrapper instead, so a grid in a card or a panel follows the room it has. The wrapper is an element with `GRID_CONTAINER_CLASS` and `data-se-theme="${theme.id}"` around each grid; a grid with no wrapper keeps its narrowest layout. The document is the same in both modes.
 
+An element with `grid: { subgrid: true }` spans its parent's full row and lays its children on the parent's column tracks and gap instead of tracks of its own. The item, every box between it and the inner grid, and the inner `GRID_CLASS` grid carry `GRID_SUBGRID_CLASS` and `data-se-theme`, and none may be a `GRID_CONTAINER_CLASS` wrapper or set `container-type`, or the browser falls back to one column without a warning. Keep a `<fieldset>` out of the chain, because Chromium does not make one a subgrid; use a `div` with `role="group"` and `aria-labelledby` its heading. A domain passes the children of its subgrids among the items it gives `getGridVariables`.
+
 ## Entry points
 
-The package has one entry, `@schema-engine/layout`: `createLayoutTheme`, `defineAxis` and `builtInAxes`, the grid helpers (`getGridVariables`, `getGridItemVariables`) and the hooks `GRID_CLASS`, `GRID_ITEM_CLASS` and `GRID_CONTAINER_CLASS`, `getAppearanceAttributes`, and the recipe protocol (`defineRecipeProtocol`, `resolveRecipeView`).
+The package has one entry, `@schema-engine/layout`: `createLayoutTheme`, `defineAxis` and `builtInAxes`, the grid helpers (`getGridVariables`, `getGridItemVariables`) and the hooks `GRID_CLASS`, `GRID_ITEM_CLASS`, `GRID_SUBGRID_CLASS` and `GRID_CONTAINER_CLASS`, the subgrid checks `elementIsSubgrid` and `subgridPlacementIssue`, `getAppearanceAttributes`, and the recipe protocol (`defineRecipeProtocol`, `resolveRecipeView`).
 
 ## Documentation
 

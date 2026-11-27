@@ -197,3 +197,127 @@ export function ssrNestedContainerForm(
 		],
 	};
 }
+
+/**
+ * The forms of the subgrid acceptance, by name.
+ *
+ * - `widths`: two half fields, then a subgrid fieldset of two half fields and one with no width.
+ * - `through`: no width on the step's own fields; the two halves exist only inside the subgrid.
+ * - `columns`: a two-column step with a wide gap, a field per column and a padded subgrid fieldset of two.
+ * - `responsive`: full width, half from `md`, in the step and in the subgrid.
+ * - `hidden`: a subgrid fieldset that hides from `md`.
+ * - `nested`: a subgrid inside a subgrid, in a width grid.
+ * - `container`: `responsive` under a container query theme.
+ */
+export type SsrSubgridVariant = 'widths' | 'through' | 'columns' | 'responsive' | 'hidden' | 'nested' | 'container';
+
+export const SSR_SUBGRID_VARIANTS: readonly SsrSubgridVariant[] = [
+	'widths',
+	'through',
+	'columns',
+	'responsive',
+	'hidden',
+	'nested',
+	'container',
+];
+
+/** The layout input a subgrid variant renders under: a container query theme for `container`, else the default. */
+export function ssrSubgridLayout(variant: SsrSubgridVariant) {
+	return variant === 'container' ? ({ grid: { query: 'container' } } as const) : undefined;
+}
+
+/**
+ * Stylesheet a document of the `columns` variant gets, so the edge inset is a known amount in both renderers.
+ *
+ * @remarks
+ * A fieldset's own `style` takes custom properties only, so the padding and border come from a rule on the
+ * subgrid item, the outermost box of the chain in both renderers.
+ */
+export const SSR_SUBGRID_INSET_CSS = '.se-subgrid.se-grid-item{padding-inline:12px;border:2px solid;}';
+
+/** Padding plus border of the rule above, per side. */
+export const SSR_SUBGRID_INSET = 14;
+
+/**
+ * Config of a subgrid acceptance form, authored once for both renderers.
+ *
+ * @param type The `$type` of the renderer's input.
+ * @param inputProps Props the input needs besides its id, name, label and `grid` (Radiant's `inputType`).
+ * @remarks
+ * Labels are unique, so a test finds a field by its label. A field of a width variant is `half` or `adaptive`:
+ * full width, half from `md`.
+ */
+export function ssrSubgridForm(
+	variant: SsrSubgridVariant,
+	type: string,
+	inputProps: Readonly<Record<string, unknown>> = {},
+) {
+	const slug = (label: string) => label.toLowerCase().replaceAll(' ', '-');
+	const input = (label: string, grid?: Record<string, unknown>) => ({
+		$type: type,
+		...inputProps,
+		id: slug(label),
+		name: slug(label),
+		label,
+		...(grid ? { grid } : {}),
+	});
+	const fieldset = (label: string, grid: Record<string, unknown>, elements: unknown[]) => ({
+		$type: 'fieldSet',
+		id: slug(label),
+		name: slug(label),
+		legend: label,
+		grid,
+		elements,
+	});
+	const half = { width: 'half' };
+	const adaptive = { width: 'full', responsive: { md: { width: 'half' } } };
+	const form = (elements: unknown[], grid?: Record<string, unknown>) => ({
+		id: `ssr-subgrid-${variant}`,
+		title: 'SSR subgrid acceptance',
+		...(grid ? { grid } : {}),
+		steps: [{ id: 'main', title: 'Main', elements }],
+	});
+
+	switch (variant) {
+		case 'widths':
+			return form([
+				input('First', half),
+				input('Last', half),
+				fieldset('Address', { subgrid: true }, [input('Street', half), input('City', half), input('Notes')]),
+			]);
+		case 'through':
+			return form([
+				input('Plain'),
+				fieldset('Address', { subgrid: true }, [input('Street', half), input('City', half)]),
+			]);
+		case 'columns':
+			return form(
+				[
+					input('Col A'),
+					input('Col B'),
+					fieldset('Address', { subgrid: true }, [input('Col C'), input('Col D')]),
+				],
+				{ columns: 2, gap: 'wide' },
+			);
+		case 'responsive':
+		case 'container':
+			return form([
+				input('First', adaptive),
+				input('Last', adaptive),
+				fieldset('Address', { subgrid: true }, [input('Street', adaptive), input('City', adaptive)]),
+			]);
+		case 'hidden':
+			return form([
+				input('First', half),
+				fieldset('Address', { subgrid: true, responsive: { md: { hidden: true } } }, [input('Street', half)]),
+			]);
+		case 'nested':
+			return form([
+				input('First', half),
+				input('Last', half),
+				fieldset('Outer', { subgrid: true }, [
+					fieldset('Inner', { subgrid: true }, [input('Street', half), input('City', half)]),
+				]),
+			]);
+	}
+}

@@ -225,6 +225,27 @@ export function FieldGroup({
 	);
 }
 
+interface FieldLegendProps extends React.HTMLAttributes<HTMLElement> {
+	/**
+	 * The element to render: a `legend` inside a `fieldset`, or a `div` that labels a `role="group"` box
+	 * through `aria-labelledby`.
+	 */
+	as?: 'legend' | 'div';
+	description?: string;
+}
+
+export function FieldLegend({ as: Element = 'legend', description, className, children, ...props }: FieldLegendProps) {
+	return (
+		<Element
+			className={cn('text-base font-semibold mb-8 pb-3 border-b border-border w-full', className)}
+			{...props}
+		>
+			{children}
+			{description && <span className="block text-sm font-normal text-muted-foreground mt-1">{description}</span>}
+		</Element>
+	);
+}
+
 interface FieldSetProps extends React.ComponentProps<'fieldset'> {
 	legend?: string;
 	description?: string;
@@ -234,14 +255,7 @@ interface FieldSetProps extends React.ComponentProps<'fieldset'> {
 export function FieldSet({ legend, description, className, children, ...props }: FieldSetProps) {
 	return (
 		<fieldset className={cn('border-0 p-0 m-0', className)} {...props}>
-			{legend && (
-				<legend className="text-base font-semibold mb-8 pb-3 border-b border-border w-full">
-					{legend}
-					{description && (
-						<span className="block text-sm font-normal text-muted-foreground mt-1">{description}</span>
-					)}
-				</legend>
-			)}
+			{legend && <FieldLegend description={description}>{legend}</FieldLegend>}
 			{children}
 		</fieldset>
 	);

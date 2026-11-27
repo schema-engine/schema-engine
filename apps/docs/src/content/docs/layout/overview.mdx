@@ -135,7 +135,7 @@ A form's `grid` and each element's own `grid` lay fields out. The levels run fro
 2. `areas` for a layout you draw as rows of names, with `area` on each field.
 3. Raw grid lines (`column`, `row`, `placeSelf`) as the escape hatch.
 
-Fieldsets and array rows lay their children out on a grid of their own, so the same names work inside a container. A step's `grid` replaces the form's grid for that step. The rules, the validation errors and the limits are on [Placing fields in the grid](/docs/layout/grid-and-placement#placing-fields-in-the-grid).
+Fieldsets and array rows lay their children out on a grid of their own, so the same names work inside a container. A fieldset with `grid: { subgrid: true }` lays them on its parent's tracks instead, so its fields line up with the fields around it. A step's `grid` replaces the form's grid for that step. The rules, the validation errors and the limits are on [Placing fields in the grid](/docs/layout/grid-and-placement#placing-fields-in-the-grid).
 
 ## Appearance
 

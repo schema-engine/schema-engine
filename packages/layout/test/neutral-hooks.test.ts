@@ -35,9 +35,10 @@ describe('the layout stylesheet hooks', () => {
 		expect(selectors.filter((selector) => /form/i.test(selector))).toEqual([]);
 	});
 
-	test('class selectors are the neutral se-grid and se-grid-item, scoped by data-se-theme', () => {
+	test('class selectors are the neutral se-grid, se-grid-item and se-subgrid, scoped by data-se-theme', () => {
 		const classes = new Set(Array.from(css.matchAll(/\.([a-z][\w-]*)/g), (match) => match[1]));
-		expect(classes).toEqual(new Set(['se-grid', 'se-grid-item']));
+		expect(classes).toEqual(new Set(['se-grid', 'se-grid-item', 'se-subgrid']));
+		expect(css).toMatch(/\.se-subgrid\[data-se-theme="l[0-9a-z]+"\]\{/);
 		expect(css).toMatch(/\.se-grid\[data-se-theme="l[0-9a-z]+"\]\{/);
 		expect(css).toMatch(/\.se-grid-item\[data-se-theme="l[0-9a-z]+"\]\{/);
 	});
@@ -45,7 +46,7 @@ describe('the layout stylesheet hooks', () => {
 	test('container mode adds only the neutral se-grid-container hook, scoped by data-se-theme', () => {
 		const containerCss = createLayoutTheme({ grid: { query: 'container' } }).css;
 		const classes = new Set(Array.from(containerCss.matchAll(/\.([a-z][\w-]*)/g), (match) => match[1]));
-		expect(classes).toEqual(new Set(['se-grid', 'se-grid-item', 'se-grid-container']));
+		expect(classes).toEqual(new Set(['se-grid', 'se-grid-item', 'se-subgrid', 'se-grid-container']));
 		expect(containerCss).toMatch(/\.se-grid-container\[data-se-theme="l[0-9a-z]+"\]\{/);
 		expect(selectorsOf(containerCss).filter((selector) => /form/i.test(selector))).toEqual([]);
 	});

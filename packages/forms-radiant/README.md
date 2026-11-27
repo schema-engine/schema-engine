@@ -51,14 +51,14 @@ export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => vo
 
 ## Entry points
 
-| Import                                       | Holds                                                                                                 |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms-radiant`               | `createRadiantFormEngine`, `FormRenderer`, `schemaFormRegistrations`, the recipes and the controllers |
-| `@schema-engine/forms-radiant/index.css`     | The renderer's stylesheet                                                                             |
-| `@schema-engine/forms-radiant/registrations` | Each element registration by name                                                                     |
-| `@schema-engine/forms-radiant/primitives`    | `FormField`, `FormFieldElement`, `FormElement` and `ChildGrid`                                        |
-| `@schema-engine/forms-radiant/hooks`         | Helpers for building elements                                                                         |
-| `@schema-engine/forms-radiant/contexts`      | The contexts the hosts publish                                                                        |
+| Import                                       | Holds                                                                                                           |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-radiant`               | `createRadiantFormEngine`, `FormRenderer`, `schemaFormRegistrations`, the recipes and the controllers           |
+| `@schema-engine/forms-radiant/index.css`     | The renderer's stylesheet                                                                                       |
+| `@schema-engine/forms-radiant/registrations` | Each element registration by name                                                                               |
+| `@schema-engine/forms-radiant/primitives`    | `FormField`, `FormFieldElement`, `FormElement` and `ChildGrid` (`subgrid` for a container whose `grid` sets it) |
+| `@schema-engine/forms-radiant/hooks`         | Helpers for building elements                                                                                   |
+| `@schema-engine/forms-radiant/contexts`      | The contexts the hosts publish                                                                                  |
 
 ## Documentation
 

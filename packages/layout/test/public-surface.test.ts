@@ -9,6 +9,7 @@ const SUPPORTED_VALUE_EXPORTS = [
 	'GRID_CLASS',
 	'GRID_CONTAINER_CLASS',
 	'GRID_ITEM_CLASS',
+	'GRID_SUBGRID_CLASS',
 	'GRID_TEMPLATE_KEYS',
 	'GridBreakpointConfigSchema',
 	'GridGapTokens',
@@ -34,6 +35,7 @@ const SUPPORTED_VALUE_EXPORTS = [
 	'elementAreaSlots',
 	'elementGridKeys',
 	'elementHiddenSlots',
+	'elementIsSubgrid',
 	'elementUsesGridWidths',
 	'getAppearanceAttributes',
 	'getDefaultLayoutTheme',
@@ -48,6 +50,7 @@ const SUPPORTED_VALUE_EXPORTS = [
 	'pickSupportedAppearance',
 	'readSlotConfig',
 	'resolveRecipeView',
+	'subgridPlacementIssue',
 	'withAppearanceAxes',
 	'withSlotAppearanceAxes',
 ];

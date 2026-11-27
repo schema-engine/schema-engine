@@ -4,7 +4,7 @@ import { safeParseNode, type NodeLookup } from '@schema-engine/registry';
 import { markNormalizedElementConfig, type NormalizedElementConfig } from '@/lib/normalized-form-config';
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
 import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
-import { areaPlacementIssue, namedPlacementIssue } from './grid-checks';
+import { areaPlacementIssue, namedPlacementIssue, subgridIssue } from './grid-checks';
 import { childPath, isTaggedConfig, issueAt, type FormValidationIssue, type Path } from './issues';
 import type { ElementRegistration, ValidateFormOptions } from './options';
 import { fromSchemaIssues } from './schema-issues';
@@ -108,6 +108,8 @@ export function parseElementNode(
 	if (placementIssue) return fail(placementIssue.message, placementIssue.path);
 	const areaIssue = areaPlacementIssue(config, nested);
 	if (areaIssue) return fail(areaIssue.message, areaIssue.path);
+	const subgrid = subgridIssue(config, containerKindOf(parsed.registration));
+	if (subgrid) return fail(subgrid.message, subgrid.path);
 
 	const elementAppearance = resolveAppearance(authoredAppearance, appearance, {
 		subject: `Element '${config.$type}'`,
