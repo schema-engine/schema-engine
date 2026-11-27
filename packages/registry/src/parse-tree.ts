@@ -43,25 +43,29 @@ type ParsedChildren<TAll extends TreeRegistration, TPaths> = TPaths extends read
 export type SafeParseTreeResult<TAll extends TreeRegistration, TRoot extends TreeRegistration = TAll> =
 	{ success: true; tree: ParsedNode<TAll, TRoot> } | { success: false; issues: RegistryIssue[] };
 
-/** The registrations of a union whose `$type` is not a literal (`string`, as `BaseRegistration` has), or missing. */
-type WidenedOf<TAll extends TreeRegistration> = TAll extends { $type: infer TType }
+/**
+ * The registrations of a union that may answer one of the names `TName`: every one whose `$type` overlaps them.
+ *
+ * @remarks
+ * A literal `$type` overlaps when it is one of the names, a union of literals when any member is, and a widened
+ * `$type` (`string`, as `BaseRegistration` has) or a missing one always does, since it may hold any name at run time.
+ */
+type AcceptedOf<TAll extends TreeRegistration, TName> = TAll extends { $type: infer TType }
 	? string extends TType
 		? TAll
-		: never
+		: [Extract<TType, TName>] extends [never]
+			? never
+			: TAll
 	: TAll;
 
 /**
  * The registrations a root may be: those `accepts` names, but only when the options type has `accepts`, not when it
  * only may.
- *
- * @remarks
- * A registration typed by a widened `$type` may answer any accepted name at run time, so it always stays in the
- * union, beside the literal registrations `accepts` names.
  */
 type RootOf<TAll extends TreeRegistration, TOptions> = TOptions extends {
 	readonly accepts: readonly (infer TName)[];
 }
-	? Extract<TAll, { $type: TName }> | WidenedOf<TAll>
+	? AcceptedOf<TAll, TName>
 	: TAll;
 
 interface RuntimeNode {
