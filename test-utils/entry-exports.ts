@@ -211,3 +211,20 @@ export function valueExportNames(packageDir: string): string[] {
 		.map(({ exportedAs }) => exportedAs);
 	return [...new Set(names)].toSorted();
 }
+
+/**
+ * The names one entry of a package's `exports` map exports, by the name an importer writes, sorted.
+ *
+ * @param packageDir - The package's directory, with its `package.json` and `tsconfig.json`
+ * @param entry - An `exports` key that names JavaScript, such as `.` or `./primitives`
+ * @param kind - `values` leaves out type-only exports, so the list is what the built module exports at run time
+ * @throws {Error} When the package has no such entry, since an empty list would pass any check against it
+ */
+export function entryExportNames(packageDir: string, entry: string, kind: 'all' | 'values' = 'all'): string[] {
+	const symbols = exportsByEntry(packageDir).get(entry);
+	if (symbols === undefined) throw new Error(`The package at ${packageDir} has no JavaScript entry '${entry}'.`);
+	return symbols
+		.filter(({ isValue }) => kind === 'all' || isValue)
+		.map(({ exportedAs }) => exportedAs)
+		.toSorted();
+}
