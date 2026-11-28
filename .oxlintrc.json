@@ -43,6 +43,9 @@
 					"**/*.test-d.ts",
 					"**/node_modules/**",
 					"@/lib/form-engine-setup",
+					"./components/form-instance.script.js",
+					"./components/form-step.js",
+					"./components/internals/form-renderer.script.js",
 					"@ecopages/radiant-ui/**",
 					"@ecopages/radiant/**",
 					"@testing-library/jest-dom/vitest"

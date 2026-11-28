@@ -121,6 +121,13 @@ describe('a bundle of the published package', () => {
 		}
 	});
 
+	test('importing the root for its effect alone still registers the form hosts', async () => {
+		const bundle = await bundlePublishedEntry(packageDir, `import '@schema-engine/forms-radiant';`);
+		for (const tag of ['se-form-renderer', 'se-form-instance', 'se-form-step']) {
+			expect(bundle.code, tag).toContain(tag);
+		}
+	});
+
 	test('everything the root exports holds no debugger', async () => {
 		const bundle = await bundlePublishedEntry(packageDir, `export * from '@schema-engine/forms-radiant';`);
 		expect(bundle.code).toContain('se-phone-input');

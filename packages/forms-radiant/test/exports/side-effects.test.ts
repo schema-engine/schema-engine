@@ -6,9 +6,6 @@ import { expect, test } from 'vitest';
 const packageDir = path.resolve(import.meta.dirname, '../..');
 const sourceDir = path.join(packageDir, 'src');
 
-/** The entry whose import registers the form hosts: it is side-effectful although it declares no element itself. */
-const ENTRY_WITH_EFFECT = 'index';
-
 /** The scripts the build emits, which is every module of `src` that is not a type declaration, a story or a play function. */
 function sourceModules(dir: string): string[] {
 	return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -45,7 +42,7 @@ test('sideEffects names exactly the modules that have a load-time effect, so a b
 	const effectful = sourceModules(sourceDir)
 		.filter(hasLoadTimeEffect)
 		.map((file) => path.relative(sourceDir, file).replace(/\.tsx?$/, ''));
-	const derived = [...effectful, ENTRY_WITH_EFFECT].map((module) => `./dist/${module}.js`).toSorted();
+	const derived = effectful.map((module) => `./dist/${module}.js`).toSorted();
 
 	const { sideEffects } = JSON.parse(readFileSync(path.join(packageDir, 'package.json'), 'utf8')) as {
 		sideEffects: string[];
@@ -59,7 +56,7 @@ test('sideEffects names exactly the modules that have a load-time effect, so a b
 test('the derivation finds the custom elements, so the list above cannot be empty by accident', () => {
 	const effectful = sourceModules(sourceDir).filter(hasLoadTimeEffect);
 	expect(effectful.length).toBeGreaterThan(20);
-	expect(effectful.map((file) => path.relative(sourceDir, file))).toContain(
-		path.join('elements', 'inputs', 'form-phone-input.tsx'),
+	expect(effectful.map((file) => path.relative(sourceDir, file))).toEqual(
+		expect.arrayContaining([path.join('elements', 'inputs', 'form-phone-input.tsx'), 'index.ts']),
 	);
 });
