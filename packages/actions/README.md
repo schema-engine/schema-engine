@@ -64,6 +64,7 @@ The package has one entry, `@schema-engine/actions`: `ActionDispatcher`, `parseA
 - [Writing actions](https://schema-engine.com/docs/actions/writing-actions): `defineAction`, a service call and testing.
 - [Serialized workflows](https://schema-engine.com/docs/actions/serialized-workflows): a workflow as JSON.
 - [API reference](https://schema-engine.com/docs/actions/api-reference): every export.
+- [Upgrade from 0.5 to 0.6](https://schema-engine.com/docs/schema-engine/migrate-0-5-to-0-6): the breaking changes, with the code before and after.
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License

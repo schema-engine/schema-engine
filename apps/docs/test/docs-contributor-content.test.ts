@@ -15,7 +15,7 @@ const CONTRIBUTOR = [
 	/\bpnpm (?:--filter|turbo|dev:|build:)/,
 ];
 
-/** A sentence about an API that no longer exists. Nothing is released, so there is nothing to migrate from. */
+/** A sentence about an API that no longer exists. Only the migration guide, for a reader on an earlier release, may. */
 const REMOVED_API = [
 	/\b(?:has|have) been removed\b/i,
 	/\bno longer (?:exists?|takes?|supported|used|part)\b/i,
@@ -23,6 +23,9 @@ const REMOVED_API = [
 	/\bwas removed\b/i,
 	/\bmigrat(?:e|ion) (?:from|guide|notes?)\b/i,
 ];
+
+/** The page that describes the removed APIs of the last breaking release. */
+const MIGRATION_PAGE = 'schema-engine/migrate-0-5-to-0-6';
 
 const packageReadmes = readdirSync(join(repository, 'packages')).map((name) => `packages/${name}/README.md`);
 
@@ -39,7 +42,7 @@ describe('the user pages', () => {
 	test.each(docsPageIds())('%s has no contributor content and describes no removed API', (page) => {
 		const text = readPage(page);
 		expect(violations(text, CONTRIBUTOR)).toEqual([]);
-		expect(violations(text, REMOVED_API)).toEqual([]);
+		expect(violations(text, page === MIGRATION_PAGE ? [] : REMOVED_API)).toEqual([]);
 	});
 });
 

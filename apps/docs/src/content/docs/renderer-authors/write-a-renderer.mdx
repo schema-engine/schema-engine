@@ -51,7 +51,7 @@ export const bareControls = {
 export const engine = createFormEngine({ elements: [textInput], recipes: [bareControls] });
 ```
 
-A recipe written by hand states its `schema` and `slots` and may leave out `slotSchemas`, the schema of each slot, which `defineFormRecipe` fills in from a spec. When it sets them, they must list exactly its `slots`. Without them, the JSON Schema export lists the recipe by its own `schema` when that is Zod, and by its `$type` alone otherwise.
+A recipe written by hand states its `schema` and `slots` and may leave out `slotSchemas`, the schema of each slot, which `defineFormRecipe` fills in from a spec. When it sets them, they must list exactly its `slots`. Without them, the JSON Schema export lists the recipe by its own `schema` when that is Zod or sets `~standard.jsonSchema`, and by its `$type` alone otherwise.
 
 ## A renderer in one file
 

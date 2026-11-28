@@ -213,6 +213,37 @@ parsed: stack at children[1]
 
 Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way. An issue the engine creates has a `code` (`registry/not-accepted` here, with `expected` the list and `received` the `$type`), so a UI can branch on it without reading the message; an issue from a schema is the schema library's own. The `parsed:` lines come from the partial tree: the failing badge and the `chip` are left out, and the second `stack` is kept, with none of its children.
 
+## A slot that holds a list
+
+A child path holds one node or a list of nodes. Say `list: true` when it is always a list: a value that is not an array is then the issue `registry/not-a-list` at the path, `exportTreeSchema` writes an open slot as an array, and `tree.data` types the slot as an array. A schema that lets any value through (`z.unknown()`) is where this matters, since the schema would not refuse an object itself. A schema typed as no array (an object, a string) with `list: true` is a type error (`listPathNotAnArray`).
+
+```ts title="rows.ts"
+import * as z from 'zod/mini';
+import { createRegistry, formatIssuePath, safeParseTree } from '@schema-engine/registry';
+
+const rows = createRegistry('Row', [
+	{
+		$type: 'row',
+		schema: z.object({ $type: z.literal('row'), cells: z.unknown() }),
+		metadata: { name: 'Row' },
+		childPaths: [{ keys: ['cells'], accepts: ['cell'], list: true }],
+	},
+	{
+		$type: 'cell',
+		schema: z.object({ $type: z.literal('cell'), text: z.string() }),
+		metadata: { name: 'Cell' },
+	},
+]);
+
+export function describeRow(document: unknown): string[] {
+	const parsed = safeParseTree(rows, document, { accepts: ['row'] });
+	if (parsed.success) return (parsed.tree.data.cells ?? []).map((cell) => cell.text);
+	return parsed.issues.map((issue) => `${formatIssuePath(issue.path)}: ${issue.code} ${issue.message}`);
+}
+```
+
+A row with its cells in a list reads its texts. A row whose `cells` is one cell object reports `cells: registry/not-a-list Expected a list of nodes.`
+
 ## The JSON Schema of the document
 
 The same registrations describe the document to a tool that is not TypeScript: an editor that completes it, a server that validates what it receives, an AI tool API. `exportTreeSchema` composes the JSON Schema of the whole tree from the registrations' own, so it does not depend on the validator. It reads each schema through `~standard.jsonSchema`, which a schema library that implements Standard JSON Schema and a hand-written schema provide; pass `resolve` for a library that does not, as here for Zod Mini.

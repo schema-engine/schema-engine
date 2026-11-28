@@ -1,6 +1,6 @@
 # @schema-engine/registry
 
-The registration contract and the read-only registry every other package builds on, and the YAML subpath for documents authored as text. The terms are defined in the router (`SKILL.md`). How the forms engine registers elements, recipes, actions and rules is in `forms.md`.
+The registration contract and the registries (read-only, or mutable for runtime registrations) every other package builds on, and the YAML subpath for documents authored as text. The terms are defined in the router (`SKILL.md`). How the forms engine registers elements, recipes, actions and rules is in `forms.md`.
 
 ## A registration
 
@@ -149,7 +149,7 @@ export const documentSchema = exportTreeSchema(nodes, {
 
 ## createMutableRegistry
 
-`createRegistry` and `createMutableRegistry` take `{ hint }`: the sentence that ends the message of an unregistered `$type`, exposed as the registry's optional `hint`, so a registry is a `NodeLookup` with its hint (`parseActions` and `safeParseNode` report it). `createMutableRegistry<MyRegistration>('Plugin')` is the mutable opt-in for registrations that arrive at runtime, such as a plugin system. It returns a `MutableRegistry`: the read side of a `createRegistry` result (`get`, `has`, `all`, `keys`, `size`, `kind`) plus `register` and `clear`, so either kind goes wherever a registry is read. `register` checks a registration as `createRegistry` does (`RegistryError` `'invalid-schema'`, `'invalid-child-paths'`), a repeated `$type` replaces the earlier one and keeps its position (or throws `'duplicate-type'` with `{ duplicates: 'error' }`), and nothing is logged. `all()` and `keys()` return the same frozen array until the next change. A function that finds a registration takes a `NodeLookup`, one that lists them takes an `ExportLookup`, and a registry of either kind is both. Use `createRegistry` unless the list is not known when the registry is built.
+`createRegistry` and `createMutableRegistry` take `{ hint }`: the sentence that ends the message of an unregistered `$type`, exposed as the registry's optional `hint`, so a registry is a `NodeLookup` with its hint (`parseActions` and `safeParseNode` report it). `createMutableRegistry<MyRegistration>('Plugin')` is the mutable opt-in for registrations that arrive at runtime, such as a plugin system. It returns a `MutableRegistry`: the read side of a `createRegistry` result (`get`, `has`, `all`, `keys`, `size`, `kind`) plus `register` and `clear`, so either kind goes wherever a registry is read. `register` checks a registration as `createRegistry` does (`RegistryError` `'invalid-schema'`, `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'`, and the registry is unchanged when it throws), a repeated `$type` replaces the earlier one and keeps its position (or throws `'duplicate-type'` with `{ duplicates: 'error' }`), and nothing is logged. `all()` and `keys()` return the same frozen array until the next change. A function that finds a registration takes a `NodeLookup`, one that lists them takes an `ExportLookup`, and a registry of either kind is both. Use `createRegistry` unless the list is not known when the registry is built.
 
 ## YAML documents
 

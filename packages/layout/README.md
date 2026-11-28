@@ -61,6 +61,7 @@ An item with `grid: { span: n }` takes `n` tracks of the grid it sits in, never 
 - [Theming](https://schema-engine.com/docs/layout/theming): the custom properties a host overrides.
 - [Recipe protocol](https://schema-engine.com/docs/layout/recipe-protocol): declare the slots and kinds of a domain's view recipes.
 - [Recipes outside forms](https://schema-engine.com/docs/layout/recipes-outside-forms): a card recipe bound for React and for Radiant.
+- [Upgrade from 0.5 to 0.6](https://schema-engine.com/docs/schema-engine/migrate-0-5-to-0-6): the breaking changes, with the code before and after.
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License

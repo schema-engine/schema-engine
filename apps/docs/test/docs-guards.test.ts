@@ -18,6 +18,8 @@ const SHADCN_PAGES: Record<string, string> = {
 	'forms-react/components': 'The fields the shadcn registry installs and how to own them.',
 	'forms-react/other-react-state': 'The settings panel registers the fields the shadcn registry installs.',
 	'forms-react/layouts': 'The default view recipes the shadcn registry installs.',
+	'schema-engine/migrate-0-5-to-0-6':
+		'A copied shadcn item that imports a moved symbol is added again or changed by hand.',
 	'layout/theming': 'The colour roles the React registry controls read.',
 	'layout/appearance-axes': 'What the React registry controls read of the size and tone axes.',
 	'examples/overview': 'Says where the fields of the React examples come from.',

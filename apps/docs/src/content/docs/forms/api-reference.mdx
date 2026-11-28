@@ -237,8 +237,10 @@ slot.
    `appearance` or rules to it, so state them in the schema. A container's children are typed after the conversion, as
    for every other schema.
 3. A schema that provides neither is listed by its shape: an element by its `$type`, its appearance axes and, for a
-   container, an optional `elements` list; an action or a rule by its `$type`; a recipe slot as an open object with its
-   appearance axes.
+   container, an optional `elements` list; an action by its `$type` and the action envelope (it requires an `id` and
+   allows `enabled` and `triggers`, as every Zod action does), so `generateActionConfigSchema(type)` answers for it too; a
+   rule by its `$type`; a recipe slot as an open object with its appearance axes. An open element, action or recipe is a
+   definition of the form config and an entry of `generateJSONSchemaCollection()`, as one that exports itself is.
 
 How a rule 2 schema is embedded in the export:
 
