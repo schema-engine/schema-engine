@@ -635,6 +635,11 @@ const TRACKED_NPM_DEPENDENCIES = [
  */
 const PUBLIC_FORMS_REACT_IMPORTS = publicEntrySpecifiers(join(root, 'packages/forms-react/package.json'));
 
+/** Whether a registry copy may import `spec`: anything outside `@schema-engine/forms-react`, or one of its JavaScript entries. */
+export function isPublicFormsReactImport(spec: string): boolean {
+	return !spec.startsWith('@schema-engine/forms-react') || PUBLIC_FORMS_REACT_IMPORTS.has(spec);
+}
+
 function publicEntrySpecifiers(manifestPath: string): Set<string> {
 	const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
 		name: string;
@@ -723,7 +728,7 @@ export function validateCatalog(): string[] {
 				if (spec.includes('@schema-engine/forms-react/components/internals')) {
 					errors.push(`${item.name} reaches into forms-react internals: ${spec}`);
 				}
-				if (spec.startsWith('@schema-engine/forms-react') && !PUBLIC_FORMS_REACT_IMPORTS.has(spec)) {
+				if (!isPublicFormsReactImport(spec)) {
 					errors.push(`${item.name} uses a non-public forms-react import: ${spec}`);
 				}
 			}

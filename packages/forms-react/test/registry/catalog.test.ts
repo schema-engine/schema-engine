@@ -1,7 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { catalog, validateCatalog } from '../../../../scripts/generate-schema-engine-registry.ts';
+import {
+	catalog,
+	isPublicFormsReactImport,
+	validateCatalog,
+} from '../../../../scripts/generate-schema-engine-registry.ts';
 
 const github = 'schema-engine/schema-engine';
 
@@ -180,5 +184,22 @@ describe('schema-engine GitHub registry catalog', () => {
 	test('item names are unique across all bases', () => {
 		const names = catalog.map((item) => item.name);
 		expect(new Set(names).size).toBe(names.length);
+	});
+
+	test.each([
+		'@schema-engine/forms-react',
+		'@schema-engine/forms-react/primitives',
+		'@schema-engine/forms-react/hooks',
+		'react',
+	])('lets a registry copy import %s', (spec) => {
+		expect(isPublicFormsReactImport(spec)).toBe(true);
+	});
+
+	test.each([
+		'@schema-engine/forms-react/contexts',
+		'@schema-engine/forms-react/components/form-debugger',
+		'@schema-engine/forms-react/src/primitives',
+	])('refuses a registry copy the non-public import %s', (spec) => {
+		expect(isPublicFormsReactImport(spec)).toBe(false);
 	});
 });

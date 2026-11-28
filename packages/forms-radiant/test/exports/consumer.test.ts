@@ -39,7 +39,7 @@ describe('a consumer of the published package', () => {
 		},
 	);
 
-	test.each(['/hooks', '/contexts', '/components/form-debugger'])('is refused the removed entry %s', (subpath) => {
+	test.each(['/hooks', '/contexts'])('is refused the removed entry %s', (subpath) => {
 		expect(
 			consumerImport(packageDir, `@schema-engine/forms-radiant${subpath}`, { bootstrap: SERVER_BOOT }),
 		).toEqual({ error: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });

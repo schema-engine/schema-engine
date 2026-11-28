@@ -77,6 +77,13 @@ function consumerErrors(packages: readonly PackageEntries[], resolution: 'node16
 				return copy;
 			}),
 		);
+		for (const name of ['forms-react', 'forms-radiant']) {
+			if (!fixtures.some((fixture) => path.basename(path.dirname(fixture)) === name)) {
+				throw new Error(
+					`packages/${name}/test/consumer/ holds no fixture, so its published entries would go unchecked.`,
+				);
+			}
+		}
 		const program = ts.createProgram([file, ...fixtures], {
 			strict: true,
 			noEmit: true,
