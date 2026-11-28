@@ -91,6 +91,14 @@ describe('replaceChildSlot', () => {
 			['behind allOf', { type: 'object', properties: { kids: { allOf: [{ type: 'array' }] } } }],
 			['not declared', { type: 'object', properties: {} }],
 			[
+				'nullable, as OpenAPI 3.0 writes it for an array',
+				{ type: 'object', properties: { kids: { type: 'array', items: {}, nullable: true } } },
+			],
+			[
+				'nullable, as OpenAPI 3.0 writes it for an object',
+				{ type: 'object', properties: { kids: { type: 'object', properties: {}, nullable: true } } },
+			],
+			[
 				'inside a schema with an $id of its own',
 				{ type: 'object', $id: 'https://example.com/box', properties: { kids: {} } },
 			],
@@ -99,6 +107,20 @@ describe('replaceChildSlot', () => {
 
 			expect(error).toBeInstanceOf(RegistryError);
 			expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'box', childPath: ['kids'] });
+		});
+	});
+
+	describe('Scenario: A child path without keys throws', () => {
+		it('throws RegistryError invalid-child-paths and leaves the definition alone', () => {
+			const definition = { type: 'object', properties: { kids: { type: 'array', items: {} } } };
+			const before = structuredClone(definition);
+
+			const error = thrown(() => replaceChildSlot(definition, { $type: 'box', keys: [] }, union));
+
+			expect(error).toBeInstanceOf(RegistryError);
+			expect(error).toMatchObject({ code: 'invalid-child-paths', $type: 'box', childPath: [] });
+			expect((error as Error).message).toContain("'box'");
+			expect(definition).toEqual(before);
 		});
 	});
 });

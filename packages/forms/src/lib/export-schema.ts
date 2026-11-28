@@ -30,25 +30,6 @@ interface StandardSource {
 	readonly open: () => z.ZodMiniType;
 }
 
-/**
- * A target as the Zod converter spells it.
- *
- * @remarks
- * Zod 4.0 and 4.1 know the draft-07 and draft-04 dialects only as `'draft-7'` and `'draft-4'`, and later versions accept
- * both. The peer range of Zod starts at 4.0.17, so the Zod converter is always given the spelling every version knows,
- * and everything else in the engine uses the Standard JSON Schema names.
- */
-export function toZodTarget(target: JSONSchemaTarget): 'draft-2020-12' | 'draft-7' | 'draft-4' | 'openapi-3.0' {
-	switch (target) {
-		case 'draft-07':
-			return 'draft-7';
-		case 'draft-04':
-			return 'draft-4';
-		default:
-			return target;
-	}
-}
-
 const STANDARD_SOURCES = new WeakMap<object, StandardSource>();
 
 function vendorOf(schema: unknown): string {
@@ -144,7 +125,7 @@ export function createExportConversion(options: {
 				{ error },
 			);
 			return z.toJSONSchema(source.open(), {
-				target: toZodTarget(target),
+				target,
 				io,
 				unrepresentable: 'any',
 			}) as JSONSchemaObject;

@@ -18,9 +18,15 @@ describe('the target of the JSON Schema export', () => {
 	});
 
 	it('refuses the Zod spellings', () => {
+		type FormConfigOptions = NonNullable<Parameters<typeof engine.generateFormConfigSchema>[0]>;
+		type CollectionOptions = NonNullable<Parameters<typeof engine.generateJSONSchemaCollection>[0]>;
+
 		// @ts-expect-error the older Zod spelling of draft-07 is not a target
-		expectTypeOf(engine.generateFormConfigSchema).toBeCallableWith({ target: 'draft-7' });
+		const draft7: FormConfigOptions = { target: 'draft-7' };
 		// @ts-expect-error the older Zod spelling of draft-04 is not a target
-		expectTypeOf(engine.generateJSONSchemaCollection).toBeCallableWith({ target: 'draft-4' });
+		const draft4: CollectionOptions = { target: 'draft-4' };
+
+		expectTypeOf(draft7).toBeObject();
+		expectTypeOf(draft4).toBeObject();
 	});
 });

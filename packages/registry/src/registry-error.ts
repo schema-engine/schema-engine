@@ -9,7 +9,8 @@
  * - `'invalid-schema'`: a registration's `schema` has no `~standard.validate` function.
  * - `'invalid-child-paths'`: a registration's `childPaths` is not a list, or holds an entry that is not an object
  *   `{ keys, accepts? }` with a non-empty list of non-empty string `keys`, no other property, and an `accepts` that is
- *   absent or a non-empty list of non-empty strings without repeats.
+ *   absent or a non-empty list of non-empty strings without repeats. `replaceChildSlot` throws it too for a path with
+ *   no keys.
  * - `'duplicate-child-path'`: a registration declares the same child path (`childPath`) twice, key by key.
  * - `'nested-child-path'`: a child path (`childPath`) runs through another child path (`outerChildPath`) of the same
  *   registration.
@@ -23,7 +24,7 @@
  *   keep a child path (`childPath`) the document fills, or fills one the document leaves empty.
  * - `'unreachable-child-path'`: {@link exportTreeSchema} found no slot for a child path (`childPath`) in the JSON
  *   Schema of a registration, because the schema does not declare its keys, or it sits behind `allOf`, a `$ref` or a
- *   union, or inside a schema with an `$id` of its own.
+ *   union, or inside a schema with an `$id` of its own, or because the slot is nullable.
  * - `'unknown-accepted-type'`: {@link exportTreeSchema} was given a lookup that lacks a `$type` a child path
  *   (`childPath`) accepts (`key`).
  * - `'definition-name-clash'`: {@link exportTreeSchema} found that a definition a schema brought along (`key`) takes the

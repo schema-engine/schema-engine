@@ -4,7 +4,7 @@ import { frozenCopy } from '@/lib/frozen-copy';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { buildSubmissionShape, type ShapeElement, type ShapeStep, type SubmissionShape } from '@/lib/submission-shape';
 import { isZodType } from '@/lib/is-zod-type';
-import { toZodTarget } from '@/lib/export-schema';
+import type { JSONSchemaTarget } from '@schema-engine/registry';
 import {
 	createJSONSchemaEmbedder,
 	readStandardJSONSchema,
@@ -213,7 +213,7 @@ export function issuePath(issue: StandardSchemaV1.Issue): string {
 	return (issue.path ?? []).map((segment) => String(typeof segment === 'object' ? segment.key : segment)).join('.');
 }
 
-const SUBMISSION_TARGETS = ['draft-2020-12', 'draft-07', 'openapi-3.0'] as const;
+const SUBMISSION_TARGETS = ['draft-2020-12', 'draft-07', 'openapi-3.0'] as const satisfies readonly JSONSchemaTarget[];
 
 type SubmissionTarget = (typeof SUBMISSION_TARGETS)[number];
 
@@ -251,9 +251,7 @@ interface JsonContext {
 function leafJsonSchema(name: string, schema: StandardSchemaV1, context: JsonContext): JSONSchemaObject {
 	const { io, target, options, embedder } = context;
 	if (isZodType(schema)) {
-		return embedder.embed(
-			z.toJSONSchema(schema, { target: toZodTarget(target), io, unrepresentable: 'any' }) as JSONSchemaObject,
-		);
+		return embedder.embed(z.toJSONSchema(schema, { target, io, unrepresentable: 'any' }) as JSONSchemaObject);
 	}
 	const converter = readStandardJSONSchema(schema);
 	if (converter) return embedder.embed(converter[io](options));

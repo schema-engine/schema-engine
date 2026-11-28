@@ -12,5 +12,3 @@ engine.generateJSONSchemaCollection({ target: 'draft-4' });
 engine.generateFormConfigSchema({ target: 'draft-07' });
 engine.generateJSONSchemaCollection({ target: 'draft-04' });
 ```
-
-An export with a `target` of `'draft-07'` or `'draft-04'` now also works with the lowest Zod version the peer range allows (4.0.17), which knows the two drafts only by their older names: the engine passes Zod the spelling it knows.

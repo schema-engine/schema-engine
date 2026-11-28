@@ -14,8 +14,8 @@ const SLOT_ANNOTATIONS = ['title', 'description', 'default', 'examples', 'deprec
  * @param path - The registration's `$type`, for the error, and the `keys` of the child path whose slot to replace
  * @param union - The schema every child must match, already resolved: each `$ref` is written as the document it goes in
  * refers to a definition. Each place the slot takes it gets its own copy
- * @throws {RegistryError} Code `'unreachable-child-path'` when the slot is not where the definition declares it, or is
- * not an object, an array or open
+ * @throws {RegistryError} Code `'unreachable-child-path'` when the slot is not where the definition declares it, is
+ * nullable, or is not an object, an array or open, and `'invalid-child-paths'` when `path.keys` is empty
  *
  * @remarks
  * `required`, list bounds and every sibling keyword of the slot's parent stay, since the registration's schema owns
@@ -23,7 +23,9 @@ const SLOT_ANNOTATIONS = ['title', 'description', 'default', 'examples', 'deprec
  * object (`type: 'object'` or `properties`) becomes the union, and an open slot (no keyword but annotations) becomes the
  * union or a list of it, matching a child or a list of children. Annotations of the slot are kept. A slot inside a
  * schema with an `$id` of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the
- * document.
+ * document. A nullable slot (`type: ['array', 'null']` or an `anyOf` with `null`, or `nullable: true` as OpenAPI 3.0
+ * writes it) cannot be reached either, since `safeParseTree` refuses `null` at a slot and keeping the keyword would
+ * leave the slot accepting it.
  *
  * A tuple is an array whose every item is a child, as `safeParseTree` reads it, so each position takes the union:
  * every `prefixItems` entry (2020-12), every array-form `items` entry and `additionalItems` (draft-07), and the
@@ -39,6 +41,13 @@ export function replaceChildSlot(
 	union: JSONSchemaObject,
 ): void {
 	const { $type, keys } = path;
+	if (keys.length === 0) {
+		throw new RegistryError(
+			'invalid-child-paths',
+			`The child path of '${$type}' has no keys, so there is no slot to replace.`,
+			{ $type, childPath: keys },
+		);
+	}
 	const copy = () => structuredClone(union);
 	const unreachable = () =>
 		new RegistryError(
@@ -61,7 +70,12 @@ export function replaceChildSlot(
 	const found = getOwn(properties, last);
 	const slot = found === true ? {} : found;
 	if (!isPlainObject(slot)) throw unreachable();
-	if (SCHEMA_APPLICATORS.some((keyword) => keyword in slot) || Array.isArray(slot.type) || startsResource(slot)) {
+	if (
+		SCHEMA_APPLICATORS.some((keyword) => keyword in slot) ||
+		Array.isArray(slot.type) ||
+		slot.nullable === true ||
+		startsResource(slot)
+	) {
 		throw unreachable();
 	}
 	const annotations = Object.fromEntries(

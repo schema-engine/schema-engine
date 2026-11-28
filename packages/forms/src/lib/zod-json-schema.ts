@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 import type { JSONSchemaTarget } from '@schema-engine/registry';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
-import { createExportConversion, toZodTarget } from '@/lib/export-schema';
+import { createExportConversion } from '@/lib/export-schema';
 
 /**
  * Shared alias for the Zod registry type used during JSON Schema generation.
@@ -34,7 +34,7 @@ export function generateZodJSONSchemaCollection(
 	});
 	return conversion.finish(
 		z.toJSONSchema(metadataRegistry, {
-			target: toZodTarget(target),
+			target,
 			io,
 			uri,
 			override: conversion.override,
@@ -87,7 +87,7 @@ export function generateZodJSONSchemaDocument(
 	const conversion = createExportConversion({ io, target, placement: { kind: 'document' } });
 	const schema = conversion.finish(
 		z.toJSONSchema(validator, {
-			target: toZodTarget(target),
+			target,
 			io,
 			metadata: new LayeredMetadataRegistry(metadataRegistry),
 			override: conversion.override,
