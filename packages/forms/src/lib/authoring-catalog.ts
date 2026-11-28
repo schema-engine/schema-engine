@@ -20,7 +20,7 @@ export function describeRecipeFromRegistration(
 }
 
 export function describeViewCatalogFromRecipes(
-	recipes: AnyRecipeRegistration[],
+	recipes: readonly AnyRecipeRegistration[],
 	generateViewSchema?: (recipe: AnyRecipeRegistration) => Record<string, unknown>,
 ): ViewCatalog {
 	return {

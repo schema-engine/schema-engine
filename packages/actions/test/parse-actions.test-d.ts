@@ -1,10 +1,10 @@
 import { expectTypeOf } from 'vitest';
 import { ActionDispatcher } from '../src/dispatcher';
 import { parseActions } from '../src/parse-actions';
-import { ActionRegistry } from '../src/registry';
-import type { ActionConfigBase, ParsedAction, ParsedActionSequence } from '../src/types';
+import { createRegistry } from '@schema-engine/registry';
+import type { ActionConfigBase, ActionRegistration, ParsedAction, ParsedActionSequence } from '../src/types';
 
-const registry = new ActionRegistry([]);
+const registry = createRegistry('Action', [] as ActionRegistration[]);
 const dispatcher = new ActionDispatcher(registry);
 const raw = [{ id: 'a', $type: 'post' }];
 

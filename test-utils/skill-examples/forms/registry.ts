@@ -4,6 +4,6 @@ import { textRegistration } from './engine';
 
 export const appEngine = createFormEngine({ elements: [textRegistration], validations: [postalCode] });
 
-export const elementTypes = appEngine.getAllElements().map(({ $type }) => $type);
+export const elementTypes = appEngine.elements.all().map(({ $type }) => $type);
 
-export const ruleTypes = appEngine.getValidationRegistry().keys();
+export const ruleTypes = appEngine.validations.keys();

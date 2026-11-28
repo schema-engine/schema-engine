@@ -132,7 +132,7 @@ function useFieldRequired(config: FormFieldConfig | undefined): boolean {
 	);
 	const engineContext = useOptionalFormEngine();
 	const registry = useMemo(
-		() => engineContext?.engine.getValidationRegistry() ?? getFallbackValidationRegistry(),
+		() => engineContext?.engine.validations ?? getFallbackValidationRegistry(),
 		[engineContext],
 	);
 	return constraintRequired || (config !== undefined && isElementRequired(config, registry));

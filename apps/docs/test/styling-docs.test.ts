@@ -341,9 +341,9 @@ describe('registries page', () => {
 		expect(catalog.get('axis:tone')?.title).toBe('Tone');
 		expect(catalog.get('element:input')?.componentType).toBe('element');
 		expect(catalog.getAll().map((entry) => entry.id)).toContain('axis:size');
-		expect(engine.getAllElements().map((element) => element.$type)).toContain('input');
-		expect(engine.getAllRecipes()).toEqual([]);
-		expect(engine.getValidationRegistry().kind).toBe('Validation');
+		expect(engine.elements.all().map((element) => element.$type)).toContain('input');
+		expect(engine.recipes.all()).toEqual([]);
+		expect(engine.validations.kind).toBe('Validation');
 		expect(engine.extend().getLayout()).toBe(engine.getLayout());
 	});
 

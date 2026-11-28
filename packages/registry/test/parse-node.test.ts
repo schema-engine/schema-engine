@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import * as z from 'zod/mini';
-import { BaseRegistry, createRegistry, safeParseNode, unregisteredTypeMessage, type BaseRegistration } from '../src';
+import {
+	createMutableRegistry,
+	createRegistry,
+	safeParseNode,
+	unregisteredTypeMessage,
+	type BaseRegistration,
+} from '../src';
 
 const badge: BaseRegistration = {
 	$type: 'badge',
@@ -189,10 +195,7 @@ describe('safeParseNode', () => {
 	});
 
 	it('works with a mutable registry', () => {
-		class Badges extends BaseRegistry<BaseRegistration> {
-			readonly kind = 'Badge';
-		}
-		const registry = new Badges();
+		const registry = createMutableRegistry<BaseRegistration>('Badge');
 		registry.register(badge);
 
 		expect(safeParseNode(registry, { $type: 'badge', label: 'Paid' }).success).toBe(true);

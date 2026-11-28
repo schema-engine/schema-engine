@@ -19,14 +19,13 @@ const emailForInputs: ValidationRegistration<EmailRule> = {
  *
  * @remarks
  * The `submit` action lets a test author an `actions` entry; the fixture form
- * declares none, and a test that runs one returns its own registration from
- * `getAction`.
+ * declares none, and a test that runs one passes its own `submit` registration.
  */
-export function createHydrationEngine() {
+export function createHydrationEngine(submit = testAction('submit', ['form_submit'], async () => ({ success: true }))) {
 	return createFormEngine({
 		elements: schemaFormRegistrations.map((registration) =>
 			registration.$type === 'input' ? { ...registration, validations: [emailForInputs] } : registration,
 		),
-		actions: [testAction('submit', ['form_submit'], async () => ({ success: true }))],
+		actions: [submit],
 	});
 }

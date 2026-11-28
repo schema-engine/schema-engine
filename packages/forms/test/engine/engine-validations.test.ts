@@ -39,7 +39,7 @@ function declaring($type: string, validation: { $type: string; handler: () => z.
 }
 
 function schemaFor(engine: ReturnType<typeof createFormEngine>, rule: { $type: string }) {
-	return engine.getValidationRegistry().createSchema(rule, {
+	return engine.validations.createSchema(rule, {
 		values: {},
 		fieldPath: '',
 		resolve: () => undefined,
@@ -53,7 +53,7 @@ afterEach(() => {
 
 describe('engine validation registry', () => {
 	test('stores the rules in a read-only registry with no register or clear', () => {
-		const registry = createFormEngine({ validations: [postcode] }).getValidationRegistry();
+		const registry = createFormEngine({ validations: [postcode] }).validations;
 
 		expect(registry.kind).toBe('Validation');
 		expect(registry.has('postcode')).toBe(true);
@@ -88,13 +88,13 @@ describe('engine validation registry', () => {
 		const invalid = await validateFormValues({
 			steps: [{ elements }],
 			values: { postcode: 'nope' },
-			registry: engine.getValidationRegistry(),
+			registry: engine.validations,
 			debounceScope: createDebounceScope(),
 		});
 		const valid = await validateFormValues({
 			steps: [{ elements }],
 			values: { postcode: 'SW1A 1AA' },
-			registry: engine.getValidationRegistry(),
+			registry: engine.validations,
 			debounceScope: createDebounceScope(),
 		});
 
@@ -130,7 +130,7 @@ describe('engine validation registry', () => {
 		const registry = createFormEngine({
 			elements: [phone],
 			validations: [{ ...postcode, $type: 'phone', defaultFor: ['phone-input'] }],
-		}).getValidationRegistry();
+		}).validations;
 
 		const rules = registry.getDefaultRulesForFieldType('phone-input');
 		expect(rules).toEqual([{ $type: 'phone' }]);
@@ -144,7 +144,7 @@ describe('engine validation registry', () => {
 		const engine = createFormEngine({ validations: list });
 		list.push({ ...postcode, $type: 'late-rule' });
 
-		expect(engine.extend().getValidationRegistry().has('late-rule')).toBe(false);
+		expect(engine.extend().validations.has('late-rule')).toBe(false);
 	});
 
 	test('keeps engine validations when the engine is extended', () => {
@@ -152,14 +152,14 @@ describe('engine validation registry', () => {
 			elements: [declaring('extra-input', { $type: 'extra-rule', handler: () => z.string() })],
 		});
 
-		expect(engine.getValidationRegistry().has('postcode')).toBe(true);
-		expect(engine.getValidationRegistry().has('extra-rule')).toBe(true);
+		expect(engine.validations.has('postcode')).toBe(true);
+		expect(engine.validations.has('extra-rule')).toBe(true);
 	});
 
 	test('adds validations given to extend', () => {
 		const engine = createFormEngine().extend({ validations: [postcode] });
 
-		expect(engine.getValidationRegistry().has('postcode')).toBe(true);
+		expect(engine.validations.has('postcode')).toBe(true);
 	});
 
 	test('rejects a validation whose schema is not a Standard Schema', () => {

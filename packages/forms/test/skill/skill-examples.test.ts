@@ -58,7 +58,7 @@ describe('a custom rule', () => {
 	test('is checked by the container and keeps its type and message', async () => {
 		const container = createFormStateContainer({
 			config: addressForm,
-			registry: addressEngine.getValidationRegistry(),
+			registry: addressEngine.validations,
 		});
 
 		container.setValue('postalCode', 'abc');
@@ -135,10 +135,10 @@ describe('actions and the runtime', () => {
 
 describe('registries', () => {
 	test('the engine lists the elements it was given and the rules it holds, built-in and registered', () => {
-		expect(appEngine.getElement('text')).toMatchObject({ $type: 'text' });
-		expect(appEngine.getElement('missing')).toBeUndefined();
+		expect(appEngine.elements.get('text')).toMatchObject({ $type: 'text' });
+		expect(appEngine.elements.get('missing')).toBeUndefined();
 		expect(elementTypes).toEqual(['text']);
 		expect(ruleTypes).toEqual(expect.arrayContaining(['required', 'postalCode']));
-		expect(appEngine.getValidationRegistry().has('postalCode')).toBe(true);
+		expect(appEngine.validations.has('postalCode')).toBe(true);
 	});
 });

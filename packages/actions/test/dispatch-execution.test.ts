@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { parsed } from './parsed';
 import { ActionDispatcher } from '../src/dispatcher';
-import type { ActionRegistryProvider } from '../src/registry';
+import { createMutableRegistry } from '@schema-engine/registry';
 import type { ActionRegistration, ActionConfigBase } from '../src/types';
 import * as z from 'zod/mini';
 
@@ -27,32 +27,15 @@ function createContext(overrides: Partial<TestContext> = {}): TestContext {
 	};
 }
 
-class MockActionRegistry implements ActionRegistryProvider<TestContext, TestTrigger> {
-	private actions = new Map<string, ActionRegistration<TestActionConfig, TestContext, TestTrigger>>();
-
-	register(action: ActionRegistration<TestActionConfig, TestContext, TestTrigger>): void {
-		this.actions.set(action.$type, action);
-	}
-
-	getAction(type: string): ActionRegistration<TestActionConfig, TestContext, TestTrigger> | undefined {
-		return this.actions.get(type);
-	}
-
-	getActionTypes(): string[] {
-		return Array.from(this.actions.keys());
-	}
-
-	clear(): void {
-		this.actions.clear();
-	}
-}
+const createTestRegistry = () =>
+	createMutableRegistry<ActionRegistration<TestActionConfig, TestContext, TestTrigger>>('Action');
 
 describe('ActionDispatcher', () => {
-	let registry: MockActionRegistry;
+	let registry: ReturnType<typeof createTestRegistry>;
 	let executionLog: string[];
 
 	beforeEach(() => {
-		registry = new MockActionRegistry();
+		registry = createTestRegistry();
 		executionLog = [];
 	});
 

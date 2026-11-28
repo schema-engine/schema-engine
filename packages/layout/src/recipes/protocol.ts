@@ -2,6 +2,7 @@ import {
 	assertStandardSchema,
 	createRegistry,
 	type BaseRegistration,
+	type CreateRegistryOptions,
 	type ReadOnlyRegistry,
 } from '@schema-engine/registry';
 
@@ -150,6 +151,8 @@ function assertSlotSchemas(
 /**
  * Builds the read-only `Recipe` registry of a domain, with its protocol rules run at build.
  *
+ * @param options - The registry options, such as the `hint` of an unregistered `$type`
+ *
  * @throws {Error} Naming the recipe when a winning registration breaks the protocol, has no Standard Schema, or
  * carries `slotSchemas` that differ from its slots or are not Standard Schemas
  *
@@ -162,8 +165,12 @@ export function createRecipeRegistry<
 	TKind extends string,
 	TRecipe extends BaseRegistration &
 		RecipeShape<TSlot, TKind> & { readonly slotSchemas?: Readonly<Partial<Record<string, unknown>>> },
->(protocol: RecipeProtocol<TSlot, TKind>, recipes: readonly TRecipe[]): ReadOnlyRegistry<TRecipe> {
-	const registry = createRegistry('Recipe', recipes);
+>(
+	protocol: RecipeProtocol<TSlot, TKind>,
+	recipes: readonly TRecipe[],
+	options?: CreateRegistryOptions,
+): ReadOnlyRegistry<TRecipe> {
+	const registry = createRegistry('Recipe', recipes, options);
 	for (const recipe of registry.all()) {
 		assertRecipeRules(protocol, recipe);
 		assertSlotSchemas(registry.kind, recipe);

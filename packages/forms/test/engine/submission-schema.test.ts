@@ -84,7 +84,7 @@ const parse = (config: ReturnType<typeof form>, value: unknown) =>
 
 /** What the container submits once `writes` are made, parsed by the schema of the same config. */
 async function submitted(config: ReturnType<typeof form>, writes: Record<string, unknown>, defaults = {}) {
-	const container = createFormStateContainer({ config, registry: engine.getValidationRegistry(), defaults });
+	const container = createFormStateContainer({ config, registry: engine.validations, defaults });
 	for (const [path, value] of Object.entries(writes)) container.setValue(path, value);
 	const result = await container.submit();
 	if (result.outcome !== 'passed') throw new Error(`the submission was ${result.outcome}`);

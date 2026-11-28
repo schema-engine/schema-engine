@@ -1,6 +1,6 @@
 ---
 title: 'Read-only and mutable registries'
-description: 'Choose between createRegistry and BaseRegistry, and override a default registration by listing a later one.'
+description: 'Choose between createRegistry and createMutableRegistry, and override a default registration by listing a later one.'
 order: 2
 ---
 
@@ -10,15 +10,15 @@ Everything a Schema Engine package lets you extend is a registration in a regist
 
 ## Read-only or mutable
 
-| Question                      | `createRegistry`                                                                                     | `BaseRegistry`                            |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| When are registrations known? | At build, from a list                                                                                | Any time, after construction              |
-| Can it change?                | No. It is frozen, with no `register` or `clear`                                                      | Yes: `register`, `clear`                  |
-| A second `$type` of one key   | Replaces the first silently (or throws with `duplicates: 'error'`); the key keeps its first position | Replaces it and logs a warning            |
-| Is the schema checked?        | Yes, for each winner, at build                                                                       | No                                        |
-| Use it for                    | Elements, recipes, actions, axes and validations of an engine                                        | A plugin system that registers at runtime |
+| Question                      | `createRegistry`                                                                                     | `createMutableRegistry`                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| When are registrations known? | At build, from a list                                                                                | Any time, after construction                                         |
+| Can it change?                | No. It is frozen, with no `register` or `clear`                                                      | Yes: `register`, `clear`                                             |
+| A second `$type` of one key   | Replaces the first silently (or throws with `duplicates: 'error'`); the key keeps its first position | The same: replaces it silently, or throws with `duplicates: 'error'` |
+| Is the schema checked?        | Yes, for each winner, at build                                                                       | Yes, at each `register`                                              |
+| Use it for                    | Elements, recipes, actions, axes and validations of an engine                                        | A plugin system that registers at runtime                            |
 
-`createRegistry` is the default. Reach for `BaseRegistry` only when registrations arrive after the registry exists; the forms engine never does.
+Both return the same read side (`get`, `has`, `all`, `keys`, `size`, `kind`), so either goes wherever a registry is read. `createRegistry` is the default. Reach for `createMutableRegistry` only when registrations arrive after the registry exists; the forms engine never does.
 
 ```ts
 import * as z from 'zod/mini';
@@ -92,22 +92,18 @@ Leave out `badge`, add a `crad` key or set `schema` in a binding and TypeScript 
 
 ## The mutable registry
 
-Use `BaseRegistry` when plugins register themselves after startup:
+Use `createMutableRegistry` when plugins register themselves after startup:
 
 ```ts
 import * as z from 'zod/mini';
-import { BaseRegistry } from '@schema-engine/registry';
+import { createMutableRegistry } from '@schema-engine/registry';
 import type { BaseRegistration } from '@schema-engine/registry';
 
 interface PluginRegistration extends BaseRegistration {
 	execute: () => Promise<void>;
 }
 
-class PluginRegistry extends BaseRegistry<PluginRegistration> {
-	readonly kind = 'Plugin';
-}
-
-const plugins = new PluginRegistry();
+const plugins = createMutableRegistry<PluginRegistration>('Plugin');
 
 plugins.register({
 	$type: 'sync-cache',
@@ -117,6 +113,6 @@ plugins.register({
 });
 ```
 
-It does not check schemas and it warns on an override, so it suits a small set of known plugins. The actions package supports both: `ActionRegistry` is read-only, and a `BaseRegistry` subclass can implement `ActionRegistryProvider` for registration at runtime.
+`register` checks each registration as `createRegistry` does and throws a `RegistryError` for a schema that is not a Standard Schema or for malformed `childPaths`. It logs nothing on an override: call `plugins.has('sync-cache')` first to warn about one. The actions package takes either kind: `parseActions` and `ActionDispatcher` read any registry, so `createRegistry('Action', [...])` builds a fixed set and `createMutableRegistry<MyAction>('Action')` takes actions at runtime.
 
 See the [API reference](/docs/registry/api-reference) for every member.

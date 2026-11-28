@@ -71,7 +71,7 @@ const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 export async function walkThrough() {
 	const form = createFormStateContainer({
 		config,
-		registry: engine.getValidationRegistry(),
+		registry: engine.validations,
 		defaults: { email: '' },
 	});
 	const error = () => form.getSnapshot().errors['email'];

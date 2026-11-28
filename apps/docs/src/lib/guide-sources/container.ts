@@ -22,7 +22,7 @@ const config = engine.defineForm({
 
 export const container = createFormStateContainer({
 	config,
-	registry: engine.getValidationRegistry(),
+	registry: engine.validations,
 	defaults: { email: 'ada@example.com', password: '' },
 });
 

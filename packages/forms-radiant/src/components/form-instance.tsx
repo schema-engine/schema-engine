@@ -33,7 +33,7 @@ function serverHydration(
 ): FormStateHydration | undefined {
 	if (!isServer) return undefined;
 	return toHydration(
-		createFormStateContainer({ config, registry: engine.getValidationRegistry(), defaults }).getServerSnapshot(),
+		createFormStateContainer({ config, registry: engine.validations, defaults }).getServerSnapshot(),
 	);
 }
 

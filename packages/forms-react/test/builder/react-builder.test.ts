@@ -25,8 +25,8 @@ describe('React Form Engine factory', () => {
 		test('should register input element', () => {
 			const engine = createFormEngine({ elements: [InputElementRegistration] });
 
-			expect(engine.hasElement('input')).toBe(true);
-			const element = engine.getElement('input');
+			expect(engine.elements.has('input')).toBe(true);
+			const element = engine.elements.get('input');
 			expect(element?.$type).toBe('input');
 		});
 
@@ -48,24 +48,24 @@ describe('React Form Engine factory', () => {
 				elements: [InputElementRegistration, textareaElement],
 			});
 
-			expect(engine.hasElement('input')).toBe(true);
-			expect(engine.hasElement('textarea')).toBe(true);
+			expect(engine.elements.has('input')).toBe(true);
+			expect(engine.elements.has('textarea')).toBe(true);
 
-			const elementIds = engine.getElementIds();
+			const elementIds = engine.elements.keys();
 			expect(elementIds).toContain('input');
 			expect(elementIds).toContain('textarea');
 		});
 
 		test('should include element schema', () => {
 			const engine = createFormEngine({ elements: [InputElementRegistration] });
-			const element = engine.getElement('input');
+			const element = engine.elements.get('input');
 
 			expect(element?.schema).toBe(InputFieldSchema);
 		});
 
 		test('should include element metadata', () => {
 			const engine = createFormEngine({ elements: [InputElementRegistration] });
-			const element = engine.getElement('input');
+			const element = engine.elements.get('input');
 
 			expect(element?.metadata.name).toBe('Text Input Field');
 			expect(element?.metadata.category).toBe('input');
@@ -76,9 +76,9 @@ describe('React Form Engine factory', () => {
 		test('registers recipes only when explicitly added', () => {
 			const engine = createFormEngine();
 
-			expect(engine.getRecipeIds()).toEqual([]);
+			expect(engine.recipes.keys()).toEqual([]);
 			const recipeEngine = createFormEngine({ recipes: [CardRecipe] });
-			expect(recipeEngine.getRecipe('card')?.metadata.name).toBe(CardRecipe.metadata.name);
+			expect(recipeEngine.recipes.get('card')?.metadata.name).toBe(CardRecipe.metadata.name);
 		});
 	});
 
@@ -102,8 +102,8 @@ describe('React Form Engine factory', () => {
 				],
 			});
 
-			expect(extended.hasElement('input')).toBe(true);
-			expect(extended.hasElement('textarea')).toBe(true);
+			expect(extended.elements.has('input')).toBe(true);
+			expect(extended.elements.has('textarea')).toBe(true);
 		});
 	});
 
@@ -119,9 +119,9 @@ describe('React Form Engine factory', () => {
 		test('should allow building a headless engine with no registrations', () => {
 			const engine = createFormEngine();
 
-			expect(engine.getElementIds()).toEqual([]);
-			expect(engine.getActionTypes()).toEqual([]);
-			expect(engine.getRecipeIds()).toEqual([]);
+			expect(engine.elements.keys()).toEqual([]);
+			expect(engine.actions.keys()).toEqual([]);
+			expect(engine.recipes.keys()).toEqual([]);
 			const summary = engine.getSummary();
 			expect(summary.elements.count).toBe(0);
 			expect(summary.actions.count).toBe(0);
@@ -147,7 +147,7 @@ describe('React Form Engine factory', () => {
 			const engine = createFormEngine({
 				elements: [InputElementRegistration, textareaElement],
 			});
-			const elements = engine.getAllElements();
+			const elements = engine.elements.all();
 
 			expect(elements.map((element) => element.$type).sort()).toEqual(['input', 'textarea']);
 		});
@@ -155,8 +155,8 @@ describe('React Form Engine factory', () => {
 		test('should return undefined for non-existent element', () => {
 			const engine = createFormEngine();
 
-			expect(engine.getElement('nonexistent')).toBeUndefined();
-			expect(engine.hasElement('nonexistent')).toBe(false);
+			expect(engine.elements.get('nonexistent')).toBeUndefined();
+			expect(engine.elements.has('nonexistent')).toBe(false);
 		});
 	});
 
@@ -179,10 +179,10 @@ describe('React Form Engine factory', () => {
 		test('should create a fully configured form engine', () => {
 			const engine = createFormEngine({ elements: [InputElementRegistration] });
 
-			expect(engine.hasElement('input')).toBe(true);
-			expect(engine.getRecipeIds()).toEqual([]);
+			expect(engine.elements.has('input')).toBe(true);
+			expect(engine.recipes.keys()).toEqual([]);
 
-			const element = engine.getElement('input');
+			const element = engine.elements.get('input');
 			expect(element?.$type).toBe('input');
 			expect(element?.schema).toBe(InputFieldSchema);
 			expect(element?.metadata.name).toBe('Text Input Field');

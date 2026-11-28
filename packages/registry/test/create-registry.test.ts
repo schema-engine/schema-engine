@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as z from 'zod/mini';
-import { createRegistry, type BaseRegistration } from '../src';
+import { createRegistry, safeParseNode, type BaseRegistration } from '../src';
 
 const createItem = (type: string, name: string): BaseRegistration => ({
 	$type: type,
@@ -76,6 +76,24 @@ describe('createRegistry', () => {
 
 			expect(registry.get('card')?.metadata.name).toBe('Second');
 			expect(registry.keys()).toEqual(['card']);
+		});
+	});
+
+	describe('Scenario: The hint option is the hint of the registry as a lookup', () => {
+		it('is on the registry and ends the message of an unregistered $type', () => {
+			const registry = createRegistry('Widget', [createItem('card', 'Card')], {
+				hint: 'Register it in widgets.ts.',
+			});
+
+			expect(registry.hint).toBe('Register it in widgets.ts.');
+			expect(safeParseNode(registry, { $type: 'missing' })).toMatchObject({
+				success: false,
+				issues: [{ message: "No registration for $type 'missing'. Register it in widgets.ts." }],
+			});
+		});
+
+		it('is absent without the option', () => {
+			expect(createRegistry('Widget', []).hint).toBeUndefined();
 		});
 	});
 

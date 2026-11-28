@@ -45,14 +45,14 @@ export { FormValidationError } from './validate-form/validation-error';
  */
 export function validateElementConfig(
 	config: unknown,
-	options: Pick<ValidateFormOptions, 'getElement' | 'checkRule' | 'axes'>,
+	options: Pick<ValidateFormOptions, 'elements' | 'checkRule' | 'axes'>,
 ): NormalizedElementConfig {
-	const parsed = parseElementNode(config, options.getElement, options.checkRule, [], {
+	const parsed = parseElementNode(config, options.elements, options.checkRule, [], {
 		axes: options.axes ?? getDefaultLayoutTheme().axes,
 		inherited: {},
 	});
 	if (!parsed.item) throw new FormValidationError(parsed.issues, config);
-	return brandElementTree(parsed.item, options.getElement);
+	return brandElementTree(parsed.item, options.elements);
 }
 
 /**
@@ -120,7 +120,7 @@ export function safeValidateFormConfig(
 		issues.push(...stepAppearance.issues);
 		const elements = parseElementList(
 			step.elements,
-			options.getElement,
+			options.elements,
 			options.checkRule,
 			stepPath,
 			stepAppearance.childScope,
@@ -139,7 +139,7 @@ export function safeValidateFormConfig(
 		};
 	});
 
-	issues.push(...stepStructureIssues(steps, options.getElement));
+	issues.push(...stepStructureIssues(steps, options.elements));
 	issues.push(
 		...payloadIssues(
 			envelope.payload,
@@ -180,7 +180,7 @@ export function safeValidateFormConfig(
 				steps: steps.map((step) => ({
 					...step,
 					elements: step.elements.map((element) =>
-						brandElementTree(element as FormTaggedConfig, options.getElement),
+						brandElementTree(element as FormTaggedConfig, options.elements),
 					),
 				})),
 				view: view.view ?? envelope.view,

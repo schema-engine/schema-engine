@@ -127,16 +127,16 @@ Building or binding a registry from registrations that break a rule throws a `Re
 
 ## Entry points
 
-| Import                                | Holds                                                                                                                                                                                                                                                                                    |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/registry`             | `createRegistry`, `bindRegistry`, `BaseRegistry`, `RegistryError`, `RegistryErrorCode`, the registration types (`ChildPath` among them), `safeParseNode`, `safeParseTree`, `exportTreeSchema`, `safeParseStandardSchema`, `assertStandardSchema`, `standardSchema` and `formatIssuePath` |
-| `@schema-engine/registry/json-schema` | `readStandardJSONSchema` and `createJSONSchemaEmbedder`, for code that writes JSON Schema itself: a `resolve` that falls back to Standard JSON Schema, or a domain package's own export                                                                                                  |
-| `@schema-engine/registry/yaml`        | `parseYaml`, `safeParseYaml` and `stringifyYaml`, which report errors by line and column. Needs the optional peer dependency `yaml`                                                                                                                                                      |
+| Import                                | Holds                                                                                                                                                                                                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/registry`             | `createRegistry`, `createMutableRegistry`, `bindRegistry`, `RegistryError`, `RegistryErrorCode`, the registration types (`ChildPath` among them), `safeParseNode`, `safeParseTree`, `exportTreeSchema`, `safeParseStandardSchema`, `assertStandardSchema`, `standardSchema` and `formatIssuePath` |
+| `@schema-engine/registry/json-schema` | `readStandardJSONSchema` and `createJSONSchemaEmbedder`, for code that writes JSON Schema itself: a `resolve` that falls back to Standard JSON Schema, or a domain package's own export                                                                                                           |
+| `@schema-engine/registry/yaml`        | `parseYaml`, `safeParseYaml` and `stringifyYaml`, which report errors by line and column. Needs the optional peer dependency `yaml`                                                                                                                                                               |
 
 ## Documentation
 
 - [Registry](https://schema-engine.com/docs/registry/overview): install, build a registry and resolve a JSON node.
-- [Read-only and mutable registries](https://schema-engine.com/docs/registry/registries): `createRegistry` and `BaseRegistry`.
+- [Read-only and mutable registries](https://schema-engine.com/docs/registry/registries): `createRegistry` and `createMutableRegistry`.
 - [Resolve a document](https://schema-engine.com/docs/registry/resolve-a-document): validate a whole tree of nodes with `safeParseTree`, render it and write its JSON Schema with `exportTreeSchema`.
 - [API reference](https://schema-engine.com/docs/registry/api-reference): every export.
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.

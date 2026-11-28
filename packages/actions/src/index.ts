@@ -8,20 +8,21 @@
  * ```typescript
  * import * as z from 'zod/mini';
  * import { Logger } from '@ecopages/logger';
- * import { ActionDispatcher, ActionRegistry, parseActions } from '@schema-engine/actions';
+ * import { createRegistry } from '@schema-engine/registry';
+ * import { ActionDispatcher, defineAction, parseActions } from '@schema-engine/actions';
  *
  * const logger = new Logger('[my-app]');
- * const registry = new ActionRegistry<{ formId: string }, 'submit' | 'change'>([
- *   {
- *     $type: 'log',
- *     schema: z.object({ message: z.string() }),
- *     metadata: { name: 'Log', defaultTriggers: ['change'] },
- *     execute: async (ctx) => {
- *       logger.info(ctx.config.message, ctx);
- *       return { success: true };
- *     },
+ * const defineLogAction = defineAction<{ formId: string }, 'submit' | 'change'>();
+ * const log = defineLogAction({
+ *   $type: 'log',
+ *   schema: z.object({ message: z.string() }),
+ *   metadata: { name: 'Log', defaultTriggers: ['change'] },
+ *   execute: async (ctx) => {
+ *     logger.info(ctx.config.message, ctx);
+ *     return { success: true };
  *   },
- * ]);
+ * });
+ * const registry = createRegistry('Action', [log]);
  *
  * const dispatcher = new ActionDispatcher(registry);
  * const parsed = parseActions(registry, [{ id: '1', $type: 'log', message: 'hello' }]);
@@ -32,6 +33,5 @@
  */
 
 export * from './types';
-export * from './registry';
 export * from './dispatcher';
 export * from './parse-actions';

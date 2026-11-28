@@ -9,11 +9,6 @@ import {
 } from '@schema-engine/registry';
 import type { ActionConfigBase, ParsedAction, ParsedActionSequence } from './types';
 
-/** What {@link parseActions} needs of a registry: the registration of a `$type`, for its schema. */
-export interface ActionSchemaLookup {
-	getAction(type: string): Pick<BaseRegistration, 'schema'> | undefined;
-}
-
 /** What a domain tells {@link parseActions} about the entries it accepts. */
 export interface ParseActionsOptions {
 	/**
@@ -22,12 +17,6 @@ export interface ParseActionsOptions {
 	 * @remarks Without it, any string is accepted, since the engine cannot know a domain's triggers.
 	 */
 	triggers?: readonly string[];
-	/**
-	 * The sentence that follows the message of an action `$type` nothing registers, naming where to register it.
-	 *
-	 * @remarks Without it, the sentence is `Register it in the action registry.`. A domain that registers actions through its own entry point says that one.
-	 */
-	hint?: NodeLookup['hint'];
 }
 
 /**
@@ -37,7 +26,7 @@ export interface ParseActionsOptions {
  * An issue is a Standard Schema issue whose `path` starts with the index of the entry, then the index inside
  * a group, then the path the schema reported (`[1, 0, 'endpoint']`). Each entry is checked by `safeParseNode`, so its
  * issues sit where that function puts them: an entry that is not an object at the entry, and a missing or unregistered
- * `$type` at `$type`. An unregistered `$type` says where to register it ({@link ParseActionsOptions.hint}). An empty group is an issue at its index.
+ * `$type` at `$type`. An unregistered `$type` says where to register it ({@link NodeLookup.hint}). An empty group is an issue at its index.
  * An issue the registry creates has its namespaced `code` (`registry/unregistered-type` with `received`, say); the ones
  * of the engine's own checks have none.
  */
@@ -126,7 +115,9 @@ function entrySchema(
 /**
  * Check serialized actions against their registrations, and return them as {@link ParsedAction}s.
  *
- * @param registry - Where each entry's `$type` finds its registration and schema
+ * @param registry - Where each entry's `$type` finds its registration and schema: a registry of either kind, or any
+ * {@link NodeLookup}. Its `hint` ends the message of an unregistered `$type`; without one the sentence is
+ * `Register it in the action registry.`
  * @param input - The sequence as it arrived, for example the result of `JSON.parse`: entries, where an array entry is a group
  * @param options - What the domain adds, such as the trigger names it accepts
  *
@@ -143,7 +134,7 @@ function entrySchema(
  * @throws {Error} When a registration's schema validates asynchronously, which is a misuse of the registry.
  */
 export function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
-	registry: ActionSchemaLookup,
+	registry: NodeLookup<Pick<BaseRegistration, 'schema'>>,
 	input: unknown,
 	options?: ParseActionsOptions,
 ): ParseActionsResult<TConfig> {
@@ -153,10 +144,10 @@ export function parseActions<TConfig extends ActionConfigBase = ActionConfigBase
 
 	const entries: NodeLookup<Pick<BaseRegistration, 'schema'>> = {
 		get(type) {
-			const registration = registry.getAction(type);
+			const registration = registry.get(type);
 			return registration && { schema: entrySchema(type, registration.schema, options) };
 		},
-		hint: options?.hint ?? DEFAULT_HINT,
+		hint: registry.hint ?? DEFAULT_HINT,
 	};
 	const issues: StandardSchemaIssue[] = [];
 	const sequence: Array<ParsedAction<TConfig> | Array<ParsedAction<TConfig>>> = [];

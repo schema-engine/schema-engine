@@ -36,7 +36,7 @@ describe('the root entry does not need yaml', () => {
 			format: 'esm',
 			platform: 'neutral',
 			logLevel: 'silent',
-			external: ['@ecopages/logger', '@standard-schema/spec'],
+			external: ['@standard-schema/spec'],
 			plugins: [
 				{
 					name: 'no-yaml',

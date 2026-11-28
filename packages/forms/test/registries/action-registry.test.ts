@@ -10,7 +10,7 @@ const submitActionSchema = z.object({ id: z.string(), $type: z.literal('submit')
 type LogActionConfig = z.output<typeof logActionSchema>;
 type SubmitActionConfig = z.output<typeof submitActionSchema>;
 
-describe('ActionRegistry', () => {
+describe('form action registrations', () => {
 	const mockAction: BuilderActionRegistration<'log', typeof logActionSchema> = {
 		$type: 'log',
 		schema: logActionSchema,
@@ -41,8 +41,8 @@ describe('ActionRegistry', () => {
 		test('should register an action', () => {
 			const engine = createFormEngine({ actions: [mockAction] });
 
-			expect(engine.hasAction('log')).toBe(true);
-			const retrieved = engine.getAction('log');
+			expect(engine.actions.has('log')).toBe(true);
+			const retrieved = engine.actions.get('log');
 			expect(retrieved?.$type).toBe('log');
 			expect(retrieved?.metadata.name).toBe('Log Action');
 			expect(retrieved?.metadata.description).toBe('Logs a message');
@@ -51,9 +51,9 @@ describe('ActionRegistry', () => {
 		test('should allow registering multiple actions', () => {
 			const engine = createFormEngine({ actions: [mockAction, anotherAction] });
 
-			expect(engine.getAllActions().length).toBe(2);
-			expect(engine.hasAction('log')).toBe(true);
-			expect(engine.hasAction('submit')).toBe(true);
+			expect(engine.actions.all().length).toBe(2);
+			expect(engine.actions.has('log')).toBe(true);
+			expect(engine.actions.has('submit')).toBe(true);
 		});
 
 		test('should override when registering duplicate id', () => {
@@ -67,27 +67,27 @@ describe('ActionRegistry', () => {
 
 			const engine = createFormEngine({ actions: [mockAction, updated] });
 
-			expect(engine.getAllActions().length).toBe(1);
-			expect(engine.getAction('log')?.metadata.name).toBe('Updated Log Action');
+			expect(engine.actions.all().length).toBe(1);
+			expect(engine.actions.get('log')?.metadata.name).toBe('Updated Log Action');
 		});
 	});
 
 	describe('has', () => {
 		test('should return true for registered action', () => {
 			const engine = createFormEngine({ actions: [mockAction] });
-			expect(engine.hasAction('log')).toBe(true);
+			expect(engine.actions.has('log')).toBe(true);
 		});
 
 		test('should return false for unregistered action', () => {
 			const engine = createFormEngine();
-			expect(engine.hasAction('non-existent')).toBe(false);
+			expect(engine.actions.has('non-existent')).toBe(false);
 		});
 	});
 
-	describe('getAction', () => {
+	describe('get', () => {
 		test('should retrieve registered action', () => {
 			const engine = createFormEngine({ actions: [mockAction] });
-			const retrieved = engine.getAction('log');
+			const retrieved = engine.actions.get('log');
 
 			expect(retrieved?.$type).toBe('log');
 			expect(retrieved?.metadata.name).toBe('Log Action');
@@ -97,21 +97,21 @@ describe('ActionRegistry', () => {
 
 		test('should return undefined for unregistered action', () => {
 			const engine = createFormEngine();
-			const retrieved = engine.getAction('non-existent');
+			const retrieved = engine.actions.get('non-existent');
 			expect(retrieved).toBeUndefined();
 		});
 	});
 
-	describe('getAll', () => {
+	describe('all', () => {
 		test('should return empty array when no actions registered', () => {
 			const engine = createFormEngine();
-			expect(engine.getAllActions()).toEqual([]);
+			expect(engine.actions.all()).toEqual([]);
 		});
 
 		test('should return all registered actions', () => {
 			const engine = createFormEngine({ actions: [mockAction, anotherAction] });
 
-			const all = engine.getAllActions();
+			const all = engine.actions.all();
 			expect(all).toHaveLength(2);
 			expect(all.map((a) => a.$type).toSorted((a, b) => a.localeCompare(b))).toEqual(['log', 'submit']);
 			expect(all.find((a) => a.$type === 'log')?.metadata.name).toBe('Log Action');
@@ -119,16 +119,16 @@ describe('ActionRegistry', () => {
 		});
 	});
 
-	describe('getActionTypes', () => {
+	describe('keys', () => {
 		test('should return empty array when no actions registered', () => {
 			const engine = createFormEngine();
-			expect(engine.getActionTypes()).toEqual([]);
+			expect(engine.actions.keys()).toEqual([]);
 		});
 
 		test('should return all registered ids', () => {
 			const engine = createFormEngine({ actions: [mockAction, anotherAction] });
 
-			const keys = engine.getActionTypes();
+			const keys = engine.actions.keys();
 			expect(keys).toHaveLength(2);
 			expect(keys).toContain('log');
 			expect(keys).toContain('submit');

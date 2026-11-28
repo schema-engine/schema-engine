@@ -6,7 +6,7 @@ order: 4
 
 # Writing actions
 
-The package ships the primitives, not a catalog: `ActionRegistry`, `ActionDispatcher`, `parseActions`, `defineAction` and the shared types. The actions of an application, such as webhooks, analytics, notifications, persistence or workflow transitions, are registrations you write. A domain package ships its own on top of these.
+The package ships the primitives, not a catalog: `ActionDispatcher`, `parseActions`, `defineAction` and the shared types. The registry is the one from `@schema-engine/registry`: `createRegistry('Action', [...])`. The actions of an application, such as webhooks, analytics, notifications, persistence or workflow transitions, are registrations you write. A domain package ships its own on top of these.
 
 ## Define an action
 
@@ -61,27 +61,57 @@ There are two layers. `TBaseContext` is what callers pass to `dispatch()`. The h
 
 ## Register actions at runtime
 
-`ActionRegistry` is built once from a list and cannot change. To register actions at runtime, implement `ActionRegistryProvider` on a store of your own. `parseActions` needs only `getAction`; `ActionDispatcher` also needs `getActionTypes`:
+`createRegistry('Action', [...])` from `@schema-engine/registry` builds a registry once, from a list, and it cannot change. For actions that register after startup, build a mutable one. `parseActions` and `ActionDispatcher` read it through `get`, so an action registered after the dispatcher is built still runs:
 
 ```ts
-import type { ActionConfigBase, ActionRegistration, ActionRegistryProvider } from '@schema-engine/actions';
+import { createMutableRegistry } from '@schema-engine/registry';
+import { defineAction, type ActionConfigBase, type AnyActionRegistration } from '@schema-engine/actions';
+import * as z from 'zod/mini';
 
-export class MutableActionRegistry<TBaseContext, TTrigger> implements ActionRegistryProvider<TBaseContext, TTrigger> {
-	private actions = new Map<string, ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>();
-
-	register(action: ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>) {
-		this.actions.set(action.$type, action);
-	}
-
-	getAction(type: string) {
-		return this.actions.get(type);
-	}
-
-	getActionTypes(): string[] {
-		return Array.from(this.actions.keys());
-	}
+interface Context {
+	log: string[];
 }
+
+interface AuditConfig extends ActionConfigBase<'audit'> {
+	note: string;
+}
+
+interface PingConfig extends ActionConfigBase<'ping'> {
+	url: string;
+}
+
+const define = defineAction<Context>();
+
+export const actions = createMutableRegistry<AnyActionRegistration<Context>>('Action');
+
+actions.register(
+	define<AuditConfig>({
+		$type: 'audit',
+		schema: z.object({ note: z.string() }),
+		metadata: { name: 'Audit', defaultTriggers: ['submit'] },
+		execute: ({ config, log }) => {
+			log.push(config.note);
+			return { success: true };
+		},
+	}),
+);
+
+actions.register(
+	define<PingConfig>({
+		$type: 'ping',
+		schema: z.object({ url: z.string() }),
+		metadata: { name: 'Ping', defaultTriggers: ['submit'] },
+		execute: ({ config, log }) => {
+			log.push(config.url);
+			return { success: true };
+		},
+	}),
+);
 ```
+
+`AnyActionRegistration<Context, Trigger>` is the registration type for a registry that holds actions of several configs; `ActionRegistration<AuditConfig, Context>` would let it hold only one.
+
+If the actions live in a store of your own, pass any object with `get($type)`. Its optional `hint` ends the message of an unregistered `$type`: `parseActions({ get: (type) => store.find(type), hint: 'Register it in plugins.ts.' }, input)`.
 
 ## Test an action
 

@@ -26,7 +26,7 @@ describe('the registration config', () => {
 
 	test('the password rule reports its message, and a valid account passes', async () => {
 		const config = reactEngine.validateForm(registration);
-		const container = createFormStateContainer({ config, registry: reactEngine.getValidationRegistry() });
+		const container = createFormStateContainer({ config, registry: reactEngine.validations });
 
 		container.setValue('email', 'ada@example.com');
 		container.setValue('password', 'short');

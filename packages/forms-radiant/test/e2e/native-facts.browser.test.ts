@@ -39,7 +39,7 @@ afterEach(() => {
 async function reportedFact(spec: NativeFactCase) {
 	const container = createFormStateContainer({
 		config: { steps: config.steps, validationMode: 'onSubmit', reValidateMode: 'onChange' },
-		registry: engine.getValidationRegistry(),
+		registry: engine.validations,
 		defaults: { field: '' },
 	});
 	const reported = vi.spyOn(container, 'reportNative');

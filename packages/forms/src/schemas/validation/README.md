@@ -745,7 +745,7 @@ Always test custom validation logic thoroughly:
 describe('Custom postal-code validation', () => {
 	it('validates postal codes correctly', () => {
 		const rule = { $type: 'postalCode', message: 'Invalid postal code' };
-		const schema = engine.getValidationRegistry().createSchema(rule, createValidationContext());
+		const schema = engine.validations.createSchema(rule, createValidationContext());
 
 		expect(() => schema?.parse('28013')).not.toThrow();
 		expect(() => schema?.parse('invalid')).toThrow();

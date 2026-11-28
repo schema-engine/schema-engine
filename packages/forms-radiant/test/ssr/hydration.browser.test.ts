@@ -19,8 +19,11 @@ await Promise.all([
 	import('@/elements/inputs/form-phone-input'),
 ]);
 
-function mount({ bindBeforeUpgrade = false } = {}) {
-	const engine = createHydrationEngine();
+function mount({
+	bindBeforeUpgrade = false,
+	submit,
+}: { bindBeforeUpgrade?: boolean; submit?: Parameters<typeof createHydrationEngine>[0] } = {}) {
+	const engine = createHydrationEngine(submit);
 	const owner = bindBeforeUpgrade ? document.implementation.createHTMLDocument() : document;
 	const renderer = owner.createElement('se-form-renderer') as FormRendererElement;
 	renderer.engine = engine;
@@ -117,9 +120,10 @@ test('a hydrated form without onSubmit submits natively', async () => {
 });
 
 test.each([false, true])('native submission waits for successful actions (%s)', async (succeeded) => {
-	const { engine, instance, form } = mount();
 	const execute = vi.fn(async () => (succeeded ? { success: true } : { success: false, shouldContinue: false }));
-	vi.spyOn(engine, 'getAction').mockReturnValue(testAction('submit', ['form_mount', 'form_submit'], execute));
+	const { engine, instance, form } = mount({
+		submit: testAction('submit', ['form_mount', 'form_submit'], execute),
+	});
 	form.action = '/native';
 	const nativeForm = form.querySelector<HTMLFormElement>('form[data-ref="form"]')!;
 	const nativeSubmit = vi.spyOn(nativeForm, 'submit').mockImplementation(() => {});
@@ -140,13 +144,12 @@ test.each([false, true])('native submission waits for successful actions (%s)', 
 });
 
 test('form_change runs for a nested value tree, and a reconnect adds no duplicate watcher', async () => {
-	const { engine, instance, root } = mount();
 	const seen: Array<Record<string, unknown>> = [];
 	const execute = vi.fn(async (context: { formData: Record<string, unknown> }) => {
 		seen.push(context.formData);
 		return { success: true };
 	});
-	vi.spyOn(engine, 'getAction').mockReturnValue(testAction('submit', ['form_change'], execute));
+	const { engine, instance, root } = mount({ submit: testAction('submit', ['form_change'], execute) });
 	instance.config = engine.defineForm({
 		id: 'changes',
 		steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'textarea', id: 'street', name: 'address.street' }] }],

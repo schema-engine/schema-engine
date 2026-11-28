@@ -41,7 +41,7 @@ const config = engine.defineForm({
 
 export const container = createFormStateContainer({
 	config,
-	registry: engine.getValidationRegistry(),
+	registry: engine.validations,
 	defaults: { email: 'ada@example.com', password: '' },
 });
 
@@ -70,7 +70,7 @@ export async function fillIn() {
 | Option     | Meaning                                                                                                                   |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `config`   | A form from `engine.defineForm` or `engine.validateForm`: its elements, `validationMode`, `reValidateMode` and `payload`. |
-| `registry` | The engine's validation registry, `engine.getValidationRegistry()`.                                                       |
+| `registry` | The engine's validation registry, `engine.validations`.                                                                   |
 | `defaults` | The values the form starts from and `reset()` restores. They are copied, never shared with the live values.               |
 | `snapshot` | The `values` and `rowIds` of a container that rendered the form on a server. See [Server rendering](#server-rendering).   |
 
@@ -141,7 +141,7 @@ const config = engine.defineForm({
 	id: 'profile',
 	steps: [{ id: 'main', title: 'Profile', elements: [{ $type: 'input', id: 'name', name: 'name' }] }],
 });
-const registry = engine.getValidationRegistry();
+const registry = engine.validations;
 const defaults = { name: 'Ada' };
 
 /** On the server: render the form from its container, and send the part a client needs next to the markup. */

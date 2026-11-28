@@ -104,7 +104,7 @@ function makeField(name: string, attributes: Record<string, string> = {}) {
 async function mount(options: { validationMode?: 'onBlur' | 'onChange' | 'onSubmit' } = {}) {
 	const container = createFormStateContainer({
 		config: { steps: config.steps, validationMode: options.validationMode ?? 'onBlur', reValidateMode: 'onChange' },
-		registry: engine.getValidationRegistry(),
+		registry: engine.validations,
 		defaults: defaults(),
 	});
 	const form = document.createElement('rui-form') as RuiFormElement;

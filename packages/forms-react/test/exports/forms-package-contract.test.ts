@@ -8,6 +8,6 @@ describe('forms package export contract', () => {
 
 	test('createFormEngine is callable from the published package', () => {
 		const engine = createFormEngine();
-		expect(engine.getElementIds()).toEqual([]);
+		expect(engine.elements.keys()).toEqual([]);
 	});
 });

@@ -1,11 +1,6 @@
 import * as z from 'zod/mini';
-import {
-	ActionDispatcher,
-	ActionRegistry,
-	defineAction,
-	parseActions,
-	type ActionConfigBase,
-} from '@schema-engine/actions';
+import { createRegistry } from '@schema-engine/registry';
+import { ActionDispatcher, defineAction, parseActions, type ActionConfigBase } from '@schema-engine/actions';
 
 type Trigger = 'save';
 
@@ -32,9 +27,9 @@ const notify = defineNotify<NotifyConfig>({
 	},
 });
 
-export const registry = new ActionRegistry<Context, Trigger>([notify]);
+export const registry = createRegistry('Action', [notify]);
 
-const dispatcher = new ActionDispatcher<Context, Trigger>(registry);
+const dispatcher = new ActionDispatcher(registry);
 
 /** Parses a serialized sequence, then runs it for a trigger; the entry in brackets is a parallel group. */
 export async function run(input: unknown, sent: string[]) {

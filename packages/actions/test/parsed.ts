@@ -2,7 +2,7 @@ import * as z from 'zod/mini';
 import { parseActions } from '../src/parse-actions';
 import type { ActionConfigBase, ParsedActionSequence } from '../src/types';
 
-const acceptAnything = { getAction: () => ({ schema: z.unknown() }) };
+const acceptAnything = { get: () => ({ schema: z.unknown() }) };
 
 /**
  * Parses actions with a registry that accepts any `$type` and any shape, for the tests that exercise

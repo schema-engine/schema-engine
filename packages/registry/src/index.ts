@@ -1,5 +1,4 @@
 export * from './types.js';
-export * from './base-registry.js';
 export * from './registry-error.js';
 export * from './create-registry.js';
 export * from './bind-registry.js';

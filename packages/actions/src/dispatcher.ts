@@ -4,10 +4,11 @@ import type {
 	ActionDispatchResult,
 	ActionExecutionResult,
 	ActionSequenceEntry,
+	AnyActionRegistration,
 	ParsedAction,
 	ParsedActionSequence,
 } from './types';
-import type { ActionRegistryProvider } from './registry';
+import type { NodeLookup } from '@schema-engine/registry';
 import { Logger } from '@ecopages/logger';
 
 const logger = new Logger('[@schema-engine/actions]');
@@ -27,12 +28,19 @@ function isCancellation(error: unknown, signal: AbortSignal): boolean {
 }
 
 type ActionMatch<TBaseContext, TTrigger> =
-	| { runs: false }
-	| { runs: true; registration: ReturnType<ActionRegistryProvider<TBaseContext, TTrigger>['getAction']> };
+	{ runs: false } | { runs: true; registration: AnyActionRegistration<TBaseContext, TTrigger> | undefined };
 
-/** Dispatches actions in sequence, allowing groups to execute concurrently. */
+/**
+ * Dispatches actions in sequence, allowing groups to execute concurrently.
+ *
+ * @remarks
+ * The registry is any {@link NodeLookup}: a `createRegistry` or `createMutableRegistry` result from
+ * `@schema-engine/registry`, or `{ get }` over a store of your own. The context and trigger types are inferred from the
+ * registrations, which fix them through `defineAction<Context, Trigger>()`. The dispatcher calls only `get`, at
+ * dispatch time, so a mutable registry may gain registrations after the dispatcher is built.
+ */
 export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
-	constructor(private readonly registry: ActionRegistryProvider<TBaseContext, TTrigger>) {}
+	constructor(private readonly registry: NodeLookup<AnyActionRegistration<TBaseContext, TTrigger>>) {}
 
 	async dispatch<TConfig extends ActionConfigBase>({
 		actions,
@@ -59,7 +67,10 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 				const { registration } = match;
 				if (!registration) {
 					const error = `No handler registered for action type: ${action.$type}`;
-					logger.error(error, { actionId: action.id, availableActions: this.registry.getActionTypes() });
+					logger.error(error, {
+						actionId: action.id,
+						...(this.registry.kind === undefined ? {} : { registry: this.registry.kind }),
+					});
 					return {
 						actionId: action.id,
 						sequenceIndex,
@@ -139,7 +150,7 @@ export class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 		if (action.triggers !== undefined && !action.triggers.some((candidate) => candidate === trigger)) {
 			return { runs: false };
 		}
-		const registration = this.registry.getAction(action.$type);
+		const registration = this.registry.get(action.$type);
 		const implicit = action.triggers === undefined;
 		if (implicit && registration && !(registration.metadata.defaultTriggers ?? []).includes(trigger)) {
 			return { runs: false };

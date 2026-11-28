@@ -58,7 +58,7 @@ describe('the native validity page', () => {
 		});
 		const form = createFormStateContainer({
 			config,
-			registry: engine.getValidationRegistry(),
+			registry: engine.validations,
 			defaults: { email: '' },
 		});
 		form.setValue('email', 'abc');

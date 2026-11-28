@@ -148,7 +148,7 @@ describe('actions/serialized-workflows', () => {
 			(block) => block.lang === 'json' && block.heading === 'The workflow as JSON',
 		)!;
 		const { registry } = titledRunner(page, packages).load('shop-actions.ts') as {
-			registry: actionsPackage.ActionRegistry;
+			registry: registryPackage.ReadOnlyRegistry;
 		};
 		expect(actionsPackage.parseActions(registry, JSON.parse(json.code)).success).toBe(true);
 	});
@@ -192,7 +192,7 @@ describe('forms/getting-started', () => {
 	test('the overview rule count is the number of registered rules', () => {
 		const engine = formsPackage.createFormEngine({ elements: [] });
 		const overview = readPage('forms/overview');
-		expect(overview).toContain(`the ${engine.getValidationRegistry().size} validation rules`);
+		expect(overview).toContain(`the ${engine.validations.size} validation rules`);
 	});
 });
 

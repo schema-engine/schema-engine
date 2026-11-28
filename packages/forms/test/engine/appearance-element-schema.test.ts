@@ -165,8 +165,8 @@ describe('the schema catalog keeps the validator schemas', () => {
 	test('each registration is found by its own schema, not the export one', () => {
 		const engine = createFormEngine({ elements: [sized], recipes: [card] });
 		const catalog = engine.getSchemaCatalog();
-		const element = engine.getElement('sized');
-		const recipe = engine.getRecipe('card');
+		const element = engine.elements.get('sized');
+		const recipe = engine.recipes.get('card');
 		expect(catalog.getBySchema(element!.schema)?.id).toBe('element:sized');
 		expect(catalog.has(recipe!.schema)).toBe(true);
 	});

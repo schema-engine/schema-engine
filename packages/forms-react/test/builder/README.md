@@ -23,12 +23,12 @@ const engine1 = createFormEngine({ elements: [InputElementRegistration] });
 const engine2 = createFormEngine({ elements: [TextareaElementRegistration] });
 
 // ✅ engine1 only has input
-expect(engine1.hasElement('input')).toBe(true);
-expect(engine1.hasElement('textarea')).toBe(false);
+expect(engine1.elements.has('input')).toBe(true);
+expect(engine1.elements.has('textarea')).toBe(false);
 
 // ✅ engine2 only has textarea
-expect(engine2.hasElement('input')).toBe(false);
-expect(engine2.hasElement('textarea')).toBe(true);
+expect(engine2.elements.has('input')).toBe(false);
+expect(engine2.elements.has('textarea')).toBe(true);
 ```
 
 ### 2. No Type Leakage
@@ -43,10 +43,10 @@ The type system accurately reflects what each builder has registered. No "ghost 
 
 All tests verify both compile-time types and runtime behavior match:
 
-- `engine.hasElement(id)` - Check if element is registered
-- `engine.getElement(id)` - Retrieve element registration
-- `engine.hasRecipe(id)` - Check if a view recipe is registered
-- `engine.getRecipe(id)` - Retrieve a view recipe registration
+- `engine.elements.has(id)` - Check if element is registered
+- `engine.elements.get(id)` - Retrieve element registration
+- `engine.recipes.has(id)` - Check if a view recipe is registered
+- `engine.recipes.get(id)` - Retrieve a view recipe registration
 
 ## Test Files
 

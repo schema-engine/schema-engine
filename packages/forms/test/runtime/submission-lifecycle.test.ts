@@ -7,7 +7,7 @@ import type { FormActionTrigger } from '@/actions';
 import type { BuilderActionBaseContext } from '@/types';
 
 const context = {} as BuilderActionBaseContext;
-const acceptAnything = { getAction: () => ({ schema: z.unknown() }) };
+const acceptAnything = { get: () => ({ schema: z.unknown() }) };
 
 /** Parses actions with a registry that accepts any shape, for tests of the lifecycle and not of the checking. */
 function parsed<TConfig extends FormActionConfig = FormActionConfig>(

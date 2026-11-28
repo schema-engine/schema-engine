@@ -20,7 +20,7 @@ interface CheckedStep {
  */
 function readablePaths(
 	elements: readonly object[],
-	getElement: ValidateFormOptions['getElement'],
+	elementRegistry: ValidateFormOptions['elements'],
 	base = '',
 ): string[] {
 	return elements.flatMap((element) => {
@@ -30,11 +30,11 @@ function readablePaths(
 		const children = getElementChildren(element);
 		const kind =
 			'$type' in element && typeof element.$type === 'string'
-				? containerKindOf(getElement(element.$type))
+				? containerKindOf(elementRegistry.get(element.$type))
 				: undefined;
 		return kind === 'array' || !children
 			? [path]
-			: [path, ...readablePaths(children.filter(isObject), getElement, path)];
+			: [path, ...readablePaths(children.filter(isObject), elementRegistry, path)];
 	});
 }
 
@@ -47,7 +47,7 @@ function readablePaths(
  */
 export function stepStructureIssues(
 	steps: readonly CheckedStep[],
-	getElement: ValidateFormOptions['getElement'],
+	elementRegistry: ValidateFormOptions['elements'],
 ): FormValidationIssue[] {
 	const issues: FormValidationIssue[] = [];
 	const seen = new Set<string>();
@@ -76,7 +76,7 @@ export function stepStructureIssues(
 				}
 			});
 		}
-		for (const path of readablePaths(step.elements, getElement)) earlier.add(path);
+		for (const path of readablePaths(step.elements, elementRegistry)) earlier.add(path);
 	});
 	return issues;
 }

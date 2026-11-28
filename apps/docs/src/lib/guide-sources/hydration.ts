@@ -5,7 +5,7 @@ const config = engine.defineForm({
 	id: 'profile',
 	steps: [{ id: 'main', title: 'Profile', elements: [{ $type: 'input', id: 'name', name: 'name' }] }],
 });
-const registry = engine.getValidationRegistry();
+const registry = engine.validations;
 const defaults = { name: 'Ada' };
 
 /** On the server: render the form from its container, and send the part a client needs next to the markup. */

@@ -64,11 +64,11 @@ use last-wins typing; open `T[]` values use a union of configs for the same
 
 `formatIssue` is the engine's [issue formatter](/docs/forms/issue-text), `engine.getIssueFormatter()`. `engine.fetch` is the
 request function with the [CSRF policy](/docs/forms/csrf) applied, and `engine.getCsrf()` returns the policy.
-`engine.getValidationRegistry()` is the registry a [state container](/docs/renderer-authors/state-container) is made with.
+`engine.elements`, `engine.recipes`, `engine.actions` and `engine.validations` are the engine's read-only registries: `get($type)`, `has($type)`, `all()`, `keys()`, `size` and `kind`. `engine.validations` is the registry a [state container](/docs/renderer-authors/state-container) is made with.
 
 `engine.getSchemaCatalog()` returns the metadata the JSON Schema export reads (title, description and category by id, such as
-`element:input`), not a list of what is registered. Read what is registered with `engine.getAllElements()`,
-`getAllRecipes()`, `getAllActions()` and `engine.getValidationRegistry()` ([What the engine registers](/docs/forms/engine#what-the-engine-registers)).
+`element:input`), not a list of what is registered. Read what is registered with `engine.elements.all()`,
+`engine.recipes.all()`, `engine.actions.all()` and `engine.validations` ([What the engine registers](/docs/forms/engine#what-the-engine-registers)).
 
 `validations` takes validation registrations (`$type`, `schema`, `metadata`, `category`, `handler`)
 and is not typed per engine: field `rules` keep their `$type` string. See
@@ -129,9 +129,9 @@ form configuration; and generates JSON Schema and authoring catalog artifacts.
 `validateElement` for a standalone field that is not already inside a form.
 
 ```ts
-engine.getElement('text');
-engine.getRecipe('card');
-engine.getAllRecipes();
+engine.elements.get('text');
+engine.recipes.get('card');
+engine.recipes.all();
 engine.defineForm(config);
 engine.validateForm(json);
 engine.validateForm(json, { values: Profile });

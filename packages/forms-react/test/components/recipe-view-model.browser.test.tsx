@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@schema-engine/forms';
-import { defineRecipeSpec } from '@schema-engine/forms/recipes';
+import { defineRecipeSpec, getViewRecipe } from '@schema-engine/forms/recipes';
 import { FormRenderer } from '@/components/internals/form-renderer';
 import { useViewContext } from '@/contexts/view-context';
 import { defineRecipe } from '@/primitives';
@@ -49,7 +49,7 @@ describe('recipe view model', () => {
 		expect(slotRenders).toBe(rendersBefore);
 	});
 
-	test('throws when the engine no longer resolves the config view recipe', () => {
+	test('getViewRecipe throws when the engine has no recipe for the config view', () => {
 		const recipe = defineRecipe(
 			defineRecipeSpec({
 				$type: 'orphaned',
@@ -65,10 +65,9 @@ describe('recipe view model', () => {
 			view: { $type: 'orphaned' },
 			steps: [{ id: 'main', title: 'Main', elements: [] }],
 		});
-		vi.spyOn(engine, 'getRecipe').mockReturnValue(undefined);
-		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const withoutRecipe = createFormEngine({ elements: [InputElementRegistration] });
 
-		expect(() => render(<FormRenderer config={config} engine={engine} />)).toThrow(
+		expect(() => getViewRecipe(withoutRecipe, config)).toThrow(
 			"Form 'orphan-form' uses view 'orphaned' but the engine has no such recipe.",
 		);
 	});

@@ -56,7 +56,6 @@
 		"check-types": "tsc --noEmit && node test/type-cost/check.ts"
 	},
 	"dependencies": {
-		"@ecopages/logger": "^0.2.3",
 		"@standard-schema/spec": "^1.1.0"
 	},
 	"devDependencies": {

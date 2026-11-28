@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import * as z from 'zod/mini';
 import {
-	BaseRegistry,
+	createMutableRegistry,
 	RegistryError,
 	createRegistry,
 	exportTreeSchema,
@@ -584,12 +584,8 @@ describe('exportTreeSchema', () => {
 			expect(document.anyOf).toEqual([ref('layout')]);
 		});
 
-		class MutableNodes extends BaseRegistry<BaseRegistration> {
-			readonly kind = 'MutableNode';
-		}
-
-		it('exports a BaseRegistry alone', () => {
-			const mutable = new MutableNodes();
+		it('exports a mutable registry alone', () => {
+			const mutable = createMutableRegistry<BaseRegistration>('MutableNode');
 			mutable.register({
 				$type: 'component',
 				schema: jsonSchemaOf({ type: 'object' }),
@@ -601,8 +597,8 @@ describe('exportTreeSchema', () => {
 			expect(document.anyOf).toEqual([ref('component')]);
 		});
 
-		it('exports a BaseRegistry in a list with a createRegistry result', () => {
-			const mutable = new MutableNodes();
+		it('exports a mutable registry in a list with a createRegistry result', () => {
+			const mutable = createMutableRegistry<BaseRegistration>('MutableNode');
 			mutable.register({
 				$type: 'component',
 				schema: jsonSchemaOf({ type: 'object' }),

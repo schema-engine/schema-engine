@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { parsed } from './parsed';
 import { ActionDispatcher } from '../src/dispatcher';
-import { ActionRegistry } from '../src/registry';
+import { createRegistry } from '@schema-engine/registry';
 import type { ActionConfigBase, ActionRegistration } from '../src/types';
 
 type Config = ActionConfigBase & { behavior: 'wait' | 'fail' | 'optional' | 'later' };
@@ -27,7 +27,7 @@ function setup(
 		metadata: { name: 'work', description: 'work', defaultTriggers: ['submit'] },
 		execute: ({ config, signal }) => run(config as Config, signal),
 	};
-	const registry = new ActionRegistry([work]);
+	const registry = createRegistry('Action', [work]);
 	return new ActionDispatcher(registry);
 }
 
