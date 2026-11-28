@@ -30,7 +30,9 @@ A child path says which `$type`s it accepts, and `safeParseTree` returns the par
     // before
     const controls = tree.children['engine.controls'];
     // after
-    const controls = tree.children.find(({ keys }) => keys.join('.') === 'engine.controls')?.nodes;
+    const controls = tree.children.find(
+    	({ keys }) => keys.length === 2 && keys[0] === 'engine' && keys[1] === 'controls',
+    )?.nodes;
     // or read the typed data
     const same = tree.data.engine.controls;
     ```

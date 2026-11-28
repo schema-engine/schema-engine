@@ -59,8 +59,7 @@ closest-union-branch choice), `grid-checks.ts` (named placement, areas and templ
 `{ success: false, issues }` with the same issues. Each issue is `{ message, path }`, plus `code` and `params` when a schema or the registry reported it, the path in config keys
 and indexes (`['steps', 0, 'elements', 2, 'grid', 'width']`, `[]` for the whole form). See
 [Form configuration errors](https://schema-engine.com/docs/forms/engine#form-configuration-errors) for the paths each check reports. Registration
-checks made at build time (`buildFormEngine`) throw a plain `Error` naming the registration; they are not
-form issues.
+checks made at build time (`buildFormEngine`) are not form issues. Forms' own (an element's child path, a static element with `childPaths`, a recipe's slots) throw a plain `Error` naming the registration, and the registries the build creates with `createRegistry` throw a `RegistryError` (`'invalid-schema'`, `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'` and `'duplicate-type'`).
 
 ## Requests
 
