@@ -131,7 +131,7 @@ What a control says about its own value reaches the container as a native fact, 
 
 ## Registering the widget
 
-Register the widget with `defineInput` (`forms.md`) and pass it to the engine. A Radiant engine is `createRadiantFormEngine`, which is `createFormEngine` with the Radiant recipes bound; the packaged widgets are `schemaFormRegistrations` (`forms-radiant.md`).
+Register the widget with `defineInput` (`forms.md`) and pass it to the engine. A Radiant engine is `createRadiantFormEngine`, which is `createFormEngine` with the Radiant recipes bound; the packaged widgets are `schemaFormRegistrations`, or the named registrations of `@schema-engine/forms-radiant/registrations`, each of which loads only its own widget (`forms-radiant.md`). Build your own registration the same way a packaged one is built: spread an element contract and add `render`, as `defineInput({ ...InputElementContract, render: TextField })` does.
 
 ```ts title="radiant/engine.ts"
 import { createRadiantFormEngine } from '@schema-engine/forms-radiant';

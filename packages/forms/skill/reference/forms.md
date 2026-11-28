@@ -206,7 +206,7 @@ Save your copy as `container-conformance.test.ts`.
 | `submit`           | `SubmitButtonSchema`                                          | none                                | none: display-only        | `SubmitButtonElementContract`    |
 | `submission-alert` | `SubmissionAlertConfigSchema`                                 | `SubmissionAlertExtensionSchema`    | none: display-only        | `SubmissionAlertElementContract` |
 
-Every config schema is `BaseFieldSchema` extended with the element's `$type` and its own keys. `inputFieldExample`, `textareaFieldExample`, `maskedInputFieldExample`, `phoneInputFieldExample` and `dropZoneFieldExample` are sample configs for docs and tests. A renderer binds the contracts with `bindRegistry(defaultElementContracts, bindings)`, and `satisfies ElementBindings<typeof defaultElementContracts>` checks each `render` against the output of its contract's schema.
+Every config schema is `BaseFieldSchema` extended with the element's `$type` and its own keys. `inputFieldExample`, `textareaFieldExample`, `maskedInputFieldExample`, `phoneInputFieldExample` and `dropZoneFieldExample` are sample configs for docs and tests. A renderer binds a contract by spreading it into `defineInput` (`defineStatic` for a display-only element) with its `render`, or binds all of them with `bindRegistry(defaultElementContracts, bindings)`, where `satisfies ElementBindings<typeof defaultElementContracts>` checks each `render` against the output of its contract's schema.
 
 ## View recipes
 
