@@ -5,6 +5,7 @@ import {
 	safeParseTree,
 	type BaseRegistration,
 	type ParseOptions,
+	type PartialNode,
 	type ReadOnlyRegistry,
 	type RegistryIssue,
 } from '../../src';
@@ -321,5 +322,73 @@ describe('children', () => {
 		if (!result.success) return;
 
 		expectTypeOf(result.tree.children).toExtend<readonly { keys: readonly string[] }[]>();
+	});
+});
+
+describe('the partial tree of the failure branch', () => {
+	it('is optional, and a partial node has output typed by the root registration, not data', () => {
+		const result = safeParseTree(nodes, {}, { accepts: ['page'] });
+		if (result.success) return;
+
+		expectTypeOf(result.issues).toEqualTypeOf<RegistryIssue[]>();
+		expectTypeOf(result.tree).toBeNullable();
+		if (result.tree === undefined) return;
+
+		expectTypeOf(result.tree.$type).toEqualTypeOf<'page'>();
+		expectTypeOf(result.tree.output.title).toEqualTypeOf<string>();
+		expectTypeOf(result.tree.output.sections).toEqualTypeOf<unknown[]>();
+		expectTypeOf<'data' extends keyof typeof result.tree ? true : false>().toEqualTypeOf<false>();
+		// @ts-expect-error a partial node has no composed data, only the output of its own schema
+		void result.tree.data;
+	});
+
+	it('types the children as partial nodes narrowed by $type, with output at every depth', () => {
+		const result = safeParseTree(nodes, {}, { accepts: ['page'] });
+		if (result.success || result.tree === undefined) return;
+
+		const child = result.tree.children[0]?.nodes[0];
+		if (child?.$type === 'chart') {
+			expectTypeOf(child.output.metric).toEqualTypeOf<string>();
+			expectTypeOf(child.registration.$type).toEqualTypeOf<'chart'>();
+		}
+		if (child?.$type === 'text') expectTypeOf(child.output.value).toEqualTypeOf<string>();
+		if (child) {
+			expectTypeOf(child.path).not.toBeAny();
+			expectTypeOf<'data' extends keyof typeof child ? true : false>().toEqualTypeOf<false>();
+			// @ts-expect-error a child of a partial node has no composed data either
+			void child.data;
+		}
+	});
+
+	it('takes the whole union for a root with no accepts', () => {
+		const result = safeParseTree(nodes, {});
+		if (result.success || result.tree === undefined) return;
+
+		expectTypeOf(result.tree.$type).toEqualTypeOf<NodeType>();
+	});
+
+	it('is a PartialNode, which a caller may write as a parameter type', () => {
+		const result = safeParseTree(nodes, {});
+		if (result.success || result.tree === undefined) return;
+
+		const tree: PartialNode<typeof result.tree.registration> = result.tree;
+		if (tree.$type === 'page') expectTypeOf(tree.output.title).toEqualTypeOf<string>();
+	});
+
+	it('keeps the success branch as it was: tree is defined and data is typed per child path', () => {
+		const result = safeParseTree(nodes, {}, { accepts: ['page'] });
+		if (!result.success) return;
+
+		expectTypeOf(result.tree).not.toBeNullable();
+		expectTypeOf(result.tree.data.sections[0]!.$type).toEqualTypeOf<'section'>();
+		expectTypeOf<'output' extends keyof typeof result.tree ? true : false>().toEqualTypeOf<false>();
+	});
+
+	it('gives unknown output for a widened registry', () => {
+		const loose = nodes as ReadOnlyRegistry<BaseRegistration>;
+		const result = safeParseTree(loose, {});
+		if (result.success || result.tree === undefined) return;
+
+		expectTypeOf(result.tree.output).toEqualTypeOf<unknown>();
 	});
 });
