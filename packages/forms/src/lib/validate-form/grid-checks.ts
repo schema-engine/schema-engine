@@ -1,7 +1,7 @@
 import type { FormTaggedConfig } from '@/schemas/form-config';
 import type { ContainerKind } from '@/types/registration';
 import { getElementChildren } from '@/lib/element-children';
-import { placedTrackItems } from '@/lib/grid-track-items';
+import { placedTrackItems, type PlacedItem } from '@/lib/grid-track-items';
 import {
 	areaNames,
 	areaTemplateIssues,
@@ -176,10 +176,15 @@ export function subgridIssue(item: FormTaggedConfig, kind: ContainerKind | undef
 	return placement ? issueAt(placement.path, `${label} ${placement.message}`) : undefined;
 }
 
-/** An element of a step that validated, with where it sits in the form. */
-export interface PlacedElement {
+/**
+ * An element of a step whose own schema passed, with where it sits in the form and the children that did.
+ *
+ * @remarks
+ * An element with an issue of its own still counts: placement is checked on everything that parsed.
+ */
+export interface PlacedElement extends PlacedItem {
 	element: FormTaggedConfig;
-	path: Path;
+	children?: readonly PlacedElement[];
 }
 
 interface GridScope {

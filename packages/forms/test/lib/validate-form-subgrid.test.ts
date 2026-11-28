@@ -72,6 +72,17 @@ describe('subgrid validation', () => {
 		expect(issues).toHaveLength(1);
 		return issues[0]!;
 	};
+	/**
+	 * The one issue at a path whose message matches. A subgrid that failed its own check still counts for the step, so
+	 * the form may have others, even at the same key.
+	 */
+	const issueAtPath = (form: unknown, path: ReadonlyArray<PropertyKey>, message: RegExp) => {
+		const found = failure(form).filter(
+			(issue) => issue.path.join('.') === path.join('.') && message.test(issue.message),
+		);
+		expect(found).toHaveLength(1);
+		return found[0]!;
+	};
 
 	test('a fieldset of fields on the parent tracks is accepted', () => {
 		const form = formWith([
@@ -126,9 +137,11 @@ describe('subgrid validation', () => {
 		['placeSelf', { placeSelf: 'center' }, ['grid', 'placeSelf']],
 		['a responsive width', { responsive: { md: { width: 'half' } } }, ['grid', 'responsive', 'md', 'width']],
 	])('a subgrid that sets %s is rejected at that key', (_label, extra, path) => {
-		const issue = only(formWith([subgrid('address', [field('street')], extra)]));
-		expect(issue.path).toEqual(['steps', 0, 'elements', 0, ...path]);
-		expect(issue.message).toMatch(/'address'.*'subgrid' and/);
+		issueAtPath(
+			formWith([subgrid('address', [field('street')], extra)]),
+			['steps', 0, 'elements', 0, ...path],
+			/'address'.*'subgrid' and/,
+		);
 	});
 
 	test('a subgrid inside responsive is rejected by the grid schema', () => {

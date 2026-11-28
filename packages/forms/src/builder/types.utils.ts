@@ -140,6 +140,7 @@ export type ElementRegistrationConstraint = {
 	readonly render: (props: never) => unknown;
 	readonly validations?: readonly ValidationRegistrationConstraint[];
 	readonly containerKind?: ContainerKind;
+	readonly childPaths?: readonly { readonly keys: readonly string[]; readonly accepts?: readonly string[] }[];
 	readonly appearanceAxes?: AppearanceAxisList;
 	readonly value?: (config: never) => StandardSchemaConstraint;
 };

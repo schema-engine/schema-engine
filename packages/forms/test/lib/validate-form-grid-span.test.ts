@@ -55,6 +55,19 @@ describe('numeric span validation', () => {
 		expect(result.issues).toHaveLength(1);
 		return result.issues[0]!;
 	};
+	/**
+	 * The one issue at a path whose message matches. A field that failed its own check still counts for the step, so
+	 * the form may have others, even at the same key.
+	 */
+	const issueAtPath = (form: unknown, path: ReadonlyArray<PropertyKey>, message: RegExp) => {
+		const result = engine.safeValidateForm(form);
+		if (result.success) throw new Error('Expected the form to be rejected.');
+		const found = result.issues.filter(
+			(issue) => issue.path.join('.') === path.join('.') && message.test(issue.message),
+		);
+		expect(found).toHaveLength(1);
+		return found[0]!;
+	};
 
 	test('spans under a numeric grid, also per breakpoint, are accepted', () => {
 		const form = formWith(
@@ -74,9 +87,11 @@ describe('numeric span validation', () => {
 		['column', { column: 2 }],
 		['area', { area: 'a' }],
 	])('a field that sets span and %s in one slot is rejected at that key', (key, extra) => {
-		const issue = only(formWith([field('lonely', { span: 2, ...extra })], { columns: 4 }));
-		expect(issue.path).toEqual(['steps', 0, 'elements', 0, 'grid', key]);
-		expect(issue.message).toMatch(new RegExp(`'lonely'.*'span' and '${key}'`));
+		issueAtPath(
+			formWith([field('lonely', { span: 2, ...extra })], { columns: 4 }),
+			['steps', 0, 'elements', 0, 'grid', key],
+			new RegExp(`'lonely'.*'span' and '${key}'`),
+		);
 	});
 
 	test('span in one slot and a width in another is accepted', () => {

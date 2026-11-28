@@ -53,8 +53,9 @@ function isPrefaultSchema(schema: z.ZodMiniType): schema is z.ZodMiniPrefault {
  * @remarks
  * Finds the array a schema holds under {@link ELEMENT_CHILDREN_KEY}, looking through a pipe (its input)
  * and a prefault (its inner schema), and replaces its item schema; the array's own checks, such as a
- * minimum length, stay. Any other schema comes back as it is, so an `elements` array wrapped in `optional`, `nullable`, `default` or `readonly` keeps loose children in the export. Validation checks the children of every container (an input that declares `childPaths`), so this keeps the export from lagging behind it. The result is
- * for export only: parse with the original.
+ * minimum length, stay. Any other schema comes back as it is, so an `elements` array wrapped in `optional`, `nullable`, `default` or `readonly` keeps loose children in the export. Validation checks the children of every container (an input that declares `childPaths`) through that path, but the export does not read
+ * `childPaths` yet: it still composes by this Zod introspection, so a container whose `elements` is wrapped, or whose schema is not
+ * Zod, exports loose children, and an `accepts` limit is not in the export. The result is for export only: parse with the original.
  */
 export function withExportedChildren(schema: z.ZodMiniType, child: z.ZodMiniType): z.ZodMiniType {
 	if (isObjectSchema(schema)) {

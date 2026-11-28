@@ -49,7 +49,7 @@ import { createDefaultValidationRegistry, type ValidationRegistry } from '@/sche
  * children's, so it declares no `value`, and `containerKind` only says whether they make an object or a list of rows,
  * so it needs `childPaths` beside it. Any other `input` declares `value`. A `static` element holds neither.
  */
-function assertElementDeclarations(registration: AnyElementRegistration): void {
+function assertElementDeclarations(registration: ElementRegistrationConstraint): void {
 	const { $type, childPaths } = registration;
 	const kind: unknown = registration.kind;
 	if (kind !== 'input' && kind !== 'static') {
@@ -361,11 +361,10 @@ function resolveLayout(layout: LayoutInput | undefined): LayoutTheme {
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const layout = resolveLayout(lists.layout);
-	const elementList = (lists.elements ?? []) as readonly AnyElementRegistration[];
-	const elementRegistry = createRegistry('Element', elementList, {
+	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[], {
 		hint: 'Register it with createFormEngine({ elements: [...] }).',
 	});
-	for (const registration of elementList) assertElementDeclarations(registration);
+	for (const registration of lists.elements ?? []) assertElementDeclarations(registration);
 	const recipeRegistry = createFormRecipeRegistry((lists.recipes ?? []) as readonly AnyRecipeRegistration[], {
 		hint: 'Register it with createFormEngine({ recipes: [...] }).',
 	});

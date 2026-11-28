@@ -52,9 +52,14 @@ export const FormConfigSchema = createFormConfigShape({
 /**
  * Envelope used by runtime validation: identity and `$type` tags only.
  * Element, recipe, and action payloads are validated separately via Standard Schema.
+ *
+ * @remarks
+ * A step's elements are left as they arrived (`z.unknown()`): the registry's tree walk is what narrows them, from the
+ * authored value, so a cycle is reported at its first repeat and an element without a `$type` is that element's
+ * issue and not one of the envelope that stops every deeper check.
  */
 export const formConfigEnvelopeSchema = createFormConfigShape({
-	elements: TypedConfigEnvelopeSchema,
+	elements: z.unknown(),
 	view: FormViewConfigSchema,
 	actions: TypedConfigEnvelopeSchema,
 });
@@ -71,7 +76,7 @@ type InferredForm = z.infer<typeof FormConfigSchema>;
 export type FormConfigEnvelope = Omit<InferredForm, 'steps' | 'view' | 'actions'> & {
 	steps: Array<
 		Omit<InferredStep, 'elements' | 'actions'> & {
-			elements: FormTaggedConfig[];
+			elements: unknown[];
 			actions?: Array<FormTaggedConfig | FormTaggedConfig[]>;
 		}
 	>;

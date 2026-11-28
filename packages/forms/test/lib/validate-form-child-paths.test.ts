@@ -254,7 +254,9 @@ describe('container child paths: children are read as authored', () => {
 		const result = engine.safeValidateForm(formWith([cyclic]));
 		expect(result.success).toBe(false);
 		if (result.success) return;
-		expect(result.issues.map((issue) => issue.code)).toEqual(['registry/contains-itself']);
+		expect(result.issues.map(({ code, path }) => ({ code, path: path.join('.') }))).toEqual([
+			{ code: 'registry/contains-itself', path: 'steps.0.elements.0.elements.0' },
+		]);
 	});
 });
 

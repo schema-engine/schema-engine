@@ -118,7 +118,13 @@ child path, for more than one and for one on a `static` element) and, for rows, 
 one call per top-level element over an internal lookup that runs each schema without the element's `appearance`, so children are read
 as authored with the registry's slot rules (a parent schema that drops, renames, resizes or defaults `elements` to a non-empty list is a
 `RegistryError` `'schema-breaks-child-path'`, a reorder is ignored, and `accepts` gives `registry/not-accepted`). A pass over the returned tree
-then runs the checks forms adds: reserved names, rules, grid and appearance, which it reads from the authored node at `ParsedNode.path`. An
+then runs the checks forms adds: reserved names, rules, grid and appearance, which it reads from the authored node at `ParsedNode.path`.
+The pass runs on the tree from either branch of the result (`data` on success, the partial tree's `output` on failure), so one call reports every
+issue: the registry's first, then forms' (rules, name, grid, appearance), parent before children, document order, and a node's children are
+checked whether or not it had an issue. Placement, step constraints and the payload check read a retained tree built from the registry's `children`
+only (`RetainedElement`), which keeps an element with an issue of its own and cannot hold a cycle or a rejected node; `items` is the clean trees, for
+normalization only. The envelope leaves a step's elements as they arrived (`z.unknown()`), so a top-level element without a `$type` is that
+element's `registry/missing-type` issue and a cycle is reported at its first repeat. An
 element without `childPaths` that holds `elements` is an issue at its `elements` key.
 Normalization stores the container kind on the frozen element without adding JSON
 keys. `collectFieldDefaults`, `collectInitialValues`, `createArrayRowDefault`

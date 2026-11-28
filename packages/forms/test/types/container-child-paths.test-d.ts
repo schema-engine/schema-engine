@@ -1,5 +1,6 @@
 import { expectTypeOf } from 'vitest';
 import * as z from 'zod/mini';
+import { createFormEngine } from '@/engine/create-form-engine';
 import { elementChildrenSchema } from '@/lib/element-children';
 import { defineInput, defineStatic } from '@/types';
 import { anyValue } from '../lib/any-value';
@@ -79,4 +80,41 @@ defineStatic({
 	childPaths: [{ keys: ['elements'] }],
 	metadata: { name: 'Frame', category: 'content' },
 	render: () => null,
+});
+
+// A static element holds no children, so a schema that declares elements is the same migration error.
+defineStatic(
+	// @ts-expect-error -- elementsWithoutChildPaths: 'frame'
+	{
+		$type: 'frame',
+		schema: groupSchema,
+		metadata: { name: 'Frame', category: 'content' },
+		render: () => null,
+	},
+);
+
+// childPaths: undefined declares nothing, so it is no container and the input still needs a value.
+defineInput(
+	// @ts-expect-error -- an input declares childPaths or value
+	{
+		$type: 'plain',
+		schema: z.looseObject({ $type: z.literal('plain') }),
+		childPaths: undefined,
+		metadata: { name: 'Plain', category: 'input' },
+		render: () => null,
+	},
+);
+
+createFormEngine({
+	elements: [
+		{
+			kind: 'input',
+			$type: 'hand',
+			schema: groupSchema,
+			// @ts-expect-error -- a child path is { keys, accepts? }, not { key }
+			childPaths: [{ key: ['elements'] }],
+			metadata: { name: 'Hand', category: 'input' },
+			render: () => null,
+		},
+	],
 });

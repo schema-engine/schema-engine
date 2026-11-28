@@ -41,7 +41,7 @@ type ContainerDeclaration<
 	TKind extends ContainerKind | undefined,
 	TChildPaths extends ElementChildPaths | undefined,
 > = {
-	childPaths: TChildPaths;
+	childPaths: TChildPaths & ElementChildPaths;
 	containerKind?: TKind;
 	value?: never;
 };
@@ -117,9 +117,16 @@ type DefineInputRegistration<
 	validations?: readonly ValidationRegistrationConstraint[];
 } & InputValueDeclaration<TType, TSchema, TValue, TKind, TChildPaths>;
 
+/**
+ * The argument of `defineStatic`: a display-only element holds no children, so a schema that declares `elements` is the
+ * migration error, the required `elementsWithoutChildPaths`. A container is made with `defineInput`.
+ */
 type DefineElementArg<TType extends string, TSchema extends StandardSchemaV1, TProps> =
 	WithNormalizedChildren<InferOutput<TSchema>> extends TProps
-		? DefineElementRegistration<TType, TSchema, TProps>
+		? DefineElementRegistration<TType, TSchema, TProps> &
+				(DeclaresChildren<InferOutput<TSchema>> extends true
+					? { readonly elementsWithoutChildPaths: TType }
+					: unknown)
 		: never;
 
 type DefineInputArg<
