@@ -30,7 +30,7 @@ It also checks each winner's [`childPaths`](#childpath) as data and in the types
 
 | Member     | Returns                      | Description                              |
 | ---------- | ---------------------------- | ---------------------------------------- |
-| `kind`     | `string`                     | The label passed to `createRegistry`     |
+| `kind`     | `string`                     | The label used in errors                 |
 | `size`     | `number`                     | Count of distinct `$type` keys           |
 | `get(key)` | `TRegistration \| undefined` | Gets a registration by `$type`           |
 | `has(key)` | `boolean`                    | Checks if the key exists                 |
@@ -179,7 +179,7 @@ interface ParseOptions<TType extends string = string> {
 }
 ```
 
-Checks one node against the registration its `$type` names, without throwing. `registry` is anything whose `get(key)` returns a registration with a `schema`, so a `createRegistry` result, a `BaseRegistry` and a lookup over several registries all fit. `options.path` is where the node sits in its document, and every issue's `path` starts with it. `options.accepts` is the `$type`s the node may have, as a position of a document accepts them; an empty list throws an `Error`, a caller bug like an asynchronous schema.
+Checks one node against the registration its `$type` names, without throwing. `registry` is anything whose `get(key)` returns a registration with a `schema`, so a registry of either kind and a lookup over several registries all fit. `options.path` is where the node sits in its document, and every issue's `path` starts with it. `options.accepts` is the `$type`s the node may have, as a position of a document accepts them; an empty list throws an `Error`, a caller bug like an asynchronous schema.
 
 ```typescript
 interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> {
@@ -187,7 +187,11 @@ interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema'> = Ba
 	kind?: string;
 	hint?: string;
 }
+```
 
+`NodeLookup` is the one shape for finding a registration, and `ExportLookup` (see [`exportTreeSchema`](#exporttreeschema)) the one for listing them. A function that finds a registration takes a `NodeLookup`; one that lists them takes an `ExportLookup`; a registry of either kind is both. A package that adds a domain, such as actions, declares no lookup interface of its own: its functions take a `NodeLookup`. `kind` is the label used in errors, and `hint` is a sentence that follows the message of a `$type` `get` does not answer, such as where to register it.
+
+```typescript
 type SafeParseNodeResult<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> =
 	| (TRegistration extends unknown
 			? {
@@ -380,49 +384,33 @@ Writes the `path` of an issue as text for a log or a message: keys are joined by
 
 With the document as `source`, an array item that has a string `id` is followed by the id in parentheses, `steps[0] (main).elements[1] (email).id`, so a log of a large document names the node it means.
 
-## BaseRegistry
-
-Abstract, mutable class for plugin systems that register at runtime. Prefer `createRegistry` otherwise.
+## createMutableRegistry
 
 ```typescript
-abstract class BaseRegistry<TValue extends BaseRegistration> implements ReadOnlyRegistry<TValue> {
-	protected items: Map<string, TValue>;
+function createMutableRegistry<TRegistration extends BaseRegistration = BaseRegistration>(
+	kind: string,
+	options?: CreateRegistryOptions,
+): MutableRegistry<TRegistration>;
 
-	abstract readonly kind: string;
-	protected getItemKey(item: TValue): string;
-	protected getItemName(item: TValue): string;
-
-	register(item: TValue): void;
-	has(key: string): boolean;
-	get(key: string): TValue | undefined;
-	all(): readonly TValue[];
-	keys(): readonly string[];
-	get size(): number;
+interface MutableRegistry<
+	TRegistration extends BaseRegistration = BaseRegistration,
+> extends ReadOnlyRegistry<TRegistration> {
+	register<const T extends TRegistration>(registration: T & CheckChildPaths<T>): void;
 	clear(): void;
 }
 ```
 
-It implements `ReadOnlyRegistry`, the interface of a `createRegistry` result, so `safeParseNode`, `safeParseTree`, `exportTreeSchema` and any code that reads a registry take either kind.
+Builds an empty registry for registrations that arrive at runtime, such as a plugin system's. Prefer `createRegistry` when the list is known. The type parameter is explicit, since there is no list to infer from. A `MutableRegistry` is a [`ReadOnlyRegistry`](#readonlyregistry) plus `register` and `clear`, so `safeParseNode`, `safeParseTree`, `exportTreeSchema` and any code that reads a registry take either kind.
 
-### Members
+| Member                                      | Returns                  | Description                                                                                                                 |
+| ------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `register(registration)`                    | `void`                   | Checks the registration as `createRegistry` does, then stores a frozen shallow copy keyed by its `$type`                    |
+| `clear()`                                   | `void`                   | Removes every registration                                                                                                  |
+| `kind`, `size`, `get`, `has`, `all`, `keys` | as in `ReadOnlyRegistry` | `all()` and `keys()` return the same frozen array until the next `register` or `clear`, so you can compare them by identity |
 
-| Member           | Returns               | Description                                                                         |
-| ---------------- | --------------------- | ----------------------------------------------------------------------------------- |
-| `kind`           | `string`              | Abstract. The label used in log messages, such as `Plugin`                          |
-| `register(item)` | `void`                | Registers an item. Logs warning on override                                         |
-| `has(key)`       | `boolean`             | Checks if key exists                                                                |
-| `get(key)`       | `TValue \| undefined` | Gets item by key                                                                    |
-| `all()`          | `readonly TValue[]`   | The items in first-registration order, in a frozen array that does not change later |
-| `keys()`         | `readonly string[]`   | The keys in first-registration order, in a frozen array that does not change later  |
-| `size`           | `number`              | Count of items                                                                      |
-| `clear()`        | `void`                | Removes all items                                                                   |
+`register` throws a [`RegistryError`](#registryerror) with the codes and messages of `createRegistry`: `'invalid-schema'` for a schema that is not a Standard Schema, and `'invalid-child-paths'`, `'duplicate-child-path'` or `'nested-child-path'` for malformed [`childPaths`](#childpath). The registry is unchanged when `register` throws. In the types, `register` reports a child path the schema does not declare as `childPathNotInSchema` and an unknown child path property as `childPathUnknownProperty`, as `createRegistry` does. An `accepts` name may be a `$type` that is not registered yet: the vocabulary is open, and `safeParseTree` reports a node it cannot find as an issue.
 
-### Protected methods
-
-| Method              | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `getItemKey(item)`  | Extracts key from item (uses `$type`)          |
-| `getItemName(item)` | Extracts name from item (uses `metadata.name`) |
+A repeated `$type` replaces the earlier registration without a warning and keeps its first position. With `{ duplicates: 'error' }` it throws `'duplicate-type'`, and the first registration stays. The registry logs nothing: call `has` before `register` to warn about an override. The key is always `$type`.
 
 ## Types
 
@@ -450,7 +438,7 @@ interface ChildPath {
 }
 ```
 
-`childPaths` says where a node of this `$type` holds child nodes. A child path is always an object, so a registration stays plain data. `keys` is the list of keys from the node to the slot (`['engine', 'controls']` is `node.engine.controls`), relative and without indexes: it is not called `path`, which names absolute document paths with indexes. The value there is one node or an array of nodes. `accepts` is a non-empty, closed list of `$type`s allowed at the slot, so adding a leaf to `[...defaults, custom]` means overriding each container that should take it; without `accepts`, any `$type` the lookup answers is accepted, which an open vocabulary (plugins, a `BaseRegistry` that grows at runtime) needs. `accepts` is the only way to restrict a slot: parent schemas keep slots opaque, and the docs say not to restrict `$type` in the parent schema. `BaseRegistry` checks no `childPaths`.
+`childPaths` says where a node of this `$type` holds child nodes. A child path is always an object, so a registration stays plain data. `keys` is the list of keys from the node to the slot (`['engine', 'controls']` is `node.engine.controls`), relative and without indexes: it is not called `path`, which names absolute document paths with indexes. The value there is one node or an array of nodes. `accepts` is a non-empty, closed list of `$type`s allowed at the slot, so adding a leaf to `[...defaults, custom]` means overriding each container that should take it; without `accepts`, any `$type` the lookup answers is accepted, which an open vocabulary (plugins, a mutable registry that grows at runtime) needs. `accepts` is the only way to restrict a slot: parent schemas keep slots opaque, and the docs say not to restrict `$type` in the parent schema.
 
 ### RegistrationMetadata
 

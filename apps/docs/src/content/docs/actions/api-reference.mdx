@@ -6,46 +6,24 @@ order: 6
 
 # API reference
 
-## ActionRegistry
-
-```typescript
-class ActionRegistry<TBaseContext, TTrigger>
-	implements
-		ReadOnlyRegistry<ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>>,
-		ActionRegistryProvider<TBaseContext, TTrigger>
-{
-	constructor(registrations: readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[]);
-
-	readonly kind: string;
-	readonly size: number;
-	get(key: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
-	has(key: string): boolean;
-	all(): readonly ActionRegistration<ActionConfigBase, TBaseContext, TTrigger>[];
-	keys(): readonly string[];
-	getAction(type: string): ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> | undefined;
-	getActionTypes(): string[];
-}
-```
-
-`ActionRegistry` is built from a list with `createRegistry` from `@schema-engine/registry`. It is read-only and frozen. A later registration with the same `$type` replaces an earlier one without a warning, and a winning registration whose schema is not a Standard Schema throws at construction, naming its `$type`. Subclasses may add their own fields. There is no `register` or `clear`; to register at runtime, implement `ActionRegistryProvider` yourself.
-
 ## parseActions
 
 ```typescript
 function parseActions<TConfig extends ActionConfigBase = ActionConfigBase>(
-	registry: ActionSchemaLookup,
+	registry: NodeLookup<Pick<BaseRegistration, 'schema'>>,
 	input: unknown,
 	options?: ParseActionsOptions,
 ): ParseActionsResult<TConfig>;
 
 interface ParseActionsOptions {
 	triggers?: readonly string[];
-	hint?: string;
 }
 
 type ParseActionsResult<TConfig> =
 	{ success: true; data: ParsedActionSequence<TConfig> } | { success: false; issues: RegistryIssue[] };
 ```
+
+`registry` is a [`NodeLookup`](/docs/registry/api-reference#safeparsenode): a registry of either kind from `@schema-engine/registry` (`createRegistry('Action', [...])` or `createMutableRegistry`), or `{ get, hint? }` over a store of your own. `parseActions` reads only `get($type)` and `hint`.
 
 Validates each entry of a serialized sequence, inner arrays included. The engine checks the keys every entry carries: `id` (a non-empty string), `$type` (a registered one), `enabled` (a boolean when present) and `triggers` (an array of strings when present; each must be in `options.triggers` when that list is given). The remaining keys go to the schema of the registration its `$type` names, which lists the action's own arguments only. `data` holds the entry's base keys merged with what the schema returned, so defaults and transforms apply, and every entry is checked, so two bad entries report two issues.
 
@@ -53,7 +31,7 @@ An issue is a Standard Schema issue whose `path` is the index of the entry, the 
 
 An issue the registry creates has a namespaced `code` (`registry/unregistered-type` with `received`, `registry/not-an-object` and `registry/missing-type`), so a caller can branch on it; the issues of the engine's own checks (`id`, `enabled`, `triggers`, an empty group) have none, and an issue from a schema is its library's own.
 
-An unregistered `$type` reads `No registration for $type '<type>'. Register it in the action registry.`. `options.hint` replaces the last sentence, for a domain that registers actions through its own entry point: the forms engine says `Register it with createFormEngine({ actions: [...] }).`.
+An unregistered `$type` reads `No registration for $type '<type>'. Register it in the action registry.`. The lookup's `hint` replaces the last sentence, for a domain that registers actions through its own entry point: `parseActions({ get, hint: 'Register it in plugins.ts.' }, input)`. The forms engine says `Register it with createFormEngine({ actions: [...] }).`.
 
 `ParsedAction` is the entry type of `data`. Its brand exists in the type only and `parseActions` is the one function that produces it. `TConfig` is the caller's claim about what the registered schemas return; the parse checks the schemas and not that claim.
 
@@ -61,7 +39,7 @@ An unregistered `$type` reads `No registration for $type '<type>'. Register it i
 
 ```typescript
 class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
-	constructor(registry: ActionRegistryProvider<TBaseContext, TTrigger>);
+	constructor(registry: NodeLookup<ActionRegistration<any, TBaseContext, TTrigger>>);
 
 	dispatch<TConfig extends ActionConfigBase>(
 		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
@@ -73,26 +51,9 @@ class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
 }
 ```
 
+The constructor takes a [`NodeLookup`](/docs/registry/api-reference#safeparsenode) of action registrations, so a `createRegistry('Action', [...])` or `createMutableRegistry` result fits. It calls only `get`, at dispatch time, so a mutable registry may gain actions after the dispatcher is built. `TBaseContext` and `TTrigger` are inferred from the registrations, which fix them through `defineAction<Context, Trigger>()`; a `dispatch` with another context or trigger is a type error. An action whose `$type` has no registration fails with `No handler registered for action type: <type>`, and the log names the action `id` and the registry's `kind`.
+
 `dispatch`, `dispatchSync` and `hasMatching` take only parsed actions, so JSON or an object literal does not type-check until `parseActions` has returned it. When `metadata` is provided in the input, `dispatch()` shallow-merges it into `context.metadata` before execution.
-
-## ActionRegistryProvider
-
-Available from the package root:
-
-```typescript
-interface ActionRegistryProvider<
-	TBaseContext = unknown,
-	TTrigger = string,
-	TRegistration extends ActionRegistration<ActionConfigBase, TBaseContext, TTrigger> = ActionRegistration<
-		ActionConfigBase,
-		TBaseContext,
-		TTrigger
-	>,
-> {
-	getAction(type: string): TRegistration | undefined;
-	getActionTypes(): string[];
-}
-```
 
 ## ActionRegistration
 
@@ -204,16 +165,6 @@ inside that group. Disabled or nonmatching actions retain their positions in the
 input, even though they produce no result. `cancelled` means an abort error was
 observed after cancellation was requested; the remote side effect may still have
 occurred. Direct callers constructing `ActionRuntimeContext` must provide `signal`.
-
-## ActionSchemaLookup
-
-```typescript
-interface ActionSchemaLookup {
-	getAction(type: string): Pick<BaseRegistration, 'schema'> | undefined;
-}
-```
-
-What `parseActions` needs of a registry: the registration of a `$type`, for its schema. `ActionRegistry` and every `ActionRegistryProvider` fit.
 
 ## ActionSequenceEntry, ParsedAction and ParsedActionSequence
 

@@ -33,7 +33,7 @@ test('validates and dispatches parallel submit actions through the form lifecycl
 			],
 		],
 	});
-	const dispatcher = new ActionDispatcher(engine);
+	const dispatcher = new ActionDispatcher({ get: (type) => engine.getAction(type) });
 	const context = { formData: {}, metadata: {}, formId: 'group' } as BuilderActionBaseContext;
 	const result = await runSubmissionLifecycle((input) => dispatcher.dispatch(input), {
 		actions: form.actions ?? [],
@@ -76,7 +76,7 @@ test('keeps grouped callbacks matched to configurations with duplicate action ID
 			],
 		],
 	});
-	const dispatcher = new ActionDispatcher(engine);
+	const dispatcher = new ActionDispatcher({ get: (type) => engine.getAction(type) });
 	const context = { formData: {}, metadata: {}, formId: 'duplicates' } as BuilderActionBaseContext;
 	const result = await runSubmissionLifecycle((input) => dispatcher.dispatch(input), {
 		actions: form.actions ?? [],
@@ -122,7 +122,7 @@ test('forwards cancellation to grouped submit requests and reports both outcomes
 			],
 		],
 	});
-	const dispatcher = new ActionDispatcher(engine);
+	const dispatcher = new ActionDispatcher({ get: (type) => engine.getAction(type) });
 	const context = { formData: {}, metadata: {}, formId: 'cancel' } as BuilderActionBaseContext;
 	const result = await runSubmissionLifecycle((input) => dispatcher.dispatch(input), {
 		actions: form.actions ?? [],

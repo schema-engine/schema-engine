@@ -17,7 +17,8 @@ The page uses four actions of an order flow. The context carries the stock the a
 ```ts title="shop-actions.ts"
 import { setTimeout as sleep } from 'node:timers/promises';
 import * as z from 'zod/mini';
-import { ActionRegistry, defineAction, type ActionConfigBase } from '@schema-engine/actions';
+import { createRegistry } from '@schema-engine/registry';
+import { defineAction, type ActionConfigBase } from '@schema-engine/actions';
 
 z.config(z.locales.en());
 
@@ -83,12 +84,7 @@ const sendReceipt = define<SendReceiptConfig>({
 	execute: async () => ({ success: true, message: 'Receipt sent' }),
 });
 
-export const registry = new ActionRegistry<ShopContext, ShopTrigger>([
-	reserveStock,
-	chargeCard,
-	notifyWarehouse,
-	sendReceipt,
-]);
+export const registry = createRegistry('Action', [reserveStock, chargeCard, notifyWarehouse, sendReceipt]);
 ```
 
 ## The workflow as JSON

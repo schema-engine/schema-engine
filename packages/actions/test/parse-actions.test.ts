@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
 import { ActionDispatcher } from '../src/dispatcher';
 import { parseActions } from '../src/parse-actions';
-import { ActionRegistry } from '../src/registry';
+import { createRegistry } from '@schema-engine/registry';
 import type { ActionConfigBase, ActionRegistration } from '../src/types';
 
 interface PostConfig extends ActionConfigBase<'post'> {
@@ -19,7 +19,7 @@ const post: ActionRegistration<PostConfig> = {
 	execute: ({ config }) => ({ success: true, data: config }),
 };
 
-const registry = new ActionRegistry([post]);
+const registry = createRegistry('Action', [post]);
 
 describe('parseActions', () => {
 	test('parses a JSON workflow with a parallel group, and dispatch runs it', async () => {
@@ -89,10 +89,10 @@ describe('parseActions', () => {
 		]);
 	});
 
-	test('ends the message of an unknown $type with the hint of the domain', () => {
-		const result = parseActions(registry, [{ id: 'a', $type: 'put' }], {
-			hint: 'Register it with the domain.',
-		});
+	test('ends the message of an unknown $type with the hint of the lookup', () => {
+		const result = parseActions({ get: () => undefined, hint: 'Register it with the domain.' }, [
+			{ id: 'a', $type: 'put' },
+		]);
 
 		expect(result).toEqual({
 			success: false,
@@ -183,7 +183,7 @@ describe('parseActions', () => {
 	});
 
 	test('does not pass the base keys to the schema, so a strict schema lists only the own arguments', () => {
-		const strict = new ActionRegistry([{ ...post, schema: z.strictObject({ endpoint: z.string() }) }]);
+		const strict = createRegistry('Action', [{ ...post, schema: z.strictObject({ endpoint: z.string() }) }]);
 
 		expect(parseActions(strict, [{ id: 'a', $type: 'post', endpoint: '/a', triggers: ['submit'] }]).success).toBe(
 			true,
@@ -192,7 +192,7 @@ describe('parseActions', () => {
 	});
 
 	test('reports a schema that does not return an object at the entry, beside the envelope issues', () => {
-		const scalar = new ActionRegistry([
+		const scalar = createRegistry('Action', [
 			{
 				...post,
 				schema: z.pipe(

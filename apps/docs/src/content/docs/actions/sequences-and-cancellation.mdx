@@ -60,7 +60,8 @@ Cancellation is cooperative. A handler has to observe `signal`, for example by p
 ```ts title="cancel.ts"
 import { setTimeout as sleep } from 'node:timers/promises';
 import * as z from 'zod/mini';
-import { ActionDispatcher, ActionRegistry, parseActions, type ActionRegistration } from '@schema-engine/actions';
+import { createRegistry } from '@schema-engine/registry';
+import { ActionDispatcher, parseActions, type ActionRegistration } from '@schema-engine/actions';
 
 z.config(z.locales.en());
 
@@ -88,7 +89,7 @@ const receipt: ActionRegistration<{ id: string; $type: 'receipt' }> = {
 	execute: () => ({ success: true }),
 };
 
-const registry = new ActionRegistry([charge, syncStock, receipt]);
+const registry = createRegistry('Action', [charge, syncStock, receipt]);
 
 async function main() {
 	const parsed = parseActions(registry, [

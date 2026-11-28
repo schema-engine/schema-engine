@@ -4,11 +4,12 @@ import type { CheckChildPaths } from './tree-types.js';
 import type { BaseRegistration } from './types.js';
 
 /**
- * A registry built once from a list of registrations. It has no `register` or
- * `clear`; to change its contents, build another registry from a new list.
+ * The read side of every registry: what {@link createRegistry} returns, and what a {@link MutableRegistry} also has.
+ * It has no `register` or `clear`; to change the contents of one built by {@link createRegistry}, build another
+ * registry from a new list.
  */
 export interface ReadOnlyRegistry<TRegistration extends BaseRegistration = BaseRegistration> {
-	/** Label used in build errors, for example `Element`. */
+	/** Label used in errors, for example `Element`. */
 	readonly kind: string;
 	/** Number of distinct `$type` keys. */
 	readonly size: number;
@@ -111,7 +112,28 @@ function assertChildPaths(childPaths: unknown, context: string, details: Registr
 	}
 }
 
-/** Options of {@link createRegistry}. */
+/**
+ * Check one registration the way both registry factories do, so their errors cannot drift.
+ *
+ * @throws {RegistryError} Code `'invalid-schema'`, or one of the child path codes of {@link createRegistry}
+ */
+function assertRegistration(kind: string, registration: BaseRegistration): void {
+	const details = { kind, $type: registration.$type };
+	if (!isStandardSchema(registration.schema)) {
+		throw new RegistryError(
+			'invalid-schema',
+			standardSchemaMessage(`${kind} '${registration.$type}' schema`),
+			details,
+		);
+	}
+	assertChildPaths(registration.childPaths, `${kind} '${registration.$type}'`, details);
+}
+
+function duplicateTypeError(kind: string, type: string): RegistryError {
+	return new RegistryError('duplicate-type', `${kind} '${type}' is registered twice.`, { kind, $type: type });
+}
+
+/** Options of {@link createRegistry} and {@link createMutableRegistry}. */
 export interface CreateRegistryOptions {
 	/**
 	 * What a second registration of one `$type` does: replace the first (`'override'`, the default) or fail the build
@@ -154,7 +176,7 @@ export interface CreateRegistryOptions {
  * build a new registry. The copy shares nested values such as `schema` with the
  * original.
  *
- * Use {@link BaseRegistry} instead when registrations arrive at runtime.
+ * Use {@link createMutableRegistry} instead when registrations arrive at runtime.
  */
 export function createRegistry<const TRegistration extends BaseRegistration>(
 	kind: string,
@@ -164,20 +186,13 @@ export function createRegistry<const TRegistration extends BaseRegistration>(
 	const winners = new Map<string, TRegistration>();
 	for (const registration of registrations) {
 		if (options.duplicates === 'error' && winners.has(registration.$type)) {
-			throw new RegistryError('duplicate-type', `${kind} '${registration.$type}' is registered twice.`, {
-				kind,
-				$type: registration.$type,
-			});
+			throw duplicateTypeError(kind, registration.$type);
 		}
 		winners.set(registration.$type, registration);
 	}
 	const entries = new Map<string, Readonly<TRegistration>>();
 	for (const [key, registration] of winners) {
-		const details = { kind, $type: key };
-		if (!isStandardSchema(registration.schema)) {
-			throw new RegistryError('invalid-schema', standardSchemaMessage(`${kind} '${key}' schema`), details);
-		}
-		assertChildPaths(registration.childPaths, `${kind} '${key}'`, details);
+		assertRegistration(kind, registration);
 		entries.set(key, Object.freeze({ ...registration }));
 	}
 	const all = Object.freeze([...entries.values()]);
@@ -190,5 +205,72 @@ export function createRegistry<const TRegistration extends BaseRegistration>(
 		has: (key: string) => entries.has(key),
 		all: () => all,
 		keys: () => keys,
+	});
+}
+
+/**
+ * A registry that takes registrations after it exists: the read side of a {@link createRegistry} result, plus
+ * `register` and `clear`.
+ */
+export interface MutableRegistry<
+	TRegistration extends BaseRegistration = BaseRegistration,
+> extends ReadOnlyRegistry<TRegistration> {
+	/**
+	 * Add a registration, keyed by its `$type`.
+	 *
+	 * @throws {RegistryError} The codes {@link createRegistry} gives for a registration: `'invalid-schema'`,
+	 * `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'`, and `'duplicate-type'` when the registry
+	 * was built with `{ duplicates: 'error' }`
+	 *
+	 * @remarks
+	 * The registry is unchanged when `register` throws. A repeated `$type` replaces the earlier registration and keeps
+	 * its first position. The registry stores a frozen shallow copy. `accepts` may name a `$type` that is not registered
+	 * yet: `safeParseTree` reports a node it cannot find as an issue.
+	 */
+	register<const T extends TRegistration>(registration: T & CheckChildPaths<T>): void;
+	/** Remove every registration. */
+	clear(): void;
+}
+
+/**
+ * Build an empty registry that takes registrations at runtime, such as a plugin system's.
+ *
+ * @param kind - Label for errors, for example `Plugin`
+ * @param options - How to treat a repeated `$type`, see {@link CreateRegistryOptions}
+ *
+ * @remarks
+ * Its read side matches a {@link createRegistry} result, so it goes wherever a registry is read. `all()` and `keys()`
+ * return the same frozen array until the next `register` or `clear`. `register` checks each registration as
+ * {@link createRegistry} does. The registry logs nothing: call `has` before `register` to warn about an override.
+ */
+export function createMutableRegistry<TRegistration extends BaseRegistration = BaseRegistration>(
+	kind: string,
+	options: CreateRegistryOptions = {},
+): MutableRegistry<TRegistration> {
+	const entries = new Map<string, Readonly<TRegistration>>();
+	let all: readonly TRegistration[] | undefined;
+	let keys: readonly string[] | undefined;
+
+	return Object.freeze({
+		kind,
+		get size() {
+			return entries.size;
+		},
+		get: (key: string) => entries.get(key),
+		has: (key: string) => entries.has(key),
+		all: () => (all ??= Object.freeze([...entries.values()])),
+		keys: () => (keys ??= Object.freeze([...entries.keys()])),
+		register: (registration: TRegistration) => {
+			if (options.duplicates === 'error' && entries.has(registration.$type)) {
+				throw duplicateTypeError(kind, registration.$type);
+			}
+			assertRegistration(kind, registration);
+			entries.set(registration.$type, Object.freeze({ ...registration }));
+			all = keys = undefined;
+		},
+		clear: () => {
+			entries.clear();
+			all = keys = undefined;
+		},
 	});
 }

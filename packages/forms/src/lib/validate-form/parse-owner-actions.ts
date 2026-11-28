@@ -17,10 +17,11 @@ export function parseOwnerActions(
 	ownerPath: Path,
 ): { issues: FormValidationIssue[]; items?: ParsedActionSequence } {
 	if (!items) return { issues: [] };
-	const result = parseActions(options, items, {
-		triggers: FormActionTriggerSchema.options,
-		hint: 'Register it with createFormEngine({ actions: [...] }).',
-	});
+	const result = parseActions(
+		{ get: options.getAction, hint: 'Register it with createFormEngine({ actions: [...] }).' },
+		items,
+		{ triggers: FormActionTriggerSchema.options },
+	);
 	if (!result.success) return { issues: fromSchemaIssues(result.issues, [...ownerPath, 'actions']) };
 	return { issues: [], items: result.data };
 }

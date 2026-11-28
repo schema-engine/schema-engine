@@ -147,9 +147,9 @@ export const documentSchema = exportTreeSchema(nodes, {
 });
 ```
 
-## BaseRegistry
+## createMutableRegistry
 
-`BaseRegistry` is the mutable opt-in for registrations that arrive at runtime, such as a plugin system: `register`, `has`, `get`, `all`, `keys`, `size`, `clear` and an abstract `kind` (the label of its log messages). Its read side is that of a `createRegistry` result, so either kind goes wherever a registry is read. It warns when `register` overrides a key and does not check schemas. Use `createRegistry` unless the list is not known when the registry is built.
+`createMutableRegistry<MyRegistration>('Plugin')` is the mutable opt-in for registrations that arrive at runtime, such as a plugin system. It returns a `MutableRegistry`: the read side of a `createRegistry` result (`get`, `has`, `all`, `keys`, `size`, `kind`) plus `register` and `clear`, so either kind goes wherever a registry is read. `register` checks a registration as `createRegistry` does (`RegistryError` `'invalid-schema'`, `'invalid-child-paths'`), a repeated `$type` replaces the earlier one and keeps its position (or throws `'duplicate-type'` with `{ duplicates: 'error' }`), and nothing is logged. `all()` and `keys()` return the same frozen array until the next change. A function that finds a registration takes a `NodeLookup`, one that lists them takes an `ExportLookup`, and a registry of either kind is both. Use `createRegistry` unless the list is not known when the registry is built.
 
 ## YAML documents
 

@@ -7,7 +7,8 @@ The engine stores its registrations in three read-only registries built with
 - `RecipeRegistry`: view recipes that own the shell, header, progress, and
   action slots of a form view.
 - `ActionRegistrationRegistry`: form action registrations. Execution uses the
-  actions package's `ActionDispatcher`.
+  actions package's `ActionDispatcher`, which reads them through the engine's
+  `getAction`.
 
 These are type aliases of `ReadOnlyRegistry<AnyElementRegistration>`,
 `ReadOnlyRegistry<AnyRecipeRegistration>` and

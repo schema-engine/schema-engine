@@ -2,7 +2,8 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 import * as z from 'zod/mini';
 import { parsed } from './parsed';
 import { ActionDispatcher } from '../src/dispatcher';
-import type { ActionRegistryProvider } from '../src/registry';
+import { Logger } from '@ecopages/logger';
+import { createMutableRegistry } from '@schema-engine/registry';
 import type { ActionRegistration, ActionConfigBase } from '../src/types';
 
 type TestTrigger = 'submit' | 'change';
@@ -16,28 +17,15 @@ interface TestActionConfig extends ActionConfigBase<'log'> {
 	name: string;
 }
 
-class MockRegistry implements ActionRegistryProvider<TestContext, TestTrigger> {
-	private actions = new Map<string, ActionRegistration<TestActionConfig, TestContext, TestTrigger>>();
-
-	register(action: ActionRegistration<TestActionConfig, TestContext, TestTrigger>) {
-		this.actions.set(action.$type, action);
-	}
-
-	getAction(type: string) {
-		return this.actions.get(type);
-	}
-
-	getActionTypes(): string[] {
-		return Array.from(this.actions.keys());
-	}
-}
+const createTestRegistry = () =>
+	createMutableRegistry<ActionRegistration<TestActionConfig, TestContext, TestTrigger>>('Action');
 
 describe('ActionDispatcher', () => {
-	let registry: MockRegistry;
+	let registry: ReturnType<typeof createTestRegistry>;
 	let dispatcher: ActionDispatcher<TestContext, TestTrigger>;
 
 	beforeEach(() => {
-		registry = new MockRegistry();
+		registry = createTestRegistry();
 		dispatcher = new ActionDispatcher(registry);
 	});
 
@@ -193,7 +181,7 @@ describe('ActionDispatcher', () => {
 });
 
 test('unregistered action with another trigger produces no result', async () => {
-	const dispatcher = new ActionDispatcher({ getAction: () => undefined, getActionTypes: () => [] });
+	const dispatcher = new ActionDispatcher({ get: () => undefined });
 	expect(
 		await dispatcher.dispatch({
 			actions: parsed([{ id: 'audit-1', $type: 'audit', triggers: ['form_submit'] }]),
@@ -205,13 +193,12 @@ test('unregistered action with another trigger produces no result', async () => 
 
 test('runs actions that match by default or explicit triggers and skips explicit mismatches', async () => {
 	const dispatcher = new ActionDispatcher({
-		getAction: () => ({
+		get: () => ({
 			$type: 'audit',
 			schema: z.unknown(),
 			metadata: { name: 'Audit', defaultTriggers: ['form_submit'] },
 			execute: () => ({ success: true, data: 'audited' }),
 		}),
-		getActionTypes: () => ['audit'],
 	});
 	const results = await dispatcher.dispatch({
 		actions: parsed([
@@ -226,4 +213,39 @@ test('runs actions that match by default or explicit triggers and skips explicit
 		{ success: true, data: 'audited' },
 		{ success: true, data: 'audited' },
 	]);
+});
+
+test('a mutable registry that gains an action after the dispatcher is built runs it', async () => {
+	const registry = createMutableRegistry<ActionRegistration>('Action');
+	const dispatcher = new ActionDispatcher(registry);
+	const actions = parsed([{ id: 'late', $type: 'notify' }]);
+	registry.register({
+		$type: 'notify',
+		schema: z.unknown(),
+		metadata: { name: 'Notify', defaultTriggers: ['submit'] },
+		execute: () => ({ success: true, data: 'notified' }),
+	});
+
+	expect(await dispatcher.dispatch({ actions, trigger: 'submit', context: {} })).toMatchObject([
+		{ actionId: 'late', success: true, data: 'notified' },
+	]);
+});
+
+test('an action with no registration is reported with its id and the kind of the registry', async () => {
+	const error = vi.spyOn(Logger.prototype, 'error').mockReturnThis();
+	const registry = createMutableRegistry<ActionRegistration>('Action');
+	const results = await new ActionDispatcher(registry).dispatch({
+		actions: parsed([{ id: 'ghost', $type: 'missing' }]),
+		trigger: 'submit',
+		context: {},
+	});
+
+	expect(results).toMatchObject([
+		{ actionId: 'ghost', success: false, error: 'No handler registered for action type: missing' },
+	]);
+	expect(error).toHaveBeenCalledWith('No handler registered for action type: missing', {
+		actionId: 'ghost',
+		registry: 'Action',
+	});
+	error.mockRestore();
 });

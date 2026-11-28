@@ -21,7 +21,7 @@ These playgrounds dispatch through `ActionDispatcher`. Run an action, or run the
 ## Install
 
 ```bash
-pnpm add @schema-engine/actions zod
+pnpm add @schema-engine/actions @schema-engine/registry zod
 ```
 
 `@schema-engine/actions` has no schema-library dependency. Zod is the validator these examples use, and any [Standard Schema](https://standardschema.dev/) validator works in its place.
@@ -34,7 +34,8 @@ The context is what the caller hands to every dispatch: here an API for support 
 
 ```ts title="actions.ts"
 import * as z from 'zod/mini';
-import { ActionRegistry, type ActionConfigBase, type ActionRegistration } from '@schema-engine/actions';
+import { createRegistry } from '@schema-engine/registry';
+import { type ActionConfigBase, type ActionRegistration } from '@schema-engine/actions';
 
 z.config(z.locales.en());
 
@@ -85,7 +86,7 @@ const notify: ActionRegistration<NotifyConfig, TicketContext, TicketTrigger> = {
 	},
 };
 
-export const registry = new ActionRegistry<TicketContext, TicketTrigger>([assign, notify]);
+export const registry = createRegistry('Action', [assign, notify]);
 ```
 
 `execute` receives `TicketContext` enriched by the dispatcher with `config`, `trigger` and a cancellation `signal`, so a handler reads `config.ticketId` and `tickets` from one object.

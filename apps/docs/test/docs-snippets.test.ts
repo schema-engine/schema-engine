@@ -88,15 +88,12 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		reason: 'Imports the barrel the shadcn command copies into the app, which does not exist before it runs.',
 	},
 	...declarations('actions/api-reference', [
-		'ActionRegistry',
 		'parseActions',
 		'ActionDispatcher',
-		'ActionRegistryProvider',
 		'ActionRegistration',
 		'ActionDispatchInput',
 		'ActionMetadata',
 		'ActionDispatchResult',
-		'ActionSchemaLookup',
 		'ActionSequenceEntry, ParsedAction and ParsedActionSequence',
 		'ActionHandler',
 		'defineAction',
@@ -117,7 +114,7 @@ const ALLOWED_FENCES: AllowedFence[] = [
 		'safeParseTree',
 		'exportTreeSchema',
 		'formatIssuePath',
-		'BaseRegistry',
+		'createMutableRegistry',
 		'BaseRegistration',
 		'ComponentRegistration',
 		'ComponentMetadata',
@@ -242,13 +239,13 @@ describe('docs snippets', () => {
 				'demo/page',
 				text(
 					fenceOf('ts', 'export const a = 1;'),
-					fenceOf('ts', 'export const registry = new BaseRegistry();'),
+					fenceOf('ts', 'export const registry = new PluginRegistry();'),
 				),
 				{},
 			);
 			expect(failures).toHaveLength(1);
 			expect(failures[0]).toMatchObject({ page: 'demo/page', fence: 2, heading: 'Setup' });
-			expect(failures[0]!.messages[0]).toContain("Cannot find name 'BaseRegistry'");
+			expect(failures[0]!.messages[0]).toContain("Cannot find name 'PluginRegistry'");
 		});
 
 		test('leaves a fence the caller skips, and fences that declare the same name do not collide', () => {

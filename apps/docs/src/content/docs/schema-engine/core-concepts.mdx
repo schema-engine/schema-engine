@@ -45,7 +45,7 @@ The schema is any [Standard Schema](https://standardschema.dev/) value, so Zod, 
 
 ## Registry
 
-A registry is a collection of registrations keyed by `$type`. `createRegistry` builds a read-only one from a list. A later registration with the same `$type` replaces an earlier one, so `[...defaults, mine]` overrides a default. `BaseRegistry` is the mutable form, for registrations that arrive at runtime. See [Registry](/docs/registry/overview).
+A registry is a collection of registrations keyed by `$type`. `createRegistry` builds a read-only one from a list. A later registration with the same `$type` replaces an earlier one, so `[...defaults, mine]` overrides a default. `createMutableRegistry` builds the mutable form, for registrations that arrive at runtime; both kinds read the same way. See [Registry](/docs/registry/overview).
 
 This is the code registry: registrations held in memory, resolved by `$type`. It is not a set of source files copied into an app.
 

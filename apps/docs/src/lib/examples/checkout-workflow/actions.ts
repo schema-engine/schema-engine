@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
-import { ActionRegistry, defineAction, type ActionConfigBase } from '@schema-engine/actions';
+import { createRegistry } from '@schema-engine/registry';
+import { defineAction, type ActionConfigBase } from '@schema-engine/actions';
 
 z.config(z.locales.en());
 
@@ -98,7 +99,7 @@ const sendReceipt = define<SendReceiptConfig>({
 	},
 });
 
-export const registry = new ActionRegistry<CheckoutContext, CheckoutTrigger>([
+export const registry = createRegistry('Action', [
 	reserveStock,
 	chargeCard,
 	notifyWarehouse,

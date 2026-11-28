@@ -200,7 +200,9 @@ export function createFormRuntime<TAction extends FormActionConfig, TValues exte
 		defaults: collectInitialValues(flattenStepElements(config.steps), defaults),
 		snapshot: options.snapshot,
 	});
-	const dispatcher = new ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>(engine);
+	const dispatcher = new ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>({
+		get: (type) => engine.getAction(type),
+	});
 	const mountedAt = Date.now();
 	const mode = config.navigation ?? 'linear';
 	const firstStep = config.steps[0]?.id ?? '';

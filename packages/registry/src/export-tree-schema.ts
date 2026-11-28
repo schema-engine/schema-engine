@@ -13,7 +13,7 @@ import type { TreeRegistration } from './tree-types.js';
  * What {@link exportTreeSchema} needs of a registry: the registrations it lists.
  *
  * @remarks
- * Both registry kinds ({@link createRegistry}, {@link BaseRegistry}) provide it. A vocabulary spread over several
+ * Both registry kinds ({@link createRegistry}, {@link createMutableRegistry}) provide it. A vocabulary spread over several
  * registries is passed as a list of them.
  */
 export interface ExportLookup {

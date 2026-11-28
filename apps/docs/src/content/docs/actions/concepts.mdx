@@ -8,7 +8,7 @@ order: 2
 
 ## Lifecycle
 
-1. Build an `ActionRegistry` from your action registrations.
+1. Build a registry from your action registrations with `createRegistry('Action', [...])`, or `createMutableRegistry` when they arrive at runtime.
 2. Check the workflow with `parseActions`. A workflow that arrives as JSON takes the same path as one written in code.
 3. Call `dispatch` with the parsed actions, a trigger and the base context.
 4. For each entry in order, the dispatcher finds the actions whose trigger matches and resolves their registrations.

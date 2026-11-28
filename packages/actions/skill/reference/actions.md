@@ -1,6 +1,6 @@
 # @schema-engine/actions
 
-The domain-agnostic action package: a registration, a registry, `parseActions` and a dispatcher that runs a sequence for a trigger. A form uses it through its runtime (`forms-actions.md`). The terms are defined in the router (`SKILL.md`).
+The domain-agnostic action package: a registration, `parseActions` and a dispatcher that runs a sequence for a trigger. A form uses it through its runtime (`forms-actions.md`). The terms are defined in the router (`SKILL.md`).
 
 ## The flow
 
@@ -8,13 +8,8 @@ Serialized actions are checked, then dispatched: `parseActions(registry, input)`
 
 ```ts title="actions/dispatch.ts"
 import * as z from 'zod/mini';
-import {
-	ActionDispatcher,
-	ActionRegistry,
-	defineAction,
-	parseActions,
-	type ActionConfigBase,
-} from '@schema-engine/actions';
+import { createRegistry } from '@schema-engine/registry';
+import { ActionDispatcher, defineAction, parseActions, type ActionConfigBase } from '@schema-engine/actions';
 
 type Trigger = 'save';
 
@@ -41,9 +36,9 @@ const notify = defineNotify<NotifyConfig>({
 	},
 });
 
-export const registry = new ActionRegistry<Context, Trigger>([notify]);
+export const registry = createRegistry('Action', [notify]);
 
-const dispatcher = new ActionDispatcher<Context, Trigger>(registry);
+const dispatcher = new ActionDispatcher(registry);
 
 /** Parses a serialized sequence, then runs it for a trigger; the entry in brackets is a parallel group. */
 export async function run(input: unknown, sent: string[]) {
@@ -55,7 +50,7 @@ export async function run(input: unknown, sent: string[]) {
 
 ## An action
 
-A registration is `{ $type, schema, metadata, execute }`; an instance is `{ $type, id, ...config, enabled?, triggers? }`. `schema` describes the action's own arguments: `parseActions` checks `id`, `$type`, `enabled` and `triggers` itself, so a schema never lists them. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the base context you pass to `dispatch` plus `config` (the instance), `trigger` and an abort `signal`, and returns `{ success, message?, error?, data?, shouldContinue? }`. `ActionRegistry` is built once from a list, like any registry (`registry.md`). A domain that registers at runtime implements `ActionRegistryProvider` instead.
+A registration is `{ $type, schema, metadata, execute }`; an instance is `{ $type, id, ...config, enabled?, triggers? }`. `schema` describes the action's own arguments: `parseActions` checks `id`, `$type`, `enabled` and `triggers` itself, so a schema never lists them. `metadata.defaultTriggers` says when it runs unless the instance sets its own `triggers`. `execute` receives the base context you pass to `dispatch` plus `config` (the instance), `trigger` and an abort `signal`, and returns `{ success, message?, error?, data?, shouldContinue? }`. The registry is the one of `@schema-engine/registry` (`registry.md`): `createRegistry('Action', [...])` from a list, or `createMutableRegistry<MyAction>('Action')` for actions that register at runtime. `parseActions` and `ActionDispatcher` take any lookup with `get($type)`, so `{ get, hint }` over a store of your own works too; its `hint` ends the message of an unregistered `$type`. The dispatcher infers its context and trigger types from the registrations. The package exports no registry of its own.
 
 `ActionRegistration`, `ActionHandler` (the `execute` function), `ActionRuntimeContext` (what it receives) and `ActionExecutionResult` (what it returns) type those parts. When a handler throws, the dispatcher turns it into a failed result whose `cause` is the thrown error.
 

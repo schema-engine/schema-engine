@@ -10,7 +10,7 @@ const submitActionSchema = z.object({ id: z.string(), $type: z.literal('submit')
 type LogActionConfig = z.output<typeof logActionSchema>;
 type SubmitActionConfig = z.output<typeof submitActionSchema>;
 
-describe('ActionRegistry', () => {
+describe('form action registrations', () => {
 	const mockAction: BuilderActionRegistration<'log', typeof logActionSchema> = {
 		$type: 'log',
 		schema: logActionSchema,

@@ -1,8 +1,10 @@
+import { createRegistry, type ReadOnlyRegistry } from '@schema-engine/registry';
 import {
 	ActionDispatcher,
-	ActionRegistry,
+	defineAction,
 	parseActions,
 	type ActionConfigBase,
+	type ActionRegistration,
 	type ActionDispatchResult,
 	type ActionRuntimeContext,
 	type ActionSequenceEntry,
@@ -226,7 +228,7 @@ export class ActionPlaygroundSession {
 	readonly #sleep: PlaygroundSleep;
 	readonly #delayMs: number | undefined;
 	readonly #listeners = new Set<Listener>();
-	readonly #registry: ActionRegistry<PlaygroundContext, 'submit'>;
+	readonly #registry: ReadOnlyRegistry<ActionRegistration<DemoConfig, PlaygroundContext, 'submit'>>;
 	readonly #dispatcher: ActionDispatcher<PlaygroundContext, 'submit'>;
 	#nodes: PlaygroundNode[];
 	#result: PlaygroundNode = { ...RESULT_NODE, status: 'idle' };
@@ -240,13 +242,14 @@ export class ActionPlaygroundSession {
 		this.#delayMs = options.delayMs;
 		this.#nodes = idleNodes(this.#definition.actions);
 
-		this.#registry = new ActionRegistry<PlaygroundContext, 'submit'>([
-			{
+		const defineWork = defineAction<PlaygroundContext, 'submit'>();
+		this.#registry = createRegistry('Action', [
+			defineWork<DemoConfig>({
 				$type: 'work',
 				schema: demoSchema,
 				metadata: { name: 'Work', defaultTriggers: ['submit'] },
 				execute: (context) => this.#execute(context),
-			},
+			}),
 		]);
 		this.#dispatcher = new ActionDispatcher(this.#registry);
 	}

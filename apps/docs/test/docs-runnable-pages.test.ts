@@ -148,7 +148,7 @@ describe('actions/serialized-workflows', () => {
 			(block) => block.lang === 'json' && block.heading === 'The workflow as JSON',
 		)!;
 		const { registry } = titledRunner(page, packages).load('shop-actions.ts') as {
-			registry: actionsPackage.ActionRegistry;
+			registry: registryPackage.ReadOnlyRegistry;
 		};
 		expect(actionsPackage.parseActions(registry, JSON.parse(json.code)).success).toBe(true);
 	});

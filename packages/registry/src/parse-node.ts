@@ -9,7 +9,7 @@ import type { BaseRegistration } from './types.js';
 export interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema'> = BaseRegistration> {
 	get(key: string): TRegistration | undefined;
 	/**
-	 * The registry's label, for example `Widget`. A registry built by `createRegistry` has it.
+	 * The registry's label, for example `Widget`, as it is used in errors.
 	 *
 	 * @remarks
 	 * {@link safeParseTree} names it in the `RegistryError` it throws when a schema contradicts its registration, and

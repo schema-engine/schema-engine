@@ -69,7 +69,8 @@ An action is registered behaviour. Its context is whatever the caller hands to a
 
 ```ts title="actions.ts"
 import * as z from 'zod/mini';
-import { ActionRegistry, defineAction, type ActionConfigBase } from '@schema-engine/actions';
+import { createRegistry } from '@schema-engine/registry';
+import { defineAction, type ActionConfigBase } from '@schema-engine/actions';
 
 export interface Mailer {
 	send(message: { to: string; subject: string }): Promise<void>;
@@ -101,7 +102,7 @@ const sendEmail = defineShopAction<SendEmailConfig>({
 	},
 });
 
-export const actions = new ActionRegistry<ShopContext, ShopTrigger>([sendEmail]);
+export const actions = createRegistry('Action', [sendEmail]);
 ```
 
 ## 3. Resolve a document and run a workflow

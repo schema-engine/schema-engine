@@ -5,7 +5,7 @@ Registered behaviour that runs from plain data. You define an action once in cod
 ## Install
 
 ```bash
-pnpm add @schema-engine/actions zod
+pnpm add @schema-engine/actions @schema-engine/registry zod
 ```
 
 Install the [Standard Schema](https://standardschema.dev/) validator you prefer. The example uses `zod/mini`.
@@ -14,13 +14,8 @@ Install the [Standard Schema](https://standardschema.dev/) validator you prefer.
 
 ```ts
 import * as z from 'zod/mini';
-import {
-	ActionDispatcher,
-	ActionRegistry,
-	defineAction,
-	parseActions,
-	type ActionConfigBase,
-} from '@schema-engine/actions';
+import { createRegistry } from '@schema-engine/registry';
+import { ActionDispatcher, defineAction, parseActions, type ActionConfigBase } from '@schema-engine/actions';
 
 type Trigger = 'save';
 
@@ -45,12 +40,12 @@ const notify = defineNotify<NotifyConfig>({
 	},
 });
 
-const registry = new ActionRegistry<Context, Trigger>([notify]);
+const registry = createRegistry('Action', [notify]);
 
 export async function run(input: unknown, sent: string[]) {
 	const parsed = parseActions(registry, input);
 	if (!parsed.success) return { issues: parsed.issues };
-	const dispatcher = new ActionDispatcher<Context, Trigger>(registry);
+	const dispatcher = new ActionDispatcher(registry);
 	return { results: await dispatcher.dispatch({ actions: parsed.data, trigger: 'save', context: { sent } }) };
 }
 ```
@@ -59,7 +54,7 @@ export async function run(input: unknown, sent: string[]) {
 
 ## Exports
 
-The package has one entry, `@schema-engine/actions`: `ActionRegistry`, `ActionDispatcher`, `parseActions`, `defineAction` and the registration, entry and result types.
+The package has one entry, `@schema-engine/actions`: `ActionDispatcher`, `parseActions`, `defineAction` and the registration, entry and result types. The registry is the one from `@schema-engine/registry`, and `parseActions` and `ActionDispatcher` take any lookup with `get($type)`.
 
 ## Documentation
 
