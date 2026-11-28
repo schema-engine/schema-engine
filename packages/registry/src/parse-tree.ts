@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { safeParseNode, type NodeLookup, type ParseOptions, type RegistryIssue } from './parse-node.js';
 import { RegistryError } from './registry-error.js';
 import type { Accepted, AcceptedOf, CheckLookup, NodeData, TreeRegistration } from './tree-types.js';
@@ -39,9 +40,44 @@ type ParsedChildren<TAll extends TreeRegistration, TPaths> = TPaths extends read
 		}
 	: readonly [];
 
-/** What {@link safeParseTree} returns: the tree of a document with no issue, or every issue found. */
+/**
+ * One node of a document that has issues: its registration, its own schema output, where it sits and the children that
+ * parsed.
+ *
+ * @remarks
+ * `output` is exactly what {@link safeParseNode} returned for the node. No child data is written into it, so a child
+ * slot holds whatever the parent's schema returned there (the authored items, for an opaque slot), including children
+ * that failed or were pruned. Read the children from `children`, never from a slot of `output`. There is no `data`:
+ * the composed document exists only when there are no issues, as `data` of a {@link ParsedNode}. `children` has one
+ * `{ keys, nodes }` entry per child path the registration declares, in declaration order, with `nodes` holding the
+ * children that parsed in document order, each with its own `path`. A child that failed is missing, so the issues, not
+ * the position in `nodes`, say where it was. A child is any `PartialNode<TAll>`, narrowed by its `$type`, not by
+ * `accepts`.
+ */
+export type PartialNode<
+	TAll extends TreeRegistration,
+	TRegistration extends TreeRegistration = TAll,
+> = TRegistration extends unknown
+	? {
+			$type: TRegistration['$type'];
+			registration: TRegistration;
+			output: StandardSchemaV1.InferOutput<TRegistration['schema']>;
+			path: NonNullable<StandardSchemaIssue['path']>;
+			children: readonly { keys: readonly string[]; nodes: readonly PartialNode<TAll>[] }[];
+		}
+	: never;
+
+/**
+ * What {@link safeParseTree} returns: the tree of a document with no issue, or every issue found and the nodes that
+ * parsed.
+ *
+ * @remarks
+ * `tree` on the failure branch is present exactly when the root's own schema passed, and is absent when the root
+ * failed, was not accepted or has no registration.
+ */
 export type SafeParseTreeResult<TAll extends TreeRegistration, TRoot extends TreeRegistration = TAll> =
-	{ success: true; tree: ParsedNode<TAll, TRoot> } | { success: false; issues: RegistryIssue[] };
+	| { success: true; tree: ParsedNode<TAll, TRoot> }
+	| { success: false; issues: RegistryIssue[]; tree?: PartialNode<TAll, TRoot> };
 
 /**
  * The registrations a root may be: those `accepts` names, but only when the options type has `accepts`, not when it
@@ -53,12 +89,57 @@ type RootOf<TAll extends TreeRegistration, TOptions> = TOptions extends {
 	? AcceptedOf<TAll, TName>
 	: TAll;
 
-interface RuntimeNode {
+/**
+ * A node the walk kept: its own schema passed and its parent was kept.
+ *
+ * @remarks
+ * `data` is meaningful only when `complete`, that is when nothing below the node failed, was pruned or was no node.
+ * The walk does not compose data for an incomplete node.
+ */
+interface WalkedNode {
+	$type: string;
+	registration: TreeRegistration;
+	output: unknown;
+	data: unknown;
+	complete: boolean;
+	path: NonNullable<StandardSchemaIssue['path']>;
+	children: { keys: readonly string[]; nodes: WalkedNode[] }[];
+}
+
+interface RuntimeParsedNode {
 	$type: string;
 	registration: TreeRegistration;
 	data: unknown;
 	path: NonNullable<StandardSchemaIssue['path']>;
-	children: { keys: readonly string[]; nodes: RuntimeNode[] }[];
+	children: { keys: readonly string[]; nodes: RuntimeParsedNode[] }[];
+}
+
+interface RuntimePartialNode {
+	$type: string;
+	registration: TreeRegistration;
+	output: unknown;
+	path: NonNullable<StandardSchemaIssue['path']>;
+	children: { keys: readonly string[]; nodes: RuntimePartialNode[] }[];
+}
+
+function toParsed(node: WalkedNode): RuntimeParsedNode {
+	return {
+		$type: node.$type,
+		registration: node.registration,
+		data: node.data,
+		path: node.path,
+		children: node.children.map(({ keys, nodes }) => ({ keys, nodes: nodes.map(toParsed) })),
+	};
+}
+
+function toPartial(node: WalkedNode): RuntimePartialNode {
+	return {
+		$type: node.$type,
+		registration: node.registration,
+		output: node.output,
+		path: node.path,
+		children: node.children.map(({ keys, nodes }) => ({ keys, nodes: nodes.map(toPartial) })),
+	};
 }
 
 type PlainObject = Record<PropertyKey, unknown>;
@@ -156,10 +237,12 @@ function withChildData(
  * | an empty array | no children; `data` holds `[]` |
  *
  * A node that contains itself is `registry/contains-itself`. A node whose own schema fails is not walked further, but
- * its siblings still are, so one call reports every issue of the document. The tree is returned only when there are
- * none: `tree.data` is then the parsed document, each node's schema output with the children's data at its child
- * paths, in document order. Each child is parsed once, from the authored value, and the authored document and the
- * schema outputs are never written to.
+ * its siblings still are, so one call reports every issue of the document. When there are none, `tree.data` is the
+ * parsed document, each node's schema output with the children's data at its child paths, in document order. When
+ * there are issues, `tree` is a {@link PartialNode} of the nodes that parsed, present exactly when the root's own
+ * schema passed: every node whose own schema passed and whose parent was kept, with `output` and `children`, and
+ * without `data`. A failed node, a child the slot does not accept and the edge of a cycle are left out. Each child is
+ * parsed once, from the authored value, and the authored document and the schema outputs are never written to.
  *
  * The parent schema owns, at a child path, whether the value may be missing, list or single, and list bounds; it does
  * not own the children, whose data replaces whatever the schema returned there. For each node it parses, `safeParseTree`
@@ -207,7 +290,7 @@ export function safeParseTree<
 		nodePath: NonNullable<StandardSchemaIssue['path']>,
 		ancestors: readonly unknown[],
 		accepts: readonly string[] | undefined,
-	): RuntimeNode | undefined {
+	): WalkedNode | undefined {
 		if (ancestors.includes(node)) {
 			issues.push({ code: 'registry/contains-itself', message: 'A node cannot contain itself.', path: nodePath });
 			return undefined;
@@ -229,11 +312,11 @@ export function safeParseTree<
 
 		const authored = node as PlainObject;
 		const trail = [...ancestors, node];
-		const groups: RuntimeNode['children'] = [];
+		const groups: WalkedNode['children'] = [];
 		const writes: { keys: readonly string[]; value: unknown }[] = [];
 		let complete = true;
 		for (const { keys, accepts: childAccepts } of registration.childPaths ?? []) {
-			const nodes: RuntimeNode[] = [];
+			const nodes: WalkedNode[] = [];
 			groups.push({ keys, nodes });
 			const slot = valueAt(authored, keys, isRecord);
 			const held = valueAt(output, keys, isPlainObject);
@@ -248,14 +331,18 @@ export function safeParseTree<
 					const child = walk(slot[index], [...childPath, index], trail, childAccepts);
 					if (child) nodes.push(child);
 				}
-				if (nodes.length === slot.length) writes.push({ keys, value: nodes.map((item) => item.data) });
-				else complete = false;
+				if (nodes.length === slot.length && nodes.every((item) => item.complete)) {
+					writes.push({ keys, value: nodes.map((item) => item.data) });
+				} else {
+					complete = false;
+				}
 			} else if (isRecord(slot)) {
 				if (!isRecord(held)) throw brokenSlot(type, keys);
 				const child = walk(slot, childPath, trail, childAccepts);
 				if (child) {
 					nodes.push(child);
-					writes.push({ keys, value: child.data });
+					if (child.complete) writes.push({ keys, value: child.data });
+					else complete = false;
 				} else {
 					complete = false;
 				}
@@ -268,19 +355,15 @@ export function safeParseTree<
 				complete = false;
 			}
 		}
-		if (!complete) return undefined;
-		return {
-			$type: type,
-			registration,
-			data: writes.length === 0 ? output : withChildData(output, writes),
-			path: nodePath,
-			children: groups,
-		};
+		let data: unknown;
+		if (complete) data = writes.length === 0 ? output : withChildData(output, writes);
+		return { $type: type, registration, output, data, complete, path: nodePath, children: groups };
 	}
 
-	const tree = walk(root, options?.path ?? [], [], options?.accepts);
-	return (tree && issues.length === 0 ? { success: true, tree } : { success: false, issues }) as SafeParseTreeResult<
-		TAll,
-		RootOf<TAll, TOptions>
-	>;
+	const walked = walk(root, options?.path ?? [], [], options?.accepts);
+	let result: unknown;
+	if (walked?.complete === true && issues.length === 0) result = { success: true, tree: toParsed(walked) };
+	else if (walked) result = { success: false, issues, tree: toPartial(walked) };
+	else result = { success: false, issues };
+	return result as SafeParseTreeResult<TAll, RootOf<TAll, TOptions>>;
 }

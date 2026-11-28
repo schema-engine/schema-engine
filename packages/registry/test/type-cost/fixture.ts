@@ -715,5 +715,10 @@ if (r.success) {
 	void s;
 	for (const g of r.tree.children) void g.nodes;
 }
+if (!r.success && r.tree !== undefined) {
+	const o = r.tree.output.kids;
+	void o;
+	for (const g of r.tree.children) for (const n of g.nodes) void n.output;
+}
 const any = safeParseTree(reg, {});
 if (any.success) void any.tree.data;

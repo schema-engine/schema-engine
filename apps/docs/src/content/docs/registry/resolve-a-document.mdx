@@ -1,6 +1,6 @@
 ---
 title: 'Resolve a document'
-description: 'Validate a tree of $type nodes with safeParseTree, say which $types each position accepts, collect every issue with its path, read the parsed document and render it.'
+description: 'Validate a tree of $type nodes with safeParseTree, say which $types each position accepts, collect every issue with its path, read the parsed document or the nodes that parsed, and render it.'
 order: 3
 ---
 
@@ -80,7 +80,7 @@ export function resolve(document: unknown) {
 }
 ```
 
-A node whose own schema fails reports its issues and is not walked further, but its siblings still are. The result is either a tree that is safe to render or every issue found, never a half-valid tree. A value at a child path that is not a node, a `$type` a position does not accept and a node that contains itself are issues too, at the path where they sit. `'stack'` in `accepts` is checked against the registry's `$type`s, so a name it lacks is a type error, and the root of the tree is typed as a `stack`.
+A node whose own schema fails reports its issues and is not walked further, but its siblings still are. The result is either a tree that is safe to render or every issue found: a failure has no `data`, so nothing half-valid can be rendered. It does carry the nodes that parsed, which [the next section](#check-what-parsed-when-the-document-has-issues) read. A value at a child path that is not a node, a `$type` a position does not accept and a node that contains itself are issues too, at the path where they sit. `'stack'` in `accepts` is checked against the registry's `$type`s, so a name it lacks is a type error, and the root of the tree is typed as a `stack`.
 
 ## Read the parsed document
 
@@ -97,6 +97,31 @@ export function badgeLabels(document: unknown): string[] {
 ```
 
 `child` is the data of a `text`, a `badge` or a `stack`, so checking `$type` narrows it. A slot typed `z.unknown()` becomes `child | child[] | undefined`, and a nullable slot loses its `null`: a `null` at a child path is an issue, not a node.
+
+## Check what parsed when the document has issues
+
+A failed result is `{ success: false, issues, tree? }`. `tree` is a `PartialNode`: the nodes whose own schema passed, kept when their parent was kept. It is there exactly when the root's own schema passed, and absent when the root itself failed. A node that failed is left out and its children are not walked, as are a child its slot does not accept and the repeat of a cycle. Use it to run your own checks on what parsed, so one call reports every issue.
+
+A partial node has `output`, its own schema output, and no `data`: the parsed document exists only when there are no issues. A slot of `output` holds whatever the document had there, children that failed included, so read the children from `children`: one `{ keys, nodes }` per child path, with the children that parsed in document order, each with its own `path`. A failed child is missing from `nodes`, so the issues, not the position, say where it was.
+
+```ts title="partial.ts"
+import type { PartialNode } from '@schema-engine/registry';
+import type { Registration } from './blocks';
+import { resolve } from './resolve';
+
+function badgeLabels(node: PartialNode<Registration>): string[] {
+	const own = node.$type === 'badge' ? [node.output.label] : [];
+	return [...own, ...node.children.flatMap(({ nodes }) => nodes.flatMap(badgeLabels))];
+}
+
+export function labelsThatParsed(document: unknown): string[] {
+	const resolution = resolve(document);
+	if (resolution.success || resolution.tree === undefined) return [];
+	return badgeLabels(resolution.tree);
+}
+```
+
+For the `broken` document below, `labelsThatParsed` finds no badge: the first fails its schema and the second is not an accepted `$type`.
 
 ## The render step
 

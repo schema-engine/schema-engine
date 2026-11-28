@@ -70,7 +70,7 @@ export function titles(document: unknown): string[] {
 }
 ```
 
-The parent's schema keeps the slot opaque (`z.array(z.unknown())`) and declares every child key; `accepts` is the only way to restrict it. The parent's schema keeps `$type` and the slot's shape in its output, or `safeParseTree` throws a `RegistryError`. The issues the engine creates carry a namespaced `code` (`registry/not-accepted`, `registry/unregistered-type`, `registry/missing-type`, `registry/not-an-object`, `registry/not-a-node`, `registry/contains-itself`); an issue from a schema keeps whatever its library wrote.
+When the document has issues, the failure also carries `tree`, a `PartialNode`, when the root's own schema passed: every node whose own schema passed, with `output` (its own schema output) and `children` (the children that parsed, in document order), and no `data`. Use it to run your own checks on what parsed. The parent's schema keeps the slot opaque (`z.array(z.unknown())`) and declares every child key; `accepts` is the only way to restrict it. The parent's schema keeps `$type` and the slot's shape in its output, or `safeParseTree` throws a `RegistryError`. The issues the engine creates carry a namespaced `code` (`registry/not-accepted`, `registry/unregistered-type`, `registry/missing-type`, `registry/not-an-object`, `registry/not-a-node`, `registry/contains-itself`); an issue from a schema keeps whatever its library wrote.
 
 ## JSON Schema of a whole document
 
