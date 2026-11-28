@@ -73,18 +73,14 @@ type HoldsList<TSlot> = unknown extends TSlot
 			: false;
 
 /** The child paths that set `list` over a slot the schema output types as no array, as `{ $type, keys }`. */
-type ListPathsNotArrays<T> = T extends {
-	$type: infer TType;
-	schema: infer TSchema extends StandardSchemaV1;
-	readonly childPaths: readonly (infer TPath)[];
-}
-	? unknown extends StandardSchemaV1.InferOutput<TSchema>
-		? never
-		: TPath extends { readonly keys: infer TKeys; readonly list: true }
+type ListPathsNotArrays<T> = T extends { readonly childPaths: readonly (infer TPath)[] }
+	? TPath extends { readonly keys: infer TKeys; readonly list: true }
+		? T extends { $type: infer TType; schema: infer TSchema extends StandardSchemaV1 }
 			? HoldsList<SlotAt<StandardSchemaV1.InferOutput<TSchema>, TKeys>> extends true
 				? never
 				: { $type: TType; keys: TKeys }
 			: never
+		: never
 	: never;
 
 /**

@@ -129,11 +129,31 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 			const entry = embedder.embedDefinition(resource, 'element:leaf');
 
 			expect(entry).toEqual({
-				$ref: 'https://example.test/leaf',
+				allOf: [{ $ref: 'https://example.test/leaf' }],
 				$defs: { 'element:leaf': { ...resource, $schema: undefined } },
 			});
 			expect(entry).not.toHaveProperty('$id');
 		});
+
+		it.each(['draft-07', 'draft-04', 'openapi-3.0'] as const)(
+			'writes no $ref beside other keywords for %s, where a strict tool ignores them',
+			(target) => {
+				const embedder = createJSONSchemaEmbedder(target, { kind: 'collection', uri });
+
+				const entry = embedder.embedDefinition(
+					{ $id: 'https://example.test/leaf', type: 'object', definitions: { label: { type: 'string' } } },
+					'leaf',
+				);
+
+				expect(entry).not.toHaveProperty('$ref');
+				expect(entry).toMatchObject({
+					allOf: [{ $ref: 'https://example.test/leaf' }],
+					definitions: { leaf: {} },
+				});
+				expect(entry).not.toHaveProperty('$defs');
+				expect(Object.keys(entry).filter((key) => key !== 'allOf' && key !== 'definitions')).toEqual([]);
+			},
+		);
 
 		it('is resolved by Ajv from another entry through the collection URI, with the schema keeping its own base', () => {
 			const embedder = createJSONSchemaEmbedder('draft-2020-12', { kind: 'collection', uri });
