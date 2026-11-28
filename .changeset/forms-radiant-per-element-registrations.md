@@ -22,4 +22,12 @@ import { InputElementRegistration, SelectElementRegistration } from '@schema-eng
 const engine = createRadiantFormEngine({ elements: [InputElementRegistration, SelectElementRegistration] });
 ```
 
-`radiantElements.get('input')` becomes `InputElementRegistration`, and `radiantElements.keys()` has no replacement: read `$type` from `schemaFormRegistrations`.
+Each `radiantElements` call maps onto the named registrations or the array:
+
+| 0.5                            | 0.6                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| `radiantElements.all()`        | `schemaFormRegistrations`                                                     |
+| `radiantElements.get('input')` | `InputElementRegistration`                                                    |
+| `radiantElements.get(type)`    | `schemaFormRegistrations.find((registration) => registration.$type === type)` |
+| `radiantElements.has(type)`    | `schemaFormRegistrations.some((registration) => registration.$type === type)` |
+| `radiantElements.keys()`       | `schemaFormRegistrations.map((registration) => registration.$type)`           |
