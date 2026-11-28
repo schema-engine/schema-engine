@@ -273,6 +273,77 @@ describe('docs snippets', () => {
 			]);
 		});
 
+		describe.each([
+			{
+				kind: 'a global declaration',
+				declaring: 'export {};\ndeclare global {\n\tconst docsOnlyToken: string;\n}',
+				using: 'export const token: string = docsOnlyToken;',
+				own: 'export const own: string = docsOnlyToken;',
+			},
+			{
+				kind: 'a Window augmentation',
+				declaring: 'export {};\ndeclare global {\n\tinterface Window {\n\t\tdocsOnly: string;\n\t}\n}',
+				using: 'export const value: string = window.docsOnly;',
+				own: 'export const own: string = window.docsOnly;',
+			},
+			{
+				kind: 'a module augmentation',
+				declaring:
+					"declare module 'react' {\n\tinterface CSSProperties {\n\t\tdocsOnly?: string;\n\t}\n}\nexport {};",
+				using: "import type { CSSProperties } from 'react';\nexport const style: CSSProperties = { docsOnly: 'a' };",
+				own: "import type { CSSProperties } from 'react';\nexport const own: CSSProperties = { docsOnly: 'a' };",
+			},
+		])('a page with $kind', ({ declaring, using, own }) => {
+			test('does not reach the other pages of the program', () => {
+				const failures = checkSiteSnippets([
+					{ page: 'demo/declares', text: text(fenceOf('ts', declaring)), app: {} },
+					{ page: 'demo/uses', text: text(fenceOf('ts', using)), app: {} },
+				]);
+				expect(failures.map(({ page }) => page)).toEqual(['demo/uses']);
+			});
+
+			test('is not hidden by, and does not hide, a page that declares the same name', () => {
+				const failures = checkSiteSnippets([
+					{ page: 'demo/declares', text: text(fenceOf('ts', declaring)), app: {} },
+					{ page: 'demo/uses', text: text(fenceOf('ts', using)), app: {} },
+					{ page: 'demo/declares-too', text: text(fenceOf('ts', declaring)), app: {} },
+				]);
+				expect(failures.map(({ page }) => page)).toEqual(['demo/uses']);
+			});
+
+			test('still checks its own fences against the declaration', () => {
+				const failures = checkSiteSnippets([
+					{
+						page: 'demo/declares',
+						text: text(
+							fenceOf('ts', declaring),
+							fenceOf('ts', own),
+							fenceOf('ts', 'export const n: number = "a";'),
+						),
+						app: {},
+					},
+				]);
+				expect(failures.map(({ fence }) => fence)).toEqual([3]);
+			});
+		});
+
+		test('resolves an installed module only for the pages that list it', () => {
+			const snippet = fenceOf(
+				'ts',
+				`import { InputElementRegistration } from '${INSTALLED_BARREL}';\nexport const registration = InputElementRegistration;`,
+			);
+			const failures = checkSiteSnippets([
+				{
+					page: 'demo/installs',
+					text: text(snippet),
+					app: {},
+					installed: { [INSTALLED_BARREL]: 'src/lib/installed-components/registrations.ts' },
+				},
+				{ page: 'demo/does-not', text: text(snippet), app: {} },
+			]);
+			expect(failures.map(({ page }) => page)).toEqual(['demo/does-not']);
+		});
+
 		test('resolves the files of the app and the titled fences of the page', () => {
 			const titled = '```ts title="theme.ts"\nexport const theme = 1;\n```';
 			const user = fenceOf(

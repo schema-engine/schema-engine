@@ -110,9 +110,9 @@ interface VirtualFolder {
 function typecheckFolders(folders: Record<string, VirtualFolder>): Record<string, Record<string, string[]>> {
 	const virtual = new Map<string, string>();
 	const roots = new Map<string, VirtualFolder>();
-	for (const [folder, { files }] of Object.entries(folders)) {
-		for (const [name, text] of Object.entries(files)) virtual.set(join(snippetDir, folder, name), text);
-		roots.set(join(snippetDir, folder), folders[folder]!);
+	for (const [folder, value] of Object.entries(folders)) {
+		for (const [name, text] of Object.entries(value.files)) virtual.set(join(snippetDir, folder, name), text);
+		roots.set(join(snippetDir, folder), value);
 	}
 	const options: ts.CompilerOptions = {
 		module: ts.ModuleKind.ESNext,
@@ -177,9 +177,25 @@ function typecheckFolders(folders: Record<string, VirtualFolder>): Record<string
 		if (folder) return Object.keys(folder.installed).length > 0 ? folder.installed : undefined;
 		return containingFile.startsWith(`${docsSource}${sep}`) ? {} : undefined;
 	};
-	host.resolveModuleNameLiterals = (literals, containingFile) => {
+	host.resolveModuleNameLiterals = (
+		literals,
+		containingFile,
+		redirectedReference,
+		_options,
+		containingSourceFile,
+	) => {
 		const { options: resolution, cache } = resolverFor(modulesOf(containingFile));
-		return literals.map((literal) => ts.resolveModuleName(literal.text, containingFile, resolution, host, cache));
+		return literals.map((literal) =>
+			ts.resolveModuleName(
+				literal.text,
+				containingFile,
+				resolution,
+				host,
+				cache,
+				redirectedReference,
+				ts.getModeForUsageLocation(containingSourceFile, literal, resolution),
+			),
+		);
 	};
 	const program = ts.createProgram([...virtual.keys()], options, host);
 	return Object.fromEntries(
@@ -257,17 +273,44 @@ function pageFiles({ text, app }: SitePage): {
 	return { files, fences };
 }
 
-/** Type-checks the fences of the pages in one program and returns every fence with its diagnostics. */
+/**
+ * Whether a file adds to the global scope of the program that holds it.
+ *
+ * @remarks
+ * A script file (no import or export) declares globals, a `declare global` block extends them, and a
+ * `declare module '<name>'` in a module file augments a module that every other file sees too.
+ */
+function addsToGlobalScope(name: string, text: string): boolean {
+	const source = ts.createSourceFile(name, text, ts.ScriptTarget.ES2022, false);
+	return (
+		!ts.isExternalModule(source) ||
+		source.statements.some(
+			(statement) =>
+				ts.isModuleDeclaration(statement) &&
+				(ts.isStringLiteral(statement.name) || (statement.flags & ts.NodeFlags.GlobalAugmentation) !== 0),
+		)
+	);
+}
+
+const isolated = (files: Record<string, string>): boolean =>
+	Object.entries(files).some(([name, text]) => addsToGlobalScope(name, text));
+
+/** Type-checks the fences of the pages and returns every fence with its diagnostics. */
 function checkFences(pages: SitePage[]): CheckedFence[] {
 	const built = pages.map((page) => ({ page, ...pageFiles(page) })).filter(({ fences }) => fences.length > 0);
-	const diagnostics = typecheckFolders(
-		Object.fromEntries(
-			built.map(({ page, files, fences }) => [
-				page.page,
-				{ files, installed: page.installed ?? {}, report: fences.map(({ name }) => name) },
-			]),
+	const folderOf = ({ page, files, fences }: (typeof built)[number]): [string, VirtualFolder] => [
+		page.page,
+		{ files, installed: page.installed ?? {}, report: fences.map(({ name }) => name) },
+	];
+	const diagnostics = {
+		...typecheckFolders(Object.fromEntries(built.filter(({ files }) => !isolated(files)).map(folderOf))),
+		...Object.assign(
+			{},
+			...built
+				.filter(({ files }) => isolated(files))
+				.map((entry) => typecheckFolders(Object.fromEntries([folderOf(entry)]))),
 		),
-	);
+	};
 	return built.flatMap(({ page, fences }) =>
 		fences.map(({ block, fence, name }) => ({
 			page: page.page,
@@ -312,7 +355,10 @@ export function checkPageSnippets(
  * Each page is a folder of its own in the program, so file names that pages share, such as `fence-1.ts` and
  * `app.ts`, do not collide, and a failure names its own page. The library, React and package declarations are
  * checked once for the whole site instead of once per page. Fences are checked as in {@link checkPageSnippets},
- * with none skipped: a caller that allows a fence filters the failures it gets back.
+ * with none skipped: a caller that allows a fence filters the failures it gets back. A page with a file that adds
+ * to the global scope (a `declare global` block, a `declare module '<name>'` augmentation, or a file with no import
+ * or export) is checked in a program of its own, found with the TypeScript syntax tree: in the shared program its
+ * declarations would reach the other pages and could hide their errors.
  */
 export function checkSiteSnippets(pages: SitePage[]): SnippetFailure[] {
 	return failuresOf(checkFences(pages));
