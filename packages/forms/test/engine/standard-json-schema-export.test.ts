@@ -567,6 +567,52 @@ describe('a schema that exports itself keeps its references inside the resource 
 	});
 });
 
+describe('two elements whose ids joined with their anchors would match', () => {
+	const anchored = (anchor: string, kind: string) => ({
+		type: 'object',
+		properties: { $type: { const: kind }, here: { $anchor: anchor, type: 'string' }, next: { $ref: `#${anchor}` } },
+	});
+	const twins = createFormEngine({
+		elements: [
+			['a', 'b-c'],
+			['a-b', 'c'],
+		].map(([$type, anchor]) => ({
+			$type: $type!,
+			kind: 'input' as const,
+			value: anyValue,
+			schema: exporting(anchored(anchor!, $type!)),
+			metadata: { name: $type!, category: 'input' },
+			render: () => null,
+		})),
+	});
+
+	test('the document writes one anchor each, and every reference resolves to its own', () => {
+		const document = twins.generateFormConfigSchema() as unknown as { $defs: Record<string, JSONSchema> };
+
+		expect(brokenLinks(document)).toEqual([]);
+		const declared = ['a', 'a-b'].map((id) => {
+			const { here, next } = (document.$defs[`element:${id}`]!.properties ?? {}) as Record<string, JSONSchema>;
+			const anchor = here!.$anchor as string;
+			expect(next!.$ref).toBe(`#${anchor}`);
+			return anchor;
+		});
+		expect(new Set(declared).size).toBe(2);
+	});
+
+	test('the collection keeps each anchor in the entry that declares it', () => {
+		const { schemas } = twins.generateJSONSchemaCollection() as unknown as Collection;
+
+		for (const [id, anchor] of [
+			['a', 'b-c'],
+			['a-b', 'c'],
+		] as const) {
+			const written = schemas[`element:${id}`]!;
+			expect(brokenLinks(written)).toEqual([]);
+			expect(written.properties).toMatchObject({ here: { $anchor: anchor }, next: { $ref: `#${anchor}` } });
+		}
+	});
+});
+
 describe('a draft-07 schema whose root $id is a fragment, hoisted into a collection', () => {
 	const rule = (name: string): JSONSchema => ({
 		$id: '#node',

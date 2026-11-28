@@ -1,5 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { definitionRef, definitionsKeyword, hoistDefinitions, startsResource } from './json-schema/embedder.js';
+import { createJSONSchemaEmbedder, definitionRef, definitionsKeyword, startsResource } from './json-schema/embedder.js';
 import { replaceChildSlot } from './json-schema/slot.js';
 import {
 	getOwn,
@@ -127,7 +127,7 @@ function unreachableSlot($type: string, keys: readonly string[]): RegistryError 
  * draft-07 target), and the root as the union of the root's accepted `$type`s
  * @throws {RegistryError} Code `'unreachable-child-path'` when a slot cannot be found where a registration's JSON
  * Schema declares it, `'unknown-accepted-type'` when a child path accepts a `$type` the lookup lacks, and
- * `'definition-name-clash'` when a definition a schema brought along takes the name of a `$type`
+ * `'definition-name-clash'` when a definition a schema brought along takes the name of a `$type` or of another definition
  * @throws {Error} When `target` is not `'draft-2020-12'` or `'draft-07'`, before any schema is read, when the lookup
  * holds no registration, when `accepts` is empty, and when it names a `$type` the lookup lacks
  *
@@ -150,10 +150,15 @@ function unreachableSlot($type: string, keys: readonly string[]): RegistryError 
  * `U` is `{ anyOf: [{ $ref }, ...] }`. A slot the walk cannot reach (behind `allOf`, a `$ref` or a union, or inside
  * a schema with an `$id` of its own) throws, since guessing would write a document that disagrees with the registration.
  *
- * A schema that was written as a document of its own is moved into the document: its `$defs` are lifted to the
- * top, named under their owner (`page.address` for the `address` definition of `page`), and every local pointer follows.
- * A `$type` that takes such a name is an error, since the two definitions could not both stay. A name in a `$ref`
- * is a JSON Pointer token (`~` as `~0`, `/` as `~1`) and percent-encoded for the URI fragment.
+ * A schema that was written as a document of its own is moved into the document by
+ * {@link createJSONSchemaEmbedder}, and every local pointer follows. Its `$defs` are lifted to the top as
+ * `<owner>.<name>` (`page.address` for the `address` definition of `page`), and each anchor is renamed
+ * `<owner part>-<name>`. Both write the owner so that two owners never write the same name: in a lifted name each `.`
+ * and `_` of the `$type` is `_2e_` and `_5f_` (`a.b` with `c` is `a_2e_b.c`, `a` with `b.c` is `a.b.c`), and in an anchor
+ * the owner part is `o` and the `$type` with every character outside `[A-Za-z0-9.]` written as `_<hex>_`
+ * (`ui/button` with `x` is `oui_2f_button-x`). A name that is still taken, by a `$type` say, is an error, since the two
+ * definitions could not both stay. A name in a `$ref` is a JSON Pointer token (`~` as `~0`, `/` as `~1`) and
+ * percent-encoded for the URI fragment.
  */
 export function exportTreeSchema(
 	lookup: ExportLookup | readonly ExportLookup[],
@@ -180,11 +185,11 @@ export function exportTreeSchema(
 	const everyType = [...registrations.keys()];
 	const unionOf = (names: readonly string[]): JSONSchemaObject => ({ anyOf: names.map(reference) });
 
+	const embedder = createJSONSchemaEmbedder(target, { kind: 'document' });
 	const definitions = new Map<string, JSONSchemaObject>();
-	const nestedNames = new Set<string>();
 	for (const registration of registrations.values()) {
 		const resolved = resolve(registration.schema, { io, target });
-		const { definition, nested } = hoistDefinitions(resolved ?? openNode(registration), registration.$type, target);
+		const definition = embedder.embedDefinition(resolved ?? openNode(registration), registration.$type);
 		for (const { keys, accepts: slotAccepts, list } of registration.childPaths ?? []) {
 			if (startsResource(definition)) throw unreachableSlot(registration.$type, keys);
 			const missing = slotAccepts?.find((name) => !registrations.has(name));
@@ -198,22 +203,11 @@ export function exportTreeSchema(
 			replaceChildSlot(definition, { $type: registration.$type, keys, list }, unionOf(slotAccepts ?? everyType));
 		}
 		definitions.set(registration.$type, definition);
-		for (const [name, schema] of Object.entries(nested)) {
-			if (registrations.has(name) || nestedNames.has(name)) {
-				throw new RegistryError(
-					'definition-name-clash',
-					`The definition '${name}' that '${registration.$type}' brought along takes the name of another definition of the export.`,
-					{ $type: registration.$type, key: name },
-				);
-			}
-			nestedNames.add(name);
-			definitions.set(name, schema);
-		}
 	}
 
-	return {
+	return embedder.finish({
 		$schema: DIALECTS[target],
 		[keyword]: Object.fromEntries(definitions),
 		...unionOf(accepts ?? everyType),
-	};
+	});
 }

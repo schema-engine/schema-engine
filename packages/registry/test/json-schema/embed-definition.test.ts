@@ -1,6 +1,7 @@
 import { Ajv } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { describe, expect, it } from 'vitest';
+import { RegistryError } from '../../src';
 import {
 	createJSONSchemaEmbedder,
 	definitionRef,
@@ -10,6 +11,14 @@ import {
 import type { JSONSchemaObject } from '../../src';
 
 const document: JSONSchemaPlacement = { kind: 'document' };
+const thrownBy = (run: () => unknown): unknown => {
+	try {
+		run();
+	} catch (error) {
+		return error;
+	}
+	throw new Error('Expected a throw');
+};
 const uri = (id: string) => `https://example.test/${id}.json`;
 
 const box: JSONSchemaObject = {
@@ -78,13 +87,92 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 			expect(embedder.finish({})).toEqual({});
 		});
 
-		it('throws when a definition it lifts takes a name the document already defines', () => {
+		it('throws a RegistryError when a definition it lifts takes a name the document already defines', () => {
 			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
 			embedder.embedDefinition(box, 'element:box');
 
-			expect(() => embedder.finish({ $defs: { 'element:box.label': {} } })).toThrow(
-				"The JSON Schema export already defines 'element:box.label'.",
-			);
+			const error = thrownBy(() => embedder.finish({ $defs: { 'element:box.label': {} } }));
+
+			expect(error).toBeInstanceOf(RegistryError);
+			expect(error).toMatchObject({
+				code: 'definition-name-clash',
+				$type: 'element:box',
+				key: 'element:box.label',
+			});
+		});
+
+		it('throws a RegistryError instead of overwriting when two embeds lift the same name', () => {
+			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
+			embedder.embedDefinition(box, 'element:box');
+
+			expect(thrownBy(() => embedder.embedDefinition(box, 'element:box'))).toMatchObject({
+				code: 'definition-name-clash',
+				$type: 'element:box',
+				key: 'element:box.label',
+			});
+		});
+
+		it('throws a RegistryError when a definition it lifts takes the key of a schema embed hoisted', () => {
+			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
+			embedder.embed({ type: 'object', properties: { next: { $ref: '#' } } });
+
+			expect(thrownBy(() => embedder.finish({ $defs: { 'embedded-1': {} } }))).toMatchObject({
+				code: 'definition-name-clash',
+				key: 'embedded-1',
+			});
+		});
+
+		it('keeps owners whose lifted names would join to the same text apart, and both resolve under Ajv', () => {
+			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
+			const owned = (reference: string, definitions: Record<string, JSONSchemaObject>) => ({
+				type: 'object',
+				properties: { x: { $ref: reference } },
+				$defs: definitions,
+			});
+			const first = embedder.embedDefinition(owned('#/$defs/b.c', { 'b.c': { type: 'string' } }), 'element:a');
+			const second = embedder.embedDefinition(owned('#/$defs/c', { c: { type: 'number' } }), 'element:a.b');
+			const written = embedder.finish({
+				$defs: { 'element:a': first, 'element:a.b': second },
+				anyOf: [{ $ref: '#/$defs/element:a' }, { $ref: '#/$defs/element:a.b' }],
+			});
+
+			expect(Object.keys(written.$defs as object).sort()).toEqual([
+				'element:a',
+				'element:a.b',
+				'element:a.b.c',
+				'element:a_2e_b.c',
+			]);
+			const validate = new Ajv2020({ strict: false }).compile(written);
+			expect([validate({ x: 'a' }), validate({ x: 1 }), validate({ x: true })]).toEqual([true, true, false]);
+		});
+
+		it('keeps owners whose joined anchors would match apart, and every reference resolves under Ajv', () => {
+			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
+			const anchored = (anchor: string, type: string) => ({
+				type: 'object',
+				properties: { a: { $anchor: anchor, type }, b: { $ref: `#${anchor}` } },
+			});
+			const first = embedder.embedDefinition(anchored('b-c', 'string'), 'element:a');
+			const second = embedder.embedDefinition(anchored('c', 'number'), 'element:a-b');
+			const written = embedder.finish({
+				$defs: { 'element:a': first, 'element:a-b': second },
+				anyOf: [{ $ref: '#/$defs/element:a' }, { $ref: '#/$defs/element:a-b' }],
+			});
+
+			expect(first.properties).toMatchObject({
+				a: { $anchor: 'oelement_3a_a-b-c' },
+				b: { $ref: '#oelement_3a_a-b-c' },
+			});
+			expect(second.properties).toMatchObject({
+				a: { $anchor: 'oelement_3a_a_2d_b-c' },
+				b: { $ref: '#oelement_3a_a_2d_b-c' },
+			});
+			const validate = new Ajv2020({ strict: false }).compile(written);
+			expect([validate({ a: 'x', b: 'y' }), validate({ a: 1, b: 2 }), validate({ a: 1, b: 'y' })]).toEqual([
+				true,
+				true,
+				false,
+			]);
 		});
 
 		it('renames an anchor under the name of the definition', () => {
@@ -96,7 +184,7 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 
 			expect(definition).toEqual({
 				type: 'object',
-				properties: { a: { $anchor: 'box-node', type: 'string' }, b: { $ref: '#box-node' } },
+				properties: { a: { $anchor: 'obox-node', type: 'string' }, b: { $ref: '#obox-node' } },
 			});
 		});
 	});

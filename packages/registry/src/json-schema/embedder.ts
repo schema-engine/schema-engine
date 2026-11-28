@@ -1,3 +1,4 @@
+import { RegistryError } from '../registry-error.js';
 import { assertJSONSchemaTarget, isPlainObject, type JSONSchemaObject, type JSONSchemaTarget } from './standard.js';
 
 /** Where the JSON Schema being written keeps its definitions. */
@@ -137,8 +138,8 @@ export interface JSONSchemaEmbedder {
 	 * @remarks
 	 * The schema stays at its own place, so a container found by its name is the schema itself and not a reference to
 	 * another definition. In a document, `#` points at the definition, a pointer into the schema's own definitions at the
-	 * definition lifted to the document as `name.<its name>`, and anchors are renamed under `name`, as
-	 * {@link hoistDefinitions} does. In a collection the entry is its own resource, so the schema is kept as it is, with
+	 * definition lifted to the document as `<name>.<its name>` and anchors are renamed under `name`, as
+	 * {@link createJSONSchemaEmbedder} explains. In a collection the entry is its own resource, so the schema is kept as it is, with
 	 * its own definitions, without `$schema`, and a draft-07 root `$id: '#node'` is dropped with its references turned
 	 * into `#`, since the entry is addressed by the `$id` the collection gives it. A schema with an `$id` of its own is a
 	 * resource that keeps its base: in a document it is kept as it is, and in a collection the entry is an `allOf` of a
@@ -146,7 +147,11 @@ export interface JSONSchemaEmbedder {
 	 * `$id`.
 	 */
 	embedDefinition(own: JSONSchemaObject, name: string): JSONSchemaObject;
-	/** Adds the definitions `embed` and `embedDefinition` moved to the finished document or collection, in place. */
+	/**
+	 * Adds the definitions `embed` and `embedDefinition` moved to the finished document or collection, in place.
+	 *
+	 * @throws {RegistryError} Code `'definition-name-clash'` when one of them takes a name `written` already defines
+	 */
 	finish(written: JSONSchemaObject): JSONSchemaObject;
 }
 
@@ -174,11 +179,30 @@ export interface JSONSchemaEmbedder {
  *
  * Only the schema's root resource is rewritten. A schema with its own `$id`, and any subschema that sets one, resolves
  * its pointers and anchors against that and is left as it is.
+ *
+ * A definition written into a document by `embedDefinition(own, owner)` is named, and its anchors renamed, by the
+ * owner, so that no two owners share a name:
+ *
+ * - A definition `name` of the schema's own `$defs` (`definitions` for a draft-07 target) is lifted to
+ *   `<owner>.<name>`, with the owner written so that it holds no `.`: each `.` and `_` in it is replaced by `_` and its
+ *   code point in hex and `_` again (`_2e_`, `_5f_`), any other character stays. Owner `element:a.b` with a definition
+ *   `c` is lifted as `element:a_2e_b.c` and owner `element:a` with `b.c` as `element:a.b.c`, so the first `.` of a
+ *   lifted name always ends the owner.
+ * - An anchor `name` is renamed `<owner part>-<name>`, where the owner part is `o` followed by the owner with every
+ *   character outside `[A-Za-z0-9.]` (`-` and `_` included) replaced by `_`, its code point in hex and `_` (`ui/button`
+ *   becomes `oui_2f_button`, `a-b` becomes `oa_2d_b`). The part starts with a letter, holds only characters every
+ *   dialect allows in an anchor, and no `-`, so the first `-` ends it, and the keys of `embed` (`embedded-1`) never
+ *   start with `o`.
+ *
+ * Both are one-to-one, so two owners never write the same name. A name that is still taken, by another definition
+ * lifted into the document or one `finish` finds in the document it completes, is a `RegistryError` with the code
+ * `'definition-name-clash'`; nothing is overwritten.
  */
 export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JSONSchemaPlacement): JSONSchemaEmbedder {
 	assertJSONSchemaTarget(target);
 	const keyword = definitionsKeyword(target);
 	const hoisted: Record<string, JSONSchemaObject> = {};
+	const ownerOf = new Map<string, string>();
 	let count = 0;
 	return {
 		embed(own) {
@@ -190,6 +214,7 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 			const key = `embedded-${count}`;
 			if (pointsIntoItself && placement.kind === 'collection') {
 				const ref = placement.uri(key);
+				ownerOf.set(key, key);
 				hoisted[key] = {
 					...(own.$schema === undefined ? {} : { $schema: own.$schema }),
 					...withoutRootAnchor(body),
@@ -204,6 +229,7 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 			});
 			if (!pointsIntoItself) return rewritten;
 			hoisted[key] = rewritten;
+			ownerOf.set(key, key);
 			return { $ref: ref };
 		},
 		embedDefinition(own, name) {
@@ -213,7 +239,11 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 				return { allOf: [{ $ref: entry.$id }], [keyword]: { [name]: entry } };
 			}
 			const { definition, nested } = hoistDefinitions(own, name, target);
-			Object.assign(hoisted, nested);
+			for (const [lifted, schema] of Object.entries(nested)) {
+				if (Object.hasOwn(hoisted, lifted)) throw definitionNameClash(name, lifted);
+				hoisted[lifted] = schema;
+				ownerOf.set(lifted, name);
+			}
 			return definition;
 		},
 		finish(written) {
@@ -221,7 +251,7 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 			const field = placement.kind === 'collection' ? 'schemas' : keyword;
 			const existing: JSONSchemaObject = isPlainObject(written[field]) ? written[field] : {};
 			for (const key of Object.keys(hoisted)) {
-				if (key in existing) throw new Error(`The JSON Schema export already defines '${key}'.`);
+				if (Object.hasOwn(existing, key)) throw definitionNameClash(ownerOf.get(key) ?? key, key);
 			}
 			written[field] = { ...existing, ...hoisted };
 			return written;
@@ -229,25 +259,43 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 	};
 }
 
-/**
- * The name of an owner as the first part of an anchor name, which stays within the anchor grammar of every dialect
- * (`^[A-Za-z][-A-Za-z0-9._]*$`) whatever the owner is called.
- *
- * @remarks
- * An owner that is already such a name, and has no `__` in it, is used as it is, so the anchors of the names that were
- * valid before do not change. Any other owner is written as `a__` followed by its characters, each one outside
- * `[A-Za-z0-9.-]` as `__` and its code point in hex and `__` again (`ui/button` becomes `a__ui__2f__button`). A written
- * owner always holds `__` and a kept one never does, and `_` is escaped like the other characters, so two owners never
- * share a name.
- */
-function anchorOwner(owner: string): string {
-	if (/^[A-Za-z][-A-Za-z0-9._]*$/.test(owner) && !owner.includes('__')) return owner;
-	let written = 'a__';
-	for (const char of owner) {
-		written += /[A-Za-z0-9.-]/.test(char) ? char : `__${char.codePointAt(0)!.toString(16)}__`;
-	}
+/** The error for a definition `key` that `owner` brought along and that takes a name another definition holds. */
+function definitionNameClash(owner: string, key: string): RegistryError {
+	return new RegistryError(
+		'definition-name-clash',
+		`The definition '${key}' that '${owner}' brought along takes the name of another definition of the export.`,
+		{ $type: owner, key },
+	);
+}
+
+/** `text` with each character that `keep` does not match written as `_`, its code point in hex and `_`. */
+function escapeCharacters(text: string, keep: RegExp): string {
+	let written = '';
+	for (const char of text) written += keep.test(char) ? char : `_${char.codePointAt(0)!.toString(16)}_`;
 	return written;
 }
+
+/**
+ * The owner part of an anchor name: `o` and the owner with every character outside `[A-Za-z0-9.]` written as `_`, its
+ * code point in hex and `_` (`ui/button` becomes `oui_2f_button`).
+ *
+ * @remarks
+ * The part holds no `-`, so the first `-` of `<owner part>-<name>` ends it, and it escapes `_` as well, so a literal `_`
+ * is never read as the start of an escape: two owners never share a part. It starts with a letter and holds only
+ * `[A-Za-z0-9._]`, which every dialect allows in an anchor name (`^[A-Za-z][-A-Za-z0-9._]*$`), whatever the owner is
+ * called. No owner is kept as it is, since an owner that was kept could be mistaken for a written one.
+ */
+const anchorOwnerPart = (owner: string): string => `o${escapeCharacters(owner, /[A-Za-z0-9.]/)}`;
+
+/**
+ * The name a definition of an owner takes in a document of definitions: `<owner part>.<name>`, with the owner part
+ * written without a `.` (`.` and `_` become `_2e_` and `_5f_`, other characters stay).
+ *
+ * @remarks
+ * The owner part holds no `.`, so the first `.` ends it and two (owner, name) pairs never write the same name, while an
+ * owner like `element:tab` reads as written.
+ */
+const liftedName = (owner: string, name: string): string => `${escapeCharacters(owner, /[^._]/)}.${name}`;
 
 /**
  * A JSON Pointer reference token, written for a URI fragment: `~` and `/` escaped, then percent-encoded for what a
@@ -288,10 +336,10 @@ function unescapedToken(token: string): string {
  * A JSON Schema that was written as a document of its own, split into the definition it becomes and the definitions it
  * brought along.
  */
-export interface HoistedDefinitions {
+interface HoistedDefinitions {
 	/** The schema to keep under the owner's name in the document's definitions. */
 	readonly definition: JSONSchemaObject;
-	/** The definitions of `own`, by the name each takes in the document: the owner, a dot and its own name. */
+	/** The definitions of `own`, by the name each takes in the document, as {@link liftedName} writes it. */
 	readonly nested: Readonly<Record<string, JSONSchemaObject>>;
 }
 
@@ -302,21 +350,23 @@ export interface HoistedDefinitions {
  * @param own - The schema, which is not changed
  * @param owner - The name its definition takes in the document, for example a `$type`
  * @param target - The target the document is written for, which decides the definitions keyword
+ * @throws {RegistryError} Code `'definition-name-clash'` when `$defs` and `definitions` both define one name
  *
  * @remarks
  * The schema's own definitions (`$defs`, or `definitions` for a draft-07 target) are lifted out and named under their
- * owner (`owner.name`), so the document's definitions stay one flat list. Every local pointer follows: `#` points at
- * the owner's definition, `#/$defs/name` at the lifted one, and any other `#/...` pointer into the owner's definition.
- * Anchors and `$schema` are handled as {@link createJSONSchemaEmbedder} does, each anchor named `owner-name` with the
- * owner written as {@link anchorOwner} does when it is not a valid anchor name itself. The caller checks the names it gets back
+ * owner as {@link liftedName} does, so the document's definitions stay one flat list. Every local pointer follows: `#`
+ * points at the owner's definition, `#/$defs/name` at the lifted one, and any other `#/...` pointer into the owner's
+ * definition. Anchors and `$schema` are handled as {@link createJSONSchemaEmbedder} does, each anchor named
+ * `<owner part>-<name>` as {@link anchorOwnerPart} writes the owner part. The caller checks the names it gets back
  * against the ones it already holds. A schema with an `$id` of its own is a resource that resolves itself, so it is
  * kept as it is.
  */
-export function hoistDefinitions(own: JSONSchemaObject, owner: string, target: JSONSchemaTarget): HoistedDefinitions {
+function hoistDefinitions(own: JSONSchemaObject, owner: string, target: JSONSchemaTarget): HoistedDefinitions {
 	const body = withoutSchemaKeyword(own);
 	if (startsResource(body)) return { definition: body, nested: {} };
-	const nameOf = (name: string) => `${owner}.${name}`;
+	const nameOf = (name: string) => liftedName(owner, name);
 	const place = (name: string) => definitionRef(target, name);
+	const ownerPart = anchorOwnerPart(owner);
 	const rewritten = rewriteResource(body, {
 		pointer(pointer) {
 			if (pointer === '#') return place(owner);
@@ -327,13 +377,16 @@ export function hoistDefinitions(own: JSONSchemaObject, owner: string, target: J
 			}
 			return `${place(owner)}/${tokens.join('/')}`;
 		},
-		anchor: (name) => `${anchorOwner(owner)}-${name}`,
+		anchor: (name) => `${ownerPart}-${name}`,
 	});
 	const nested: Record<string, JSONSchemaObject> = {};
 	for (const field of ['$defs', 'definitions']) {
 		const lifted = rewritten[field];
 		if (!isPlainObject(lifted)) continue;
-		for (const [name, schema] of Object.entries(lifted)) nested[nameOf(name)] = schema as JSONSchemaObject;
+		for (const [name, schema] of Object.entries(lifted)) {
+			if (Object.hasOwn(nested, nameOf(name))) throw definitionNameClash(owner, nameOf(name));
+			nested[nameOf(name)] = schema as JSONSchemaObject;
+		}
 		delete rewritten[field];
 	}
 	return { definition: rewritten, nested };

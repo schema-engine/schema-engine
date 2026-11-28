@@ -27,8 +27,8 @@
  *   union, or inside a schema with an `$id` of its own, or because the slot is nullable.
  * - `'unknown-accepted-type'`: {@link exportTreeSchema} was given a lookup that lacks a `$type` a child path
  *   (`childPath`) accepts (`key`).
- * - `'definition-name-clash'`: {@link exportTreeSchema} found that a definition a schema brought along (`key`) takes the
- *   name of a `$type` or of another definition.
+ * - `'definition-name-clash'`: {@link exportTreeSchema}, or the JSON Schema embedder it writes through, found that a
+ *   definition a schema brought along (`key`, brought by `$type`) takes the name of a `$type` or of another definition.
  */
 export type RegistryErrorCode =
 	| 'invalid-schema'
