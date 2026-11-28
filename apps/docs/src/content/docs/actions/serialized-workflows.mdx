@@ -182,7 +182,7 @@ A workflow can hold entries for several moments. `dispatch` takes a `trigger`, a
 { "id": "refund-receipt", "$type": "sendReceipt", "triggers": ["refund"] }
 ```
 
-An entry with `enabled: false` never runs. The registration's schema has to declare `enabled` and `triggers`, because `parseActions` returns what the schema returns.
+An entry with `enabled: false` never runs. `parseActions` checks `enabled` and `triggers` itself, so the registration's schema lists only the action's own arguments.
 
 ## Stops and cancellation
 

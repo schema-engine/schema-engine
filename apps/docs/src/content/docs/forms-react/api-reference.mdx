@@ -56,7 +56,7 @@ See [Submitted values](/docs/forms/form-state#submitted-values).
 
 `FormRenderer` validates the config once at the form boundary and renders the
 resulting `NormalizedFormConfig`. Field renderers do not re-parse registration
-schemas. The selected recipe receives a `ViewContext` containing form metadata,
+schemas. The selected recipe's blocks read a `ViewModel` (through `useViewContext()`) containing form metadata,
 active-step state, navigation, and the current slot configuration.
 
 ## View hooks

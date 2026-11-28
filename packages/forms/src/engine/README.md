@@ -46,7 +46,7 @@ form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigat
 position among the active steps and their number; the context carries `stepId`, `currentStep` and `totalSteps`. `validateFieldValue` and `validateFormValues`
 require a `debounceScope` owned by the form.
 
-The public usage examples are in the [forms package README](../../README.md#engine-validation).
+The public usage examples are in [Engine and registrations](https://schema-engine.com/docs/forms/engine).
 
 ## Form configuration validation
 
@@ -56,11 +56,10 @@ runs live next to it in `lib/validate-form/`: `step-checks.ts` (unique step ids;
 closest-union-branch choice), `grid-checks.ts` (named placement, areas and template checks), `parse-elements.ts`
 (elements and actions) and `parse-view.ts` (the view recipe).
 `validateForm` throws a `FormValidationError`; `safeValidateForm` returns `{ success: true, data }` or
-`{ success: false, issues }` with the same issues. Each issue is `{ message, path }`, the path in config keys
+`{ success: false, issues }` with the same issues. Each issue is `{ message, path }`, plus `code` and `params` when a schema or the registry reported it, the path in config keys
 and indexes (`['steps', 0, 'elements', 2, 'grid', 'width']`, `[]` for the whole form). See
-[Validation errors](../../README.md#validation-errors) for the paths each check reports. Registration
-checks made at build time (`buildFormEngine`) throw a plain `Error` naming the registration; they are not
-form issues.
+[Form configuration errors](https://schema-engine.com/docs/forms/engine#form-configuration-errors) for the paths each check reports. Registration
+checks made at build time (`buildFormEngine`) are not form issues. Forms' own (an element's child path, a static element with `childPaths`, a recipe's slots) throw a plain `Error` naming the registration, and the registries the build creates with `createRegistry` throw a `RegistryError` (`'invalid-schema'`, `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'` and `'duplicate-type'`).
 
 ## Requests
 

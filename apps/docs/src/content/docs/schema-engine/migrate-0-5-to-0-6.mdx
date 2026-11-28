@@ -1,0 +1,455 @@
+---
+title: 'Migrate from 0.5 to 0.6'
+description: 'Every breaking change of 0.6.0 by package, in docs order, with the code before and after: child paths, the parsed document, issue and error codes, mutable registries, actions, the forms engine, JSON Schema targets and import paths.'
+order: 7
+---
+
+# Migrate from 0.5 to 0.6
+
+0.6.0 breaks the registry, actions, forms, Forms React and Forms Radiant APIs of 0.5. Layout adds to its API and raises its `zod` floor. This page lists each change by package in the order of the docs, with the code before and after. A line starting with `-` is 0.5 and a line starting with `+` is 0.6. The TypeScript snippets are checked against the 0.6 packages.
+
+## Before you start
+
+- **Move every package together.** The six packages share one version, so upgrade each one you use to 0.6 in one step.
+- **Update `zod` to `^4.5.0`.** The peer range of the forms, layout, Forms React and Forms Radiant packages was `^4.0.17`. Zod before 4.2.0 has no Standard JSON Schema target names, and the JSON Schema export of the forms engine needs 4.5.0.
+- **List the packages you import.** `@schema-engine/forms` depends on the registry, actions and layout packages, `@schema-engine/forms-radiant` on actions and registry, and `@schema-engine/actions` on the registry. A project that imports one of them directly lists it in its own `package.json`. An actions-only project adds the registry, because actions are built with `createRegistry` from it now.
+- **Let the compiler find the rest.** Most changes are type errors: a child path that is not an object, a container without `list: true`, a method that no longer exists, a misspelled JSON Schema target. Fix those first, then run your tests for the changes that only throw at run time (see the end of this page).
+
+```bash
+pnpm add zod@^4.5.0 @schema-engine/registry
+```
+
+## Registry
+
+### A child path is an object
+
+`childPaths` takes `{ keys, accepts?, list? }` objects, not lists of keys. `accepts` is a closed list of the `$type`s a slot takes, and `list: true` says the slot holds a list. Paths are compared key by key, so `['a.b']` and `['a', 'b']` are two paths. See [Resolve a document](/docs/registry/resolve-a-document).
+
+```diff
+- childPaths: [['sections'], ['engine', 'controls']],
++ childPaths: [{ keys: ['sections'], accepts: ['section'], list: true }, { keys: ['engine', 'controls'] }],
+```
+
+`createRegistry` and `createMutableRegistry` check the entries. A property other than `keys`, `accepts` and `list`, an empty or repeating `accepts`, and a `list` that is not `true` throw `RegistryError` `'invalid-child-paths'`. Four mistakes are type errors:
+
+- `childPathUnknownProperty`: an entry with a property other than those three, such as `accept`.
+- `listPathNotAnArray`: `list: true` over a slot the schema types as no array.
+- `schemaOutputWithoutType`: a registration whose schema output declares no `$type`, for `safeParseTree`.
+- `acceptsUnknownType`: an `accepts` name the lookup does not have, for `safeParseTree`.
+
+### The parent schema declares the child keys and keeps `$type`
+
+A tree schema returns the node's `$type` and the slot the way the document has it, and `accepts` is the only way to restrict a slot. A schema that restricts the children, or drops, renames or resizes the slot, is a bug of the registration: `safeParseTree` throws a `RegistryError` with the code `'schema-changes-type'` or `'schema-breaks-child-path'`. A key a schema does not declare is a type error (`childPathNotInSchema`).
+
+```diff
+- schema: z.looseObject({ $type: z.literal('page') }),
+- childPaths: [['sections']],
++ schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
++ childPaths: [{ keys: ['sections'], accepts: ['section'], list: true }],
+```
+
+### `path` moved into an options object
+
+`safeParseNode` and `safeParseTree` take `{ path, accepts }` as their last argument. `accepts` restricts the node, or the root of a tree, and an empty list throws.
+
+```ts
+import * as z from 'zod/mini';
+import { createRegistry, safeParseNode, safeParseTree } from '@schema-engine/registry';
+
+const nodes = createRegistry('Node', [
+	{
+		$type: 'page',
+		schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
+		metadata: { name: 'Page' },
+		childPaths: [{ keys: ['sections'], accepts: ['section'], list: true }],
+	},
+	{
+		$type: 'section',
+		schema: z.object({ $type: z.literal('section'), title: z.string() }),
+		metadata: { name: 'Section' },
+	},
+]);
+
+export function check(document: unknown, index: number) {
+	const one = safeParseNode(nodes, document, { path: ['children', index] });
+	const tree = safeParseTree(nodes, document, { path: ['doc'], accepts: ['page'] });
+	return { one, tree };
+}
+```
+
+### `tree.data` is the parsed document, and `children` is a list
+
+`tree.data` holds the parsed document, with the data of each child at its child path, typed per path. `children` is a list of `{ keys, nodes }`, one per declared child path in declaration order, and no longer a record keyed by the dotted path. Read the typed data, or find an entry by comparing its `keys` element by element: `['engine.controls']` and `['engine', 'controls']` are two paths, so do not join the keys.
+
+Every entry's `nodes` is a list. In 0.5 a slot that held one object gave a single `ParsedNode` and a slot that held an array gave a list, so code that read a single-node slot as one node breaks without a type error where the slot was typed loosely: read `nodes[0]`, or the typed `data`.
+
+```diff
+- const controls = tree.children['engine.controls'];
++ const entry = tree.children.find(({ keys }) => keys.length === 2 && keys[0] === 'engine' && keys[1] === 'controls');
++ const controls = entry?.nodes;
++ const same = tree.data.engine.controls;
+```
+
+### A failed `safeParseTree` carries the partial tree
+
+This one is an addition. The failure result has `tree?: PartialNode`, the partial tree, present when the root's own schema passed: every node whose own schema passed, with `output` and `children`, and never `data`. Code that read only `issues` keeps working. See [Check what parsed when the document has issues](/docs/registry/resolve-a-document#check-what-parsed-when-the-document-has-issues).
+
+### Issues and errors carry codes
+
+The issues the registry creates have a namespaced `code`: `registry/not-an-object`, `registry/missing-type`, `registry/unregistered-type` (`received`), `registry/not-accepted` (`expected`, `received`), `registry/not-a-node`, `registry/not-a-list` and `registry/contains-itself`, typed as `RegistryIssue`. Messages of the issues 0.5 already created are unchanged, `registry/not-a-list` is new (it needs `list: true`), and an issue from a schema is untouched.
+
+Errors thrown while a registry is built or bound were plain `Error`s in 0.5. They are `RegistryError` now, with a stable `RegistryErrorCode` (`code`), a `kind` (absent when the lookup is not a registry, as a function is), a `$type` and, where the code needs them, `key`, `childPath` and `outerChildPath`. So are the errors of a tree parsed against a schema that contradicts its registration and of an export that cannot write a slot, which are new. Messages are unchanged. Branch on `code`, not on the message.
+
+```ts
+import { RegistryError, createRegistry } from '@schema-engine/registry';
+
+export function buildOrExplain(schema: unknown): string {
+	try {
+		createRegistry('Widget', [{ $type: 'card', schema: schema as never, metadata: { name: 'Card' } }]);
+		return 'built';
+	} catch (error) {
+		return error instanceof RegistryError ? `${error.code}: ${error.kind} ${error.$type}` : 'unexpected';
+	}
+}
+```
+
+### `BaseRegistry` is `createMutableRegistry`
+
+Build a registry that takes registrations at runtime with `createMutableRegistry` instead of subclassing `BaseRegistry`. It has the read side of a `createRegistry` result (`get`, `has`, `all`, `keys`, `size`, `kind`) plus `register` and `clear`, so it goes wherever a registry is read. See [Read-only and mutable registries](/docs/registry/registries).
+
+```diff
+- class Plugins extends BaseRegistry<string, PluginRegistration> {
+- 	get registryName() {
+- 		return 'Plugin';
+- 	}
+- }
+- const plugins = new Plugins();
+- plugins.getAll();
+- plugins.getAllKeys();
++ const plugins = createMutableRegistry<PluginRegistration>('Plugin');
++ plugins.all();
++ plugins.keys();
+```
+
+```ts
+import * as z from 'zod/mini';
+import { createMutableRegistry, type BaseRegistration } from '@schema-engine/registry';
+
+interface PluginRegistration extends BaseRegistration {
+	execute: () => Promise<void>;
+}
+
+export const plugins = createMutableRegistry<PluginRegistration>('Plugin');
+
+plugins.register({
+	$type: 'sync-cache',
+	schema: z.strictObject({ enabled: z.boolean() }),
+	metadata: { name: 'Sync cache' },
+	execute: async () => {},
+});
+
+export const types: readonly string[] = plugins.keys();
+```
+
+- `getAll()` is `all()` and `getAllKeys()` is `keys()`. Both return frozen arrays in first-registration order, the same array until the next `register` or `clear`, so copy one before you sort it.
+- `registryName` is the `kind` argument, `get` and `has` take a `string`, and the `TKey` type parameter is gone: the key is always `$type`. A subclass that overrode `getItemKey` or `getItemName`, or read the protected `items`, has no replacement, and one that added methods wraps the registry instead.
+- `register` checks a registration as `createRegistry` does and throws a `RegistryError` (`'invalid-schema'`, `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'`), and the registry is unchanged when it throws.
+- A repeated `$type` replaces the earlier registration without a warning and keeps its position, or throws `'duplicate-type'` with `{ duplicates: 'error' }`. The registry logs nothing, so call `has` before `register` to warn about an override, and `@ecopages/logger` is no longer a dependency. `get` returns a frozen copy.
+
+### Lookups are one set of types
+
+`ReadOnlyRegistry`, `MutableRegistry`, `NodeLookup` (find one registration: what `safeParseNode` and `safeParseTree` take) and `ExportLookup` (list them all: what `exportTreeSchema` takes) are the lookup types, and a registry of either kind is all of them. `createRegistry` and `createMutableRegistry` take a `hint` option, exposed as the registry's `hint`: the sentence that ends the message of an unregistered `$type`.
+
+### New: JSON Schema targets, `exportTreeSchema` and the `json-schema` subpath
+
+These are additions. `JSONSchemaTarget` is `'draft-2020-12' | 'draft-07' | 'draft-04' | 'openapi-3.0'`, the Standard JSON Schema names, and the set is closed: each API throws for a target it does not write before it converts a schema. `exportTreeSchema` writes the JSON Schema of a whole tree of registrations, composed at the JSON Schema level, for `'draft-2020-12'` (the default) and `'draft-07'`: see [The JSON Schema of the document](/docs/registry/resolve-a-document#the-json-schema-of-the-document). The `@schema-engine/registry/json-schema` subpath exports `assertJSONSchemaTarget` for the open `target` of a Standard JSON Schema converter's options, and the helpers a domain package uses to write JSON Schema itself.
+
+```ts
+import { assertJSONSchemaTarget, definitionRef, replaceChildSlot } from '@schema-engine/registry/json-schema';
+
+export function typeGroupSlot(definition: Record<string, unknown>, target: string): void {
+	assertJSONSchemaTarget(target);
+	replaceChildSlot(
+		definition,
+		{ $type: 'group', keys: ['elements'], list: true },
+		{ anyOf: [{ $ref: definitionRef(target, 'input') }] },
+		{ target },
+	);
+}
+```
+
+## Actions
+
+### The registry is the registry package's
+
+`ActionRegistry`, `ActionRegistryProvider` and `ActionSchemaLookup` are removed. Build the registry with `createRegistry('Action', [...])`, or `createMutableRegistry<AnyActionRegistration<Context, Trigger>>('Action')` for actions that register at runtime, both from `@schema-engine/registry`. `parseActions` and `ActionDispatcher` take any lookup with `get($type)`: a registry of either kind, or `{ get }` over a store of your own. `getAction(type)` is `get(type)` and `getActionTypes()` is `keys()`.
+
+- The hint of an unregistered `$type` moves from `parseActions(registry, input, { hint })` to the lookup: `parseActions({ get, hint }, input)`. `ParseActionsOptions` keeps only `triggers`.
+- `ActionDispatcher` infers the context and trigger types from the registrations, which fix them through `defineAction<Context, Trigger>()`. A `dispatch` with another context or trigger is still a type error.
+- An action registered inline is wrapped in `defineAction<Context, Trigger>()(...)`: `createRegistry('Action', [{ ... }])` has no class parameters to type an inline `execute` from.
+- A `FormEngine` is no longer a lookup: pass `engine.actions`.
+
+```diff
+- const registry = new ActionRegistry<Context, Trigger>([
+- 	{ $type: 'log', schema, metadata, execute: (ctx) => ({ success: true }) },
+- 	notify,
+- ]);
+- const parsed = parseActions(registry, input, { hint: 'Register it in plugins.ts.' });
+- const dispatcher = new ActionDispatcher<Context, Trigger>(registry);
++ const defineLog = defineAction<Context, Trigger>();
++ const registry = createRegistry('Action', [
++ 	defineLog({ $type: 'log', schema, metadata, execute: (ctx) => ({ success: true }) }),
++ 	notify,
++ ]);
++ const parsed = parseActions(registry, input);
++ const dispatcher = new ActionDispatcher(registry);
+```
+
+```ts
+import * as z from 'zod/mini';
+import { createMutableRegistry, createRegistry } from '@schema-engine/registry';
+import {
+	ActionDispatcher,
+	defineAction,
+	parseActions,
+	type ActionConfigBase,
+	type AnyActionRegistration,
+} from '@schema-engine/actions';
+
+type Trigger = 'save';
+
+interface Context {
+	readonly sent: string[];
+}
+
+interface LogConfig extends ActionConfigBase<'log'> {
+	message: string;
+}
+
+const defineLog = defineAction<Context, Trigger>();
+
+const log = defineLog<LogConfig>({
+	$type: 'log',
+	schema: z.object({ message: z.string() }),
+	metadata: { name: 'Log', defaultTriggers: ['save'] },
+	execute: async ({ config, sent }) => {
+		sent.push(config.message);
+		return { success: true };
+	},
+});
+
+export const registry = createRegistry('Action', [log]);
+export const dispatcher = new ActionDispatcher(registry);
+
+export const runtime = createMutableRegistry<AnyActionRegistration<Context, Trigger>>('Action');
+export const sameDispatcher = new ActionDispatcher(runtime);
+
+const store = new Map<string, typeof log>([['log', log]]);
+
+export function parseFromStore(input: unknown) {
+	return parseActions({ get: (type) => store.get(type), hint: 'Register it in plugins.ts.' }, input);
+}
+```
+
+### Issues carry the registry's codes
+
+`parseActions` types its issues as the registry's `RegistryIssue`. An unregistered `$type`, a node that is not an object and a node without a `$type` have the codes `registry/unregistered-type`, `registry/not-an-object` and `registry/missing-type`. Messages and paths are unchanged, and an issue `parseActions` finds itself (`id`, `enabled`, `triggers`, an empty group) still has no code. The log of an action with no registration names the action `id` and the registry's `kind`, and no longer lists the registered types.
+
+## Forms
+
+### The engine exposes its registries
+
+`engine.elements`, `engine.recipes`, `engine.actions` and `engine.validations` are the read-only registries the engine holds, and the 13 methods that read them are removed. `all()` and `keys()` return frozen arrays, where the old `getAll*()` and `get*Ids()` returned copies, so copy one (`[...engine.elements.all()]`) before sorting it. See [Engine and registrations](/docs/forms/engine#what-the-engine-registers).
+
+| Before                                                   | After                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------- |
+| `getElement(id)`, `getRecipe(id)`, `getAction(id)`       | `elements.get(id)`, `recipes.get(id)`, `actions.get(id)` |
+| `hasElement(id)`, `hasRecipe(id)`, `hasAction(id)`       | `elements.has(id)`, `recipes.has(id)`, `actions.has(id)` |
+| `getAllElements()`, `getAllRecipes()`, `getAllActions()` | `elements.all()`, `recipes.all()`, `actions.all()`       |
+| `getElementIds()`, `getRecipeIds()`, `getActionTypes()`  | `elements.keys()`, `recipes.keys()`, `actions.keys()`    |
+| `getValidationRegistry()`                                | `validations`                                            |
+
+```ts
+import { ActionDispatcher } from '@schema-engine/actions';
+import { createFormEngine } from '@schema-engine/forms';
+import { getViewRecipe } from '@schema-engine/forms/recipes';
+
+const engine = createFormEngine();
+
+export const types = engine.elements.all().map(({ $type }) => $type);
+export const validations = engine.validations;
+export const dispatcher = new ActionDispatcher(engine.actions);
+export const recipe = getViewRecipe(engine, { id: 'contact' });
+```
+
+- `getViewRecipe(engine, config)` takes `{ readonly recipes: RecipeRegistry }`: a `FormEngine` still works, and a hand-written `{ getRecipe }` adapter breaks. The exported `ValidateFormOptions` renames `getRecipe`, `getElement` and `getAction` to `recipes`, `elements` and `actions`, each a registry.
+- An unregistered `$type` reports the engine's hint (`Register it with createFormEngine({ actions: [...] }).`) through `parseActions(engine.actions, input)`.
+- A test that replaced a method with `vi.spyOn(engine, 'getAction')` registers the action it needs with `createFormEngine({ actions: [...] })` instead: the registries are frozen.
+
+### `FormEngine` is a type, and the schema internals are gone
+
+`createFormEngine` is the one way to make an engine. The `FormEngine` class and its constructor are no longer exported, so import `FormEngine` as a type. `engine.getSchemaArtifacts()`, `engine.getSchemaRegistry()` and `engine.getFormConfigSchema()` are removed: they returned Zod objects. Validate a config with `engine.validateForm` or `engine.safeValidateForm`, export JSON Schema with `generateFormConfigSchema`, `generateJSONSchemaCollection` or `generateActionConfigSchema`, hand `getFormConfigStandardSchema()` to a tool that takes Standard JSON Schema, and read titles and descriptions with `getSchemaCatalog()`.
+
+```diff
+- import { FormEngine } from '@schema-engine/forms';
+- const engine = new FormEngine(registries);
+- engine.getFormConfigSchema().safeParse(config).success;
++ import { createFormEngine, type FormEngine } from '@schema-engine/forms';
++ const engine: FormEngine = createFormEngine({ elements, recipes, actions });
++ engine.safeValidateForm(config).success;
+```
+
+### A container declares `childPaths` with `list: true`
+
+An element that holds `elements` declares `childPaths: [{ keys: ['elements'], list: true }]` in its registration, with `accepts` to limit which elements it takes. The schema still declares `elements`. See [Register a container](/docs/forms/engine#register-a-container).
+
+```diff
+- defineInput({ $type: 'group', schema: GroupSchema /* declares elements */, metadata, render: Group });
+- defineInput({ $type: 'v-group', schema: valibotGroup, containerKind: 'object', metadata, render });
++ defineInput({
++ 	$type: 'group',
++ 	schema: GroupSchema,
++ 	childPaths: [{ keys: ['elements'], list: true }],
++ 	metadata,
++ 	render: Group,
++ });
++ defineInput({
++ 	$type: 'v-group',
++ 	schema: valibotGroup,
++ 	childPaths: [{ keys: ['elements'], list: true }],
++ 	metadata,
++ 	render,
++ });
+```
+
+Write `childPaths` inline in `defineInput`, as below: a `const` that holds the list widens its type and is refused.
+
+```ts
+import { defineInput, elementChildrenSchema, BaseFieldSchema } from '@schema-engine/forms';
+import * as z from 'zod/mini';
+
+const TabsSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('tabs'),
+	elements: elementChildrenSchema.check(z.minLength(1)),
+});
+
+const GroupSchema = z.extend(BaseFieldSchema, {
+	$type: z.literal('group'),
+	elements: elementChildrenSchema,
+});
+
+export const GroupRegistration = defineInput({
+	$type: 'group',
+	schema: GroupSchema,
+	childPaths: [{ keys: ['elements'], list: true }],
+	metadata: { name: 'Group', category: 'input' },
+	render: () => null,
+});
+
+export const TabsRegistration = defineInput({
+	$type: 'tabs',
+	schema: TabsSchema,
+	childPaths: [{ keys: ['elements'], list: true, accepts: ['tab'] }],
+	metadata: { name: 'Tabs', category: 'input' },
+	render: () => null,
+});
+```
+
+- A schema that declares `elements` and a registration without `childPaths` does not compile, and the error names `elementsWithoutChildPaths` and the `$type`. That is every 0.5 container written as `defineInput` with a schema that declares `elements` and no child path, and a `defineStatic` whose schema declares `elements`.
+- `containerKind` only says how the children make the value (`'object'` or `'array'`), so a container written with a Valibot or a hand-written schema declares `childPaths` too, and `containerKind` without `childPaths` throws when the engine is built. `value` is required exactly when there is no `childPaths`: a container that declares one throws.
+- Forms reads one path, `['elements']`, and only under an input: `createFormEngine` throws for a `static` element with `childPaths`, and for any other key or more than one path. A static layout element that holds `elements` becomes `defineInput` with `childPaths`.
+- A `list` container takes a list: a form that writes one object where `elements` goes is the issue `registry/not-a-list` at the `elements` key, where it was silently dropped before. An element outside `accepts` is `registry/not-accepted` at its `$type`.
+- Children are checked as the author wrote them, with the registry's rules. A container schema that drops, renames or resizes `elements`, or defaults it to a list that holds elements, throws `RegistryError` `'schema-breaks-child-path'`, and a transform that reorders the children is ignored. An element whose schema drops or changes its `$type`, or returns something that is not an object, throws `'schema-changes-type'` instead of being a document issue.
+- The default `fieldSet` and `arrayElements` contracts, and the elements of Forms React and Forms Radiant that spread them, declare `childPaths` already, so a copied shadcn fieldset or array item needs no change. A custom widget built on `ArrayElementConfigSchema` or `FieldSetConfigSchema` adds `childPaths`.
+- `ElementChildPaths` is exported as a type.
+
+### A form's issues come in one pass, with the registry's codes
+
+`validateForm` runs forms' checks (names, rules, grid, appearance) on every element whose own schema passed, even when another element failed, and checks the children of an element that has an issue. The order is the registry's issues first, then forms', parent before children, in document order. An element with an issue still counts for grid placement, payload key collisions and the fields a later step's constraint may read.
+
+- A top-level element that is not an object, or has no `$type`, is an issue of that element (`registry/not-an-object` at the element, `registry/missing-type` at its `$type`) beside the issues of every other element, and no longer an issue of the whole form that stopped every other check. A cycle is reported at its first repeat.
+- An entry of `actions` (the form's or a step's) with no registered `$type`, an empty one included, is that entry's issue, and no longer an issue of the whole form that stopped every other check.
+- A form issue from the registry has `code` and `params` (`{ received }` for an unregistered `$type`), so an editor can localize it like a schema issue. An issue the forms engine finds itself still has neither.
+- An element in a form that holds `elements` but declares no child path is an issue at its `elements` key (`Element 'note' declares no child path, so it cannot hold elements.`).
+
+### JSON Schema targets use the Standard names
+
+This is the breaking spelling change. `generateFormConfigSchema`, `generateJSONSchemaCollection` and `generateActionConfigSchema` take a `JSONSchemaTarget` from `@schema-engine/registry`: `'draft-2020-12'` (the default), `'draft-07'`, `'draft-04'` or `'openapi-3.0'`. Zod's older spellings `'draft-7'` and `'draft-4'` are not targets, and any other target, a misspelling included, throws before a schema is converted. The Standard converters of `getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` throw the same way, where they handed the string to Zod. `submissionSchema(config)` writes `'draft-2020-12'`, `'draft-07'` and `'openapi-3.0'`.
+
+```diff
+- engine.generateFormConfigSchema({ target: 'draft-7' });
+- engine.generateJSONSchemaCollection({ target: 'draft-4' });
++ engine.generateFormConfigSchema({ target: 'draft-07' });
++ engine.generateJSONSchemaCollection({ target: 'draft-04' });
+```
+
+A `'draft-04'` export names its collection entries and its form config document by `id`, the identifier a draft-04 validator reads, where it wrote `$id`.
+
+### The export types the children of every container
+
+The `elements` of every container are typed by what the container accepts, whichever library wrote its schema. Before, only a Zod schema whose `elements` was a plain array, a pipe or a prefault was typed. See [How the children of a container are typed](/docs/forms/api-reference#how-the-children-of-a-container-are-typed).
+
+- Each child is `{ anyOf: [{ $ref }, ...] }` over the `accepts` of the container's child path (every element of the engine without `accepts`), and `required`, `minItems` and `maxItems` stay. Each child refers to the definition of an element (`#/$defs/element:tab`, or its URI in a collection), not to a shared `__schema0` definition.
+- An element, action or recipe whose schema the export cannot read (a Valibot schema, a hand-written one) is a definition of the form config and an entry of `generateJSONSchemaCollection()`, as one that exports itself is. `generateActionConfigSchema(type)` and `getActionConfigStandardSchema(type)` answer for such an action with its `$type` and the `id`, `enabled` and `triggers` every action carries, where they returned `undefined`.
+- Two mistakes throw a `RegistryError` when you export, not when the engine is built: `'unknown-accepted-type'` when `accepts` names a `$type` no element registers, and `'unreachable-child-path'` when the container's `elements` is nullable or behind `allOf`, a union or a reference.
+
+### One import path per export
+
+`@schema-engine/forms` and `@schema-engine/forms/recipes` no longer re-export what another package declares.
+
+| Before                                                                   | After                                                             |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `import { formatIssuePath } from '@schema-engine/forms'`                 | `import { formatIssuePath } from '@schema-engine/registry'`       |
+| `import type { RecipeMetadata } from '@schema-engine/forms/recipes'`     | `import type { RecipeMetadata } from '@schema-engine/layout'`     |
+| `import type { RecipeSlotDefaults } from '@schema-engine/forms/recipes'` | `import type { RecipeSlotDefaults } from '@schema-engine/layout'` |
+| `import type { RecipeViewSchema } from '@schema-engine/forms/recipes'`   | `import type { RecipeViewSchema } from '@schema-engine/layout'`   |
+
+`defineRecipeSpec` stays on `@schema-engine/forms/recipes` and `DEFAULT_WIZARD_RECIPE` on `@schema-engine/forms`.
+
+## Forms React
+
+`@schema-engine/forms-react/hooks` and `@schema-engine/forms-react/contexts` no longer re-export what `@schema-engine/forms` declares, and `SubmissionState` and `ViewContextValue`, which renamed two of those, are gone. `ViewProvider` stays on `contexts` and the hooks stay on `hooks`.
+
+| Before (from `@schema-engine/forms-react/hooks`)                                                                                   | After                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `FORM_ROOT`                                                                                                                        | `FORM_ROOT` from `@schema-engine/forms/state-container`    |
+| `FieldArrayValue`, `FormIssueFormatter`, `FormStateError`, `FormStateErrorsInput`, `FormStateIssue`, `FormSubmissionIssue` (types) | the same names from `@schema-engine/forms/state-container` |
+| `FormValues`, `FormSubmitHelpers`, `SubmissionStatus` (types)                                                                      | the same names from `@schema-engine/forms`                 |
+| `SubmissionState` (type)                                                                                                           | `FormSubmissionState` from `@schema-engine/forms`          |
+
+| Before (from `@schema-engine/forms-react/contexts`) | After                                              |
+| --------------------------------------------------- | -------------------------------------------------- |
+| `ViewContextValue` (type)                           | `ViewModel` from `@schema-engine/forms/recipes`    |
+| `ViewNavigation`, `ViewStep` (types)                | the same names from `@schema-engine/forms/recipes` |
+
+```diff
+- import { FORM_ROOT, type FieldArrayValue, type SubmissionState } from '@schema-engine/forms-react/hooks';
++ import { FORM_ROOT, type FieldArrayValue } from '@schema-engine/forms/state-container';
++ import type { FormSubmissionState } from '@schema-engine/forms';
+```
+
+A copied shadcn `form-submission-alert.tsx` imports `FORM_ROOT` from `@schema-engine/forms/state-container`: run `shadcn add` for the item again, or change the import by hand.
+
+## Forms Radiant
+
+`@schema-engine/forms-radiant` no longer re-exports `defineRecipeSpec` and `DEFAULT_WIZARD_RECIPE`. `defineRecipe` stays on `@schema-engine/forms-radiant`.
+
+```diff
+- import { defineRecipe, defineRecipeSpec, DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms-radiant';
++ import { defineRecipe } from '@schema-engine/forms-radiant';
++ import { defineRecipeSpec } from '@schema-engine/forms/recipes';
++ import { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms';
+```
+
+## Layout
+
+Nothing in Layout breaks except the `zod` peer range above. Two additions:
+
+- `createRecipeRegistry(protocol, recipes, options?)` takes the registry options of `@schema-engine/registry` as a third argument, such as `{ hint }`, the sentence that ends the message of an unregistered recipe `$type`. See [Recipe protocol](/docs/layout/recipe-protocol).
+- `findSubgridChainBreaks(root)` from `@schema-engine/layout/testing` is a DOM check for a renderer's tests, which returns one sentence per break in a subgrid's chain to its grid. The main entry keeps no DOM types. See [Write a renderer](/docs/renderer-authors/write-a-renderer).
+
+The built package shares its code between its entries, so a module-level value is one value whichever entry imports it.
+
+## After the upgrade
+
+Run the type check, then the tests. Two changes only fail at run time: a registration whose schema contradicts its child paths (`'schema-changes-type'`, `'schema-breaks-child-path'`, thrown by `safeParseTree` and `validateForm`), and a document that writes one object where a container declares a list (the issue `registry/not-a-list`). A container without `list: true` and a target spelled `'draft-7'` or `'draft-4'` are type errors for a typed caller, and throw for an untyped one. Each error names the `$type` and the key it is about.

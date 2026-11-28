@@ -230,4 +230,4 @@ action and `onSubmit`), the runtime calls its `navigate` option once with the `r
 submit result that set one. `navigate` defaults to `location.assign` where there is a `location` and does nothing on
 a server, and a renderer passes its own: React's `navigate` prop, Radiant's `FormRenderer` `navigate` prop. A redirect
 replaces the native post of a Radiant form with `action`.
-Both renderers execute actions through `ActionDispatcher.dispatch` or `dispatchSync` from `@schema-engine/actions`; the actions of a validated form are already parsed, as `parseActions` returns them. See the [actions package](../../../actions/README.md#parallel-groups-and-results) for cancellation and result semantics.
+Both renderers execute actions through `ActionDispatcher.dispatch` or `dispatchSync` from `@schema-engine/actions`; the actions of a validated form are already parsed, as `parseActions` returns them. See the [actions package](https://schema-engine.com/docs/actions/sequences-and-cancellation) for cancellation and result semantics.

@@ -124,6 +124,7 @@ The [documentation](https://schema-engine.com/docs/schema-engine/introduction) r
 - **[Forms](https://schema-engine.com/docs/forms/overview)**, **[Forms React](https://schema-engine.com/docs/forms-react/overview)** and **[Forms Radiant](https://schema-engine.com/docs/forms-radiant/overview)**
 - **[Layout](https://schema-engine.com/docs/layout/overview)**: grid, appearance axes and theming
 - **[Examples](https://schema-engine.com/docs/examples/overview)**: tested examples with the files to copy
+- **[Upgrade from 0.5 to 0.6](https://schema-engine.com/docs/schema-engine/migrate-0-5-to-0-6)**: the breaking changes, with the code before and after
 - **[shadcn registry sources](./registry/README.md)**: the optional React fields and recipes for Forms React
 - **[Contributing](./CONTRIBUTING.md)**: the pre-commit hook and how to run its checks locally
 

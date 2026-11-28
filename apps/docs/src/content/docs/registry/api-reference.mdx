@@ -300,7 +300,7 @@ The result is `{ success: true, tree }`, or `{ success: false, issues, tree? }` 
 
 On failure, `tree` is a `PartialNode`, present exactly when the root's own schema passed (absent when the root failed, was not accepted or has no registration). It holds every node whose own schema passed and whose parent was kept: a node that failed is left out and its children are not walked, and a child its slot does not accept and the repeat of a cycle are left out too. A partial node has `output`, its own schema output (what `safeParseNode` returned), and no `data`: the parsed document exists only when there are no issues, so reading `tree.data` on the failure branch is a type error. A slot of `output` holds what the document had there, so read the children from `children`, never from `output`. `children` has one `{ keys, nodes }` entry per declared child path, in declaration order, with the kept children in document order, each with its own `path`; a failed child is missing, so the issues say where it was. A child is any `PartialNode<TAll>`, narrowed by its `$type`, not by `accepts`. A `RegistryError` still throws, partial walk or not. See [Check what parsed when the document has issues](/docs/registry/resolve-a-document#check-what-parsed-when-the-document-has-issues).
 
-`children` has one entry per child path the registration declares, in declaration order, `nodes` empty when the node holds none there. Find an entry by its `keys` (`children.find(({ keys }) => keys.join('.') === 'engine.controls')?.nodes`), never by index; code that names a position reads `data`, which is typed per path. For a registry typed by its registrations, the root narrows when `accepts` is a literal list (not when the options type only may have `accepts`, and not for `{ path }` alone), `data` types each child path by what the path accepts (a list stays a list, optional stays optional, an `unknown` slot becomes `child | child[] | undefined`, and `null` is removed from a nullable slot), and the `nodes` of each `children` entry are typed by its `accepts`. A registry typed as `BaseRegistration` keeps `data: unknown`. An `accepts` name the lookup lacks is a type error (`acceptsUnknownType: 'knob'`), and so is a registration whose schema output declares no `$type` (`schemaOutputWithoutType: 'card'`). Two registries in one lookup share one `$type` namespace: the lookup decides which wins when both answer (`a.get(type) ?? b.get(type)` prefers `a`).
+`children` has one entry per child path the registration declares, in declaration order, `nodes` empty when the node holds none there. Find an entry by comparing its `keys` element by element (`children.find(({ keys }) => keys.length === 2 && keys[0] === 'engine' && keys[1] === 'controls')?.nodes`), never by index and never by joining them, since `['engine.controls']` and `['engine', 'controls']` are two paths; code that names a position reads `data`, which is typed per path. For a registry typed by its registrations, the root narrows when `accepts` is a literal list (not when the options type only may have `accepts`, and not for `{ path }` alone), `data` types each child path by what the path accepts (a list stays a list, optional stays optional, an `unknown` slot becomes `child | child[] | undefined`, and `null` is removed from a nullable slot), and the `nodes` of each `children` entry are typed by its `accepts`. A registry typed as `BaseRegistration` keeps `data: unknown`. An `accepts` name the lookup lacks is a type error (`acceptsUnknownType: 'knob'`), and so is a registration whose schema output declares no `$type` (`schemaOutputWithoutType: 'card'`). Two registries in one lookup share one `$type` namespace: the lookup decides which wins when both answer (`a.get(type) ?? b.get(type)` prefers `a`).
 
 | Value at the child path                                | Result                                                                                           |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -320,7 +320,7 @@ On failure, `tree` is a `PartialNode`, present exactly when the root's own schem
 | Every node is valid         | `{ success: true, tree }`                                                             |
 | A node's own schema fails   | Its issues; the node is not walked further, but its siblings still are                |
 | A node that contains itself | `registry/contains-itself` at the node reached again: `A node cannot contain itself.` |
-| Any issue anywhere          | `{ success: false, issues }` with all of them, and no tree                            |
+| Any issue anywhere          | `{ success: false, issues, tree? }` with all of them, and the nodes that parsed       |
 
 The same object under two parents (not a cycle) is parsed twice, and a registration may accept itself (a section in a section). Each child is parsed once, from the authored value, and its data is written into a copy of the node's schema output, never into the authored document: the output shares references with the input (a loose object returns the authored array), so the root and each object on a path are copied once, and two paths with a shared prefix share one copy.
 
@@ -539,7 +539,9 @@ type JSONSchemaPlacement =
 interface JSONSchemaEmbedder {
 	/** The schema to write in place of `own`, which is not changed. */
 	embed(own: JSONSchemaObject): JSONSchemaObject;
-	/** Adds the definitions `embed` hoisted to the finished document or collection, in place. */
+	/** The schema to write as the definition `name` of a document, or as the entry `name` of a collection. */
+	embedDefinition(own: JSONSchemaObject, name: string): JSONSchemaObject;
+	/** Adds the definitions `embed` and `embedDefinition` moved to the finished document or collection, in place. */
 	finish(written: JSONSchemaObject): JSONSchemaObject;
 }
 ```
@@ -579,6 +581,47 @@ export const documentSchema = exportTreeSchema(blocks, {
 			: readStandardJSONSchema(schema)?.[io]({ target }),
 });
 ```
+
+### Write the JSON Schema of your own domain
+
+A domain package that writes JSON Schema itself composes the same pieces `exportTreeSchema` does: the embedder moves each registration's schema into the document, `replaceChildSlot` types the slot of a child path, and `definitionRef` writes the reference to a definition for the target.
+
+```ts title="group-document.ts"
+import type { JSONSchemaObject } from '@schema-engine/registry';
+import {
+	assertJSONSchemaTarget,
+	createJSONSchemaEmbedder,
+	definitionRef,
+	definitionsKeyword,
+	idKeyword,
+	replaceChildSlot,
+	startsResource,
+} from '@schema-engine/registry/json-schema';
+
+export function groupDocument(target: string, group: JSONSchemaObject, leaf: JSONSchemaObject): JSONSchemaObject {
+	assertJSONSchemaTarget(target);
+	if (startsResource(group, target)) {
+		throw new Error(
+			`The schema of 'group' sets ${idKeyword(target)}, so a reference in its slot would resolve against it.`,
+		);
+	}
+	const embedder = createJSONSchemaEmbedder(target, { kind: 'document' });
+	const groupDefinition = embedder.embedDefinition(group, 'group');
+	const leafDefinition = embedder.embedDefinition(leaf, 'leaf');
+	replaceChildSlot(
+		groupDefinition,
+		{ $type: 'group', keys: ['children'], list: true },
+		{ anyOf: [{ $ref: definitionRef(target, 'leaf') }] },
+		{ target },
+	);
+	return embedder.finish({
+		[definitionsKeyword(target)]: { group: groupDefinition, leaf: leafDefinition },
+		$ref: definitionRef(target, 'group'),
+	});
+}
+```
+
+`assertJSONSchemaTarget` narrows the open `target` string. After `replaceChildSlot`, `group` accepts only a list of `leaf` definitions at `children`. The reference is written for the document, so the container must not be a resource of its own: a schema that sets `$id` (`id` for draft-04) makes the `$ref` in its slot resolve against that identifier and not against the document, and a validator fails to find the definition. `startsResource` finds it, and the recipe refuses it as `exportTreeSchema` does. A `'draft-2020-12'`, `'draft-07'` or `'draft-04'` document resolves every reference; `'openapi-3.0'` has no definitions keyword to resolve them against, so write for a draft.
 
 ## YAML subpath
 

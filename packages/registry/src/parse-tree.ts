@@ -14,8 +14,8 @@ import type { ChildPath } from './types.js';
  * path replaced by the data of the children found there, so it is the same object the parent's data holds at that
  * position, and `tree.data` is the whole parsed document. `children` has one entry per child path the registration
  * declares, in declaration order, each `{ keys, nodes }` with `nodes` empty when the node holds none there, in document
- * order. Find an entry by its `keys`, never by index (`children.find(({ keys }) => keys.join('.') === 'sections')`), or
- * read `data`, which is typed per path. `TAll` is the whole union of registrations, so a child is typed by what its
+ * order. Find an entry by its `keys`, compared key by key and never by index or by a joined string (`['a.b']` and
+ * `['a', 'b']` are two paths), or read `data`, which is typed per path. `TAll` is the whole union of registrations, so a child is typed by what its
  * path accepts, or by the whole union without `accepts`.
  */
 export type ParsedNode<

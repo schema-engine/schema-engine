@@ -81,6 +81,7 @@ export const Contact = () => <FormRenderer engine={engine} config={form} onSubmi
 - [Hooks](https://schema-engine.com/docs/forms-react/hooks) and [View recipes](https://schema-engine.com/docs/forms-react/layouts).
 - [Other React state](https://schema-engine.com/docs/forms-react/other-react-state): mount a form in a panel that holds other state.
 - [API reference](https://schema-engine.com/docs/forms-react/api-reference).
+- [Upgrade from 0.5 to 0.6](https://schema-engine.com/docs/schema-engine/migrate-0-5-to-0-6): the breaking changes, with the code before and after.
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License

@@ -268,4 +268,4 @@ The view schema is a Standard Schema typed by the slots, so a document is checke
 - A bad value is reported at the slot and the key: `footer: { align: 'middle' }` fails at `['footer', 'align']`.
 - A pick on an axis a slot does not declare is reported at `['header', 'appearance', 'size']`.
 
-A hand-written registration needs no `bindRecipe`: it passes `createRecipeRegistry` with any Standard Schema as its `schema`, and it may leave out `slotSchemas`. The forms JSON Schema export lists a Zod slot in full and any other slot as an open object, with the appearance axes the recipe declares for it.
+A hand-written registration needs no `bindRecipe`: it passes `createRecipeRegistry` with any Standard Schema as its `schema`, and it may leave out `slotSchemas`. The forms JSON Schema export lists a Zod slot in full, a slot that sets `~standard.jsonSchema` as what it returns, and any other slot as an open object with the appearance axes the recipe declares for it.

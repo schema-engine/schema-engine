@@ -68,6 +68,7 @@ export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => vo
 - [Form controls](https://schema-engine.com/docs/forms-radiant/form-controls): native events and custom controls.
 - [Server rendering and engine binding](https://schema-engine.com/docs/forms-radiant/server-rendering): assign the engine to server-rendered forms.
 - [API reference](https://schema-engine.com/docs/forms-radiant/api-reference).
+- [Upgrade from 0.5 to 0.6](https://schema-engine.com/docs/schema-engine/migrate-0-5-to-0-6): the breaking changes, with the code before and after.
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License

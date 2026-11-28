@@ -19,7 +19,7 @@ This file is the router. It defines the concepts once; the references assume the
 ## Core concepts
 
 - **registration**: `{ $type, schema, metadata, ... }`, where `$type` is the stable key, `schema` is any Standard Schema that describes its config, and `metadata` names it. Elements, recipes, actions, validation rules and appearance axes are all registrations.
-- **registry**: a read-only registry, `createRegistry(kind, registrations)` from `@schema-engine/registry`, built once from a list. The last registration of a `$type` wins without a warning, which is how you replace a built-in; pass `{ duplicates: 'error' }` to make a repeat a build error instead.
+- **registry**: a read-only registry, `createRegistry(kind, registrations)` from `@schema-engine/registry`, built once from a list, or `createMutableRegistry(kind)` for registrations that arrive at runtime; both are read the same way. The last registration of a `$type` wins without a warning, which is how you replace a built-in; pass `{ duplicates: 'error' }` to make a repeat a build error instead.
 - **document**: serializable data whose every node names a registration by `$type`. It is checked against the registrations at the boundary, so what is rendered or run has passed its schema.
 - **action**: a registration with `execute` that runs on a trigger. Actions run as a sequence, an inner array is a parallel group, and a failure that sets `shouldContinue: false` stops what follows and cancels the group's siblings through their `signal`.
 
@@ -34,14 +34,14 @@ Outcomes use one vocabulary: a check or a submission ends `passed`, `invalid` or
 
 ## Packages
 
-| Package                        | Role                                                                                                                                      |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/registry`      | The registration contract and read-only registries every package builds on, and `/yaml` for documents authored as YAML. Ships this router |
-| `@schema-engine/actions`       | Actions: `parseActions`, and a dispatcher that runs a sequence with parallel groups, cancellation and results                             |
-| `@schema-engine/layout`        | Domain-neutral grid, appearance axes, layout themes and the recipe protocol                                                               |
-| `@schema-engine/forms`         | The forms engine: config, validation, constraints, the container, the runtime                                                             |
-| `@schema-engine/forms-react`   | React renderer: `FormRenderer` and the hooks. You write the widgets; ready-made ones come from the optional shadcn registry               |
-| `@schema-engine/forms-radiant` | Radiant renderer: `se-form-instance`, `FormController`, widgets and recipes in the package                                                |
+| Package                        | Role                                                                                                                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@schema-engine/registry`      | The registration contract and the registries every package builds on, `safeParseTree` and `exportTreeSchema` for a whole document, and `/yaml` for documents authored as YAML. Ships this router |
+| `@schema-engine/actions`       | Actions: `parseActions`, and a dispatcher that runs a sequence with parallel groups, cancellation and results                                                                                    |
+| `@schema-engine/layout`        | Domain-neutral grid, appearance axes, layout themes and the recipe protocol                                                                                                                      |
+| `@schema-engine/forms`         | The forms engine: config, validation, constraints, the container, the runtime                                                                                                                    |
+| `@schema-engine/forms-react`   | React renderer: `FormRenderer` and the hooks. You write the widgets; ready-made ones come from the optional shadcn registry                                                                      |
+| `@schema-engine/forms-radiant` | Radiant renderer: `se-form-instance`, `FormController`, widgets and recipes in the package                                                                                                       |
 
 A symbol has one import path. `@schema-engine/forms` has these entries: `.` (the engine, the runtime and the types), `/state-container` (the container and its selectors), `/csrf`, `/server-errors`, `/recipes`, `/recipes/built-in`, `/browser` (browser-side actions such as auto-save), `/testing` (conformance suites; they need vitest) and `/agent-tool` (experimental).
 

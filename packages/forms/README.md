@@ -64,6 +64,7 @@ const result = engine.safeValidateForm({
 - [Form state](https://schema-engine.com/docs/forms/form-state), [Wizard](https://schema-engine.com/docs/forms/wizard) and [Actions in forms](https://schema-engine.com/docs/forms/actions).
 - [Issue text](https://schema-engine.com/docs/forms/issue-text), [Server errors](https://schema-engine.com/docs/forms/server-errors) and [CSRF](https://schema-engine.com/docs/forms/csrf).
 - [Agent tools](https://schema-engine.com/docs/forms/agent-tool) and [API reference](https://schema-engine.com/docs/forms/api-reference).
+- [Upgrade from 0.5 to 0.6](https://schema-engine.com/docs/schema-engine/migrate-0-5-to-0-6): the breaking changes, with the code before and after.
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License

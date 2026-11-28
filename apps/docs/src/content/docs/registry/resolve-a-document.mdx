@@ -126,7 +126,7 @@ export function parsedNodes(document: unknown): string[] {
 
 ## The render step
 
-Rendering takes a resolved tree and maps each node to output. It does no validation, because resolving has already done it. A `ParsedNode` holds the `registration`, the `data` its schema returned with its children's data in place, the `path` of the node in the document and its `children`: one `{ keys, nodes }` per child path the registration declares, in declaration order, with `nodes` empty when the node holds none there. A tool that wants one path finds its entry by `keys`, never by index:
+Rendering takes a resolved tree and maps each node to output. It does no validation, because resolving has already done it. A `ParsedNode` holds the `registration`, the `data` its schema returned with its children's data in place, the `path` of the node in the document and its `children`: one `{ keys, nodes }` per child path the registration declares, in declaration order, with `nodes` empty when the node holds none there. A tool that wants one path finds its entry by comparing `keys` element by element, never by index and never by joining them (`['a.b']` and `['a', 'b']` are two paths):
 
 ```ts title="render.ts"
 import type { ParsedNode } from '@schema-engine/registry';
@@ -138,8 +138,11 @@ export function render(node: ParsedNode<Registration>): string {
 	return block.render(node.data, children);
 }
 
-export function childrenAt(node: ParsedNode<Registration>, dottedKeys: string): ParsedNode<Registration>[] {
-	return node.children.find(({ keys }) => keys.join('.') === dottedKeys)?.nodes.slice() ?? [];
+export function childrenAt(node: ParsedNode<Registration>, keys: readonly string[]): ParsedNode<Registration>[] {
+	const entry = node.children.find(
+		(child) => child.keys.length === keys.length && child.keys.every((key, i) => key === keys[i]),
+	);
+	return entry?.nodes.slice() ?? [];
 }
 ```
 
@@ -212,6 +215,37 @@ parsed: stack at children[1]
 ```
 
 Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way. An issue the engine creates has a `code` (`registry/not-accepted` here, with `expected` the list and `received` the `$type`), so a UI can branch on it without reading the message; an issue from a schema is the schema library's own. The `parsed:` lines come from the partial tree: the failing badge and the `chip` are left out, and the second `stack` is kept, with none of its children.
+
+## A slot that holds a list
+
+A child path holds one node or a list of nodes. Say `list: true` when it is always a list: a value that is not an array is then the issue `registry/not-a-list` at the path, `exportTreeSchema` writes an open slot as an array, and `tree.data` types the slot as an array. A schema that lets any value through (`z.optional(z.unknown())`) is where this matters, since the schema would not refuse an object itself. A schema typed as no array (an object, a string) with `list: true` is a type error (`listPathNotAnArray`).
+
+```ts title="rows.ts"
+import * as z from 'zod/mini';
+import { createRegistry, formatIssuePath, safeParseTree } from '@schema-engine/registry';
+
+const rows = createRegistry('Row', [
+	{
+		$type: 'row',
+		schema: z.object({ $type: z.literal('row'), cells: z.optional(z.unknown()) }),
+		metadata: { name: 'Row' },
+		childPaths: [{ keys: ['cells'], accepts: ['cell'], list: true }],
+	},
+	{
+		$type: 'cell',
+		schema: z.object({ $type: z.literal('cell'), text: z.string() }),
+		metadata: { name: 'Cell' },
+	},
+]);
+
+export function describeRow(document: unknown): string[] {
+	const parsed = safeParseTree(rows, document, { accepts: ['row'] });
+	if (parsed.success) return (parsed.tree.data.cells ?? []).map((cell) => cell.text);
+	return parsed.issues.map((issue) => `${formatIssuePath(issue.path)}: ${issue.code} ${issue.message}`);
+}
+```
+
+A row with its cells in a list reads its texts, and a row without `cells` reads none. A row whose `cells` is one cell object reports `cells: registry/not-a-list Expected a list of nodes.`
 
 ## The JSON Schema of the document
 

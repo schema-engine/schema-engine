@@ -1,6 +1,6 @@
 # @schema-engine/registry
 
-The registration contract and the read-only registries that hold registrations by `$type`. It is the base of Schema Engine's common language: a document names registrations by `$type`, a registry resolves each one, and the registration's schema validates its configuration. It has no UI and no schema-library dependency.
+The registration contract and the registries that hold registrations by `$type`, read-only from a list or mutable for registrations that arrive at runtime. It is the base of Schema Engine's common language: a document names registrations by `$type`, a registry resolves each one, and the registration's schema validates its configuration. It has no UI and no schema-library dependency.
 
 ## Install
 
@@ -139,6 +139,7 @@ Building or binding a registry from registrations that break a rule throws a `Re
 - [Read-only and mutable registries](https://schema-engine.com/docs/registry/registries): `createRegistry` and `createMutableRegistry`.
 - [Resolve a document](https://schema-engine.com/docs/registry/resolve-a-document): validate a whole tree of nodes with `safeParseTree`, render it and write its JSON Schema with `exportTreeSchema`.
 - [API reference](https://schema-engine.com/docs/registry/api-reference): every export.
+- [Upgrade from 0.5 to 0.6](https://schema-engine.com/docs/schema-engine/migrate-0-5-to-0-6): the breaking changes, with the code before and after.
 - [For AI agents](https://schema-engine.com/docs/schema-engine/agent-skill): the package ships its part of the agent skill.
 
 ## License
