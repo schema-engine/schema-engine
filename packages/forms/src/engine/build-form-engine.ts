@@ -310,17 +310,21 @@ function registerSchemaMetadata(
 /**
  * Rejects an axis a registration declares that the layout theme's axis registry does not hold, so a
  * typo such as `'sise'` fails the build instead of silently making the axis unsupported.
+ *
+ * @throws {RegistryError} Code `'invalid-declaration'`, with the registration's `kind` and `$type`
  */
 function assertDeclaredAxes(
 	owner: string,
 	axes: readonly string[] | undefined,
 	layout: LayoutTheme,
-	createError: (message: string) => Error,
+	details: { kind: 'Element' | 'Recipe'; $type: string },
 ): void {
 	for (const axis of axes ?? []) {
 		if (!layout.appearance.has(axis)) {
-			throw createError(
+			throw new RegistryError(
+				'invalid-declaration',
 				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${layout.appearance.keys().join(', ')}. Add it with createFormEngine({ layout: { appearance: [...builtInAxes, defineAxis({ $type: '${axis}', ... })] } }).`,
+				details,
 			);
 		}
 	}
@@ -388,16 +392,17 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	});
 
 	for (const element of elementRegistry.all()) {
-		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout, Error);
+		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout, {
+			kind: 'Element',
+			$type: element.$type,
+		});
 	}
 	for (const recipe of recipeRegistry.all()) {
 		for (const [slot, axes] of Object.entries(recipe.appearanceAxes ?? {})) {
-			assertDeclaredAxes(
-				`Recipe '${recipe.$type}' slot '${slot}'`,
-				axes,
-				layout,
-				(message) => new RegistryError('invalid-declaration', message, { kind: 'Recipe', $type: recipe.$type }),
-			);
+			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, layout, {
+				kind: 'Recipe',
+				$type: recipe.$type,
+			});
 		}
 	}
 

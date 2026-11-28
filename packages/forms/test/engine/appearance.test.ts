@@ -188,7 +188,16 @@ describe('registration axis declarations', () => {
 			metadata: { name: 'Typo', category: 'input' },
 			render: () => null,
 		});
-		expect(() => createFormEngine({ elements: [typo] })).toThrowError(/typo.*unknown appearance axis 'sise'/s);
+		const build = () => createFormEngine({ elements: [typo] });
+		expect(build).toThrow(RegistryError);
+		expect(build).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Element',
+				$type: 'typo',
+				message: expect.stringContaining("Element 'typo' declares unknown appearance axis 'sise'"),
+			}),
+		);
 	});
 
 	test('an overridden element that declares an unknown axis does not fail the build', () => {
