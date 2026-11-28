@@ -58,7 +58,7 @@ or a list of paths) and `useFieldArray` cover observation and array editing.
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `useFormField(config)`                       | An uncontrolled field: the state (`error`, `warning`, `issue`, `invalid`, `isTouched`, `isDirty`, `isValidating`), `required`, `disabled`, `defaultValue`, and the props `fieldProps`, `labelProps`, `errorProps` and `containerStyles` |
 | `useFormField(config, { controlled: true })` | The same, plus `value`, `onChange(value)` and `onBlur()`. `fieldProps` has no change handler                                                                                                                                            |
-| `useFormField(path)`                         | The state and texts of a path alone (`FORM_ROOT` is the form), with no value. `useWatch(path)` reads the value                                                                                                                          |
+| `useFormField(path)`                         | The state and texts of a path alone (`FORM_ROOT`, from `@schema-engine/forms/state-container`, is the form), with no value. `useWatch(path)` reads the value                                                                            |
 
 `fieldProps` carries `ref`, `id`, `name`, `required`, `disabled`, `aria-*`, `onChange` and `onBlur`. A widget receives its configuration as props, so it takes the config itself: `function TextField(config: TextFieldConfig)`.
 

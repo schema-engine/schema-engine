@@ -5,6 +5,8 @@ import ts from 'typescript';
 interface EntrySymbol {
 	/** The declaration the export resolves to, as `<file>#<declared name>`. */
 	readonly declaration: string;
+	/** Whether that declaration is a file of the package itself, not one of another package or a library. */
+	readonly isOwn: boolean;
 	/** The name the entry exports it under, which an importer writes. */
 	readonly exportedAs: string;
 	/** Whether an importer gets a runtime binding (a function, class or constant), not only a type. */
@@ -60,10 +62,12 @@ function readExportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 			checker.getExportsOfModule(moduleSymbol).map((exported) => {
 				const target = exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
 				const declaration = target.declarations?.[0]?.getSourceFile().fileName ?? 'unknown';
+				const relative = path.relative(packageDir, declaration);
 				const typeOnly =
 					exported.declarations?.some((node) => ts.isTypeOnlyImportOrExportDeclaration(node)) ?? false;
 				return {
-					declaration: `${path.relative(packageDir, declaration)}#${target.name}`,
+					declaration: `${relative}#${target.name}`,
+					isOwn: !relative.startsWith('..') && !relative.split(path.sep).includes('node_modules'),
 					exportedAs: exported.name,
 					isValue: !typeOnly && (target.flags & ts.SymbolFlags.Value) !== 0,
 				};
@@ -88,6 +92,23 @@ export function symbolsSharedByEntries(packageDir: string): string[] {
 	return [...owners]
 		.filter(([, entries]) => entries.length > 1)
 		.map(([symbol, entries]) => `${symbol}: ${entries.join(', ')}`);
+}
+
+/**
+ * The symbols a package's entries export that another package or a library declares, each as
+ * `<entry>: <exported name> (<declaration>)`, so a symbol has one import path: its owner's.
+ *
+ * @remarks
+ * A renamed re-export (`export { a as b }`) of such a symbol is listed under the name an importer writes.
+ *
+ * @param packageDir - The package's directory, with its `package.json` and `tsconfig.json`
+ */
+export function symbolsFromOtherPackages(packageDir: string): string[] {
+	return [...exportsByEntry(packageDir)].flatMap(([entry, symbols]) =>
+		symbols
+			.filter(({ isOwn }) => !isOwn)
+			.map(({ exportedAs, declaration }) => `${entry}: ${exportedAs} (${declaration})`),
+	);
 }
 
 /** The names a package exports from any of its entries, values and types, sorted and without repeats. */

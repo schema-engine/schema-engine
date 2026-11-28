@@ -3,7 +3,6 @@ import type { RecipeMetadata, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } fr
 import type { RecipeKind, RecipeSlot } from './protocol';
 
 export type { RecipeKind, RecipeSlot } from './protocol';
-export type { RecipeMetadata, RecipeSlotDefaults } from '@schema-engine/layout';
 
 export type RecipeSlotSchemas = ProtocolRecipeSlotSchemas<RecipeSlot>;
 

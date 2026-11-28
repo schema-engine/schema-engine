@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { act, render } from '@testing-library/react';
-import { useFormContext, FORM_ROOT } from '../../src/hooks/form-state';
+import { FORM_ROOT } from '@schema-engine/forms/state-container';
+import { useFormContext } from '../../src/hooks/form-state';
 import { useFormRuntime } from '../../src/hooks/use-form-context';
 import type { FormContextValue } from '../../src/hooks/form-state';
 import { ContainerHarness, createTestContainer, runtimeOf } from '../utils/container-harness';

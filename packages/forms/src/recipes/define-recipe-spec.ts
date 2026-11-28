@@ -6,8 +6,6 @@ import {
 import { formRecipeProtocol, type RecipeKind, type RecipeSlot } from './protocol';
 import type { RecipeSlotSchemas, RecipeSpec } from './types';
 
-export type { RecipeViewSchema } from '@schema-engine/layout';
-
 /**
  * Declares a form recipe's `$type`, kind, slot schemas, and metadata.
  *

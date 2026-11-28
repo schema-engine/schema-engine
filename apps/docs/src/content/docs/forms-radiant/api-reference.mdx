@@ -68,7 +68,7 @@ The schemas, metadata and value declarations of these elements are the default e
 
 ## Recipes
 
-`radiantRecipes` lists the canonical view recipes that `createRadiantFormEngine` binds: `CardRecipe`, `SplitScreenRecipe`, `HeroBackgroundRecipe`, `BareControlsRecipe`, `WizardRecipe`, `SidebarWizardRecipe`, `CardWizardRecipe`, `HeroWizardRecipe` and `SplitScreenWizardRecipe`. `defineRecipe` binds your own shell and slots to a recipe spec, and `DEFAULT_WIZARD_RECIPE` names the recipe a multi-step form without a `view` falls back to. See [Layouts](/docs/forms-radiant/layouts).
+`radiantRecipes` lists the canonical view recipes that `createRadiantFormEngine` binds: `CardRecipe`, `SplitScreenRecipe`, `HeroBackgroundRecipe`, `BareControlsRecipe`, `WizardRecipe`, `SidebarWizardRecipe`, `CardWizardRecipe`, `HeroWizardRecipe` and `SplitScreenWizardRecipe`. `defineRecipe` binds your own shell and slots to a recipe spec made with `defineRecipeSpec` from `@schema-engine/forms/recipes`. The recipe a multi-step form without a `view` falls back to is `DEFAULT_WIZARD_RECIPE` from `@schema-engine/forms`. See [Layouts](/docs/forms-radiant/layouts).
 
 ## Controllers
 

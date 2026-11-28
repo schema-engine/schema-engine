@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import { selectValue, type FormStateContainer, type FormStateSnapshot } from '@schema-engine/forms/state-container';
 import { useFormStateContext } from './context';
-import type { FormValues } from './types';
+import type { FormValues } from '@schema-engine/forms';
 
 type Target = string | readonly string[] | undefined;
 
