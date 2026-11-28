@@ -19,9 +19,9 @@ import type {
 import { defaultValidations } from './defaults.js';
 import { BaseValidationRuleSchema } from './types.js';
 import { ValidationRuleError } from './errors.js';
-import { globalFetch, type FormFetch } from '@/lib/form-fetch';
-import type { FormValidationIssue } from '@/lib/validate-form/issues';
-import { fromSchemaIssues } from '@/lib/validate-form/schema-issues';
+import { globalFetch, type FormFetch } from '../../lib/form-fetch.js';
+import type { FormValidationIssue } from '../../lib/validate-form/issues.js';
+import { fromSchemaIssues } from '../../lib/validate-form/schema-issues.js';
 import { createValidationContext } from './utils.js';
 
 /** @remarks Rule-specific handlers are checked where a registration is defined, then stored together by rule type. */

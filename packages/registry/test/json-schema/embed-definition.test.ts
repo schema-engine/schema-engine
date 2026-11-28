@@ -308,6 +308,28 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 			}
 		});
 
+		it('reads a pointer whose definitions keyword is percent-encoded as the keyword, and the hoisted reference resolves under Ajv', () => {
+			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
+			const own: JSONSchemaObject = {
+				type: 'object',
+				properties: { title: { $ref: '#/%24defs/title' }, name: { $ref: '#/%24defs/na%6De' } },
+				$defs: { title: { type: 'string' }, name: { type: 'string' } },
+			};
+
+			const definition = embedder.embedDefinition(own, 'text');
+			const written = embedder.finish({
+				$defs: { text: definition },
+				$ref: definitionRef('draft-2020-12', 'text'),
+			});
+
+			expect(definition).toEqual({
+				type: 'object',
+				properties: { title: { $ref: '#/$defs/text.title' }, name: { $ref: '#/$defs/text.name' } },
+			});
+			const validate = new Ajv2020({ strict: false }).compile(written);
+			expect([validate({ title: 'x' }), validate({ title: 1 })]).toEqual([true, false]);
+		});
+
 		it('keeps a schema with an $id of its own as it is, and brings nothing along', () => {
 			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
 			const resource = { $id: 'https://example.test/box', type: 'object', $defs: { label: { type: 'string' } } };

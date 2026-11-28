@@ -4,10 +4,10 @@ import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { isSubmissionBusy } from '@schema-engine/forms';
 import { formatStepLabel, type WizardActionsConfig } from '@schema-engine/forms/recipes/built-in';
-import type { FormMeta } from '@/lib/instance-view';
-import type { RecipeSlotContext } from '@/recipes/types';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveFormSteps, deriveInitialInstance, deriveNavigation } from '@/lib/instance-view';
+import type { FormMeta } from '../../lib/instance-view.js';
+import type { RecipeSlotContext } from '../../recipes/types.js';
+import { formInstanceContext, type FormInstanceContextValue } from '../../contexts/form-instance-context.js';
+import { deriveFormSteps, deriveInitialInstance, deriveNavigation } from '../../lib/instance-view.js';
 
 /**
  * @remarks

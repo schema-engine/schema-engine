@@ -1,12 +1,12 @@
-export type { FormMeta } from '@/lib/instance-view';
-export { defineRecipe } from './bind-recipes';
+export type { FormMeta } from '../lib/instance-view.js';
+export { defineRecipe } from './bind-recipes.js';
 export type {
 	FormShellComponent,
 	FormShellProps,
 	RadiantRecipeAdapterPayload,
 	RadiantRecipePayload,
 	RadiantRecipeSlotFactory,
-} from './types';
+} from './types.js';
 export {
 	CardRecipe,
 	SplitScreenRecipe,
@@ -18,4 +18,4 @@ export {
 	HeroWizardRecipe,
 	SplitScreenWizardRecipe,
 	radiantRecipes,
-} from './bind-recipes';
+} from './bind-recipes.js';

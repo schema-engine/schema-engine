@@ -1,22 +1,22 @@
-import type { FormTaggedConfig } from '@/schemas/form-config';
-import type { ElementConfig } from '@/schemas/field-config';
+import type { FormTaggedConfig } from '../../schemas/form-config.js';
+import type { ElementConfig } from '../../schemas/field-config.js';
 import { safeParseTree, type NodeLookup, type ParsedNode, type PartialNode } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { markNormalizedElementConfig, type NormalizedElementConfig } from '@/lib/normalized-form-config';
+import { markNormalizedElementConfig, type NormalizedElementConfig } from '../normalized-form-config.js';
 import {
 	ELEMENT_CHILDREN_KEY,
 	getElementChildren,
 	withElementChildren,
 	withoutElementChildren,
-} from '@/lib/element-children';
-import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
-import { areaPlacementIssue, namedPlacementIssue, spanIssue, subgridIssue, type PlacedElement } from './grid-checks';
-import { childPath, issueAt, type FormValidationIssue, type Path } from './issues';
-import type { ValidateFormOptions } from './options';
-import { fromSchemaIssues, schemaIssuePath } from './schema-issues';
-import { containerKindOf } from '@/lib/container-kind-of';
-import type { AnyElementRegistration } from '@/types/registration';
-import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
+} from '../element-children.js';
+import { resolveAppearance, withAppearance, type AppearanceScope } from '../resolve-appearance.js';
+import { areaPlacementIssue, namedPlacementIssue, spanIssue, subgridIssue, type PlacedElement } from './grid-checks.js';
+import { childPath, issueAt, type FormValidationIssue, type Path } from './issues.js';
+import type { ValidateFormOptions } from './options.js';
+import { fromSchemaIssues, schemaIssuePath } from './schema-issues.js';
+import { containerKindOf } from '../container-kind-of.js';
+import type { AnyElementRegistration } from '../../types/registration.js';
+import { ENGINE_KEY_PREFIX, isReservedPathKey } from '../reserved-path-keys.js';
 
 /**
  * Holds each rule of an element to its registration, and replaces it with the rule as the registration parses it.

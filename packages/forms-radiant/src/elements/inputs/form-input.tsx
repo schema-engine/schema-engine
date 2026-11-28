@@ -1,8 +1,8 @@
 import { RuiInput } from '@ecopages/radiant-ui/input';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules';
-import { FieldGroup } from '../field-group';
-import type { InputFieldProps } from './form-input.types';
+import { isRenderedRequired } from '../../lib/field-rules.js';
+import { FieldGroup } from '../field-group.js';
+import type { InputFieldProps } from './form-input.types.js';
 
 export function FormInput(config: InputFieldProps) {
 	const { inputType, placeholder } = config;

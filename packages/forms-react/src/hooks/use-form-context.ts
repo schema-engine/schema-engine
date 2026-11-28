@@ -1,9 +1,9 @@
 import { useContext, useMemo, useSyncExternalStore } from 'react';
 import type { EngineOutputMaps, FormRuntime, FormWizard } from '@schema-engine/forms';
-import { useFormStateContext } from './form-state/context';
+import { useFormStateContext } from './form-state/context.js';
 import { getDefaultLayoutTheme } from '@schema-engine/layout';
-import { FormEngineContext } from '../components/provider';
-import type { FormEngineContextValue } from '../components/provider';
+import { FormEngineContext } from '../components/provider.js';
+import type { FormEngineContextValue } from '../components/provider.js';
 
 /**
  * The form's wizard: where it is, and the commands that move it.

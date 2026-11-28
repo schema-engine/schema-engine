@@ -3,9 +3,9 @@
  */
 
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@/schemas/base-field';
-import { elementChildrenSchema } from '@/lib/element-children';
-import { defineInputContract } from './define-contract';
+import { BaseFieldSchema } from '../schemas/base-field.js';
+import { elementChildrenSchema } from '../lib/element-children.js';
+import { defineInputContract } from './define-contract.js';
 
 export const FieldSetConfigSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('fieldSet'),

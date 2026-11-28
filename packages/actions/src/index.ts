@@ -32,6 +32,6 @@
  * ```
  */
 
-export * from './types';
-export * from './dispatcher';
-export * from './parse-actions';
+export * from './types.js';
+export * from './dispatcher.js';
+export * from './parse-actions.js';

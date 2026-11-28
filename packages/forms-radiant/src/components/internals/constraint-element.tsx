@@ -2,7 +2,7 @@ import { customElement, onUpdated, prop, RadiantElement } from '@ecopages/radian
 import { onContextUpdate } from '@ecopages/radiant/context';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { selectFieldState, type FormStateContainer } from '@schema-engine/forms/state-container';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { formInstanceContext, type FormInstanceContextValue } from '../../contexts/form-instance-context.js';
 
 /**
  * Shows or hides one element as the form's constraints say.

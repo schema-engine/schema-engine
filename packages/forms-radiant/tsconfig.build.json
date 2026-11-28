@@ -1,6 +1,8 @@
 {
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"baseUrl": ".",
 		"rootDir": "./src",
@@ -10,8 +12,7 @@
 		"emitDeclarationOnly": true,
 		"paths": {
 			"@schema-engine/forms-radiant": ["./src/index.ts"],
-			"@schema-engine/forms-radiant/*": ["./src/*"],
-			"@/*": ["./src/*"]
+			"@schema-engine/forms-radiant/*": ["./src/*"]
 		}
 	},
 	"include": ["src"],
@@ -23,8 +24,5 @@
 		"**/*.stories.ts",
 		"**/*.stories.tsx",
 		"**/*.play.ts"
-	],
-	"tsc-alias": {
-		"resolveFullPaths": true
-	}
+	]
 }

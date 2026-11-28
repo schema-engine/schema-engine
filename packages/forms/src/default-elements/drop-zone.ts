@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@/schemas/base-field';
-import { defineInputContract } from './define-contract';
+import { BaseFieldSchema } from '../schemas/base-field.js';
+import { defineInputContract } from './define-contract.js';
 
 export const DropZoneFieldExtensionSchema = z.object({
 	accept: z.optional(z.record(z.string(), z.array(z.string()))),

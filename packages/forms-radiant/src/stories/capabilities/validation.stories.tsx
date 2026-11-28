@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { formRendererMeta } from '@/stories/shared/form-story';
+import { formRendererMeta } from '@/stories/shared/form-story.js';
 import {
 	asyncUsernameAvailabilityPlay,
 	builtInRulesPlay,
 	clearsErrorsAfterValidInputPlay,
 	formatRulesPlay,
-} from './validation.play';
+} from './validation.play.js';
 
 const meta = {
 	...formRendererMeta,

@@ -1,7 +1,7 @@
-import type { FormTaggedConfig } from '@/schemas/form-config';
-import type { ContainerKind } from '@/types/registration';
-import { getElementChildren } from '@/lib/element-children';
-import { placedTrackItems, type PlacedItem } from '@/lib/grid-track-items';
+import type { FormTaggedConfig } from '../../schemas/form-config.js';
+import type { ContainerKind } from '../../types/registration.js';
+import { getElementChildren } from '../element-children.js';
+import { placedTrackItems, type PlacedItem } from '../grid-track-items.js';
 import {
 	areaNames,
 	areaTemplateIssues,
@@ -22,7 +22,7 @@ import {
 	type CascadeSlot,
 	type GridLayoutConfig,
 } from '@schema-engine/layout';
-import { isTaggedConfig, issueAt, isRecord, type FormValidationIssue, type Path } from './issues';
+import { isTaggedConfig, issueAt, isRecord, type FormValidationIssue, type Path } from './issues.js';
 
 /**
  * Where a grid sets the first of `keys`, relative to the grid: `['columns']` or

@@ -6,7 +6,7 @@ import {
 	type ActionRegistrationConstraint,
 } from '@schema-engine/forms';
 import type { LayoutInput } from '@schema-engine/layout';
-import { radiantRecipes } from '@/recipes/bind-recipes';
+import { radiantRecipes } from '../recipes/bind-recipes.js';
 
 /**
  * Factory for a Radiant form engine with canonical view recipes already bound.

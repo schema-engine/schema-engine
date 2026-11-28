@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { StoryWrapper } from '@/stories/shared/story-wrapper.js';
+import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui.js';
 import * as z from 'zod/mini';
 import {
 	type BuilderActionRuntimeContext,
@@ -9,7 +9,7 @@ import {
 	type BuilderActionConfig,
 	type ActionExecutionResult,
 } from '@schema-engine/forms';
-import { SUBMIT_FORM_MOCK_URL } from '@/stories/msw/submit-form';
+import { SUBMIT_FORM_MOCK_URL } from '@/stories/msw/submit-form.js';
 
 const CONFETTI_SCRIPT_SRC = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js';
 

@@ -1,5 +1,5 @@
 import type { ComponentMetadata } from '@schema-engine/registry';
-import type { ElementCategory } from './categories';
+import type { ElementCategory } from './categories.js';
 
 /**
  * Element-specific metadata extends the base metadata with category.

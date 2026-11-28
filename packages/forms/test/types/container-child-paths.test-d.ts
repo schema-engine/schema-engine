@@ -2,6 +2,7 @@ import { expectTypeOf } from 'vitest';
 import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { elementChildrenSchema } from '@/lib/element-children';
+import { defineInputContract } from '@/default-elements/define-contract';
 import { defineInput, defineStatic } from '@/types';
 import { anyValue } from '../lib/any-value';
 
@@ -81,6 +82,41 @@ defineInput({
 	metadata: { name: 'Group', category: 'input' },
 	render: () => null,
 });
+
+// A container whose schema declares no `elements` is the registry's childPathNotInSchema, at the declaration.
+defineInput(
+	// @ts-expect-error -- childPathNotInSchema: { $type: 'bare'; keys: readonly ['elements'] }
+	{
+		$type: 'bare',
+		schema: z.object({ $type: z.literal('bare') }),
+		childPaths: [{ keys: ['elements'], list: true }],
+		metadata: { name: 'Bare', category: 'input' },
+		render: () => null,
+	},
+);
+
+// A container whose schema types `elements` as no array is the registry's listPathNotAnArray.
+defineInput(
+	// @ts-expect-error -- listPathNotAnArray: { $type: 'single'; keys: readonly ['elements'] }
+	{
+		$type: 'single',
+		schema: z.object({ $type: z.literal('single'), elements: z.string() }),
+		childPaths: [{ keys: ['elements'], list: true }],
+		metadata: { name: 'Single', category: 'input' },
+		render: () => null,
+	},
+);
+
+// A contract is checked the same way.
+defineInputContract(
+	// @ts-expect-error -- childPathNotInSchema: { $type: 'bare'; keys: readonly ['elements'] }
+	{
+		$type: 'bare',
+		schema: z.object({ $type: z.literal('bare') }),
+		childPaths: [{ keys: ['elements'], list: true }],
+		metadata: { name: 'Bare', category: 'input' },
+	},
+);
 
 // Only an input can be a container.
 defineStatic({

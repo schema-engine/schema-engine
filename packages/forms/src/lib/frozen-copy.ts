@@ -1,4 +1,4 @@
-import { isPlainObject } from './is-plain-object';
+import { isPlainObject } from './is-plain-object.js';
 
 /**
  * A deep, frozen copy of a serializable value.

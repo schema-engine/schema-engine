@@ -1,6 +1,6 @@
 import { prop } from '@ecopages/radiant';
-import { choiceKeys, choiceValueOf, type ChoiceOption } from './choice-value';
-import { ControlHost } from './control-host';
+import { choiceKeys, choiceValueOf, type ChoiceOption } from './choice-value.js';
+import { ControlHost } from './control-host.js';
 
 /** The value a choice element declares: an option's own value, or a list of them with `multiple`. */
 export type ChoiceValue = string | number | Array<string | number>;

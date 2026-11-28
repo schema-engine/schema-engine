@@ -1,4 +1,4 @@
-import type { FormStateIssue, FormSubmissionIssue } from './types';
+import type { FormStateIssue, FormSubmissionIssue } from './types.js';
 
 /**
  * The text to show for an issue at `path`: what the form's formatter says, else the issue's own `message`, else nothing.

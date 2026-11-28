@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { FormTemplates } from '@/stories/shared/sample-forms';
-import { formRendererMeta } from '@/stories/shared/form-story';
-import { recipeStoryMeta } from './shared/recipe-story';
+import { FormTemplates } from '@/stories/shared/sample-forms.js';
+import { formRendererMeta } from '@/stories/shared/form-story.js';
+import { recipeStoryMeta } from './shared/recipe-story.js';
 
 const contactForm = FormTemplates.contactForm;
 

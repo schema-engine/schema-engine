@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import { selectValue, type FormStateContainer, type FormStateSnapshot } from '@schema-engine/forms/state-container';
-import { useFormStateContext } from './context';
+import { useFormStateContext } from './context.js';
 import type { FormValues } from '@schema-engine/forms';
 
 type Target = string | readonly string[] | undefined;

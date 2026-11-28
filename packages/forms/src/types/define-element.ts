@@ -1,14 +1,15 @@
+import type { CheckChildPaths } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { ElementMetadata } from './metadata';
+import type { ElementMetadata } from './metadata.js';
 import type {
 	ContainerKind,
 	ElementChildPaths,
 	InputRegistration,
 	StaticRegistration,
 	ValueDeclaration,
-} from './registration';
-import type { NormalizedElementConfig } from '@/lib/normalized-form-config';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
+} from './registration.js';
+import type { NormalizedElementConfig } from '../lib/normalized-form-config.js';
+import type { ValidationRegistrationConstraint } from '../schemas/validation/types.js';
 import type { AppearanceAxisList } from '@schema-engine/layout';
 
 type InferOutput<TSchema> = TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : never;
@@ -129,6 +130,16 @@ type DefineElementArg<TType extends string, TSchema extends StandardSchemaV1, TP
 					: unknown)
 		: never;
 
+/**
+ * The registry's check of the child paths a registration declares, for an input: a path the schema does not declare is
+ * `childPathNotInSchema` and a list path over a slot that is no array is `listPathNotAnArray`.
+ */
+export type CheckedChildPaths<
+	TType extends string,
+	TSchema extends StandardSchemaV1,
+	TChildPaths extends ElementChildPaths | undefined,
+> = CheckChildPaths<{ $type: TType; schema: TSchema; childPaths: TChildPaths }>;
+
 type DefineInputArg<
 	TType extends string,
 	TSchema extends StandardSchemaV1,
@@ -162,7 +173,8 @@ export function defineInput<
 	const TKind extends ContainerKind | undefined = undefined,
 	const TChildPaths extends ElementChildPaths | undefined = undefined,
 >(
-	registration: DefineInputArg<TType, TSchema, TProps, TValue, TKind, TChildPaths>,
+	registration: DefineInputArg<TType, TSchema, TProps, TValue, TKind, TChildPaths> &
+		CheckedChildPaths<TType, TSchema, TChildPaths>,
 ): InputRegistration<TType, TSchema, TProps, TValue, TKind, TChildPaths> {
 	return { ...registration, kind: 'input' } as unknown as InputRegistration<
 		TType,

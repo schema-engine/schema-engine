@@ -1,7 +1,7 @@
 import './wizard-blocks.css';
 
-export { StepHeaderBlock } from './step-header';
-export { MinimalProgressBlock } from './minimal-progress';
-export { StepIndicatorsBlock } from './step-indicators';
-export { WizardActionsBlock } from './wizard-actions';
-export { FormActionsBlock } from './form-actions';
+export { StepHeaderBlock } from './step-header.js';
+export { MinimalProgressBlock } from './minimal-progress.js';
+export { StepIndicatorsBlock } from './step-indicators.js';
+export { WizardActionsBlock } from './wizard-actions.js';
+export { FormActionsBlock } from './form-actions.js';

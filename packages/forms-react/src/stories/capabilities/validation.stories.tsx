@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
-import { StoryWrapper } from '@/stories/shared/story-wrapper';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui.js';
+import { StoryWrapper } from '@/stories/shared/story-wrapper.js';
 import {
 	asyncUsernameAvailabilityPlay,
 	builtInRulesPlay,
 	clearsErrorsAfterValidInputPlay,
 	formatRulesPlay,
-} from './validation.play';
+} from './validation.play.js';
 
 const engine = getEngine();
 

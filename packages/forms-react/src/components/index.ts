@@ -1,4 +1,4 @@
-export * from './provider';
-export { FormRenderer, type FormRendererProps } from './internals/form-renderer';
-export { FormProvider } from './form-provider';
-export { FormEngineProvider, type FormEngineProviderProps } from './form-engine-provider';
+export * from './provider.js';
+export { FormRenderer, type FormRendererProps } from './internals/form-renderer.js';
+export { FormProvider } from './form-provider.js';
+export { FormEngineProvider, type FormEngineProviderProps } from './form-engine-provider.js';

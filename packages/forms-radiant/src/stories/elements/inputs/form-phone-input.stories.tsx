@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
+import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story.js';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-import { queryDeep } from '@/stories/shared/dom-utils';
+import { queryDeep } from '@/stories/shared/dom-utils.js';
 import type { StoryContext } from 'storybook/internal/types';
 
-import type { SePhoneInput } from '@/elements/inputs/form-phone-input';
-import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+import type { SePhoneInput } from '@/elements/inputs/form-phone-input.js';
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr.js';
 
 async function waitForPhoneReady(canvasElement: HTMLElement) {
 	await waitFor(async () => {

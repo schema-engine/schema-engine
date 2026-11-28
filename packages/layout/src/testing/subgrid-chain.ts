@@ -1,4 +1,4 @@
-import { GRID_CLASS, GRID_SUBGRID_CLASS } from '../lib/grid-styles';
+import { GRID_CLASS, GRID_SUBGRID_CLASS } from '../lib/grid-styles.js';
 
 function describeElement(element: Element): string {
 	const id = element.id ? `#${element.id}` : '';

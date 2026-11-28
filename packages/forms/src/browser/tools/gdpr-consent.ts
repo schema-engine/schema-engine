@@ -1,6 +1,6 @@
-import { logger } from '@/lib/logger';
-import { getAutoSaveDraftStorageKey } from '../../actions/plugins/auto-save.plugin';
-import { clearTrackedAutoSaveDrafts, createLocalStorageAutoSaveStorage } from './auto-save-storage';
+import { logger } from '../../lib/logger.js';
+import { getAutoSaveDraftStorageKey } from '../../actions/plugins/auto-save.plugin.js';
+import { clearTrackedAutoSaveDrafts, createLocalStorageAutoSaveStorage } from './auto-save-storage.js';
 
 const consentKey = 'gdpr_consent_form_autosave';
 const consentVersion = '1.0';

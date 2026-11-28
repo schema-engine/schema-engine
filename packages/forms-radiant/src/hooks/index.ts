@@ -1,2 +1,2 @@
-export { combineHandlers } from './bind-field';
-export { mergeFieldGridHost } from './grid-styles';
+export { combineHandlers } from './bind-field.js';
+export { mergeFieldGridHost } from './grid-styles.js';

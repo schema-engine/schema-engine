@@ -19,11 +19,11 @@ const exportsByPackage = new Map<string, Map<string, EntrySymbol[]>>();
  * Every symbol each entry of a package's `exports` map exposes, values and types, by the declaration it resolves to.
  *
  * @remarks
- * An entry is read at the source file its `dist` path is built from, so the check needs no build. A package with no
+ * An entry is read at the source file its `dist` path is built from. A package with no
  * `exports` map has the one entry its `module` field names. A re-export
  * names the same declaration as the original, so a symbol exported under the same name from two entries
  * is found whichever file declares it. Building the TypeScript program is the whole cost, so it is built once
- * per package and every check in a test file reads the same result.
+ * per package and the build gate shares it between the ownership and duplicate-export checks.
  *
  * It throws instead of reporting less than the package exports: for a package with no entry it can read, an exports
  * entry it cannot map, an entry file that is missing, and a re-export whose module or name does not resolve. A missing or
@@ -103,7 +103,7 @@ function readExportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 	const { options } = ts.parseJsonConfigFileContent(configFile.config, ts.sys, packageDir);
 	const program = ts.createProgram(
 		entries.map(([, file]) => file),
-		{ ...options, noEmit: true },
+		{ ...options, noEmit: true, types: [], noLib: true, lib: undefined },
 	);
 	const checker = program.getTypeChecker();
 	const unresolved: string[] = [];

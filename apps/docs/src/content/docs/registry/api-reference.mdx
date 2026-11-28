@@ -25,7 +25,7 @@ interface CreateRegistryOptions {
 
 Builds a frozen, read-only registry. `options.hint` is a sentence that ends the message of a `$type` the registry does not answer, such as where to register it; it is the registry's [`hint`](#readonlyregistry), so `safeParseNode`, `safeParseTree` and `parseActions` report it. By default (`duplicates: 'override'`) a later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. With `duplicates: 'error'` a repeated `$type` throws a [`RegistryError`](#registryerror) (`'duplicate-type'`) `<kind> '<$type>' is registered twice.` before any schema is checked; use it for a catalog where a repeat is always a mistake. Throws `'invalid-schema'`, `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).`, when a winning registration's schema is not a Standard Schema; an overridden registration is not checked. The registry stores a frozen shallow copy of each winner and leaves the objects you passed untouched.
 
-It also checks each winner's [`childPaths`](#childpath) as data and in the types. At run time, each entry must be an object with only `keys`, `accepts` and `list`; `keys` a non-empty list of non-empty strings; `accepts`, when present, a non-empty list of non-empty names without repeats; `list`, when present, `true`, or it throws `'invalid-child-paths'`. Two entries with the same keys are `'duplicate-child-path'`, and a path that runs through another is `'nested-child-path'`. Paths are compared key by key, so `['a.b']` and `['a', 'b']` are two paths. No check asks whether an `accepts` name is registered: a registry is not always a document's whole vocabulary, so [`safeParseTree`](#safeparsetree) checks the names against the lookup it gets, in the types. In the types, a registration whose schema output does not declare a key of a child path is an error that names it (`Property 'childPathNotInSchema' is missing`, with the `$type` and the keys), and so is an entry with a property other than `keys`, `accepts` and `list`, such as `accept` (`childPathUnknownProperty`, with the `$type` and the property), and an entry with `list: true` over a slot the schema types as no array (`listPathNotAnArray`, with the `$type` and the keys). A key that a loose schema allows only through its index signature does not count as declared, and a schema whose output type cannot be read (`unknown`, a plain `StandardSchemaV1`) is not checked. The parent schema declares every child key, so the exported JSON Schema shows the whole node.
+It also checks each winner's [`childPaths`](#childpath) as data and in the types. At run time, each entry must be an object with only `keys`, `accepts` and `list`; `keys` a non-empty list of non-empty strings; `accepts`, when present, a non-empty list of non-empty names without repeats; `list`, when present, `true`, or it throws `'invalid-child-paths'`. Two entries with the same keys are `'duplicate-child-path'`, and a path that runs through another is `'nested-child-path'`. Paths are compared key by key, so `['a.b']` and `['a', 'b']` are two paths. No check asks whether an `accepts` name is registered: a registry is not always a document's whole vocabulary, so [`safeParseTree`](#safeparsetree) checks the names against the lookup it gets, in the types. In the types, a registration whose schema output does not declare a key of a child path is an error that names it (`Property 'childPathNotInSchema' is missing`, with the `$type` and the keys), and so is an entry with a property other than `keys`, `accepts` and `list`, such as `accept` (`childPathUnknownProperty`, with the `$type` and the property), and an entry with `list: true` over a slot the schema types as no array (`listPathNotAnArray`, with the `$type` and the keys). A key that a loose schema allows only through its index signature does not count as declared, and a schema whose output type cannot be read (`unknown`, a plain `StandardSchemaV1`) is not checked. The check is the exported type `CheckChildPaths<T>`, for a domain package that declares registrations of its own (`defineInput` of `@schema-engine/forms` applies it). The parent schema declares every child key, so the exported JSON Schema shows the whole node.
 
 ### ReadOnlyRegistry
 
@@ -87,7 +87,8 @@ type RegistryErrorCode =
 	| 'schema-breaks-child-path'
 	| 'unreachable-child-path'
 	| 'unknown-accepted-type'
-	| 'definition-name-clash';
+	| 'definition-name-clash'
+	| 'invalid-declaration';
 
 declare class RegistryError extends Error {
 	readonly code: RegistryErrorCode;
@@ -125,8 +126,17 @@ What `createRegistry` and `bindRegistry` throw when the registrations or binding
 | `'unreachable-child-path'`     | `exportTreeSchema` found no slot for a child path in a registration's JSON Schema: not declared, behind `allOf`, a `$ref` or a union, inside an `$id` (`id` for draft-04) of its own, or not an object, an array or open | `childPath`                         |
 | `'unknown-accepted-type'`      | `exportTreeSchema` got a lookup that lacks a `$type` a child path accepts                                                                                                                                                | `childPath`, and `key`, the `$type` |
 | `'definition-name-clash'`      | A definition a schema brought along takes the name of a `$type` or of another definition                                                                                                                                 | `key`, the name; `$type`, the owner |
+| `'invalid-declaration'`        | A domain package refuses a declaration of a registration other than its child paths                                                                                                                                      | None; `$type` is the registration   |
 
 A parse throws a `RegistryError` only when a schema contradicts its registration, never for a bad document. [`assertStandardSchema`](#assertstandardschema) on its own and the other errors raised while parsing, such as a Standard Schema that validates asynchronously, are plain `Error`s, and `parseYaml` throws [`YamlDocumentError`](#yaml-subpath).
+
+## isStandardSchema
+
+```typescript
+function isStandardSchema(schema: unknown): schema is StandardSchemaV1;
+```
+
+`true` when `schema` is an object or a function with a `~standard.validate` function. It looks at the shape only and never runs the schema. A domain package uses it to check schemas of its own and throw a [`RegistryError`](#registryerror) with its own `kind` and `$type`, as `createRegistry` does for a registration.
 
 ## assertStandardSchema
 

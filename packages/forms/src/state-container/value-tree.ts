@@ -1,5 +1,5 @@
-import { isPlainObject } from '@/lib/is-plain-object';
-import { assertWritablePathKey, isReservedPathKey } from '@/lib/reserved-path-keys';
+import { isPlainObject } from '../lib/is-plain-object.js';
+import { assertWritablePathKey, isReservedPathKey } from '../lib/reserved-path-keys.js';
 
 /** A map held by the container: null-prototype, replaced rather than mutated. */
 export type NullMap<T = unknown> = Record<string, T>;

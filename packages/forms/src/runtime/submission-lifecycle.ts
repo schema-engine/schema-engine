@@ -4,10 +4,10 @@ import type {
 	ParsedAction,
 	ParsedActionSequence,
 } from '@schema-engine/actions';
-import type { FormActionTrigger } from '@/actions';
-import type { ActionExecutionResult } from '@/actions/types';
-import type { FormConfigView } from '@/lib/normalized-form-config';
-import type { BuilderActionBaseContext } from '@/types';
+import type { FormActionTrigger } from '../actions/index.js';
+import type { ActionExecutionResult } from '../actions/types.js';
+import type { FormConfigView } from '../lib/normalized-form-config.js';
+import type { BuilderActionBaseContext } from '../types/index.js';
 
 type Entry = NonNullable<FormConfigView['actions']>[number];
 /** The loosely typed action of a form config, which a typed action extends. */

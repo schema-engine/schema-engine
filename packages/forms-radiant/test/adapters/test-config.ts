@@ -1,15 +1,13 @@
-import { type FormConfig, markNormalizedFormConfig } from '@schema-engine/forms';
+import type { FormConfig } from '@schema-engine/forms';
+import { radiantElements } from '@/elements/radiant-elements';
+import { createRadiantFormEngine } from '@/registries';
 
-const testOwner = {};
+const engine = createRadiantFormEngine({ elements: radiantElements.all() });
 
 /**
- * Frozen, branded snapshot of an authored config, for helpers that take a
- * normalized config but need no engine.
- *
- * @remarks
- * Registration schemas do not run, so the snapshot keeps exactly what the test
- * authored, as the plain object fixtures did.
+ * The normalized config of an authored one, which the Radiant engine validates, for helpers that take a normalized
+ * config but need no rendering.
  */
 export function normalizedTestConfig(config: FormConfig) {
-	return markNormalizedFormConfig(config, testOwner);
+	return engine.validateForm(config);
 }

@@ -1,21 +1,21 @@
-import { globalFetch, withCsrf, type CsrfPolicy, type FormFetch } from '@/lib/form-fetch';
-import type { FormIssueFormatter } from '@/state-container/types';
-import { assertStandardSchema, createRegistry } from '@schema-engine/registry';
-import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '@/types/registration';
+import { globalFetch, withCsrf, type CsrfPolicy, type FormFetch } from '../lib/form-fetch.js';
+import type { FormIssueFormatter } from '../state-container/types.js';
+import { assertStandardSchema, createRegistry, RegistryError } from '@schema-engine/registry';
+import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '../types/registration.js';
 import type {
 	ActionRegistrationConstraint,
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
-} from '@/builder/types.utils';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
-import { FormEngine } from '@/engine/form-engine';
-import { ComponentType } from '@/engine/component-type';
-import { createActionExportSchemaMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
-import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
-import { logger } from '@/lib/logger';
-import { ELEMENT_CHILDREN_KEY } from '@/lib/element-children';
-import { withExportedRules } from '@/lib/exported-rules';
-import { withActionEnvelope } from '@/lib/exported-action-envelope';
+} from '../builder/types.utils.js';
+import type { ValidationRegistrationConstraint } from '../schemas/validation/types.js';
+import { FormEngine } from './form-engine.js';
+import { ComponentType } from './component-type.js';
+import { createActionExportSchemaMap, createFormEngineSchemaArtifacts } from './schema-artifacts.js';
+import { SchemaMetadataCatalog } from './schema-metadata-catalog.js';
+import { logger } from '../lib/logger.js';
+import { ELEMENT_CHILDREN_KEY } from '../lib/element-children.js';
+import { withExportedRules } from '../lib/exported-rules.js';
+import { withActionEnvelope } from '../lib/exported-action-envelope.js';
 import {
 	assertAxesNotReserved,
 	createAppearanceSchema,
@@ -27,17 +27,22 @@ import {
 	type LayoutInput,
 	type LayoutTheme,
 } from '@schema-engine/layout';
-import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
-import { createFormConfigShape } from '@/schemas/form-config-shape';
+import { RENDERER_DATA_ATTRIBUTES } from '../lib/renderer-data-attributes.js';
+import { createFormConfigShape } from '../schemas/form-config-shape.js';
 import * as z from 'zod/mini';
-import { resolveExportSchema } from '@/lib/export-schema';
-import { createExportedRecipeView } from '@/lib/exported-recipe-view';
-import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
-import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
+import { resolveExportSchema } from '../lib/export-schema.js';
+import { createExportedRecipeView } from '../lib/exported-recipe-view.js';
+import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '../recipes/protocol.js';
+import { createDefaultValidationRegistry, type ValidationRegistry } from '../schemas/validation/index.js';
 
 /**
  * Rejects an element registration that states no `kind`, a container that breaks the child path rule, and an input that
  * declares neither `childPaths` nor `value`, which types forbid but a hand-written object does not.
+ *
+ * @throws {RegistryError} Code `'invalid-child-paths'` for `childPaths` forms does not read (on a static element, more
+ * than one path, a key other than `elements`, no `list: true`) and for `containerKind` without `childPaths`, and code
+ * `'invalid-declaration'` for a registration that states no `kind`, an input that declares neither `value` nor
+ * `childPaths`, and a container that declares a `value`
  *
  * @remarks
  * `defineInput` and `defineStatic` set `kind`, which is what says whether an element holds a value: its metadata is for display and is never read here.
@@ -51,46 +56,64 @@ import { createDefaultValidationRegistry, type ValidationRegistry } from '@/sche
 function assertElementDeclarations(registration: ElementRegistrationConstraint): void {
 	const { $type, childPaths } = registration;
 	const kind: unknown = registration.kind;
+	const invalid = (
+		code: 'invalid-child-paths' | 'invalid-declaration',
+		message: string,
+		childPath?: readonly string[],
+	) =>
+		new RegistryError(code, message, { kind: 'Element', $type, ...(childPath === undefined ? {} : { childPath }) });
 	if (kind !== 'input' && kind !== 'static') {
-		throw new Error(
+		throw invalid(
+			'invalid-declaration',
 			`Element '${$type}' states no kind. Build it with \`defineInput\` or \`defineStatic\`, or set \`kind: 'input'\` (it holds a value or children) or \`kind: 'static'\` (display only) on a registration written by hand.`,
 		);
 	}
 	if (registration.kind === 'static') {
 		if (childPaths === undefined) return;
-		throw new Error(
+		throw invalid(
+			'invalid-child-paths',
 			`Element '${$type}' is a static element that declares childPaths: only an input can hold children. Make it an input with \`defineInput\`, or drop its childPaths.`,
+			childPaths[0]?.keys,
 		);
 	}
 	if (childPaths === undefined) {
 		if (registration.containerKind !== undefined) {
-			throw new Error(
+			throw invalid(
+				'invalid-child-paths',
 				`Element '${$type}' sets containerKind without childPaths. A container declares \`childPaths: [{ keys: ['${ELEMENT_CHILDREN_KEY}'], list: true }]\`; containerKind only says whether its children make an object or a list of rows.`,
 			);
 		}
 		if (typeof registration.value === 'function') return;
-		throw new Error(
+		throw invalid(
+			'invalid-declaration',
 			`Element '${$type}' is an input that declares no value. Give it \`value: (config) => schema\`, the value its control writes. An input that holds children declares \`childPaths: [{ keys: ['${ELEMENT_CHILDREN_KEY}'], list: true }]\` and \`${ELEMENT_CHILDREN_KEY}\` in its schema instead. A display-only element is made with \`defineStatic\`.`,
 		);
 	}
 	const [path, ...others] = childPaths;
 	if (others.length > 0) {
-		throw new Error(
+		throw invalid(
+			'invalid-child-paths',
 			`Element '${$type}' declares ${childPaths.length} child paths. Forms reads one, \`{ keys: ['${ELEMENT_CHILDREN_KEY}'], list: true }\`, so a container holds its children in one place.`,
+			others[0]?.keys,
 		);
 	}
 	if (path?.keys.length !== 1 || path.keys[0] !== ELEMENT_CHILDREN_KEY) {
-		throw new Error(
+		throw invalid(
+			'invalid-child-paths',
 			`Element '${$type}' must hold its children under '${ELEMENT_CHILDREN_KEY}', not '${path?.keys.join('.')}': it is the one child path forms reads.`,
+			path?.keys,
 		);
 	}
 	if (path.list !== true) {
-		throw new Error(
+		throw invalid(
+			'invalid-child-paths',
 			`Element '${$type}' must declare its child path with \`list: true\`: \`{ keys: ['${ELEMENT_CHILDREN_KEY}'], list: true }\`. Forms reads \`${ELEMENT_CHILDREN_KEY}\` only as a list, so a value that is not one is an issue and the export types the slot as a list.`,
+			path.keys,
 		);
 	}
 	if (registration.value !== undefined) {
-		throw new Error(
+		throw invalid(
+			'invalid-declaration',
 			`Element '${$type}' is a container that declares a value. The value of a container is its children's, so drop \`value\`.`,
 		);
 	}
@@ -287,12 +310,21 @@ function registerSchemaMetadata(
 /**
  * Rejects an axis a registration declares that the layout theme's axis registry does not hold, so a
  * typo such as `'sise'` fails the build instead of silently making the axis unsupported.
+ *
+ * @throws {RegistryError} Code `'invalid-declaration'`, with the registration's `kind` and `$type`
  */
-function assertDeclaredAxes(owner: string, axes: readonly string[] | undefined, layout: LayoutTheme): void {
+function assertDeclaredAxes(
+	owner: string,
+	axes: readonly string[] | undefined,
+	layout: LayoutTheme,
+	details: { kind: 'Element' | 'Recipe'; $type: string },
+): void {
 	for (const axis of axes ?? []) {
 		if (!layout.appearance.has(axis)) {
-			throw new Error(
+			throw new RegistryError(
+				'invalid-declaration',
 				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${layout.appearance.keys().join(', ')}. Add it with createFormEngine({ layout: { appearance: [...builtInAxes, defineAxis({ $type: '${axis}', ... })] } }).`,
+				details,
 			);
 		}
 	}
@@ -360,11 +392,17 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	});
 
 	for (const element of elementRegistry.all()) {
-		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout);
+		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout, {
+			kind: 'Element',
+			$type: element.$type,
+		});
 	}
 	for (const recipe of recipeRegistry.all()) {
 		for (const [slot, axes] of Object.entries(recipe.appearanceAxes ?? {})) {
-			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, layout);
+			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, layout, {
+				kind: 'Recipe',
+				$type: recipe.$type,
+			});
 		}
 	}
 

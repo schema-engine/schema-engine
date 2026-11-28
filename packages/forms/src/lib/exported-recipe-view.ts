@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { resolveExportSchema } from '@/lib/export-schema';
+import { resolveExportSchema } from './export-schema.js';
 
 /**
  * The view schema the JSON Schema export lists a recipe by, built from the schema of each declared slot.

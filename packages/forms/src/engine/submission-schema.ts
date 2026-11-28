@@ -1,20 +1,25 @@
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/spec';
 import * as z from 'zod/mini';
-import { frozenCopy } from '@/lib/frozen-copy';
-import { isPlainObject } from '@/lib/is-plain-object';
-import { buildSubmissionShape, type ShapeElement, type ShapeStep, type SubmissionShape } from '@/lib/submission-shape';
-import { isZodType } from '@/lib/is-zod-type';
+import { frozenCopy } from '../lib/frozen-copy.js';
+import { isPlainObject } from '../lib/is-plain-object.js';
+import {
+	buildSubmissionShape,
+	type ShapeElement,
+	type ShapeStep,
+	type SubmissionShape,
+} from '../lib/submission-shape.js';
+import { isZodType } from '../lib/is-zod-type.js';
 import type { JSONSchemaTarget } from '@schema-engine/registry';
 import {
 	createJSONSchemaEmbedder,
 	readStandardJSONSchema,
 	type JSONSchemaEmbedder,
 } from '@schema-engine/registry/json-schema';
-import type { JSONSchemaObject } from '@/lib/standard-json-schema';
-import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
-import { getValidationRulesForElement, isFieldRequired } from '@/schemas/validation/utils';
-import type { BaseValidationRule } from '@/schemas/validation/types';
-import type { ElementRegistry } from '@/registries';
+import type { JSONSchemaObject } from '../lib/standard-json-schema.js';
+import type { ValidationRegistry } from '../schemas/validation/validation-registry.js';
+import { getValidationRulesForElement, isFieldRequired } from '../schemas/validation/utils.js';
+import type { BaseValidationRule } from '../schemas/validation/types.js';
+import type { ElementRegistry } from '../registries/index.js';
 
 /**
  * The submitted values of a form, as a Standard Schema, and as a Standard JSON Schema where its value schemas can say so.

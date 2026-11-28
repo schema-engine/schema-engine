@@ -1,2 +1,2 @@
-export * from './slot-schemas';
-export * from './built-in-specs';
+export * from './slot-schemas.js';
+export * from './built-in-specs.js';

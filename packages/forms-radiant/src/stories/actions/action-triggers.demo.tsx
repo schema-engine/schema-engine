@@ -14,11 +14,11 @@ import {
 	type FormConfig,
 } from '@schema-engine/forms';
 import * as z from 'zod/mini';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { FormController } from '@/adapters/radiant/controller';
-import { schemaFormRegistrations } from '@/registrations';
-import { createRadiantFormEngine } from '@/registries/builder-registry';
-import { ValidationPresets } from '@/stories/shared/form-builder';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { FormController } from '@/adapters/radiant/controller/index.js';
+import { schemaFormRegistrations } from '@/registrations/index.js';
+import { createRadiantFormEngine } from '@/registries/builder-registry.js';
+import { ValidationPresets } from '@/stories/shared/form-builder.js';
 
 export interface ActionLogEntry {
 	id: string;

@@ -17,8 +17,8 @@ export {
 	createAppearanceSchema,
 	withAppearanceAxes,
 	withSlotAppearanceAxes,
-} from './schemas/appearance';
-export type { AppearanceConfig } from './schemas/appearance';
+} from './schemas/appearance.js';
+export type { AppearanceConfig } from './schemas/appearance.js';
 
 export {
 	ElementGridConfigSchema,
@@ -28,7 +28,7 @@ export {
 	GridOffsetNames,
 	GridWidthNames,
 	ItemGridBreakpointSchema,
-} from './schemas/grid';
+} from './schemas/grid.js';
 export type {
 	ElementGridConfig,
 	GridBreakpointConfig,
@@ -37,7 +37,7 @@ export type {
 	GridOffsetName,
 	GridWidthName,
 	ItemGridBreakpointConfig,
-} from './schemas/grid';
+} from './schemas/grid.js';
 
 export {
 	builtInAxes,
@@ -46,7 +46,7 @@ export {
 	getAppearanceAttributes,
 	mergeAppearance,
 	pickSupportedAppearance,
-} from './lib/appearance';
+} from './lib/appearance.js';
 export type {
 	AnyAxisRegistration,
 	AppearanceAxisList,
@@ -59,7 +59,7 @@ export type {
 	BuiltInAppearanceAxes,
 	ResolvedAppearanceAxes,
 	SlotAppearanceAxes,
-} from './lib/appearance';
+} from './lib/appearance.js';
 
 export {
 	GRID_TEMPLATE_KEYS,
@@ -78,8 +78,8 @@ export {
 	namedPlacementOverflow,
 	spanPlacementIssue,
 	subgridPlacementIssue,
-} from './lib/grid-placement';
-export type { CascadeSlot, GridAreaRows, GridAreaTemplates, GridBreakpointToken } from './lib/grid-placement';
+} from './lib/grid-placement.js';
+export type { CascadeSlot, GridAreaRows, GridAreaTemplates, GridBreakpointToken } from './lib/grid-placement.js';
 
 export {
 	GRID_CLASS,
@@ -88,44 +88,44 @@ export {
 	GRID_SUBGRID_CLASS,
 	getGridItemVariables,
 	getGridVariables,
-} from './lib/grid-styles';
+} from './lib/grid-styles.js';
 export type {
 	CssVariables,
 	GridGapScale,
 	GridQueryMode,
 	GridThemeOptions,
 	NormalizedGridTheme,
-} from './lib/grid-styles';
+} from './lib/grid-styles.js';
 
-export { assertAxesNotReserved, createLayoutTheme, getDefaultLayoutTheme, isLayoutTheme } from './lib/layout-theme';
-export type { LayoutIssue } from './lib/layout-issue';
+export { assertAxesNotReserved, createLayoutTheme, getDefaultLayoutTheme, isLayoutTheme } from './lib/layout-theme.js';
+export type { LayoutIssue } from './lib/layout-issue.js';
 export type {
 	LayoutAxes,
 	LayoutInput,
 	LayoutTheme,
 	LayoutThemeCompilerOptions,
 	LayoutThemeOptions,
-} from './lib/layout-theme';
+} from './lib/layout-theme.js';
 
-export { bindRecipe } from './recipes/bind-recipe';
-export { defineProtocolRecipeSpec } from './recipes/define-recipe-spec';
-export type { ProtocolRecipeSpecDefinition, RecipeViewSchema } from './recipes/define-recipe-spec';
-export { mergeSlotDefaults } from './recipes/merge-slot-defaults';
-export { assertRecipeRules, createRecipeRegistry, defineRecipeProtocol } from './recipes/protocol';
-export type { KindOf, RecipeProtocol, RecipeRule, RecipeShape, SlotOf } from './recipes/protocol';
-export { resolveRecipeView } from './recipes/resolve-recipe-view';
+export { bindRecipe } from './recipes/bind-recipe.js';
+export { defineProtocolRecipeSpec } from './recipes/define-recipe-spec.js';
+export type { ProtocolRecipeSpecDefinition, RecipeViewSchema } from './recipes/define-recipe-spec.js';
+export { mergeSlotDefaults } from './recipes/merge-slot-defaults.js';
+export { assertRecipeRules, createRecipeRegistry, defineRecipeProtocol } from './recipes/protocol.js';
+export type { KindOf, RecipeProtocol, RecipeRule, RecipeShape, SlotOf } from './recipes/protocol.js';
+export { resolveRecipeView } from './recipes/resolve-recipe-view.js';
 export type {
 	RecipeViewInput,
 	RecipeViewScope,
 	RecipeViewSource,
 	ResolvedRecipeView,
-} from './recipes/resolve-recipe-view';
+} from './recipes/resolve-recipe-view.js';
 export type {
 	ProtocolRecipeRegistration,
 	ProtocolRecipeSlotSchemas,
 	ProtocolRecipeSpec,
 	RecipeMetadata,
 	RecipeSlotDefaults,
-} from './recipes/types';
-export { readSlotConfig } from './recipes/view-model';
-export type { RecipeViewModel } from './recipes/view-model';
+} from './recipes/types.js';
+export { readSlotConfig } from './recipes/view-model.js';
+export type { RecipeViewModel } from './recipes/view-model.js';

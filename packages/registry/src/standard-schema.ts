@@ -6,6 +6,22 @@ export type StandardSchemaSafeParseResult<T> =
 	{ success: true; data: T } | { success: false; error: { issues: StandardSchemaIssue[] } };
 
 /**
+ * Whether `schema` is a Standard Schema: an object or function with a `~standard.validate` function.
+ *
+ * @remarks
+ * It looks at the shape only and never runs the schema. {@link assertStandardSchema} throws where this returns `false`, and
+ * {@link createRegistry} reports a registration for which it is `false` as `'invalid-schema'`. A domain package that checks
+ * schemas of its own, such as the slot schemas of a recipe, uses it to throw a {@link RegistryError} with its own details.
+ */
+export function isStandardSchema(schema: unknown): schema is StandardSchemaV1 {
+	const standard =
+		schema !== null && (typeof schema === 'object' || typeof schema === 'function')
+			? (schema as Partial<StandardSchemaV1>)['~standard']
+			: undefined;
+	return typeof standard?.validate === 'function';
+}
+
+/**
  * Validate `value` with a Standard Schema without throwing.
  *
  * @param schema - Standard Schema to run

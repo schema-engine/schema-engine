@@ -1,9 +1,9 @@
 import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { RuiAlert, RuiAlertIcon } from '@ecopages/radiant-ui/alert';
 import { GRID_ITEM_CLASS } from '@schema-engine/layout';
-import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { mergeFieldGridHost } from '../../hooks/grid-styles.js';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
-import type { SubmissionAlertProps } from './form-submission-alert.types';
+import type { SubmissionAlertProps } from './form-submission-alert.types.js';
 
 type AlertStatus = 'idle' | 'submitting' | 'success' | 'error';
 

@@ -3,10 +3,10 @@ import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiHeading, RuiHeadingDescription, RuiHeadingTitle } from '@ecopages/radiant-ui/heading';
 import { formatStepLabel, type StepHeaderConfig } from '@schema-engine/forms/recipes/built-in';
-import type { FormMeta } from '@/lib/instance-view';
-import type { RecipeSlotContext } from '@/recipes/types';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
+import type { FormMeta } from '../../lib/instance-view.js';
+import type { RecipeSlotContext } from '../../recipes/types.js';
+import { formInstanceContext, type FormInstanceContextValue } from '../../contexts/form-instance-context.js';
+import { deriveFormSteps, deriveInitialInstance } from '../../lib/instance-view.js';
 
 @customElement('se-step-header')
 export class StepHeaderElement extends RadiantElement {

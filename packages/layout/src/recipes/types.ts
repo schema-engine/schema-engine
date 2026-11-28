@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { BaseRegistration, ComponentMetadata } from '@schema-engine/registry';
-import type { SlotAppearanceAxes } from '../lib/appearance';
+import type { SlotAppearanceAxes } from '../lib/appearance.js';
 
 export interface RecipeMetadata extends ComponentMetadata {
 	category?: string;

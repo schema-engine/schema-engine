@@ -1,5 +1,5 @@
-import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '@/schemas/grid';
-import type { LayoutIssue } from './layout-issue';
+import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '../schemas/grid.js';
+import type { LayoutIssue } from './layout-issue.js';
 
 /**
  * Reads of an element's grid placement shared by the stylesheet emitter and

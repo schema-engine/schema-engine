@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
 import type { FormIssueFormatter, FormStateContainer, FormStateSnapshot } from '@schema-engine/forms/state-container';
 import type { FormRuntime } from '@schema-engine/forms';
-import type { FieldRegistry } from './field-registry';
+import type { FieldRegistry } from './field-registry.js';
 
 /**
  * What a form instance provides to the hooks under it.

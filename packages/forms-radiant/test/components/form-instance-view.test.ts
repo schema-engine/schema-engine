@@ -1,10 +1,21 @@
 import { expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
+import { defineRecipeSpec } from '@schema-engine/forms/recipes';
 import { FormInstance } from '@/components/form-instance';
-import { normalizedTestConfig } from '../adapters/test-config';
+import { defineRecipe } from '@/recipes';
+import { createRadiantFormEngine } from '@/registries';
+
+const ghost = defineRecipe(
+	defineRecipeSpec({
+		$type: 'ghost',
+		kind: 'single-step',
+		metadata: { name: 'Ghost', description: 'A view the rendering engine does not register' },
+	}),
+	{ slots: {} },
+);
 
 test('FormInstance throws when the config view names a recipe the engine does not register', () => {
-	const config = normalizedTestConfig({
+	const config = createRadiantFormEngine({ recipes: [ghost] }).validateForm({
 		id: 'orphan-view',
 		steps: [{ id: 'one', title: 'One', elements: [] }],
 		view: { $type: 'ghost' },

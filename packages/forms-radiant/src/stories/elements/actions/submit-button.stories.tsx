@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
-import { clickSubmit, expectFieldError, playFieldFocusAndType } from '@/stories/shared/play';
+import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story.js';
+import { clickSubmit, expectFieldError, playFieldFocusAndType } from '@/stories/shared/play.js';
 
-import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr.js';
 
 const meta = {
 	...formRendererMeta,

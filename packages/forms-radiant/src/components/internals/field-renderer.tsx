@@ -4,13 +4,13 @@ import {
 	type FormEngineRuntime as FormEngine,
 	isFieldRequired,
 } from '@schema-engine/forms';
-import { renderRegisteredElement } from './render-registered-element';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { peekOwningParticipation } from '@/contexts/form-engine-owner';
-import { constraintsFromParticipation, standaloneConstraints } from '@/lib/participation-snapshot';
-import type { ConstraintEvaluationContext } from './render-registered-element';
-import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { ConstraintElement } from './constraint-element';
+import { renderRegisteredElement } from './render-registered-element.js';
+import { resolveFormEngine } from '../../contexts/resolve-form-engine.js';
+import { peekOwningParticipation } from '../../contexts/form-engine-owner.js';
+import { constraintsFromParticipation, standaloneConstraints } from '../../lib/participation-snapshot.js';
+import type { ConstraintEvaluationContext } from './render-registered-element.js';
+import { mergeFieldGridHost } from '../../hooks/grid-styles.js';
+import { ConstraintElement } from './constraint-element.js';
 import { GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, elementIsSubgrid } from '@schema-engine/layout';
 
 export interface FormElementProps {
@@ -32,7 +32,7 @@ export interface FormElementProps {
 	style?: Record<string, string | number | undefined>;
 }
 
-export { renderRegisteredElement } from './render-registered-element';
+export { renderRegisteredElement } from './render-registered-element.js';
 
 export function FormElement({
 	config,

@@ -9,12 +9,12 @@
 import { GRID_CLASS, getAppearanceAttributes, getGridVariables, type LayoutTheme } from '@schema-engine/layout';
 import type React from 'react';
 import { useMemo } from 'react';
-import { FormProvider } from '../form-provider';
-import type { FormProviderProps } from '../../hooks/form-state/types';
-import { FormElements } from './form-elements';
-import { GridContainer } from './grid-container';
-import { useFormWizard, useOptionalFormEngine } from '@/hooks/use-form-context';
-import { FormEngineProvider } from '../form-engine-provider';
+import { FormProvider } from '../form-provider.js';
+import type { FormProviderProps } from '../../hooks/form-state/types.js';
+import { FormElements } from './form-elements.js';
+import { GridContainer } from './grid-container.js';
+import { useFormWizard, useOptionalFormEngine } from '../../hooks/use-form-context.js';
+import { FormEngineProvider } from '../form-engine-provider.js';
 import {
 	type EngineOutputMaps,
 	type FormEngineRuntime as FormEngine,
@@ -28,7 +28,7 @@ import {
 	stepGrid,
 } from '@schema-engine/forms';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
-import { RecipeRenderer } from './recipe-renderer';
+import { RecipeRenderer } from './recipe-renderer.js';
 
 function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }) {
 	return (

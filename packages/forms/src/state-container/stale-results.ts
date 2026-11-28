@@ -1,5 +1,5 @@
-import type { RowAnchor } from './row-ids';
-import { isWithin } from './value-tree';
+import type { RowAnchor } from './row-ids.js';
+import { isWithin } from './value-tree.js';
 
 /** One recorded validation, as the tracker sees it. */
 export interface ValidationRun {

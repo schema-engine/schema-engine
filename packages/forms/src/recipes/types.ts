@@ -1,8 +1,8 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { RecipeMetadata, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from '@schema-engine/layout';
-import type { RecipeKind, RecipeSlot } from './protocol';
+import type { RecipeKind, RecipeSlot } from './protocol.js';
 
-export type { RecipeKind, RecipeSlot } from './protocol';
+export type { RecipeKind, RecipeSlot } from './protocol.js';
 
 export type RecipeSlotSchemas = ProtocolRecipeSlotSchemas<RecipeSlot>;
 

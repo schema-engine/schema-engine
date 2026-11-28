@@ -1,9 +1,9 @@
-import { containerKindOf } from '@/lib/container-kind-of';
-import { getElementChildren } from '@/lib/element-children';
-import { getElementName } from '@/lib/field-scope';
-import { resolveFieldRef } from '@/lib/field-ref';
-import { issueAt, type FormValidationIssue } from './issues';
-import type { ValidateFormOptions } from './options';
+import { containerKindOf } from '../container-kind-of.js';
+import { getElementChildren } from '../element-children.js';
+import { getElementName } from '../field-scope.js';
+import { resolveFieldRef } from '../field-ref.js';
+import { issueAt, type FormValidationIssue } from './issues.js';
+import type { ValidateFormOptions } from './options.js';
 
 const isObject = (value: unknown): value is object => typeof value === 'object' && value !== null;
 

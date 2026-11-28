@@ -141,7 +141,14 @@ describe('recipe slot schemas from any Standard Schema library', () => {
 				// @ts-expect-error -- gap is a picklist of text, not a number
 				slotDefaults: { body: { gap: 3 } },
 			}),
-		).toThrow(/Recipe 'card' slotDefaults\.body is invalid: gap: /);
+		).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'card',
+				message: expect.stringMatching(/Recipe 'card' slotDefaults\.body is invalid: gap: /),
+			}),
+		);
 	});
 
 	test('names an unknown key in a slot default, whichever library reports it', () => {
@@ -200,21 +207,36 @@ describe('createRecipeRegistry slotSchemas', () => {
 	test('rejects a slot schema for a slot the recipe does not list, naming the recipe', () => {
 		const extra = { ...card, slotSchemas: { body: valibotBody, footer: valibotBody } };
 		expect(() => createRecipeRegistry(cardProtocol, [extra])).toThrow(
-			/Recipe 'card' slotSchemas must list exactly the recipe's slots \(body\): 'footer' is not a declared slot/,
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'card',
+				message: expect.stringContaining("'footer' is not a declared slot"),
+			}),
 		);
 	});
 
 	test('rejects a listed slot without a schema', () => {
 		const missing = { ...card, slotSchemas: {} };
 		expect(() => createRecipeRegistry(cardProtocol, [missing])).toThrow(
-			/Recipe 'card' slotSchemas .*'body' has no schema/,
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'card',
+				message: expect.stringMatching(/Recipe 'card' slotSchemas .*'body' has no schema/),
+			}),
 		);
 	});
 
 	test('rejects a slot schema that is not a Standard Schema', () => {
 		const broken = { ...card, slotSchemas: { body: { parse: () => ({}) } as unknown as StandardSchemaV1 } };
 		expect(() => createRecipeRegistry(cardProtocol, [broken])).toThrow(
-			/Recipe 'card' slotSchemas\.body must implement Standard Schema/,
+			expect.objectContaining({
+				code: 'invalid-schema',
+				kind: 'Recipe',
+				$type: 'card',
+				message: expect.stringContaining("Recipe 'card' slotSchemas.body must implement Standard Schema"),
+			}),
 		);
 	});
 });

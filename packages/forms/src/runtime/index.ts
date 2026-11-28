@@ -1,5 +1,5 @@
-export { createFormRuntime, defaultNavigate } from './create-form-runtime';
-export { isSubmissionBusy } from './types';
+export { createFormRuntime, defaultNavigate } from './create-form-runtime.js';
+export { isSubmissionBusy } from './types.js';
 export type {
 	CreateFormRuntimeOptions,
 	FormRuntime,
@@ -15,4 +15,4 @@ export type {
 	NavigationOutcome,
 	SubmissionStatus,
 	SubmitOutcome,
-} from './types';
+} from './types.js';

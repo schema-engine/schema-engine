@@ -7,9 +7,9 @@ import {
 	composeFieldName,
 	type NormalizedElementConfig,
 } from '@schema-engine/forms';
-import { FormElement } from './field-renderer';
-import { peekOwningConstraintValues, peekOwningRowIds } from '@/contexts/form-engine-owner';
-import type { ConstraintEvaluationContext } from './render-registered-element';
+import { FormElement } from './field-renderer.js';
+import { peekOwningConstraintValues, peekOwningRowIds } from '../../contexts/form-engine-owner.js';
+import type { ConstraintEvaluationContext } from './render-registered-element.js';
 
 export interface FormElementsProps {
 	elements: ReadonlyArray<NormalizedElementConfig>;

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { FormTemplates } from '@/stories/shared/sample-forms';
-import { recipeStoryDecorators, recipeStoryEngine } from './shared/recipe-story';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { FormTemplates } from '@/stories/shared/sample-forms.js';
+import { recipeStoryDecorators, recipeStoryEngine } from './shared/recipe-story.js';
 
 const meta = {
 	title: 'Recipes/Card',

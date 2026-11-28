@@ -1,10 +1,10 @@
 import * as z from 'zod/mini';
-import type { FormActionConfig } from '../actions/types';
-import { createFormConfigShape, createFormStepSchema, TypedConfigEnvelopeSchema } from './form-config-shape';
-import type { ElementConfig } from './field-config';
+import type { FormActionConfig } from '../actions/types.js';
+import { createFormConfigShape, createFormStepSchema, TypedConfigEnvelopeSchema } from './form-config-shape.js';
+import type { ElementConfig } from './field-config.js';
 
-export type { FormActionConfig } from '../actions/types';
-export { TypedConfigEnvelopeSchema } from './form-config-shape';
+export type { FormActionConfig } from '../actions/types.js';
+export { TypedConfigEnvelopeSchema } from './form-config-shape.js';
 
 /** Form view config for an engine's recipe map. */
 export type FormViewConfig<TRecipes extends Record<string, unknown> = Record<string, unknown>> =

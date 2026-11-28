@@ -1,4 +1,4 @@
-import { FORM_ROOT, type FormStateErrorsInput } from '@/state-container/types';
+import { FORM_ROOT, type FormStateErrorsInput } from '../state-container/types.js';
 import {
 	groupByPath,
 	isRecord,
@@ -8,7 +8,7 @@ import {
 	serializableParams,
 	ServerErrorsInputError,
 	textOf,
-} from './shared';
+} from './shared.js';
 
 const KNOWN = ['type', 'title', 'status', 'detail', 'instance', 'errors'];
 const ENTRY_MEMBERS: ReadonlySet<string> = new Set(['pointer', 'detail', 'code']);

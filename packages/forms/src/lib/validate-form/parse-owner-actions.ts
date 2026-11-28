@@ -1,8 +1,8 @@
 import { parseActions, type ParsedActionSequence } from '@schema-engine/actions';
-import { FormActionTriggerSchema } from '@/actions/triggers';
-import type { FormValidationIssue, Path } from './issues';
-import type { ValidateFormOptions } from './options';
-import { fromSchemaIssues } from './schema-issues';
+import { FormActionTriggerSchema } from '../../actions/triggers.js';
+import type { FormValidationIssue, Path } from './issues.js';
+import type { ValidateFormOptions } from './options.js';
+import { fromSchemaIssues } from './schema-issues.js';
 
 /**
  * Parses the `actions` of the form or of a step with {@link parseActions}, and lays the issues under `actions` at the owner.

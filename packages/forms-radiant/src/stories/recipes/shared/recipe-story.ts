@@ -1,5 +1,5 @@
 import type { Meta } from '@ecopages/storybook-radiant-vite';
-import { formRendererMeta } from '@/stories/shared/form-story';
+import { formRendererMeta } from '@/stories/shared/form-story.js';
 
 type RecipeLayout = 'fullscreen' | 'padded';
 

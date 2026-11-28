@@ -19,14 +19,14 @@ import {
 	peekOwningRowIds,
 	peekOwningParticipation,
 	renderWithParticipation,
-} from '@/contexts/form-engine-owner';
+} from '../../contexts/form-engine-owner.js';
 import {
 	constraintsFromParticipation,
 	standaloneConstraints,
 	type RenderedConstraints,
-} from '@/lib/participation-snapshot';
-import { ElementError } from './element-error';
-import { isRenderedRequired } from '@/lib/field-rules';
+} from '../../lib/participation-snapshot.js';
+import { ElementError } from './element-error.js';
+import { isRenderedRequired } from '../../lib/field-rules.js';
 
 /** Live values the constraint snapshot is evaluated against. */
 export interface ConstraintEvaluationContext {

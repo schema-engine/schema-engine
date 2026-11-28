@@ -14,9 +14,9 @@
  * ```
  */
 
-import { notificationPlugin, NotificationActionSchema } from './notification.plugin';
-import { logger } from '@/lib/logger';
-import type { BuilderActionRegistration } from '@/types';
+import { notificationPlugin, NotificationActionSchema } from './notification.plugin.js';
+import { logger } from '../../lib/logger.js';
+import type { BuilderActionRegistration } from '../../types/index.js';
 
 /**
  * Default Notification Action Registration

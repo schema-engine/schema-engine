@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { SlotAppearanceAxes } from '../lib/appearance';
-import type { ProtocolRecipeRegistration, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from './types';
+import type { SlotAppearanceAxes } from '../lib/appearance.js';
+import type { ProtocolRecipeRegistration, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from './types.js';
 
 /**
  * @remarks

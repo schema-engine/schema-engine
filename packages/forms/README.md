@@ -57,9 +57,10 @@ const result = engine.safeValidateForm({
 
 ## Documentation
 
+- For direct value validation, import `ValidationStep` and `ValidationElement` from the root entry.
 - [Forms](https://schema-engine.com/docs/forms/overview): what a form can do.
 - [Installation and quick start](https://schema-engine.com/docs/forms/getting-started): create the engine, check JSON and render it.
-- [Engine and registrations](https://schema-engine.com/docs/forms/engine): the engine, custom fields and configuration errors.
+- [Engine and registrations](https://schema-engine.com/docs/forms/engine): the engine, custom fields, registration error codes and configuration errors.
 - [Validation](https://schema-engine.com/docs/forms/validation) and [custom and async rules](https://schema-engine.com/docs/forms/validation-custom).
 - [Form state](https://schema-engine.com/docs/forms/form-state), [Wizard](https://schema-engine.com/docs/forms/wizard) and [Actions in forms](https://schema-engine.com/docs/forms/actions).
 - [Issue text](https://schema-engine.com/docs/forms/issue-text), [Server errors](https://schema-engine.com/docs/forms/server-errors) and [CSRF](https://schema-engine.com/docs/forms/csrf).

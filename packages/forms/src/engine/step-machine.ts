@@ -1,4 +1,4 @@
-import { collectStepFieldPaths, type ValidationStep } from './value-validation';
+import { collectStepFieldPaths, type ValidationStep } from './value-validation.js';
 
 /**
  * How freely a wizard moves forward.

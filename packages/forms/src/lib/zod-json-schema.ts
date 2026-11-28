@@ -1,8 +1,8 @@
 import * as z from 'zod/mini';
 import type { JSONSchemaTarget } from '@schema-engine/registry';
 import { idKeyword } from '@schema-engine/registry/json-schema';
-import type { JSONSchemaObject } from '@/lib/standard-json-schema';
-import { createExportConversion } from '@/lib/export-schema';
+import type { JSONSchemaObject } from './standard-json-schema.js';
+import { createExportConversion } from './export-schema.js';
 
 /**
  * Shared alias for the Zod registry type used during JSON Schema generation.

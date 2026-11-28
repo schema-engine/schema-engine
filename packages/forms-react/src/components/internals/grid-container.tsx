@@ -1,6 +1,6 @@
 import type React from 'react';
 import { GRID_CONTAINER_CLASS, getDefaultLayoutTheme } from '@schema-engine/layout';
-import { useOptionalFormEngine } from '@/hooks/use-form-context';
+import { useOptionalFormEngine } from '../../hooks/use-form-context.js';
 
 /**
  * Wraps one grid in the element a `query: 'container'` layout theme measures its breakpoints against.

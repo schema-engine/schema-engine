@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const repoRoot = join(import.meta.dirname, '../../..');
@@ -37,22 +37,15 @@ async function listOrEmpty(folder: string): Promise<string[]> {
  * Finds the one skill the packages ship: the router of {@link ROUTER_PACKAGE} and every `skill/reference/*.md` of every package.
  *
  * @remarks
- * The references are served flat, so a name must be unique across packages. A package other than the router's may hold a
- * `SKILL.md` only when it is a copy of the router, which its build makes; any other is an error, because a skill has one router.
+ * The references are served flat, so a name must be unique across packages. The router is the one file of
+ * {@link ROUTER_PACKAGE}. A `SKILL.md` in another package is a copy its build makes, ignored here: git ignores it, so it
+ * is never a second router, and one an earlier build left behind is stale, which is no reason for an install to fail.
+ * `test/skill-sync.test.ts` checks that the copies of a built tree match the router.
  */
 export async function findSkillSources(packagesRoot = PACKAGES_ROOT): Promise<SkillSources> {
 	const references: SkillReference[] = [];
 	for (const pkg of await listOrEmpty(packagesRoot)) {
 		const skillRoot = join(packagesRoot, pkg, 'skill');
-		if (pkg !== ROUTER_PACKAGE && (await listOrEmpty(skillRoot)).includes('SKILL.md')) {
-			const copy = await readFile(join(skillRoot, 'SKILL.md'), 'utf8');
-			const router = await readFile(join(packagesRoot, ROUTER_PACKAGE, 'skill', 'SKILL.md'), 'utf8');
-			if (copy !== router) {
-				throw new Error(
-					`packages/${pkg}/skill/SKILL.md: the router lives in packages/${ROUTER_PACKAGE} only, and a copy must match it.`,
-				);
-			}
-		}
 		for (const name of await listOrEmpty(join(skillRoot, 'reference'))) {
 			const clash = references.find((reference) => reference.name === name);
 			if (clash) throw new Error(`The reference ${name} is shipped by ${clash.package} and by ${pkg}.`);

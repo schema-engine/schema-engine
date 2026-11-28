@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '@/types';
-import { logger } from '@/lib/logger';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '../../types/index.js';
+import { logger } from '../../lib/logger.js';
 
 /**
  * Form Submit Plugin Configuration

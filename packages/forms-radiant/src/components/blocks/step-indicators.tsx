@@ -6,10 +6,10 @@ import { peek, state } from '@ecopages/signals';
 import type { ViewStep } from '@schema-engine/forms/recipes';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { formatStepLabel, type StepIndicatorsConfig } from '@schema-engine/forms/recipes/built-in';
-import type { FormMeta } from '@/lib/instance-view';
-import type { RecipeSlotContext } from '@/recipes/types';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveFormSteps, deriveInitialInstance, deriveNavigation } from '@/lib/instance-view';
+import type { FormMeta } from '../../lib/instance-view.js';
+import type { RecipeSlotContext } from '../../recipes/types.js';
+import { formInstanceContext, type FormInstanceContextValue } from '../../contexts/form-instance-context.js';
+import { deriveFormSteps, deriveInitialInstance, deriveNavigation } from '../../lib/instance-view.js';
 
 /**
  * One indicator, as `MapItems` receives it.

@@ -12,7 +12,7 @@ Schema Engine is a set of packages that build on each other. Install the ones th
 
 - **Node.js** `^24.22.0 || >=26.0.0` is what the packages are built and tested with. They declare no Node engine of their own. Their runtime requirements are the peer dependencies below.
 - **pnpm** 10. The commands here use it, and `npm` and `yarn` take the same package names.
-- **TypeScript** `^5.4`. `@schema-engine/registry`, `@schema-engine/actions` and `@schema-engine/layout` accept `^5`.
+- **TypeScript** `^5.4`. No package lists it as a peer dependency, so your project installs it.
 - **A Standard Schema validator**, such as Zod, Valibot or Effect Schema. Registrations take any of them. The examples use `zod/mini`, and `zod` `^4.5.0` is a peer of the forms and layout packages.
 
 ## What each package does
@@ -44,14 +44,14 @@ Zod is only needed to author schemas with `zod/mini`. A registration written aga
 
 The ranges are the ones in the package manifests. A peer on another Schema Engine package means the same release of it.
 
-| Package                        | Peer dependencies                                                                                                                                                                                                  |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@schema-engine/registry`      | `typescript` `^5`; `yaml` `^2.8.0`, optional, needed only for `@schema-engine/registry/yaml`                                                                                                                       |
-| `@schema-engine/actions`       | `typescript` `^5`                                                                                                                                                                                                  |
-| `@schema-engine/layout`        | `typescript` `^5`, `zod` `^4.5.0`                                                                                                                                                                                  |
-| `@schema-engine/forms`         | `typescript` `^5.4`, `zod` `^4.5.0`                                                                                                                                                                                |
-| `@schema-engine/forms-react`   | `@schema-engine/forms`, `@schema-engine/layout`, `react` `^19`, `react-dom` `^19`, `typescript` `^5.4`, `zod` `^4.5.0`                                                                                             |
-| `@schema-engine/forms-radiant` | `@schema-engine/forms`, `@schema-engine/layout`, `@ecopages/jsx` `>=0.12.0`, `@ecopages/radiant` `>=0.12.0`, `@ecopages/signals` `>=0.12.0`, `@ecopages/radiant-ui` `>=0.6.1`, `typescript` `^5.4`, `zod` `^4.5.0` |
+| Package                        | Peer dependencies                                                                                                                                                                             |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/registry`      | `yaml` `^2.8.0`, optional, needed only for `@schema-engine/registry/yaml`                                                                                                                     |
+| `@schema-engine/actions`       | None                                                                                                                                                                                          |
+| `@schema-engine/layout`        | `zod` `^4.5.0`                                                                                                                                                                                |
+| `@schema-engine/forms`         | `zod` `^4.5.0`                                                                                                                                                                                |
+| `@schema-engine/forms-react`   | `@schema-engine/forms`, `@schema-engine/layout`, `react` `^19`, `react-dom` `^19`, `zod` `^4.5.0`                                                                                             |
+| `@schema-engine/forms-radiant` | `@schema-engine/forms`, `@schema-engine/layout`, `@ecopages/jsx` `>=0.12.0`, `@ecopages/radiant` `>=0.12.0`, `@ecopages/signals` `>=0.12.0`, `@ecopages/radiant-ui` `>=0.6.2`, `zod` `^4.5.0` |
 
 ## TypeScript configuration
 

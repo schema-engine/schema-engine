@@ -1,22 +1,22 @@
-import type { CsrfPolicy, FormFetch } from '@/lib/form-fetch';
-import type { FormIssueFormatter } from '@/state-container/types';
-import type { AnyRecipeRegistration } from '@/types/registration';
-import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
-import { ComponentType } from './component-type';
-import { logger } from '@/lib/logger';
-import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
+import type { CsrfPolicy, FormFetch } from '../lib/form-fetch.js';
+import type { FormIssueFormatter } from '../state-container/types.js';
+import type { AnyRecipeRegistration } from '../types/registration.js';
+import type { ActionRegistry, ElementRegistry, RecipeRegistry } from '../registries/index.js';
+import { ComponentType } from './component-type.js';
+import { logger } from '../lib/logger.js';
+import type { StandardJSONSchemaV1 } from '../lib/standard-json-schema.js';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { JSONSchemaTarget } from '@schema-engine/registry';
 import * as z from 'zod/mini';
-import type { FormEngineSchemaArtifacts } from './schema-artifacts';
+import type { FormEngineSchemaArtifacts } from './schema-artifacts.js';
 import {
 	safeValidateFormConfig,
 	validateElementConfig,
 	validateFormConfig,
 	type FormValidationResult,
-} from '@/lib/validate-form';
-import type { NormalizedElementConfig, NormalizedFormConfig, ValuesBrand } from '@/lib/normalized-form-config';
-import type { ExactFormAppearance, ExactViewConfig, FormAuthoringInput } from '@/builder/form-authoring';
+} from '../lib/validate-form.js';
+import type { NormalizedElementConfig, NormalizedFormConfig, ValuesBrand } from '../lib/normalized-form-config.js';
+import type { ExactFormAppearance, ExactViewConfig, FormAuthoringInput } from '../builder/form-authoring.js';
 import type {
 	LastWinsMerge,
 	EngineOutputMaps,
@@ -27,24 +27,24 @@ import type {
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
 	ActionRegistrationConstraint,
-} from '@/builder/types.utils';
-import type { ExtendFormEngineOptions } from './create-form-engine';
-import type { ValuesOf } from '@/builder/form-values';
-import type { FormValues } from '@/runtime/types';
-import { buildFormEngine } from './build-form-engine';
-import { SchemaMetadataCatalog } from './schema-metadata-catalog';
+} from '../builder/types.utils.js';
+import type { ExtendFormEngineOptions } from './create-form-engine.js';
+import type { ValuesOf } from '../builder/form-values.js';
+import type { FormValues } from '../runtime/types.js';
+import { buildFormEngine } from './build-form-engine.js';
+import { SchemaMetadataCatalog } from './schema-metadata-catalog.js';
 import type { LayoutTheme, ResolvedAppearanceAxes } from '@schema-engine/layout';
-import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
+import type { ValidationRegistry } from '../schemas/validation/validation-registry.js';
+import type { ValidationRegistrationConstraint } from '../schemas/validation/types.js';
 import {
 	describeRecipeFromRegistration,
 	describeViewCatalogFromRecipes,
 	getAuthoringInstructionsFromCatalog,
-} from '@/lib/authoring-catalog';
-import type { RecipeDescriptor, ViewCatalog } from '@/recipes/types';
-import { generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
-import { createSubmissionSchema, type SubmissionSchema, type SubmissionSchemaConfig } from './submission-schema';
-export * from './component-type';
+} from '../lib/authoring-catalog.js';
+import type { RecipeDescriptor, ViewCatalog } from '../recipes/types.js';
+import { generateZodJSONSchemaDocument } from '../lib/zod-json-schema.js';
+import { createSubmissionSchema, type SubmissionSchema, type SubmissionSchemaConfig } from './submission-schema.js';
+export * from './component-type.js';
 
 /**
  * Engine registries - internal storage for all registered components.
@@ -52,7 +52,7 @@ export * from './component-type';
 export interface EngineRegistries {
 	elements: ElementRegistry;
 	recipes: RecipeRegistry;
-	actions: ActionRegistrationRegistry;
+	actions: ActionRegistry;
 	schemaArtifacts: FormEngineSchemaArtifacts;
 	layout: LayoutTheme;
 	validationRegistry: ValidationRegistry;
@@ -106,7 +106,7 @@ export class FormEngine<
 	 * It is a lookup the actions package reads: `new ActionDispatcher(engine.actions)` and
 	 * `parseActions(engine.actions, input)` take it as it is.
 	 */
-	readonly actions: ActionRegistrationRegistry;
+	readonly actions: ActionRegistry;
 
 	/** The registered validation rules, read-only, which also checks a rule of an element with `check`. */
 	readonly validations: ValidationRegistry;
@@ -498,4 +498,4 @@ export type FormEngineRuntime<
 	TAppearance extends Record<string, string> = ResolvedAppearanceAxes,
 > = Omit<FormEngine<TElements, TRecipes, TActions, TOutputs, TAppearance>, 'extend'>;
 
-export type { EngineOutputMaps } from '@/builder/types.utils';
+export type { EngineOutputMaps } from '../builder/types.utils.js';

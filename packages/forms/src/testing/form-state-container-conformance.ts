@@ -16,16 +16,16 @@ import {
 	spyOn,
 	stubGlobal,
 	waitFor,
-} from '@/testing/assert';
+} from './assert.js';
 import * as z from 'zod/mini';
-import { markNormalizedElementConfig } from '@/lib/normalized-form-config';
-import type { ElementConfig } from '@/schemas/field-config';
-import type { ValidationElementTree } from '@/engine/value-validation';
-import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation/validation-registry';
-import { logger } from '@/lib/logger';
-import { toFieldArrayValue } from '@/state-container/field-array';
-import { toHydration } from '@/state-container/hydration';
-import { selectFieldState, selectValue } from '@/state-container/selectors';
+import { markNormalizedElementConfig } from '../lib/normalized-form-config.js';
+import type { ElementConfig } from '../schemas/field-config.js';
+import type { ValidationElementTree } from '../engine/value-validation.js';
+import { createDefaultValidationRegistry, type ValidationRegistry } from '../schemas/validation/validation-registry.js';
+import { logger } from '../lib/logger.js';
+import { toFieldArrayValue } from '../state-container/field-array.js';
+import { toHydration } from '../state-container/hydration.js';
+import { selectFieldState, selectValue } from '../state-container/selectors.js';
 import {
 	FORM_ROOT,
 	type FormStateContainer,
@@ -34,7 +34,7 @@ import {
 	type FormStateErrorsInput,
 	type FormStateHydration,
 	type FormSubmitResult,
-} from '@/state-container/types';
+} from '../state-container/types.js';
 
 /**
  * One rule of the internal form store contract, with the check that proves it.

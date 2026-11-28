@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 import type React from 'react';
 import { isSubmissionBusy, type FormConfigView, type RecipeRegistration } from '@schema-engine/forms';
 import { buildViewModel, createViewNavigation } from '@schema-engine/forms/recipes';
-import { useFormContext } from '@/hooks/form-state';
-import { useFormWizard } from '@/hooks/use-form-context';
-import { ViewProvider } from '@/contexts/view-context';
-import type { ReactRecipeAdapterPayload } from '@/primitives';
+import { useFormContext } from '../../hooks/form-state/index.js';
+import { useFormWizard } from '../../hooks/use-form-context.js';
+import { ViewProvider } from '../../contexts/view-context.js';
+import type { ReactRecipeAdapterPayload } from '../../primitives.js';
 
 type ReactRecipeRegistration = RecipeRegistration<string, RecipeRegistration['schema'], ReactRecipeAdapterPayload>;
 

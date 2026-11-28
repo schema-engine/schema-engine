@@ -2,10 +2,10 @@ import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { formatStepLabel, type MinimalProgressConfig } from '@schema-engine/forms/recipes/built-in';
-import type { FormMeta } from '@/lib/instance-view';
-import type { RecipeSlotContext } from '@/recipes/types';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { deriveFormSteps, deriveInitialInstance } from '@/lib/instance-view';
+import type { FormMeta } from '../../lib/instance-view.js';
+import type { RecipeSlotContext } from '../../recipes/types.js';
+import { formInstanceContext, type FormInstanceContextValue } from '../../contexts/form-instance-context.js';
+import { deriveFormSteps, deriveInitialInstance } from '../../lib/instance-view.js';
 
 /**
  * @remarks

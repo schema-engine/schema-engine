@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { RendererStyleSchema, StepConstraintSchema } from './base-field';
+import { RendererStyleSchema, StepConstraintSchema } from './base-field.js';
 import { AppearanceConfigSchema, GridLayoutConfigSchema } from '@schema-engine/layout';
 
 /**

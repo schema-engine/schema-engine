@@ -2,7 +2,7 @@ import { createContext } from '@ecopages/radiant/context';
 
 import type { FormRuntime, FormSubmissionState, FormWizard } from '@schema-engine/forms';
 import type { FormIssueFormatter } from '@schema-engine/forms/state-container';
-import type { FormMeta } from '@/lib/instance-view';
+import type { FormMeta } from '../lib/instance-view.js';
 
 /**
  * What a `se-form-instance` publishes to the hosts under it, for the blocks and recipes of a renderer.

@@ -1,5 +1,5 @@
 import { selectValue, type FormStateContainer, type FormStateSnapshot } from '@schema-engine/forms/state-container';
-import { logger } from '@/lib/logger';
+import { logger } from '../../lib/logger.js';
 import {
 	controlMatches,
 	isNativeControl,
@@ -8,7 +8,7 @@ import {
 	sameValue,
 	writeControl,
 	type NativeControl,
-} from './native-control';
+} from './native-control.js';
 
 /**
  * Who owns the value of a control. An uncontrolled control keeps its own value, which the registry reads and

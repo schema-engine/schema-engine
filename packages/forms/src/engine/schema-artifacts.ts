@@ -2,20 +2,20 @@ import * as z from 'zod/mini';
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import type { JSONSchemaTarget } from '@schema-engine/registry';
 import { assertJSONSchemaTarget } from '@schema-engine/registry/json-schema';
-import { ComponentType } from './component-type';
-import { composeCollectionChildSlots, composeDocumentChildSlots, type ChildSlotOwner } from './child-slots';
-import { SchemaMetadataCatalog } from './schema-metadata-catalog';
-import { isZodType } from '@/lib/is-zod-type';
+import { ComponentType } from './component-type.js';
+import { composeCollectionChildSlots, composeDocumentChildSlots, type ChildSlotOwner } from './child-slots.js';
+import { SchemaMetadataCatalog } from './schema-metadata-catalog.js';
+import { isZodType } from '../lib/is-zod-type.js';
 import {
 	defaultCollectionURI,
 	generateZodJSONSchemaCollection,
 	generateZodJSONSchemaDocument,
-} from '@/lib/zod-json-schema';
+} from '../lib/zod-json-schema.js';
 import {
 	createStandardJSONSchema,
 	createStandardJSONSchemaRecord,
 	type JSONSchemaObject,
-} from '@/lib/standard-json-schema';
+} from '../lib/standard-json-schema.js';
 
 /**
  * Metadata for form engine JSON Schema generation.

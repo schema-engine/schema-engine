@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { formRendererMeta } from '@/stories/shared/form-story';
-import { autoFitColumnsPlay, columnSpansPlay, rowAndColumnGapPlay, twoColumnsPerRowPlay } from './grid.play';
+import { formRendererMeta } from '@/stories/shared/form-story.js';
+import { autoFitColumnsPlay, columnSpansPlay, rowAndColumnGapPlay, twoColumnsPerRowPlay } from './grid.play.js';
 
 const meta = {
 	...formRendererMeta,

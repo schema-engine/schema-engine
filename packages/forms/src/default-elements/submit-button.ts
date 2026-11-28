@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@/schemas/base-field';
-import { defineStaticContract } from './define-contract';
+import { BaseFieldSchema } from '../schemas/base-field.js';
+import { defineStaticContract } from './define-contract.js';
 
 export const SubmitButtonSchema = z.extend(BaseFieldSchema, {
 	$type: z.literal('submit'),

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { getSsrAcceptanceFixture } from '../../../test/ssr/ssr-fixture';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { StoryWrapper } from '@/stories/shared/story-wrapper.js';
+import { getSsrAcceptanceFixture } from '../../../test/ssr/ssr-fixture.js';
 
 const { engine, config } = getSsrAcceptanceFixture();
 

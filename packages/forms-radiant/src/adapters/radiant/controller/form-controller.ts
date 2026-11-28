@@ -8,7 +8,7 @@ import {
 	type FormStateSnapshot,
 	type FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { formInstanceContext, type FormInstanceContextValue } from '../../../contexts/form-instance-context.js';
 
 interface RuntimeState {
 	readonly runtime: FormRuntime;

@@ -101,7 +101,7 @@ See [Submitted values](/docs/forms/form-state#submitted-values).
 `elementChildrenSchema`, and the registration declares `childPaths`; the engine validates those children
 against its registrations, as authored, with the registry's `safeParseTree`
 ([Register a container](/docs/forms/engine#register-a-container)). The render function then receives frozen,
-normalized children, not authoring JSON.
+normalized children, not authoring JSON. `defineInput` and `defineInputContract` also apply the registry's `CheckChildPaths`: `childPaths` over a key the schema does not declare is the compile error `childPathNotInSchema`, and `list: true` over a slot the schema types as no array is `listPathNotAnArray`.
 
 ## Default element contracts
 

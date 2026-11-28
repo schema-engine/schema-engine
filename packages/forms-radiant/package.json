@@ -17,9 +17,6 @@
 		"url": "git+https://github.com/schema-engine/schema-engine.git",
 		"directory": "packages/forms-radiant"
 	},
-	"engines": {
-		"node": "^24.22.0 || >=26.0.0"
-	},
 	"homepage": "https://schema-engine.com/docs/forms-radiant/overview",
 	"publishConfig": {
 		"access": "public"
@@ -39,7 +36,7 @@
 	"scripts": {
 		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
 		"build:files": "node ./build.ts",
-		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json -f",
+		"build:types": "tsc -p tsconfig.build.json",
 		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "vitest run --project unit --project browser",
@@ -84,7 +81,6 @@
 		"nitro": "^3.0.260311-beta",
 		"playwright": "^1.61.1",
 		"storybook": "^10.6.9",
-		"tsc-alias": "^1.8.16",
 		"typescript": "catalog:",
 		"vite": "^8.0.0",
 		"vitest": "catalog:",
@@ -92,7 +88,6 @@
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",
-		"@schema-engine/actions": "workspace:^",
 		"@schema-engine/registry": "workspace:^",
 		"@standard-schema/spec": "^1.1.0",
 		"country-flag-icons": "^1.6.20",

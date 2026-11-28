@@ -1,5 +1,5 @@
-import { whenInteractive } from '@/stories/shared/storybook-ssr';
-import { clickSubmit, expectFieldError, expectNoFieldError, playFieldFocusAndType } from '@/stories/shared/play';
+import { whenInteractive } from '@/stories/shared/storybook-ssr.js';
+import { clickSubmit, expectFieldError, expectNoFieldError, playFieldFocusAndType } from '@/stories/shared/play.js';
 
 export const clearsErrorsAfterValidInputPlay = whenInteractive(async ({ canvasElement }) => {
 	await clickSubmit(canvasElement, /continue/i);

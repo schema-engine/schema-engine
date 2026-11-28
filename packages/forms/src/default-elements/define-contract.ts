@@ -1,10 +1,11 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type {
+	CheckedChildPaths,
 	DefineElementRegistration,
 	InputValueDeclaration,
 	ResolvedInputDeclaration,
-} from '@/types/define-element';
-import type { ContainerKind, ElementChildPaths, InputRegistration, StaticRegistration } from '@/types/registration';
+} from '../types/define-element.js';
+import type { ContainerKind, ElementChildPaths, InputRegistration, StaticRegistration } from '../types/registration.js';
 
 /**
  * An input element without the part a renderer adds: its `$type`, schema, value declaration, container kind,
@@ -46,7 +47,8 @@ export function defineInputContract<
 	const TChildPaths extends ElementChildPaths | undefined = undefined,
 >(
 	contract: Omit<DefineElementRegistration<TType, TSchema, never>, 'render'> &
-		InputValueDeclaration<TType, TSchema, TValue, TKind, TChildPaths>,
+		InputValueDeclaration<TType, TSchema, TValue, TKind, TChildPaths> &
+		CheckedChildPaths<TType, TSchema, TChildPaths>,
 ): InputContract<TType, TSchema, TValue, TKind, TChildPaths> {
 	return { ...contract, kind: 'input' } as unknown as InputContract<TType, TSchema, TValue, TKind, TChildPaths>;
 }

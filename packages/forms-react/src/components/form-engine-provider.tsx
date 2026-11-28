@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import type { EngineOutputMaps, FormEngineRuntime as CoreFormEngine } from '@schema-engine/forms';
-import { FormEngineContext, createFormEngineContextValue } from './provider';
+import { FormEngineContext, createFormEngineContextValue } from './provider.js';
 
 export interface FormEngineProviderProps<
 	TElements extends Record<string, unknown> = Record<string, unknown>,

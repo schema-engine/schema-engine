@@ -1,8 +1,8 @@
 import { expect, userEvent, waitFor } from 'storybook/test';
 import type { StoryContext } from 'storybook/internal/types';
-import { whenInteractive } from '@/stories/shared/storybook-ssr';
-import { queryAllDeep, queryByTextContentDeep, queryDeep } from '@/stories/shared/dom-utils';
-import { clickSubmit, expectFieldError, getFieldControl } from '@/stories/shared/play';
+import { whenInteractive } from '@/stories/shared/storybook-ssr.js';
+import { queryAllDeep, queryByTextContentDeep, queryDeep } from '@/stories/shared/dom-utils.js';
+import { clickSubmit, expectFieldError, getFieldControl } from '@/stories/shared/play.js';
 
 function getDashboard(root: ParentNode): HTMLElement {
 	const dashboard = queryDeep(root, '[data-testid="action-dashboard"]');

@@ -1,9 +1,9 @@
 import '@ecopages/radiant-ui/checkbox-group';
 import { RuiCheckbox } from '@ecopages/radiant-ui/checkbox';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules';
-import { FieldGroup, RequiredMarker } from '../field-group';
-import type { CheckboxFieldProps } from './form-checkbox.types';
+import { isRenderedRequired } from '../../lib/field-rules.js';
+import { FieldGroup, RequiredMarker } from '../field-group.js';
+import type { CheckboxFieldProps } from './form-checkbox.types.js';
 
 export function FormCheckbox(config: CheckboxFieldProps) {
 	return (

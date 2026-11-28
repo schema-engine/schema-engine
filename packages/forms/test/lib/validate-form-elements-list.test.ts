@@ -13,15 +13,13 @@ const field = defineInput({
 	render: () => null,
 });
 
-const oneChild = z.looseObject({ $type: z.string() });
-
-/** A container whose schema lets `elements` be a list or one child, which the registry's tree walk accepts. */
+/** A container whose schema lets `elements` be anything, so the registry's tree walk decides whether it is a list. */
 const lenient = defineInput({
 	$type: 'lenient',
 	schema: z.looseObject({
 		$type: z.literal('lenient'),
 		id: z.string(),
-		elements: z.union([elementChildrenSchema, oneChild]),
+		elements: z.unknown(),
 	}),
 	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'Lenient', category: 'input' },

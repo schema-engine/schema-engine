@@ -27,8 +27,8 @@ import {
 	TextareaElementRegistration,
 	DateElementRegistration,
 	DateRangeElementRegistration,
-} from '@/components/schema-engine/forms/registrations';
-import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
+} from '@/components/schema-engine/forms/registrations.js';
+import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations.js';
 
 export { ValidationPresets };
 

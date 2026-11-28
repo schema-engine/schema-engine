@@ -2,10 +2,14 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, test } from 'vitest';
-import { exportedSymbolNames, symbolsFromOtherPackages } from '../../../test-utils/entry-exports';
+import {
+	exportedSymbolNames,
+	symbolsFromOtherPackages,
+	symbolsSharedByEntries,
+} from '../../../test-utils/entry-exports';
 
 /**
- * Tests of the `test-utils/entry-exports.ts` helper that every package's `entry-points` test relies on.
+ * Tests of the entry export checks run by the build gate.
  *
  * @remarks
  * A guard that passes when it cannot see what it guards is worse than none, so each case here is a way the guard
@@ -157,5 +161,25 @@ describe('symbolsFromOtherPackages', () => {
 			{ 'index.ts': 'export const own = 1;\n' },
 		);
 		expect(symbolsFromOtherPackages(dir)).toEqual([]);
+	});
+});
+
+describe('symbolsSharedByEntries', () => {
+	const twoEntries = { ...index, './extra': { types: './dist/extra.d.ts', import: './dist/extra.js' } };
+
+	test('is empty for entries that export different declarations', () => {
+		const dir = fixturePackage(twoEntries, {
+			'index.ts': 'export const own = 1;\n',
+			'extra.ts': 'export const other = 2;\n',
+		});
+		expect(symbolsSharedByEntries(dir)).toEqual([]);
+	});
+
+	test('lists a declaration two entries export, with both entries, even under another name', () => {
+		const dir = fixturePackage(twoEntries, {
+			'index.ts': 'export const own = 1;\n',
+			'extra.ts': "export { own as alias } from './index';\n",
+		});
+		expect(symbolsSharedByEntries(dir)).toEqual(['src/index.ts#own: ., ./extra']);
 	});
 });

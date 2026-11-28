@@ -1,1 +1,1 @@
-export { StackShell, SidebarShell, CardShell, HeroShell, SplitScreenShell } from './shells';
+export { StackShell, SidebarShell, CardShell, HeroShell, SplitScreenShell } from './shells.js';

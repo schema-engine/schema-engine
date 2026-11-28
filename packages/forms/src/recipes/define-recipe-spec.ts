@@ -3,8 +3,8 @@ import {
 	type ProtocolRecipeSpecDefinition,
 	type RecipeViewSchema,
 } from '@schema-engine/layout';
-import { formRecipeProtocol, type RecipeKind, type RecipeSlot } from './protocol';
-import type { RecipeSlotSchemas, RecipeSpec } from './types';
+import { formRecipeProtocol, type RecipeKind, type RecipeSlot } from './protocol.js';
+import type { RecipeSlotSchemas, RecipeSpec } from './types.js';
 
 /**
  * Declares a form recipe's `$type`, kind, slot schemas, and metadata.

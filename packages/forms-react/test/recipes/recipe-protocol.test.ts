@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
-import { validateRegistrationConfig } from '@schema-engine/forms';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
 import { defineRecipe } from '@/primitives';
 import { schemaFormRecipeRegistrations } from '@/components/schema-engine/forms/recipes/registrations';
@@ -38,8 +38,8 @@ describe('recipe protocol', () => {
 			{ shell: () => null, slots: { header: () => null } },
 		);
 
-		expect(() =>
-			validateRegistrationConfig(recipe.schema, { $type: 'brand', shell: { accent: '#111' } }),
-		).not.toThrow();
+		expect(safeParseStandardSchema(recipe.schema, { $type: 'brand', shell: { accent: '#111' } })).toMatchObject({
+			success: true,
+		});
 	});
 });

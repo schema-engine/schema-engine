@@ -1,8 +1,8 @@
 import type React from 'react';
 import { GRID_CLASS, GRID_SUBGRID_CLASS, getDefaultLayoutTheme, getGridVariables } from '@schema-engine/layout';
 import { gridTrackItems } from '@schema-engine/forms';
-import { useOptionalFormEngine } from '@/hooks/use-form-context';
-import { GridContainer } from './grid-container';
+import { useOptionalFormEngine } from '../../hooks/use-form-context.js';
+import { GridContainer } from './grid-container.js';
 
 interface ChildGridBaseProps {
 	/** Classes added to the grid element, after `se-form-grid se-grid`. */

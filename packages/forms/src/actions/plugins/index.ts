@@ -5,15 +5,15 @@
  */
 
 /** Plugin factory functions; action config types come from the registrations passed to the engine. */
-export * from './auto-save.plugin';
-export * from './gtm.plugin';
-export * from './notification.plugin';
-export * from './form-reset.plugin';
-export * from './form-submit.plugin';
+export * from './auto-save.plugin.js';
+export * from './gtm.plugin.js';
+export * from './notification.plugin.js';
+export * from './form-reset.plugin.js';
+export * from './form-submit.plugin.js';
 
 /** Runtime-neutral pre-configured registrations. */
-export * from './form-submit.registration';
-export * from './notification.registration';
+export * from './form-submit.registration.js';
+export * from './notification.registration.js';
 
 /** Convenience re-exports. */
-export * from './registrations';
+export * from './registrations.js';

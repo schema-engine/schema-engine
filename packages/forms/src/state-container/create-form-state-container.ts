@@ -7,25 +7,34 @@ import {
 	type Participation,
 	runValidationPlan,
 	type ValidationIssue,
-} from '@/engine/value-validation';
-import { createDebounceScope } from '@/lib/debounce';
-import { resolveFieldRef } from '@/lib/field-ref';
-import { logger } from '@/lib/logger';
-import { frozenCopy } from '@/lib/frozen-copy';
-import { getValueAtPath } from '@/lib/path-values';
-import { isReservedPathKey } from '@/lib/reserved-path-keys';
+} from '../engine/value-validation.js';
+import { createDebounceScope } from '../lib/debounce.js';
+import { resolveFieldRef } from '../lib/field-ref.js';
+import { logger } from '../lib/logger.js';
+import { frozenCopy } from '../lib/frozen-copy.js';
+import { getValueAtPath } from '../lib/path-values.js';
+import { isReservedPathKey } from '../lib/reserved-path-keys.js';
 import {
 	buildDependencyIndex,
 	shouldSurfaceDependentError,
 	type DependencyIndex,
-} from '@/schemas/validation/dependencies';
-import { dirtyTree } from './dirty';
-import { readHydration } from './hydration';
-import type { FieldArrayCommands } from './field-array';
-import { anchorOf, flatIds, idsAt, replaceIdsAt, resolveAnchor, syncIds, type IdTree, type RowNode } from './row-ids';
-import { submittedTree, submittedValues, toFormPath, type SubmissionRecord } from './submission';
-import { createRunTracker } from './stale-results';
-import { buildSubmissionShape } from '@/lib/submission-shape';
+} from '../schemas/validation/dependencies.js';
+import { dirtyTree } from './dirty.js';
+import { readHydration } from './hydration.js';
+import type { FieldArrayCommands } from './field-array.js';
+import {
+	anchorOf,
+	flatIds,
+	idsAt,
+	replaceIdsAt,
+	resolveAnchor,
+	syncIds,
+	type IdTree,
+	type RowNode,
+} from './row-ids.js';
+import { submittedTree, submittedValues, toFormPath, type SubmissionRecord } from './submission.js';
+import { createRunTracker } from './stale-results.js';
+import { buildSubmissionShape } from '../lib/submission-shape.js';
 import {
 	clearAround,
 	clearAt,
@@ -42,7 +51,7 @@ import {
 	stable,
 	type IsArrayAt,
 	type Tree,
-} from './state-tree';
+} from './state-tree.js';
 import {
 	FORM_ROOT,
 	type FormStateContainer,
@@ -55,7 +64,7 @@ import {
 	type FormSubmitResult,
 	type FormValidateResult,
 	type NativeValidity,
-} from './types';
+} from './types.js';
 import {
 	changedPaths,
 	createMap,
@@ -69,7 +78,7 @@ import {
 	toPlain,
 	toPlainMap,
 	type NullMap,
-} from './value-tree';
+} from './value-tree.js';
 
 /** The issues of one path in one source. */
 type Issues = readonly FormStateIssue[];

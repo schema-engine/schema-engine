@@ -1,8 +1,8 @@
 import { RuiTextarea } from '@ecopages/radiant-ui/textarea';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules';
-import { FieldGroup } from '../field-group';
-import type { TextareaFieldProps } from './form-textarea.types';
+import { isRenderedRequired } from '../../lib/field-rules.js';
+import { FieldGroup } from '../field-group.js';
+import type { TextareaFieldProps } from './form-textarea.types.js';
 
 export function FormTextarea(config: TextareaFieldProps) {
 	return (

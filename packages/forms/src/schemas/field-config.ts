@@ -1,6 +1,6 @@
-import type { AuthoringElement } from '@/builder/form-authoring';
-import type { FormViewConfig } from './form-config';
-import type { BaseFieldInput } from './base-field';
+import type { AuthoringElement } from '../builder/form-authoring.js';
+import type { FormViewConfig } from './form-config.js';
+import type { BaseFieldInput } from './base-field.js';
 
 /** Open field config used by helpers that do not receive an engine type. */
 export type UnregisteredElementConfig = BaseFieldInput & {

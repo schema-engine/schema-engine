@@ -1,9 +1,9 @@
 import type { BaseValidationRule } from './types.js';
 import type { ValidationRegistry } from './validation-registry.js';
 import { getValidationRulesForElement } from './utils.js';
-import { walkNamedElements } from '@/lib/field-scope.js';
-import { resolveFieldRef } from '@/lib/field-ref.js';
-import { expandFieldTemplatePaths } from '@/lib/path-values.js';
+import { walkNamedElements } from '../../lib/field-scope.js';
+import { resolveFieldRef } from '../../lib/field-ref.js';
+import { expandFieldTemplatePaths } from '../../lib/path-values.js';
 
 const NO_DEPENDENTS: readonly string[] = [];
 const NO_REFERENCES: readonly string[] = [];

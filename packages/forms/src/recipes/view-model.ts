@@ -1,10 +1,10 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { FormConfigView } from '@/lib/normalized-form-config';
-import { stepAfter, stepBefore, type FormStepState } from '@/engine/step-machine';
-import type { RecipeRegistry } from '@/registries';
-import type { AnyRecipeRegistration } from '@/types/registration';
+import type { FormConfigView } from '../lib/normalized-form-config.js';
+import { stepAfter, stepBefore, type FormStepState } from '../engine/step-machine.js';
+import type { RecipeRegistry } from '../registries/index.js';
+import type { AnyRecipeRegistration } from '../types/registration.js';
 import { readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
-import type { RecipeKind, RecipeSlot } from './types';
+import type { RecipeKind, RecipeSlot } from './types.js';
 
 /**
  * The commands a stepper or an actions block calls, and whether each is available.

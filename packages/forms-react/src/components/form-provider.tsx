@@ -7,11 +7,11 @@ import {
 	type FormConfigView,
 	type FormValues,
 } from '@schema-engine/forms';
-import { getObjectIdentity } from '@/lib/object-identity';
-import { FormStateContext, type FormStateContextValue } from '@/hooks/form-state/context';
-import { createFieldRegistry, type FieldRegistry } from '@/hooks/form-state/field-registry';
-import type { FormProviderAction, FormProviderProps } from '@/hooks/form-state/types';
-import { useFormEngine } from '@/hooks/use-form-context';
+import { getObjectIdentity } from '../lib/object-identity.js';
+import { FormStateContext, type FormStateContextValue } from '../hooks/form-state/context.js';
+import { createFieldRegistry, type FieldRegistry } from '../hooks/form-state/field-registry.js';
+import type { FormProviderAction, FormProviderProps } from '../hooks/form-state/types.js';
+import { useFormEngine } from '../hooks/use-form-context.js';
 
 /** @remarks The form instance of one normalized config and one engine: the runtime, and the container it builds, are created once, from both. */
 function FormInstance<TOutputs extends EngineOutputMaps, TValues extends FormValues>({

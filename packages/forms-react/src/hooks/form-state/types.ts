@@ -11,7 +11,7 @@ import type {
 	NormalizedFormConfig,
 	SubmissionActionResult,
 } from '@schema-engine/forms';
-import type { RequiredFlagSource } from '@/hooks/is-element-required';
+import type { RequiredFlagSource } from '../is-element-required.js';
 import type {
 	FormIssueFormatter,
 	FormStateError,

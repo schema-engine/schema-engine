@@ -5,8 +5,8 @@ import {
 	type RegistrationMetadata,
 } from '@schema-engine/registry';
 import * as z from 'zod/mini';
-import type { LayoutIssue } from './layout-issue';
-import type { LayoutTheme, LayoutThemeCompilerOptions } from './layout-theme';
+import type { LayoutIssue } from './layout-issue.js';
+import type { LayoutTheme, LayoutThemeCompilerOptions } from './layout-theme.js';
 
 /**
  * Appearance axes a document picks values on and renderers emit as data attributes.

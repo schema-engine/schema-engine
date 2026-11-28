@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { FormEngineProvider } from '@/components/form-engine-provider';
-import { getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { FormEngineProvider } from '@/components/form-engine-provider.js';
+import { getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui.js';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.js';
+import { Badge } from '@/components/ui/badge.js';
+import { Button } from '@/components/ui/button.js';
+import { ScrollArea } from '@/components/ui/scroll-area.js';
+import { SUBMIT_FORM_MOCK_URL } from '../msw/submit-form.js';
 import {
 	type BuilderActionConfig,
 	formResetPlugin,

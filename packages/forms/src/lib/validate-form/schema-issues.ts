@@ -1,5 +1,5 @@
 import type { StandardSchemaIssue } from '@schema-engine/registry';
-import { issueAt, type FormValidationIssue, type Path } from './issues';
+import { issueAt, type FormValidationIssue, type Path } from './issues.js';
 
 /** A schema issue's path as plain keys, with each path segment flattened to its key. */
 export function schemaIssuePath(path: StandardSchemaIssue['path']): PropertyKey[] {

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { defineStoryForm, getEngine } from '@/stories/shared/form-builder.ui';
-import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { responsiveColumnsPlay, responsiveFieldSpansPlay } from './layout.play';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { defineStoryForm, getEngine } from '@/stories/shared/form-builder.ui.js';
+import { StoryWrapper } from '@/stories/shared/story-wrapper.js';
+import { responsiveColumnsPlay, responsiveFieldSpansPlay } from './layout.play.js';
 
 const engine = getEngine();
 

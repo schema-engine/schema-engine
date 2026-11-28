@@ -1,4 +1,4 @@
-import { isOpaque, join, createMap, type NullMap } from './value-tree';
+import { isOpaque, join, createMap, type NullMap } from './value-tree.js';
 
 /**
  * Field state kept in the shape of the values, one slot per node.

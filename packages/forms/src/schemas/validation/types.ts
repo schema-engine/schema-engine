@@ -1,4 +1,4 @@
-import type { FormFetch } from '@/lib/form-fetch';
+import type { FormFetch } from '../../lib/form-fetch.js';
 import * as z from 'zod/mini';
 import type { BaseRegistration, RegistrationMetadata } from '@schema-engine/registry';
 import type { DebounceScope } from '../../lib/debounce.js';

@@ -1,10 +1,10 @@
-import { FormController } from '@/adapters/radiant/controller';
+import { FormController } from '@/adapters/radiant/controller/index.js';
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
+import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story.js';
 import { expect, userEvent, within, waitFor, fn } from 'storybook/test';
-import { clickSubmit, expectFieldError, expectNoFieldError, playFieldFocusAndType } from '@/stories/shared/play';
+import { clickSubmit, expectFieldError, expectNoFieldError, playFieldFocusAndType } from '@/stories/shared/play.js';
 
-import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr.js';
 
 async function assertStaticArrayRows(canvasElement: HTMLElement, expected: number): Promise<boolean> {
 	if (!isStaticSsrPreview(canvasElement)) return false;

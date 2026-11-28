@@ -1,5 +1,5 @@
 import { formatIssuePath } from '@schema-engine/registry';
-import type { FormValidationIssue } from './issues';
+import type { FormValidationIssue } from './issues.js';
 
 /**
  * Thrown by {@link validateFormConfig} when a form does not validate.

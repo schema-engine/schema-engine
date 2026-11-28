@@ -6,11 +6,11 @@ import {
 } from '@schema-engine/layout';
 import { RuiFieldElement, type RuiFieldProps } from '@ecopages/radiant-ui/field';
 import type { JsxCustomElementAttributes } from '@ecopages/jsx';
-import { mergeFieldGridHost } from '@/hooks/grid-styles';
+import { mergeFieldGridHost } from '../hooks/grid-styles.js';
 import { bindTo, customElement, onUpdated, prop, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import { selectFieldState, type FormStateContainer } from '@schema-engine/forms/state-container';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import { formInstanceContext, type FormInstanceContextValue } from '../contexts/form-instance-context.js';
 
 /** RuiField's registration and presentation, restoring the required state and defaults. */
 @customElement('se-field')

@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { bindRecipe } from '@schema-engine/layout';
-import type { RecipeRegistration } from '@/types';
-import type { RecipeSlotSchemas, RecipeSpec } from './types';
+import type { RecipeRegistration } from '../types/index.js';
+import type { RecipeSlotSchemas, RecipeSpec } from './types.js';
 
 /**
  * Binds a recipe spec to a framework render payload (shell and slot components).

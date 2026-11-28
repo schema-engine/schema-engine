@@ -1,7 +1,7 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms';
-import { formEngineContext } from '@/components/provider';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine';
+import { formEngineContext } from '../../../components/provider.js';
+import { resolveFormEngine } from '../../../contexts/resolve-form-engine.js';
 
 /** Resolves the engine from the host's context or active render scope. */
 export class FormEngineController {

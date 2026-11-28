@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
+import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story.js';
 import { expect, within } from 'storybook/test';
-import { clickSubmit, expectFieldError, playClearSelection, playSelectOption } from '@/stories/shared/play';
+import { clickSubmit, expectFieldError, playClearSelection, playSelectOption } from '@/stories/shared/play.js';
 
-import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr.js';
 
 const programmingLanguages = [
 	{ value: 'js', label: 'JavaScript' },

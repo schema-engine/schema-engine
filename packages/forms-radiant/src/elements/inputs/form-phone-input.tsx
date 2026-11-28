@@ -20,12 +20,12 @@ import { RuiAutocomplete, RuiAutocompleteCollection, RuiAutocompleteEmpty } from
 import { RuiListbox, RuiListboxOption, RuiListboxOptionIndicator } from '@ecopages/radiant-ui/listbox';
 import type { CountryCode } from 'libphonenumber-js';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, emitControlCommit } from '@/lib/field-control';
-import { registerHostControl } from '@/lib/control-host';
+import { isRenderedRequired } from '../../lib/field-rules.js';
+import { emitControlChange, emitControlCommit } from '../../lib/field-control.js';
+import { registerHostControl } from '../../lib/control-host.js';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
-import { FieldGroup } from '../field-group';
+import { FieldGroup } from '../field-group.js';
 import {
 	detectCountryFromInput,
 	formatPhoneInputValue,
@@ -38,8 +38,8 @@ import {
 	countryFlagSvg,
 	type LibPhoneNumber,
 	type PhoneCountryOption,
-} from '@/lib/phone-number';
-import type { PhoneInputFieldProps } from './form-phone-input.types';
+} from '../../lib/phone-number.js';
+import type { PhoneInputFieldProps } from './form-phone-input.types.js';
 
 function PhoneFlag({ code, class: className }: { code?: string; class: string }) {
 	const svg = code ? countryFlagSvg(code) : '';

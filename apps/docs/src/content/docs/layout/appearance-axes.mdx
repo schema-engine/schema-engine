@@ -149,7 +149,7 @@ export const notice = defineStatic({
 
 For a recipe, `defineRecipeSpec({ ..., appearanceAxes: { shell: ['size', 'surface'] } })` lists the axes of each slot; a slot that declares axes must accept an `appearance` key in its schema, so authored configs type-check. The engine does not pass `appearance` to the schema when it parses the view; it writes the resolved pick back. An element schema never sees the key either: the engine strips it before parsing and writes it back, so a strict custom element schema still supports axes.
 
-The engine build throws when a registration declares an axis the theme lacks, naming the registration: `Element 'notice' declares unknown appearance axis 'tone'. Declared axes: size, surface. Add it with createFormEngine({ layout: { appearance: [...builtInAxes, defineAxis({ $type: 'tone', ... })] } }).` The form and each step accept every axis of the theme.
+The engine build throws a `RegistryError` with code `'invalid-declaration'` when a registration declares an axis the theme lacks, naming the registration: `Element 'notice' declares unknown appearance axis 'tone'. Declared axes: size, surface. Add it with createFormEngine({ layout: { appearance: [...builtInAxes, defineAxis({ $type: 'tone', ... })] } }).` The form and each step accept every axis of the theme.
 
 ## Add a host axis
 

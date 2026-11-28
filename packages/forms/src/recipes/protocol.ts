@@ -1,7 +1,7 @@
 import { createRecipeRegistry, defineRecipeProtocol, type KindOf, type SlotOf } from '@schema-engine/layout';
 import type { CreateRegistryOptions, ReadOnlyRegistry } from '@schema-engine/registry';
-import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
-import type { AnyRecipeRegistration } from '@/types/registration';
+import { DEFAULT_WIZARD_RECIPE } from '../lib/form-view.js';
+import type { AnyRecipeRegistration } from '../types/registration.js';
 
 /**
  * The recipe protocol of forms: four slots, composed in this order, and two kinds.

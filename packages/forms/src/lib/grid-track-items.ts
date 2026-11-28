@@ -1,6 +1,6 @@
 import { elementIsSubgrid } from '@schema-engine/layout';
-import { getElementChildren } from './element-children';
-import { childPath, type Path } from './validate-form/issues';
+import { getElementChildren } from './element-children.js';
+import { childPath, type Path } from './validate-form/issues.js';
 
 /** An element and where it sits in the form, as validation reads it. */
 export interface PlacedItem {

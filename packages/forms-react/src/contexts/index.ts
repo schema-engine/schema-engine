@@ -1,1 +1,1 @@
-export { ViewProvider } from './view-context';
+export { ViewProvider } from './view-context.js';

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
-import { createDefaultFieldPlay, createValidationFieldPlay } from '@/stories/shared/field-plays';
+import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story.js';
+import { createDefaultFieldPlay, createValidationFieldPlay } from '@/stories/shared/field-plays.js';
 
 const meta = {
 	...formRendererMeta,

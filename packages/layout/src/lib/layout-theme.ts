@@ -7,14 +7,14 @@ import {
 	type CompiledAppearance,
 	type ResolvedAppearanceAxes,
 	type builtInAxes,
-} from '@/lib/appearance';
+} from './appearance.js';
 import {
 	canonicalGridTheme,
 	getGridThemeCss,
 	resolveGridTheme,
 	type GridThemeOptions,
 	type NormalizedGridTheme,
-} from '@/lib/grid-styles';
+} from './grid-styles.js';
 
 /** What an author writes: the grid vocabulary and the appearance vocabulary of one theme. */
 export interface LayoutThemeOptions<

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/spec';
 import * as classic from 'zod';
 import * as z from 'zod/mini';
+import { RegistryError } from '@schema-engine/registry';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { issuePath } from '@/engine/submission-schema';
 import { createFormStateContainer } from '@/state-container/create-form-state-container';
@@ -418,6 +419,17 @@ describe('engine.submissionSchema', () => {
 	});
 });
 
+/** The error `createFormEngine` throws for this element, which a test branches on by `code`. */
+function buildError(element: unknown): RegistryError {
+	try {
+		createFormEngine({ elements: [element as never] });
+	} catch (error) {
+		if (error instanceof RegistryError) return error;
+		throw error;
+	}
+	throw new Error('Expected createFormEngine to throw a RegistryError');
+}
+
 describe('createFormEngine', () => {
 	const handWritten = (extra: Record<string, unknown>) =>
 		({
@@ -430,15 +442,21 @@ describe('createFormEngine', () => {
 		}) as never;
 
 	test('rejects an input registration that declares no value, naming its $type', () => {
-		expect(() => createFormEngine({ elements: [handWritten({})] })).toThrow(
-			/Element 'hand' is an input that declares no value/,
-		);
+		expect(buildError(handWritten({}))).toMatchObject({
+			code: 'invalid-declaration',
+			kind: 'Element',
+			$type: 'hand',
+			message: expect.stringMatching(/Element 'hand' is an input that declares no value/),
+		});
 	});
 
 	test('a container kind is no container: it needs childPaths beside it', () => {
-		expect(() => createFormEngine({ elements: [handWritten({ containerKind: 'object' })] })).toThrow(
-			/Element 'hand' sets containerKind without childPaths/,
-		);
+		expect(buildError(handWritten({ containerKind: 'object' }))).toMatchObject({
+			code: 'invalid-child-paths',
+			kind: 'Element',
+			$type: 'hand',
+			message: expect.stringMatching(/Element 'hand' sets containerKind without childPaths/),
+		});
 	});
 
 	test('a schema that is not Zod is a container by its childPaths, with no value', () => {
@@ -474,9 +492,12 @@ describe('createFormEngine', () => {
 
 	test('a registration written by hand states its kind, and the helpers set it', () => {
 		const unstated = { ...(handWritten({}) as object), kind: undefined } as never;
-		expect(() => createFormEngine({ elements: [unstated] })).toThrow(
-			/Element 'hand' states no kind.*defineInput.*defineStatic/,
-		);
+		expect(buildError(unstated)).toMatchObject({
+			code: 'invalid-declaration',
+			kind: 'Element',
+			$type: 'hand',
+			message: expect.stringMatching(/Element 'hand' states no kind.*defineInput.*defineStatic/),
+		});
 		expect(note.kind).toBe('static');
 		expect(fieldSet.kind).toBe('input');
 	});
