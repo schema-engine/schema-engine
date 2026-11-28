@@ -9,13 +9,13 @@ Each export has one import path: `@schema-engine/forms-radiant` no longer re-exp
 | `import { defineRecipeSpec } from '@schema-engine/forms-radiant'`      | `import { defineRecipeSpec } from '@schema-engine/forms/recipes'` |
 | `import { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms-radiant'` | `import { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms'`    |
 
-`defineRecipe` stays on `@schema-engine/forms-radiant`.
+`defineRecipe` is on `@schema-engine/forms-radiant/primitives`, with the other things you build recipes from.
 
 ```ts
 // before
 import { defineRecipe, defineRecipeSpec, DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms-radiant';
 // after
-import { defineRecipe } from '@schema-engine/forms-radiant';
+import { defineRecipe } from '@schema-engine/forms-radiant/primitives';
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
 import { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms';
 ```

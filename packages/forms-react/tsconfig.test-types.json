@@ -4,5 +4,6 @@
 		"types": ["node", "vite/client"],
 		"noEmit": true
 	},
-	"include": ["test", "vitest.setup.ts"]
+	"include": ["test", "vitest.setup.ts"],
+	"exclude": ["test/consumer"]
 }

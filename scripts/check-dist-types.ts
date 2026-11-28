@@ -1,5 +1,7 @@
 import {
+	copyFileSync,
 	existsSync,
+	globSync,
 	mkdirSync,
 	mkdtempSync,
 	readdirSync,
@@ -43,6 +45,12 @@ function typedEntries(dir: string): PackageEntries {
  * `exports` map as an installed one is. It compiles with `skipLibCheck: false`, so a declaration file that does not
  * type-check is an error, and every entry must export something: a declaration that fails to resolve its own imports
  * leaves an entry with no exports, which no error of the consumer would name.
+ *
+ * @remarks
+ * It also compiles the consumer fixtures of the packages (`test/consumer/*.ts`), which read every public entry by name and
+ * every removed entry under `@ts-expect-error`. They compile here, not in the package, because a package inside a
+ * checkout that holds another install of the same package (a git worktree under the main checkout) would resolve a
+ * removed subpath through that install's `node_modules`, and the scratch project has no ancestor to find one in.
  */
 function consumerErrors(packages: readonly PackageEntries[], resolution: 'node16' | 'bundler'): string[] {
 	const scratch = mkdtempSync(path.join(tmpdir(), 'dist-types-'));
@@ -61,7 +69,22 @@ function consumerErrors(packages: readonly PackageEntries[], resolution: 'node16
 			.join('\n');
 		const file = path.join(scratch, 'consumer.ts');
 		writeFileSync(file, source);
-		const program = ts.createProgram([file], {
+		const fixtures = packages.flatMap(({ dir }) =>
+			globSync('test/consumer/*.ts', { cwd: dir }).map((fixture) => {
+				const copy = path.join(scratch, 'fixtures', path.basename(dir), path.basename(fixture));
+				mkdirSync(path.dirname(copy), { recursive: true });
+				copyFileSync(path.join(dir, fixture), copy);
+				return copy;
+			}),
+		);
+		for (const name of ['forms-react', 'forms-radiant']) {
+			if (!fixtures.some((fixture) => path.basename(path.dirname(fixture)) === name)) {
+				throw new Error(
+					`packages/${name}/test/consumer/ holds no fixture, so its published entries would go unchecked.`,
+				);
+			}
+		}
+		const program = ts.createProgram([file, ...fixtures], {
 			strict: true,
 			noEmit: true,
 			skipLibCheck: false,
@@ -75,7 +98,7 @@ function consumerErrors(packages: readonly PackageEntries[], resolution: 'node16
 		});
 		return ts.getPreEmitDiagnostics(program).map((diagnostic) => {
 			const where = diagnostic.file
-				? `${path.relative(root, diagnostic.file.fileName)}:${diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start ?? 0).line + 1}`
+				? `${path.relative(diagnostic.file.fileName.startsWith(scratch) ? scratch : root, diagnostic.file.fileName)}:${diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start ?? 0).line + 1}`
 				: 'program';
 			return `${where} TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`;
 		});

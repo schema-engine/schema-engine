@@ -65,13 +65,15 @@ export const Contact = () => <FormRenderer engine={engine} config={form} onSubmi
 
 ## Entry points
 
-| Import                                                | Holds                                                                                                          |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms-react`                          | `FormRenderer`, `FormProvider` and `FormEngineProvider`                                                        |
-| `@schema-engine/forms-react/hooks`                    | `useFormField`, `useFormContext`, `useWatch`, `useFieldArray`, the runtime and view hooks                      |
-| `@schema-engine/forms-react/primitives`               | `FormElement`, `FormElements`, `ChildGrid` (`subgrid` for a container whose `grid` sets it) and `defineRecipe` |
-| `@schema-engine/forms-react/contexts`                 | The view provider                                                                                              |
-| `@schema-engine/forms-react/components/form-debugger` | `FormDebugger`, a development panel                                                                            |
+| Import                                    | Holds                                                                                                                                                                   |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-react`              | `FormRenderer`, `FormProvider` and `FormEngineProvider`                                                                                                                 |
+| `@schema-engine/forms-react/primitives`   | What you build widgets and recipes from: `FormElement`, `FormElements`, `ChildGrid` (`subgrid` for a container whose `grid` sets it), `defineRecipe` and `ViewProvider` |
+| `@schema-engine/forms-react/hooks`        | `useFormField`, `useFormContext`, `useWatch`, `useFieldArray`, the runtime and view hooks                                                                               |
+| `@schema-engine/forms-react/debugger`     | `FormDebugger`, a development panel                                                                                                                                     |
+| `@schema-engine/forms-react/debugger.css` | The debugger's styles, loaded only where you render it                                                                                                                  |
+
+`@schema-engine/forms-radiant` has the same `.`, `/primitives`, `/debugger` and `/debugger.css`, with the same meaning.
 
 ## Documentation
 

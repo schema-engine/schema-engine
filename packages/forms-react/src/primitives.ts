@@ -20,6 +20,7 @@ export { FormElements } from './components/internals/form-elements.js';
 export type { FormElementsProps } from './components/internals/form-elements.js';
 export { ChildGrid } from './components/internals/child-grid.js';
 export type { ChildGridProps } from './components/internals/child-grid.js';
+export { ViewProvider } from './contexts/view-context.js';
 
 /** Stable React recipe contracts for consumer-owned view implementations. */
 export type FormShellProps = FormShellLayout<React.ReactNode>;

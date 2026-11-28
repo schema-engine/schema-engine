@@ -6,7 +6,7 @@ import { createFormEngine } from '@schema-engine/forms';
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
 import { StepHeaderBlock } from '@/components/blocks';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
-import { defineRecipe } from '@/recipes';
+import { defineRecipe } from '@/primitives';
 
 const HeaderSchema = v.object({
 	align: v.optional(v.picklist(['start', 'center']), 'start'),

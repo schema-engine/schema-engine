@@ -627,12 +627,30 @@ const TRACKED_NPM_DEPENDENCIES = [
 	'imask',
 ];
 
-const PUBLIC_FORMS_REACT_IMPORTS = new Set([
-	'@schema-engine/forms-react',
-	'@schema-engine/forms-react/contexts',
-	'@schema-engine/forms-react/hooks',
-	'@schema-engine/forms-react/primitives',
-]);
+/**
+ * The specifiers a registry copy may import from `@schema-engine/forms-react`: the JavaScript entries of its `exports` map.
+ *
+ * @remarks
+ * Read from the package manifest, so an entry the package adds or drops is public or refused here without a second list to edit.
+ */
+const PUBLIC_FORMS_REACT_IMPORTS = publicEntrySpecifiers(join(root, 'packages/forms-react/package.json'));
+
+/** Whether a registry copy may import `spec`: anything outside `@schema-engine/forms-react`, or one of its JavaScript entries. */
+export function isPublicFormsReactImport(spec: string): boolean {
+	return !spec.startsWith('@schema-engine/forms-react') || PUBLIC_FORMS_REACT_IMPORTS.has(spec);
+}
+
+function publicEntrySpecifiers(manifestPath: string): Set<string> {
+	const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+		name: string;
+		exports: Record<string, string | { import?: string }>;
+	};
+	return new Set(
+		Object.entries(manifest.exports)
+			.filter(([key, target]) => key !== './package.json' && typeof target === 'object' && target.import)
+			.map(([key]) => (key === '.' ? manifest.name : `${manifest.name}${key.slice(1)}`)),
+	);
+}
 
 function expectedFromImports(imports: string[], base: Base) {
 	const registryDependencies = new Set<string>();
@@ -710,7 +728,7 @@ export function validateCatalog(): string[] {
 				if (spec.includes('@schema-engine/forms-react/components/internals')) {
 					errors.push(`${item.name} reaches into forms-react internals: ${spec}`);
 				}
-				if (spec.startsWith('@schema-engine/forms-react') && !PUBLIC_FORMS_REACT_IMPORTS.has(spec)) {
+				if (!isPublicFormsReactImport(spec)) {
 					errors.push(`${item.name} uses a non-public forms-react import: ${spec}`);
 				}
 			}

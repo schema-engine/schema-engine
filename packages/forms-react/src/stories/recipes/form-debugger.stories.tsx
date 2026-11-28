@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FormRenderer } from '@/components/internals/form-renderer.js';
-import { FormDebugger } from '@/components/form-debugger/index.js';
+import { FormDebugger } from '@/debugger.js';
 import { FormTemplates } from '@/stories/shared/sample-forms.js';
 import { recipeStoryDecorators, recipeStoryEngine } from './shared/recipe-story.js';
 

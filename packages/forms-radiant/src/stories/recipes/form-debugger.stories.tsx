@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { FormDebugger } from '@/components/form-debugger/index.js';
+import { FormDebugger } from '@/debugger.js';
 import { FormTemplates } from '@/stories/shared/sample-forms.js';
 import { formRendererMeta } from '@/stories/shared/form-story.js';
 import { recipeStoryMeta } from './shared/recipe-story.js';

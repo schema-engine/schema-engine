@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import ts from 'typescript';
 import * as layout from '@/index';
@@ -108,20 +108,26 @@ describe('the layout root entry on a server', () => {
 	const DOM_TYPE_NAMES =
 		/\b(?:ParentNode|Node|NodeList|Element|HTMLElement|SVGElement|Document|DocumentFragment|ShadowRoot|Window|Event|EventTarget)\b/;
 
-	/** The declarations the root entry emits, as a consumer's compiler reads them, without comments. */
+	/**
+	 * The published declaration files a consumer's compiler reads from the root entry, without comments.
+	 *
+	 * @remarks
+	 * Walks the relative imports of `dist/index.d.ts`, which `test:all` reads after `build:lib`, so the check is the
+	 * shape users install and costs a file scan, not a compile of the source.
+	 */
 	function emittedDeclarations(): Map<string, string> {
-		const root = resolve(__dirname, '..');
-		const configFile = ts.readConfigFile(resolve(root, 'tsconfig.json'), (file) => ts.sys.readFile(file));
-		const { options } = ts.parseJsonConfigFileContent(configFile.config, ts.sys, root);
-		const program = ts.createProgram([resolve(root, 'src/index.ts')], {
-			...options,
-			noEmit: false,
-			declaration: true,
-			emitDeclarationOnly: true,
-			removeComments: true,
-		});
+		const dist = resolve(__dirname, '../dist');
 		const declarations = new Map<string, string>();
-		program.emit(undefined, (file, text) => declarations.set(file, text), undefined, true);
+		const pending = [resolve(dist, 'index.d.ts')];
+		for (let file = pending.pop(); file !== undefined; file = pending.pop()) {
+			if (declarations.has(file)) continue;
+			const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.ESNext);
+			const printed = ts.createPrinter({ removeComments: true }).printFile(source);
+			declarations.set(file, printed);
+			for (const [, specifier] of printed.matchAll(/from ['"](\.{1,2}\/[^'"]+)['"]/g)) {
+				pending.push(resolve(dirname(file), specifier!.replace(/\.js$/, '.d.ts')));
+			}
+		}
 		return declarations;
 	}
 

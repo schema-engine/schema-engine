@@ -26,7 +26,6 @@
 	"main": "dist/index.js",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
-	"style": "dist/global.css",
 	"files": [
 		"/dist/*",
 		"/skill"
@@ -121,15 +120,11 @@
 			"types": "./dist/hooks/index.d.ts",
 			"import": "./dist/hooks/index.js"
 		},
-		"./contexts": {
-			"types": "./dist/contexts/index.d.ts",
-			"import": "./dist/contexts/index.js"
+		"./debugger": {
+			"types": "./dist/debugger.d.ts",
+			"import": "./dist/debugger.js"
 		},
-		"./components/form-debugger": {
-			"types": "./dist/components/form-debugger/index.d.ts",
-			"import": "./dist/components/form-debugger/index.js"
-		},
-		"./global.css": "./dist/global.css"
+		"./debugger.css": "./dist/debugger.css"
 	},
 	"msw": {
 		"workerDirectory": [

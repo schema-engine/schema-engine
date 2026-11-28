@@ -6,7 +6,7 @@ import { defineRecipeSpec } from '@schema-engine/forms/recipes';
 import { StepHeaderConfigSchema, WizardActionsConfigSchema } from '@schema-engine/forms/recipes/built-in';
 import { StepHeaderBlock, WizardActionsBlock } from '@/components/blocks';
 import { RecipeRenderer } from '@/components/internals/recipe-renderer';
-import { defineRecipe } from '@/recipes';
+import { defineRecipe } from '@/primitives';
 
 const recipe = defineRecipe(
 	defineRecipeSpec({

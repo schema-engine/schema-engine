@@ -6,6 +6,18 @@ order: 5
 
 # Server rendering and engine binding
 
+## Server boot
+
+Every `@schema-engine/forms-radiant` entry defines custom elements when it loads, and a custom element needs `HTMLElement`, which Node does not have. Import Radiant's server runtime once, first, at the boot of the server and before any forms-radiant import:
+
+```ts title="server-boot.ts"
+import '@ecopages/radiant/server/install-ssr-runtime';
+```
+
+This holds for the root, `/primitives`, `/registrations` and `/debugger` alike. Without it the import throws `HTMLElement is not defined`. The browser needs no such import.
+
+## Bind the engine
+
 Radiant UI views rendered on the server do not register their elements in the browser, so
 the module that builds your engine must reach the client: it imports `@schema-engine/forms-radiant`,
 which registers the form hosts and the Radiant UI components they use. The engine is not
