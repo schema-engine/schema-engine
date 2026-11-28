@@ -1,0 +1,104 @@
+import { describe, expect, it } from 'vitest';
+import { RegistryError, type JSONSchemaObject } from '../../src';
+import { replaceChildSlot } from '../../src/json-schema';
+
+const union: JSONSchemaObject = { anyOf: [{ $ref: '#/$defs/leaf' }, { $ref: '#/$defs/text' }] };
+
+const slot = (definition: JSONSchemaObject, keys: readonly string[] = ['kids']): JSONSchemaObject => {
+	replaceChildSlot(definition, { $type: 'box', keys }, union);
+	return definition;
+};
+
+const thrown = (run: () => unknown): unknown => {
+	try {
+		run();
+	} catch (error) {
+		return error;
+	}
+	throw new Error('Expected replaceChildSlot to throw');
+};
+
+describe('replaceChildSlot', () => {
+	describe('Scenario: The slot is replaced by what it is, and nothing around it', () => {
+		it('takes the union for the items of an array and keeps its bounds and annotations', () => {
+			const definition = slot({
+				type: 'object',
+				required: ['kids'],
+				properties: { kids: { type: 'array', items: {}, minItems: 1, maxItems: 3, default: [] } },
+			});
+
+			expect(definition).toEqual({
+				type: 'object',
+				required: ['kids'],
+				properties: { kids: { type: 'array', items: union, minItems: 1, maxItems: 3, default: [] } },
+			});
+		});
+
+		it('becomes the union for an object slot and keeps its annotations', () => {
+			const definition = slot({
+				type: 'object',
+				properties: { kids: { type: 'object', properties: {}, description: 'One child' } },
+			});
+
+			expect(definition.properties).toEqual({ kids: { description: 'One child', ...union } });
+		});
+
+		it('becomes a child or a list of children for an open slot', () => {
+			const definition = slot({ type: 'object', properties: { kids: { title: 'Either' } } });
+
+			expect(definition.properties).toEqual({
+				kids: { title: 'Either', anyOf: [union, { type: 'array', items: union }] },
+			});
+		});
+
+		it('reads a nested key path', () => {
+			const definition = slot(
+				{ type: 'object', properties: { aside: { type: 'object', properties: { header: {} } } } },
+				['aside', 'header'],
+			);
+
+			expect(definition.properties).toEqual({
+				aside: { type: 'object', properties: { header: { anyOf: [union, { type: 'array', items: union }] } } },
+			});
+		});
+
+		it('gives every position of a tuple the union and keeps a rest that is closed', () => {
+			const definition = slot({
+				type: 'object',
+				properties: { kids: { type: 'array', prefixItems: [{}, {}], items: false } },
+			});
+
+			expect(definition.properties).toEqual({
+				kids: { type: 'array', prefixItems: [union, union], items: false },
+			});
+		});
+
+		it('writes a copy of the union at each place, so changing one leaves the others', () => {
+			const definition = slot({
+				type: 'object',
+				properties: { kids: { type: 'array', prefixItems: [{}, {}], items: {} } },
+			});
+			const kids = (definition.properties as Record<string, { prefixItems: JSONSchemaObject[] }>).kids!;
+
+			expect(kids.prefixItems[0]).not.toBe(kids.prefixItems[1]);
+			expect(kids.prefixItems[0]).not.toBe(union);
+		});
+	});
+
+	describe('Scenario: A slot the walk cannot reach throws', () => {
+		it.each([
+			['behind a $ref', { type: 'object', properties: { kids: { $ref: '#/$defs/list' } } }],
+			['behind allOf', { type: 'object', properties: { kids: { allOf: [{ type: 'array' }] } } }],
+			['not declared', { type: 'object', properties: {} }],
+			[
+				'inside a schema with an $id of its own',
+				{ type: 'object', $id: 'https://example.com/box', properties: { kids: {} } },
+			],
+		])('throws RegistryError unreachable-child-path for a slot %s', (_name, definition) => {
+			const error = thrown(() => slot(definition));
+
+			expect(error).toBeInstanceOf(RegistryError);
+			expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'box', childPath: ['kids'] });
+		});
+	});
+});

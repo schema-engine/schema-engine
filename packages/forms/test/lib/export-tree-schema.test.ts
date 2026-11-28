@@ -21,10 +21,7 @@ describe('exportTreeSchema with the elements of forms', () => {
 		CheckboxElementContract,
 	]);
 	const document = exportTreeSchema(elements, {
-		resolve: (schema, { io, target }) =>
-			isZodType(schema)
-				? z.toJSONSchema(schema, { io, target: target === 'draft-07' ? 'draft-7' : target })
-				: undefined,
+		resolve: (schema, { io, target }) => (isZodType(schema) ? z.toJSONSchema(schema, { io, target }) : undefined),
 	});
 	const everyElement = elements.keys().map((type) => ({ $ref: `#/$defs/${type}` }));
 

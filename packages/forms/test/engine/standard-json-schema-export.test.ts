@@ -146,8 +146,8 @@ describe('a schema that provides Standard JSON Schema is exported as exactly wha
 		targets.length = 0;
 		expect(entry(collection({ io: 'output' }).schemas, 'element:widget')).toEqual(widgetOutput);
 		expect(actionDefinition({ io: 'output' })).toMatchObject(pingOutput);
-		collection({ target: 'draft-7' });
-		collection({ target: 'draft-4' });
+		collection({ target: 'draft-07' });
+		collection({ target: 'draft-04' });
 		expect(targets).toEqual(['draft-2020-12', 'draft-07', 'draft-04']);
 	});
 
@@ -503,7 +503,7 @@ describe('a schema that exports itself keeps its references inside the resource 
 			bodyOf: (root: JSONSchema) => (root.$defs as Record<string, JSONSchema>).body!,
 		},
 		'hoisted, as a draft-07 fragment $id': {
-			target: 'draft-7' as const,
+			target: 'draft-07' as const,
 			schema: (name: string) => ({
 				$id: '#node',
 				$ref: '#/definitions/body',
@@ -556,7 +556,7 @@ describe('a draft-07 schema whose root $id is a fragment, hoisted into a collect
 		),
 	});
 	const { schemas } = twins.generateJSONSchemaCollection({
-		target: 'draft-7',
+		target: 'draft-07',
 		uri: (id) => `https://example.test/${id}`,
 	}) as unknown as Collection;
 	const references = (schemas['validation-rule']!.anyOf as JSONSchema[]).flatMap((member) =>

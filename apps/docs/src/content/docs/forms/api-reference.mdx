@@ -172,6 +172,12 @@ Use `io: 'input'` for authoring input (where defaulted fields are optional) or
 what authors write. An element whose schema pipes a transform (Radiant's `input-otp`) has no
 JSON Schema for its output side, so `io: 'output'` throws for an engine that registers one.
 
+`target` is a Standard JSON Schema name, one of `'draft-2020-12'` (the default), `'draft-07'`, `'draft-04'` and
+`'openapi-3.0'`; the type is `JSONSchemaTarget` from `@schema-engine/registry`. Any other value, including Zod's older
+spellings of the two drafts, throws before a schema is converted. The Standard converters of
+`getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` throw the same way, and a submission's
+converter writes `'draft-2020-12'`, `'draft-07'` and `'openapi-3.0'`.
+
 The collection also holds the `validation-rule` entry: the union of every registered rule, which the form config schema defines once and each element's `rules` refers to.
 
 ```ts

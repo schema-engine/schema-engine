@@ -5,7 +5,8 @@ import {
 	readStandardJSONSchema,
 	type JSONSchemaPlacement,
 } from '@schema-engine/registry/json-schema';
-import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-schema';
+import type { JSONSchemaTarget } from '@schema-engine/registry';
+import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import { isZodType } from '@/lib/is-zod-type';
 import { logger } from '@/lib/logger';
 
@@ -29,8 +30,24 @@ interface StandardSource {
 	readonly open: () => z.ZodMiniType;
 }
 
-/** The Standard JSON Schema names of the targets Zod also accepts by an older name. */
-const STANDARD_TARGETS: Readonly<Record<string, string>> = { 'draft-7': 'draft-07', 'draft-4': 'draft-04' };
+/**
+ * A target as the Zod converter spells it.
+ *
+ * @remarks
+ * Zod 4.0 and 4.1 know the draft-07 and draft-04 dialects only as `'draft-7'` and `'draft-4'`, and later versions accept
+ * both. The peer range of Zod starts at 4.0.17, so the Zod converter is always given the spelling every version knows,
+ * and everything else in the engine uses the Standard JSON Schema names.
+ */
+export function toZodTarget(target: JSONSchemaTarget): 'draft-2020-12' | 'draft-7' | 'draft-4' | 'openapi-3.0' {
+	switch (target) {
+		case 'draft-07':
+			return 'draft-7';
+		case 'draft-04':
+			return 'draft-4';
+		default:
+			return target;
+	}
+}
 
 const STANDARD_SOURCES = new WeakMap<object, StandardSource>();
 
@@ -107,9 +124,8 @@ export interface ExportConversion {
  * sees what the entry is. They are annotations, so they change nothing the schema accepts. The entry of a collection
  * is the schema's own document root, so it is written there without hoisting.
  *
- * The engine takes Zod's target names, so `draft-7` reaches a converter as `draft-07`. A converter that throws (a
- * target it does not support, as ArkType does for `openapi-3.0`) does not stop the export: the schema is listed by the
- * `open` object it was resolved with, and a warning names its vendor and the target.
+ * A converter that throws (a target it does not support, as ArkType does for `openapi-3.0`) does not stop the export: the
+ * schema is listed by the `open` object it was resolved with, and a warning names its vendor and the target.
  */
 export function createExportConversion(options: {
 	io: 'input' | 'output';
@@ -118,17 +134,20 @@ export function createExportConversion(options: {
 }): ExportConversion {
 	const { io, target, placement } = options;
 	const embedder = createJSONSchemaEmbedder(target, placement);
-	const standardTarget = STANDARD_TARGETS[target] ?? target;
 
 	function ownJSONSchema(source: StandardSource): JSONSchemaObject {
 		try {
-			return source.converter[io]({ target: standardTarget });
+			return source.converter[io]({ target });
 		} catch (error) {
 			logger.warn(
-				`A '${source.vendor}' schema could not write JSON Schema for target '${standardTarget}' (${io}), so the export lists it by its shape.`,
+				`A '${source.vendor}' schema could not write JSON Schema for target '${target}' (${io}), so the export lists it by its shape.`,
 				{ error },
 			);
-			return z.toJSONSchema(source.open(), { target, io, unrepresentable: 'any' }) as JSONSchemaObject;
+			return z.toJSONSchema(source.open(), {
+				target: toZodTarget(target),
+				io,
+				unrepresentable: 'any',
+			}) as JSONSchemaObject;
 		}
 	}
 

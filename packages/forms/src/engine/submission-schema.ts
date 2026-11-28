@@ -4,6 +4,7 @@ import { frozenCopy } from '@/lib/frozen-copy';
 import { isPlainObject } from '@/lib/is-plain-object';
 import { buildSubmissionShape, type ShapeElement, type ShapeStep, type SubmissionShape } from '@/lib/submission-shape';
 import { isZodType } from '@/lib/is-zod-type';
+import { toZodTarget } from '@/lib/export-schema';
 import {
 	createJSONSchemaEmbedder,
 	readStandardJSONSchema,
@@ -212,24 +213,29 @@ export function issuePath(issue: StandardSchemaV1.Issue): string {
 	return (issue.path ?? []).map((segment) => String(typeof segment === 'object' ? segment.key : segment)).join('.');
 }
 
-function standardOptions(options: StandardJSONSchemaV1.Options): {
-	target: 'draft-2020-12' | 'draft-7' | 'openapi-3.0';
-} {
-	switch (options.target) {
-		case 'draft-2020-12':
-			return { target: 'draft-2020-12' };
-		case 'draft-07':
-			return { target: 'draft-7' };
-		case 'openapi-3.0':
-			return { target: 'openapi-3.0' };
-		default:
-			throw new Error(`The JSON Schema target '${options.target}' is not supported for a submission.`);
+const SUBMISSION_TARGETS = ['draft-2020-12', 'draft-07', 'openapi-3.0'] as const;
+
+type SubmissionTarget = (typeof SUBMISSION_TARGETS)[number];
+
+/**
+ * The target a submission's JSON Schema is written for.
+ *
+ * @remarks
+ * A submission supports `'draft-2020-12'`, `'draft-07'` and `'openapi-3.0'`, and refuses any other target before a
+ * schema is converted.
+ */
+function submissionTarget(options: StandardJSONSchemaV1.Options): SubmissionTarget {
+	const supported = SUBMISSION_TARGETS.find((name) => name === options.target);
+	if (supported === undefined) {
+		throw new Error(`The JSON Schema target '${options.target}' is not supported for a submission.`);
 	}
+	return supported;
 }
 
 /** What writing the JSON Schema of a submission reads at every node. */
 interface JsonContext {
 	readonly io: 'input' | 'output';
+	readonly target: SubmissionTarget;
 	readonly options: StandardJSONSchemaV1.Options;
 	readonly embedder: JSONSchemaEmbedder;
 }
@@ -243,10 +249,10 @@ interface JsonContext {
  * date) as `{}` rather than an error. Each result is embedded by the export's {@link JSONSchemaEmbedder}.
  */
 function leafJsonSchema(name: string, schema: StandardSchemaV1, context: JsonContext): JSONSchemaObject {
-	const { io, options, embedder } = context;
+	const { io, target, options, embedder } = context;
 	if (isZodType(schema)) {
 		return embedder.embed(
-			z.toJSONSchema(schema, { ...standardOptions(options), io, unrepresentable: 'any' }) as JSONSchemaObject,
+			z.toJSONSchema(schema, { target: toZodTarget(target), io, unrepresentable: 'any' }) as JSONSchemaObject,
 		);
 	}
 	const converter = readStandardJSONSchema(schema);
@@ -283,8 +289,9 @@ function nodeJsonSchema(node: Node, context: JsonContext): JSONSchemaObject {
 
 /** The JSON Schema of a submission tree, with the definitions its leaves hoisted at its root. */
 function treeJsonSchema(tree: Node, io: 'input' | 'output', options: StandardJSONSchemaV1.Options): JSONSchemaObject {
-	const embedder = createJSONSchemaEmbedder(options.target, { kind: 'document' });
-	return embedder.finish({ ...toJsonSchema(tree, { io, options, embedder }) });
+	const target = submissionTarget(options);
+	const embedder = createJSONSchemaEmbedder(target, { kind: 'document' });
+	return embedder.finish({ ...toJsonSchema(tree, { io, target, options, embedder }) });
 }
 
 /**

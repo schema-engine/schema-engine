@@ -315,9 +315,11 @@ describe('engine.submissionSchema', () => {
 			required: ['email'],
 			additionalProperties: false,
 		});
-		expect(() => engine.submissionSchema(config)['~standard'].jsonSchema.input({ target: 'draft-3' })).toThrow(
-			/not supported/,
-		);
+		for (const target of ['draft-3', 'draft-7', 'draft-04']) {
+			expect(() => engine.submissionSchema(config)['~standard'].jsonSchema.input({ target })).toThrow(
+				`The JSON Schema target '${target}' is not supported for a submission.`,
+			);
+		}
 	});
 
 	test('describes each field by its label, then its help text', () => {

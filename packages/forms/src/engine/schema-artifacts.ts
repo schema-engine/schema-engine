@@ -1,5 +1,7 @@
 import * as z from 'zod/mini';
 import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
+import type { JSONSchemaTarget } from '@schema-engine/registry';
+import { assertJSONSchemaTarget } from '@schema-engine/registry/json-schema';
 import { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import { isZodType } from '@/lib/is-zod-type';
@@ -8,7 +10,6 @@ import {
 	createStandardJSONSchema,
 	createStandardJSONSchemaRecord,
 	type JSONSchemaObject,
-	type JSONSchemaTarget,
 } from '@/lib/standard-json-schema';
 
 /**
@@ -134,6 +135,18 @@ export function createActionConfigValidatorMap(
 	);
 }
 
+/**
+ * The target of a Standard JSON Schema converter's options.
+ *
+ * @remarks
+ * The Standard JSON Schema type leaves the target open so that a converter may support more than the four this one
+ * does, and a converter refuses a target it does not support. This one throws before any schema is converted.
+ */
+function targetOf(options: StandardJSONSchemaV1.Options): JSONSchemaTarget {
+	assertJSONSchemaTarget(options.target);
+	return options.target;
+}
+
 function generateFormConfigJSONSchemaForIO(
 	metadataRegistry: FormEngineSchemaMetadataRegistry,
 	formConfigValidator: z.ZodMiniType,
@@ -172,6 +185,7 @@ function createFormEngineJSONSchemaSerializer(
 		actionType: string,
 		options?: { target?: JSONSchemaTarget; io?: 'input' | 'output' },
 	): JSONSchemaObject | undefined => {
+		if (options?.target !== undefined) assertJSONSchemaTarget(options.target);
 		const validator = actionConfigValidators?.get(actionType);
 		return validator
 			? generateZodJSONSchemaDocument(validator, metadataRegistry, {
@@ -186,19 +200,19 @@ function createFormEngineJSONSchemaSerializer(
 		VENDOR,
 		(options) =>
 			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, 'input', {
-				target: options.target,
+				target: targetOf(options),
 			}),
 		(options) =>
 			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, 'output', {
-				target: options.target,
+				target: targetOf(options),
 			}),
 	);
 
 	const actionConfigStandardSchemas = createStandardJSONSchemaRecord(
 		Array.from(actionConfigValidators?.keys() || []),
 		VENDOR,
-		(actionType, options) => generateActionSchema(actionType, { target: options.target, io: 'input' }),
-		(actionType, options) => generateActionSchema(actionType, { target: options.target, io: 'output' }),
+		(actionType, options) => generateActionSchema(actionType, { target: targetOf(options), io: 'input' }),
+		(actionType, options) => generateActionSchema(actionType, { target: targetOf(options), io: 'output' }),
 	);
 
 	return {

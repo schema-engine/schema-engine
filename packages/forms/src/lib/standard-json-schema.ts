@@ -11,13 +11,6 @@ export type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 export type JSONSchemaObject = Record<string, any>;
 
 /**
- * JSON Schema targets supported by the current serializer layer.
- * This mirrors the Standard JSON Schema target model and keeps room for
- * future target strings without another breaking type change.
- */
-export type JSONSchemaTarget = StandardJSONSchemaV1.Target;
-
-/**
  * Create a Standard JSON Schema wrapper for a schema generator.
  * This keeps Standard JSON Schema plumbing separate from form-specific code.
  */

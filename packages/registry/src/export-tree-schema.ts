@@ -1,8 +1,11 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { definitionsKeyword, hoistDefinitions, pointerToken, startsResource } from './json-schema/embedder.js';
+import { definitionsKeyword, hoistDefinitions, pointerToken } from './json-schema/embedder.js';
+import { replaceChildSlot } from './json-schema/slot.js';
 import {
+	getOwn,
 	isPlainObject,
 	readStandardJSONSchema,
+	setOwn,
 	type JSONSchemaObject,
 	type JSONSchemaTarget,
 } from './json-schema/standard.js';
@@ -20,12 +23,15 @@ export interface ExportLookup {
 	all(): readonly TreeRegistration[];
 }
 
+/** The two dialects {@link exportTreeSchema} knows the `$schema` and the definitions keyword of. */
+type TreeSchemaTarget = Extract<JSONSchemaTarget, 'draft-2020-12' | 'draft-07'>;
+
 /** What a `resolve` function is told about the export it takes part in. */
 export interface ExportSchemaContext {
 	/** `'input'` is the authored shape, `'output'` the parsed one. */
 	readonly io: 'input' | 'output';
 	/** The target the document is written for. */
-	readonly target: JSONSchemaTarget;
+	readonly target: TreeSchemaTarget;
 }
 
 /** Options of {@link exportTreeSchema}. */
@@ -39,8 +45,14 @@ export interface ExportTreeSchemaOptions {
 	readonly accepts?: readonly string[];
 	/** Which shape of each schema to write. Default `'input'`, the shape an author writes. */
 	readonly io?: 'input' | 'output';
-	/** The JSON Schema dialect to write. Default `'draft-2020-12'`. */
-	readonly target?: JSONSchemaTarget;
+	/**
+	 * The JSON Schema dialect to write. Default `'draft-2020-12'`.
+	 *
+	 * @remarks
+	 * Any other value throws before a schema is read, since a document without `$schema`, or with the wrong keyword for
+	 * its definitions, would be written silently.
+	 */
+	readonly target?: TreeSchemaTarget;
 	/**
 	 * Writes the JSON Schema of one registration's schema, or returns `undefined` for a schema it cannot write.
 	 *
@@ -54,14 +66,10 @@ export interface ExportTreeSchemaOptions {
 	readonly resolve?: (schema: StandardSchemaV1, context: ExportSchemaContext) => JSONSchemaObject | undefined;
 }
 
-const DIALECTS: Readonly<Record<string, string>> = {
+const DIALECTS: Readonly<Record<TreeSchemaTarget, string>> = {
 	'draft-2020-12': 'https://json-schema.org/draft/2020-12/schema',
 	'draft-07': 'http://json-schema.org/draft-07/schema#',
 };
-
-const SCHEMA_APPLICATORS = ['$ref', '$dynamicRef', 'allOf', 'anyOf', 'oneOf', 'not', 'if', 'then', 'else'];
-
-const SLOT_ANNOTATIONS = ['title', 'description', 'default', 'examples', 'deprecated', '$comment'];
 
 function defaultResolve(schema: StandardSchemaV1, { io, target }: ExportSchemaContext): JSONSchemaObject | undefined {
 	return readStandardJSONSchema(schema)?.[io]({ target });
@@ -69,21 +77,6 @@ function defaultResolve(schema: StandardSchemaV1, { io, target }: ExportSchemaCo
 
 function isLookupList(lookup: ExportLookup | readonly ExportLookup[]): lookup is readonly ExportLookup[] {
 	return !('all' in lookup);
-}
-
-/**
- * The own entry of `record` under `key`, or `undefined`.
- *
- * @remarks
- * A child path key is data, and `__proto__` is a valid key. Reading and writing keys through these two functions keeps
- * every one on the document's own properties, so none reaches the prototype chain, whatever its name.
- */
-function getOwn(record: Record<string, unknown>, key: string): unknown {
-	return Object.hasOwn(record, key) ? record[key] : undefined;
-}
-
-function setOwn(record: Record<string, unknown>, key: string, value: unknown): void {
-	Object.defineProperty(record, key, { value, enumerable: true, writable: true, configurable: true });
 }
 
 /**
@@ -112,71 +105,6 @@ function openNode(registration: TreeRegistration): JSONSchemaObject {
 }
 
 /**
- * Replace the slot a child path names in a registration's JSON Schema, and nothing around it.
- *
- * @remarks
- * `required`, list bounds and every sibling keyword of the slot's parent stay, since the registration's schema owns
- * them. The slot is read by what it is: an array (`type: 'array'`, `items` or `prefixItems`) gets its items replaced, an
- * object (`type: 'object'` or `properties`) becomes the union, and an open slot (no keyword but annotations) becomes the
- * union or a list of it, matching a child or a list of children. Annotations of the slot are kept. A slot inside a
- * schema with an `$id` of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the
- * document.
- *
- * A tuple is an array whose every item is a child, as `safeParseTree` reads it, so each position takes the union:
- * every `prefixItems` entry (2020-12), every array-form `items` entry and `additionalItems` (draft-07), and the
- * `items` that follows `prefixItems`. A rest that the schema closes with `false` stays closed, since the tuple's arity
- * is the registration's to decide. Throwing instead would refuse a fixed-arity pair of children that is valid, while
- * replacing only `items` would leave the prefix positions accepting any `$type`.
- */
-function replaceSlot(
-	definition: JSONSchemaObject,
-	registration: TreeRegistration,
-	keys: readonly string[],
-	union: () => JSONSchemaObject,
-): void {
-	const unreachable = () =>
-		new RegistryError(
-			'unreachable-child-path',
-			`The JSON Schema of '${registration.$type}' has no slot the export can reach for the child path '${keys.join('.')}'. The slot must be a declared property, not behind a reference, allOf or a union, nor inside a schema with an $id of its own, and an object, an array or open.`,
-			{ $type: registration.$type, childPath: keys },
-		);
-	if (startsResource(definition)) throw unreachable();
-	let parent: JSONSchemaObject = definition;
-	for (const key of keys.slice(0, -1)) {
-		const step = isPlainObject(parent.properties) ? getOwn(parent.properties, key) : undefined;
-		if (!isPlainObject(step) || startsResource(step)) throw unreachable();
-		parent = step;
-	}
-	const last = keys[keys.length - 1]!;
-	const properties = parent.properties;
-	if (!isPlainObject(properties) || !Object.hasOwn(properties, last)) {
-		throw unreachable();
-	}
-	const found = getOwn(properties, last);
-	const slot = found === true ? {} : found;
-	if (!isPlainObject(slot)) throw unreachable();
-	if (SCHEMA_APPLICATORS.some((keyword) => keyword in slot) || Array.isArray(slot.type) || startsResource(slot)) {
-		throw unreachable();
-	}
-	const annotations = Object.fromEntries(
-		SLOT_ANNOTATIONS.filter((key) => key in slot).map((key) => [key, slot[key]]),
-	);
-	if (slot.type === 'array' || 'items' in slot || 'prefixItems' in slot) {
-		const tupleItems = Array.isArray(slot.items);
-		const rest = tupleItems ? 'additionalItems' : 'items';
-		if (Array.isArray(slot.prefixItems)) slot.prefixItems = slot.prefixItems.map(union);
-		if (tupleItems) slot.items = (slot.items as unknown[]).map(union);
-		if (slot[rest] !== false) slot[rest] = union();
-	} else if (slot.type === 'object' || 'properties' in slot) {
-		setOwn(properties, last, { ...annotations, ...union() });
-	} else if (slot.type === undefined && Object.keys(slot).every((key) => key in annotations)) {
-		setOwn(properties, last, { ...annotations, anyOf: [union(), { type: 'array', items: union() }] });
-	} else {
-		throw unreachable();
-	}
-}
-
-/**
  * Write the JSON Schema of a whole tree of registrations, composed at the JSON Schema level.
  *
  * @param lookup - The registrations to export: a registry, or a list of registries that make up one vocabulary. When
@@ -188,8 +116,8 @@ function replaceSlot(
  * @throws {RegistryError} Code `'unreachable-child-path'` when a slot cannot be found where a registration's JSON
  * Schema declares it, `'unknown-accepted-type'` when a child path accepts a `$type` the lookup lacks, and
  * `'definition-name-clash'` when a definition a schema brought along takes the name of a `$type`
- * @throws {Error} When the lookup holds no registration, when `accepts` is empty, and when it names a `$type` the lookup
- * lacks
+ * @throws {Error} When `target` is not `'draft-2020-12'` or `'draft-07'`, before any schema is read, when the lookup
+ * holds no registration, when `accepts` is empty, and when it names a `$type` the lookup lacks
  *
  * @remarks
  * Each registration's schema is written by `options.resolve`, by default the schema's own `~standard.jsonSchema`, so
@@ -220,6 +148,9 @@ export function exportTreeSchema(
 	options: ExportTreeSchemaOptions = {},
 ): JSONSchemaObject {
 	const { accepts, io = 'input', target = 'draft-2020-12', resolve = defaultResolve } = options;
+	if (!Object.hasOwn(DIALECTS, target)) {
+		throw new Error(`exportTreeSchema writes 'draft-2020-12' or 'draft-07', not '${target}'.`);
+	}
 	const registrations = new Map<string, TreeRegistration>();
 	for (const source of isLookupList(lookup) ? lookup : [lookup]) {
 		for (const registration of source.all()) {
@@ -251,7 +182,7 @@ export function exportTreeSchema(
 					{ $type: registration.$type, childPath: keys, key: missing },
 				);
 			}
-			replaceSlot(definition, registration, keys, () => unionOf(slotAccepts ?? everyType));
+			replaceChildSlot(definition, { $type: registration.$type, keys }, unionOf(slotAccepts ?? everyType));
 		}
 		definitions.set(registration.$type, definition);
 		for (const [name, schema] of Object.entries(nested)) {
@@ -267,9 +198,8 @@ export function exportTreeSchema(
 		}
 	}
 
-	const dialect = DIALECTS[target];
 	return {
-		...(dialect === undefined ? {} : { $schema: dialect }),
+		$schema: DIALECTS[target],
 		[keyword]: Object.fromEntries(definitions),
 		...unionOf(accepts ?? everyType),
 	};
