@@ -9,10 +9,60 @@ interface BuildLibOptions {
 	outdir?: string;
 	outbase?: string;
 	splitting?: boolean;
+	/**
+	 * Writes one output file per source module and keeps every import between them as a relative `.js` import.
+	 *
+	 * @remarks
+	 * Every eligible module under `outbase` becomes an entry point, whether or not an entry glob reaches it, because an
+	 * import that stays external is no longer followed to its target. A package that lists its load-time side effects
+	 * in `sideEffects` needs this: hashed shared chunks cannot be listed, and a bundler that drops an unlisted chunk
+	 * drops the elements it registers. It turns `splitting` off by default, since nothing is left to share, so each file
+	 * carries the few compiler helpers it uses.
+	 */
+	preserveModules?: boolean;
 	minify?: boolean;
 	external?: string[];
 	plugins?: Plugin[];
 	onEnd?: () => void | Promise<void>;
+}
+
+/**
+ * Keeps each import that resolves to a script inside `outbase` as an external relative `.js` import of the module's own output file.
+ *
+ * @remarks
+ * Stylesheet imports are left to the plugins that stub them or the CSS bundler. A target outside `outbase` is bundled.
+ */
+function preserveModulesPlugin(outbase: string): Plugin {
+	return {
+		name: 'preserve-modules',
+		setup(buildApi) {
+			buildApi.onResolve({ filter: /.*/ }, async (args) => {
+				const isScriptImport = args.kind === 'import-statement' || args.kind === 'dynamic-import';
+				if (!isScriptImport || args.pluginData?.preserveModules || args.path.endsWith('.css')) {
+					return null;
+				}
+				const resolved = await buildApi.resolve(args.path, {
+					importer: args.importer,
+					kind: args.kind,
+					namespace: args.namespace,
+					resolveDir: args.resolveDir,
+					pluginData: { preserveModules: true },
+				});
+				const target = resolved.path;
+				const isInsideOutbase =
+					!resolved.external && path.isAbsolute(target) && !path.relative(outbase, target).startsWith('..');
+				if (resolved.errors.length > 0 || !isInsideOutbase || !/\.[cm]?[jt]sx?$/.test(target)) {
+					return null;
+				}
+				const relative = path
+					.relative(path.dirname(args.importer), target)
+					.replace(/\.[cm]?[jt]sx?$/, '.js')
+					.split(path.sep)
+					.join('/');
+				return { path: relative.startsWith('.') ? relative : `./${relative}`, external: true };
+			});
+		},
+	};
 }
 
 function collectEntryPoints(cwd: string, patterns: string[], exclude: string[]): string[] {
@@ -50,13 +100,19 @@ export async function buildLib(options: BuildLibOptions): Promise<void> {
 	const outdir = path.resolve(cwd, options.outdir ?? 'dist');
 	const outbase = path.resolve(cwd, options.outbase ?? 'src');
 	const exclude = options.exclude ?? ['.test.', '.stories.', '.play.'];
-	const entryPoints = collectEntryPoints(cwd, options.entryGlobs, exclude);
+	const sourceModules = options.preserveModules
+		? [`${path.relative(cwd, outbase)}/**/*.ts`, `${path.relative(cwd, outbase)}/**/*.tsx`]
+		: [];
+	const entryPoints = collectEntryPoints(cwd, [...options.entryGlobs, ...sourceModules], exclude);
 
 	if (entryPoints.length === 0) {
 		throw new Error(`No entry points matched ${options.entryGlobs.join(', ')}`);
 	}
 
 	const plugins = [...(options.plugins ?? [])];
+	if (options.preserveModules) {
+		plugins.push(preserveModulesPlugin(outbase));
+	}
 
 	const onEnd = options.onEnd;
 	if (onEnd) {
@@ -81,7 +137,7 @@ export async function buildLib(options: BuildLibOptions): Promise<void> {
 		format: 'esm',
 		platform: 'browser',
 		target: 'es2022',
-		splitting: options.splitting ?? true,
+		splitting: options.splitting ?? !options.preserveModules,
 		minify: watch ? false : (options.minify ?? false),
 		sourcemap: 'external',
 		packages: 'external',
