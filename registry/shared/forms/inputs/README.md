@@ -330,7 +330,7 @@ Show/hide or enable/disable fields based on conditions:
 
 ## Array Elements
 
-Array registrations declare `childPaths: [{ keys: ['elements'] }]` and `containerKind: 'array'` (the copied item spreads
+Array registrations declare `childPaths: [{ keys: ['elements'], list: true }]` and `containerKind: 'array'` (the copied item spreads
 `ArrayElementContract`, which has both); the engine uses the container kind to seed normalized defaults independently of
 the widget name.
 Add appends `createArrayRowDefault` from `@schema-engine/forms`, the same row

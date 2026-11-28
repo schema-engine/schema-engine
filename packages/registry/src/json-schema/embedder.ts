@@ -130,7 +130,23 @@ export const definitionsKeyword = (target: JSONSchemaTarget): '$defs' | 'definit
 export interface JSONSchemaEmbedder {
 	/** The schema to write in place of `own`, which is not changed. */
 	embed(own: JSONSchemaObject): JSONSchemaObject;
-	/** Adds the definitions `embed` hoisted to the finished document or collection, in place. */
+	/**
+	 * The schema to write as the definition named `name` of a document, or as the entry of that name of a collection,
+	 * where `own` is not changed.
+	 *
+	 * @remarks
+	 * The schema stays at its own place, so a container found by its name is the schema itself and not a reference to
+	 * another definition. In a document, `#` points at the definition, a pointer into the schema's own definitions at the
+	 * definition lifted to the document as `name.<its name>`, and anchors are renamed under `name`, as
+	 * {@link hoistDefinitions} does. In a collection the entry is its own resource, so the schema is kept as it is, with
+	 * its own definitions, without `$schema`, and a draft-07 root `$id: '#node'` is dropped with its references turned
+	 * into `#`, since the entry is addressed by the `$id` the collection gives it. A schema with an `$id` of its own is a
+	 * resource that keeps its base: in a document it is kept as it is, and in a collection the entry is an `allOf` of a
+	 * reference to it, with the schema beside it under the name (a `$ref` beside other keywords is ignored before 2019-09), so the entry keeps the collection's URI and the schema keeps its
+	 * `$id`.
+	 */
+	embedDefinition(own: JSONSchemaObject, name: string): JSONSchemaObject;
+	/** Adds the definitions `embed` and `embedDefinition` moved to the finished document or collection, in place. */
 	finish(written: JSONSchemaObject): JSONSchemaObject;
 }
 
@@ -181,7 +197,7 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 				};
 				return { $ref: ref };
 			}
-			const ref = `#/${keyword}/${key}`;
+			const ref = definitionRef(target, key);
 			const rewritten = rewriteResource(body, {
 				pointer: pointsIntoItself ? (pointer) => `${ref}${pointer.slice(1)}` : undefined,
 				anchor: (name) => `${key}-${name}`,
@@ -189,6 +205,16 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 			if (!pointsIntoItself) return rewritten;
 			hoisted[key] = rewritten;
 			return { $ref: ref };
+		},
+		embedDefinition(own, name) {
+			if (placement.kind === 'collection') {
+				const entry = withoutRootAnchor(withoutSchemaKeyword(own));
+				if (!startsResource(entry)) return entry;
+				return { allOf: [{ $ref: entry.$id }], [keyword]: { [name]: entry } };
+			}
+			const { definition, nested } = hoistDefinitions(own, name, target);
+			Object.assign(hoisted, nested);
+			return definition;
 		},
 		finish(written) {
 			if (Object.keys(hoisted).length === 0) return written;
@@ -223,9 +249,35 @@ function anchorOwner(owner: string): string {
 	return written;
 }
 
-/** A JSON Pointer reference token, written for a URI fragment: `~` and `/` escaped, then percent-encoded. */
+/**
+ * A JSON Pointer reference token, written for a URI fragment: `~` and `/` escaped, then percent-encoded for what a
+ * fragment does not allow.
+ *
+ * @remarks
+ * RFC 3986 lets a fragment hold the `pchar` characters raw, so `:`, `@` and the sub-delimiters (`$&+,;=` and `!'()*`)
+ * stay as they are and a name like `element:tab` reads as written.
+ */
 export function pointerToken(name: string): string {
-	return encodeURIComponent(name.replaceAll('~', '~0').replaceAll('/', '~1'));
+	return encodeURIComponent(name.replaceAll('~', '~0').replaceAll('/', '~1')).replaceAll(
+		/%(?:24|26|2B|2C|3A|3B|3D|40)/g,
+		decodeURIComponent,
+	);
+}
+
+/**
+ * The `$ref` to the definition of a name in a document written for a target: `#/$defs/<name>` for `'draft-2020-12'`,
+ * `#/definitions/<name>` for every other target, with the name written as a JSON Pointer token.
+ *
+ * @param target - The target the document is written for, which decides the keyword of its definitions
+ * @param name - The key of the definition, for example `'ui/button'`
+ *
+ * @remarks
+ * A name holds any character. `~` and `/` are escaped as the pointer syntax requires, and what a URI fragment does not
+ * allow (a space, `%`, `#`, `?`) is percent-encoded, so a tool that resolves the reference finds the key whatever the
+ * name is.
+ */
+export function definitionRef(target: JSONSchemaTarget, name: string): string {
+	return `#/${definitionsKeyword(target)}/${pointerToken(name)}`;
 }
 
 function unescapedToken(token: string): string {
@@ -261,11 +313,10 @@ export interface HoistedDefinitions {
  * kept as it is.
  */
 export function hoistDefinitions(own: JSONSchemaObject, owner: string, target: JSONSchemaTarget): HoistedDefinitions {
-	const keyword = definitionsKeyword(target);
 	const body = withoutSchemaKeyword(own);
 	if (startsResource(body)) return { definition: body, nested: {} };
 	const nameOf = (name: string) => `${owner}.${name}`;
-	const place = (name: string) => `#/${keyword}/${pointerToken(name)}`;
+	const place = (name: string) => definitionRef(target, name);
 	const rewritten = rewriteResource(body, {
 		pointer(pointer) {
 			if (pointer === '#') return place(owner);

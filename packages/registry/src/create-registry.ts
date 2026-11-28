@@ -82,12 +82,14 @@ function assertChildPaths(childPaths: unknown, context: string, details: Registr
 	for (const [index, entry] of (childPaths as unknown[]).entries()) {
 		const name = `childPaths[${index}]`;
 		if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
-			throw invalid(`${name} must be an object { keys, accepts? }.`);
+			throw invalid(`${name} must be an object { keys, accepts?, list? }.`);
 		}
-		const extra = Object.keys(entry).find((property) => property !== 'keys' && property !== 'accepts');
+		const extra = Object.keys(entry).find(
+			(property) => property !== 'keys' && property !== 'accepts' && property !== 'list',
+		);
 		if (extra !== undefined)
 			throw invalid(`${name} has the property '${extra}', which a child path does not have.`);
-		const { keys, accepts } = entry as { keys?: unknown; accepts?: unknown };
+		const { keys, accepts, list } = entry as { keys?: unknown; accepts?: unknown; list?: unknown };
 		if (!Array.isArray(keys) || keys.length === 0 || !keys.every(isNonEmptyString)) {
 			throw invalid(`${name}.keys must be a non-empty list of non-empty strings.`);
 		}
@@ -98,6 +100,7 @@ function assertChildPaths(childPaths: unknown, context: string, details: Registr
 			const repeated = (accepts as string[]).find((type, position) => accepts.indexOf(type) !== position);
 			if (repeated !== undefined) throw invalid(`${name}.accepts names '${repeated}' twice.`);
 		}
+		if (list !== undefined && list !== true) throw invalid(`${name}.list must be true when present.`);
 		paths.push(keys as string[]);
 	}
 	for (const [index, keys] of paths.entries()) {
@@ -168,14 +171,14 @@ export interface CreateRegistryOptions {
  * @throws {RegistryError} Code `'invalid-schema'`, naming the `$type`, when a winning registration's schema is not a
  * Standard Schema
  * @throws {RegistryError} Naming the `$type`, with code `'invalid-child-paths'` when a winning registration's
- * `childPaths` is not a list of `{ keys, accepts? }` objects (a property other than those two, empty or non-string keys,
- * an empty or repeating `accepts`), `'duplicate-child-path'` when it repeats a path (`childPath`), or
+ * `childPaths` is not a list of `{ keys, accepts?, list? }` objects (a property other than those three, empty or
+ * non-string keys, an empty or repeating `accepts`, a `list` that is not `true`), `'duplicate-child-path'` when it repeats a path (`childPath`), or
  * `'nested-child-path'` when a path (`childPath`) runs through another (`outerChildPath`). Paths are compared key by
  * key.
  *
  * @remarks
  * The types check that the schema output declares every key of every child path (`childPathNotInSchema`), where the
- * output type can be read, and that a child path written inline has no property other than `keys` and `accepts`
+ * output type can be read, and that a child path written inline has no property other than `keys`, `accepts` and `list`
  * (`childPathUnknownProperty`).
  *
  * By default a later registration with the same `$type` replaces the earlier one without a

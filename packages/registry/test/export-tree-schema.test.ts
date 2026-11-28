@@ -542,11 +542,13 @@ describe('exportTreeSchema', () => {
 	});
 
 	describe('Scenario: A $type is a JSON Pointer token in a $ref', () => {
-		it('escapes ~ and / and percent-encodes the rest of the fragment', () => {
+		it('escapes ~ and / and percent-encodes only what a URI fragment does not allow', () => {
 			const nodes = createRegistry('Node', [
 				handWritten({ type: 'object' }, undefined, 'ui/button'),
 				handWritten({ type: 'object' }, undefined, 'a~b'),
 				handWritten({ type: 'object' }, undefined, 'my type'),
+				handWritten({ type: 'object' }, undefined, 'element:tab'),
+				handWritten({ type: 'object' }, undefined, 'user@host'),
 			]);
 			const document = exportTreeSchema(nodes);
 
@@ -554,8 +556,16 @@ describe('exportTreeSchema', () => {
 				{ $ref: '#/$defs/ui~1button' },
 				{ $ref: '#/$defs/a~0b' },
 				{ $ref: '#/$defs/my%20type' },
+				{ $ref: '#/$defs/element:tab' },
+				{ $ref: '#/$defs/user@host' },
 			]);
-			expect(Object.keys(document.$defs as object)).toEqual(['ui/button', 'a~b', 'my type']);
+			expect(Object.keys(document.$defs as object)).toEqual([
+				'ui/button',
+				'a~b',
+				'my type',
+				'element:tab',
+				'user@host',
+			]);
 			expectEveryReferenceToResolve(document);
 			expect(compileJSONSchema(document)({})).toBe(true);
 		});
@@ -684,6 +694,48 @@ describe('exportTreeSchema', () => {
 			expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'box', childPath: keys });
 			expect((error as Error).message).toContain(`'box'`);
 			expect((error as Error).message).toContain(`'${keys.join('.')}'`);
+		});
+
+		it('makes a slot that declares only array keywords a list, so an object is rejected as safeParseTree does', () => {
+			const nodes = createRegistry('Node', [
+				{
+					$type: 'box',
+					schema: jsonSchemaOf({ type: 'object', properties: { kids: { items: {} } } }),
+					metadata,
+					childPaths: [{ keys: ['kids'], accepts: ['leaf'], list: true }],
+				} as BaseRegistration,
+				{
+					$type: 'leaf',
+					schema: jsonSchemaOf({ type: 'object', properties: { $type: { const: 'leaf' } } }),
+					metadata,
+				} as BaseRegistration,
+			]);
+			const accepts = compileJSONSchema(exportTreeSchema(nodes, { accepts: ['box'] }));
+			const leaf = { $type: 'leaf' };
+
+			expect(accepts({ kids: [leaf] })).toBe(true);
+			expect(accepts({ kids: leaf })).toBe(false);
+		});
+
+		it('writes an open slot of a list path as a list, where a path without list takes a child or a list', () => {
+			const nodes = (list: true | undefined) =>
+				createRegistry('Node', [
+					{
+						$type: 'box',
+						schema: jsonSchemaOf({ type: 'object', properties: { kids: {} } }),
+						metadata,
+						childPaths: [{ keys: ['kids'], accepts: ['leaf'], ...(list ? { list } : {}) }],
+					} as BaseRegistration,
+					{ $type: 'leaf', schema: jsonSchemaOf({ type: 'object' }), metadata } as BaseRegistration,
+				]);
+			const kidsOf = (document: JSONSchemaObject) =>
+				((document.$defs as Record<string, JSONSchemaObject>).box!.properties as Record<string, unknown>).kids;
+			const leaf = { anyOf: [{ $ref: '#/$defs/leaf' }] };
+
+			expect(kidsOf(exportTreeSchema(nodes(true)))).toEqual({ type: 'array', items: leaf });
+			expect(kidsOf(exportTreeSchema(nodes(undefined)))).toEqual({
+				anyOf: [leaf, { type: 'array', items: leaf }],
+			});
 		});
 
 		it('reads the schema true as an open slot', () => {

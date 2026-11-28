@@ -191,22 +191,21 @@ describe('a Standard Schema element', () => {
 		};
 		const engine = createFormEngine({ elements: [native as never] });
 		const schema = engine.generateFormConfigSchema() as Schema;
-		const steps = (schema.properties as Record<string, { items: { properties: Record<string, unknown> } }>).steps;
-		const elements = steps.items.properties.elements as { items: { properties: Record<string, unknown> } };
-		const envelope = elements.items.properties.appearance as AppearanceJsonSchema;
-		expect(axesOf(envelope)).toEqual(['size']);
+		expect(axesOf(appearanceOfElement(schema, 'native'))).toEqual(['size']);
 	});
 });
 
 describe('the children of a container are typed like top-level elements', () => {
-	const fieldset = field(
-		'fieldset',
-		undefined,
-		z.extend(BaseFieldSchema, {
+	const fieldset = defineInput({
+		$type: 'fieldset',
+		schema: z.extend(BaseFieldSchema, {
 			$type: z.literal('fieldset'),
 			elements: elementChildrenSchema.check(z.minLength(1)),
 		}),
-	);
+		childPaths: [{ keys: ['elements'], list: true }],
+		metadata: { name: 'fieldset', category: 'input' },
+		render: () => null,
+	});
 	const engine = createFormEngine({ elements: [sized, plain, fieldset] });
 	const schema = engine.generateFormConfigSchema() as Schema;
 	const children = (definitions(schema)['element:fieldset'].properties as Record<string, Schema>).elements as {
@@ -219,16 +218,19 @@ describe('the children of a container are typed like top-level elements', () => 
 	});
 
 	test('its child item is the element union, not a bare object with a $type', () => {
-		expect(children.items).toEqual({ $ref: expect.stringMatching(/^#\/\$defs\//) });
-		const union = (schema.$defs as Record<string, Schema>)[(children.items.$ref as string).split('/').pop()!];
-		const members = (union.anyOf as Array<{ $ref?: string }>).map((member) => member.$ref);
-		expect(members).toEqual(['#/$defs/element:sized', '#/$defs/element:plain', '#/$defs/element:fieldset']);
+		expect(children.items).toEqual({
+			anyOf: [
+				{ $ref: '#/$defs/element:sized' },
+				{ $ref: '#/$defs/element:plain' },
+				{ $ref: '#/$defs/element:fieldset' },
+			],
+		});
 	});
 
 	test('a child lists the axes its element declares', () => {
-		const union = (schema.$defs as Record<string, Schema>)[(children.items.$ref as string).split('/').pop()!];
 		const memberOf = ($type: string) => {
-			const ref = (union.anyOf as Array<{ $ref: string }>).find((member) => member.$ref.endsWith(`:${$type}`));
+			const members = (children.items as { anyOf: Array<{ $ref: string }> }).anyOf;
+			const ref = members.find((member) => member.$ref.endsWith(`:${$type}`));
 			return definitions(schema)[ref!.$ref.split('/').pop()!];
 		};
 		const appearanceOf = (member: Schema) => (member.properties as Record<string, AppearanceJsonSchema>).appearance;

@@ -73,6 +73,7 @@ export function unregisteredTypeMessage(type: string, hint?: string): string {
  * - `'registry/unregistered-type'`: no registration answers the `$type` (`received`).
  * - `'registry/not-accepted'`: the `$type` (`received`) is not in the `accepts` list (`expected`) of its position.
  * - `'registry/not-a-node'`: a value at a child path is neither an object nor a list.
+ * - `'registry/not-a-list'`: a value at a child path that sets `list` is not an array.
  * - `'registry/contains-itself'`: a node is reached again through its own ancestors.
  *
  * The messages are written for a person and may be reworded; the codes stay.

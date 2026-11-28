@@ -241,6 +241,67 @@ describe('safeParseTree', () => {
 		});
 	});
 
+	describe('Scenario: a child path that holds a list', () => {
+		const listed = createRegistry('Listed', [
+			{
+				$type: 'row',
+				schema: z.looseObject({ $type: z.literal('row'), cells: z.optional(z.unknown()) }),
+				metadata: { name: 'Row' },
+				childPaths: [{ keys: ['cells'], list: true }],
+			},
+			{ $type: 'text', schema: textSchema, metadata: { name: 'Text' } },
+		]);
+		const row = (cells: unknown) => safeParseTree(listed, { $type: 'row', cells });
+		const notAList = (path: (string | number)[]) => ({
+			code: 'registry/not-a-list',
+			message: 'Expected a list of nodes.',
+			path,
+		});
+
+		it.each([
+			['one node', { $type: 'text' }],
+			['null', null],
+			['a string', 'text'],
+			['a number', 7],
+		])('is the issue registry/not-a-list at the path for %s', (_name, value) => {
+			expect(issuesOf(row(value))).toEqual([notAList(['cells'])]);
+		});
+
+		it('is a tree with a child per item for an array, and none for an empty array', () => {
+			expect(treeOf(row([{ $type: 'text' }, { $type: 'text', value: 'a' }])).data).toEqual({
+				$type: 'row',
+				cells: [
+					{ $type: 'text', value: '' },
+					{ $type: 'text', value: 'a' },
+				],
+			});
+			expect(treeOf(row([])).children).toEqual([{ keys: ['cells'], nodes: [] }]);
+		});
+
+		it('is no children when the value is absent or undefined', () => {
+			expect(treeOf(safeParseTree(listed, { $type: 'row' })).children).toEqual([{ keys: ['cells'], nodes: [] }]);
+			expect(treeOf(row(undefined)).children).toEqual([{ keys: ['cells'], nodes: [] }]);
+		});
+
+		it('reports the issue beside the issues of the other nodes, and keeps the partial tree', () => {
+			const result = safeParseTree(listed, {
+				$type: 'row',
+				cells: { $type: 'text' },
+			});
+
+			expect(result.success).toBe(false);
+			if (result.success) return;
+			expect(result.tree?.children).toEqual([{ keys: ['cells'], nodes: [] }]);
+		});
+
+		it('does not require a list of a path that does not say so', () => {
+			expect(
+				treeOf(safeParseTree(nodes, { $type: 'frame', content: { $type: 'chart', metric: 'cpu' } }))
+					.children[0]!.nodes,
+			).toHaveLength(1);
+		});
+	});
+
 	describe('Scenario: the value at a child path', () => {
 		const framed = (content: unknown) => safeParseTree(nodes, { $type: 'frame', content });
 

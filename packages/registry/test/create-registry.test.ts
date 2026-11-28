@@ -213,7 +213,7 @@ describe('createRegistry childPaths', () => {
 	const keysMessage = "Widget 'layout' childPaths[0].keys must be a non-empty list of non-empty strings.";
 	const acceptsMessage =
 		"Widget 'layout' childPaths[0].accepts must be a non-empty list of non-empty $types when present.";
-	const entryMessage = "Widget 'layout' childPaths[0] must be an object { keys, accepts? }.";
+	const entryMessage = "Widget 'layout' childPaths[0] must be an object { keys, accepts?, list? }.";
 
 	it('builds a path as { keys } and as { keys, accepts }', () => {
 		const registry = createRegistry('Widget', [
@@ -224,6 +224,14 @@ describe('createRegistry childPaths', () => {
 			{ keys: ['blocks'] },
 			{ keys: ['engine', 'controls'], accepts: ['knob', 'dial'] },
 		]);
+	});
+
+	it('builds a child path that holds a list', () => {
+		const registry = createRegistry('Widget', [
+			{ ...layout, childPaths: [{ keys: ['blocks'], accepts: ['block'], list: true }] },
+		]);
+
+		expect(registry.get('layout')?.childPaths).toEqual([{ keys: ['blocks'], accepts: ['block'], list: true }]);
 	});
 
 	it('builds a registration with no child path', () => {
@@ -239,6 +247,16 @@ describe('createRegistry childPaths', () => {
 			'a property other than keys and accepts, such as accept',
 			[{ keys: ['blocks'], accept: ['block'] }],
 			"Widget 'layout' childPaths[0] has the property 'accept', which a child path does not have.",
+		],
+		[
+			'a list that is not true',
+			[{ keys: ['blocks'], list: false }],
+			"Widget 'layout' childPaths[0].list must be true when present.",
+		],
+		[
+			'a list that is a string',
+			[{ keys: ['blocks'], list: 'yes' }],
+			"Widget 'layout' childPaths[0].list must be true when present.",
 		],
 		['no keys', [{}], keysMessage],
 		['empty keys', [{ keys: [] }], keysMessage],

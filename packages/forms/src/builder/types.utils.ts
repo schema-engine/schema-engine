@@ -2,6 +2,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
 import type { ContainerKind } from '@/types/registration';
+import type { ChildPath } from '@schema-engine/registry';
 
 /** Coerce inferred registration maps into the engine generic constraint. */
 export type AsRegistrationMap<T> = T extends Record<string, unknown> ? T : Record<never, never>;
@@ -140,7 +141,7 @@ export type ElementRegistrationConstraint = {
 	readonly render: (props: never) => unknown;
 	readonly validations?: readonly ValidationRegistrationConstraint[];
 	readonly containerKind?: ContainerKind;
-	readonly childPaths?: readonly { readonly keys: readonly string[]; readonly accepts?: readonly string[] }[];
+	readonly childPaths?: readonly ChildPath[];
 	readonly appearanceAxes?: AppearanceAxisList;
 	readonly value?: (config: never) => StandardSchemaConstraint;
 };

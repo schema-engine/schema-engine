@@ -9,6 +9,11 @@ const slot = (definition: JSONSchemaObject, keys: readonly string[] = ['kids']):
 	return definition;
 };
 
+const listed = (definition: JSONSchemaObject): JSONSchemaObject => {
+	replaceChildSlot(definition, { $type: 'box', keys: ['kids'], list: true }, union);
+	return definition;
+};
+
 const thrown = (run: () => unknown): unknown => {
 	try {
 		run();
@@ -85,6 +90,67 @@ describe('replaceChildSlot', () => {
 		});
 	});
 
+	describe('Scenario: A child path that holds a list', () => {
+		it('writes an open slot as an array of the union, and keeps its annotations', () => {
+			const definition = listed({ type: 'object', properties: { kids: { title: 'Kids' } } });
+
+			expect(definition.properties).toEqual({ kids: { title: 'Kids', type: 'array', items: union } });
+		});
+
+		it('writes the schema true as an array of the union', () => {
+			const definition = listed({ type: 'object', properties: { kids: true } });
+
+			expect(definition.properties).toEqual({ kids: { type: 'array', items: union } });
+		});
+
+		it('requires an array of a slot that declares only array keywords, so an object is no list', () => {
+			const definition = listed({ type: 'object', properties: { kids: { items: {}, minItems: 1 } } });
+
+			expect(definition.properties).toEqual({ kids: { type: 'array', items: union, minItems: 1 } });
+		});
+
+		it('leaves a slot that declares only array keywords as it is when the path does not say list', () => {
+			const definition = slot({ type: 'object', properties: { kids: { items: {} } } });
+
+			expect(definition.properties).toEqual({ kids: { items: union } });
+		});
+
+		it('throws unreachable-child-path for a slot whose type is not array', () => {
+			const error = thrown(() => listed({ type: 'object', properties: { kids: { type: 'string', items: {} } } }));
+
+			expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'box', childPath: ['kids'] });
+		});
+
+		it('replaces the items of an array as it does without list', () => {
+			const definition = listed({
+				type: 'object',
+				properties: { kids: { type: 'array', items: {}, minItems: 1 } },
+			});
+
+			expect(definition.properties).toEqual({ kids: { type: 'array', items: union, minItems: 1 } });
+		});
+
+		it('throws unreachable-child-path for an object slot, which holds one node and no list', () => {
+			const error = thrown(() =>
+				listed({ type: 'object', properties: { kids: { type: 'object', properties: {} } } }),
+			);
+
+			expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'box', childPath: ['kids'] });
+		});
+	});
+
+	describe("Scenario: The definition's own root is the caller's to check", () => {
+		it('replaces the slot of a definition whose root sets an $id, as a collection entry does', () => {
+			const definition = slot({
+				$id: 'https://example.com/box',
+				type: 'object',
+				properties: { kids: { type: 'array', items: {} } },
+			});
+
+			expect(definition.properties).toEqual({ kids: { type: 'array', items: union } });
+		});
+	});
+
 	describe('Scenario: A slot the walk cannot reach throws', () => {
 		it.each([
 			['behind a $ref', { type: 'object', properties: { kids: { $ref: '#/$defs/list' } } }],
@@ -99,8 +165,13 @@ describe('replaceChildSlot', () => {
 				{ type: 'object', properties: { kids: { type: 'object', properties: {}, nullable: true } } },
 			],
 			[
-				'inside a schema with an $id of its own',
-				{ type: 'object', $id: 'https://example.com/box', properties: { kids: {} } },
+				'inside a schema with an $id of its own, between the definition and the slot',
+				{
+					type: 'object',
+					properties: {
+						aside: { $id: 'https://example.com/aside', type: 'object', properties: { kids: {} } },
+					},
+				},
 			],
 		])('throws RegistryError unreachable-child-path for a slot %s', (_name, definition) => {
 			const error = thrown(() => slot(definition));

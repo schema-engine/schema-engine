@@ -235,7 +235,39 @@ describe('a schema the export cannot read is listed as an open object', () => {
 		expect(config).toContain('"const":"ping"');
 		const rules = open.generateJSONSchemaCollection().schemas as unknown as Record<string, unknown>;
 		expect(JSON.stringify(rules['validation-rule'])).toContain('"const":"even"');
-		expect(open.generateActionConfigSchema('ping')).toBeUndefined();
+	});
+
+	test('an element and an action are a definition of the document and an entry of the collection', () => {
+		const document = open.generateFormConfigSchema() as unknown as { $defs: Record<string, JSONSchema> };
+		const entries = open.generateJSONSchemaCollection().schemas as unknown as Record<string, JSONSchema>;
+
+		for (const id of ['element:widget', 'element:note', 'action:ping']) {
+			expect(document.$defs[id]).toBeDefined();
+			expect(entries[id]).toBeDefined();
+		}
+		expect(document.$defs['action:ping']).toMatchObject({ properties: { $type: { const: 'ping' } } });
+	});
+
+	test('an action is referred to by its definition in the form config, not listed inline', () => {
+		const document = open.generateFormConfigSchema() as unknown as { properties: { actions: unknown } };
+		const actions = JSON.stringify(document.properties.actions);
+
+		expect(actions).toContain('#/$defs/action:ping');
+		expect(actions).not.toContain('"const"');
+	});
+
+	test('an open action requires an id and allows enabled and triggers, like every Zod action', () => {
+		const document = open.generateActionConfigSchema('ping') as unknown as { $defs: Record<string, JSONSchema> };
+		const ping = document.$defs['action:ping']!;
+
+		expect(ping.required).toEqual(expect.arrayContaining(['id', '$type']));
+		expect(Object.keys(ping.properties as object)).toEqual(expect.arrayContaining(['id', 'enabled', 'triggers']));
+	});
+
+	test('an open action has an action config schema by its $type, as one that exports itself has', () => {
+		const document = open.generateActionConfigSchema('ping') as unknown as { $defs: Record<string, JSONSchema> };
+
+		expect(document.$defs['action:ping']).toMatchObject({ properties: { $type: { const: 'ping' } } });
 	});
 });
 
@@ -458,9 +490,10 @@ describe('a schema that exports itself keeps its references inside the resource 
 		const document = actionOf({ $ref: '#/$defs/child', $defs: { child } }).generateActionConfigSchema(
 			'nested',
 		) as unknown as { $defs: Record<string, JSONSchema> };
-		const hoisted = resolve(document, document.$defs['action:nested']!.$ref as string);
-		const nested = (hoisted.$defs as Record<string, JSONSchema>).child!;
-		expect(hoisted.$ref).toBe('#/$defs/embedded-1/$defs/child');
+		const definition = document.$defs['action:nested']!;
+		const nested = document.$defs['action:nested.child']!;
+		expect(definition.$ref).toBe('#/$defs/action:nested.child');
+		expect(definition).not.toHaveProperty('$defs');
 		expect((nested.properties as Record<string, JSONSchema>).name).toEqual({ $ref: '#/$defs/value' });
 		expect(brokenLinks(document)).toEqual([]);
 	});
@@ -475,8 +508,7 @@ describe('a schema that exports itself keeps its references inside the resource 
 		const document = actionOf({ $ref: '#/$defs/child', $defs: { child } }).generateActionConfigSchema(
 			'nested',
 		) as unknown as { $defs: Record<string, JSONSchema> };
-		const hoisted = resolve(document, document.$defs['action:nested']!.$ref as string);
-		const nested = (hoisted.$defs as Record<string, JSONSchema>).child!;
+		const nested = document.$defs['action:nested.child']!;
 		expect(nested.$anchor).toBe('node');
 		expect((nested.properties as Record<string, JSONSchema>).next).toEqual({ $ref: '#node' });
 		expect(brokenLinks(document)).toEqual([]);
@@ -491,7 +523,7 @@ describe('a schema that exports itself keeps its references inside the resource 
 				type: 'object',
 				properties: { ...tag(name), next: { $ref: '#node' } },
 			}),
-			bodyOf: (root: JSONSchema) => root,
+			bodyOf: (written: JSONSchema) => written,
 		},
 		'hoisted, in draft-2020-12': {
 			target: 'draft-2020-12' as const,
@@ -500,7 +532,7 @@ describe('a schema that exports itself keeps its references inside the resource 
 				$ref: '#/$defs/body',
 				$defs: { body: { type: 'object', properties: { ...tag(name), next: { $ref: '#node' } } } },
 			}),
-			bodyOf: (root: JSONSchema) => (root.$defs as Record<string, JSONSchema>).body!,
+			bodyOf: (written: JSONSchema, document: JSONSchema) => resolve(document, written.$ref as string),
 		},
 		'hoisted, as a draft-07 fragment $id': {
 			target: 'draft-07' as const,
@@ -509,7 +541,7 @@ describe('a schema that exports itself keeps its references inside the resource 
 				$ref: '#/definitions/body',
 				definitions: { body: { type: 'object', properties: { ...tag(name), next: { $ref: '#node' } } } },
 			}),
-			bodyOf: (root: JSONSchema) => (root.definitions as Record<string, JSONSchema>).body!,
+			bodyOf: (written: JSONSchema, document: JSONSchema) => resolve(document, written.$ref as string),
 		},
 	};
 
@@ -527,10 +559,10 @@ describe('a schema that exports itself keeps its references inside the resource 
 		const definitions = (document.$defs ?? document.definitions) as Record<string, JSONSchema>;
 		for (const $type of ['first', 'second']) {
 			const written = definitions[`action:${$type}`]!;
-			const root = typeof written.$ref === 'string' ? resolve(document, written.$ref) : written;
-			const next = (kind.bodyOf(root).properties as Record<string, JSONSchema>).next!;
-			expect(kind.bodyOf(root).properties).toMatchObject(tag($type));
-			expect(resolveLocal(document, next.$ref as string)).toBe(root);
+			const body = kind.bodyOf(written, document);
+			const next = (body.properties as Record<string, JSONSchema>).next!;
+			expect(body.properties).toMatchObject(tag($type));
+			expect(resolveLocal(document, next.$ref as string)).toBe(written);
 		}
 	});
 });

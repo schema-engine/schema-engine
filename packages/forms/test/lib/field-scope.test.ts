@@ -318,7 +318,7 @@ test('container semantics come from the registration rather than the widget name
 	const engine = createFormEngine({
 		elements: [
 			defineInput({
-				childPaths: [{ keys: ['elements'] }],
+				childPaths: [{ keys: ['elements'], list: true }],
 				$type: 'rows',
 				containerKind: 'array',
 				schema: z.looseObject({

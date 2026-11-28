@@ -122,10 +122,10 @@ describe('defineForm contract', () => {
 			id: 'zod',
 			steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'note', id: 'n1', name: 'n1' }] }],
 		};
-		expect(engine.getFormConfigSchema().safeParse(nativeForm).success).toBe(true);
-		expect(engine.getFormConfigSchema().safeParse(zodForm).success).toBe(true);
+		expect(engine.safeValidateForm(nativeForm).success).toBe(true);
+		expect(engine.safeValidateForm(zodForm).success).toBe(true);
 		expect(
-			engine.getFormConfigSchema().safeParse({
+			engine.safeValidateForm({
 				id: 'unknown',
 				steps: [{ id: 'main', title: 'Main', elements: [{ $type: 'missing', id: 'x', name: 'x' }] }],
 			}).success,

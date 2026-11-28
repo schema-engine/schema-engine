@@ -45,6 +45,24 @@ describe('createMutableRegistry', () => {
 		});
 	});
 
+	it('errors, naming the $type and the keys, for a list path over a slot the schema types as no array', () => {
+		const registry = createMutableRegistry('Node');
+
+		// @ts-expect-error list: true over an object slot (listPathNotAnArray: { $type: 'page'; keys: ['header'] })
+		registry.register({
+			$type: 'page',
+			schema: z.object({ $type: z.literal('page'), header: z.object({ $type: z.string() }) }),
+			metadata: { name: 'Page' },
+			childPaths: [{ keys: ['header'], list: true }],
+		});
+		registry.register({
+			$type: 'row',
+			schema: z.object({ $type: z.literal('row'), cells: z.array(z.unknown()) }),
+			metadata: { name: 'Row' },
+			childPaths: [{ keys: ['cells'], list: true }],
+		});
+	});
+
 	it('has no BaseRegistry class to extend', async () => {
 		const entry = await import('../../src');
 

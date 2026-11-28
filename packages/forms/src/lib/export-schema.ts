@@ -14,7 +14,7 @@ import { logger } from '@/lib/logger';
  * How the JSON Schema export reads one registration's schema.
  *
  * - `zod`: a Zod schema (classic or Mini), exported by the Zod converter. The caller may compose it first (closed
- *   appearance axes, typed children and rules).
+ *   appearance axes and rules).
  * - `standard`: a schema that exports itself, held by a Zod placeholder the conversion replaces with what the schema
  *   returns. Nothing is composed around it.
  * - `open`: a schema the export cannot read. The caller lists it by an open object of its own kind.
@@ -55,7 +55,7 @@ function vendorOf(schema: unknown): string {
  *
  * 1. A Zod schema (classic or Mini) is exported by the Zod converter. This comes first even though classic Zod also
  *    implements Standard JSON Schema, because the export composes Zod schemas before it converts them (closed
- *    appearance axes, typed children and rules), which a schema that has already exported itself cannot take part
+ *    appearance axes and rules), which a schema that has already exported itself cannot take part
  *    in. Read through `~standard.jsonSchema`, a classic Zod element would lose those, and would export differently
  *    from the same element in Zod Mini.
  * 2. Any other schema that provides Standard JSON Schema (`~standard.jsonSchema`) is exported as what it returns for
@@ -74,17 +74,10 @@ export function resolveExportSchema(schema: unknown, open: () => z.ZodMiniType):
 	return { kind: 'standard', schema: placeholder };
 }
 
-/** The embedder's placement, where a collection also names the Zod registry whose ids are its entries. */
-export type ConversionPlacement =
-	| Extract<JSONSchemaPlacement, { kind: 'document' }>
-	| (Extract<JSONSchemaPlacement, { kind: 'collection' }> & {
-			readonly registry: { get(schema: z.core.$ZodType): { id?: string } | undefined };
-	  });
-
-function withoutSchemaKeyword(schema: JSONSchemaObject): JSONSchemaObject {
-	const { $schema: _dropped, ...rest } = schema;
-	return structuredClone(rest);
-}
+/** The embedder's placement, with the Zod registry whose ids are the definitions of a document or the entries of a collection. */
+export type ConversionPlacement = JSONSchemaPlacement & {
+	readonly registry: { get(schema: z.core.$ZodType): { id?: string } | undefined };
+};
 
 /** One Zod conversion of the export: the `override` that writes each `standard` schema, and the step after it. */
 export interface ExportConversion {
@@ -138,8 +131,8 @@ export function createExportConversion(options: {
 			if (!source) return;
 			const annotations = { ...jsonSchema };
 			const own = ownJSONSchema(source);
-			const isEntry = placement.kind === 'collection' && placement.registry.get(zodSchema)?.id !== undefined;
-			const written = isEntry ? withoutSchemaKeyword(own) : embedder.embed(own);
+			const id = placement.registry.get(zodSchema)?.id;
+			const written = id === undefined ? embedder.embed(own) : embedder.embedDefinition(own, id);
 			for (const key of Object.keys(jsonSchema)) delete jsonSchema[key];
 			Object.assign(jsonSchema, annotations, written);
 		},

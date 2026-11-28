@@ -26,7 +26,7 @@ export type ArrayElementsInput = z.input<typeof ArrayElementConfigSchema>;
 /** The contract of the `array-elements` element: what every renderer of it agrees on. */
 export const ArrayElementContract = defineInputContract({
 	$type: 'arrayElements',
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	appearanceAxes: ['size'],
 	containerKind: 'array',
 	schema: ArrayElementConfigSchema,

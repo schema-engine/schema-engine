@@ -13,5 +13,4 @@ await buildLib({
 	 * Keep shared modules (especially the validation registry singleton) as one
 	 * runtime instance across package entry points.
 	 */
-	splitting: true,
 });

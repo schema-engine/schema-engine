@@ -76,7 +76,7 @@ export function createFixture() {
 				render: (_props: Record<string, unknown>) => null,
 			}),
 			defineInput({
-				childPaths: [{ keys: ['elements'] }],
+				childPaths: [{ keys: ['elements'], list: true }],
 				$type: 'group',
 				containerKind: 'object',
 				schema: z.looseObject({

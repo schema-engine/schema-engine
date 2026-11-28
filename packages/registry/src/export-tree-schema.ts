@@ -1,5 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { definitionsKeyword, hoistDefinitions, pointerToken } from './json-schema/embedder.js';
+import { definitionRef, definitionsKeyword, hoistDefinitions, startsResource } from './json-schema/embedder.js';
 import { replaceChildSlot } from './json-schema/slot.js';
 import {
 	getOwn,
@@ -105,6 +105,18 @@ function openNode(registration: TreeRegistration): JSONSchemaObject {
 }
 
 /**
+ * The error for a registration whose own JSON Schema is a resource of its own (it sets an `$id`), so the references
+ * written into it would resolve against that `$id` and not against the document.
+ */
+function unreachableSlot($type: string, keys: readonly string[]): RegistryError {
+	return new RegistryError(
+		'unreachable-child-path',
+		`The JSON Schema of '${$type}' sets an $id of its own, so the export cannot reach the child path '${keys.join('.')}': a $ref written there resolves against that $id, not against the document.`,
+		{ $type, childPath: keys },
+	);
+}
+
+/**
  * Write the JSON Schema of a whole tree of registrations, composed at the JSON Schema level.
  *
  * @param lookup - The registrations to export: a registry, or a list of registries that make up one vocabulary. When
@@ -164,7 +176,7 @@ export function exportTreeSchema(
 	}
 
 	const keyword = definitionsKeyword(target);
-	const reference = (name: string) => ({ $ref: `#/${keyword}/${pointerToken(name)}` });
+	const reference = (name: string) => ({ $ref: definitionRef(target, name) });
 	const everyType = [...registrations.keys()];
 	const unionOf = (names: readonly string[]): JSONSchemaObject => ({ anyOf: names.map(reference) });
 
@@ -173,7 +185,8 @@ export function exportTreeSchema(
 	for (const registration of registrations.values()) {
 		const resolved = resolve(registration.schema, { io, target });
 		const { definition, nested } = hoistDefinitions(resolved ?? openNode(registration), registration.$type, target);
-		for (const { keys, accepts: slotAccepts } of registration.childPaths ?? []) {
+		for (const { keys, accepts: slotAccepts, list } of registration.childPaths ?? []) {
+			if (startsResource(definition)) throw unreachableSlot(registration.$type, keys);
 			const missing = slotAccepts?.find((name) => !registrations.has(name));
 			if (missing !== undefined) {
 				throw new RegistryError(
@@ -182,7 +195,7 @@ export function exportTreeSchema(
 					{ $type: registration.$type, childPath: keys, key: missing },
 				);
 			}
-			replaceChildSlot(definition, { $type: registration.$type, keys }, unionOf(slotAccepts ?? everyType));
+			replaceChildSlot(definition, { $type: registration.$type, keys, list }, unionOf(slotAccepts ?? everyType));
 		}
 		definitions.set(registration.$type, definition);
 		for (const [name, schema] of Object.entries(nested)) {

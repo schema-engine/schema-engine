@@ -86,7 +86,7 @@ import { defineInput, elementChildrenSchema } from '@schema-engine/forms';
 export const FieldSetRegistration = defineInput({
 	$type: 'fieldSet',
 	schema: FieldSetConfigSchema,
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'FieldSet', category: 'input' },
 	render: FormFieldSet,
 });
@@ -94,7 +94,7 @@ export const FieldSetRegistration = defineInput({
 
 An input declares what its control writes with `value`, a function of the configured element that returns a Standard
 Schema (`value: ({ options }) => z.literal(options.map((option) => option.value))`). `defineInput` requires it, except
-on a container (an input that declares `childPaths: [{ keys: ['elements'] }]`, with `accepts` to limit its children; `containerKind` may sit beside it), whose value is its children's, and `createFormEngine` rejects an input that has neither `value` nor `childPaths`. `defineStatic` has none. The two helpers set a `kind` (`'input'` or `'static'`) on the registration, which is what the engine reads, not the element's `metadata.category`; a registration written by hand states its `kind`.
+on a container (an input that declares `childPaths: [{ keys: ['elements'], list: true }]`, with `accepts` to limit its children; `containerKind` may sit beside it), whose value is its children's, and `createFormEngine` rejects an input that has neither `value` nor `childPaths`. `defineStatic` has none. The two helpers set a `kind` (`'input'` or `'static'`) on the registration, which is what the engine reads, not the element's `metadata.category`; a registration written by hand states its `kind`.
 See [Submitted values](/docs/forms/form-state#submitted-values).
 
 `defineInput` keeps the concrete schema type. A container schema declares `elements` with
@@ -127,6 +127,7 @@ A renderer that draws every element binds the whole registry with `bindRegistry`
 
 `FormEngine` retrieves registered elements, recipes, and actions; validates
 form configuration; and generates JSON Schema and authoring catalog artifacts.
+It is a type: `createFormEngine` is the one way to make an engine, and the class and its constructor are not exported.
 `defineForm` and `validateForm` return `NormalizedFormConfig`. Use
 `validateElement` for a standalone field that is not already inside a form.
 
@@ -192,11 +193,32 @@ In these schemas an `appearance` pick is closed over the axes its owner declares
 each step list every axis of the layout theme; an element lists the axes in its `appearanceAxes`
 and a recipe slot the axes in the recipe's `appearanceAxes`, each as an enum of the axis's
 values. Any other axis is rejected, as it is by `validateForm`. The export checks elements, the
-children of a fieldset or an array row (typed as a union of every element's schema) and the recipe
+children of every container (see [How the children of a container are typed](#how-the-children-of-a-container-are-typed)) and the recipe
 slots. It does not check the `appearance` of an element whose schema is lazy; `validateForm` does.
 
 `getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` expose
 the same input/output converters through the Standard JSON Schema contract.
+
+### How the children of a container are typed
+
+A container is an element that declares `childPaths: [{ keys: ['elements'], list: true }]`. The export types its `elements` the same
+way for every schema library, after the schema is converted: the items of the list become the union of what the
+container accepts, a reference to the definition of each element (`#/$defs/element:tab`, or the entry's URI in
+`generateJSONSchemaCollection()`), and every element of the engine when `accepts` is absent. A child outside `accepts`
+fails the JSON Schema as it fails `validateForm`, whether the schema is Zod, a schema that exports itself or an open one:
+for a `tabs` container with `childPaths: [{ keys: ['elements'], list: true, accepts: ['tab'] }]`, the `items` of its `elements` are
+`{ anyOf: [{ $ref: '#/$defs/element:tab' }] }`.
+
+Only the slot changes: `required`, `minItems` and `maxItems` stay as the schema wrote them, and an `optional`,
+`default` or `readonly` list is the same list in JSON Schema, so it is typed too. A schema the export cannot read gets an
+optional `elements` list. The same step types the children of `exportTreeSchema`
+([`replaceChildSlot`](/docs/registry/api-reference#json-schema-subpath)). Two mistakes throw a
+[`RegistryError`](/docs/registry/api-reference#registryerror) when you export, and not when the engine is built:
+
+- `'unknown-accepted-type'`: `accepts` names a `$type` that no element registers, so there is no definition to refer to.
+  Validation does not fail the build: it reports a child of that `$type` as an unregistered one.
+- `'unreachable-child-path'`: the `elements` of the container is nullable, or sits behind `allOf`, a union or a
+  reference, so the export cannot tell which list to type.
 
 ### How each schema is exported
 
@@ -206,15 +228,17 @@ slot.
 
 1. A Zod schema (classic or Mini) goes through the Zod converter. The export composes an element's, action's or
    slot's Zod schema before converting it: it closes `appearance` over the axes the owner declares, types an
-   element's children and rules, and adds an action's envelope (`id`, `enabled`, `triggers`). Classic Zod also
+   element's rules, and adds an action's envelope (`id`, `enabled`, `triggers`). Classic Zod also
    provides `~standard.jsonSchema`, but its output is already final and cannot take part in that composition, so
    reading it would drop those additions and export a classic Zod element differently from the same element written
    in Zod Mini. Zod therefore always goes through the converter.
 2. Any other schema that provides Standard JSON Schema (`~standard.jsonSchema`) is exported as what its `input()` or
    `output()` returns for the `io` and `target` you ask for, embedded as described below. The export adds no
-   `appearance`, children or rules to it, so state them in the schema.
-3. A schema that provides neither is listed by its shape: an element by its `$type` and its appearance axes, an action
-   or a rule by its `$type`, a recipe slot as an open object with its appearance axes.
+   `appearance` or rules to it, so state them in the schema. A container's children are typed after the conversion, as
+   for every other schema.
+3. A schema that provides neither is listed by its shape: an element by its `$type`, its appearance axes and, for a
+   container, an optional `elements` list; an action or a rule by its `$type`; a recipe slot as an open object with its
+   appearance axes.
 
 How a rule 2 schema is embedded in the export:
 
