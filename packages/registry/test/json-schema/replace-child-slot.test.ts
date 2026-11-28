@@ -5,12 +5,12 @@ import { replaceChildSlot } from '../../src/json-schema';
 const union: JSONSchemaObject = { anyOf: [{ $ref: '#/$defs/leaf' }, { $ref: '#/$defs/text' }] };
 
 const slot = (definition: JSONSchemaObject, keys: readonly string[] = ['kids']): JSONSchemaObject => {
-	replaceChildSlot(definition, { $type: 'box', keys }, union);
+	replaceChildSlot(definition, { $type: 'box', keys }, union, { target: 'draft-2020-12' });
 	return definition;
 };
 
 const listed = (definition: JSONSchemaObject): JSONSchemaObject => {
-	replaceChildSlot(definition, { $type: 'box', keys: ['kids'], list: true }, union);
+	replaceChildSlot(definition, { $type: 'box', keys: ['kids'], list: true }, union, { target: 'draft-2020-12' });
 	return definition;
 };
 
@@ -186,12 +186,40 @@ describe('replaceChildSlot', () => {
 			const definition = { type: 'object', properties: { kids: { type: 'array', items: {} } } };
 			const before = structuredClone(definition);
 
-			const error = thrown(() => replaceChildSlot(definition, { $type: 'box', keys: [] }, union));
+			const error = thrown(() =>
+				replaceChildSlot(definition, { $type: 'box', keys: [] }, union, { target: 'draft-2020-12' }),
+			);
 
 			expect(error).toBeInstanceOf(RegistryError);
 			expect(error).toMatchObject({ code: 'invalid-child-paths', $type: 'box', childPath: [] });
 			expect((error as Error).message).toContain("'box'");
 			expect(definition).toEqual(before);
+		});
+	});
+
+	describe('Scenario: A schema with an identifier of its own is a resource', () => {
+		const inside = (keyword: string): JSONSchemaObject => ({
+			type: 'object',
+			properties: { inner: { [keyword]: 'https://example.test/inner', properties: { kids: { type: 'array' } } } },
+		});
+		const reach = (definition: JSONSchemaObject, target: 'draft-04' | 'draft-2020-12') =>
+			replaceChildSlot(definition, { $type: 'box', keys: ['inner', 'kids'] }, union, { target });
+
+		it('is unreachable behind an id for draft-04', () => {
+			expect(thrown(() => reach(inside('id'), 'draft-04'))).toMatchObject({
+				code: 'unreachable-child-path',
+			});
+		});
+
+		it('is unreachable behind a $id for draft-2020-12', () => {
+			expect(thrown(() => reach(inside('$id'), 'draft-2020-12'))).toMatchObject({
+				code: 'unreachable-child-path',
+			});
+		});
+
+		it('is reachable behind the other keyword, which the target does not read', () => {
+			expect(() => reach(inside('$id'), 'draft-04')).not.toThrow();
+			expect(() => reach(inside('id'), 'draft-2020-12')).not.toThrow();
 		});
 	});
 });

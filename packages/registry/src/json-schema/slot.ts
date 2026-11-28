@@ -1,6 +1,6 @@
 import { RegistryError } from '../registry-error.js';
 import { startsResource } from './embedder.js';
-import { getOwn, isPlainObject, setOwn, type JSONSchemaObject } from './standard.js';
+import { getOwn, isPlainObject, setOwn, type JSONSchemaObject, type JSONSchemaTarget } from './standard.js';
 
 const SCHEMA_APPLICATORS = ['$ref', '$dynamicRef', 'allOf', 'anyOf', 'oneOf', 'not', 'if', 'then', 'else'];
 
@@ -15,6 +15,8 @@ const SLOT_ANNOTATIONS = ['title', 'description', 'default', 'examples', 'deprec
  * replace
  * @param union - The schema every child must match, already resolved: each `$ref` is written as the document it goes in
  * refers to a definition. Each place the slot takes it gets its own copy
+ * @param options - The `target` the schema is written for, which decides the identifier (`$id`, or `id` for draft-04)
+ * that makes a schema a resource of its own
  * @throws {RegistryError} Code `'unreachable-child-path'` when the slot is not where the definition declares it, is
  * nullable, is not an object, an array or open, or is an object where the path sets `list`, and `'invalid-child-paths'` when `path.keys` is empty
  *
@@ -27,7 +29,7 @@ const SLOT_ANNOTATIONS = ['title', 'description', 'default', 'examples', 'deprec
  * the list the document holds. An array slot of such a path that declares only array keywords (`items`) gets
  * `type: 'array'`, so an object is refused as the walk refuses it, and one whose `type` is another is unreachable.
  * Annotations of the slot are kept. A slot inside a
- * schema with an `$id` of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the
+ * schema with an `$id` (`id` for draft-04) of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the
  * document. That holds for each schema between the definition and the slot. The definition's own root is the caller's
  * to check, since only the caller knows whether the references it writes resolve against that root: a collection entry
  * has an `$id` that is its address, and its references are written for that collection. A nullable slot (`type: ['array', 'null']` or an `anyOf` with `null`, or `nullable: true` as OpenAPI 3.0
@@ -46,7 +48,9 @@ export function replaceChildSlot(
 	definition: JSONSchemaObject,
 	path: { readonly $type: string; readonly keys: readonly string[]; readonly list?: true },
 	union: JSONSchemaObject,
+	options: { readonly target: JSONSchemaTarget },
 ): void {
+	const { target } = options;
 	const { $type, keys, list } = path;
 	if (keys.length === 0) {
 		throw new RegistryError(
@@ -59,13 +63,13 @@ export function replaceChildSlot(
 	const unreachable = () =>
 		new RegistryError(
 			'unreachable-child-path',
-			`The JSON Schema of '${$type}' has no slot the export can reach for the child path '${keys.join('.')}'. The slot must be a declared property, not behind a reference, allOf or a union, nor inside a schema with an $id of its own, and an object, an array or open.`,
+			`The JSON Schema of '${$type}' has no slot the export can reach for the child path '${keys.join('.')}'. The slot must be a declared property, not behind a reference, allOf or a union, nor inside a schema with an $id (id for draft-04) of its own, and an object, an array or open.`,
 			{ $type, childPath: keys },
 		);
 	let parent: JSONSchemaObject = definition;
 	for (const key of keys.slice(0, -1)) {
 		const step = isPlainObject(parent.properties) ? getOwn(parent.properties, key) : undefined;
-		if (!isPlainObject(step) || startsResource(step)) throw unreachable();
+		if (!isPlainObject(step) || startsResource(step, target)) throw unreachable();
 		parent = step;
 	}
 	const last = keys[keys.length - 1]!;
@@ -80,7 +84,7 @@ export function replaceChildSlot(
 		SCHEMA_APPLICATORS.some((keyword) => keyword in slot) ||
 		Array.isArray(slot.type) ||
 		slot.nullable === true ||
-		startsResource(slot)
+		startsResource(slot, target)
 	) {
 		throw unreachable();
 	}

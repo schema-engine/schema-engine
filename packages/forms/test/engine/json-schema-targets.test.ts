@@ -120,3 +120,66 @@ describe('the Standard JSON Schema names are the ones the export writes', () => 
 		expect(() => engine.generateFormConfigSchema({ target: 'openapi-3.0' })).not.toThrow();
 	});
 });
+
+describe('a draft-04 export names its resources by id, which a draft-04 validator reads, not $id', () => {
+	const uri = (id: string) => `https://example.test/${id}.json`;
+	const leaf = {
+		'~standard': {
+			version: 1,
+			vendor: 'schema-engine-test',
+			validate: (value: unknown) => ({ value }),
+			jsonSchema: {
+				input: () => ({ id: 'https://example.test/leaf', type: 'object' }),
+				output: () => ({ id: 'https://example.test/leaf', type: 'object' }),
+			},
+		},
+	} satisfies StandardSchemaV1 & StandardJSONSchemaV1;
+	const resourceEngine = createFormEngine({
+		elements: [
+			{
+				$type: 'leaf',
+				kind: 'input',
+				value: anyValue,
+				schema: leaf,
+				metadata: { name: 'Leaf', category: 'input' },
+				render: () => null,
+			},
+		],
+	});
+
+	test('every entry of the collection is addressed by id, as it is by $id for the other targets', () => {
+		for (const [target, keyword, other] of [
+			['draft-04', 'id', '$id'],
+			['draft-07', '$id', 'id'],
+		] as const) {
+			const { schemas } = engine.generateJSONSchemaCollection({ target, uri }) as unknown as {
+				schemas: Record<string, Record<string, unknown>>;
+			};
+
+			expect(Object.keys(schemas).length).toBeGreaterThan(0);
+			for (const [name, entry] of Object.entries(schemas)) {
+				expect(entry[keyword], name).toBe(uri(name));
+				expect(entry, name).not.toHaveProperty(other);
+			}
+		}
+	});
+
+	test('an entry whose schema has an id of its own refers to it, and is addressed by the collection id', () => {
+		const { schemas } = resourceEngine.generateJSONSchemaCollection({ target: 'draft-04', uri }) as unknown as {
+			schemas: Record<string, Record<string, unknown>>;
+		};
+
+		expect(schemas['element:leaf']).toMatchObject({
+			id: uri('element:leaf'),
+			allOf: [{ $ref: 'https://example.test/leaf' }],
+		});
+		expect(schemas['element:leaf']).not.toHaveProperty('$id');
+	});
+
+	test('the form config document is addressed by id for draft-04', () => {
+		const document = engine.generateFormConfigSchema({ target: 'draft-04' }) as unknown as Record<string, unknown>;
+
+		expect(document.id).toBe('form-config-schema');
+		expect(document).not.toHaveProperty('$id');
+	});
+});

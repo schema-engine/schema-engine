@@ -246,7 +246,7 @@ describe('RegistryError', () => {
 			'schema-breaks-child-path': (e) =>
 				`${e.kind} '${e.$type}' schema output does not keep the child path '${e.childPath?.join('.')}' as the document has it.`,
 			'unreachable-child-path': (e) =>
-				`The JSON Schema of '${e.$type}' has no slot the export can reach for the child path '${e.childPath?.join('.')}'. The slot must be a declared property, not behind a reference, allOf or a union, nor inside a schema with an $id of its own, and an object, an array or open.`,
+				`The JSON Schema of '${e.$type}' has no slot the export can reach for the child path '${e.childPath?.join('.')}'. The slot must be a declared property, not behind a reference, allOf or a union, nor inside a schema with an $id (id for draft-04) of its own, and an object, an array or open.`,
 			'unknown-accepted-type': (e) =>
 				`The child path '${e.childPath?.join('.')}' of '${e.$type}' accepts '${e.key}', which the lookup does not list. Pass every registry of the vocabulary.`,
 			'definition-name-clash': (e) =>

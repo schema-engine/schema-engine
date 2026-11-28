@@ -192,7 +192,7 @@ export function exportTreeSchema(
 		const resolved = resolve(registration.schema, { io, target });
 		const definition = embedder.embedDefinition(resolved ?? openNode(registration), registration.$type);
 		for (const { keys, accepts: slotAccepts, list } of registration.childPaths ?? []) {
-			if (startsResource(definition)) throw unreachableSlot(registration.$type, keys);
+			if (startsResource(definition, target)) throw unreachableSlot(registration.$type, keys);
 			const missing = slotAccepts?.find((name) => !registrations.has(name));
 			if (missing !== undefined) {
 				throw new RegistryError(
@@ -201,7 +201,9 @@ export function exportTreeSchema(
 					{ $type: registration.$type, childPath: keys, key: missing },
 				);
 			}
-			replaceChildSlot(definition, { $type: registration.$type, keys, list }, unionOf(slotAccepts ?? everyType));
+			replaceChildSlot(definition, { $type: registration.$type, keys, list }, unionOf(slotAccepts ?? everyType), {
+				target,
+			});
 		}
 		definitions.set(registration.$type, definition);
 	}

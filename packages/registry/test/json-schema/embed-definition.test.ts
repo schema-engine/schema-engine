@@ -6,6 +6,8 @@ import {
 	createJSONSchemaEmbedder,
 	definitionRef,
 	definitionsKeyword,
+	idKeyword,
+	startsResource,
 	type JSONSchemaPlacement,
 } from '../../src/json-schema';
 import type { JSONSchemaObject } from '../../src';
@@ -36,6 +38,27 @@ describe('definitionsKeyword', () => {
 		['openapi-3.0', 'definitions'],
 	] as const)('is %s for %s', (target, keyword) => {
 		expect(definitionsKeyword(target)).toBe(keyword);
+	});
+});
+
+describe('idKeyword and startsResource', () => {
+	it.each([
+		['draft-04', 'id'],
+		['draft-07', '$id'],
+		['draft-2020-12', '$id'],
+		['openapi-3.0', '$id'],
+	] as const)('the identifier of %s is %s', (target, keyword) => {
+		expect(idKeyword(target)).toBe(keyword);
+	});
+
+	it('is a resource by the identifier of its target, and a fragment names an anchor instead', () => {
+		expect(startsResource({ id: 'https://example.test/a' }, 'draft-04')).toBe(true);
+		expect(startsResource({ $id: 'https://example.test/a' }, 'draft-04')).toBe(false);
+		expect(startsResource({ id: 'https://example.test/a' }, 'draft-07')).toBe(false);
+		expect(startsResource({ $id: 'https://example.test/a' }, 'draft-07')).toBe(true);
+		expect(startsResource({ id: '#node' }, 'draft-04')).toBe(false);
+		expect(startsResource({ $id: '#node' }, 'draft-2020-12')).toBe(false);
+		expect(startsResource({ id: 7 }, 'draft-04')).toBe(false);
 	});
 });
 
@@ -74,6 +97,100 @@ describe('JSONSchemaEmbedder.embed', () => {
 				here: { id: '#onode.node', type: 'string' },
 				there: { $ref: '#onode.node' },
 			});
+		});
+	});
+
+	describe('Scenario: A draft-04 schema with an id of its own is a resource', () => {
+		const child = {
+			id: 'https://example.test/child.json',
+			definitions: { a: { type: 'string' } },
+			properties: {
+				x: { $ref: '#/definitions/a' },
+				y: { id: '#node', type: 'string' },
+				z: { $ref: '#node' },
+			},
+		};
+		const withChild = { type: 'object', properties: { child }, definitions: { own: { type: 'number' } } };
+
+		it('leaves a nested resource as it is, with its anchors and pointers', () => {
+			const embedder = createJSONSchemaEmbedder('draft-04', document);
+
+			const definition = embedder.embedDefinition(
+				{ ...withChild, properties: { ...withChild.properties, self: { $ref: '#/definitions/own' } } },
+				'owner',
+			);
+			const written = embedder.finish({ definitions: { owner: definition } });
+
+			expect(definition.properties).toEqual({ child, self: { $ref: '#/definitions/owner.own' } });
+			expect(Object.keys(written.definitions as object)).toEqual(['owner', 'owner.own']);
+		});
+
+		it('keeps a nested resource and an absolute reference into its fragment, which still resolve', () => {
+			const schema = {
+				type: 'object',
+				properties: {
+					child: {
+						id: 'https://example.test/child.json',
+						properties: { n: { id: '#node', type: 'string' } },
+					},
+					ref: { $ref: 'https://example.test/child.json#node' },
+				},
+			};
+
+			expect(createJSONSchemaEmbedder('draft-04', document).embed(schema)).toEqual(schema);
+			expect(createJSONSchemaEmbedder('draft-04', document).embedDefinition(schema, 'owner')).toEqual(schema);
+		});
+
+		it('keeps a root resource as it is, whose references resolve against its own id', () => {
+			const root = { ...child, type: 'object' };
+			const embedder = createJSONSchemaEmbedder('draft-04', document);
+
+			expect(embedder.embed(root)).toEqual(root);
+			expect(embedder.embedDefinition(root, 'owner')).toEqual(root);
+			expect(embedder.finish({})).toEqual({});
+		});
+
+		it('treats id as an ordinary keyword for a target that writes $id', () => {
+			const embedder = createJSONSchemaEmbedder('draft-07', document);
+			const own = {
+				type: 'object',
+				properties: {
+					child: { id: 'https://example.test/child.json', properties: { x: { $ref: '#/definitions/a' } } },
+				},
+				definitions: { a: { type: 'string' } },
+			};
+
+			expect(embedder.embedDefinition(own, 'owner').properties).toEqual({
+				child: { id: 'https://example.test/child.json', properties: { x: { $ref: '#/definitions/owner.a' } } },
+			});
+		});
+
+		it('writes a collection entry under id, and refers to a resource by its own id', () => {
+			const embedder = createJSONSchemaEmbedder('draft-04', { kind: 'collection', uri });
+
+			const entry = embedder.embedDefinition({ ...child, type: 'object' }, 'leaf');
+			const recursive = embedder.embed({ type: 'object', properties: { next: { $ref: '#' } } });
+			const written = embedder.finish({ schemas: {} });
+
+			expect(entry).toEqual({
+				allOf: [{ $ref: 'https://example.test/child.json' }],
+				definitions: { leaf: { ...child, type: 'object' } },
+			});
+			expect(recursive).toEqual({ $ref: uri('embedded-1') });
+			expect(written.schemas).toEqual({
+				'embedded-1': { id: uri('embedded-1'), type: 'object', properties: { next: { $ref: '#' } } },
+			});
+		});
+
+		it('drops a root id fragment of a collection entry, with its references turned into #', () => {
+			const embedder = createJSONSchemaEmbedder('draft-04', { kind: 'collection', uri });
+
+			expect(
+				embedder.embedDefinition(
+					{ id: '#node', type: 'object', properties: { next: { $ref: '#node' } } },
+					'node',
+				),
+			).toEqual({ type: 'object', properties: { next: { $ref: '#' } } });
 		});
 	});
 });
@@ -151,18 +268,17 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 			});
 		});
 
-		it('throws a RegistryError when a definition it lifts takes the key of a schema embed hoisted', () => {
+		it('throws an Error when the document defines a key that embed reserves', () => {
 			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
 			embedder.embed({ type: 'object', properties: { next: { $ref: '#' } } });
 
 			const error = thrownBy(() => embedder.finish({ $defs: { 'embedded-1': {} } }));
 
-			expect(error).toMatchObject({
-				code: 'definition-name-clash',
-				key: 'embedded-1',
-				message: "A schema embed hoisted as 'embedded-1' takes the name of a definition of the export.",
-			});
-			expect((error as RegistryError).$type).toBeUndefined();
+			expect(error).toBeInstanceOf(Error);
+			expect(error).not.toBeInstanceOf(RegistryError);
+			expect((error as Error).message).toBe(
+				"The embedder reserves 'embedded-1'; the document already defines it.",
+			);
 		});
 
 		it('keeps owners whose lifted names would join to the same text apart, and both resolve under Ajv', () => {
@@ -287,7 +403,11 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 				const embedder = createJSONSchemaEmbedder(target, { kind: 'collection', uri });
 
 				const entry = embedder.embedDefinition(
-					{ $id: 'https://example.test/leaf', type: 'object', definitions: { label: { type: 'string' } } },
+					{
+						[idKeyword(target)]: 'https://example.test/leaf',
+						type: 'object',
+						definitions: { label: { type: 'string' } },
+					},
 					'leaf',
 				);
 

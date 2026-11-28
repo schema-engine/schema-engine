@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 import type { JSONSchemaTarget } from '@schema-engine/registry';
+import { idKeyword } from '@schema-engine/registry/json-schema';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import { createExportConversion } from '@/lib/export-schema';
 
@@ -35,7 +36,7 @@ export function generateZodJSONSchemaCollection(
 		target,
 		placement: { kind: 'collection', uri, registry: metadataRegistry },
 	});
-	return conversion.finish(
+	const collection = conversion.finish(
 		z.toJSONSchema(metadataRegistry, {
 			target,
 			io,
@@ -43,6 +44,26 @@ export function generateZodJSONSchemaCollection(
 			override: conversion.override,
 		}) as JSONSchemaObject,
 	);
+	return target === 'draft-04' ? withEntryIdentifiers(collection, target) : collection;
+}
+
+/**
+ * The collection with the address of each entry written under the identifier keyword of the target.
+ *
+ * @remarks
+ * Zod writes an entry's address as `$id` whatever the target, and draft-04 has no `$id`: its identifier is `id`, so a
+ * draft-04 validator would ignore the address and the `$ref`s that name it by `uri` would not resolve. The entry is
+ * changed in place; one that has no `$id` (an entry the embedder wrote under its own identifier) is left as it is.
+ */
+function withEntryIdentifiers(collection: JSONSchemaObject, target: JSONSchemaTarget): JSONSchemaObject {
+	const keyword = idKeyword(target);
+	const entries: Record<string, JSONSchemaObject> = collection.schemas ?? {};
+	for (const entry of Object.values(entries)) {
+		if (keyword === '$id' || typeof entry.$id !== 'string') continue;
+		entry[keyword] = entry.$id;
+		delete entry.$id;
+	}
+	return collection;
 }
 
 /**
@@ -102,7 +123,7 @@ export function generateZodJSONSchemaDocument(
 	);
 
 	if (options?.schemaId) {
-		schema.$id = options.schemaId;
+		schema[idKeyword(target)] = options.schemaId;
 	}
 
 	return schema;

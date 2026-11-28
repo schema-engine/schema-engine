@@ -12,3 +12,5 @@ engine.generateJSONSchemaCollection({ target: 'draft-4' });
 engine.generateFormConfigSchema({ target: 'draft-07' });
 engine.generateJSONSchemaCollection({ target: 'draft-04' });
 ```
+
+A `'draft-04'` export addresses its collection entries and its form config document by `id`, the identifier a draft-04 validator reads, where it wrote `$id`, so the `uri` references between entries resolve.

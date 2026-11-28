@@ -25,53 +25,58 @@ const NAMED_SCHEMA_KEYWORDS = new Set([
 
 const isLocalPointer = (ref: string): boolean => ref === '#' || ref.startsWith('#/');
 
+/** The keyword a target writes a schema's identifier under: `id` for draft-04, `$id` for every other target. */
+export const idKeyword = (target: JSONSchemaTarget): 'id' | '$id' => (target === 'draft-04' ? 'id' : '$id');
+
 /**
- * Whether a schema is the root of a resource of its own, which resolves its references against itself. A draft-07
- * `$id` that is only a fragment (`#node`) names an anchor instead.
+ * Whether a schema is the root of a resource of its own, which resolves its references against itself: it sets the
+ * identifier of its target ({@link idKeyword}) to something other than a fragment. An identifier that is only a
+ * fragment (`#node`) names an anchor instead.
  */
-export const startsResource = (schema: Record<string, unknown>): boolean =>
-	typeof schema.$id === 'string' && !schema.$id.startsWith('#');
+export const startsResource = (schema: Record<string, unknown>, target: JSONSchemaTarget): boolean => {
+	const id = schema[idKeyword(target)];
+	return typeof id === 'string' && !id.startsWith('#');
+};
 
 /**
  * A copy of a schema's root resource with `rewrite` applied to each string keyword of every schema in it. A keyword
  * is replaced where `rewrite` returns another value.
  *
  * @remarks
- * A subschema with its own `$id` is another resource: its references and anchors are relative to it, not to the
- * schema being embedded, so it is copied as it is. The root is walked whatever its `$id`; the embedder embeds a root
- * that starts a resource as it is.
+ * A subschema with its own identifier (`$id`, or `id` for draft-04) is another resource: its references and anchors are
+ * relative to it, not to the schema being embedded, so it is copied as it is. The root is walked whatever its
+ * identifier; the embedder embeds a root that starts a resource as it is.
  */
-function mapResource(node: unknown, rewrite: (keyword: string, value: string) => string, isRoot = true): unknown {
-	if (Array.isArray(node)) return node.map((item) => mapResource(item, rewrite, false));
+function mapResource(
+	node: unknown,
+	target: JSONSchemaTarget,
+	rewrite: (keyword: string, value: string) => string,
+	isRoot = true,
+): unknown {
+	if (Array.isArray(node)) return node.map((item) => mapResource(item, target, rewrite, false));
 	if (!isPlainObject(node)) return node;
-	if (!isRoot && startsResource(node)) return structuredClone(node);
+	if (!isRoot && startsResource(node, target)) return structuredClone(node);
 	const copy: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(node)) {
 		if (typeof value === 'string') copy[key] = rewrite(key, value);
 		else if (DATA_KEYWORDS.has(key)) copy[key] = structuredClone(value);
 		else if (NAMED_SCHEMA_KEYWORDS.has(key) && isPlainObject(value)) {
 			copy[key] = Object.fromEntries(
-				Object.entries(value).map(([name, schema]) => [name, mapResource(schema, rewrite, false)]),
+				Object.entries(value).map(([name, schema]) => [name, mapResource(schema, target, rewrite, false)]),
 			);
-		} else copy[key] = mapResource(value, rewrite, false);
+		} else copy[key] = mapResource(value, target, rewrite, false);
 	}
 	return copy;
 }
 
 /**
- * The keyword a target writes an anchor under as a fragment identifier: `id: '#name'` for draft-04, `$id: '#name'` for
- * every other target.
- */
-const fragmentKeyword = (target: JSONSchemaTarget): 'id' | '$id' => (target === 'draft-04' ? 'id' : '$id');
-
-/**
  * The anchor names a schema's root resource declares: `$anchor`, `$dynamicAnchor` and the fragment identifier the
- * target writes ({@link fragmentKeyword}).
+ * target writes ({@link idKeyword}).
  */
 function declaredAnchors(schema: JSONSchemaObject, target: JSONSchemaTarget): Set<string> {
 	const names = new Set<string>();
-	const fragment = fragmentKeyword(target);
-	mapResource(schema, (keyword, value) => {
+	const fragment = idKeyword(target);
+	mapResource(schema, target, (keyword, value) => {
 		if (keyword === '$anchor' || keyword === '$dynamicAnchor') names.add(value);
 		else if (keyword === fragment && value.startsWith('#')) names.add(value.slice(1));
 		return value;
@@ -88,10 +93,10 @@ function rewriteResource(
 	target: JSONSchemaTarget,
 	rewrite: { readonly pointer?: (pointer: string) => string; readonly anchor?: (name: string) => string },
 ): JSONSchemaObject {
-	const fragment = fragmentKeyword(target);
+	const fragment = idKeyword(target);
 	const anchors = rewrite.anchor ? declaredAnchors(schema, target) : new Set<string>();
 	const renamed = (name: string) => (rewrite.anchor && anchors.has(name) ? rewrite.anchor(name) : name);
-	return mapResource(schema, (keyword, value) => {
+	return mapResource(schema, target, (keyword, value) => {
 		if (keyword === '$anchor' || keyword === '$dynamicAnchor') return renamed(value);
 		if (keyword === fragment && value.startsWith('#')) return `#${renamed(value.slice(1))}`;
 		if (keyword !== '$ref' && keyword !== '$dynamicRef') return value;
@@ -105,9 +110,9 @@ function withoutSchemaKeyword(schema: JSONSchemaObject): JSONSchemaObject {
 	return structuredClone(rest);
 }
 
-function hasLocalRef(schema: JSONSchemaObject): boolean {
+function hasLocalRef(schema: JSONSchemaObject, target: JSONSchemaTarget): boolean {
 	let found = false;
-	mapResource(schema, (keyword, value) => {
+	mapResource(schema, target, (keyword, value) => {
 		if (keyword === '$ref' && isLocalPointer(value)) found = true;
 		return value;
 	});
@@ -115,19 +120,20 @@ function hasLocalRef(schema: JSONSchemaObject): boolean {
 }
 
 /**
- * A copy of a schema without its root's draft-07 fragment `$id` (`#node`), with the `#node` references to it pointing
- * at the root as `#`. A schema without one is returned as it is.
+ * A copy of a schema without its root's fragment identifier (`$id: '#node'`, `id: '#node'` for draft-04), with the
+ * `#node` references to it pointing at the root as `#`. A schema without one is returned as it is.
  *
  * @remarks
- * A fragment `$id` is an anchor, and a draft-07 root has only one `$id`, which an entry of a collection needs for its
+ * A fragment identifier is an anchor, and a root has only one identifier, which an entry of a collection needs for its
  * URI. The anchor can only name the root, so `#` says the same within the entry, which is a resource of its own by
  * that URI. Anchors below the root are kept, and the root's other keywords are untouched.
  */
-function withoutRootAnchor(schema: JSONSchemaObject): JSONSchemaObject {
-	if (typeof schema.$id !== 'string' || !schema.$id.startsWith('#')) return schema;
-	const root = schema.$id;
-	const { $id: _anchor, ...rest } = mapResource(schema, (keyword, value) =>
-		(keyword === '$ref' || keyword === '$dynamicRef') && value === root ? '#' : value,
+function withoutRootAnchor(schema: JSONSchemaObject, target: JSONSchemaTarget): JSONSchemaObject {
+	const keyword = idKeyword(target);
+	const root = schema[keyword];
+	if (typeof root !== 'string' || !root.startsWith('#')) return schema;
+	const { [keyword]: _anchor, ...rest } = mapResource(schema, target, (name, value) =>
+		(name === '$ref' || name === '$dynamicRef') && value === root ? '#' : value,
 	) as JSONSchemaObject;
 	return rest;
 }
@@ -152,17 +158,20 @@ export interface JSONSchemaEmbedder {
 	 * another definition. In a document, `#` points at the definition, a pointer into the schema's own definitions at the
 	 * definition lifted to the document as `<name>.<its name>` and anchors are renamed under `name`, as
 	 * {@link createJSONSchemaEmbedder} explains. In a collection the entry is its own resource, so the schema is kept as it is, with
-	 * its own definitions, without `$schema`, and a draft-07 root `$id: '#node'` is dropped with its references turned
-	 * into `#`, since the entry is addressed by the `$id` the collection gives it. A schema with an `$id` of its own is a
+	 * its own definitions, without `$schema`, and a root fragment identifier (`$id: '#node'`, `id: '#node'` for draft-04) is
+	 * dropped with its references turned into `#`, since the entry is addressed by the identifier the collection gives
+	 * it. A schema with an identifier of its own (`$id`, or `id` for draft-04) is a
 	 * resource that keeps its base: in a document it is kept as it is, and in a collection the entry is an `allOf` of a
 	 * reference to it, with the schema beside it under the name (a `$ref` beside other keywords is ignored before 2019-09), so the entry keeps the collection's URI and the schema keeps its
-	 * `$id`.
+	 * identifier.
 	 */
 	embedDefinition(own: JSONSchemaObject, name: string): JSONSchemaObject;
 	/**
 	 * Adds the definitions `embed` and `embedDefinition` moved to the finished document or collection, in place.
 	 *
-	 * @throws {RegistryError} Code `'definition-name-clash'` when one of them takes a name `written` already defines
+	 * @throws {RegistryError} Code `'definition-name-clash'` when a definition `embedDefinition` lifted takes a name
+	 * `written` already defines
+	 * @throws {Error} When `written` already defines an `embedded-<n>` key `embed` hoisted: the embedder reserves them
 	 */
 	finish(written: JSONSchemaObject): JSONSchemaObject;
 }
@@ -179,17 +188,17 @@ export interface JSONSchemaEmbedder {
  * itself from its root (`#`, `#/$defs/node`, as ArkType writes a recursive type) would point at the wrong root once
  * embedded, so it is hoisted: in a document, into its definitions under a key of its own (`embedded-1`), with each of
  * its local pointers prefixed by that place; in a collection, as an entry of its own, referred to by its URI. The
- * references stay `#/...` pointers and `#name` anchors, which is what AI tool APIs resolve, rather than `$id` URIs.
+ * references stay `#/...` pointers and `#name` anchors, which is what AI tool APIs resolve, rather than `$id` URIs (`id` for draft-04).
  *
  * A plain-name anchor (`$anchor`, `$dynamicAnchor`, a draft-07 `$id: '#node'`, a draft-04 `id: '#node'`) resolves anywhere in the document, so
  * two schemas that each declare `node` would declare it twice. Each embedded schema's anchors, and the `#node`
  * references to them, are renamed to carry its key (`embedded-1-node`), whether it is hoisted into a document or
- * embedded where it stands. A schema hoisted into a collection is a resource of its own by its `$id`, which scopes
- * its anchors, so they keep their names. Only a draft-07 root `$id: '#node'` cannot stay: the entry's `$id` is its
+ * embedded where it stands. A schema hoisted into a collection is a resource of its own by its `$id` (`id` for draft-04), which scopes
+ * its anchors, so they keep their names. Only a root fragment identifier (`$id: '#node'`, `id: '#node'` for draft-04) cannot stay: the entry's identifier is its
  * assigned URI, so the root's anchor is dropped and its `#node` references become `#`, as
  * {@link withoutRootAnchor} explains.
  *
- * Only the schema's root resource is rewritten. A schema with its own `$id`, and any subschema that sets one, resolves
+ * Only the schema's root resource is rewritten. A schema with its own `$id` (`id` for draft-04), and any subschema that sets one, resolves
  * its pointers and anchors against that and is left as it is.
  *
  * A definition written into a document by `embedDefinition(own, owner)` is named, and its anchors renamed, by the
@@ -214,14 +223,15 @@ export interface JSONSchemaEmbedder {
 export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JSONSchemaPlacement): JSONSchemaEmbedder {
 	assertJSONSchemaTarget(target);
 	const keyword = definitionsKeyword(target);
+	const id = idKeyword(target);
 	const hoisted: Record<string, JSONSchemaObject> = {};
 	const ownerOf = new Map<string, string>();
 	let count = 0;
 	return {
 		embed(own) {
 			const body = withoutSchemaKeyword(own);
-			if (startsResource(body)) return body;
-			const pointsIntoItself = hasLocalRef(body);
+			if (startsResource(body, target)) return body;
+			const pointsIntoItself = hasLocalRef(body, target);
 			if (!pointsIntoItself && declaredAnchors(body, target).size === 0) return body;
 			count += 1;
 			const key = `embedded-${count}`;
@@ -229,8 +239,8 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 				const ref = placement.uri(key);
 				hoisted[key] = {
 					...(own.$schema === undefined ? {} : { $schema: own.$schema }),
-					...withoutRootAnchor(body),
-					$id: ref,
+					...withoutRootAnchor(body, target),
+					[id]: ref,
 				};
 				return { $ref: ref };
 			}
@@ -245,9 +255,9 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 		},
 		embedDefinition(own, name) {
 			if (placement.kind === 'collection') {
-				const entry = withoutRootAnchor(withoutSchemaKeyword(own));
-				if (!startsResource(entry)) return entry;
-				return { allOf: [{ $ref: entry.$id }], [keyword]: { [name]: entry } };
+				const entry = withoutRootAnchor(withoutSchemaKeyword(own), target);
+				if (!startsResource(entry, target)) return entry;
+				return { allOf: [{ $ref: entry[id] }], [keyword]: { [name]: entry } };
 			}
 			const { definition, nested } = hoistDefinitions(own, name, target);
 			for (const [lifted, schema] of Object.entries(nested)) {
@@ -262,7 +272,11 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 			const field = placement.kind === 'collection' ? 'schemas' : keyword;
 			const existing: JSONSchemaObject = isPlainObject(written[field]) ? written[field] : {};
 			for (const key of Object.keys(hoisted)) {
-				if (Object.hasOwn(existing, key)) throw definitionNameClash(ownerOf.get(key), key);
+				if (!Object.hasOwn(existing, key)) continue;
+				const owner = ownerOf.get(key);
+				if (owner === undefined)
+					throw new Error(`The embedder reserves '${key}'; the document already defines it.`);
+				throw definitionNameClash(owner, key);
 			}
 			written[field] = { ...existing, ...hoisted };
 			return written;
@@ -270,18 +284,8 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 	};
 }
 
-/**
- * The error for a definition `key` that takes a name another definition holds. `owner` is the owner whose schema
- * brought the definition along, and is absent for the key of a schema `embed` hoisted, which has none.
- */
-function definitionNameClash(owner: string | undefined, key: string): RegistryError {
-	if (owner === undefined) {
-		return new RegistryError(
-			'definition-name-clash',
-			`A schema embed hoisted as '${key}' takes the name of a definition of the export.`,
-			{ key },
-		);
-	}
+/** The error for a definition `key` that `owner` brought along and that takes a name another definition holds. */
+function definitionNameClash(owner: string, key: string): RegistryError {
 	return new RegistryError(
 		'definition-name-clash',
 		`The definition '${key}' that '${owner}' brought along takes the name of another definition of the export.`,
@@ -379,12 +383,12 @@ interface HoistedDefinitions {
  * points at the owner's definition, `#/$defs/name` at the lifted one, and any other `#/...` pointer into the owner's
  * definition. Anchors and `$schema` are handled as {@link createJSONSchemaEmbedder} does, each anchor named
  * `<owner part>.<name>` as {@link anchorOwnerPart} writes the owner part. The caller checks the names it gets back
- * against the ones it already holds. A schema with an `$id` of its own is a resource that resolves itself, so it is
+ * against the ones it already holds. A schema with an `$id` (`id` for draft-04) of its own is a resource that resolves itself, so it is
  * kept as it is.
  */
 function hoistDefinitions(own: JSONSchemaObject, owner: string, target: JSONSchemaTarget): HoistedDefinitions {
 	const body = withoutSchemaKeyword(own);
-	if (startsResource(body)) return { definition: body, nested: {} };
+	if (startsResource(body, target)) return { definition: body, nested: {} };
 	const nameOf = (name: string) => liftedName(owner, name);
 	const place = (name: string) => definitionRef(target, name);
 	const ownerPart = anchorOwnerPart(owner);

@@ -28,8 +28,7 @@
  * - `'unknown-accepted-type'`: {@link exportTreeSchema} was given a lookup that lacks a `$type` a child path
  *   (`childPath`) accepts (`key`).
  * - `'definition-name-clash'`: {@link exportTreeSchema}, or the JSON Schema embedder it writes through, found that a
- *   definition a schema brought along (`key`, brought by the owner `$type`, which is absent for a schema the embedder hoisted
- *   for itself) takes the name of a `$type` or of another definition.
+ *   definition a schema brought along (`key`, brought by `$type`) takes the name of a `$type` or of another definition.
  */
 export type RegistryErrorCode =
 	| 'invalid-schema'
@@ -55,14 +54,8 @@ export interface RegistryErrorDetails {
 	 * Absent when a parse failed through a lookup that is not a registry, a function say, which has no label.
 	 */
 	readonly kind?: string;
-	/**
-	 * The `$type` of the registration at fault, or the key of a binding that names no registration.
-	 *
-	 * @remarks
-	 * Absent for `'definition-name-clash'` of a schema the JSON Schema embedder hoisted for itself, which has no owner. For
-	 * a definition a schema brought along it is the owner's name.
-	 */
-	readonly $type?: string;
+	/** The `$type` of the registration at fault, or the key of a binding that names no registration. */
+	readonly $type: string;
 	/**
 	 * The key a binding sets that its contract defines, for `'binding-overrides-contract'`, the `$type` a child path
 	 * accepts that the lookup lacks, for `'unknown-accepted-type'`, and the name of the definition that clashes, for
@@ -92,7 +85,7 @@ export interface RegistryErrorDetails {
 export class RegistryError extends Error implements RegistryErrorDetails {
 	readonly code: RegistryErrorCode;
 	readonly kind?: string;
-	readonly $type?: string;
+	readonly $type: string;
 	readonly key?: string;
 	readonly childPath?: readonly string[];
 	readonly outerChildPath?: readonly string[];
@@ -102,7 +95,7 @@ export class RegistryError extends Error implements RegistryErrorDetails {
 		this.name = 'RegistryError';
 		this.code = code;
 		if (details.kind !== undefined) this.kind = details.kind;
-		if (details.$type !== undefined) this.$type = details.$type;
+		this.$type = details.$type;
 		if (details.key !== undefined) this.key = details.key;
 		if (details.childPath !== undefined) this.childPath = details.childPath;
 		if (details.outerChildPath !== undefined) this.outerChildPath = details.outerChildPath;
