@@ -6,7 +6,6 @@ import {
 	type JSONSchemaObject,
 	type JSONSchemaTarget,
 } from './json-schema/standard.js';
-import type { ReadOnlyRegistry } from './create-registry.js';
 import { RegistryError } from './registry-error.js';
 import type { TreeRegistration } from './tree-types.js';
 
@@ -17,7 +16,9 @@ import type { TreeRegistration } from './tree-types.js';
  * Both registry kinds ({@link createRegistry}, {@link BaseRegistry}) provide it. A vocabulary spread over several
  * registries is passed as a list of them.
  */
-export type ExportLookup = Pick<ReadOnlyRegistry, 'all'>;
+export interface ExportLookup {
+	all(): readonly TreeRegistration[];
+}
 
 /** What a `resolve` function is told about the export it takes part in. */
 export interface ExportSchemaContext {
