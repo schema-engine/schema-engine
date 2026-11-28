@@ -105,23 +105,24 @@ A failed result is `{ success: false, issues, tree? }`. `tree` is a `PartialNode
 A partial node has `output`, its own schema output, and no `data`: the parsed document exists only when there are no issues. A slot of `output` holds whatever the document had there, children that failed included, so read the children from `children`: one `{ keys, nodes }` per child path, with the children that parsed in document order, each with its own `path`. A failed child is missing from `nodes`, so the issues, not the position, say where it was.
 
 ```ts title="partial.ts"
-import type { PartialNode } from '@schema-engine/registry';
+import { formatIssuePath, type PartialNode } from '@schema-engine/registry';
 import type { Registration } from './blocks';
 import { resolve } from './resolve';
 
-function badgeLabels(node: PartialNode<Registration>): string[] {
-	const own = node.$type === 'badge' ? [node.output.label] : [];
-	return [...own, ...node.children.flatMap(({ nodes }) => nodes.flatMap(badgeLabels))];
+function describe(node: PartialNode<Registration>): string[] {
+	const label = node.$type === 'text' ? ` "${node.output.value}"` : '';
+	const own = `${node.$type} at ${formatIssuePath(node.path) || 'root'}${label}`;
+	return [own, ...node.children.flatMap(({ nodes }) => nodes.flatMap(describe))];
 }
 
-export function labelsThatParsed(document: unknown): string[] {
+export function parsedNodes(document: unknown): string[] {
 	const resolution = resolve(document);
 	if (resolution.success || resolution.tree === undefined) return [];
-	return badgeLabels(resolution.tree);
+	return describe(resolution.tree);
 }
 ```
 
-For the `broken` document below, `labelsThatParsed` finds no badge: the first fails its schema and the second is not an accepted `$type`.
+`describe` reads `output`, the node's own configuration, and finds the children only through `children`. The next section prints its result for the `broken` document, beside the issues.
 
 ## The render step
 
@@ -148,6 +149,7 @@ A valid document renders. An invalid one reports a `$type` that a position does 
 
 ```ts title="check.ts"
 import { formatIssuePath } from '@schema-engine/registry';
+import { parsedNodes } from './partial';
 import { render } from './render';
 import { resolve } from './resolve';
 
@@ -183,7 +185,10 @@ const broken = {
 for (const document of [confirmation, broken]) {
 	const resolution = resolve(document);
 	if (resolution.success) console.log(render(resolution.tree));
-	else for (const issue of resolution.issues) console.log(`${formatIssuePath(issue.path)}: ${issue.message}`);
+	else {
+		for (const issue of resolution.issues) console.log(`${formatIssuePath(issue.path)}: ${issue.message}`);
+		for (const node of parsedNodes(document)) console.log(`parsed: ${node}`);
+	}
 }
 ```
 
@@ -201,9 +206,12 @@ for (const document of [confirmation, broken]) {
 ```text
 children[1].children[0].label: Invalid input: expected string, received number
 children[1].children[1].$type: $type 'chip' is not accepted here. Expected one of 'text', 'badge', 'stack'.
+parsed: stack at root
+parsed: text at children[0] "Order 1042 confirmed"
+parsed: stack at children[1]
 ```
 
-Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way. An issue the engine creates has a `code` (`registry/not-accepted` here, with `expected` the list and `received` the `$type`), so a UI can branch on it without reading the message; an issue from a schema is the schema library's own.
+Each issue names the node that failed: `children[1].children[0].label` is the label of the first badge inside the second child of the root. A tool can mark that node in an editor, and a log can say exactly what to fix. [`formatIssuePath`](/docs/registry/api-reference#formatissuepath) writes the path this way. An issue the engine creates has a `code` (`registry/not-accepted` here, with `expected` the list and `received` the `$type`), so a UI can branch on it without reading the message; an issue from a schema is the schema library's own. The `parsed:` lines come from the partial tree: the failing badge and the `chip` are left out, and the second `stack` is kept, with none of its children.
 
 ## The JSON Schema of the document
 

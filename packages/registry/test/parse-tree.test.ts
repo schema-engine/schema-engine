@@ -1083,8 +1083,14 @@ describe('safeParseTree', () => {
 			expect(() => safeParseTree(stacks, frozen)).not.toThrow();
 		});
 
-		it('still throws a RegistryError when a parent schema drops a child, beside another invalid node', () => {
+		it('still throws a RegistryError when a parent schema drops a child, after another node reported an issue', () => {
 			const dropping = createRegistry('Widget', [
+				{
+					$type: 'stack',
+					schema: schemaOf((input) => ({ ...input })),
+					metadata: { name: 'Stack' },
+					childPaths: [{ keys: ['children'] }],
+				},
 				{
 					$type: 'list',
 					schema: schemaOf((input) => ({ ...input, items: [] })),
@@ -1093,11 +1099,50 @@ describe('safeParseTree', () => {
 				},
 				{ $type: 'item', schema: z.object({ $type: z.literal('item') }), metadata: { name: 'Item' } },
 			]);
-			const withInvalidNode = { $type: 'list', items: [{ $type: 'item' }, { $type: 'missing' }] };
+			const withInvalidNodeFirst = {
+				$type: 'stack',
+				children: [{ $type: 'missing' }, { $type: 'list', items: [{ $type: 'item' }] }],
+			};
 
-			expect(thrown(() => safeParseTree(dropping, withInvalidNode))).toMatchObject({
+			expect(thrown(() => safeParseTree(dropping, withInvalidNodeFirst))).toMatchObject({
 				code: 'schema-breaks-child-path',
+				$type: 'list',
 				childPath: ['items'],
+			});
+		});
+
+		describe('a document nested deeper than a recursive copy of the tree could hold', () => {
+			const DEPTH = 2000;
+			const chain = createRegistry('Chain', [
+				{
+					$type: 'link',
+					schema: schemaOf((input) => ({ ...input })),
+					metadata: { name: 'Link' },
+					childPaths: [{ keys: ['child'] }],
+				},
+			]);
+			const linked = (depth: number, deepest: unknown): unknown => {
+				let node: unknown = deepest;
+				for (let level = 0; level < depth; level += 1) node = { $type: 'link', child: node };
+				return node;
+			};
+
+			it('returns the tree of a valid document', () => {
+				const tree = treeOf(safeParseTree(chain, linked(DEPTH, { $type: 'link' })));
+
+				let depth = 1;
+				for (let node = tree.children[0]?.nodes[0]; node; node = node.children[0]?.nodes[0]) depth += 1;
+				expect(depth).toBe(DEPTH + 1);
+			});
+
+			it('returns the partial tree of a document whose deepest node is unregistered', () => {
+				const result = safeParseTree(chain, linked(DEPTH, { $type: 'nothing' }));
+				const tree = partialOf(result);
+
+				expect(issuesOf(result)).toHaveLength(1);
+				let depth = 1;
+				for (let node = tree.children[0]?.nodes[0]; node; node = node.children[0]?.nodes[0]) depth += 1;
+				expect(depth).toBe(DEPTH);
 			});
 		});
 

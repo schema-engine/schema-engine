@@ -90,56 +90,61 @@ type RootOf<TAll extends TreeRegistration, TOptions> = TOptions extends {
 	: TAll;
 
 /**
- * A node the walk kept: its own schema passed and its parent was kept.
+ * A node the walk kept, in the shape of a {@link ParsedNode}, which the success path returns as it is.
  *
  * @remarks
- * `data` is meaningful only when `complete`, that is when nothing below the node failed, was pruned or was no node.
- * The walk does not compose data for an incomplete node.
+ * `data` is the composed data, and is `undefined` exactly when something below the node failed, was pruned or was no
+ * node: a complete node's data is always an object, so `data !== undefined` is the completeness test and the node
+ * carries no flag. The schema output of a node whose `data` is not that same object is kept apart, in the walk's
+ * `outputs`, so a node costs no field the caller would see.
  */
 interface WalkedNode {
 	$type: string;
 	registration: TreeRegistration;
-	output: unknown;
 	data: unknown;
-	complete: boolean;
 	path: NonNullable<StandardSchemaIssue['path']>;
 	children: { keys: readonly string[]; nodes: WalkedNode[] }[];
 }
 
-interface RuntimeParsedNode {
-	$type: string;
-	registration: TreeRegistration;
-	data: unknown;
-	path: NonNullable<StandardSchemaIssue['path']>;
-	children: { keys: readonly string[]; nodes: RuntimeParsedNode[] }[];
-}
-
-interface RuntimePartialNode {
+interface PartialRuntimeNode {
 	$type: string;
 	registration: TreeRegistration;
 	output: unknown;
 	path: NonNullable<StandardSchemaIssue['path']>;
-	children: { keys: readonly string[]; nodes: RuntimePartialNode[] }[];
+	children: { keys: readonly string[]; nodes: PartialRuntimeNode[] }[];
 }
 
-function toParsed(node: WalkedNode): RuntimeParsedNode {
-	return {
+/**
+ * The {@link PartialNode} shape of a walked tree, built without recursion so that a document as deep as the walk can
+ * handle converts too.
+ *
+ * @remarks
+ * A node's `output` is its entry in `outputs`, or its `data` when it has none: a node with no child to write has the
+ * schema output itself as `data`.
+ */
+function toPartial(root: WalkedNode, outputs: ReadonlyMap<WalkedNode, unknown>): PartialRuntimeNode {
+	const partialOf = (node: WalkedNode): PartialRuntimeNode => ({
 		$type: node.$type,
 		registration: node.registration,
-		data: node.data,
+		output: outputs.get(node) ?? node.data,
 		path: node.path,
-		children: node.children.map(({ keys, nodes }) => ({ keys, nodes: nodes.map(toParsed) })),
-	};
-}
-
-function toPartial(node: WalkedNode): RuntimePartialNode {
-	return {
-		$type: node.$type,
-		registration: node.registration,
-		output: node.output,
-		path: node.path,
-		children: node.children.map(({ keys, nodes }) => ({ keys, nodes: nodes.map(toPartial) })),
-	};
+		children: [],
+	});
+	const top = partialOf(root);
+	const pending: [WalkedNode, PartialRuntimeNode][] = [[root, top]];
+	for (let next = pending.pop(); next; next = pending.pop()) {
+		const [source, target] = next;
+		for (const { keys, nodes } of source.children) {
+			const kept: PartialRuntimeNode[] = [];
+			target.children.push({ keys, nodes: kept });
+			for (const child of nodes) {
+				const converted = partialOf(child);
+				kept.push(converted);
+				pending.push([child, converted]);
+			}
+		}
+	}
+	return top;
 }
 
 type PlainObject = Record<PropertyKey, unknown>;
@@ -273,6 +278,7 @@ export function safeParseTree<
 ): SafeParseTreeResult<TAll, RootOf<TAll, TOptions>> {
 	const lookup: NodeLookup<TreeRegistration> = registry;
 	const issues: RegistryIssue[] = [];
+	const outputs = new Map<WalkedNode, unknown>();
 	const label = lookup.kind === undefined ? '' : `${lookup.kind} `;
 
 	const kind = lookup.kind === undefined ? {} : { kind: lookup.kind };
@@ -327,11 +333,15 @@ export function safeParseTree<
 				}
 			} else if (Array.isArray(slot)) {
 				if (!Array.isArray(held) || held.length !== slot.length) throw brokenSlot(type, keys);
+				let kept = 0;
 				for (let index = 0; index < slot.length; index += 1) {
 					const child = walk(slot[index], [...childPath, index], trail, childAccepts);
-					if (child) nodes.push(child);
+					if (child) {
+						nodes.push(child);
+						if (child.data !== undefined) kept += 1;
+					}
 				}
-				if (nodes.length === slot.length && nodes.every((item) => item.complete)) {
+				if (kept === slot.length) {
 					writes.push({ keys, value: nodes.map((item) => item.data) });
 				} else {
 					complete = false;
@@ -341,7 +351,7 @@ export function safeParseTree<
 				const child = walk(slot, childPath, trail, childAccepts);
 				if (child) {
 					nodes.push(child);
-					if (child.complete) writes.push({ keys, value: child.data });
+					if (child.data !== undefined) writes.push({ keys, value: child.data });
 					else complete = false;
 				} else {
 					complete = false;
@@ -357,13 +367,15 @@ export function safeParseTree<
 		}
 		let data: unknown;
 		if (complete) data = writes.length === 0 ? output : withChildData(output, writes);
-		return { $type: type, registration, output, data, complete, path: nodePath, children: groups };
+		const kept: WalkedNode = { $type: type, registration, data, path: nodePath, children: groups };
+		if (data !== output) outputs.set(kept, output);
+		return kept;
 	}
 
 	const walked = walk(root, options?.path ?? [], [], options?.accepts);
 	let result: unknown;
-	if (walked?.complete === true && issues.length === 0) result = { success: true, tree: toParsed(walked) };
-	else if (walked) result = { success: false, issues, tree: toPartial(walked) };
+	if (walked?.data !== undefined && issues.length === 0) result = { success: true, tree: walked };
+	else if (walked) result = { success: false, issues, tree: toPartial(walked, outputs) };
 	else result = { success: false, issues };
 	return result as SafeParseTreeResult<TAll, RootOf<TAll, TOptions>>;
 }
