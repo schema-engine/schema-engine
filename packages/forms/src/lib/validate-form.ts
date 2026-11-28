@@ -241,5 +241,5 @@ function payloadIssues(
 function parseEnvelope(config: unknown): ParseResult<FormConfigEnvelope> {
 	const result = safeParseStandardSchema(formConfigEnvelopeSchema, config);
 	if (!result.success) return { ok: false, issues: fromSchemaIssues(result.error.issues, []) };
-	return { ok: true, data: result.data as FormConfigEnvelope };
+	return { ok: true, data: result.data };
 }

@@ -139,7 +139,11 @@ describe('one pass: every issue of a form is reported together', () => {
 		const result = engine.safeValidateForm(formWith([cyclic], { grid: { columns: 3 } }));
 		expect(result.success).toBe(false);
 		if (result.success) return;
-		expect(result.issues.map((issue) => issue.path.join('.'))).toContain('steps.0.elements.0.elements.0');
+		expect(
+			result.issues
+				.map((issue) => issue.path.join('.'))
+				.filter((path) => path === 'steps.0.elements.0.elements.0'),
+		).toEqual(['steps.0.elements.0.elements.0']);
 	});
 
 	test('placement reads a child own parsed output, at its authored index, beside an invalid sibling', () => {
@@ -185,6 +189,61 @@ describe('one pass: every issue of a form is reported together', () => {
 			{ code: 'registry/missing-type', path: 'steps.0.elements.0.$type' },
 			{ code: undefined, path: 'steps.0.elements.1.name' },
 		]);
+	});
+});
+
+describe('one pass: an element that declares no child path holds no children for the checks of a step', () => {
+	test('a cyclic non-container is an issue, not a RangeError, with or without a payload', () => {
+		const cyclic: Record<string, unknown> = { $type: 'field', id: 'c', name: 'c', elements: [] };
+		(cyclic.elements as unknown[]).push(cyclic);
+		for (const extra of [{}, { payload: {} }]) {
+			expect(paths(formWith([cyclic], extra))).toEqual(['steps.0.elements.0.elements']);
+		}
+	});
+
+	test('a null child of a non-container is an issue, not a TypeError, with a payload', () => {
+		const form = formWith([{ $type: 'field', id: 'x', name: 'x', elements: [null] }], { payload: {} });
+		expect(paths(form)).toEqual(['steps.0.elements.0.elements']);
+	});
+
+	test('a child of a non-container is no field for a later step constraint', () => {
+		const form = {
+			id: 'pass',
+			steps: [
+				{ id: 'one', title: 'One', elements: [leaf('a', { elements: [leaf('k')] })] },
+				{
+					id: 'two',
+					title: 'Two',
+					elements: [leaf('other')],
+					constraints: [{ field: 'a.k', operator: 'equals', value: true, $type: 'show' }],
+				},
+			],
+		};
+		expect(paths(form)).toEqual(['steps.0.elements.0.elements', 'steps.1.constraints.0.field']);
+	});
+
+	test('a non-container that holds elements still has its other families checked', () => {
+		const form = formWith([leaf('__x', { elements: [leaf('a')], rules: [{ $type: 'unregistered-rule' }] })]);
+		expect(paths(form)).toEqual([
+			'steps.0.elements.0.elements',
+			'steps.0.elements.0.rules.0.$type',
+			'steps.0.elements.0.name',
+		]);
+	});
+});
+
+describe('one pass: an action with no registered $type does not stop the other checks of the form', () => {
+	test('an entry with an empty $type is that entry issue, beside the others', () => {
+		const form = formWith([leaf('__x')], { actions: [{ id: 'a', $type: '' }] });
+		expect(paths(form)).toEqual(['steps.0.elements.0.name', 'actions.0.$type']);
+	});
+
+	test('a step entry with an empty $type is that entry issue, beside the others', () => {
+		const form = {
+			id: 'pass',
+			steps: [{ id: 'main', title: 'Main', elements: [leaf('__x')], actions: [{ id: 'a', $type: '' }] }],
+		};
+		expect(paths(form)).toEqual(['steps.0.elements.0.name', 'steps.0.actions.0.$type']);
 	});
 });
 

@@ -3,7 +3,12 @@ import type { ElementConfig } from '@/schemas/field-config';
 import { safeParseTree, type NodeLookup, type ParsedNode, type PartialNode } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { markNormalizedElementConfig, type NormalizedElementConfig } from '@/lib/normalized-form-config';
-import { ELEMENT_CHILDREN_KEY, getElementChildren, withElementChildren } from '@/lib/element-children';
+import {
+	ELEMENT_CHILDREN_KEY,
+	getElementChildren,
+	withElementChildren,
+	withoutElementChildren,
+} from '@/lib/element-children';
 import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
 import { areaPlacementIssue, namedPlacementIssue, spanIssue, subgridIssue, type PlacedElement } from './grid-checks';
 import { childPath, issueAt, type FormValidationIssue, type Path } from './issues';
@@ -182,7 +187,8 @@ function gridIssue(
  * has an issue.
  *
  * An element that declares no child path holds no children: `elements` on it, authored or added by its schema, is one
- * issue, and nothing else of it is checked.
+ * issue, its other families are still checked, its children are not, and its retained config has no `elements`, so no
+ * step check walks what was never validated.
  */
 function checkElementNode(
 	node: ElementTreeNode,
@@ -191,21 +197,22 @@ function checkElementNode(
 	nested: boolean,
 ): { issues: FormValidationIssue[]; item?: FormTaggedConfig; retained: RetainedElement } {
 	const path = schemaIssuePath(node.path);
-	const own = ownConfig(node);
+	const declared = ownConfig(node);
 	const authored = authoredAt(pass.root, pass.rootPath, path);
 	const issues: FormValidationIssue[] = [];
 
+	const holdsNone = node.registration.childPaths === undefined;
 	const authoredChildren =
 		typeof authored === 'object' && authored !== null && Object.hasOwn(authored, ELEMENT_CHILDREN_KEY);
-	if (node.registration.childPaths === undefined && (authoredChildren || own[ELEMENT_CHILDREN_KEY] !== undefined)) {
+	if (holdsNone && (authoredChildren || declared[ELEMENT_CHILDREN_KEY] !== undefined)) {
 		issues.push(
 			issueAt(
 				[...path, ELEMENT_CHILDREN_KEY],
 				`Element '${node.$type}' declares no child path, so it cannot hold elements.`,
 			),
 		);
-		return { issues, retained: { config: own, path, children: [] } };
 	}
+	const own: FormTaggedConfig = holdsNone ? (withoutElementChildren(declared) as FormTaggedConfig) : declared;
 
 	const checkedRules = checkElementRules(own, pass.checkRule, path);
 	issues.push(...checkedRules.issues);

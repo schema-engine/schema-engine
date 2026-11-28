@@ -54,14 +54,15 @@ export const FormConfigSchema = createFormConfigShape({
  * Element, recipe, and action payloads are validated separately via Standard Schema.
  *
  * @remarks
- * A step's elements are left as they arrived (`z.unknown()`): the registry's tree walk is what narrows them, from the
- * authored value, so a cycle is reported at its first repeat and an element without a `$type` is that element's
- * issue and not one of the envelope that stops every deeper check.
+ * A step's elements and the actions of the form and its steps are left as they arrived (`z.unknown()`): the registry's
+ * tree walk narrows the elements from the authored value, so a cycle is reported at its first repeat, and
+ * `parseActions` narrows each action. An element or an action without a `$type` is that entry's issue and not one of
+ * the envelope that stops every deeper check.
  */
 export const formConfigEnvelopeSchema = createFormConfigShape({
 	elements: z.unknown(),
 	view: FormViewConfigSchema,
-	actions: TypedConfigEnvelopeSchema,
+	actions: z.unknown(),
 });
 
 /** Inferred view config from the runtime schema. */
@@ -77,11 +78,11 @@ export type FormConfigEnvelope = Omit<InferredForm, 'steps' | 'view' | 'actions'
 	steps: Array<
 		Omit<InferredStep, 'elements' | 'actions'> & {
 			elements: unknown[];
-			actions?: Array<FormTaggedConfig | FormTaggedConfig[]>;
+			actions?: unknown[];
 		}
 	>;
 	view?: FormViewConfig;
-	actions?: Array<FormTaggedConfig | FormTaggedConfig[]>;
+	actions?: unknown[];
 };
 
 /** Form step config narrowed to the element and action maps of one engine. */

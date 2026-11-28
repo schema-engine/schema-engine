@@ -25,6 +25,12 @@ export function withElementChildren<T extends object>(config: T, children: unkno
 	return { ...config, [ELEMENT_CHILDREN_KEY]: children };
 }
 
+/** A copy of a config without its `elements`, for an element that declares no child path and so holds none. */
+export function withoutElementChildren<T extends object>(config: T): Omit<T, typeof ELEMENT_CHILDREN_KEY> {
+	const { [ELEMENT_CHILDREN_KEY]: _children, ...rest } = config as T & { [ELEMENT_CHILDREN_KEY]?: unknown };
+	return rest;
+}
+
 function isMiniSchema(schema: z.core.$ZodType): schema is z.ZodMiniType {
 	return 'check' in schema && typeof schema.check === 'function';
 }

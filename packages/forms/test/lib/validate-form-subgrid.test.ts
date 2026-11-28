@@ -72,17 +72,6 @@ describe('subgrid validation', () => {
 		expect(issues).toHaveLength(1);
 		return issues[0]!;
 	};
-	/**
-	 * The one issue at a path whose message matches. A subgrid that failed its own check still counts for the step, so
-	 * the form may have others, even at the same key.
-	 */
-	const issueAtPath = (form: unknown, path: ReadonlyArray<PropertyKey>, message: RegExp) => {
-		const found = failure(form).filter(
-			(issue) => issue.path.join('.') === path.join('.') && message.test(issue.message),
-		);
-		expect(found).toHaveLength(1);
-		return found[0]!;
-	};
 
 	test('a fieldset of fields on the parent tracks is accepted', () => {
 		const form = formWith([
@@ -131,17 +120,28 @@ describe('subgrid validation', () => {
 		['width', { width: 'half' }, ['grid', 'width']],
 		['offset', { offset: 'quarter' }, ['grid', 'offset']],
 		['column', { column: 2 }, ['grid', 'column']],
-		['area', { area: 'a' }, ['grid', 'area']],
 		['span', { span: 2 }, ['grid', 'span']],
 		['justifySelf', { justifySelf: 'start' }, ['grid', 'justifySelf']],
 		['placeSelf', { placeSelf: 'center' }, ['grid', 'placeSelf']],
 		['a responsive width', { responsive: { md: { width: 'half' } } }, ['grid', 'responsive', 'md', 'width']],
 	])('a subgrid that sets %s is rejected at that key', (_label, extra, path) => {
-		issueAtPath(
-			formWith([subgrid('address', [field('street')], extra)]),
-			['steps', 0, 'elements', 0, ...path],
-			/'address'.*'subgrid' and/,
-		);
+		const issue = only(formWith([subgrid('address', [field('street')], extra)]));
+		expect(issue.path).toEqual(['steps', 0, 'elements', 0, ...path]);
+		expect(issue.message).toMatch(/'address'.*'subgrid' and/);
+	});
+
+	test('a subgrid that sets area is rejected at that key, and the step reports the area it claims', () => {
+		const issues = failure(formWith([subgrid('address', [field('street')], { area: 'a' })]));
+		expect(issues.map(({ path, message }) => ({ path, message }))).toEqual([
+			{
+				path: ['steps', 0, 'elements', 0, 'grid', 'area'],
+				message: `Field 'address' sets grid 'subgrid' and 'area'; a subgrid spans its parent's full row, so it takes no 'width', 'offset', 'column', 'area', 'span', 'justifySelf' or 'placeSelf'.`,
+			},
+			{
+				path: ['steps', 0, 'elements', 0, 'grid', 'area'],
+				message: `Field 'address' sets grid 'area' but the form grid has no 'areas'.`,
+			},
+		]);
 	});
 
 	test('a subgrid inside responsive is rejected by the grid schema', () => {

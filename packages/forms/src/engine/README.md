@@ -123,9 +123,9 @@ The pass runs on the tree from either branch of the result (`data` on success, t
 issue: the registry's first, then forms' (rules, name, grid, appearance), parent before children, document order, and a node's children are
 checked whether or not it had an issue. Placement, step constraints and the payload check read a retained tree built from the registry's `children`
 only (`RetainedElement`), which keeps an element with an issue of its own and cannot hold a cycle or a rejected node; `items` is the clean trees, for
-normalization only. The envelope leaves a step's elements as they arrived (`z.unknown()`), so a top-level element without a `$type` is that
+normalization only. The envelope leaves a step's elements and the form's and steps' actions as they arrived (`z.unknown()`), so a top-level element without a `$type` is that
 element's `registry/missing-type` issue and a cycle is reported at its first repeat. An
-element without `childPaths` that holds `elements` is an issue at its `elements` key.
+element without `childPaths` that holds `elements` is an issue at its `elements` key; its children are not checked, its other checks still run and its retained config has no `elements`.
 Normalization stores the container kind on the frozen element without adding JSON
 keys. `collectFieldDefaults`, `collectInitialValues`, `createArrayRowDefault`
 and `walkNamedElements` detect arrays by the metadata rather than a widget `$type`. A new row
