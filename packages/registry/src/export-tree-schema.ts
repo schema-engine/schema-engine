@@ -185,7 +185,7 @@ export function exportTreeSchema(
 	for (const registration of registrations.values()) {
 		const resolved = resolve(registration.schema, { io, target });
 		const { definition, nested } = hoistDefinitions(resolved ?? openNode(registration), registration.$type, target);
-		for (const { keys, accepts: slotAccepts } of registration.childPaths ?? []) {
+		for (const { keys, accepts: slotAccepts, list } of registration.childPaths ?? []) {
 			if (startsResource(definition)) throw unreachableSlot(registration.$type, keys);
 			const missing = slotAccepts?.find((name) => !registrations.has(name));
 			if (missing !== undefined) {
@@ -195,7 +195,7 @@ export function exportTreeSchema(
 					{ $type: registration.$type, childPath: keys, key: missing },
 				);
 			}
-			replaceChildSlot(definition, { $type: registration.$type, keys }, unionOf(slotAccepts ?? everyType));
+			replaceChildSlot(definition, { $type: registration.$type, keys, list }, unionOf(slotAccepts ?? everyType));
 		}
 		definitions.set(registration.$type, definition);
 		for (const [name, schema] of Object.entries(nested)) {

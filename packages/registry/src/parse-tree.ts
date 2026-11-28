@@ -240,6 +240,7 @@ function withChildData(
  * | an object | one child |
  * | an array | each item is a child, at `[...path, index]`; an item that is not an object is an issue |
  * | an empty array | no children; `data` holds `[]` |
+ * | anything but an array or a missing value, on a path that sets `list` | issue `registry/not-a-list` at the path |
  *
  * A node that contains itself is `registry/contains-itself`. A node whose own schema fails is not walked further, but
  * its siblings still are, so one call reports every issue of the document. When there are none, `tree.data` is the
@@ -321,7 +322,7 @@ export function safeParseTree<
 		const groups: WalkedNode['children'] = [];
 		const writes: { keys: readonly string[]; value: unknown }[] = [];
 		let complete = true;
-		for (const { keys, accepts: childAccepts } of registration.childPaths ?? []) {
+		for (const { keys, accepts: childAccepts, list } of registration.childPaths ?? []) {
 			const nodes: WalkedNode[] = [];
 			groups.push({ keys, nodes });
 			const slot = valueAt(authored, keys, isRecord);
@@ -331,6 +332,9 @@ export function safeParseTree<
 				if (held !== undefined && !(Array.isArray(held) && held.length === 0)) {
 					throw brokenSlot(type, keys);
 				}
+			} else if (list === true && !Array.isArray(slot)) {
+				issues.push({ code: 'registry/not-a-list', message: 'Expected a list of nodes.', path: childPath });
+				complete = false;
 			} else if (Array.isArray(slot)) {
 				if (!Array.isArray(held) || held.length !== slot.length) throw brokenSlot(type, keys);
 				let kept = 0;

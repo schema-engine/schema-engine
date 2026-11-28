@@ -9,6 +9,11 @@ const slot = (definition: JSONSchemaObject, keys: readonly string[] = ['kids']):
 	return definition;
 };
 
+const listed = (definition: JSONSchemaObject): JSONSchemaObject => {
+	replaceChildSlot(definition, { $type: 'box', keys: ['kids'], list: true }, union);
+	return definition;
+};
+
 const thrown = (run: () => unknown): unknown => {
 	try {
 		run();
@@ -85,21 +90,34 @@ describe('replaceChildSlot', () => {
 		});
 	});
 
-	describe('Scenario: An open slot is written as a list when the registration holds a list', () => {
-		it('becomes an array of the union with openSlot list, and keeps its annotations', () => {
-			const definition: JSONSchemaObject = { type: 'object', properties: { kids: { title: 'Kids' } } };
-
-			replaceChildSlot(definition, { $type: 'box', keys: ['kids'] }, union, { openSlot: 'list' });
+	describe('Scenario: A child path that holds a list', () => {
+		it('writes an open slot as an array of the union, and keeps its annotations', () => {
+			const definition = listed({ type: 'object', properties: { kids: { title: 'Kids' } } });
 
 			expect(definition.properties).toEqual({ kids: { title: 'Kids', type: 'array', items: union } });
 		});
 
-		it('does not change a slot that is not open', () => {
-			const definition: JSONSchemaObject = { type: 'object', properties: { kids: { type: 'array', items: {} } } };
-
-			replaceChildSlot(definition, { $type: 'box', keys: ['kids'] }, union, { openSlot: 'list' });
+		it('writes the schema true as an array of the union', () => {
+			const definition = listed({ type: 'object', properties: { kids: true } });
 
 			expect(definition.properties).toEqual({ kids: { type: 'array', items: union } });
+		});
+
+		it('replaces the items of an array as it does without list', () => {
+			const definition = listed({
+				type: 'object',
+				properties: { kids: { type: 'array', items: {}, minItems: 1 } },
+			});
+
+			expect(definition.properties).toEqual({ kids: { type: 'array', items: union, minItems: 1 } });
+		});
+
+		it('throws unreachable-child-path for an object slot, which holds one node and no list', () => {
+			const error = thrown(() =>
+				listed({ type: 'object', properties: { kids: { type: 'object', properties: {} } } }),
+			);
+
+			expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'box', childPath: ['kids'] });
 		});
 	});
 

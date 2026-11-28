@@ -392,3 +392,28 @@ describe('the partial tree of the failure branch', () => {
 		expectTypeOf(result.tree.output).toEqualTypeOf<unknown>();
 	});
 });
+
+describe('a child path that holds a list', () => {
+	const listed = createRegistry('L', [
+		{
+			$type: 'row',
+			schema: z.object({ $type: z.literal('row'), cells: z.optional(z.unknown()), required: z.unknown() }),
+			metadata: { name: 'Row' },
+			childPaths: [
+				{ keys: ['cells'], accepts: ['text'], list: true },
+				{ keys: ['required'], accepts: ['text'] },
+			],
+		},
+		{ $type: 'text', schema: textSchema, metadata: { name: 'Text' } },
+	]);
+
+	it('types an opaque slot as an array of the children, never one child', () => {
+		const result = safeParseTree(listed, {}, { accepts: ['row'] });
+		if (!result.success) return;
+
+		expectTypeOf(result.tree.data.cells).toEqualTypeOf<{ $type: 'text'; value: string }[] | undefined>();
+		expectTypeOf(result.tree.data.required).toEqualTypeOf<
+			{ $type: 'text'; value: string } | { $type: 'text'; value: string }[] | undefined
+		>();
+	});
+});

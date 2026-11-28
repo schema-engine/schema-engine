@@ -1,10 +1,4 @@
-import {
-	assertJSONSchemaTarget,
-	getOwn,
-	isPlainObject,
-	type JSONSchemaObject,
-	type JSONSchemaTarget,
-} from './standard.js';
+import { assertJSONSchemaTarget, isPlainObject, type JSONSchemaObject, type JSONSchemaTarget } from './standard.js';
 
 /** Where the JSON Schema being written keeps its definitions. */
 export type JSONSchemaPlacement =
@@ -136,7 +130,21 @@ export const definitionsKeyword = (target: JSONSchemaTarget): '$defs' | 'definit
 export interface JSONSchemaEmbedder {
 	/** The schema to write in place of `own`, which is not changed. */
 	embed(own: JSONSchemaObject): JSONSchemaObject;
-	/** Adds the definitions `embed` hoisted to the finished document or collection, in place. */
+	/**
+	 * The schema to write as the definition named `name` of a document, or as the entry of that name of a collection,
+	 * where `own` is not changed.
+	 *
+	 * @remarks
+	 * The schema stays at its own place, so a container found by its name is the schema itself and not a reference to
+	 * another definition. In a document, `#` points at the definition, a pointer into the schema's own definitions at the
+	 * definition lifted to the document as `name.<its name>`, and anchors are renamed under `name`, as
+	 * {@link hoistDefinitions} does. In a collection the entry is its own resource, so the schema is kept as it is, with
+	 * its own definitions, without `$schema`, and a draft-07 root `$id: '#node'` is dropped with its references turned
+	 * into `#`, since the entry is addressed by the `$id` the collection gives it. A schema with an `$id` of its own is
+	 * kept as it is.
+	 */
+	embedDefinition(own: JSONSchemaObject, name: string): JSONSchemaObject;
+	/** Adds the definitions `embed` and `embedDefinition` moved to the finished document or collection, in place. */
 	finish(written: JSONSchemaObject): JSONSchemaObject;
 }
 
@@ -195,6 +203,12 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 			if (!pointsIntoItself) return rewritten;
 			hoisted[key] = rewritten;
 			return { $ref: ref };
+		},
+		embedDefinition(own, name) {
+			if (placement.kind === 'collection') return withoutRootAnchor(withoutSchemaKeyword(own));
+			const { definition, nested } = hoistDefinitions(own, name, target);
+			Object.assign(hoisted, nested);
+			return definition;
 		},
 		finish(written) {
 			if (Object.keys(hoisted).length === 0) return written;
@@ -258,33 +272,6 @@ export function pointerToken(name: string): string {
  */
 export function definitionRef(target: JSONSchemaTarget, name: string): string {
 	return `#/${definitionsKeyword(target)}/${pointerToken(name)}`;
-}
-
-/**
- * The schema a local reference (`#` or `#/...`) points at in a document, or `undefined` when it is not a local pointer
- * or names nothing there.
- *
- * @param document - The document the reference is written in
- * @param ref - A `$ref` as {@link definitionRef} writes it, or any local JSON Pointer in URI fragment form
- *
- * @remarks
- * The reading side of {@link definitionRef}: it undoes the escaping of `~` and `/` and the percent-encoding, so a
- * name resolves to the key it was written for. Only own properties are read.
- */
-export function resolveLocalRef(document: JSONSchemaObject, ref: string): JSONSchemaObject | undefined {
-	if (!isLocalPointer(ref)) return undefined;
-	let node: unknown = document;
-	if (ref !== '#') {
-		for (const token of ref.slice(2).split('/')) {
-			if (!isPlainObject(node)) return undefined;
-			try {
-				node = getOwn(node, unescapedToken(token));
-			} catch {
-				return undefined;
-			}
-		}
-	}
-	return isPlainObject(node) ? node : undefined;
 }
 
 function unescapedToken(token: string): string {

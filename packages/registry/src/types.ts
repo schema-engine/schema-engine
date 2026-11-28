@@ -36,7 +36,7 @@ export type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
  * @remarks
  * Plain data, so a registration stays serializable. `keys` is relative to the node and holds no indexes, which is why
  * it is not called `path`: a `path` in this package is an absolute document path with indexes. The value there is one
- * node or an array of nodes. `accepts` is a closed list of `$type`s, the only way to restrict a slot: it reads no
+ * node or an array of nodes, unless `list` says the slot holds a list. `accepts` is a closed list of `$type`s, the only way to restrict a slot: it reads no
  * role, tag or category, and `metadata` decides nothing. Adding a leaf to `[...defaults, custom]` means overriding each
  * container that should take it. Without `accepts`, the slot puts no limit on the `$type`, so any `$type` the lookup
  * answers is accepted. The parent's schema keeps the slot opaque (`z.array(z.unknown())`, `z.unknown()`). A tool that
@@ -48,6 +48,16 @@ export interface ChildPath {
 	readonly keys: readonly string[];
 	/** The `$type`s allowed at the slot, at least one when present. Absent: `accepts` puts no limit on the `$type`. */
 	readonly accepts?: readonly string[];
+	/**
+	 * The slot holds a list of nodes, never one node. Absent: it holds a node or a list.
+	 *
+	 * @remarks
+	 * With `list`, a value that is not an array is the issue `registry/not-a-list` at the path, the exported JSON Schema
+	 * writes an open slot as an array, and the types read the slot as an array of the children. A missing value is still
+	 * no children. A registration whose schema declares the slot as an array sets it, so the document, the export and the
+	 * types agree.
+	 */
+	readonly list?: true;
 }
 
 /**

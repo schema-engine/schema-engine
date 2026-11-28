@@ -43,7 +43,7 @@ export function resolve(node: unknown): string {
 
 ## A whole document
 
-A document is a tree of nodes. A registration says where its children are with `childPaths`, `{ keys, accepts? }` each, and which `$type`s each place accepts. `safeParseTree` checks the whole document in one call, collecting every issue with its path, and gives the parsed document as `tree.data`, typed per place:
+A document is a tree of nodes. A registration says where its children are with `childPaths`, `{ keys, accepts?, list? }` each, and which `$type`s each place accepts (and `list: true` when it holds only a list). `safeParseTree` checks the whole document in one call, collecting every issue with its path, and gives the parsed document as `tree.data`, typed per place:
 
 ```typescript
 import * as z from 'zod/mini';
@@ -70,7 +70,7 @@ export function titles(document: unknown): string[] {
 }
 ```
 
-When the document has issues, the failure also carries `tree`, a `PartialNode`, when the root's own schema passed: every node whose own schema passed, with `output` (its own schema output) and `children` (the children that parsed, in document order), and no `data`. Use it to run your own checks on what parsed. The parent's schema keeps the slot opaque (`z.array(z.unknown())`) and declares every child key; `accepts` is the only way to restrict it. The parent's schema keeps `$type` and the slot's shape in its output, or `safeParseTree` throws a `RegistryError`. The issues the engine creates carry a namespaced `code` (`registry/not-accepted`, `registry/unregistered-type`, `registry/missing-type`, `registry/not-an-object`, `registry/not-a-node`, `registry/contains-itself`); an issue from a schema keeps whatever its library wrote.
+When the document has issues, the failure also carries `tree`, a `PartialNode`, when the root's own schema passed: every node whose own schema passed, with `output` (its own schema output) and `children` (the children that parsed, in document order), and no `data`. Use it to run your own checks on what parsed. The parent's schema keeps the slot opaque (`z.array(z.unknown())`) and declares every child key; `accepts` is the only way to restrict it. The parent's schema keeps `$type` and the slot's shape in its output, or `safeParseTree` throws a `RegistryError`. The issues the engine creates carry a namespaced `code` (`registry/not-accepted`, `registry/unregistered-type`, `registry/missing-type`, `registry/not-an-object`, `registry/not-a-node`, `registry/not-a-list`, `registry/contains-itself`); an issue from a schema keeps whatever its library wrote.
 
 ## JSON Schema of a whole document
 
@@ -110,7 +110,7 @@ Building or binding a registry from registrations that break a rule throws a `Re
 | Code                           | Thrown when                                                                                                                                                                                          | Details besides `kind` and `$type`  |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | `'invalid-schema'`             | A registration's `schema` has no `~standard.validate` function                                                                                                                                       |                                     |
-| `'invalid-child-paths'`        | `childPaths` is not a list, or an entry is not `{ keys, accepts? }` with non-empty `keys` and, when present, a non-empty `accepts` of non-empty names without repeats                                |                                     |
+| `'invalid-child-paths'`        | `childPaths` is not a list, or an entry is not `{ keys, accepts?, list? }` with non-empty `keys`, when present a non-empty `accepts` of non-empty names without repeats, and a `list` that is `true` |                                     |
 | `'duplicate-child-path'`       | A registration declares the same child path (the same keys) twice                                                                                                                                    | `childPath`                         |
 | `'nested-child-path'`          | A child path runs through another child path of the same registration                                                                                                                                | `childPath`, and `outerChildPath`   |
 | `'duplicate-type'`             | A `$type` is registered twice with `duplicates: 'error'`                                                                                                                                             |                                     |
@@ -130,7 +130,7 @@ Building or binding a registry from registrations that break a rule throws a `Re
 | Import                                | Holds                                                                                                                                                                                                                                                                                             |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@schema-engine/registry`             | `createRegistry`, `createMutableRegistry`, `bindRegistry`, `RegistryError`, `RegistryErrorCode`, the registration types (`ChildPath` among them), `safeParseNode`, `safeParseTree`, `exportTreeSchema`, `safeParseStandardSchema`, `assertStandardSchema`, `standardSchema` and `formatIssuePath` |
-| `@schema-engine/registry/json-schema` | `readStandardJSONSchema`, `createJSONSchemaEmbedder`, `assertJSONSchemaTarget`, `replaceChildSlot`, `definitionRef` and `resolveLocalRef`, for code that writes JSON Schema itself: a `resolve` that falls back to Standard JSON Schema, or a domain package's own export                         |
+| `@schema-engine/registry/json-schema` | `readStandardJSONSchema`, `createJSONSchemaEmbedder`, `assertJSONSchemaTarget`, `replaceChildSlot`, `definitionRef` and `definitionsKeyword`, for code that writes JSON Schema itself: a `resolve` that falls back to Standard JSON Schema, or a domain package's own export                      |
 | `@schema-engine/registry/yaml`        | `parseYaml`, `safeParseYaml` and `stringifyYaml`, which report errors by line and column. Needs the optional peer dependency `yaml`                                                                                                                                                               |
 
 ## Documentation

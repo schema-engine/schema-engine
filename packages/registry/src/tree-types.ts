@@ -55,7 +55,7 @@ type UndeclaredChildPaths<T> = T extends {
 	: never;
 
 /**
- * The properties of a child path entry other than `keys` and `accepts`, as `{ $type, property }`.
+ * The properties of a child path entry other than `keys`, `accepts` and `list`, as `{ $type, property }`.
  *
  * @remarks
  * `createRegistry` infers its registrations with a `const` type parameter, which keeps a property the constraint does
@@ -72,7 +72,7 @@ type UnknownChildPathProperties<T> = T extends { $type: infer TType; readonly ch
 /**
  * What `createRegistry` intersects with its `registrations` parameter, so a child path the schema does not declare is
  * an error that names it: `Property 'childPathNotInSchema' is missing`, with the `$type` and the keys. A child path
- * entry with a property other than `keys` and `accepts` is `childPathUnknownProperty`, with the `$type` and the
+ * entry with a property other than `keys`, `accepts` and `list` is `childPathUnknownProperty`, with the `$type` and the
  * property.
  *
  * @remarks
@@ -142,8 +142,8 @@ export type Accepted<TAll extends TreeRegistration, TPath> = TPath extends {
  * The value at a child path once its children are parsed. A list stays a list, an absent slot stays absent, and `null`
  * is not a slot value (it is an issue at runtime).
  */
-type Replace<TValue, TChild> = unknown extends TValue
-	? TChild | TChild[] | undefined
+type Replace<TValue, TChild, TList> = unknown extends TValue
+	? (TList extends true ? TChild[] : TChild | TChild[]) | undefined
 	: TValue extends undefined
 		? TValue
 		: TValue extends null
@@ -160,7 +160,11 @@ type SetAt<T, TKeys, TPath, TAll extends TreeRegistration> = TKeys extends reado
 		? {
 				[P in keyof T]: P extends THead
 					? TRest extends readonly []
-						? Replace<T[P], NodeData<TAll, Accepted<TAll, TPath>>>
+						? Replace<
+								T[P],
+								NodeData<TAll, Accepted<TAll, TPath>>,
+								TPath extends { readonly list: true } ? true : false
+							>
 						: SetAt<T[P], TRest, TPath, TAll>
 					: T[P];
 			}
@@ -179,7 +183,7 @@ type WithChildren<T, TPaths, TAll extends TreeRegistration> = TPaths extends rea
  *
  * @remarks
  * Optional stays optional, an array slot is an array and an object slot an object. A slot typed `unknown` becomes
- * `child | child[] | undefined`. The child type is computed inside the mapped property, so a registration that accepts
+ * `child | child[] | undefined`, and `child[] | undefined` for a path that sets `list`. The child type is computed inside the mapped property, so a registration that accepts
  * itself does not recurse eagerly. `child` is the union of the registrations the path accepts, or of the whole lookup
  * without `accepts`. A registry typed as plain `BaseRegistration` has no concrete schema to read, so its data is
  * `unknown`. A `childPaths` that lost its literal keys (a registration declared apart without `as const`) leaves the

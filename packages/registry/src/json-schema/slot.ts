@@ -11,19 +11,20 @@ const SLOT_ANNOTATIONS = ['title', 'description', 'default', 'examples', 'deprec
  * changed in place.
  *
  * @param definition - The registration's JSON Schema, as the definition of its `$type`
- * @param path - The registration's `$type`, for the error, and the `keys` of the child path whose slot to replace
+ * @param path - The registration's `$type`, for the error, and the `keys` and `list` of the child path whose slot to
+ * replace
  * @param union - The schema every child must match, already resolved: each `$ref` is written as the document it goes in
  * refers to a definition. Each place the slot takes it gets its own copy
- * @param options - `openSlot`, what an open slot becomes: `'child-or-list'` (the default) or `'list'`
  * @throws {RegistryError} Code `'unreachable-child-path'` when the slot is not where the definition declares it, is
- * nullable, or is not an object, an array or open, and `'invalid-child-paths'` when `path.keys` is empty
+ * nullable, is not an object, an array or open, or is an object where the path sets `list`, and `'invalid-child-paths'` when `path.keys` is empty
  *
  * @remarks
  * `required`, list bounds and every sibling keyword of the slot's parent stay, since the registration's schema owns
  * them. The slot is read by what it is: an array (`type: 'array'`, `items` or `prefixItems`) gets its items replaced, an
  * object (`type: 'object'` or `properties`) becomes the union, and an open slot (no keyword but annotations) becomes the
- * union or a list of it, matching a child or a list of children, or with `openSlot: 'list'` an array of the union, for
- * a registration that holds its children as a list only. Annotations of the slot are kept. A slot inside a
+ * union or a list of it, matching a child or a list of children. A path that sets `list` holds a list and never one
+ * node, so its open slot becomes an array of the union, and an object slot is unreachable, since the schema would refuse
+ * the list the document holds. Annotations of the slot are kept. A slot inside a
  * schema with an `$id` of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the
  * document. That holds for each schema between the definition and the slot. The definition's own root is the caller's
  * to check, since only the caller knows whether the references it writes resolve against that root: a collection entry
@@ -41,11 +42,10 @@ const SLOT_ANNOTATIONS = ['title', 'description', 'default', 'examples', 'deprec
  */
 export function replaceChildSlot(
 	definition: JSONSchemaObject,
-	path: { readonly $type: string; readonly keys: readonly string[] },
+	path: { readonly $type: string; readonly keys: readonly string[]; readonly list?: true },
 	union: JSONSchemaObject,
-	options: { readonly openSlot?: 'child-or-list' | 'list' } = {},
 ): void {
-	const { $type, keys } = path;
+	const { $type, keys, list } = path;
 	if (keys.length === 0) {
 		throw new RegistryError(
 			'invalid-child-paths',
@@ -92,13 +92,14 @@ export function replaceChildSlot(
 		if (tupleItems) slot.items = (slot.items as unknown[]).map(copy);
 		if (slot[rest] !== false) slot[rest] = copy();
 	} else if (slot.type === 'object' || 'properties' in slot) {
+		if (list === true) throw unreachable();
 		setOwn(properties, last, { ...annotations, ...copy() });
 	} else if (slot.type === undefined && Object.keys(slot).every((key) => key in annotations)) {
-		const list = { type: 'array', items: copy() };
+		const items = { type: 'array', items: copy() };
 		setOwn(
 			properties,
 			last,
-			options.openSlot === 'list' ? { ...annotations, ...list } : { ...annotations, anyOf: [copy(), list] },
+			list === true ? { ...annotations, ...items } : { ...annotations, anyOf: [copy(), items] },
 		);
 	} else {
 		throw unreachable();

@@ -1,7 +1,7 @@
 import { Ajv } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { describe, expect, it } from 'vitest';
-import { definitionRef, resolveLocalRef } from '../../src/json-schema';
+import { definitionRef } from '../../src/json-schema';
 
 const names = ['element:tab', 'ui/button', 'a~b', 'my type', 'user@host', "a$b&c+d,e;f=g!h'i(j)k*l", '100%', 'a#b'];
 
@@ -45,31 +45,4 @@ describe('definitionRef', () => {
 			]);
 		});
 	});
-});
-
-describe('resolveLocalRef', () => {
-	it.each(names)('finds the definition that definitionRef wrote a reference to for %j', (name) => {
-		const definition = { type: 'string' };
-
-		expect(resolveLocalRef({ $defs: { [name]: definition } }, definitionRef('draft-2020-12', name))).toBe(
-			definition,
-		);
-		expect(resolveLocalRef({ definitions: { [name]: definition } }, definitionRef('draft-07', name))).toBe(
-			definition,
-		);
-	});
-
-	it('reads # as the document and a nested pointer as the schema it names', () => {
-		const document = { properties: { a: { type: 'string' } } };
-
-		expect(resolveLocalRef(document, '#')).toBe(document);
-		expect(resolveLocalRef(document, '#/properties/a')).toBe(document.properties.a);
-	});
-
-	it.each(['#/$defs/missing', 'https://example.com/a', '#/properties/a/type', '#/%E0%A4%A', '#/__proto__'])(
-		'is undefined for %s',
-		(ref) => {
-			expect(resolveLocalRef({ properties: { a: { type: 'string' } } }, ref)).toBeUndefined();
-		},
-	);
 });

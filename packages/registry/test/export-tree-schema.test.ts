@@ -696,6 +696,27 @@ describe('exportTreeSchema', () => {
 			expect((error as Error).message).toContain(`'${keys.join('.')}'`);
 		});
 
+		it('writes an open slot of a list path as a list, where a path without list takes a child or a list', () => {
+			const nodes = (list: true | undefined) =>
+				createRegistry('Node', [
+					{
+						$type: 'box',
+						schema: jsonSchemaOf({ type: 'object', properties: { kids: {} } }),
+						metadata,
+						childPaths: [{ keys: ['kids'], accepts: ['leaf'], ...(list ? { list } : {}) }],
+					} as BaseRegistration,
+					{ $type: 'leaf', schema: jsonSchemaOf({ type: 'object' }), metadata } as BaseRegistration,
+				]);
+			const kidsOf = (document: JSONSchemaObject) =>
+				((document.$defs as Record<string, JSONSchemaObject>).box!.properties as Record<string, unknown>).kids;
+			const leaf = { anyOf: [{ $ref: '#/$defs/leaf' }] };
+
+			expect(kidsOf(exportTreeSchema(nodes(true)))).toEqual({ type: 'array', items: leaf });
+			expect(kidsOf(exportTreeSchema(nodes(undefined)))).toEqual({
+				anyOf: [leaf, { type: 'array', items: leaf }],
+			});
+		});
+
 		it('reads the schema true as an open slot', () => {
 			const document = exportTreeSchema(
 				createRegistry('Node', [

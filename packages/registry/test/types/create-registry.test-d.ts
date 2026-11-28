@@ -45,6 +45,26 @@ describe('createRegistry child paths', () => {
 		]);
 	});
 
+	it('accepts list: true on a child path, and errors for any other value', () => {
+		createRegistry('Ok', [
+			{
+				$type: 'page',
+				schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
+				metadata: { name: 'Page' },
+				childPaths: [{ keys: ['sections'], list: true }],
+			},
+		]);
+		createRegistry('Bad', [
+			{
+				$type: 'page',
+				schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
+				metadata: { name: 'Page' },
+				// @ts-expect-error list is true or absent
+				childPaths: [{ keys: ['sections'], list: false }],
+			},
+		]);
+	});
+
 	it('errors for a key that only a loose schema allows through its index signature', () => {
 		// @ts-expect-error a loose schema allows 'content' but does not declare it
 		createRegistry('Bad', [
@@ -83,16 +103,17 @@ describe('createRegistry child paths', () => {
 				$type: 'page',
 				schema: z.object({ $type: z.literal('page'), sections: z.array(z.unknown()) }),
 				metadata: { name: 'Page' },
-				// @ts-expect-error a child path is { keys, accepts? }, not a list of keys
+				// @ts-expect-error a child path is { keys, accepts?, list? }, not a list of keys
 				childPaths: [['sections']],
 			},
 		]);
 	});
 
-	it('names a child path as { keys, accepts? } with read-only lists', () => {
+	it('names a child path as { keys, accepts?, list? } with read-only lists', () => {
 		expectTypeOf<ChildPath>().toEqualTypeOf<{
 			readonly keys: readonly string[];
 			readonly accepts?: readonly string[];
+			readonly list?: true;
 		}>();
 	});
 });
