@@ -4,7 +4,7 @@
 
 Each registration from `@schema-engine/forms-radiant/registrations` loads only its own element, so an engine built from a few registrations no longer bundles the other widgets. Importing `InputElementRegistration` alone leaves out the phone, masked and drop-zone inputs and the `libphonenumber-js` and `imask` libraries behind them.
 
-Each registration module spreads its default element contract into `defineInput` (`defineStatic` for the submit button and the submission alert) beside its Radiant component, as the registry items of forms-react do. `sideEffects` names only the modules that have a load-time effect (the custom elements, the Radiant UI imports, `dist/index.js` and the stylesheets), and `dist` holds one file per source module instead of hashed chunks, so a bundler can drop every widget you do not name.
+Each registration module spreads its default element contract with its Radiant `render` beside the component, and `satisfies ElementBinding` checks `render` against the contract's schema output. The named exports keep the precise types of their widgets (`render` is the component itself). `sideEffects` names only the modules that have a load-time effect (the custom elements, the Radiant UI imports, `dist/index.js` and the stylesheets), and `dist` holds one file per source module instead of hashed chunks, so a bundler can drop every widget you do not name.
 
 `radiantElements` is removed from `@schema-engine/forms-radiant/registrations`. Use `schemaFormRegistrations` from the package root for every element, or the named registrations for some.
 

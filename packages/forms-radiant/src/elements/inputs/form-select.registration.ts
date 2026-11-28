@@ -1,8 +1,7 @@
-import { defineInput } from '@schema-engine/forms';
-import { SelectElementContract } from '@schema-engine/forms/default-elements';
+import { SelectElementContract, type ElementBinding } from '@schema-engine/forms/default-elements';
 import { FormSelect } from './form-select.js';
 
-export const SelectElementRegistration = defineInput({
+export const SelectElementRegistration = {
 	...SelectElementContract,
 	render: FormSelect,
-});
+} satisfies ElementBinding<typeof SelectElementContract>;

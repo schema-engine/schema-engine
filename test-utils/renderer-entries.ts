@@ -130,8 +130,17 @@ export interface PublishedBundle {
  * names of the custom elements it defines. Stylesheets load as empty. An input counts when any output file holds bytes of it.
  * An empty `tsconfigRaw` keeps esbuild from reading the package's `tsconfig.json`, whose `paths` map the package's own name to
  * `src` and would bundle the source instead of what is published.
+ *
+ * With `bundleDependencies`, the entry is bundled as an app does: the dependencies are bundled too and the output is split,
+ * so a module a dynamic `import()` reaches is an output file of its own. Only the output files the entry loads count, through
+ * static or dynamic imports: esbuild also writes a file for the `import()` of any module it scanned, even one whose code
+ * tree-shaking removed, and nothing loads that file.
  */
-export async function bundlePublishedEntry(packageDir: string, source: string): Promise<PublishedBundle> {
+export async function bundlePublishedEntry(
+	packageDir: string,
+	source: string,
+	options: { readonly bundleDependencies?: boolean } = {},
+): Promise<PublishedBundle> {
 	const manifest = JSON.parse(readFileSync(path.join(packageDir, 'package.json'), 'utf8')) as {
 		name: string;
 		dependencies?: Record<string, string>;
@@ -147,28 +156,50 @@ export async function bundlePublishedEntry(packageDir: string, source: string): 
 		bundle: true,
 		write: false,
 		format: 'esm',
-		platform: 'neutral',
+		platform: options.bundleDependencies ? 'browser' : 'neutral',
 		conditions: ['import'],
-		external: dependencies.flatMap((name) => [name, `${name}/*`]),
+		external: options.bundleDependencies ? [] : dependencies.flatMap((name) => [name, `${name}/*`]),
+		splitting: options.bundleDependencies === true,
+		outdir: options.bundleDependencies ? path.join(packageDir, '.bundle-probe') : undefined,
 		loader: { '.css': 'empty' },
 		metafile: true,
 		logLevel: 'silent',
 	});
-	return { code: result.outputFiles.map((file) => file.text).join('\n'), inputs: inputsInOutput(result.metafile) };
+	return {
+		code: result.outputFiles.map((file) => file.text).join('\n'),
+		inputs: inputsInOutput(result.metafile, options.bundleDependencies === true),
+	};
 }
 
 /**
  * The inputs with bytes in any output file, not `metafile.inputs`, which also lists the modules the bundler scanned and then
  * tree-shook away, so it would fail a correct bundle.
  */
-function inputsInOutput(metafile: Metafile): string[] {
+function inputsInOutput(metafile: Metafile, onlyLoadedByEntry = false): string[] {
+	const outputs = onlyLoadedByEntry ? outputsLoadedByEntry(metafile) : Object.values(metafile.outputs);
 	const files = new Set<string>();
-	for (const output of Object.values(metafile.outputs)) {
+	for (const output of outputs) {
 		for (const [file, { bytesInOutput }] of Object.entries(output.inputs)) {
 			if (bytesInOutput > 0 && !file.startsWith('<stdin>')) files.add(file);
 		}
 	}
 	return [...files];
+}
+
+/** The output files the entry source loads, followed through static and dynamic imports. */
+function outputsLoadedByEntry(metafile: Metafile): Metafile['outputs'][string][] {
+	const pending = Object.keys(metafile.outputs).filter(
+		(file) => metafile.outputs[file]?.entryPoint === 'consumer-entry.ts',
+	);
+	const loaded = new Set<string>();
+	for (let file = pending.pop(); file !== undefined; file = pending.pop()) {
+		if (loaded.has(file)) continue;
+		loaded.add(file);
+		for (const { path: imported, external } of metafile.outputs[file]?.imports ?? []) {
+			if (!external && metafile.outputs[imported]) pending.push(imported);
+		}
+	}
+	return [...loaded].map((file) => metafile.outputs[file]!);
 }
 
 /**

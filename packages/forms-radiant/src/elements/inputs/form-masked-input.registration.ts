@@ -1,8 +1,7 @@
-import { defineInput } from '@schema-engine/forms';
-import { MaskedInputElementContract } from '@schema-engine/forms/default-elements';
+import { MaskedInputElementContract, type ElementBinding } from '@schema-engine/forms/default-elements';
 import { FormMaskedInput } from './form-masked-input.js';
 
-export const MaskedInputElementRegistration = defineInput({
+export const MaskedInputElementRegistration = {
 	...MaskedInputElementContract,
 	render: FormMaskedInput,
-});
+} satisfies ElementBinding<typeof MaskedInputElementContract>;

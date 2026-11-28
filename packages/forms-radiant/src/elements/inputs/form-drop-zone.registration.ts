@@ -1,8 +1,7 @@
-import { defineInput } from '@schema-engine/forms';
-import { DropZoneElementContract } from '@schema-engine/forms/default-elements';
+import { DropZoneElementContract, type ElementBinding } from '@schema-engine/forms/default-elements';
 import { FormDropZone } from './form-drop-zone.js';
 
-export const DropZoneElementRegistration = defineInput({
+export const DropZoneElementRegistration = {
 	...DropZoneElementContract,
 	render: FormDropZone,
-});
+} satisfies ElementBinding<typeof DropZoneElementContract>;

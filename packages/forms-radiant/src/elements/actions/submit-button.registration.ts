@@ -1,8 +1,7 @@
-import { defineStatic } from '@schema-engine/forms';
-import { SubmitButtonElementContract } from '@schema-engine/forms/default-elements';
+import { SubmitButtonElementContract, type ElementBinding } from '@schema-engine/forms/default-elements';
 import { SubmitButton } from './submit-button.js';
 
-export const SubmitButtonElementRegistration = defineStatic({
+export const SubmitButtonElementRegistration = {
 	...SubmitButtonElementContract,
 	render: SubmitButton,
-});
+} satisfies ElementBinding<typeof SubmitButtonElementContract>;

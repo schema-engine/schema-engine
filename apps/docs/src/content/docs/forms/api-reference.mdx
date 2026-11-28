@@ -121,7 +121,7 @@ const checkbox = defineInput({
 export const engine = createFormEngine({ elements: [checkbox] });
 ```
 
-A renderer binds one contract per element: `@schema-engine/forms-radiant` and the registry items of Forms React each spread one contract into `defineInput` beside their component, so each element loads alone. A renderer that draws every element in one place can bind the whole registry with `bindRegistry` from `@schema-engine/registry` instead: a contract without a binding fails to compile, and `ElementBindings<typeof defaultElementContracts>` with `satisfies` checks each `render` against its own schema. See [One contract, a binding per renderer](/docs/registry/registries#one-contract-a-binding-per-renderer).
+A renderer binds one contract per element, so each element loads alone: the registry items of Forms React spread one contract into `defineInput` beside their component, and `@schema-engine/forms-radiant` spreads one with its `render`, checked with `satisfies ElementBinding<typeof Contract>`. A renderer that draws every element in one place can bind the whole registry with `bindRegistry` from `@schema-engine/registry` instead: a contract without a binding fails to compile, and `ElementBindings<typeof defaultElementContracts>` with `satisfies` checks each `render` against its own schema. See [One contract, a binding per renderer](/docs/registry/registries#one-contract-a-binding-per-renderer).
 
 ## FormEngine
 
