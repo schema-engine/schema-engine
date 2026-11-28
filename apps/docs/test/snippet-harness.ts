@@ -78,6 +78,8 @@ const sourceFileCache = new Map<string, ts.SourceFile | undefined>();
 /** The root of the docs app, which {@link InstalledModules} resolve against. */
 const docsApp = join(import.meta.dirname, '..');
 
+const docsSource = join(docsApp, 'src');
+
 /**
  * Modules a snippet may import that sit in the docs app, as `paths` of the docs' `tsconfig.json`: a specifier and the
  * file it stands for, relative to the docs app.
@@ -87,9 +89,31 @@ const docsApp = join(import.meta.dirname, '..');
  */
 export type InstalledModules = Record<string, string>;
 
-/** Type-checks virtual modules next to each other and returns the diagnostics per file. */
-export function typecheck(files: Record<string, string>, installed: InstalledModules = {}): Record<string, string[]> {
-	const virtual = new Map(Object.entries(files).map(([name, text]) => [join(snippetDir, name), text]));
+/** The virtual modules of one folder of a program, and the modules of the docs app that its files may import. */
+interface VirtualFolder {
+	files: Record<string, string>;
+	installed: InstalledModules;
+	/** The files whose diagnostics are read; all of `files` when absent. */
+	report?: string[];
+}
+
+/**
+ * Type-checks the virtual folders in one program and returns the diagnostics per folder and file.
+ *
+ * @remarks
+ * A program binds and checks the library and package declarations once, however many files import them, so
+ * the folders share one. A file resolves its relative imports inside its own folder, and `installed` modules resolve
+ * only for the files of the folder that lists them: `paths` is global to a program, so the specifier is resolved per
+ * folder by the host instead. A file outside every folder, such as the docs app file that stands for an installed
+ * module, resolves `@/generated/*` as the docs app does.
+ */
+function typecheckFolders(folders: Record<string, VirtualFolder>): Record<string, Record<string, string[]>> {
+	const virtual = new Map<string, string>();
+	const roots = new Map<string, VirtualFolder>();
+	for (const [folder, { files }] of Object.entries(folders)) {
+		for (const [name, text] of Object.entries(files)) virtual.set(join(snippetDir, folder, name), text);
+		roots.set(join(snippetDir, folder), folders[folder]!);
+	}
 	const options: ts.CompilerOptions = {
 		module: ts.ModuleKind.ESNext,
 		moduleResolution: ts.ModuleResolutionKind.Bundler,
@@ -99,20 +123,15 @@ export function typecheck(files: Record<string, string>, installed: InstalledMod
 		strict: true,
 		skipLibCheck: true,
 		noEmit: true,
-		...(Object.keys(installed).length > 0 && {
-			baseUrl: docsApp,
-			paths: {
-				...Object.fromEntries(Object.entries(installed).map(([specifier, file]) => [specifier, [file]])),
-				'@/generated/*': ['src/generated/*'],
-			},
-		}),
 	};
 	const host = ts.createCompilerHost(options);
 	const getSourceFile = host.getSourceFile.bind(host);
 	const fileExists = host.fileExists.bind(host);
 	const readFile = host.readFile.bind(host);
 	const directoryExists = host.directoryExists?.bind(host);
-	host.directoryExists = (name) => name === snippetDir || (directoryExists?.(name) ?? false);
+	host.directoryExists = (name) =>
+		[...roots.keys()].some((root) => root === name || root.startsWith(`${name}${sep}`)) ||
+		(directoryExists?.(name) ?? false);
 	host.fileExists = (name) => virtual.has(name) || fileExists(name);
 	host.readFile = (name) => virtual.get(name) ?? readFile(name);
 	host.getSourceFile = (name, languageVersion, onError, shouldCreate) => {
@@ -121,15 +140,69 @@ export function typecheck(files: Record<string, string>, installed: InstalledMod
 			sourceFileCache.set(name, getSourceFile(name, languageVersion, onError, shouldCreate));
 		return sourceFileCache.get(name);
 	};
+	const resolvers = new Map<string, { options: ts.CompilerOptions; cache: ts.ModuleResolutionCache }>();
+	const resolverFor = (modules: InstalledModules | undefined) => {
+		const key = modules === undefined ? '' : JSON.stringify(modules);
+		let resolver = resolvers.get(key);
+		if (!resolver) {
+			const resolution: ts.CompilerOptions =
+				modules === undefined
+					? options
+					: {
+							...options,
+							paths: {
+								...Object.fromEntries(
+									Object.entries(modules).map(([specifier, file]) => [
+										specifier,
+										[join(docsApp, file)],
+									]),
+								),
+								'@/generated/*': [join(docsApp, 'src/generated/*')],
+							},
+						};
+			resolver = {
+				options: resolution,
+				cache: ts.createModuleResolutionCache(
+					host.getCurrentDirectory(),
+					(file) => host.getCanonicalFileName(file),
+					resolution,
+				),
+			};
+			resolvers.set(key, resolver);
+		}
+		return resolver;
+	};
+	const modulesOf = (containingFile: string): InstalledModules | undefined => {
+		const folder = [...roots].find(([root]) => containingFile.startsWith(`${root}${sep}`))?.[1];
+		if (folder) return Object.keys(folder.installed).length > 0 ? folder.installed : undefined;
+		return containingFile.startsWith(`${docsSource}${sep}`) ? {} : undefined;
+	};
+	host.resolveModuleNameLiterals = (literals, containingFile) => {
+		const { options: resolution, cache } = resolverFor(modulesOf(containingFile));
+		return literals.map((literal) => ts.resolveModuleName(literal.text, containingFile, resolution, host, cache));
+	};
 	const program = ts.createProgram([...virtual.keys()], options, host);
-	const result: Record<string, string[]> = {};
-	for (const name of Object.keys(files)) {
-		const source = program.getSourceFile(join(snippetDir, name));
-		result[name] = ts
-			.getPreEmitDiagnostics(program, source)
-			.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
-	}
-	return result;
+	return Object.fromEntries(
+		Object.entries(folders).map(([folder, { files, report }]) => [
+			folder,
+			Object.fromEntries(
+				(report ?? Object.keys(files)).map((name) => {
+					const source = program.getSourceFile(join(snippetDir, folder, name));
+					return [
+						name,
+						ts
+							.getPreEmitDiagnostics(program, source)
+							.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')),
+					];
+				}),
+			),
+		]),
+	);
+}
+
+/** Type-checks virtual modules next to each other and returns the diagnostics per file. */
+export function typecheck(files: Record<string, string>, installed: InstalledModules = {}): Record<string, string[]> {
+	return typecheckFolders({ '': { files, installed } })[''] ?? {};
 }
 
 const REACT_PRAGMA = '/** @jsxImportSource react */';
@@ -150,6 +223,66 @@ export interface SnippetFailure {
 	messages: string[];
 }
 
+/** A docs page for {@link checkSiteSnippets}: its text and the files and installed modules its fences may import. */
+export interface SitePage {
+	page: string;
+	text: string;
+	app: Record<string, string>;
+	installed?: InstalledModules;
+}
+
+interface CheckedFence {
+	page: string;
+	fence: number;
+	block: CodeBlock;
+	messages: string[];
+}
+
+/** The virtual files of a page: its app, then each fence named by its title or its ordinal. */
+function pageFiles({ text, app }: SitePage): {
+	files: Record<string, string>;
+	fences: { block: CodeBlock; fence: number; name: string }[];
+} {
+	const files: Record<string, string> = { ...app };
+	const fences = parseCodeBlocks(text)
+		.filter(isTypeScriptFence)
+		.map((block, index) => {
+			const fence = index + 1;
+			const titled = block.meta.match(/title="([^"]+)"/)?.[1];
+			const name = titled ?? `fence-${fence}.${block.lang === 'tsx' ? 'tsx' : 'ts'}`;
+			const code = /^\s*(import|export)\s/m.test(block.code) ? block.code : `${block.code}\nexport {};`;
+			files[name] = block.lang === 'tsx' && isReactFence(titled, block.code) ? `${REACT_PRAGMA}\n${code}` : code;
+			return { block, fence, name };
+		});
+	return { files, fences };
+}
+
+/** Type-checks the fences of the pages in one program and returns every fence with its diagnostics. */
+function checkFences(pages: SitePage[]): CheckedFence[] {
+	const built = pages.map((page) => ({ page, ...pageFiles(page) })).filter(({ fences }) => fences.length > 0);
+	const diagnostics = typecheckFolders(
+		Object.fromEntries(
+			built.map(({ page, files, fences }) => [
+				page.page,
+				{ files, installed: page.installed ?? {}, report: fences.map(({ name }) => name) },
+			]),
+		),
+	);
+	return built.flatMap(({ page, fences }) =>
+		fences.map(({ block, fence, name }) => ({
+			page: page.page,
+			fence,
+			block,
+			messages: diagnostics[page.page]?.[name] ?? [],
+		})),
+	);
+}
+
+const failuresOf = (checked: CheckedFence[]): SnippetFailure[] =>
+	checked
+		.filter(({ messages }) => messages.length > 0)
+		.map(({ page, fence, block, messages }) => ({ page, fence, heading: block.heading, messages }));
+
 /**
  * Type-checks the `ts` and `tsx` fences of a page, each as its own module of one virtual app.
  *
@@ -169,25 +302,20 @@ export function checkPageSnippets(
 	skip: (block: CodeBlock, fence: number) => boolean = () => false,
 	installed: InstalledModules = {},
 ): SnippetFailure[] {
-	const fences = parseCodeBlocks(text)
-		.filter(isTypeScriptFence)
-		.map((block, index) => ({ block, fence: index + 1 }));
-	const files: Record<string, string> = { ...app };
-	const names = new Map<number, string>();
-	for (const { block, fence } of fences) {
-		const titled = block.meta.match(/title="([^"]+)"/)?.[1];
-		const name = titled ?? `fence-${fence}.${block.lang === 'tsx' ? 'tsx' : 'ts'}`;
-		names.set(fence, name);
-		const code = /^\s*(import|export)\s/m.test(block.code) ? block.code : `${block.code}\nexport {};`;
-		files[name] = block.lang === 'tsx' && isReactFence(titled, block.code) ? `${REACT_PRAGMA}\n${code}` : code;
-	}
-	const checked = fences.filter(({ block, fence }) => !skip(block, fence));
-	if (checked.length === 0) return [];
-	const diagnostics = typecheck(files, installed);
-	return checked.flatMap(({ block, fence }) => {
-		const messages = diagnostics[names.get(fence)!] ?? [];
-		return messages.length > 0 ? [{ page, fence, heading: block.heading, messages }] : [];
-	});
+	return failuresOf(checkFences([{ page, text, app, installed }]).filter(({ block, fence }) => !skip(block, fence)));
+}
+
+/**
+ * Type-checks the fences of every page in one program and returns the fences that do not compile.
+ *
+ * @remarks
+ * Each page is a folder of its own in the program, so file names that pages share, such as `fence-1.ts` and
+ * `app.ts`, do not collide, and a failure names its own page. The library, React and package declarations are
+ * checked once for the whole site instead of once per page. Fences are checked as in {@link checkPageSnippets},
+ * with none skipped: a caller that allows a fence filters the failures it gets back.
+ */
+export function checkSiteSnippets(pages: SitePage[]): SnippetFailure[] {
+	return failuresOf(checkFences(pages));
 }
 
 /** Runs a snippet as a CommonJS module with the given modules and returns its exports. */
