@@ -61,6 +61,12 @@ function issuesOf(result: { success: true } | { success: false; issues: Registry
 	return result.issues;
 }
 
+function partialOf(result: ReturnType<typeof safeParseTree>) {
+	if (result.success) throw new Error('Expected issues, got a tree');
+	if (result.tree === undefined) throw new Error('Expected a partial tree');
+	return result.tree;
+}
+
 function thrown(run: () => unknown): unknown {
 	try {
 		run();
@@ -914,6 +920,259 @@ describe('safeParseTree', () => {
 				...own.issues[0],
 				path: ['sections', 3, 'widgets', 0, ...(own.issues[0]?.path ?? [])],
 			});
+		});
+	});
+
+	describe('Scenario: a failed document returns the nodes that parsed', () => {
+		const stacks = createRegistry('Stack', [
+			{
+				$type: 'stack',
+				schema: z.object({
+					$type: z.literal('stack'),
+					gap: z._default(z.number(), 8),
+					children: z.optional(z.array(z.unknown())),
+				}),
+				metadata: { name: 'Stack' },
+				childPaths: [{ keys: ['children'], accepts: ['stack', 'leaf'] }],
+			},
+			{
+				$type: 'leaf',
+				schema: z.object({ $type: z.literal('leaf'), label: z.string(), size: z._default(z.number(), 1) }),
+				metadata: { name: 'Leaf' },
+			},
+			{
+				$type: 'pair',
+				schema: z.object({
+					$type: z.literal('pair'),
+					left: z.optional(z.unknown()),
+					right: z.optional(z.unknown()),
+				}),
+				metadata: { name: 'Pair' },
+				childPaths: [{ keys: ['left'] }, { keys: ['right'] }],
+			},
+		]);
+		const invalidLeaf = { $type: 'leaf', label: 5 };
+		const validLeaf = { $type: 'leaf', label: 'ok' };
+
+		it('keeps the root with its own output and the children that parsed, at their own paths', () => {
+			const result = safeParseTree(stacks, { $type: 'stack', children: [invalidLeaf, validLeaf] });
+			const tree = partialOf(result);
+
+			expect(issuesOf(result).map((issue) => issue.path)).toEqual([['children', 0, 'label']]);
+			expect(tree.$type).toBe('stack');
+			expect(tree.registration).toBe(stacks.get('stack'));
+			expect(tree.path).toEqual([]);
+			expect(tree.output).toEqual({ $type: 'stack', gap: 8, children: [invalidLeaf, validLeaf] });
+			expect(tree.children).toHaveLength(1);
+			expect(tree.children[0]?.keys).toEqual(['children']);
+			expect(tree.children[0]?.nodes).toHaveLength(1);
+			expect(tree.children[0]?.nodes[0]).toMatchObject({
+				$type: 'leaf',
+				path: ['children', 1],
+				output: { $type: 'leaf', label: 'ok', size: 1 },
+			});
+		});
+
+		it('has no data on a node, at any depth', () => {
+			const tree = partialOf(
+				safeParseTree(stacks, {
+					$type: 'stack',
+					children: [{ $type: 'stack', children: [invalidLeaf, validLeaf] }, validLeaf],
+				}),
+			);
+			const inner = tree.children[0]?.nodes[0];
+
+			expect('data' in tree).toBe(false);
+			expect(inner).toBeDefined();
+			expect('data' in (inner ?? {})).toBe(false);
+			expect(inner?.children[0]?.nodes[0] && 'data' in inner.children[0].nodes[0]).toBe(false);
+		});
+
+		it('keeps a node whose child failed, with its own output holding what the document had at the slot', () => {
+			const inner = { $type: 'stack', children: [invalidLeaf, validLeaf] };
+			const tree = partialOf(safeParseTree(stacks, { $type: 'stack', children: [inner, validLeaf] }));
+
+			expect(tree.children[0]?.nodes.map((node) => node.path)).toEqual([
+				['children', 0],
+				['children', 1],
+			]);
+			const kept = tree.children[0]?.nodes[0];
+			expect(kept?.output).toEqual({ $type: 'stack', gap: 8, children: [invalidLeaf, validLeaf] });
+			expect(kept?.children[0]?.nodes.map((node) => node.path)).toEqual([['children', 0, 'children', 1]]);
+		});
+
+		it('leaves out a failed node and does not walk below it, though its siblings are walked', () => {
+			const failedStack = { $type: 'stack', gap: 'wide', children: [invalidLeaf, validLeaf] };
+			const result = safeParseTree(stacks, { $type: 'stack', children: [failedStack, validLeaf] });
+			const tree = partialOf(result);
+
+			expect(issuesOf(result).map((issue) => issue.path)).toEqual([['children', 0, 'gap']]);
+			expect(tree.children[0]?.nodes.map((node) => node.path)).toEqual([['children', 1]]);
+		});
+
+		it('keeps nodes in document order, each with its own path, whatever failed before it', () => {
+			const tree = partialOf(
+				safeParseTree(stacks, {
+					$type: 'stack',
+					children: [
+						validLeaf,
+						invalidLeaf,
+						{ $type: 'leaf', label: 'c' },
+						invalidLeaf,
+						{ $type: 'leaf', label: 'e' },
+					],
+				}),
+			);
+
+			expect(
+				tree.children[0]?.nodes.map((node) => [node.path, (node.output as { label: string }).label]),
+			).toEqual([
+				[['children', 0], 'ok'],
+				[['children', 2], 'c'],
+				[['children', 4], 'e'],
+			]);
+		});
+
+		it('keeps one entry per declared path, in declaration order, empty where nothing parsed', () => {
+			const tree = partialOf(safeParseTree(stacks, { $type: 'pair', left: invalidLeaf, right: validLeaf }));
+
+			expect(tree.children.map((entry) => ({ keys: entry.keys, count: entry.nodes.length }))).toEqual([
+				{ keys: ['left'], count: 0 },
+				{ keys: ['right'], count: 1 },
+			]);
+		});
+
+		it('prunes a child a slot does not accept, and keeps the accepted ones', () => {
+			const result = safeParseTree(stacks, {
+				$type: 'stack',
+				children: [{ $type: 'pair' }, validLeaf],
+			});
+			const tree = partialOf(result);
+
+			expect(issuesOf(result).map((issue) => [issue.code, issue.path])).toEqual([
+				['registry/not-accepted', ['children', 0, '$type']],
+			]);
+			expect(tree.children[0]?.nodes.map((node) => node.path)).toEqual([['children', 1]]);
+		});
+
+		it('prunes the edge of a cycle, and keeps the rest', () => {
+			const loop: Record<string, unknown> = { $type: 'stack', children: [] };
+			(loop.children as unknown[]).push(loop, validLeaf);
+			const result = safeParseTree(stacks, loop);
+			const tree = partialOf(result);
+
+			expect(issuesOf(result).map((issue) => [issue.code, issue.path])).toEqual([
+				['registry/contains-itself', ['children', 0]],
+			]);
+			expect(tree.children[0]?.nodes.map((node) => node.path)).toEqual([['children', 1]]);
+		});
+
+		it('keeps the nodes that parsed when a slot holds a value that is no node', () => {
+			const result = safeParseTree(stacks, { $type: 'pair', left: null, right: validLeaf });
+			const tree = partialOf(result);
+
+			expect(issuesOf(result).map((issue) => [issue.code, issue.path])).toEqual([
+				['registry/not-a-node', ['left']],
+			]);
+			expect(tree.children.map((entry) => entry.nodes.length)).toEqual([0, 1]);
+		});
+
+		it('does not write to the authored document', () => {
+			const frozen = deepFreeze({ $type: 'stack', children: [invalidLeaf, validLeaf] });
+
+			expect(() => safeParseTree(stacks, frozen)).not.toThrow();
+		});
+
+		it('still throws a RegistryError when a parent schema drops a child, after another node reported an issue', () => {
+			const dropping = createRegistry('Widget', [
+				{
+					$type: 'stack',
+					schema: schemaOf((input) => ({ ...input })),
+					metadata: { name: 'Stack' },
+					childPaths: [{ keys: ['children'] }],
+				},
+				{
+					$type: 'list',
+					schema: schemaOf((input) => ({ ...input, items: [] })),
+					metadata: { name: 'List' },
+					childPaths: [{ keys: ['items'] }],
+				},
+				{ $type: 'item', schema: z.object({ $type: z.literal('item') }), metadata: { name: 'Item' } },
+			]);
+			const withInvalidNodeFirst = {
+				$type: 'stack',
+				children: [{ $type: 'missing' }, { $type: 'list', items: [{ $type: 'item' }] }],
+			};
+
+			expect(thrown(() => safeParseTree(dropping, withInvalidNodeFirst))).toMatchObject({
+				code: 'schema-breaks-child-path',
+				$type: 'list',
+				childPath: ['items'],
+			});
+		});
+
+		describe('a document nested deeper than a recursive copy of the tree could hold', () => {
+			const DEPTH = 2000;
+			const chain = createRegistry('Chain', [
+				{
+					$type: 'link',
+					schema: schemaOf((input) => ({ ...input })),
+					metadata: { name: 'Link' },
+					childPaths: [{ keys: ['child'] }],
+				},
+			]);
+			const linked = (depth: number, deepest: unknown): unknown => {
+				let node: unknown = deepest;
+				for (let level = 0; level < depth; level += 1) node = { $type: 'link', child: node };
+				return node;
+			};
+
+			it('returns the tree of a valid document', () => {
+				const tree = treeOf(safeParseTree(chain, linked(DEPTH, { $type: 'link' })));
+
+				let depth = 1;
+				for (let node = tree.children[0]?.nodes[0]; node; node = node.children[0]?.nodes[0]) depth += 1;
+				expect(depth).toBe(DEPTH + 1);
+			});
+
+			it('returns the partial tree of a document whose deepest node is unregistered', () => {
+				const result = safeParseTree(chain, linked(DEPTH, { $type: 'nothing' }));
+				const tree = partialOf(result);
+
+				expect(issuesOf(result)).toHaveLength(1);
+				let depth = 1;
+				for (let node = tree.children[0]?.nodes[0]; node; node = node.children[0]?.nodes[0]) depth += 1;
+				expect(depth).toBe(DEPTH);
+			});
+		});
+
+		it('has no tree when the root itself fails', () => {
+			const result = safeParseTree(stacks, { $type: 'stack', gap: 'wide', children: [validLeaf] });
+
+			expect(issuesOf(result)).toHaveLength(1);
+			expect('tree' in result).toBe(false);
+		});
+
+		it('has no tree when the root is not accepted, or has no registration', () => {
+			expect('tree' in safeParseTree(stacks, validLeaf, { accepts: ['stack'] })).toBe(false);
+			expect('tree' in safeParseTree(stacks, { $type: 'nothing' })).toBe(false);
+		});
+
+		it('has the root at the path option, and every kept node below it', () => {
+			const tree = partialOf(
+				safeParseTree(stacks, { $type: 'stack', children: [invalidLeaf, validLeaf] }, { path: ['doc', 3] }),
+			);
+
+			expect(tree.path).toEqual(['doc', 3]);
+			expect(tree.children[0]?.nodes[0]?.path).toEqual(['doc', 3, 'children', 1]);
+		});
+
+		it('keeps the success branch as before: composed data, and no output on a node', () => {
+			const tree = treeOf(safeParseTree(stacks, { $type: 'stack', children: [validLeaf] }));
+
+			expect(tree.data).toEqual({ $type: 'stack', gap: 8, children: [{ $type: 'leaf', label: 'ok', size: 1 }] });
+			expect('output' in tree).toBe(false);
+			expect('output' in (tree.children[0]?.nodes[0] ?? {})).toBe(false);
 		});
 	});
 
