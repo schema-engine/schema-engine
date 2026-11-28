@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import * as z from 'zod/mini';
 import {
+	BaseRegistry,
 	RegistryError,
 	createRegistry,
 	exportTreeSchema,
@@ -581,6 +582,36 @@ describe('exportTreeSchema', () => {
 			expect(Object.keys(document.$defs as object)).toEqual(['layout', 'component']);
 			expect(properties(document, 'layout').blocks).toEqual({ type: 'array', items: union('component') });
 			expect(document.anyOf).toEqual([ref('layout')]);
+		});
+
+		class MutableNodes extends BaseRegistry<BaseRegistration> {
+			readonly kind = 'MutableNode';
+		}
+
+		it('exports a BaseRegistry alone', () => {
+			const mutable = new MutableNodes();
+			mutable.register({
+				$type: 'component',
+				schema: jsonSchemaOf({ type: 'object' }),
+				metadata,
+			} as BaseRegistration);
+			const document = exportTreeSchema(mutable);
+
+			expect(Object.keys(document.$defs as object)).toEqual(['component']);
+			expect(document.anyOf).toEqual([ref('component')]);
+		});
+
+		it('exports a BaseRegistry in a list with a createRegistry result', () => {
+			const mutable = new MutableNodes();
+			mutable.register({
+				$type: 'component',
+				schema: jsonSchemaOf({ type: 'object' }),
+				metadata,
+			} as BaseRegistration);
+			const document = exportTreeSchema([layouts, mutable], { accepts: ['layout'] });
+
+			expect(Object.keys(document.$defs as object)).toEqual(['layout', 'component']);
+			expect(properties(document, 'layout').blocks).toEqual({ type: 'array', items: union('component') });
 		});
 
 		it('lets the first registry win a $type both list', () => {

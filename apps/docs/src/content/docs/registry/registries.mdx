@@ -103,10 +103,8 @@ interface PluginRegistration extends BaseRegistration {
 	execute: () => Promise<void>;
 }
 
-class PluginRegistry extends BaseRegistry<string, PluginRegistration> {
-	get registryName(): string {
-		return 'PluginRegistry';
-	}
+class PluginRegistry extends BaseRegistry<PluginRegistration> {
+	readonly kind = 'Plugin';
 }
 
 const plugins = new PluginRegistry();

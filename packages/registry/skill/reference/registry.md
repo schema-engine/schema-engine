@@ -149,7 +149,7 @@ export const documentSchema = exportTreeSchema(nodes, {
 
 ## BaseRegistry
 
-`BaseRegistry` is the mutable opt-in for registrations that arrive at runtime, such as a plugin system: `register`, `has`, `get`, `getAll`, `getAllKeys`, `size` and `clear`. It warns when `register` overrides a key and does not check schemas. Use `createRegistry` unless the list is not known when the registry is built.
+`BaseRegistry` is the mutable opt-in for registrations that arrive at runtime, such as a plugin system: `register`, `has`, `get`, `all`, `keys`, `size`, `clear` and an abstract `kind` (the label of its log messages). Its read side is that of a `createRegistry` result, so either kind goes wherever a registry is read. It warns when `register` overrides a key and does not check schemas. Use `createRegistry` unless the list is not known when the registry is built.
 
 ## YAML documents
 
