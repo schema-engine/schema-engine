@@ -1,7 +1,39 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import * as z from 'zod/mini';
-import { safeParseStandardSchema, standardSchema } from '../src';
+import { isStandardSchema, safeParseStandardSchema, standardSchema } from '../src';
+
+describe('isStandardSchema', () => {
+	it('accepts a schema library schema and a standardSchema', () => {
+		expect(isStandardSchema(z.string())).toBe(true);
+		expect(isStandardSchema(standardSchema((value) => ({ value })))).toBe(true);
+	});
+
+	it('accepts a function that carries a ~standard property', () => {
+		const callable = Object.assign(() => undefined, {
+			'~standard': { version: 1, vendor: 'x', validate: () => ({ value: 1 }) },
+		});
+
+		expect(isStandardSchema(callable)).toBe(true);
+	});
+
+	it.each([
+		['null', null],
+		['undefined', undefined],
+		['a string', 'schema'],
+		['an object without ~standard', {}],
+		['a parse-only object', { parse: () => ({}) }],
+		['a ~standard without validate', { '~standard': { version: 1, vendor: 'x' } }],
+	])('rejects %s', (_label, value) => {
+		expect(isStandardSchema(value)).toBe(false);
+	});
+
+	it('narrows the type of an unknown value', () => {
+		const value: unknown = z.string();
+
+		if (isStandardSchema(value)) expectTypeOf(value).toEqualTypeOf<StandardSchemaV1>();
+	});
+});
 
 describe('standardSchema', () => {
 	it('types the input it accepts when asked to, and leaves it unknown otherwise', () => {

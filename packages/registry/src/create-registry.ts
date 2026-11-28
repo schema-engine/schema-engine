@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { RegistryError, type RegistryErrorDetails } from './registry-error.js';
+import { isStandardSchema } from './standard-schema.js';
 import type { CheckChildPaths } from './tree-types.js';
 import type { BaseRegistration } from './types.js';
 
@@ -28,14 +29,6 @@ export interface ReadOnlyRegistry<TRegistration extends BaseRegistration = BaseR
 	all(): readonly TRegistration[];
 	/** `$type` keys in first-registration order. The array is frozen. */
 	keys(): readonly string[];
-}
-
-function isStandardSchema(schema: unknown): schema is StandardSchemaV1 {
-	const standard =
-		schema !== null && (typeof schema === 'object' || typeof schema === 'function')
-			? (schema as Partial<StandardSchemaV1>)['~standard']
-			: undefined;
-	return typeof standard?.validate === 'function';
 }
 
 const standardSchemaMessage = (context: string) => `${context} must implement Standard Schema (~standard.validate).`;

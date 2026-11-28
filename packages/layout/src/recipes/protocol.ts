@@ -1,6 +1,6 @@
 import {
-	assertStandardSchema,
 	createRegistry,
+	isStandardSchema,
 	RegistryError,
 	type BaseRegistration,
 	type CreateRegistryOptions,
@@ -157,11 +157,12 @@ function assertSlotSchemas(
 		);
 	}
 	for (const slot of listed) {
-		try {
-			assertStandardSchema(slotSchemas[slot], `${context}.${slot}`);
-		} catch (error) {
-			if (!(error instanceof Error)) throw error;
-			throw new RegistryError('invalid-schema', error.message, details);
+		if (!isStandardSchema(slotSchemas[slot])) {
+			throw new RegistryError(
+				'invalid-schema',
+				`${context}.${slot} must implement Standard Schema (~standard.validate).`,
+				details,
+			);
 		}
 	}
 }

@@ -130,6 +130,14 @@ What `createRegistry` and `bindRegistry` throw when the registrations or binding
 
 A parse throws a `RegistryError` only when a schema contradicts its registration, never for a bad document. [`assertStandardSchema`](#assertstandardschema) on its own and the other errors raised while parsing, such as a Standard Schema that validates asynchronously, are plain `Error`s, and `parseYaml` throws [`YamlDocumentError`](#yaml-subpath).
 
+## isStandardSchema
+
+```typescript
+function isStandardSchema(schema: unknown): schema is StandardSchemaV1;
+```
+
+`true` when `schema` is an object or a function with a `~standard.validate` function. It looks at the shape only and never runs the schema. A domain package uses it to check schemas of its own and throw a [`RegistryError`](#registryerror) with its own `kind` and `$type`, as `createRegistry` does for a registration.
+
 ## assertStandardSchema
 
 ```typescript
