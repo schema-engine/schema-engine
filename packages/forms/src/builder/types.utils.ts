@@ -39,8 +39,9 @@ export type RegistrationMapMode = 'input' | 'output' | 'value';
  * What a registration says about the value of the elements it types, for the values type of a form.
  *
  * @remarks
- * An input that holds its own value is `{ value }`, the output type of its declared schema. A container (it declares a
- * `containerKind`) is `{ container }`, which tells whether its children make an object or a list of rows. A static
+ * An input that holds its own value is `{ value }`, the output type of its declared schema. A container (it declares
+ * `childPaths`) is `{ container }`, which tells whether its children make an object (the default) or a list of rows
+ * by its `containerKind`. A static
  * element has neither, so it is no key of the map and contributes no value.
  */
 export type ValueEntry =
@@ -48,15 +49,15 @@ export type ValueEntry =
 	| { readonly container: ContainerKind; readonly value?: undefined };
 
 type ValueEntryOf<R> = 'value' extends keyof R
-	? [NonNullable<R[keyof R & 'containerKind']>] extends [never]
+	? [NonNullable<R[keyof R & 'childPaths']>] extends [never]
 		? NonNullable<R[keyof R & 'value']> extends (config: never) => infer V
-			? [V] extends [never]
-				? { readonly container: 'object' }
-				: [V] extends [StandardSchemaV1]
-					? { readonly value: StandardSchemaV1.InferOutput<V> }
-					: never
+			? [V] extends [StandardSchemaV1]
+				? { readonly value: StandardSchemaV1.InferOutput<V> }
+				: never
 			: never
-		: { readonly container: NonNullable<R[keyof R & 'containerKind']> }
+		: [NonNullable<R[keyof R & 'containerKind']>] extends [never]
+			? { readonly container: 'object' }
+			: { readonly container: NonNullable<R[keyof R & 'containerKind']> }
 	: never;
 
 type ConfigMapFromRegistration<R, TMode extends RegistrationMapMode = 'input'> = R extends {

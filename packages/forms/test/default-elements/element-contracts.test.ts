@@ -17,6 +17,17 @@ describe('the element contracts', () => {
 		}
 	});
 
+	test('declare childPaths on exactly the containers, and no other element', () => {
+		const withChildPaths = defaultElementContracts
+			.all()
+			.filter((contract) => 'childPaths' in contract)
+			.map((contract) => contract.$type);
+
+		expect(withChildPaths.toSorted()).toEqual(['arrayElements', 'fieldSet']);
+		expect(defaultElementContracts.get('fieldSet')?.childPaths).toEqual([{ keys: ['elements'] }]);
+		expect(defaultElementContracts.get('arrayElements')?.childPaths).toEqual([{ keys: ['elements'] }]);
+	});
+
 	test('declare the value an input writes, and none for a container or a static element', () => {
 		const withoutValue = defaultElementContracts
 			.all()

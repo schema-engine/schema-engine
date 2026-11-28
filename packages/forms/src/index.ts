@@ -211,6 +211,7 @@ export type {
 	BuilderActionConfig,
 	BuilderActionRegistration,
 	ContainerKind,
+	ElementChildPaths,
 	ElementKind,
 	InputRegistration,
 	RecipeRegistration,

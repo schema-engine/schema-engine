@@ -1,7 +1,8 @@
 import type { StandardSchemaIssue } from '@schema-engine/registry';
 import { issueAt, type FormValidationIssue, type Path } from './issues';
 
-function schemaIssuePath(path: StandardSchemaIssue['path']): PropertyKey[] {
+/** A schema issue's path as plain keys, with each path segment flattened to its key. */
+export function schemaIssuePath(path: StandardSchemaIssue['path']): PropertyKey[] {
 	return (path ?? []).map((segment) =>
 		typeof segment === 'object' && segment !== null && 'key' in segment ? segment.key : segment,
 	);

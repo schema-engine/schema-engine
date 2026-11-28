@@ -34,6 +34,7 @@ describe('numeric span validation', () => {
 		render: () => null,
 	});
 	const group = defineInput({
+		childPaths: [{ keys: ['elements'] }],
 		$type: 'group',
 		containerKind: 'object',
 		schema: z.looseObject({

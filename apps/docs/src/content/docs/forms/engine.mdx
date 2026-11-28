@@ -134,7 +134,7 @@ engine.defineForm({
 
 ## Register a container
 
-A container declares children with `elementChildrenSchema`. Nested authoring uses the same engine registrations as top-level fields, and nested children are typed from them.
+A container is an input that declares `childPaths: [{ keys: ['elements'] }]`, the [registry's own syntax](/docs/registry/api-reference#childpath) for where a node holds child nodes. Its schema still declares `elements`, with `elementChildrenSchema`. Nested authoring uses the same engine registrations as top-level fields, and nested children are typed from them.
 
 ```ts
 import { defineInput, elementChildrenSchema, BaseFieldSchema } from '@schema-engine/forms';
@@ -148,12 +148,19 @@ const GroupSchema = z.extend(BaseFieldSchema, {
 export const GroupRegistration = defineInput({
 	$type: 'group',
 	schema: GroupSchema,
+	childPaths: [{ keys: ['elements'] }],
 	metadata: { name: 'Group', category: 'input' },
 	render: () => null,
 });
 ```
 
-A container declares no `value`: its value is its children's, which the engine composes by the same path rules. `defineInput` requires `value` exactly when the schema has no `elements`, and rejects one on a schema that has (`containerKind` may sit beside `elements`; `'object'` is the default). `createFormEngine` rejects an input without one, whatever its `metadata.category`: the helpers set `kind: 'input'` or `kind: 'static'`, which is what the engine reads, and a registration written by hand states its `kind`.
+Add `accepts` to limit what the container takes: `childPaths: [{ keys: ['elements'], accepts: ['tab'] }]` makes an element of any other `$type` a `registry/not-accepted` issue at its `$type`. Without it the container takes every element of the engine.
+
+Forms fixes the key. Value paths, field scopes, grids and the submission shape all read `elements`, so a container declares one child path, `['elements']`, and `createFormEngine` throws for any other. Only an input can be a container: an element made with `defineStatic` declares no `childPaths`, and an element without them that holds `elements` in a form is an issue at its `elements` key. A container works the same whichever library wrote its schema, Zod or any other Standard Schema, since the child path is data.
+
+A container declares no `value`: its value is its children's, which the engine composes by the same path rules. `defineInput` requires `value` exactly when there is no `childPaths`, and rejects one on a container. `containerKind` only says how the children make that value, `'object'` (the default) or `'array'` for rows, so it needs `childPaths` beside it. A schema that declares `elements` without `childPaths` does not compile: the error names `elementsWithoutChildPaths` and the `$type`. `createFormEngine` rejects an input without `value` or `childPaths`, whatever its `metadata.category`: the helpers set `kind: 'input'` or `kind: 'static'`, which is what the engine reads, and a registration written by hand states its `kind`.
+
+Children are checked as the author wrote them, by the registry's [`safeParseTree`](/docs/registry/resolve-a-document). A container schema that drops, renames or resizes `elements`, or defaults it to a list that holds elements, throws a `RegistryError` with the code `'schema-breaks-child-path'`, since that is a bug of the registration and no issue of the form. A transform that reorders the children is ignored: issues and the normalized form keep the authored order. A schema never sees an element's `appearance`, which the engine resolves and writes back, so a strict schema still supports axes.
 
 Field paths are a render-time scope, not a copy of each child's config. A renderer that draws a container gives each child its scope: `objectFieldScope(name, config)` for an object, and `arrayItemScope(name, index, instanceId)` for an array, where `instanceId` is a stable item id, not the current index, so ids survive item removal. Scalar array items set `{ scalar: true }` so the child binds to the item path itself. [`FormElements`](/docs/forms-react/api-reference#formelements) of Forms React is the React way to draw the children.
 

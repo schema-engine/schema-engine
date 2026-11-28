@@ -13,7 +13,7 @@ import { ComponentType } from '@/engine/component-type';
 import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
-import { declaresChildren, withExportedChildren } from '@/lib/element-children';
+import { ELEMENT_CHILDREN_KEY, withExportedChildren } from '@/lib/element-children';
 import { withExportedRules } from '@/lib/exported-rules';
 import { withActionEnvelope } from '@/lib/exported-action-envelope';
 import {
@@ -37,31 +37,59 @@ import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/p
 import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
 
 /**
- * Rejects an element registration that states no `kind`, or an input that declares no `value`, which types forbid but a hand-written object does not.
+ * Rejects an element registration that states no `kind`, a container that breaks the child path rule, and an input that
+ * declares neither `childPaths` nor `value`, which types forbid but a hand-written object does not.
  *
  * @remarks
  * `defineInput` and `defineStatic` set `kind`, which is what says whether an element holds a value: its metadata is for display and is never read here.
  * A registration written without the helpers states its `kind`.
  *
- * For an `input` the rule is the one the types state: `value` is required exactly when the schema declares no `elements`, since the
- * value of a container is composed from its children. A `containerKind` is no escape for that: it belongs beside
- * `elements`. The one exception is a schema that is not Zod, which cannot be read for `elements`
- * (`declaresChildren` returns `undefined`), so there `containerKind` says the element holds children. A `static` element holds no value and is not checked further.
+ * Only an input can be a container, and it declares one child path, `[{ keys: ['elements'] }]` with an optional
+ * `accepts`, since value paths, field scopes, grids and the submission shape all read `elements`. Its value is its
+ * children's, so it declares no `value`, and `containerKind` only says whether they make an object or a list of rows,
+ * so it needs `childPaths` beside it. Any other `input` declares `value`. A `static` element holds neither.
  */
-function assertValueDeclared(registration: ElementRegistrationConstraint): void {
-	const { kind } = registration;
+function assertElementDeclarations(registration: AnyElementRegistration): void {
+	const { $type, childPaths } = registration;
+	const kind: unknown = registration.kind;
 	if (kind !== 'input' && kind !== 'static') {
 		throw new Error(
-			`Element '${registration.$type}' states no kind. Build it with \`defineInput\` or \`defineStatic\`, or set \`kind: 'input'\` (it holds a value or children) or \`kind: 'static'\` (display only) on a registration written by hand.`,
+			`Element '${$type}' states no kind. Build it with \`defineInput\` or \`defineStatic\`, or set \`kind: 'input'\` (it holds a value or children) or \`kind: 'static'\` (display only) on a registration written by hand.`,
 		);
 	}
-	if (kind === 'static') return;
-	if (typeof registration.value === 'function') return;
-	const children = declaresChildren(registration.schema);
-	if (children === true || (children === undefined && registration.containerKind !== undefined)) return;
-	throw new Error(
-		`Element '${registration.$type}' is an input that declares no value. Give it \`value: (config) => schema\`, the value its control writes. An input that holds children declares \`elements\` in its schema instead; \`containerKind\` stands in for that only when the schema is not Zod, which cannot be read for them. A display-only element is made with \`defineStatic\`.`,
-	);
+	if (registration.kind === 'static') {
+		if (childPaths === undefined) return;
+		throw new Error(
+			`Element '${$type}' is a static element that declares childPaths: only an input can hold children. Make it an input with \`defineInput\`, or drop its childPaths.`,
+		);
+	}
+	if (childPaths === undefined) {
+		if (registration.containerKind !== undefined) {
+			throw new Error(
+				`Element '${$type}' sets containerKind without childPaths. A container declares \`childPaths: [{ keys: ['${ELEMENT_CHILDREN_KEY}'] }]\`; containerKind only says whether its children make an object or a list of rows.`,
+			);
+		}
+		if (typeof registration.value === 'function') return;
+		throw new Error(
+			`Element '${$type}' is an input that declares no value. Give it \`value: (config) => schema\`, the value its control writes. An input that holds children declares \`childPaths: [{ keys: ['${ELEMENT_CHILDREN_KEY}'] }]\` and \`${ELEMENT_CHILDREN_KEY}\` in its schema instead. A display-only element is made with \`defineStatic\`.`,
+		);
+	}
+	const [path, ...others] = childPaths;
+	if (others.length > 0) {
+		throw new Error(
+			`Element '${$type}' declares ${childPaths.length} child paths. Forms reads one, \`{ keys: ['${ELEMENT_CHILDREN_KEY}'] }\`, so a container holds its children in one place.`,
+		);
+	}
+	if (path?.keys.length !== 1 || path.keys[0] !== ELEMENT_CHILDREN_KEY) {
+		throw new Error(
+			`Element '${$type}' must hold its children under '${ELEMENT_CHILDREN_KEY}', not '${path?.keys.join('.')}': it is the one child path forms reads.`,
+		);
+	}
+	if (registration.value !== undefined) {
+		throw new Error(
+			`Element '${$type}' is a container that declares a value. The value of a container is its children's, so drop \`value\`.`,
+		);
+	}
 }
 
 function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
@@ -333,10 +361,11 @@ function resolveLayout(layout: LayoutInput | undefined): LayoutTheme {
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const layout = resolveLayout(lists.layout);
-	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[], {
+	const elementList = (lists.elements ?? []) as readonly AnyElementRegistration[];
+	const elementRegistry = createRegistry('Element', elementList, {
 		hint: 'Register it with createFormEngine({ elements: [...] }).',
 	});
-	for (const registration of lists.elements ?? []) assertValueDeclared(registration);
+	for (const registration of elementList) assertElementDeclarations(registration);
 	const recipeRegistry = createFormRecipeRegistry((lists.recipes ?? []) as readonly AnyRecipeRegistration[], {
 		hint: 'Register it with createFormEngine({ recipes: [...] }).',
 	});

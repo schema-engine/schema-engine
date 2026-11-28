@@ -38,6 +38,7 @@ document.head.prepend(shadcnInput);
 
 const CustomArrayRegistration = defineInput({
 	$type: customArrayType,
+	childPaths: [{ keys: ['elements'] }],
 	containerKind: 'array',
 	schema: z.extend(ArrayElementConfigSchema, { $type: z.literal(customArrayType) }),
 	metadata: { name: 'Repeater', category: 'input' },

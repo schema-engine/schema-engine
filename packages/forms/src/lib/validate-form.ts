@@ -36,7 +36,7 @@ export type { ValidateFormOptions } from './validate-form/options';
 export { FormValidationError } from './validate-form/validation-error';
 
 /**
- * Validate a single element against its registration schema, including nested child elements.
+ * Validate a single element against its registration schema, including nested child elements of a container.
  * Use this before rendering a field that is not already part of a {@link NormalizedFormConfig}.
  * The normalized marker is applied only after this element and its children succeed.
  *

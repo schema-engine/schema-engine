@@ -27,6 +27,7 @@ const field = defineInput({
 });
 
 const fieldset = defineInput({
+	childPaths: [{ keys: ['elements'] }],
 	$type: 'fieldset',
 	containerKind: 'object',
 	schema: z.extend(BaseFieldSchema, {
