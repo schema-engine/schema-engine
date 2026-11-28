@@ -1,3 +1,7 @@
-import { radiantElements } from '../radiant-elements.js';
+import { InputOTPElementContract, type ElementBinding } from '@schema-engine/forms/default-elements';
+import { FormInputOTP } from './form-input-otp.js';
 
-export const InputOTPElementRegistration = radiantElements.get('input-otp');
+export const InputOTPElementRegistration = {
+	...InputOTPElementContract,
+	render: FormInputOTP,
+} satisfies ElementBinding<typeof InputOTPElementContract>;

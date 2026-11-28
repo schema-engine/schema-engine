@@ -30,6 +30,8 @@ The Radiant renderer for [Forms](/docs/forms/overview), for Ecopages apps that u
 | `arrayElements`               | Repeated element groups                         |
 | `submit`, `submission-alert`  | Action and submission feedback                  |
 
+Each registration is also a named export of `@schema-engine/forms-radiant/registrations` and loads only its own widget, so an app that uses a few registers just those. See [Register only some elements](/docs/forms-radiant/getting-started#register-only-some-elements).
+
 `date` and `date-range` exist only in the [React registry](/docs/forms-react/components): Radiant has no element for them. A Radiant element is a registration like any other, so you can write your own, as [Form controls](/docs/forms-radiant/form-controls) shows for a custom control.
 
 `createRadiantFormEngine({ elements })` is `createFormEngine` with the Radiant defaults: it binds the canonical view recipes in the package, whose specs come from `@schema-engine/forms/recipes/built-in`, and it takes the registrations you pass. Radiant has no copy step, so the recipes ship with it. See [Layouts](/docs/forms-radiant/layouts).

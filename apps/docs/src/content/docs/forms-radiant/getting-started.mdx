@@ -96,6 +96,21 @@ export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => vo
 
 `FormRenderer` validates the config, renders it and calls `onSubmit` with the values that passed validation. The values are `FormValues` for a plain config or one loaded from JSON. With `engine.defineForm()` of a literal config, `onSubmit`, `onAction` and `defaultValues` take their types from the config, and with `engine.validateForm(json, { values })` from the output of your schema. See [Authoring modes](/docs/forms/engine#author-a-form-config) and [Submitted values](/docs/forms/form-state#submitted-values).
 
+## Register only some elements
+
+`schemaFormRegistrations` loads all 18 elements. An app that uses a few imports them by name from `@schema-engine/forms-radiant/registrations`, and only those widgets reach its bundle:
+
+```tsx
+import { createRadiantFormEngine } from '@schema-engine/forms-radiant';
+import { InputElementRegistration, SelectElementRegistration } from '@schema-engine/forms-radiant/registrations';
+
+export const engine = createRadiantFormEngine({
+	elements: [InputElementRegistration, SelectElementRegistration],
+});
+```
+
+A form config that names a `$type` the engine does not register fails validation, so list every element the configs use. This engine leaves out the phone, masked and drop-zone inputs and the `libphonenumber-js` and `imask` libraries behind them.
+
 ## Override a registration
 
 A later registration with the same `$type` replaces an earlier one, so a replacement goes after the barrel. `FormField` is the field host that connects the control to the form's state, so a replacement renders inside one (see [Form controls](/docs/forms-radiant/form-controls)):

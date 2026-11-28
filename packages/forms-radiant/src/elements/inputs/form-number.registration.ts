@@ -1,3 +1,7 @@
-import { radiantElements } from '../radiant-elements.js';
+import { NumberElementContract, type ElementBinding } from '@schema-engine/forms/default-elements';
+import { FormNumber } from './form-number.js';
 
-export const NumberElementRegistration = radiantElements.get('number');
+export const NumberElementRegistration = {
+	...NumberElementContract,
+	render: FormNumber,
+} satisfies ElementBinding<typeof NumberElementContract>;

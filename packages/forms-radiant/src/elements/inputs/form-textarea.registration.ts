@@ -1,3 +1,7 @@
-import { radiantElements } from '../radiant-elements.js';
+import { TextareaElementContract, type ElementBinding } from '@schema-engine/forms/default-elements';
+import { FormTextarea } from './form-textarea.js';
 
-export const TextareaElementRegistration = radiantElements.get('textarea');
+export const TextareaElementRegistration = {
+	...TextareaElementContract,
+	render: FormTextarea,
+} satisfies ElementBinding<typeof TextareaElementContract>;

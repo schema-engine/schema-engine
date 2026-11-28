@@ -29,6 +29,9 @@ const BUILT_IN_RECIPE_TAGS = [
 	'se-split-screen-side',
 ];
 
+/** The hosts every server-rendered form needs on the client, whatever elements its engine registers. */
+const FORM_HOST_TAGS = ['se-form-renderer', 'se-form-instance', 'se-form-step', 'se-constraint', 'se-field'];
+
 describe('a consumer of the published package', () => {
 	test.each(scriptEntryKeys(packageDir))(
 		'imports %s on a server after the boot import and gets the names the source entry exports',
@@ -81,6 +84,89 @@ describe('a bundle of the published package', () => {
 			`import { radiantRecipes } from '@schema-engine/forms-radiant'; console.log(radiantRecipes);`,
 		);
 		for (const tag of BUILT_IN_RECIPE_TAGS) expect(bundle.code, tag).toContain(tag);
+	});
+
+	test('one registration loads only its own element, with no phone, mask or drop-zone code', async () => {
+		const bundle = await bundlePublishedEntry(
+			packageDir,
+			`import { InputElementRegistration } from '@schema-engine/forms-radiant/registrations'; console.log(InputElementRegistration);`,
+		);
+		expect(bundle.inputs).toContain('dist/elements/inputs/form-input.js');
+		for (const unwanted of [
+			'libphonenumber-js',
+			'imask',
+			'dist/lib/phone-number.js',
+			'dist/lib/mask-options.js',
+			'dist/elements/inputs/form-phone-input.js',
+			'dist/elements/inputs/form-masked-input.js',
+			'dist/elements/inputs/form-drop-zone.js',
+		]) {
+			expect(
+				bundle.inputs.filter((file) => file.includes(unwanted)),
+				unwanted,
+			).toEqual([]);
+		}
+		for (const tag of ['se-phone-input', 'se-masked-input', 'se-drop-zone']) {
+			expect(bundle.code, tag).not.toContain(tag);
+		}
+	});
+
+	test('the registrations of the root hold every element, so the check above can fail', async () => {
+		const bundle = await bundlePublishedEntry(
+			packageDir,
+			`import { schemaFormRegistrations } from '@schema-engine/forms-radiant'; console.log(schemaFormRegistrations);`,
+		);
+		for (const element of ['form-phone-input', 'form-masked-input', 'form-drop-zone']) {
+			expect(bundle.inputs, element).toContain(`dist/elements/inputs/${element}.js`);
+		}
+		for (const tag of ['se-phone-input', 'se-masked-input', 'se-drop-zone']) {
+			expect(bundle.code, tag).toContain(tag);
+		}
+	});
+
+	test('an engine of a few registrations from the root factory loads only those elements', async () => {
+		const bundle = await bundlePublishedEntry(
+			packageDir,
+			`import { createRadiantFormEngine } from '@schema-engine/forms-radiant'; import { InputElementRegistration, SelectElementRegistration } from '@schema-engine/forms-radiant/registrations'; console.log(createRadiantFormEngine({ elements: [InputElementRegistration, SelectElementRegistration] }));`,
+		);
+		expect(bundle.inputs).toContain('dist/elements/inputs/form-select.js');
+		expect(bundle.inputs.filter((file) => /phone|mask|drop-zone|libphonenumber|imask/.test(file))).toEqual([]);
+		for (const tag of [...FORM_HOST_TAGS, 'se-select']) {
+			expect(bundle.code, tag).toContain(tag);
+		}
+		for (const tag of ['se-phone-input', 'se-masked-input', 'se-drop-zone']) {
+			expect(bundle.code, tag).not.toContain(tag);
+		}
+	});
+
+	test('an app bundle of the few-elements engine, dependencies bundled and split, emits no phone, mask or flag library', async () => {
+		const bundle = await bundlePublishedEntry(
+			packageDir,
+			`import { createRadiantFormEngine } from '@schema-engine/forms-radiant'; import { InputElementRegistration, SelectElementRegistration } from '@schema-engine/forms-radiant/registrations'; console.log(createRadiantFormEngine({ elements: [InputElementRegistration, SelectElementRegistration] }));`,
+			{ bundleDependencies: true },
+		);
+		expect(bundle.inputs.filter((file) => /libphonenumber-js|imask|country-flag-icons/.test(file))).toEqual([]);
+	});
+
+	test('the same app bundle of every registration does emit them, so the check above can fail', async () => {
+		const bundle = await bundlePublishedEntry(
+			packageDir,
+			`import { createRadiantFormEngine, schemaFormRegistrations } from '@schema-engine/forms-radiant'; console.log(createRadiantFormEngine({ elements: schemaFormRegistrations }));`,
+			{ bundleDependencies: true },
+		);
+		for (const library of ['libphonenumber-js', 'imask', 'country-flag-icons']) {
+			expect(
+				bundle.inputs.filter((file) => file.includes(library)),
+				library,
+			).not.toEqual([]);
+		}
+	});
+
+	test('importing the root for its effect alone still registers the form hosts', async () => {
+		const bundle = await bundlePublishedEntry(packageDir, `import '@schema-engine/forms-radiant';`);
+		for (const tag of FORM_HOST_TAGS) {
+			expect(bundle.code, tag).toContain(tag);
+		}
 	});
 
 	test('everything the root exports holds no debugger', async () => {

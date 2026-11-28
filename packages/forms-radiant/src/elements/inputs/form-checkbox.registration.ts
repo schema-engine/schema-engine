@@ -1,3 +1,7 @@
-import { radiantElements } from '../radiant-elements.js';
+import { CheckboxElementContract, type ElementBinding } from '@schema-engine/forms/default-elements';
+import { FormCheckbox } from './form-checkbox.js';
 
-export const CheckboxElementRegistration = radiantElements.get('checkbox');
+export const CheckboxElementRegistration = {
+	...CheckboxElementContract,
+	render: FormCheckbox,
+} satisfies ElementBinding<typeof CheckboxElementContract>;

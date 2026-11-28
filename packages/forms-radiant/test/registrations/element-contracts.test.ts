@@ -1,7 +1,6 @@
 import { defaultElementContracts } from '@schema-engine/forms/default-elements';
 import { describe, expect, test } from 'vitest';
 import { schemaFormRegistrations } from '@/registrations';
-import { radiantElements } from '@/elements/radiant-elements';
 
 /** The value declaration of a registration or a contract; a container or a static element has none. */
 const valueOf = (registration: object | undefined): unknown =>
@@ -9,7 +8,6 @@ const valueOf = (registration: object | undefined): unknown =>
 
 describe('the Radiant elements', () => {
 	test('bind every element contract, in the order of the contracts', () => {
-		expect(radiantElements.keys()).toEqual(defaultElementContracts.keys());
 		expect(schemaFormRegistrations.map((registration) => registration.$type)).toEqual(
 			defaultElementContracts.keys(),
 		);
@@ -17,7 +15,7 @@ describe('the Radiant elements', () => {
 
 	test('share the schema, the value declaration and the metadata of each contract', () => {
 		for (const contract of defaultElementContracts.all()) {
-			const registration = radiantElements.get(contract.$type);
+			const registration = schemaFormRegistrations.find(({ $type }) => $type === contract.$type);
 
 			expect(registration?.schema, contract.$type).toBe(contract.schema);
 			expect(registration?.metadata, contract.$type).toBe(contract.metadata);
@@ -28,8 +26,7 @@ describe('the Radiant elements', () => {
 	});
 
 	test('add the phone validation to the phone input alone', () => {
-		const withValidations = radiantElements
-			.all()
+		const withValidations = schemaFormRegistrations
 			.filter((registration) => 'validations' in registration)
 			.map((registration) => registration.$type);
 

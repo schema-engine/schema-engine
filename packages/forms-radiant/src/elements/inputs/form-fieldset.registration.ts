@@ -1,3 +1,7 @@
-import { radiantElements } from '../radiant-elements.js';
+import { FieldSetContract, type ElementBinding } from '@schema-engine/forms/default-elements';
+import { FormFieldSet } from './form-fieldset.js';
 
-export const FieldSetRegistration = radiantElements.get('fieldSet');
+export const FieldSetRegistration = {
+	...FieldSetContract,
+	render: FormFieldSet,
+} satisfies ElementBinding<typeof FieldSetContract>;
