@@ -100,7 +100,14 @@ describe('defineProtocolRecipeSpec against a protocol', () => {
 				slotSchemas: { content: ContentConfigSchema },
 				slotDefaults: { content: { columns: 'two' } as never },
 			}),
-		).toThrow(/Recipe 'hero' slotDefaults.content is invalid/);
+		).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'hero',
+				message: expect.stringMatching(/Recipe 'hero' slotDefaults.content is invalid/),
+			}),
+		);
 	});
 
 	test('rejects slot defaults for a slot the recipe does not declare', () => {
@@ -112,7 +119,14 @@ describe('defineProtocolRecipeSpec against a protocol', () => {
 				slotSchemas: { content: ContentConfigSchema },
 				slotDefaults: { media: {} } as never,
 			}),
-		).toThrow(/slotDefaults.media: the recipe does not declare a 'media' slot/);
+		).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'hero',
+				message: expect.stringMatching(/slotDefaults.media: the recipe does not declare a 'media' slot/),
+			}),
+		);
 	});
 
 	test('requires a slot that declares appearance axes to be a declared slot', () => {
@@ -124,7 +138,14 @@ describe('defineProtocolRecipeSpec against a protocol', () => {
 				slotSchemas: { content: ContentConfigSchema },
 				appearanceAxes: { media: ['size'] } as never,
 			}),
-		).toThrow(/appearanceAxes.media: the recipe does not declare a 'media' slot/);
+		).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'hero',
+				message: expect.stringMatching(/appearanceAxes.media: the recipe does not declare a 'media' slot/),
+			}),
+		);
 	});
 });
 

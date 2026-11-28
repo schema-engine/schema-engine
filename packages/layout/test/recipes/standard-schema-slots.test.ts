@@ -141,7 +141,14 @@ describe('recipe slot schemas from any Standard Schema library', () => {
 				// @ts-expect-error -- gap is a picklist of text, not a number
 				slotDefaults: { body: { gap: 3 } },
 			}),
-		).toThrow(/Recipe 'card' slotDefaults\.body is invalid: gap: /);
+		).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'card',
+				message: expect.stringMatching(/Recipe 'card' slotDefaults\.body is invalid: gap: /),
+			}),
+		);
 	});
 
 	test('names an unknown key in a slot default, whichever library reports it', () => {

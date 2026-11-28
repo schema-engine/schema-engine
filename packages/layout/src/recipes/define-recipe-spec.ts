@@ -1,5 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { formatIssuePath, safeParseStandardSchema, standardSchema } from '@schema-engine/registry';
+import { formatIssuePath, RegistryError, safeParseStandardSchema, standardSchema } from '@schema-engine/registry';
 import type { AppearanceAxisList, SlotAppearanceAxes } from '../lib/appearance.js';
 import { assertRecipeRules, type RecipeProtocol } from './protocol.js';
 import { unknownViewKeyMessage } from './resolve-recipe-view.js';
@@ -125,6 +125,8 @@ function describeSlotIssue(issue: StandardSchemaV1.Issue): string[] {
 }
 
 /**
+ * @throws {RegistryError} Code `'invalid-declaration'` for a default that its slot schema rejects or for a slot the recipe does not declare
+ *
  * @remarks
  * Validation only: the parsed output is discarded. The defaults are merged under the author's
  * slot config before the view schema parses, so schema defaults still fill what they leave unset.
@@ -134,21 +136,32 @@ function assertSlotDefaults(
 	slotSchemas: ProtocolRecipeSlotSchemas,
 	slotDefaults: Record<string, unknown> | undefined,
 ): void {
+	const details = { kind: 'Recipe', $type };
 	for (const [slot, value] of Object.entries(slotDefaults ?? {})) {
 		const schema = slotSchemas[slot];
 		if (!schema) {
-			throw new Error(`Recipe '${$type}' slotDefaults.${slot}: the recipe does not declare a '${slot}' slot.`);
+			throw new RegistryError(
+				'invalid-declaration',
+				`Recipe '${$type}' slotDefaults.${slot}: the recipe does not declare a '${slot}' slot.`,
+				details,
+			);
 		}
 		const result = safeParseStandardSchema(schema, value);
 		if (!result.success) {
 			const problems = result.error.issues.flatMap(describeSlotIssue);
-			throw new Error(`Recipe '${$type}' slotDefaults.${slot} is invalid: ${problems.join('; ')}`);
+			throw new RegistryError(
+				'invalid-declaration',
+				`Recipe '${$type}' slotDefaults.${slot} is invalid: ${problems.join('; ')}`,
+				details,
+			);
 		}
 	}
 }
 
 /**
  * Validation only: a slot that declares appearance axes must exist.
+ *
+ * @throws {RegistryError} Code `'invalid-declaration'` for appearance axes on a slot the recipe does not declare
  *
  * @remarks
  * That the slot schema accepts an `appearance` key is a type constraint on
@@ -162,13 +175,19 @@ function assertAppearanceSlots(
 ): void {
 	for (const [slot, axes] of Object.entries(appearanceAxes ?? {})) {
 		if (axes && !slotSchemas[slot]) {
-			throw new Error(`Recipe '${$type}' appearanceAxes.${slot}: the recipe does not declare a '${slot}' slot.`);
+			throw new RegistryError(
+				'invalid-declaration',
+				`Recipe '${$type}' appearanceAxes.${slot}: the recipe does not declare a '${slot}' slot.`,
+				{ kind: 'Recipe', $type },
+			);
 		}
 	}
 }
 
 /**
  * Declares a recipe's `$type`, kind, slot schemas, and metadata against a domain's protocol.
+ *
+ * @throws {RegistryError} Code `'invalid-declaration'` for a rule the recipe breaks, a slot default its slot schema rejects, or slot defaults or appearance axes on a slot the recipe does not declare
  *
  * @remarks
  * The protocol decides which slots and kinds exist, in the types and at runtime, and its rules run
