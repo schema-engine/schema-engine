@@ -8,14 +8,16 @@ order: 6
 
 ## Entry points
 
-| Import                                       | Holds                                                                                                                                                                         |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms-radiant`               | `createRadiantFormEngine`, `FormRenderer`, `schemaFormRegistrations`, the recipes, `FormController` and `FormEngineController`, and the hosts                                 |
-| `@schema-engine/forms-radiant/index.css`     | The renderer's stylesheet                                                                                                                                                     |
-| `@schema-engine/forms-radiant/registrations` | Each element registration by name, such as `InputElementRegistration`                                                                                                         |
-| `@schema-engine/forms-radiant/hooks`         | Helpers for building elements: `combineHandlers` and `mergeFieldGridHost`                                                                                                     |
-| `@schema-engine/forms-radiant/primitives`    | The rendering primitives: `FormField`, `FormFieldElement`, `FormElement` and `ChildGrid` (its `subgrid` prop lays a container's children on the tracks of the grid around it) |
-| `@schema-engine/forms-radiant/contexts`      | `formInstanceContext`, which the hosts publish to the blocks and recipes of a renderer; an app reads the form with `FormController`                                           |
+| Import                                       | Holds                                                                                                                                                                                                                                                                                                                                             |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-radiant`               | `createRadiantFormEngine`, `FormRenderer`, `schemaFormRegistrations`, the recipes, `FormController` and `FormEngineController`, and the hosts                                                                                                                                                                                                     |
+| `@schema-engine/forms-radiant/primitives`    | What you build elements and recipes from: `FormElement`, `FormElements`, `FormField`, `FormFieldElement`, `ChildGrid` (its `subgrid` prop lays a container's children on the tracks of the grid around it), `defineRecipe`, the shell and recipe types, `formInstanceContext` and `formEngineContext`, `combineHandlers` and `mergeFieldGridHost` |
+| `@schema-engine/forms-radiant/registrations` | Each element registration by name, such as `InputElementRegistration`                                                                                                                                                                                                                                                                             |
+| `@schema-engine/forms-radiant/index.css`     | The renderer's stylesheet                                                                                                                                                                                                                                                                                                                         |
+| `@schema-engine/forms-radiant/debugger`      | `FormDebugger` and `FormDebuggerElement`, a development panel                                                                                                                                                                                                                                                                                     |
+| `@schema-engine/forms-radiant/debugger.css`  | The debugger's styles                                                                                                                                                                                                                                                                                                                             |
+
+`.`, `/primitives`, `/debugger` and `/debugger.css` mean the same in [Forms React](/docs/forms-react/api-reference). A renderer adds `/hooks`, `/registrations` or `/index.css` only when it has that kind of content. Importing `/primitives` loads none of the built-in recipes, and an app that never imports `/debugger` ships no debugger. `formInstanceContext` is what the hosts publish to the blocks and recipes of a renderer; an app reads the form with `FormController`.
 
 ## createRadiantFormEngine
 
@@ -56,7 +58,7 @@ A form announces what its actions and its submission did as bubbling, composed e
 | `se-action-submit-invalid`  | `{ failures }`: empty when the fields have errors               |
 | `se-action-submit-complete` | `{ succeeded, results, failures }` of the submit actions        |
 
-`FormRendererElement` is the `se-form-renderer` custom element behind it. Assign `engine` to it, as a property, to bind a server-rendered form. `FormInstance` and `FormElement` are the views for one form and one field.
+`FormRendererElement` is the `se-form-renderer` custom element behind it. Assign `engine` to it, as a property, to bind a server-rendered form. `FormElement` from `@schema-engine/forms-radiant/primitives` is the view of one field.
 
 ## Registrations
 
@@ -68,7 +70,7 @@ The schemas, metadata and value declarations of these elements are the default e
 
 ## Recipes
 
-`radiantRecipes` lists the canonical view recipes that `createRadiantFormEngine` binds: `CardRecipe`, `SplitScreenRecipe`, `HeroBackgroundRecipe`, `BareControlsRecipe`, `WizardRecipe`, `SidebarWizardRecipe`, `CardWizardRecipe`, `HeroWizardRecipe` and `SplitScreenWizardRecipe`. `defineRecipe` binds your own shell and slots to a recipe spec made with `defineRecipeSpec` from `@schema-engine/forms/recipes`. The recipe a multi-step form without a `view` falls back to is `DEFAULT_WIZARD_RECIPE` from `@schema-engine/forms`. See [Layouts](/docs/forms-radiant/layouts).
+`radiantRecipes` lists the canonical view recipes that `createRadiantFormEngine` binds: `CardRecipe`, `SplitScreenRecipe`, `HeroBackgroundRecipe`, `BareControlsRecipe`, `WizardRecipe`, `SidebarWizardRecipe`, `CardWizardRecipe`, `HeroWizardRecipe` and `SplitScreenWizardRecipe`. `defineRecipe` from `@schema-engine/forms-radiant/primitives` binds your own shell and slots to a recipe spec made with `defineRecipeSpec` from `@schema-engine/forms/recipes`; importing it loads none of the built-in recipes. The recipe a multi-step form without a `view` falls back to is `DEFAULT_WIZARD_RECIPE` from `@schema-engine/forms`. See [Layouts](/docs/forms-radiant/layouts).
 
 ## Controllers
 
@@ -76,4 +78,4 @@ The schemas, metadata and value declarations of these elements are the default e
 
 ## Debugging
 
-`FormDebugger` and `FormDebuggerElement` render a panel with the form's meta and state, for development.
+`FormDebugger` and `FormDebuggerElement` from `@schema-engine/forms-radiant/debugger` render a panel with the form's meta and state, for development. Render `FormDebugger` inside a `FormRenderer`, and load its styles with `@import '@schema-engine/forms-radiant/debugger.css';` after `index.css`. The root and `index.css` carry neither, so an app that does not debug ships no debugger.

@@ -12,8 +12,10 @@ The React renderer for [Forms](/docs/forms/overview). It supplies rendering, hoo
 
 - `@schema-engine/forms-react`: rendering components and providers.
 - `@schema-engine/forms-react/hooks`: form state, runtime and view hooks.
-- `@schema-engine/forms-react/primitives`: `FormElement`, `FormElements`, `ChildGrid` (its `subgrid` prop lays a container's children on the tracks of the grid around it) and recipe contracts.
-- `@schema-engine/forms-react/contexts`: the view provider.
+- `@schema-engine/forms-react/primitives`: `FormElement`, `FormElements`, `ChildGrid` (its `subgrid` prop lays a container's children on the tracks of the grid around it), `defineRecipe` and the view provider.
+- `@schema-engine/forms-react/debugger` and `@schema-engine/forms-react/debugger.css`: the development panel and its styles.
+
+The renderer entries are the same in [Forms Radiant](/docs/forms-radiant/api-reference#entry-points).
 
 Create engines with `createFormEngine` from `@schema-engine/forms` and register the elements and recipes you want. The rendering runtime uses `se-*` styling hooks and does not require Tailwind.
 

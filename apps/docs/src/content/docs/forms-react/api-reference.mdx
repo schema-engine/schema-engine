@@ -85,4 +85,4 @@ as omitting `FormRenderer`, which still lives in this package.
 
 ## Debugging
 
-`FormDebugger` from `@schema-engine/forms-react/components/form-debugger` renders a panel with the form's steps, values and errors, for development. Render it inside a `FormRenderer`. It takes `defaultOpen` (open on mount), `showStepDetails` (each step's description in the timeline) and `showFormState` (the state, values and errors section).
+`FormDebugger` from `@schema-engine/forms-react/debugger` renders a panel with the form's steps, values and errors, for development. Render it inside a `FormRenderer`, and load its styles from `@schema-engine/forms-react/debugger.css`; an app that does not debug loads neither. It takes `defaultOpen` (open on mount), `showStepDetails` (each step's description in the timeline) and `showFormState` (the state, values and errors section).

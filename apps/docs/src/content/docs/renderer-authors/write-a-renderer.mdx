@@ -182,6 +182,19 @@ The example leaves out what a real renderer needs, and each part has a page of i
 
 A renderer registers its elements and recipes on the engine, as [Engine and registrations](/docs/forms/engine) describes.
 
+### Package entries
+
+Forms React and Forms Radiant publish the same four entries, and a renderer of your own follows them, so that an author who knows one renderer finds the other where they expect it:
+
+| Entry           | Who imports it                        | Holds                                                                                                                    |
+| --------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `.`             | An app author                         | What renders a form: the renderer and the engine provider or factory                                                     |
+| `/primitives`   | Element, container and recipe authors | What elements and recipes are built from: `FormElement`, `FormElements`, `ChildGrid`, `defineRecipe` and the shell types |
+| `/debugger`     | An app author, in development         | The debugger panel                                                                                                       |
+| `/debugger.css` | An app author, with `/debugger`       | The debugger's styles                                                                                                    |
+
+Add `/hooks`, `/registrations` or `/index.css` only when the renderer has that kind of content: Forms React adds `/hooks`, Forms Radiant adds `/registrations` and `/index.css`. Binding a recipe from `/primitives` does not load the built-in recipes, and an app that never imports `/debugger` ships no debugger.
+
 ## Test the subgrid chain
 
 A subgrid lines up with its grid only when every box between them carries the `se-subgrid` class and `data-se-theme`. A wrapper without them, such as a label box or an ARIA wrapper, makes the children fall back to one column and nothing reports it. `findSubgridChainBreaks` from `@schema-engine/layout/testing` walks up from every subgrid under a root and returns one sentence per box in the way, so a renderer's DOM test catches the wrapper. It is in its own entry, because it reads a DOM and the main entry has no DOM types for a server to need:

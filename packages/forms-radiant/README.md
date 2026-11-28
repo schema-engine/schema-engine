@@ -51,14 +51,18 @@ export function ContactForm({ onSubmit }: { onSubmit: (values: FormValues) => vo
 
 ## Entry points
 
-| Import                                       | Holds                                                                                                           |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/forms-radiant`               | `createRadiantFormEngine`, `FormRenderer`, `schemaFormRegistrations`, the recipes and the controllers           |
-| `@schema-engine/forms-radiant/index.css`     | The renderer's stylesheet                                                                                       |
-| `@schema-engine/forms-radiant/registrations` | Each element registration by name                                                                               |
-| `@schema-engine/forms-radiant/primitives`    | `FormField`, `FormFieldElement`, `FormElement` and `ChildGrid` (`subgrid` for a container whose `grid` sets it) |
-| `@schema-engine/forms-radiant/hooks`         | Helpers for building elements                                                                                   |
-| `@schema-engine/forms-radiant/contexts`      | The contexts the hosts publish                                                                                  |
+| Import                                       | Holds                                                                                                                                                                                                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@schema-engine/forms-radiant`               | `createRadiantFormEngine`, `FormRenderer`, `schemaFormRegistrations`, the recipes and the controllers                                                                                                 |
+| `@schema-engine/forms-radiant/primitives`    | What you build elements and recipes from: `FormElement`, `FormElements`, `FormField`, `FormFieldElement`, `ChildGrid`, `defineRecipe`, the shell and recipe types, the contexts and the field helpers |
+| `@schema-engine/forms-radiant/registrations` | Each element registration by name                                                                                                                                                                     |
+| `@schema-engine/forms-radiant/index.css`     | The renderer's stylesheet                                                                                                                                                                             |
+| `@schema-engine/forms-radiant/debugger`      | `FormDebugger` and `FormDebuggerElement`, a development panel                                                                                                                                         |
+| `@schema-engine/forms-radiant/debugger.css`  | The debugger's styles, loaded only where you render it                                                                                                                                                |
+
+`@schema-engine/forms-react` has the same `.`, `/primitives`, `/debugger` and `/debugger.css`, with the same meaning.
+
+On a server, import `@ecopages/radiant/server/install-ssr-runtime` before any forms-radiant entry: the entries define custom elements, which need the DOM that module installs. See [Server rendering](https://schema-engine.com/docs/forms-radiant/server-rendering).
 
 ## Documentation
 
