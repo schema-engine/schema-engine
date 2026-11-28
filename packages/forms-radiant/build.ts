@@ -51,6 +51,7 @@ await buildLib({
 	entryGlobs: [
 		'src/index.ts',
 		'src/index.css',
+		'src/debugger.css',
 		'src/primitives.ts',
 		'src/*.ts',
 		'src/*.tsx',

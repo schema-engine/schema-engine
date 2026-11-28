@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from 'vitest';
 import { createRoot } from '@ecopages/jsx/client';
 import { FormRenderer } from '@/components/internals/form-renderer';
-import { FormDebugger } from '@/components/form-debugger';
+import { FormDebugger } from '@/debugger';
 import { createRadiantFormEngine } from '@/registries/builder-registry';
 import { schemaFormRegistrations } from '@/registrations';
 import { CardRecipe, WizardRecipe } from '@/recipes';

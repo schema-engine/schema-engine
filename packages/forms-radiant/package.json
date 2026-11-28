@@ -111,13 +111,10 @@
 			"types": "./dist/registrations/elements.d.ts",
 			"import": "./dist/registrations/elements.js"
 		},
-		"./hooks": {
-			"types": "./dist/hooks/index.d.ts",
-			"import": "./dist/hooks/index.js"
+		"./debugger": {
+			"types": "./dist/debugger.d.ts",
+			"import": "./dist/debugger.js"
 		},
-		"./contexts": {
-			"types": "./dist/contexts/index.d.ts",
-			"import": "./dist/contexts/index.js"
-		}
+		"./debugger.css": "./dist/debugger.css"
 	}
 }

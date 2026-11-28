@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { createFormEngine } from '@schema-engine/forms';
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
 import { FormInstance } from '@/components/form-instance';
-import { defineRecipe } from '@/recipes';
+import { defineRecipe } from '@/primitives';
 import { createRadiantFormEngine } from '@/registries';
 
 const ghost = defineRecipe(

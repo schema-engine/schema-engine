@@ -9,7 +9,7 @@
  * Run via: pnpm check-types (tsconfig.test-types.json)
  */
 
-import { defineRecipe } from '@schema-engine/forms-radiant';
+import { defineRecipe } from '@schema-engine/forms-radiant/primitives';
 import { formatIssuePath } from '@schema-engine/registry';
 import { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms';
 import type { FormSubmissionState, FormSubmitHelpers, FormValues, SubmissionStatus } from '@schema-engine/forms';

@@ -6,7 +6,7 @@
 import * as v from 'valibot';
 import * as z from 'zod/mini';
 import { defineRecipeSpec } from '@schema-engine/forms/recipes';
-import { defineRecipe } from '@/recipes';
+import { defineRecipe } from '@/primitives';
 
 const Shell = () => null;
 const Slot = () => null;
