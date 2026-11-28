@@ -212,7 +212,12 @@ describe('createRecipeRegistry slotSchemas', () => {
 	test('rejects a listed slot without a schema', () => {
 		const missing = { ...card, slotSchemas: {} };
 		expect(() => createRecipeRegistry(cardProtocol, [missing])).toThrow(
-			/Recipe 'card' slotSchemas .*'body' has no schema/,
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'card',
+				message: expect.stringMatching(/Recipe 'card' slotSchemas .*'body' has no schema/),
+			}),
 		);
 	});
 

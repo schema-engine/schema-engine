@@ -150,7 +150,14 @@ describe('createRecipeRegistry', () => {
 	test('runs the protocol rules at build, naming the recipe and the rule', () => {
 		const withoutContent = { ...valid, $type: 'bare-hero', slots: ['media' as const] };
 		expect(() => createRecipeRegistry(sectionProtocol, [withoutContent])).toThrow(
-			/Recipe 'bare-hero' breaks rule 'section-needs-content': kind 'section' must declare a content slot/,
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'bare-hero',
+				message: expect.stringMatching(
+					/Recipe 'bare-hero' breaks rule 'section-needs-content': kind 'section' must declare a content slot/,
+				),
+			}),
 		);
 	});
 
@@ -163,11 +170,23 @@ describe('createRecipeRegistry', () => {
 
 	test('rejects a hand-written recipe with a kind or slot outside the protocol', () => {
 		expect(() => createRecipeRegistry(sectionProtocol, [{ ...valid, kind: 'wizard' as never }])).toThrow(
-			/kind 'wizard', which the protocol does not declare/,
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'hero',
+				message: expect.stringContaining("kind 'wizard', which the protocol does not declare"),
+			}),
 		);
 		expect(() =>
 			createRecipeRegistry(sectionProtocol, [{ ...valid, slots: ['content', 'aside'] as never }]),
-		).toThrow(/slot 'aside', which the protocol does not declare/);
+		).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'hero',
+				message: expect.stringContaining("slot 'aside', which the protocol does not declare"),
+			}),
+		);
 	});
 
 	test('checks the kind and slots against the protocol before any rule sees the recipe', () => {
@@ -184,7 +203,12 @@ describe('createRecipeRegistry', () => {
 
 	test('rejects a registration whose schema is not a Standard Schema', () => {
 		expect(() => createRecipeRegistry(sectionProtocol, [{ ...valid, schema: {} as never }])).toThrow(
-			/Standard Schema/,
+			expect.objectContaining({
+				code: 'invalid-schema',
+				kind: 'Recipe',
+				$type: 'hero',
+				message: expect.stringContaining('Standard Schema'),
+			}),
 		);
 	});
 
