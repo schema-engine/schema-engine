@@ -41,7 +41,7 @@
 	"scripts": {
 		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
 		"build:files": "node ./build.ts",
-		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+		"build:types": "tsc -p tsconfig.build.json",
 		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "vitest run",
@@ -64,7 +64,6 @@
 	"devDependencies": {
 		"@schema-engine/scripts": "workspace:^",
 		"esbuild": "^0.27.0",
-		"tsc-alias": "^1.8.16",
 		"typescript": "catalog:",
 		"vitest": "catalog:",
 		"zod": "^4.5.0"

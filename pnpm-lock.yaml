@@ -297,9 +297,6 @@ importers:
       esbuild:
         specifier: ^0.27.0
         version: 0.27.7
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.9.5
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -692,9 +689,6 @@ importers:
       esbuild:
         specifier: ^0.27.0
         version: 0.27.7
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.9.5
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
