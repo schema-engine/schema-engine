@@ -121,6 +121,21 @@ describe('a bundle of the published package', () => {
 		}
 	});
 
+	test('an engine of a few registrations from the root factory loads only those elements', async () => {
+		const bundle = await bundlePublishedEntry(
+			packageDir,
+			`import { createRadiantFormEngine } from '@schema-engine/forms-radiant'; import { InputElementRegistration, SelectElementRegistration } from '@schema-engine/forms-radiant/registrations'; console.log(createRadiantFormEngine({ elements: [InputElementRegistration, SelectElementRegistration] }));`,
+		);
+		expect(bundle.inputs).toContain('dist/elements/inputs/form-select.js');
+		expect(bundle.inputs.filter((file) => /phone|mask|drop-zone|libphonenumber|imask/.test(file))).toEqual([]);
+		for (const tag of ['se-form-renderer', 'se-form-instance', 'se-form-step', 'se-select']) {
+			expect(bundle.code, tag).toContain(tag);
+		}
+		for (const tag of ['se-phone-input', 'se-masked-input', 'se-drop-zone']) {
+			expect(bundle.code, tag).not.toContain(tag);
+		}
+	});
+
 	test('importing the root for its effect alone still registers the form hosts', async () => {
 		const bundle = await bundlePublishedEntry(packageDir, `import '@schema-engine/forms-radiant';`);
 		for (const tag of ['se-form-renderer', 'se-form-instance', 'se-form-step']) {
