@@ -64,6 +64,7 @@ Errors while building or binding, and a tree parse whose schema contradicts its 
 - `'invalid-schema'`: a `schema` without `~standard.validate`.
 - `'invalid-child-paths'`: `childPaths` is not a list, or an entry is not `{ keys, accepts?, list? }` (another property such as `accept`, empty or non-string `keys`, an empty `accepts`, a name that is empty or listed twice, a `list` that is not `true`).
 - `'duplicate-child-path'`: the same child path (`childPath`, the same keys) twice. `'nested-child-path'`: a child path (`childPath`) that runs through another (`outerChildPath`).
+- `'invalid-declaration'`: a domain package refuses what a registration declares other than its `childPaths` (forms: an element without `kind`, an input with neither `value` nor `childPaths`, a container with a `value`).
 - `'duplicate-type'`: a repeated `$type` with `duplicates: 'error'`.
 - `'unknown-binding'`: a binding key no contract answers (`$type` is that key). `'missing-binding'`: a contract with no binding. `'binding-overrides-contract'`: a binding that sets a key (`key`) its contract defines.
 - `'unreachable-child-path'` (`childPath`): `exportTreeSchema` found no slot for a child path in a registration's JSON Schema. `'unknown-accepted-type'` (`childPath`, `key`): a child path accepts a `$type` the lookup lacks. `'definition-name-clash'` (`key`): a definition a schema brought along takes the name of a `$type`.

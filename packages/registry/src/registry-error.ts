@@ -10,7 +10,8 @@
  * - `'invalid-child-paths'`: a registration's `childPaths` is not a list, or holds an entry that is not an object
  *   `{ keys, accepts? }` with a non-empty list of non-empty string `keys`, no other property, and an `accepts` that is
  *   absent or a non-empty list of non-empty strings without repeats. `replaceChildSlot` throws it too for a path with
- *   no keys.
+ *   no keys. A domain package throws it too for a `childPaths` its own rule refuses (forms: more than one path, a key
+ *   other than `elements`, no `list: true`, `childPaths` on a static element, `containerKind` without `childPaths`).
  * - `'duplicate-child-path'`: a registration declares the same child path (`childPath`) twice, key by key.
  * - `'nested-child-path'`: a child path (`childPath`) runs through another child path (`outerChildPath`) of the same
  *   registration.
@@ -29,6 +30,9 @@
  *   (`childPath`) accepts (`key`).
  * - `'definition-name-clash'`: {@link exportTreeSchema}, or the JSON Schema embedder it writes through, found that a
  *   definition a schema brought along (`key`, brought by `$type`) takes the name of a `$type` or of another definition.
+ * - `'invalid-declaration'`: a domain package refuses what a registration declares, other than its `childPaths`. Forms
+ *   throws it for an element that states no `kind`, an input that declares neither `value` nor `childPaths`, and a
+ *   container that declares a `value`.
  */
 export type RegistryErrorCode =
 	| 'invalid-schema'
@@ -43,7 +47,8 @@ export type RegistryErrorCode =
 	| 'schema-breaks-child-path'
 	| 'unreachable-child-path'
 	| 'unknown-accepted-type'
-	| 'definition-name-clash';
+	| 'definition-name-clash'
+	| 'invalid-declaration';
 
 /** Where a {@link RegistryError} happened, and what its code needs to be described without the message. */
 export interface RegistryErrorDetails {

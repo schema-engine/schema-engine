@@ -229,7 +229,12 @@ describe('RegistryError', () => {
 			contracts: ReadOnlyRegistry,
 			bindings: Readonly<Record<string, Record<string, unknown>>>,
 		) => ReadOnlyRegistry = bindRegistry;
-		const templates: Record<RegistryErrorCode, (error: RegistryError) => string> = {
+		/**
+		 * The codes this package throws itself: `'invalid-declaration'` is thrown by a domain package (forms), which
+		 * tests it where it is thrown.
+		 */
+		type ThrownHere = Exclude<RegistryErrorCode, 'invalid-declaration'>;
+		const templates: Record<ThrownHere, (error: RegistryError) => string> = {
 			'invalid-schema': (e) =>
 				`${e.kind} '${e.$type}' schema must implement Standard Schema (~standard.validate).`,
 			'invalid-child-paths': (e) => `${e.kind} '${e.$type}' childPaths must be a list of child paths.`,
@@ -252,7 +257,7 @@ describe('RegistryError', () => {
 			'definition-name-clash': (e) =>
 				`The definition '${e.key}' that '${e.$type}' brought along takes the name of another definition of the export.`,
 		};
-		const failures: Record<RegistryErrorCode, () => unknown> = {
+		const failures: Record<ThrownHere, () => unknown> = {
 			'invalid-schema': () => createRegistry('Widget', [{ ...badge, schema: {} } as unknown as BaseRegistration]),
 			'invalid-child-paths': () => createRegistry('Widget', [withPaths('blocks')]),
 			'duplicate-child-path': () =>
@@ -297,7 +302,7 @@ describe('RegistryError', () => {
 				),
 		};
 
-		it.each(Object.keys(failures) as RegistryErrorCode[])('%s', (code) => {
+		it.each(Object.keys(failures) as ThrownHere[])('%s', (code) => {
 			const error = thrown(failures[code]);
 
 			expect(error).toBeInstanceOf(RegistryError);
