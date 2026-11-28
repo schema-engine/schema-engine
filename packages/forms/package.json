@@ -55,6 +55,7 @@
 	"devDependencies": {
 		"@schema-engine/scripts": "workspace:*",
 		"ajv": "^8.20.0",
+		"ajv-draft-04": "^1.0.0",
 		"effect": "^3.22.1",
 		"esbuild": "^0.27.0",
 		"tsc-alias": "^1.8.16",
@@ -65,10 +66,10 @@
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",
-		"@standard-schema/spec": "^1.1.0",
 		"@schema-engine/actions": "workspace:^",
 		"@schema-engine/layout": "workspace:^",
-		"@schema-engine/registry": "workspace:^"
+		"@schema-engine/registry": "workspace:^",
+		"@standard-schema/spec": "^1.1.0"
 	},
 	"peerDependencies": {
 		"zod": "^4.5.0"

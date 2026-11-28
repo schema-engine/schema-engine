@@ -1,5 +1,6 @@
 import { Ajv } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import Ajv04 from 'ajv-draft-04';
 import { describe, expect, it } from 'vitest';
 import { RegistryError } from '../../src';
 import {
@@ -148,6 +149,78 @@ describe('JSONSchemaEmbedder.embed', () => {
 			expect(embedder.embed(root)).toEqual(root);
 			expect(embedder.embedDefinition(root, 'owner')).toEqual(root);
 			expect(embedder.finish({})).toEqual({});
+		});
+
+		describe('resolved by a draft-04 validator', () => {
+			const compile = (schema: JSONSchemaObject) => new Ajv04({ strict: false }).compile(schema);
+
+			it("resolves the pointers and anchors of a nested resource within it, and the owner's own definitions", () => {
+				const embedder = createJSONSchemaEmbedder('draft-04', document);
+				const definition = embedder.embedDefinition(
+					{
+						type: 'object',
+						properties: { child, self: { $ref: '#/definitions/own' } },
+						definitions: { own: { type: 'number' } },
+					},
+					'owner',
+				);
+				const validate = compile(
+					embedder.finish({ definitions: { owner: definition }, $ref: '#/definitions/owner' }),
+				);
+
+				expect(validate({ child: { x: 'a', y: 'b', z: 'c' }, self: 1 })).toBe(true);
+				expect(validate({ child: { x: 1 } })).toBe(false);
+				expect(validate({ child: { z: 1 } })).toBe(false);
+				expect(validate({ self: 'a' })).toBe(false);
+			});
+
+			it('resolves an absolute reference into the fragment of a nested resource', () => {
+				const schema = {
+					type: 'object',
+					properties: {
+						child: {
+							id: 'https://example.test/child.json',
+							properties: { n: { id: '#node', type: 'string' } },
+						},
+						ref: { $ref: 'https://example.test/child.json#node' },
+					},
+				};
+				const embedder = createJSONSchemaEmbedder('draft-04', document);
+				const validate = compile(
+					embedder.finish({
+						definitions: { owner: embedder.embedDefinition(schema, 'owner') },
+						$ref: '#/definitions/owner',
+					}),
+				);
+
+				expect(validate({ ref: 'text' })).toBe(true);
+				expect(validate({ ref: 1 })).toBe(false);
+			});
+
+			it('resolves the references of a root resource kept with its own id', () => {
+				const root = { ...child, type: 'object' };
+				const embedder = createJSONSchemaEmbedder('draft-04', document);
+				const validate = compile(embedder.embedDefinition(root, 'owner'));
+
+				expect(validate({ x: 'a', y: 'b', z: 'c' })).toBe(true);
+				expect(validate({ x: 1 })).toBe(false);
+			});
+
+			it('keeps two embedded schemas that declare the same id fragment apart, each resolving to its own', () => {
+				const embedder = createJSONSchemaEmbedder('draft-04', document);
+				const typed = (type: string) => ({
+					type: 'object',
+					properties: { here: { id: '#node', type }, there: { $ref: '#node' }, next: { $ref: '#' } },
+				});
+				const first = embedder.embed(typed('string'));
+				const second = embedder.embed(typed('number'));
+				const validate = compile(embedder.finish({ properties: { first, second } }));
+
+				expect(validate({ first: { here: 'a', there: 'b' }, second: { here: 1, there: 2 } })).toBe(true);
+				expect(validate({ first: { there: 1 } })).toBe(false);
+				expect(validate({ second: { there: 'a' } })).toBe(false);
+				expect(validate({ second: { next: { there: 'a' } } })).toBe(false);
+			});
 		});
 
 		it('treats id as an ordinary keyword for a target that writes $id', () => {

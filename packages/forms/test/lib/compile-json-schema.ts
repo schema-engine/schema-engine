@@ -1,7 +1,8 @@
 import { Ajv, type SchemaObject } from 'ajv';
+import Ajv04 from 'ajv-draft-04';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 
-type Draft = 'draft-2020-12' | 'draft-07';
+type Draft = 'draft-2020-12' | 'draft-07' | 'draft-04';
 
 /**
  * An Ajv of the dialect a document is written for, for tests that check what an export accepts.
@@ -12,6 +13,7 @@ type Draft = 'draft-2020-12' | 'draft-07';
  * the test that compiles it.
  */
 function createAjv(draft: Draft): Ajv {
+	if (draft === 'draft-04') return new Ajv04({ strict: false }) as unknown as Ajv;
 	return draft === 'draft-07' ? new Ajv({ strict: false }) : new Ajv2020({ strict: false });
 }
 
@@ -28,7 +30,7 @@ export function compileDocument(
  * Compile an exported collection, and return what checks an instance against one of its entries.
  *
  * @remarks
- * Every entry is added by its own `$id`, so the entries refer to each other by the URI the collection was written
+ * Every entry is added by its own identifier (`$id`, `id` for draft-04), so the entries refer to each other by the URI the collection was written
  * with, as a tool that takes a collection resolves them.
  */
 export function compileCollectionEntry(
