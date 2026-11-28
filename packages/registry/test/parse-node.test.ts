@@ -189,10 +189,8 @@ describe('safeParseNode', () => {
 	});
 
 	it('works with a mutable registry', () => {
-		class Badges extends BaseRegistry<string, BaseRegistration> {
-			get registryName() {
-				return 'Badge';
-			}
+		class Badges extends BaseRegistry<BaseRegistration> {
+			readonly kind = 'Badge';
 		}
 		const registry = new Badges();
 		registry.register(badge);

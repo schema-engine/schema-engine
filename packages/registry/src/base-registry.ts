@@ -1,4 +1,5 @@
 import { Logger } from '@ecopages/logger';
+import type { ReadOnlyRegistry } from './create-registry.js';
 import type { BaseRegistration } from './types.js';
 
 const logger = new Logger('[@schema-engine/registry]');
@@ -11,24 +12,25 @@ const logger = new Logger('[@schema-engine/registry]');
  *
  * All registrations must extend BaseRegistration which provides the unified `$type` field.
  *
- * @template TKey - The key type (typically string)
  * @template TValue - The value type (registration object extending BaseRegistration)
+ *
+ * @remarks
+ * Implements {@link ReadOnlyRegistry}, so the read side (`get`, `has`, `all`, `keys`, `size`, `kind`) is the same as
+ * that of a {@link createRegistry} result, and either kind goes wherever a registry is read.
  */
-export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration> {
-	protected items = new Map<TKey, TValue>();
+export abstract class BaseRegistry<TValue extends BaseRegistration> implements ReadOnlyRegistry<TValue> {
+	protected items = new Map<string, TValue>();
 
-	/**
-	 * Get the registry name for logging purposes.
-	 */
-	abstract get registryName(): string;
+	/** Label used in log messages, for example `Plugin`. */
+	abstract readonly kind: string;
 
 	/**
 	 * Extract the key from an item.
 	 * Uses the unified `$type` field from BaseRegistration.
 	 * @param item - The item to extract the key from
 	 */
-	protected getItemKey(item: TValue): TKey {
-		return item.$type as TKey;
+	protected getItemKey(item: TValue): string {
+		return item.$type;
 	}
 
 	/**
@@ -52,14 +54,14 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 		if (this.items.has(key)) {
 			const existing = this.items.get(key);
 			const existingName = existing ? this.getItemName(existing) : 'unknown';
-			logger.warn(`Overriding ${this.registryName}: ${key}`, {
+			logger.warn(`Overriding ${this.kind}: ${key}`, {
 				previousName: existingName,
 				newName: name,
 			});
 		}
 
 		this.items.set(key, item);
-		logger.debug(`Registered ${this.registryName}: ${key}`, {
+		logger.debug(`Registered ${this.kind}: ${key}`, {
 			name,
 		});
 	}
@@ -70,7 +72,7 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	 * @param key - The key to check
 	 * @returns True if the item is registered
 	 */
-	has(key: TKey): boolean {
+	has(key: string): boolean {
 		return this.items.has(key);
 	}
 
@@ -80,26 +82,26 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	 * @param key - The key to retrieve
 	 * @returns The item or undefined if not found
 	 */
-	get(key: TKey): TValue | undefined {
+	get(key: string): TValue | undefined {
 		return this.items.get(key);
 	}
 
 	/**
 	 * Get all registered items.
 	 *
-	 * @returns Array of all registered items
+	 * @returns A frozen array of the items, in first-registration order
 	 */
-	getAll(): TValue[] {
-		return Array.from(this.items.values());
+	all(): readonly TValue[] {
+		return Object.freeze([...this.items.values()]);
 	}
 
 	/**
 	 * Get all registered keys.
 	 *
-	 * @returns Array of all registered keys
+	 * @returns A frozen array of the keys, in first-registration order
 	 */
-	getAllKeys(): TKey[] {
-		return Array.from(this.items.keys());
+	keys(): readonly string[] {
+		return Object.freeze([...this.items.keys()]);
 	}
 
 	/**
@@ -116,6 +118,6 @@ export abstract class BaseRegistry<TKey extends string, TValue extends BaseRegis
 	 */
 	clear(): void {
 		this.items.clear();
-		logger.debug(`${this.registryName} cleared`);
+		logger.debug(`${this.kind} cleared`);
 	}
 }

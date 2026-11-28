@@ -47,5 +47,4 @@ A child path says which `$type`s it accepts, and `safeParseTree` returns the par
     ```
 
 - The issues the engine creates carry a namespaced `code`: `registry/not-an-object`, `registry/missing-type`, `registry/unregistered-type` (`received`), `registry/not-accepted` (`expected`, `received`), `registry/not-a-node` and `registry/contains-itself`, typed as the new `RegistryIssue`. Messages are unchanged, and an issue from a schema is untouched.
-- `RegistryErrorDetails.kind` and `RegistryError.kind` are optional: a lookup that is no registry has none. Read it as `string | undefined`.
-- `['a.b']` and `['a', 'b']` are two different child paths now (paths are compared key by key), so `'duplicate-child-path'` no longer joins keys with dots. `createRegistry` also throws `'invalid-child-paths'` for an entry with a property other than `keys` and `accepts` (a type error too, `childPathUnknownProperty`, for an inline list), and for an empty or repeating `accepts`.
+- A child path is compared key by key. In 0.5 `['a.b']` and `['a', 'b']` counted as one path declared twice; now they are two different paths. `createRegistry` also throws `'invalid-child-paths'` for an entry with a property other than `keys` and `accepts` (a type error too, `childPathUnknownProperty`, for an inline list), and for an empty or repeating `accepts`.

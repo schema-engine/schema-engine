@@ -385,34 +385,37 @@ With the document as `source`, an array item that has a string `id` is followed 
 Abstract, mutable class for plugin systems that register at runtime. Prefer `createRegistry` otherwise.
 
 ```typescript
-abstract class BaseRegistry<TKey extends string, TValue extends BaseRegistration> {
-	protected items: Map<TKey, TValue>;
+abstract class BaseRegistry<TValue extends BaseRegistration> implements ReadOnlyRegistry<TValue> {
+	protected items: Map<string, TValue>;
 
-	abstract get registryName(): string;
-	protected getItemKey(item: TValue): TKey;
+	abstract readonly kind: string;
+	protected getItemKey(item: TValue): string;
 	protected getItemName(item: TValue): string;
 
 	register(item: TValue): void;
-	has(key: TKey): boolean;
-	get(key: TKey): TValue | undefined;
-	getAll(): TValue[];
-	getAllKeys(): TKey[];
+	has(key: string): boolean;
+	get(key: string): TValue | undefined;
+	all(): readonly TValue[];
+	keys(): readonly string[];
 	get size(): number;
 	clear(): void;
 }
 ```
 
-### Methods
+It implements `ReadOnlyRegistry`, the interface of a `createRegistry` result, so `safeParseNode`, `safeParseTree`, `exportTreeSchema` and any code that reads a registry take either kind.
 
-| Method           | Returns               | Description                                  |
-| ---------------- | --------------------- | -------------------------------------------- |
-| `register(item)` | `void`                | Registers an item. Logs warning on override. |
-| `has(key)`       | `boolean`             | Checks if key exists                         |
-| `get(key)`       | `TValue \| undefined` | Gets item by key                             |
-| `getAll()`       | `TValue[]`            | Returns all items                            |
-| `getAllKeys()`   | `TKey[]`              | Returns all keys                             |
-| `size`           | `number`              | Count of items                               |
-| `clear()`        | `void`                | Removes all items                            |
+### Members
+
+| Member           | Returns               | Description                                                                         |
+| ---------------- | --------------------- | ----------------------------------------------------------------------------------- |
+| `kind`           | `string`              | Abstract. The label used in log messages, such as `Plugin`                          |
+| `register(item)` | `void`                | Registers an item. Logs warning on override                                         |
+| `has(key)`       | `boolean`             | Checks if key exists                                                                |
+| `get(key)`       | `TValue \| undefined` | Gets item by key                                                                    |
+| `all()`          | `readonly TValue[]`   | The items in first-registration order, in a frozen array that does not change later |
+| `keys()`         | `readonly string[]`   | The keys in first-registration order, in a frozen array that does not change later  |
+| `size`           | `number`              | Count of items                                                                      |
+| `clear()`        | `void`                | Removes all items                                                                   |
 
 ### Protected methods
 
