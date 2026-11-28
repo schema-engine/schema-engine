@@ -86,7 +86,7 @@ import { defineInput, elementChildrenSchema } from '@schema-engine/forms';
 export const FieldSetRegistration = defineInput({
 	$type: 'fieldSet',
 	schema: FieldSetConfigSchema,
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'FieldSet', category: 'input' },
 	render: FormFieldSet,
 });
@@ -94,7 +94,7 @@ export const FieldSetRegistration = defineInput({
 
 An input declares what its control writes with `value`, a function of the configured element that returns a Standard
 Schema (`value: ({ options }) => z.literal(options.map((option) => option.value))`). `defineInput` requires it, except
-on a container (an input that declares `childPaths: [{ keys: ['elements'] }]`, with `accepts` to limit its children; `containerKind` may sit beside it), whose value is its children's, and `createFormEngine` rejects an input that has neither `value` nor `childPaths`. `defineStatic` has none. The two helpers set a `kind` (`'input'` or `'static'`) on the registration, which is what the engine reads, not the element's `metadata.category`; a registration written by hand states its `kind`.
+on a container (an input that declares `childPaths: [{ keys: ['elements'], list: true }]`, with `accepts` to limit its children; `containerKind` may sit beside it), whose value is its children's, and `createFormEngine` rejects an input that has neither `value` nor `childPaths`. `defineStatic` has none. The two helpers set a `kind` (`'input'` or `'static'`) on the registration, which is what the engine reads, not the element's `metadata.category`; a registration written by hand states its `kind`.
 See [Submitted values](/docs/forms/form-state#submitted-values).
 
 `defineInput` keeps the concrete schema type. A container schema declares `elements` with
@@ -128,7 +128,6 @@ A renderer that draws every element binds the whole registry with `bindRegistry`
 `FormEngine` retrieves registered elements, recipes, and actions; validates
 form configuration; and generates JSON Schema and authoring catalog artifacts.
 It is a type: `createFormEngine` is the one way to make an engine, and the class and its constructor are not exported.
-To check an object a renderer received, use `assertFormEngine`.
 `defineForm` and `validateForm` return `NormalizedFormConfig`. Use
 `validateElement` for a standalone field that is not already inside a form.
 
@@ -202,12 +201,12 @@ the same input/output converters through the Standard JSON Schema contract.
 
 ### How the children of a container are typed
 
-A container is an element that declares `childPaths: [{ keys: ['elements'] }]`. The export types its `elements` the same
+A container is an element that declares `childPaths: [{ keys: ['elements'], list: true }]`. The export types its `elements` the same
 way for every schema library, after the schema is converted: the items of the list become the union of what the
 container accepts, a reference to the definition of each element (`#/$defs/element:tab`, or the entry's URI in
 `generateJSONSchemaCollection()`), and every element of the engine when `accepts` is absent. A child outside `accepts`
 fails the JSON Schema as it fails `validateForm`, whether the schema is Zod, a schema that exports itself or an open one:
-for a `tabs` container with `childPaths: [{ keys: ['elements'], accepts: ['tab'] }]`, the `items` of its `elements` are
+for a `tabs` container with `childPaths: [{ keys: ['elements'], list: true, accepts: ['tab'] }]`, the `items` of its `elements` are
 `{ anyOf: [{ $ref: '#/$defs/element:tab' }] }`.
 
 Only the slot changes: `required`, `minItems` and `maxItems` stay as the schema wrote them, and an `optional`,

@@ -87,7 +87,11 @@ export function generateZodJSONSchemaDocument(
 ): JSONSchemaObject {
 	const target = options?.target ?? 'draft-2020-12';
 	const io = options?.io || 'input';
-	const conversion = createExportConversion({ io, target, placement: { kind: 'document' } });
+	const conversion = createExportConversion({
+		io,
+		target,
+		placement: { kind: 'document', registry: metadataRegistry },
+	});
 	const schema = conversion.finish(
 		z.toJSONSchema(validator, {
 			target,

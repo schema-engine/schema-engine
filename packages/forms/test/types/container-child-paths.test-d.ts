@@ -10,7 +10,7 @@ const groupSchema = z.looseObject({ $type: z.literal('group'), name: z.string(),
 const group = defineInput({
 	$type: 'group',
 	schema: groupSchema,
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'Group', category: 'input' },
 	render: () => null,
 });
@@ -18,14 +18,14 @@ const group = defineInput({
 const tabs = defineInput({
 	$type: 'tabs',
 	schema: z.looseObject({ $type: z.literal('tabs'), elements: elementChildrenSchema }),
-	childPaths: [{ keys: ['elements'], accepts: ['tab'] }],
+	childPaths: [{ keys: ['elements'], list: true, accepts: ['tab'] }],
 	containerKind: 'array',
 	metadata: { name: 'Tabs', category: 'input' },
 	render: () => null,
 });
 
 expectTypeOf<NonNullable<typeof group.childPaths>>().toEqualTypeOf<
-	readonly [{ readonly keys: readonly ['elements'] }]
+	readonly [{ readonly keys: readonly ['elements']; readonly list: true }]
 >();
 expectTypeOf(tabs.containerKind).toEqualTypeOf<'array' | undefined>();
 
@@ -44,7 +44,7 @@ defineInput(
 defineInput({
 	$type: 'group',
 	schema: groupSchema,
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	// @ts-expect-error -- value is required exactly when there is no childPaths
 	value: anyValue,
 	metadata: { name: 'Group', category: 'input' },
@@ -77,7 +77,7 @@ defineStatic({
 	$type: 'frame',
 	schema: groupSchema,
 	// @ts-expect-error -- a static element declares no childPaths
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'Frame', category: 'content' },
 	render: () => null,
 });

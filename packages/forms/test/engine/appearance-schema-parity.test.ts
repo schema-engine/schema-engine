@@ -58,7 +58,7 @@ const pipedField = defineInput({
 
 const container = ($type: string) =>
 	defineInput({
-		childPaths: [{ keys: ['elements'] }],
+		childPaths: [{ keys: ['elements'], list: true }],
 		$type,
 		schema: zm.extend(BaseFieldSchema, { $type: zm.literal($type), elements: elementChildrenSchema }),
 		appearanceAxes: ['size'],

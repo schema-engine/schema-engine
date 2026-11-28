@@ -202,7 +202,7 @@ describe('the children of a container are typed like top-level elements', () => 
 			$type: z.literal('fieldset'),
 			elements: elementChildrenSchema.check(z.minLength(1)),
 		}),
-		childPaths: [{ keys: ['elements'] }],
+		childPaths: [{ keys: ['elements'], list: true }],
 		metadata: { name: 'fieldset', category: 'input' },
 		render: () => null,
 	});

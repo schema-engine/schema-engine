@@ -134,7 +134,7 @@ engine.defineForm({
 
 ## Register a container
 
-A container is an input that declares `childPaths: [{ keys: ['elements'] }]`, the [registry's own syntax](/docs/registry/api-reference#childpath) for where a node holds child nodes. Its schema still declares `elements`, with `elementChildrenSchema`. Nested authoring uses the same engine registrations as top-level fields, and nested children are typed from them.
+A container is an input that declares `childPaths: [{ keys: ['elements'], list: true }]`, the [registry's own syntax](/docs/registry/api-reference#childpath) for where a node holds child nodes. Its schema still declares `elements`, with `elementChildrenSchema`. Nested authoring uses the same engine registrations as top-level fields, and nested children are typed from them.
 
 ```ts
 import { defineInput, elementChildrenSchema, BaseFieldSchema } from '@schema-engine/forms';
@@ -148,15 +148,15 @@ const GroupSchema = z.extend(BaseFieldSchema, {
 export const GroupRegistration = defineInput({
 	$type: 'group',
 	schema: GroupSchema,
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'Group', category: 'input' },
 	render: () => null,
 });
 ```
 
-The children of a container are a list. A container whose schema lets `elements` be a single object (a union with one child, say) is an issue at its `elements` key when a form writes the object, since no step check or renderer reads children from anything but a list.
+The children of a container are a list, which `list: true` says: a container declares `childPaths: [{ keys: ['elements'], list: true }]` and `createFormEngine` throws without it. A form that writes one object where the list goes is the issue `registry/not-a-list` at the `elements` key, even when the container's schema lets the object through, and the JSON Schema export types the slot as an array whatever library wrote the schema.
 
-Add `accepts` to limit what the container takes: `childPaths: [{ keys: ['elements'], accepts: ['tab'] }]` makes an element of any other `$type` a `registry/not-accepted` issue at its `$type`. Without it the container takes every element of the engine.
+Add `accepts` to limit what the container takes: `childPaths: [{ keys: ['elements'], list: true, accepts: ['tab'] }]` makes an element of any other `$type` a `registry/not-accepted` issue at its `$type`. Without it the container takes every element of the engine.
 
 Forms fixes the key. Value paths, field scopes, grids and the submission shape all read `elements`, so a container declares one child path, `['elements']`, and `createFormEngine` throws for any other. Only an input can be a container: an element made with `defineStatic` declares no `childPaths`, and an element without them that holds `elements` in a form is an issue at its `elements` key. A container works the same whichever library wrote its schema, Zod or any other Standard Schema, since the child path is data.
 

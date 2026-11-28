@@ -44,7 +44,7 @@ export type InputRegistration<
 	 */
 	containerKind?: TKind;
 	/**
-	 * Where this element holds its children, which makes it a container: `[{ keys: ['elements'] }]`, with `accepts`
+	 * Where this element holds its children, which makes it a container: `[{ keys: ['elements'], list: true }]`, with `accepts`
 	 * to limit the `$type`s it takes. See {@link ElementChildPaths}.
 	 */
 	childPaths?: TChildPaths;
@@ -203,13 +203,15 @@ export type ContainerKind = 'object' | 'array';
  *
  * @remarks
  * The registry's own syntax (`ChildPath`), narrowed to the key forms reads. The key is fixed because value paths,
- * field scopes, grids and the submission shape all read `elements`; widening it later is additive. `accepts` is a
+ * field scopes, grids and the submission shape all read `elements`; widening it later is additive. `list` is required:
+ * the children are a list, so the walk reports anything else as `registry/not-a-list` and the export types the slot as an
+ * array. `accepts` is a
  * closed list of the `$type`s the container takes: an element outside it is a `registry/not-accepted` issue at its
  * `$type`. The schema still declares `elements` (`elementChildrenSchema` is its schema), and only an input can be a
  * container.
  */
 export type ElementChildPaths = readonly [
-	{ readonly keys: readonly ['elements']; readonly accepts?: readonly string[] },
+	{ readonly keys: readonly ['elements']; readonly list: true; readonly accepts?: readonly string[] },
 ];
 
 /**

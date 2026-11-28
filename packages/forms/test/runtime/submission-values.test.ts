@@ -206,7 +206,7 @@ describe('the check of submitted values', () => {
 	test('a one-child array with object-row defaults but no initialValues is a list of values, so its defaults are dropped', () => {
 		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		const rows = defineInput({
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			$type: 'rows',
 			containerKind: 'array',
 			schema: z.extend(BaseFieldSchema, {
@@ -259,7 +259,7 @@ describe('the check of submitted values', () => {
 	test('one bad row of a list drops the default of the whole list, which a warning names', () => {
 		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		const rows = defineInput({
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			$type: 'rows',
 			containerKind: 'array',
 			schema: z.extend(BaseFieldSchema, {

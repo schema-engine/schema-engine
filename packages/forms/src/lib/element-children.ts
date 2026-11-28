@@ -7,7 +7,7 @@ export const ELEMENT_CHILDREN_KEY = 'elements' as const;
  * Child-element contract for container schemas.
  *
  * The parent schema only requires `$type` on each child. A container also declares
- * `childPaths: [{ keys: ['elements'] }]`, and the engine validates each child against its
+ * `childPaths: [{ keys: ['elements'], list: true }]`, and the engine validates each child against its
  * registrations through that path, as the author wrote it, after the parent schema succeeds.
  */
 export const elementChildrenSchema = z.array(z.looseObject({ $type: z.string() }));

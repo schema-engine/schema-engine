@@ -17,7 +17,7 @@ const text = defineInput({
 	render: () => null,
 });
 const rows = defineInput({
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	$type: 'rows',
 	containerKind: 'array',
 	schema: z.extend(BaseFieldSchema, { $type: z.literal('rows'), elements: children }),

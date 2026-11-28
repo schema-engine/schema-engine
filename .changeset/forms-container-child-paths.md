@@ -2,7 +2,7 @@
 '@schema-engine/forms': minor
 ---
 
-Containers declare their children with `childPaths`, and forms checks an element tree with the registry's `safeParseTree`. An element that holds `elements` adds `childPaths: [{ keys: ['elements'] }]` to its registration. Add `accepts: ['tab']` to limit which elements it takes: an element outside the list is a `registry/not-accepted` issue at its `$type`. The schema still declares `elements`.
+Containers declare their children with `childPaths`, and forms checks an element tree with the registry's `safeParseTree`. An element that holds `elements` adds `childPaths: [{ keys: ['elements'], list: true }]` to its registration. Add `accepts: ['tab']` to limit which elements it takes: an element outside the list is a `registry/not-accepted` issue at its `$type`. The schema still declares `elements`.
 
 - `containerKind` only says how the children make the value (`'object'` or `'array'`), so a container written with a Valibot or a hand-written schema declares `childPaths` as well, and `containerKind` without `childPaths` throws when the engine is built (and is a type error). `value` is required exactly when there is no `childPaths`, for a schema of any Standard Schema library: a container that declares one throws.
 - Only an input can be a container, and only under `elements`. `childPaths: undefined` is no declaration: the input still declares `value`. `createFormEngine` throws for a `static` element with `childPaths`, and for any other key or more than one path. In a form, an element without `childPaths` that holds `elements` is an issue at its `elements` key (`Element 'note' declares no child path, so it cannot hold elements.`); its children are not checked, and its other checks (rules, name, grid, appearance) still run. No step check sees them either: the retained config of such an element has no `elements`.
@@ -20,13 +20,25 @@ defineInput({ $type: 'group', schema: GroupSchema /* declares elements */, metad
 defineInput({ $type: 'v-group', schema: valibotGroup, containerKind: 'object', metadata, render });
 
 // after
-defineInput({ $type: 'group', schema: GroupSchema, childPaths: [{ keys: ['elements'] }], metadata, render: Group });
+defineInput({
+	$type: 'group',
+	schema: GroupSchema,
+	childPaths: [{ keys: ['elements'], list: true }],
+	metadata,
+	render: Group,
+});
 defineInput({
 	$type: 'tabs',
 	schema: TabsSchema,
-	childPaths: [{ keys: ['elements'], accepts: ['tab'] }],
+	childPaths: [{ keys: ['elements'], list: true, accepts: ['tab'] }],
 	metadata,
 	render: Tabs,
 });
-defineInput({ $type: 'v-group', schema: valibotGroup, childPaths: [{ keys: ['elements'] }], metadata, render });
+defineInput({
+	$type: 'v-group',
+	schema: valibotGroup,
+	childPaths: [{ keys: ['elements'], list: true }],
+	metadata,
+	render,
+});
 ```

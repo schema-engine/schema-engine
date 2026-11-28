@@ -77,7 +77,7 @@ describe('SSR constraint snapshot', () => {
 				{
 					$type: 'group',
 					kind: 'input',
-					childPaths: [{ keys: ['elements'] }],
+					childPaths: [{ keys: ['elements'], list: true }],
 					schema: containerSchema,
 					metadata: { name: 'Group', category: 'layout' },
 					render: (config: ElementRenderProps<typeof containerSchema>) =>

@@ -23,7 +23,7 @@ import { InputElementRegistration } from '@/elements/inputs/form-input.registrat
 
 const CustomArrayRegistration = defineInput({
 	$type: customArrayType,
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	containerKind: 'array',
 	schema: z.extend(ArrayElementConfigSchema, { $type: z.literal(customArrayType) }),
 	metadata: { name: 'Repeater', category: 'input' },

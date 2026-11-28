@@ -1,5 +1,5 @@
 import { RegistryError, type ChildPath, type JSONSchemaTarget } from '@schema-engine/registry';
-import { definitionRef, replaceChildSlot, resolveLocalRef } from '@schema-engine/registry/json-schema';
+import { definitionRef, definitionsKeyword, replaceChildSlot } from '@schema-engine/registry/json-schema';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
@@ -15,6 +15,7 @@ interface ChildSlot {
 	readonly $type: string;
 	readonly definitionId: string;
 	readonly keys: readonly string[];
+	readonly list?: true;
 	readonly accepted: readonly string[];
 }
 
@@ -31,7 +32,7 @@ function childSlotsOf(elements: readonly ChildSlotOwner[]): ChildSlot[] {
 	const everyType = elements.map((element) => element.$type);
 	const registered = new Set(everyType);
 	return elements.flatMap((element) =>
-		(element.childPaths ?? []).map(({ keys, accepts }) => {
+		(element.childPaths ?? []).map(({ keys, accepts, list }) => {
 			const missing = accepts?.find((name) => !registered.has(name));
 			if (missing !== undefined) {
 				throw new RegistryError(
@@ -44,6 +45,7 @@ function childSlotsOf(elements: readonly ChildSlotOwner[]): ChildSlot[] {
 				$type: element.$type,
 				definitionId: elementDefinitionId(element.$type),
 				keys,
+				list,
 				accepted: accepts ?? everyType,
 			};
 		}),
@@ -54,28 +56,6 @@ function missingDefinition(slot: ChildSlot, where: string): Error {
 	return new Error(
 		`The JSON Schema export holds no definition '${slot.definitionId}' of '${slot.$type}' in ${where}, so its children cannot be typed.`,
 	);
-}
-
-/**
- * The schema of a container as its definition holds it: the definition itself, or what it refers to when it is only
- * a reference.
- *
- * @remarks
- * A Standard JSON Schema schema that refers into itself is moved by the embedder to a definition of its own
- * (`embedded-1`), and the element's definition is then that reference with the catalog annotations beside it. The slot
- * is in the schema the reference names. A reference that does not resolve in the document is left for
- * `replaceChildSlot` to report as an unreachable slot.
- */
-function schemaOf(document: JSONSchemaObject, definition: JSONSchemaObject): JSONSchemaObject {
-	const seen = new Set<JSONSchemaObject>();
-	let current = definition;
-	while (typeof current.$ref === 'string' && !seen.has(current)) {
-		seen.add(current);
-		const next = resolveLocalRef(document, current.$ref);
-		if (next === undefined) break;
-		current = next;
-	}
-	return current;
 }
 
 /**
@@ -111,7 +91,7 @@ function unreachable(slot: ChildSlot): RegistryError {
  * Done after the schema is converted, so a container is typed the same whichever library wrote its schema, and
  * whatever wraps `elements` (`optional`, `default`, `readonly`): they are the same array in JSON Schema. The slot is
  * replaced by `replaceChildSlot`, as `exportTreeSchema` does it, so `required`, list bounds and annotations stay. A
- * container holds its children as a list, so an open slot becomes a list.
+ * container declares `list`, so an open slot becomes a list.
  */
 export function composeDocumentChildSlots(
 	document: JSONSchemaObject,
@@ -119,15 +99,15 @@ export function composeDocumentChildSlots(
 	target: JSONSchemaTarget,
 ): void {
 	const slots = childSlotsOf(elements);
+	const keyword = definitionsKeyword(target);
 	for (const slot of slots) {
-		const definition = resolveLocalRef(document, definitionRef(target, slot.definitionId));
-		if (definition === undefined) throw missingDefinition(slot, 'the definitions of the document');
-		const schema = schemaOf(document, definition);
-		if (startsResource(schema)) throw unreachable(slot);
+		const definition: JSONSchemaObject | undefined = document[keyword]?.[slot.definitionId];
+		if (definition === undefined) throw missingDefinition(slot, `'${keyword}'`);
+		if (startsResource(definition)) throw unreachable(slot);
 		const union = {
 			anyOf: slot.accepted.map((name) => ({ $ref: definitionRef(target, elementDefinitionId(name)) })),
 		};
-		replaceChildSlot(schema, slot, union, { openSlot: 'list' });
+		replaceChildSlot(definition, slot, union);
 	}
 }
 
@@ -155,6 +135,6 @@ export function composeCollectionChildSlots(
 		const entry = entries[slot.definitionId];
 		if (entry === undefined) throw missingDefinition(slot, 'the collection');
 		const union = { anyOf: slot.accepted.map((name) => ({ $ref: uri(elementDefinitionId(name)) })) };
-		replaceChildSlot(entry, slot, union, { openSlot: 'list' });
+		replaceChildSlot(entry, slot, union);
 	}
 }

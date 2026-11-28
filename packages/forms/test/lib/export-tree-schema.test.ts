@@ -15,8 +15,8 @@ import { isZodType } from '@/lib/is-zod-type';
  */
 describe('exportTreeSchema with the elements of forms', () => {
 	const elements = createRegistry<BaseRegistration>('Element', [
-		{ ...FieldSetContract, childPaths: [{ keys: ['elements'] }] },
-		{ ...ArrayElementContract, childPaths: [{ keys: ['elements'] }] },
+		{ ...FieldSetContract, childPaths: [{ keys: ['elements'], list: true }] },
+		{ ...ArrayElementContract, childPaths: [{ keys: ['elements'], list: true }] },
 		InputElementContract,
 		CheckboxElementContract,
 	]);

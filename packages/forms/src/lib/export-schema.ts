@@ -74,17 +74,10 @@ export function resolveExportSchema(schema: unknown, open: () => z.ZodMiniType):
 	return { kind: 'standard', schema: placeholder };
 }
 
-/** The embedder's placement, where a collection also names the Zod registry whose ids are its entries. */
-export type ConversionPlacement =
-	| Extract<JSONSchemaPlacement, { kind: 'document' }>
-	| (Extract<JSONSchemaPlacement, { kind: 'collection' }> & {
-			readonly registry: { get(schema: z.core.$ZodType): { id?: string } | undefined };
-	  });
-
-function withoutSchemaKeyword(schema: JSONSchemaObject): JSONSchemaObject {
-	const { $schema: _dropped, ...rest } = schema;
-	return structuredClone(rest);
-}
+/** The embedder's placement, with the Zod registry whose ids are the definitions of a document or the entries of a collection. */
+export type ConversionPlacement = JSONSchemaPlacement & {
+	readonly registry: { get(schema: z.core.$ZodType): { id?: string } | undefined };
+};
 
 /** One Zod conversion of the export: the `override` that writes each `standard` schema, and the step after it. */
 export interface ExportConversion {
@@ -138,8 +131,8 @@ export function createExportConversion(options: {
 			if (!source) return;
 			const annotations = { ...jsonSchema };
 			const own = ownJSONSchema(source);
-			const isEntry = placement.kind === 'collection' && placement.registry.get(zodSchema)?.id !== undefined;
-			const written = isEntry ? withoutSchemaKeyword(own) : embedder.embed(own);
+			const id = placement.registry.get(zodSchema)?.id;
+			const written = id === undefined ? embedder.embed(own) : embedder.embedDefinition(own, id);
 			for (const key of Object.keys(jsonSchema)) delete jsonSchema[key];
 			Object.assign(jsonSchema, annotations, written);
 		},

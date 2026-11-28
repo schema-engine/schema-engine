@@ -150,7 +150,7 @@ type DefineInputArg<
  *
  * `value` declares the value the control writes, as a function of the configured element
  * (see {@link ValueDeclaration}); it is required unless the input is a container, which declares
- * `childPaths: [{ keys: ['elements'] }]` instead (see {@link ElementChildPaths}).
+ * `childPaths: [{ keys: ['elements'], list: true }]` instead (see {@link ElementChildPaths}).
  *
  * It sets the registration's `kind` to `'input'`, which is what the engine reads to require `value`, not the metadata category.
  */

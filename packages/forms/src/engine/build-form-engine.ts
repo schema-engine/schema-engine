@@ -10,7 +10,7 @@ import type {
 import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import { FormEngine } from '@/engine/form-engine';
 import { ComponentType } from '@/engine/component-type';
-import { createActionConfigValidatorMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
+import { createActionExportSchemaMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
 import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
 import { logger } from '@/lib/logger';
 import { ELEMENT_CHILDREN_KEY } from '@/lib/element-children';
@@ -43,7 +43,7 @@ import { createDefaultValidationRegistry, type ValidationRegistry } from '@/sche
  * `defineInput` and `defineStatic` set `kind`, which is what says whether an element holds a value: its metadata is for display and is never read here.
  * A registration written without the helpers states its `kind`.
  *
- * Only an input can be a container, and it declares one child path, `[{ keys: ['elements'] }]` with an optional
+ * Only an input can be a container, and it declares one child path, `[{ keys: ['elements'], list: true }]` with an optional
  * `accepts`, since value paths, field scopes, grids and the submission shape all read `elements`. Its value is its
  * children's, so it declares no `value`, and `containerKind` only says whether they make an object or a list of rows,
  * so it needs `childPaths` beside it. Any other `input` declares `value`. A `static` element holds neither.
@@ -65,23 +65,28 @@ function assertElementDeclarations(registration: ElementRegistrationConstraint):
 	if (childPaths === undefined) {
 		if (registration.containerKind !== undefined) {
 			throw new Error(
-				`Element '${$type}' sets containerKind without childPaths. A container declares \`childPaths: [{ keys: ['${ELEMENT_CHILDREN_KEY}'] }]\`; containerKind only says whether its children make an object or a list of rows.`,
+				`Element '${$type}' sets containerKind without childPaths. A container declares \`childPaths: [{ keys: ['${ELEMENT_CHILDREN_KEY}'], list: true }]\`; containerKind only says whether its children make an object or a list of rows.`,
 			);
 		}
 		if (typeof registration.value === 'function') return;
 		throw new Error(
-			`Element '${$type}' is an input that declares no value. Give it \`value: (config) => schema\`, the value its control writes. An input that holds children declares \`childPaths: [{ keys: ['${ELEMENT_CHILDREN_KEY}'] }]\` and \`${ELEMENT_CHILDREN_KEY}\` in its schema instead. A display-only element is made with \`defineStatic\`.`,
+			`Element '${$type}' is an input that declares no value. Give it \`value: (config) => schema\`, the value its control writes. An input that holds children declares \`childPaths: [{ keys: ['${ELEMENT_CHILDREN_KEY}'], list: true }]\` and \`${ELEMENT_CHILDREN_KEY}\` in its schema instead. A display-only element is made with \`defineStatic\`.`,
 		);
 	}
 	const [path, ...others] = childPaths;
 	if (others.length > 0) {
 		throw new Error(
-			`Element '${$type}' declares ${childPaths.length} child paths. Forms reads one, \`{ keys: ['${ELEMENT_CHILDREN_KEY}'] }\`, so a container holds its children in one place.`,
+			`Element '${$type}' declares ${childPaths.length} child paths. Forms reads one, \`{ keys: ['${ELEMENT_CHILDREN_KEY}'], list: true }\`, so a container holds its children in one place.`,
 		);
 	}
 	if (path?.keys.length !== 1 || path.keys[0] !== ELEMENT_CHILDREN_KEY) {
 		throw new Error(
 			`Element '${$type}' must hold its children under '${ELEMENT_CHILDREN_KEY}', not '${path?.keys.join('.')}': it is the one child path forms reads.`,
+		);
+	}
+	if (path.list !== true) {
+		throw new Error(
+			`Element '${$type}' must declare its child path with \`list: true\`: \`{ keys: ['${ELEMENT_CHILDREN_KEY}'], list: true }\`. Forms reads \`${ELEMENT_CHILDREN_KEY}\` only as a list, so a value that is not one is an issue and the export types the slot as a list.`,
 		);
 	}
 	if (registration.value !== undefined) {
@@ -195,7 +200,10 @@ function exportSchemaOf(
 	if (componentType === ComponentType.Recipe)
 		return exportedRecipeView(registration as AnyRecipeRegistration, layout);
 	const openEnvelope = () => {
-		if (componentType !== ComponentType.Element) return createOpenEnvelope(registration.$type);
+		if (componentType !== ComponentType.Element) {
+			const envelope = createOpenEnvelope(registration.$type);
+			return componentType === ComponentType.Action ? withActionEnvelope(envelope, registration.$type) : envelope;
+		}
 		const element = registration as AnyElementRegistration;
 		return createOpenEnvelope(
 			element.$type,
@@ -410,12 +418,12 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 
 	const elementsUnion = createRegistrationSchema(exportedElements);
 	const formConfigSchema = createFormConfigSchema(elementsUnion, exportedRecipes, exportedActions, layout);
-	const actionConfigValidators = createActionConfigValidatorMap(exportedActions);
+	const actionExportSchemas = createActionExportSchemaMap(exportedActions);
 	const schemaArtifacts = createFormEngineSchemaArtifacts(
 		metadataCatalog,
 		formConfigSchema,
 		elementRegistry.all(),
-		actionConfigValidators,
+		actionExportSchemas,
 		exportSchemas,
 		[
 			{

@@ -26,7 +26,7 @@ const stars = defineInput({
 });
 
 const rows = defineInput({
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	$type: 'rows',
 	containerKind: 'array',
 	schema: z.extend(BaseFieldSchema, {

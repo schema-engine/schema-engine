@@ -18,7 +18,7 @@ const metadata = (name: string) => ({ name, category: ElementCategory.INPUT });
 const tab = defineInput({
 	$type: 'tab',
 	schema: z.looseObject({ $type: z.literal('tab'), elements: elementChildrenSchema }),
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: metadata('Tab'),
 	render: () => null,
 });
@@ -63,7 +63,7 @@ function tabs(schema: unknown, extra: Record<string, unknown> = {}): ElementRegi
 	return {
 		$type: 'tabs',
 		kind: 'input',
-		childPaths: [{ keys: ['elements'], accepts: ['tab'] }],
+		childPaths: [{ keys: ['elements'], list: true, accepts: ['tab'] }],
 		schema,
 		metadata: metadata('Tabs'),
 		render: () => null,
@@ -236,6 +236,51 @@ describe('a Standard JSON Schema container that refers to a definition of its ow
 	});
 });
 
+describe('a Standard JSON Schema container that sets an $id of its own', () => {
+	const resource = tabs(
+		exporting({
+			$id: 'https://example.test/tabs',
+			type: 'object',
+			properties: { $type: { const: 'tabs' }, elements: { type: 'array', items: anyChild } },
+			required: ['$type'],
+		}),
+	);
+	const engine = createFormEngine({ elements: [resource, tab, text] });
+
+	test('cannot be typed in a document, where a $ref written in it would resolve against its $id', () => {
+		const error = thrown(() => engine.generateFormConfigSchema());
+
+		expect(error).toBeInstanceOf(RegistryError);
+		expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'tabs', childPath: ['elements'] });
+	});
+
+	test('is typed in a collection, where the references are absolute and its entry keeps its own $id', () => {
+		const collection = engine.generateJSONSchemaCollection({ uri }) as unknown as {
+			schemas: Record<string, { $id: string; properties: { elements: { items: unknown } } }>;
+		};
+		const entry = collection.schemas['element:tabs']!;
+
+		expect(entry.$id).toBe('https://example.test/tabs');
+		expect(entry.properties.elements.items).toEqual({ anyOf: [{ $ref: uri('element:tab') }] });
+	});
+
+	test('does not borrow the definition of another element through a $ref of its own', () => {
+		const crossing = tabs(
+			exporting({
+				$id: 'https://example.test/tabs',
+				$ref: '#/$defs/element:tab',
+				$defs: { 'element:tab': { type: 'object' } },
+			}),
+		);
+		const crossed = createFormEngine({ elements: [crossing, tab, text] });
+
+		expect(thrown(() => crossed.generateFormConfigSchema())).toMatchObject({
+			code: 'unreachable-child-path',
+			$type: 'tabs',
+		});
+	});
+});
+
 describe('the children of a container are a list whatever its schema leaves open', () => {
 	const open = createFormEngine({
 		elements: [tabs(exporting(tabsObject({ description: 'Anything' }))), tab, text],
@@ -276,7 +321,7 @@ describe('a container without accepts', () => {
 	const group = {
 		$type: 'group',
 		kind: 'input',
-		childPaths: [{ keys: ['elements'] }],
+		childPaths: [{ keys: ['elements'], list: true }],
 		schema: z.looseObject({ $type: z.literal('group'), elements: elementChildrenSchema }),
 		metadata: metadata('Group'),
 		render: () => null,
@@ -379,7 +424,9 @@ describe('a container whose slot cannot be reached', () => {
 describe('a container that accepts an element no registration declares', () => {
 	const engine = createFormEngine({
 		elements: [
-			tabs(object(elementChildrenSchema), { childPaths: [{ keys: ['elements'], accepts: ['tab', 'ghost'] }] }),
+			tabs(object(elementChildrenSchema), {
+				childPaths: [{ keys: ['elements'], list: true, accepts: ['tab', 'ghost'] }],
+			}),
 			tab,
 			text,
 		],

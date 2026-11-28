@@ -23,7 +23,7 @@ const field = defineInput({
 
 const group = defineInput({
 	$type: 'group',
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	schema: z.looseObject({
 		$type: z.literal('group'),
 		id: z.string(),

@@ -45,7 +45,7 @@ describe('subgrid validation', () => {
 	});
 	const container = (type: 'group' | 'list', kind: 'object' | 'array') =>
 		defineInput({
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			$type: type,
 			containerKind: kind,
 			schema: z.looseObject({

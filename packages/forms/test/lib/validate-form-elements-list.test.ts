@@ -23,7 +23,7 @@ const lenient = defineInput({
 		id: z.string(),
 		elements: z.union([elementChildrenSchema, oneChild]),
 	}),
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'Lenient', category: 'input' },
 	render: () => null,
 });
@@ -40,8 +40,9 @@ describe('the elements of a container are a list', () => {
 		if (result.success) return;
 		expect(result.issues).toEqual([
 			expect.objectContaining({
+				code: 'registry/not-a-list',
 				path: ['steps', 0, 'elements', 0, 'elements'],
-				message: "Element 'lenient' must hold its elements as a list.",
+				message: 'Expected a list of nodes.',
 			}),
 		]);
 	});
@@ -60,7 +61,7 @@ describe('the elements of a container are a list', () => {
 				id: z.string(),
 				elements: z.optional(elementChildrenSchema),
 			}),
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			metadata: { name: 'Optional', category: 'input' },
 			render: () => null,
 		});

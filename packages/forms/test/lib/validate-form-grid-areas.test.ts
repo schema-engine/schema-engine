@@ -28,7 +28,7 @@ describe('named grid areas', () => {
 		render: () => null,
 	});
 	const group = defineInput({
-		childPaths: [{ keys: ['elements'] }],
+		childPaths: [{ keys: ['elements'], list: true }],
 		$type: 'group',
 		containerKind: 'object',
 		schema: z.looseObject({

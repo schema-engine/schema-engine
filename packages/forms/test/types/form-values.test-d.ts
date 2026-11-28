@@ -40,7 +40,7 @@ const choice = defineInput({
 });
 
 const group = defineInput({
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	$type: 'group',
 	schema: z.extend(BaseFieldSchema, {
 		$type: z.literal('group'),
@@ -51,7 +51,7 @@ const group = defineInput({
 });
 
 const rows = defineInput({
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	$type: 'rows',
 	containerKind: 'array',
 	schema: z.extend(BaseFieldSchema, {

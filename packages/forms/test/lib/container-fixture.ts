@@ -13,7 +13,7 @@ const engine = createFormEngine({
 			render: (_props: Record<string, unknown>) => null,
 		}),
 		defineInput({
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			$type: 'arrayElements',
 			containerKind: 'array',
 			schema: z.looseObject({
@@ -24,7 +24,7 @@ const engine = createFormEngine({
 			render: (_props: Record<string, unknown>) => null,
 		}),
 		defineInput({
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			$type: 'fieldSet',
 			containerKind: 'object',
 			schema: z.looseObject({

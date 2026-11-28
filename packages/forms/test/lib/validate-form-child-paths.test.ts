@@ -18,7 +18,7 @@ const field = defineInput({
 const tab = defineInput({
 	$type: 'tab',
 	schema: z.looseObject({ $type: z.literal('tab'), id: z.string(), elements: elementChildrenSchema }),
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'Tab', category: 'input' },
 	render: () => null,
 });
@@ -26,7 +26,7 @@ const tab = defineInput({
 const tabs = defineInput({
 	$type: 'tabs',
 	schema: z.looseObject({ $type: z.literal('tabs'), id: z.string(), elements: elementChildrenSchema }),
-	childPaths: [{ keys: ['elements'], accepts: ['tab'] }],
+	childPaths: [{ keys: ['elements'], list: true, accepts: ['tab'] }],
 	metadata: { name: 'Tabs', category: 'input' },
 	render: () => null,
 });
@@ -39,7 +39,7 @@ const group = defineInput({
 		name: z.string(),
 		elements: elementChildrenSchema,
 	}),
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	metadata: { name: 'Group', category: 'input' },
 	render: () => null,
 });
@@ -75,7 +75,7 @@ describe('container child paths: the build', () => {
 		const withValue = {
 			kind: 'input',
 			$type: 'greedy',
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			value: anyValue,
 			schema: z.looseObject({ $type: z.literal('greedy'), elements: elementChildrenSchema }),
 			metadata: { name: 'Greedy', category: 'input' },
@@ -87,7 +87,8 @@ describe('container child paths: the build', () => {
 	test.each([
 		['another key', [{ keys: ['items'] }], /Element 'odd'.*'elements'.*'items'/],
 		['a nested key', [{ keys: ['body', 'elements'] }], /Element 'odd'.*'elements'.*'body\.elements'/],
-		['two paths', [{ keys: ['elements'] }, { keys: ['more'] }], /Element 'odd'.*child paths/],
+		['two paths', [{ keys: ['elements'], list: true as const }, { keys: ['more'] }], /Element 'odd'.*child paths/],
+		['no list', [{ keys: ['elements'] }], /Element 'odd'.*list: true/],
 	])('forms fixes the child key: %s', (_label, childPaths, message) => {
 		const odd = {
 			kind: 'input',
@@ -104,7 +105,7 @@ describe('container child paths: the build', () => {
 		const staticWithChildren = {
 			kind: 'static',
 			$type: 'frame',
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			schema: z.looseObject({ $type: z.literal('frame'), elements: elementChildrenSchema }),
 			metadata: { name: 'Frame', category: 'content' },
 			render: () => null,
@@ -133,7 +134,7 @@ describe('container child paths: a Standard Schema container that is not Zod', (
 			name: v.string(),
 			elements: v.array(v.looseObject({ $type: v.string() })),
 		}),
-		childPaths: [{ keys: ['elements'] }],
+		childPaths: [{ keys: ['elements'], list: true }],
 		metadata: { name: 'Valibot group', category: 'input' },
 		render: () => null,
 	});
@@ -192,7 +193,7 @@ describe('container child paths: children are read as authored', () => {
 				z.looseObject({ $type: z.literal('dropping'), elements: elementChildrenSchema }),
 				z.transform((config) => ({ ...config, elements: config.elements.slice(1) })),
 			),
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			metadata: { name: 'Dropping', category: 'input' },
 			render: () => null,
 		});
@@ -211,7 +212,7 @@ describe('container child paths: children are read as authored', () => {
 				$type: z.literal('defaulting'),
 				elements: z._default(elementChildrenSchema, [{ $type: 'field', id: 'd', name: 'd' }]),
 			}),
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			metadata: { name: 'Defaulting', category: 'input' },
 			render: () => null,
 		});
@@ -228,7 +229,7 @@ describe('container child paths: children are read as authored', () => {
 				z.looseObject({ $type: z.literal('reversing'), elements: elementChildrenSchema }),
 				z.transform((config) => ({ ...config, elements: [...config.elements].reverse() })),
 			),
-			childPaths: [{ keys: ['elements'] }],
+			childPaths: [{ keys: ['elements'], list: true }],
 			metadata: { name: 'Reversing', category: 'input' },
 			render: () => null,
 		});
@@ -291,7 +292,7 @@ describe('container child paths: appearance never reaches a schema', () => {
 			name: z.string(),
 			elements: elementChildrenSchema,
 		}),
-		childPaths: [{ keys: ['elements'] }],
+		childPaths: [{ keys: ['elements'], list: true }],
 		appearanceAxes: ['size'],
 		metadata: { name: 'Strict group', category: 'input' },
 		render: () => null,

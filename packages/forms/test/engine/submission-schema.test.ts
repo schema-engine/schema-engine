@@ -32,7 +32,7 @@ const select = defineInput({
 });
 
 const fieldSet = defineInput({
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	$type: 'fieldSet',
 	schema: z.extend(BaseFieldSchema, {
 		$type: z.literal('fieldSet'),
@@ -43,7 +43,7 @@ const fieldSet = defineInput({
 });
 
 const rows = defineInput({
-	childPaths: [{ keys: ['elements'] }],
+	childPaths: [{ keys: ['elements'], list: true }],
 	$type: 'rows',
 	containerKind: 'array',
 	schema: z.extend(BaseFieldSchema, {
@@ -446,7 +446,9 @@ describe('createFormEngine', () => {
 			'~standard': { version: 1, vendor: 'test', validate: (value) => ({ value }) },
 		};
 		expect(() =>
-			createFormEngine({ elements: [handWritten({ schema: opaque, childPaths: [{ keys: ['elements'] }] })] }),
+			createFormEngine({
+				elements: [handWritten({ schema: opaque, childPaths: [{ keys: ['elements'], list: true }] })],
+			}),
 		).not.toThrow();
 		expect(() => createFormEngine({ elements: [handWritten({ schema: opaque })] })).toThrow(
 			/Element 'hand' is an input that declares no value/,

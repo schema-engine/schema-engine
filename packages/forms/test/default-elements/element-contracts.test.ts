@@ -24,8 +24,8 @@ describe('the element contracts', () => {
 			.map((contract) => contract.$type);
 
 		expect(withChildPaths.toSorted()).toEqual(['arrayElements', 'fieldSet']);
-		expect(defaultElementContracts.get('fieldSet')?.childPaths).toEqual([{ keys: ['elements'] }]);
-		expect(defaultElementContracts.get('arrayElements')?.childPaths).toEqual([{ keys: ['elements'] }]);
+		expect(defaultElementContracts.get('fieldSet')?.childPaths).toEqual([{ keys: ['elements'], list: true }]);
+		expect(defaultElementContracts.get('arrayElements')?.childPaths).toEqual([{ keys: ['elements'], list: true }]);
 	});
 
 	test('declare the value an input writes, and none for a container or a static element', () => {

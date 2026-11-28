@@ -212,11 +212,6 @@ function checkElementNode(
 			),
 		);
 	}
-	if (!holdsNone && declared[ELEMENT_CHILDREN_KEY] !== undefined && !Array.isArray(declared[ELEMENT_CHILDREN_KEY])) {
-		issues.push(
-			issueAt([...path, ELEMENT_CHILDREN_KEY], `Element '${node.$type}' must hold its elements as a list.`),
-		);
-	}
 	const own: FormTaggedConfig = holdsNone ? (withoutElementChildren(declared) as FormTaggedConfig) : declared;
 
 	const checkedRules = checkElementRules(own, pass.checkRule, path);
