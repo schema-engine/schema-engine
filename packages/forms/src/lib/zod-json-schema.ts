@@ -11,6 +11,9 @@ import { createExportConversion } from '@/lib/export-schema';
  */
 export type ZodJSONSchemaRegistry = ReturnType<typeof z.registry<Record<string, any>>>;
 
+/** How a collection refers to an entry when the caller gives no `uri`. */
+export const defaultCollectionURI = (id: string): string => `#/definitions/${id}`;
+
 /**
  * Generate a JSON Schema collection from a Zod metadata registry.
  * This is the lowest-level adapter around `z.toJSONSchema(...)` for registry
@@ -26,7 +29,7 @@ export function generateZodJSONSchemaCollection(
 ): JSONSchemaObject {
 	const target = options?.target ?? 'draft-2020-12';
 	const io = options?.io || 'input';
-	const uri = options?.uri || ((id: string) => `#/definitions/${id}`);
+	const uri = options?.uri ?? defaultCollectionURI;
 	const conversion = createExportConversion({
 		io,
 		target,

@@ -8,5 +8,6 @@ await buildLib({
 	cwd,
 	entryGlobs: ['src/**/*.ts'],
 	aliases: [{ prefix: '@', dir: path.join(cwd, 'src') }],
+	splitting: true,
 	minify: !process.argv.includes('--watch'),
 });

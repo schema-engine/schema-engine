@@ -334,6 +334,9 @@ importers:
       '@schema-engine/scripts':
         specifier: workspace:*
         version: link:../../scripts
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
       effect:
         specifier: ^3.22.1
         version: 3.22.2

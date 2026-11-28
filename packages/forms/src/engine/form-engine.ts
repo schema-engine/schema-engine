@@ -380,10 +380,6 @@ export class FormEngine<
 		}
 	}
 
-	getSchemaArtifacts() {
-		return this.schemaArtifacts;
-	}
-
 	getFormConfigStandardSchema(): StandardJSONSchemaV1 {
 		return this.schemaArtifacts.jsonSchema.formConfigStandardSchema;
 	}
@@ -394,10 +390,6 @@ export class FormEngine<
 
 	getSchemaCatalog() {
 		return this.schemaArtifacts.metadataCatalog;
-	}
-
-	getSchemaRegistry() {
-		return this.schemaArtifacts.metadataRegistry;
 	}
 
 	/**
@@ -414,10 +406,6 @@ export class FormEngine<
 		io?: 'input' | 'output';
 	}) {
 		return this.schemaArtifacts.jsonSchema.generateCollection(options);
-	}
-
-	getFormConfigSchema() {
-		return this.schemaArtifacts.formConfigValidator;
 	}
 
 	/**

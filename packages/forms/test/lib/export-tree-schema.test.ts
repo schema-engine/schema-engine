@@ -10,8 +10,8 @@ import {
 import { isZodType } from '@/lib/is-zod-type';
 
 /**
- * The tree of container elements, exported by the registry in place of `withExportedChildren`: the elements the
- * forms engine registers, with the `elements` key declared as the one child path of each container.
+ * The tree of container elements, exported by the registry: the elements the forms engine registers, with the
+ * `elements` key declared as the one child path of each container.
  */
 describe('exportTreeSchema with the elements of forms', () => {
 	const elements = createRegistry<BaseRegistration>('Element', [

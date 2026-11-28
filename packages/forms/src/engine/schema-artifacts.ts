@@ -3,9 +3,14 @@ import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import type { JSONSchemaTarget } from '@schema-engine/registry';
 import { assertJSONSchemaTarget } from '@schema-engine/registry/json-schema';
 import { ComponentType } from './component-type';
+import { composeCollectionChildSlots, composeDocumentChildSlots, type ChildSlotOwner } from './child-slots';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
 import { isZodType } from '@/lib/is-zod-type';
-import { generateZodJSONSchemaCollection, generateZodJSONSchemaDocument } from '@/lib/zod-json-schema';
+import {
+	defaultCollectionURI,
+	generateZodJSONSchemaCollection,
+	generateZodJSONSchemaDocument,
+} from '@/lib/zod-json-schema';
 import {
 	createStandardJSONSchema,
 	createStandardJSONSchemaRecord,
@@ -38,7 +43,6 @@ export type FormEngineSchemaMetadataRegistry = ReturnType<typeof z.registry<Form
 export interface FormEngineSchemaArtifacts {
 	metadataCatalog: SchemaMetadataCatalog;
 	metadataRegistry: FormEngineSchemaMetadataRegistry;
-	formConfigValidator: z.ZodMiniType;
 	/**
 	 * The schemas the JSON Schema export lists in place of a registration's own, by catalog id.
 	 *
@@ -150,14 +154,18 @@ function targetOf(options: StandardJSONSchemaV1.Options): JSONSchemaTarget {
 function generateFormConfigJSONSchemaForIO(
 	metadataRegistry: FormEngineSchemaMetadataRegistry,
 	formConfigValidator: z.ZodMiniType,
+	elements: readonly ChildSlotOwner[],
 	io: 'input' | 'output',
 	options?: { target?: JSONSchemaTarget },
 ): JSONSchemaObject {
-	return generateZodJSONSchemaDocument(formConfigValidator, metadataRegistry, {
-		target: options?.target,
+	const target = options?.target ?? 'draft-2020-12';
+	const document = generateZodJSONSchemaDocument(formConfigValidator, metadataRegistry, {
+		target,
 		io,
 		schemaId: FORM_CONFIG_SCHEMA_ID,
 	});
+	composeDocumentChildSlots(document, elements, target);
+	return document;
 }
 
 /**
@@ -166,16 +174,21 @@ function generateFormConfigJSONSchemaForIO(
 function createFormEngineJSONSchemaSerializer(
 	metadataRegistry: FormEngineSchemaMetadataRegistry,
 	formConfigValidator: z.ZodMiniType,
+	elements: readonly ChildSlotOwner[],
 	actionConfigValidators?: Map<string, z.ZodMiniType>,
 ): FormEngineJSONSchemaSerializer {
 	const generateCollection: FormEngineJSONSchemaSerializer['generateCollection'] = (options) => {
-		return generateZodJSONSchemaCollection(metadataRegistry, options);
+		const uri = options?.uri ?? defaultCollectionURI;
+		const collection = generateZodJSONSchemaCollection(metadataRegistry, { ...options, uri });
+		composeCollectionChildSlots(collection, elements, uri);
+		return collection;
 	};
 
 	const generateFormConfig: FormEngineJSONSchemaSerializer['generateFormConfig'] = (options) => {
 		return generateFormConfigJSONSchemaForIO(
 			metadataRegistry,
 			formConfigValidator,
+			elements,
 			options?.io ?? 'input',
 			options,
 		);
@@ -199,11 +212,11 @@ function createFormEngineJSONSchemaSerializer(
 	const formConfigStandardSchema = createStandardJSONSchema(
 		VENDOR,
 		(options) =>
-			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, 'input', {
+			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, elements, 'input', {
 				target: targetOf(options),
 			}),
 		(options) =>
-			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, 'output', {
+			generateFormConfigJSONSchemaForIO(metadataRegistry, formConfigValidator, elements, 'output', {
 				target: targetOf(options),
 			}),
 	);
@@ -230,6 +243,7 @@ function createFormEngineJSONSchemaSerializer(
 export function createFormEngineSchemaArtifacts(
 	metadataCatalog: SchemaMetadataCatalog,
 	formConfigValidator: z.ZodMiniType,
+	elements: readonly ChildSlotOwner[],
 	actionConfigValidators?: Map<string, z.ZodMiniType>,
 	exportSchemas: ReadonlyMap<string, z.ZodMiniType> = new Map(),
 	sharedSchemas: readonly SharedExportSchema[] = [],
@@ -239,8 +253,12 @@ export function createFormEngineSchemaArtifacts(
 	return {
 		metadataCatalog,
 		metadataRegistry,
-		formConfigValidator,
 		exportSchemas,
-		jsonSchema: createFormEngineJSONSchemaSerializer(metadataRegistry, formConfigValidator, actionConfigValidators),
+		jsonSchema: createFormEngineJSONSchemaSerializer(
+			metadataRegistry,
+			formConfigValidator,
+			elements,
+			actionConfigValidators,
+		),
 	};
 }
