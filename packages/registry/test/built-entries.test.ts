@@ -8,5 +8,7 @@ import * as jsonSchema from '../dist/json-schema/index.js';
  * `@schema-engine/registry/json-schema` would not be an `instanceof` the one it imports from the root.
  */
 test('an error thrown through the json-schema entry is the RegistryError of the root entry', () => {
-	expect(() => jsonSchema.replaceChildSlot({}, { $type: 'box', keys: [] }, {})).toThrow(root.RegistryError);
+	expect(() => jsonSchema.replaceChildSlot({}, { $type: 'box', keys: [] }, {}, { target: 'draft-2020-12' })).toThrow(
+		root.RegistryError,
+	);
 });

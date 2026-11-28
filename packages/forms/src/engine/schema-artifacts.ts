@@ -176,7 +176,7 @@ function createFormEngineJSONSchemaSerializer(
 	const generateCollection: FormEngineJSONSchemaSerializer['generateCollection'] = (options) => {
 		const uri = options?.uri ?? defaultCollectionURI;
 		const collection = generateZodJSONSchemaCollection(metadataRegistry, { ...options, uri });
-		composeCollectionChildSlots(collection, elements, uri);
+		composeCollectionChildSlots(collection, elements, uri, options?.target ?? 'draft-2020-12');
 		return collection;
 	};
 

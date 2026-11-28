@@ -163,7 +163,7 @@ const openTabsEngine = (containerKind?: 'array') =>
 describe.each(providers)('the children of a container written as %s', (_label, createTabs) => {
 	const engine = createFormEngine({ elements: [createTabs(), tab, text] });
 
-	describe.each(['draft-2020-12', 'draft-07'] as const)('in a document for %s', (target) => {
+	describe.each(['draft-2020-12', 'draft-07', 'draft-04'] as const)('in a document for %s', (target) => {
 		const accepts = compileDocument(engine.generateFormConfigSchema({ target }), target);
 
 		test('accepts the element it lists', () => {
@@ -179,7 +179,7 @@ describe.each(providers)('the children of a container written as %s', (_label, c
 		});
 	});
 
-	describe.each(['draft-2020-12', 'draft-07'] as const)('in a collection for %s', (target) => {
+	describe.each(['draft-2020-12', 'draft-07', 'draft-04'] as const)('in a collection for %s', (target) => {
 		const collection = engine.generateJSONSchemaCollection({ uri, target }) as unknown as {
 			schemas: Record<string, object>;
 		};

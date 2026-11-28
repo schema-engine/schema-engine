@@ -61,8 +61,15 @@ const ref = (name: string) => ({ $ref: `#/$defs/${name}` });
 const union = (...names: string[]) => ({ anyOf: names.map(ref) });
 const everyType = ['page', 'section', 'chart', 'text', 'frame'];
 
-function properties(document: JSONSchemaObject, type: string): Record<string, JSONSchemaObject> {
-	const definitions = document.$defs as Record<string, { properties: Record<string, JSONSchemaObject> }>;
+function properties(
+	document: JSONSchemaObject,
+	type: string,
+	target: 'draft-2020-12' | 'draft-07' = 'draft-2020-12',
+): Record<string, JSONSchemaObject> {
+	const definitions = document[target === 'draft-07' ? 'definitions' : '$defs'] as Record<
+		string,
+		{ properties: Record<string, JSONSchemaObject> }
+	>;
 	return definitions[type]!.properties;
 }
 
@@ -402,7 +409,7 @@ describe('exportTreeSchema', () => {
 			const document = exportTreeSchema(nodes);
 			const definitions = document.$defs as Record<string, JSONSchemaObject>;
 
-			expect(Object.keys(definitions)).toEqual(['card', 'card.address', 'card.line', 'note', 'note.address']);
+			expect(Object.keys(definitions)).toEqual(['card', 'note', 'card.address', 'card.line', 'note.address']);
 			expect(definitions.card).not.toHaveProperty('$defs');
 			expect(definitions.card).not.toHaveProperty('$schema');
 			expect(properties(document, 'card').address).toEqual(ref('card.address'));
@@ -469,12 +476,12 @@ describe('exportTreeSchema', () => {
 			const document = exportTreeSchema(anchored);
 
 			expect(properties(document, 'one')).toEqual({
-				a: { $anchor: 'one-node', type: 'string' },
-				b: { $ref: '#one-node' },
+				a: { $anchor: 'oone.node', type: 'string' },
+				b: { $ref: '#oone.node' },
 			});
 			expect(properties(document, 'two')).toEqual({
-				a: { $anchor: 'two-node', type: 'number' },
-				b: { $ref: '#two-node' },
+				a: { $anchor: 'otwo.node', type: 'number' },
+				b: { $ref: '#otwo.node' },
 			});
 			const validate = compileJSONSchema(document);
 			expect(validate({ a: 'x', b: 'y' })).toBe(true);
@@ -528,15 +535,63 @@ describe('exportTreeSchema', () => {
 			expect(error).toMatchObject({ code: 'definition-name-clash', $type: 'card', key: 'card.line' });
 		});
 
-		it('throws when two owners lift to the same name', () => {
-			const clashing = createRegistry('Node', [
-				handWritten({ type: 'object', $defs: { 'b.c': {} } }, undefined, 'a'),
-				handWritten({ type: 'object', $defs: { c: {} } }, undefined, 'a.b'),
+		it('keeps two owners apart whose lifted names would join to the same text', () => {
+			const owners = createRegistry('Node', [
+				handWritten(
+					{
+						type: 'object',
+						properties: { x: { $ref: '#/$defs/b.c' } },
+						$defs: { 'b.c': { type: 'string' } },
+					},
+					undefined,
+					'element:a',
+				),
+				handWritten(
+					{ type: 'object', properties: { x: { $ref: '#/$defs/c' } }, $defs: { c: { type: 'number' } } },
+					undefined,
+					'element:a.b',
+				),
+			]);
+			const document = exportTreeSchema(owners);
+
+			expect(document.$defs).toMatchObject({
+				'element:a.b.c': { type: 'string' },
+				'element:a_2e_b.c': { type: 'number' },
+			});
+			expect(properties(document, 'element:a').x).toEqual({ $ref: '#/$defs/element:a.b.c' });
+			expect(properties(document, 'element:a.b').x).toEqual({ $ref: '#/$defs/element:a_2e_b.c' });
+			expectEveryReferenceToResolve(document);
+			const validate = compileJSONSchema(document);
+			expect(validate({ x: 'text' })).toBe(true);
+			expect(validate({ x: 1 })).toBe(true);
+			expect(validate({ x: true })).toBe(false);
+		});
+
+		it('writes an owner with a . or a _ in it without the separator, and keeps the other characters', () => {
+			const document = exportTreeSchema(
+				createRegistry('Node', [
+					handWritten({ type: 'object', $defs: { part: {} } }, undefined, 'my_card.v2'),
+					handWritten({ type: 'object', $defs: { part: {} } }, undefined, 'ui/button'),
+				]),
+			);
+
+			expect(Object.keys(document.$defs as object)).toEqual([
+				'my_card.v2',
+				'ui/button',
+				'my_5f_card_2e_v2.part',
+				'ui/button.part',
+			]);
+		});
+
+		it('throws when one schema defines a name under both $defs and definitions', () => {
+			const both = createRegistry('Node', [
+				handWritten({ type: 'object', $defs: { part: {} }, definitions: { part: {} } }, undefined, 'card'),
 			]);
 
-			expect(thrown(() => exportTreeSchema(clashing))).toMatchObject({
+			expect(thrown(() => exportTreeSchema(both))).toMatchObject({
 				code: 'definition-name-clash',
-				key: 'a.b.c',
+				$type: 'card',
+				key: 'card.part',
 			});
 		});
 	});
@@ -941,15 +996,85 @@ describe('exportTreeSchema', () => {
 			expect(() => compileJSONSchema(document)).not.toThrow();
 		});
 
-		it('keeps the anchors of a valid owner as they are', () => {
+		it('writes the owner as o and its characters, with every one outside [A-Za-z0-9-] as _<hex>_', () => {
 			const document = exportTreeSchema(
 				createRegistry('Node', [
 					handWritten({ type: 'object', properties: { a: { $anchor: 'node' } } }, undefined, 'my_button.v2'),
+					handWritten({ type: 'object', properties: { a: { $anchor: 'node' } } }, undefined, 'ui-button'),
+					handWritten({ type: 'object', properties: { a: { $anchor: 'node' } } }, undefined, 'ui/button'),
 				]),
 			);
 
-			expect(properties(document, 'my_button.v2').a).toEqual({ $anchor: 'my_button.v2-node' });
+			expect(properties(document, 'my_button.v2').a).toEqual({ $anchor: 'omy_5f_button_2e_v2.node' });
+			expect(properties(document, 'ui-button').a).toEqual({ $anchor: 'oui-button.node' });
+			expect(properties(document, 'ui/button').a).toEqual({ $anchor: 'oui_2f_button.node' });
 		});
+
+		it('gives two owners whose joined anchors would match distinct anchors, each reference to its own', () => {
+			const anchored = (anchor: string, type: string) => ({
+				type: 'object',
+				properties: { a: { $anchor: anchor, type }, b: { $ref: `#${anchor}` } },
+			});
+			const document = exportTreeSchema(
+				createRegistry('Node', [
+					handWritten(anchored('b-c', 'string'), undefined, 'a'),
+					handWritten(anchored('c', 'number'), undefined, 'a-b'),
+				]),
+			);
+
+			expect(properties(document, 'a')).toEqual({
+				a: { $anchor: 'oa.b-c', type: 'string' },
+				b: { $ref: '#oa.b-c' },
+			});
+			expect(properties(document, 'a-b')).toEqual({
+				a: { $anchor: 'oa-b.c', type: 'number' },
+				b: { $ref: '#oa-b.c' },
+			});
+			const validate = compileJSONSchema(document);
+			expect(validate({ a: 'x', b: 'y' })).toBe(true);
+			expect(validate({ a: 1, b: 2 })).toBe(true);
+			expect(validate({ a: 1, b: 'y' })).toBe(false);
+		});
+
+		it.each([
+			['draft-2020-12', (name: string) => ({ $anchor: name })],
+			['draft-07', (name: string) => ({ $id: `#${name}` })],
+		] as const)(
+			'keeps owners that differ only by characters the encoding escapes distinct for %s',
+			(target, declare) => {
+				const owners = ['ui/button', 'ui_2f_button', 'ui-button'];
+				const document = exportTreeSchema(
+					createRegistry(
+						'Node',
+						owners.map(($type) =>
+							handWritten(
+								{
+									type: 'object',
+									properties: { a: { ...declare('x'), type: 'string' }, b: { $ref: '#x' } },
+								},
+								undefined,
+								$type,
+							),
+						),
+					),
+					{ target },
+				);
+
+				const declared = owners.map(($type) => {
+					const { a } = properties(document, $type, target) as { a: { $anchor?: string; $id?: string } };
+					return a.$anchor ?? a.$id!.slice(1);
+				});
+				expect(declared).toEqual(['oui_2f_button.x', 'oui_5f_2f_5f_button.x', 'oui-button.x']);
+				expect(new Set(declared).size).toBe(3);
+				for (const [index, $type] of owners.entries()) {
+					expect(properties(document, $type, target).b).toEqual({ $ref: `#${declared[index]}` });
+					expect(declared[index]).toMatch(/^[A-Za-z][-A-Za-z0-9._]*$/);
+				}
+				const validate = compileJSONSchema(document);
+				expect(validate({ a: 'x', b: 'y' })).toBe(true);
+				expect(validate({ a: 1 })).toBe(false);
+			},
+		);
 	});
 
 	describe('Scenario: A tree that forms could export', () => {

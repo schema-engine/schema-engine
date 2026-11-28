@@ -1,5 +1,10 @@
 import { RegistryError, type ChildPath, type JSONSchemaTarget } from '@schema-engine/registry';
-import { definitionRef, definitionsKeyword, replaceChildSlot } from '@schema-engine/registry/json-schema';
+import {
+	definitionRef,
+	definitionsKeyword,
+	replaceChildSlot,
+	startsResource,
+} from '@schema-engine/registry/json-schema';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
@@ -58,17 +63,6 @@ function missingDefinition(slot: ChildSlot, where: string): Error {
 	);
 }
 
-/**
- * Whether a schema sets an `$id` that makes it a resource of its own, which a draft-07 fragment (`#node`) does not.
- *
- * @remarks
- * A reference written inside such a schema resolves against that `$id`, not against the document, so the slot is not
- * where the document's references reach.
- */
-function startsResource(schema: JSONSchemaObject): boolean {
-	return typeof schema.$id === 'string' && !schema.$id.startsWith('#');
-}
-
 function unreachable(slot: ChildSlot): RegistryError {
 	return new RegistryError(
 		'unreachable-child-path',
@@ -85,7 +79,7 @@ function unreachable(slot: ChildSlot): RegistryError {
  * @param target - The target the document was written for, which decides where its definitions are
  * @throws {RegistryError} Code `'unknown-accepted-type'` when a child path accepts an element no registration declares,
  * and `'unreachable-child-path'` when a container's `elements` is not where its JSON Schema declares it (nullable,
- * or behind `allOf`, a union or a reference) or its schema sets an `$id` of its own
+ * or behind `allOf`, a union or a reference) or its schema sets an `$id` (`id` for draft-04) of its own
  *
  * @remarks
  * Done after the schema is converted, so a container is typed the same whichever library wrote its schema, and
@@ -103,11 +97,11 @@ export function composeDocumentChildSlots(
 	for (const slot of slots) {
 		const definition: JSONSchemaObject | undefined = document[keyword]?.[slot.definitionId];
 		if (definition === undefined) throw missingDefinition(slot, `'${keyword}'`);
-		if (startsResource(definition)) throw unreachable(slot);
+		if (startsResource(definition, target)) throw unreachable(slot);
 		const union = {
 			anyOf: slot.accepted.map((name) => ({ $ref: definitionRef(target, elementDefinitionId(name)) })),
 		};
-		replaceChildSlot(definition, slot, union);
+		replaceChildSlot(definition, slot, union, { target });
 	}
 }
 
@@ -117,17 +111,20 @@ export function composeDocumentChildSlots(
  * @param collection - The converted collection, which lists each element as the entry of its catalog id
  * @param elements - Every element registration of the engine
  * @param uri - How the collection refers to an entry, as it was written
- * @throws {RegistryError} The codes of {@link composeDocumentChildSlots}, except that an entry's own `$id` is no
+ * @param target - The target the collection was written for, which decides the identifier (`$id`, or `id` for draft-04)
+ * that makes a schema a resource of its own
+ * @throws {RegistryError} The codes of {@link composeDocumentChildSlots}, except that an entry's own `$id` (`id` for draft-04) is no
  * obstacle
  *
  * @remarks
- * An entry's `$id` is its own address, and a reference is written the way Zod refers from one entry of the collection to
+ * An entry's `$id` (`id` for draft-04) is its own address, and a reference is written the way Zod refers from one entry of the collection to
  * another, by `uri`, so it does not resolve against that `$id`.
  */
 export function composeCollectionChildSlots(
 	collection: JSONSchemaObject,
 	elements: readonly ChildSlotOwner[],
 	uri: (id: string) => string,
+	target: JSONSchemaTarget,
 ): void {
 	const slots = childSlotsOf(elements);
 	const entries: Record<string, JSONSchemaObject | undefined> = collection.schemas ?? {};
@@ -135,6 +132,6 @@ export function composeCollectionChildSlots(
 		const entry = entries[slot.definitionId];
 		if (entry === undefined) throw missingDefinition(slot, 'the collection');
 		const union = { anyOf: slot.accepted.map((name) => ({ $ref: uri(elementDefinitionId(name)) })) };
-		replaceChildSlot(entry, slot, union);
+		replaceChildSlot(entry, slot, union, { target });
 	}
 }

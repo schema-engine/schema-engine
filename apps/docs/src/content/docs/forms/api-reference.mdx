@@ -179,7 +179,7 @@ JSON Schema for its output side, so `io: 'output'` throws for an engine that reg
 `'openapi-3.0'`; the type is `JSONSchemaTarget` from `@schema-engine/registry`. Any other value, including Zod's older
 spellings of the two drafts, throws before a schema is converted. The Standard converters of
 `getFormConfigStandardSchema()` and `getActionConfigStandardSchema()` throw the same way, and a submission's
-converter writes `'draft-2020-12'`, `'draft-07'` and `'openapi-3.0'`.
+converter writes `'draft-2020-12'`, `'draft-07'` and `'openapi-3.0'`. A `'draft-04'` export names its resources by `id`, not `$id`: each collection entry, and the form config document, carry `id`, which a draft-04 validator reads.
 
 The collection also holds the `validation-rule` entry: the union of every registered rule, which the form config schema defines once and each element's `rules` refers to.
 
@@ -247,13 +247,15 @@ How a rule 2 schema is embedded in the export:
   `$defs`) is moved to a place where those references still resolve. In a document it goes under the document's
   `$defs` (or `definitions`) as `embedded-1`, `embedded-2` and so on, with its references rewritten to that place. In
   `generateJSONSchemaCollection()` it becomes an entry of its own, referred to by its URI. A schema that is already the
-  root of a collection entry, or that sets its own `$id`, stays as it is. References stay `#/...` pointers, which AI
+  root of a collection entry, or that sets its own `$id` (`id` for draft-04), stays as it is. References stay `#/...` pointers, which AI
   tool APIs resolve, rather than `$id` URIs. Only the schema's own resource is rewritten: a subschema that sets its own
-  `$id` is a resource of its own, so its references stay relative to it.
-- A plain-name anchor (`$anchor`, `$dynamicAnchor`, or a draft-07 `$id: '#node'`) is global to a document, so two rule 2
+  `$id` (`id` for draft-04) is a resource of its own, so its references stay relative to it.
+- A plain-name anchor (`$anchor`, `$dynamicAnchor`, a draft-07 `$id: '#node'`, or a draft-04 `id: '#node'`) is global to a document, so two rule 2
   schemas that each declare `node` would declare it twice. Each schema's anchors, and the `#node` references to them,
   are renamed to carry its place (`embedded-1-node`), whether it is moved to the definitions or embedded where it
-  stands.
+  stands. An element or action in a document is the owner of its anchors (`element:a-b` with `c` is
+  `oelement_3a_a-b.c`) and of the definitions it brings along (`element:a.b` with `c` is `element:a_2e_b.c`), written
+  so that no two ids write the same name; see the registry's `exportTreeSchema` for the rules.
 - A document (not the collection) lists catalog metadata (`title`, `description`, `componentType`, `category`) on every
   registration. It adds them beside a rule 2 schema's keywords where the schema does not set the same key. They are
   annotations, so what the schema accepts does not change.
