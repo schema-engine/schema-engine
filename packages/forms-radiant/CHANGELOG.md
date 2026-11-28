@@ -1,5 +1,71 @@
 # @schema-engine/forms-radiant
 
+## 0.6.0
+
+### Minor Changes
+
+- [#448](https://github.com/schema-engine/schema-engine/pull/448) [`d19f372`](https://github.com/schema-engine/schema-engine/commit/d19f372888cbde7ea812583a2d51c9d78762ec85) Thanks [@andeeplus](https://github.com/andeeplus)! - Each export has one import path: `@schema-engine/forms-radiant` no longer re-exports `defineRecipeSpec` and `DEFAULT_WIZARD_RECIPE`.
+
+    | Before                                                                 | After                                                             |
+    | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
+    | `import { defineRecipeSpec } from '@schema-engine/forms-radiant'`      | `import { defineRecipeSpec } from '@schema-engine/forms/recipes'` |
+    | `import { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms-radiant'` | `import { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms'`    |
+
+    `defineRecipe` is on `@schema-engine/forms-radiant/primitives`, with the other things you build recipes from.
+
+    ```ts
+    // before
+    import { defineRecipe, defineRecipeSpec, DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms-radiant';
+    // after
+    import { defineRecipe } from '@schema-engine/forms-radiant/primitives';
+    import { defineRecipeSpec } from '@schema-engine/forms/recipes';
+    import { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms';
+    ```
+
+- [#456](https://github.com/schema-engine/schema-engine/pull/456) [`d87a667`](https://github.com/schema-engine/schema-engine/commit/d87a667b4ba52e9be042c5841ffa43362289ce27) Thanks [@andeeplus](https://github.com/andeeplus)! - The entries follow the renderer layout shared with forms-react: `.`, `/primitives`, `/debugger` and `/debugger.css` mean the same in both, and forms-radiant adds `/registrations` and `/index.css`.
+
+    - What you build elements and recipes from is on `@schema-engine/forms-radiant/primitives`. `defineRecipe`, `FormElements`, `FormElementsProps`, `FormShellProps`, `FormShellComponent`, `FormMeta` and the `RadiantRecipeAdapterPayload`, `RadiantRecipePayload` and `RadiantRecipeSlotFactory` types move there from the package root. `formInstanceContext`, `formEngineContext` and their `FormInstanceContextValue` and `FormEngineContextValue` types, `combineHandlers` and `mergeFieldGridHost` move there from `/contexts` and `/hooks`, which are removed. Importing `defineRecipe` no longer loads the built-in recipes.
+    - `FormDebugger`, `FormDebuggerElement` and `FormDebuggerProps` move from the package root to `@schema-engine/forms-radiant/debugger`, and their styles move out of `index.css` into `@schema-engine/forms-radiant/debugger.css`. An app that does not render the debugger no longer registers `se-form-debugger`, loads its badge or ships its styles.
+    - `FormInstance` and `RecipeRenderer` are no longer exported: render forms with `FormRenderer`.
+    - On a server, import `@ecopages/radiant/server/install-ssr-runtime` before any forms-radiant entry. Every entry defines custom elements, so importing one in Node without it throws `HTMLElement is not defined`. The server rendering page now says so.
+
+    ```diff
+    - import { defineRecipe, type FormShellProps, FormDebugger } from '@schema-engine/forms-radiant';
+    - import { formInstanceContext } from '@schema-engine/forms-radiant/contexts';
+    - import { combineHandlers } from '@schema-engine/forms-radiant/hooks';
+    + import { defineRecipe, type FormShellProps, formInstanceContext, combineHandlers } from '@schema-engine/forms-radiant/primitives';
+    + import { FormDebugger } from '@schema-engine/forms-radiant/debugger';
+    ```
+
+    ```css
+    @import '@schema-engine/forms-radiant/index.css';
+    /* only while debugging */
+    @import '@schema-engine/forms-radiant/debugger.css';
+    ```
+
+- [#447](https://github.com/schema-engine/schema-engine/pull/447) [`5714552`](https://github.com/schema-engine/schema-engine/commit/5714552399a90f1f31ec74df5cbb30c2e83a0892) Thanks [@andeeplus](https://github.com/andeeplus)! - **Zod `^4.5.0` is required.** The peer range of `zod` was `^4.0.17`, which promised more than the packages work with: Zod before 4.2.0 has no Standard JSON Schema target names and no `~standard.jsonSchema`, and the JSON Schema export of the forms engine needs Zod 4.5.0, where the catalog ids of a schema are written as `$defs` entries (the document tests fail on 4.4.3). Update `zod` to 4.5.0 or later. A CI job runs the type checks and tests of every package that uses Zod against Zod 4.5.0 itself.
+
+    ```json
+    // before
+    { "peerDependencies": { "zod": "^4.0.17" } }
+    // after
+    { "peerDependencies": { "zod": "^4.5.0" } }
+    ```
+
+### Patch Changes
+
+- [#455](https://github.com/schema-engine/schema-engine/pull/455) [`b3302bf`](https://github.com/schema-engine/schema-engine/commit/b3302bff07ae32a812aae17b1ffa4a67a81ed077) Thanks [@andeeplus](https://github.com/andeeplus)! - The published packages resolve under `node16` and `nodenext` module resolution, and declare what they are.
+
+    - The declaration files write their relative imports with an extension (`./types.js`), so a consumer on `node16` or `nodenext` finds the exports of `@schema-engine/actions`, `forms`, `forms-react`, `layout` and `forms-radiant`, where the entry resolved to no exports. `@schema-engine/forms-radiant` no longer writes `export * from './recipes/index.d.ts'`, which was an error (TS2846) for a project with `skipLibCheck: false`.
+    - `@schema-engine/actions` has an `exports` map (`.` and `./package.json`), as the other packages do, and `@schema-engine/registry` exports `./package.json`.
+    - No package declares an `engines` field.
+    - `@schema-engine/forms-radiant` no longer lists `@schema-engine/actions` as a dependency, which nothing imported.
+
+- Updated dependencies [[`1f80c6b`](https://github.com/schema-engine/schema-engine/commit/1f80c6b001fcdbf0b6b038e799bea6aceba62844), [`7d5319a`](https://github.com/schema-engine/schema-engine/commit/7d5319a367314501965b5813ec37b12ecb9cad11), [`2ddce15`](https://github.com/schema-engine/schema-engine/commit/2ddce1566bd4a1812557ddbf65c1af693da5e28f), [`1931b45`](https://github.com/schema-engine/schema-engine/commit/1931b45fe173eaf7dbad57b92d04fb0577c87827), [`b75f9bb`](https://github.com/schema-engine/schema-engine/commit/b75f9bb5b6e158a846773c394660450e00fa26ca), [`d19f372`](https://github.com/schema-engine/schema-engine/commit/d19f372888cbde7ea812583a2d51c9d78762ec85), [`fcc99fc`](https://github.com/schema-engine/schema-engine/commit/fcc99fc74dd68437cde326a58d0bbd3656ffa82f), [`bacef31`](https://github.com/schema-engine/schema-engine/commit/bacef3173f05807b5fed658655d401558450d04c), [`b3302bf`](https://github.com/schema-engine/schema-engine/commit/b3302bff07ae32a812aae17b1ffa4a67a81ed077), [`822d1fd`](https://github.com/schema-engine/schema-engine/commit/822d1fd7d29fa9770abe5fc2eb2b9700899041a7), [`2ddce15`](https://github.com/schema-engine/schema-engine/commit/2ddce1566bd4a1812557ddbf65c1af693da5e28f), [`479f41b`](https://github.com/schema-engine/schema-engine/commit/479f41b3891666cf8da2c949b71b2e8295aca59f), [`5addcce`](https://github.com/schema-engine/schema-engine/commit/5addcceecabfc0d94580435217ce13fc566a3410), [`612d332`](https://github.com/schema-engine/schema-engine/commit/612d33213af7d9a1d2a71ebf7ccddf8279c492c7), [`8608803`](https://github.com/schema-engine/schema-engine/commit/860880328679a5226b96d2cdb03064f9a9403ed3), [`0930f0a`](https://github.com/schema-engine/schema-engine/commit/0930f0a8cab9d4e6e8d78bb36e92c32f01a6ed25), [`56381d9`](https://github.com/schema-engine/schema-engine/commit/56381d9d82a9b50a6ac5d9723354a82984de8609), [`b75f9bb`](https://github.com/schema-engine/schema-engine/commit/b75f9bb5b6e158a846773c394660450e00fa26ca), [`80e9cab`](https://github.com/schema-engine/schema-engine/commit/80e9cab742178fddd421b754a4f368b5ce4b7f26), [`7e86306`](https://github.com/schema-engine/schema-engine/commit/7e86306754c0e1689205c33cafba9fdc07d37aff), [`42a3f6f`](https://github.com/schema-engine/schema-engine/commit/42a3f6fcd76339ad4641d77208095714be63fe36), [`56381d9`](https://github.com/schema-engine/schema-engine/commit/56381d9d82a9b50a6ac5d9723354a82984de8609), [`35c1c5a`](https://github.com/schema-engine/schema-engine/commit/35c1c5ace849ddbf79d4cdab7d32dfb132bc3059), [`5714552`](https://github.com/schema-engine/schema-engine/commit/5714552399a90f1f31ec74df5cbb30c2e83a0892)]:
+    - @schema-engine/forms@0.6.0
+    - @schema-engine/layout@0.6.0
+    - @schema-engine/registry@0.6.0
+
 ## 0.5.3
 
 ### Patch Changes

@@ -1,5 +1,37 @@
 # @schema-engine/layout
 
+## 0.6.0
+
+### Minor Changes
+
+- [#446](https://github.com/schema-engine/schema-engine/pull/446) [`bacef31`](https://github.com/schema-engine/schema-engine/commit/bacef3173f05807b5fed658655d401558450d04c) Thanks [@andeeplus](https://github.com/andeeplus)! - `createRecipeRegistry(protocol, recipes, options?)` takes the registry options of `@schema-engine/registry` as a third argument, such as `{ hint }`, the sentence that ends the message of an unregistered recipe `$type`.
+
+- [#447](https://github.com/schema-engine/schema-engine/pull/447) [`5714552`](https://github.com/schema-engine/schema-engine/commit/5714552399a90f1f31ec74df5cbb30c2e83a0892) Thanks [@andeeplus](https://github.com/andeeplus)! - **Zod `^4.5.0` is required.** The peer range of `zod` was `^4.0.17`, which promised more than the packages work with: Zod before 4.2.0 has no Standard JSON Schema target names and no `~standard.jsonSchema`, and the JSON Schema export of the forms engine needs Zod 4.5.0, where the catalog ids of a schema are written as `$defs` entries (the document tests fail on 4.4.3). Update `zod` to 4.5.0 or later. A CI job runs the type checks and tests of every package that uses Zod against Zod 4.5.0 itself.
+
+    ```json
+    // before
+    { "peerDependencies": { "zod": "^4.0.17" } }
+    // after
+    { "peerDependencies": { "zod": "^4.5.0" } }
+    ```
+
+### Patch Changes
+
+- [#451](https://github.com/schema-engine/schema-engine/pull/451) [`fcc99fc`](https://github.com/schema-engine/schema-engine/commit/fcc99fc74dd68437cde326a58d0bbd3656ffa82f) Thanks [@andeeplus](https://github.com/andeeplus)! - The built package shares its code between its entries (`.` and `./testing`): `dist` holds shared modules once, in chunks, instead of a copy in every entry, so a module-level value is one value whichever entry imports it.
+
+- [#455](https://github.com/schema-engine/schema-engine/pull/455) [`b3302bf`](https://github.com/schema-engine/schema-engine/commit/b3302bff07ae32a812aae17b1ffa4a67a81ed077) Thanks [@andeeplus](https://github.com/andeeplus)! - The published packages resolve under `node16` and `nodenext` module resolution, and declare what they are.
+
+    - The declaration files write their relative imports with an extension (`./types.js`), so a consumer on `node16` or `nodenext` finds the exports of `@schema-engine/actions`, `forms`, `forms-react`, `layout` and `forms-radiant`, where the entry resolved to no exports. `@schema-engine/forms-radiant` no longer writes `export * from './recipes/index.d.ts'`, which was an error (TS2846) for a project with `skipLibCheck: false`.
+    - `@schema-engine/actions` has an `exports` map (`.` and `./package.json`), as the other packages do, and `@schema-engine/registry` exports `./package.json`.
+    - No package declares an `engines` field.
+    - `@schema-engine/forms-radiant` no longer lists `@schema-engine/actions` as a dependency, which nothing imported.
+
+- [#455](https://github.com/schema-engine/schema-engine/pull/455) [`822d1fd`](https://github.com/schema-engine/schema-engine/commit/822d1fd7d29fa9770abe5fc2eb2b9700899041a7) Thanks [@andeeplus](https://github.com/andeeplus)! - Recipe protocol violations, slot defaults that their slot schema rejects, slot defaults or appearance axes on a slot the recipe does not declare, and slot declarations that disagree with the recipe's slot schemas now throw `RegistryError` with code `'invalid-declaration'`. A slot schema that does not implement Standard Schema throws `'invalid-schema'`. The error identifies the recipe by kind and `$type`.
+
+- [#440](https://github.com/schema-engine/schema-engine/pull/440) [`35c1c5a`](https://github.com/schema-engine/schema-engine/commit/35c1c5ace849ddbf79d4cdab7d32dfb132bc3059) Thanks [@andeeplus](https://github.com/andeeplus)! - Add `findSubgridChainBreaks(root)`, exported from `@schema-engine/layout/testing` so the main entry keeps no DOM types, a DOM check for a renderer's tests that returns one sentence per break in a subgrid's chain to its grid (a box without `GRID_SUBGRID_CLASS`, a subgrid without `data-se-theme`, a subgrid with no grid above it), so a wrapper that silently drops the subgrid's tracks fails `expect(findSubgridChainBreaks(container)).toEqual([])`.
+- Updated dependencies [[`b3302bf`](https://github.com/schema-engine/schema-engine/commit/b3302bff07ae32a812aae17b1ffa4a67a81ed077), [`2ddce15`](https://github.com/schema-engine/schema-engine/commit/2ddce1566bd4a1812557ddbf65c1af693da5e28f), [`479f41b`](https://github.com/schema-engine/schema-engine/commit/479f41b3891666cf8da2c949b71b2e8295aca59f), [`5addcce`](https://github.com/schema-engine/schema-engine/commit/5addcceecabfc0d94580435217ce13fc566a3410), [`612d332`](https://github.com/schema-engine/schema-engine/commit/612d33213af7d9a1d2a71ebf7ccddf8279c492c7), [`8608803`](https://github.com/schema-engine/schema-engine/commit/860880328679a5226b96d2cdb03064f9a9403ed3), [`0930f0a`](https://github.com/schema-engine/schema-engine/commit/0930f0a8cab9d4e6e8d78bb36e92c32f01a6ed25), [`b75f9bb`](https://github.com/schema-engine/schema-engine/commit/b75f9bb5b6e158a846773c394660450e00fa26ca), [`80e9cab`](https://github.com/schema-engine/schema-engine/commit/80e9cab742178fddd421b754a4f368b5ce4b7f26), [`7e86306`](https://github.com/schema-engine/schema-engine/commit/7e86306754c0e1689205c33cafba9fdc07d37aff), [`42a3f6f`](https://github.com/schema-engine/schema-engine/commit/42a3f6fcd76339ad4641d77208095714be63fe36), [`56381d9`](https://github.com/schema-engine/schema-engine/commit/56381d9d82a9b50a6ac5d9723354a82984de8609)]:
+    - @schema-engine/registry@0.6.0
+
 ## 0.5.2
 
 ### Patch Changes
