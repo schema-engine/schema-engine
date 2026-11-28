@@ -58,7 +58,7 @@ Turbo caches `test:all` and `check-types` results. Add `--force` to run them aga
 
 Turbo runs each package's uncached `clean` before `build:lib`. It deletes `dist` until the build writes it again or Turbo restores it from cache. A dev server, Storybook or `watch:lib` in another terminal can briefly lose access to `dist` while that Turbo build runs.
 
-`pnpm build:lib` runs both published-entry checks once after the builds. `pnpm check:dist-types` type-checks a consumer of every typed package entry with `skipLibCheck: false` under `node16` and `bundler`. `pnpm check:dist-exports` verifies export ownership and checks that the built registry entries share the same `RegistryError` class.
+`pnpm build:lib` runs both published-entry checks once after the builds. `pnpm check:dist-types` type-checks a consumer of every typed package entry with `skipLibCheck: false` under `node16` and `bundler`, together with each package's `test/consumer/*.ts` fixture, which reads every public entry by name and every removed one under `@ts-expect-error`. `pnpm check:dist-exports` verifies export ownership and checks that the built registry entries share the same `RegistryError` class.
 
 Never skip the hook with `--no-verify` or `HUSKY=0`. If it fails, the failure is real or it is a bug in the hook: fix it or file an issue.
 

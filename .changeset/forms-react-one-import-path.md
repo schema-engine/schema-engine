@@ -2,7 +2,7 @@
 '@schema-engine/forms-react': minor
 ---
 
-Each export has one import path: `@schema-engine/forms-react/hooks` and `@schema-engine/forms-react/contexts` (which the renderer entry layout then removes) no longer re-export what `@schema-engine/forms` declares, and `SubmissionState` and `ViewContextValue`, which renamed two of those, are gone.
+Each export has one import path: `@schema-engine/forms-react/hooks` no longer re-exports what `@schema-engine/forms` declares, the names `@schema-engine/forms-react/contexts` re-exported come from `@schema-engine/forms/recipes` (the entry itself is removed), and `SubmissionState` and `ViewContextValue`, which renamed two of those, are gone.
 
 | Before (from `@schema-engine/forms-react/hooks`)                                                                                   | After                                                      |
 | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
