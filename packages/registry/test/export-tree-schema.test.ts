@@ -16,9 +16,7 @@ type Resolve = NonNullable<Parameters<typeof exportTreeSchema>[1]>['resolve'];
 
 /** The Zod-first resolve a domain passes, as forms does: Zod converts its own schemas, anything else is open. */
 const zodFirst: Resolve = (schema, { io, target }) =>
-	'_zod' in schema
-		? z.toJSONSchema(schema as z.ZodMiniType, { io, target: target === 'draft-07' ? 'draft-7' : target })
-		: undefined;
+	'_zod' in schema ? z.toJSONSchema(schema as z.ZodMiniType, { io, target }) : undefined;
 
 const metadata = { name: 'Node' };
 const typed = <T extends string>(type: T) => z.literal(type);

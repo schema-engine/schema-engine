@@ -248,8 +248,8 @@ describe('native Standard Schema engine path', () => {
 			],
 		});
 		const standardSchema = engine.getFormConfigStandardSchema()['~standard'];
-		const input = standardSchema.jsonSchema.input({ target: 'draft-7' });
-		const output = standardSchema.jsonSchema.output({ target: 'draft-7' });
+		const input = standardSchema.jsonSchema.input({ target: 'draft-07' });
+		const output = standardSchema.jsonSchema.output({ target: 'draft-07' });
 
 		expect(standardSchema.vendor).toBe('@schema-engine/forms');
 		expect(input.$schema).toBe('http://json-schema.org/draft-07/schema#');

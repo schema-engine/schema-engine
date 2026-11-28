@@ -55,7 +55,7 @@
 		"@ecopages/signals": ">=0.12.0",
 		"@schema-engine/forms": "workspace:^",
 		"@schema-engine/layout": "workspace:^",
-		"zod": "^4.0.17"
+		"zod": "^4.5.0"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.28.0",
@@ -88,7 +88,7 @@
 		"typescript": "catalog:",
 		"vite": "^8.0.0",
 		"vitest": "catalog:",
-		"zod": "^4.0.17"
+		"zod": "^4.5.0"
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",

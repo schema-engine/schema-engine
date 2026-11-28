@@ -59,6 +59,43 @@ jobs:
             - name: Docs end-to-end tests
               run: pnpm test:e2e:docs
 
+    zod-floor:
+        name: Zod floor
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: pnpm/action-setup@v6
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: '24'
+                  cache: 'pnpm'
+
+            - name: Install
+              run: pnpm install --frozen-lockfile
+
+            - name: Install browsers
+              run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+            # The packages declare zod ^4.5.0 as a peer. This installs that floor itself, uncommitted, so a use of a newer Zod API fails here.
+            - name: Install the lowest supported Zod
+              run: |
+                  node -e "const fs = require('node:fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); pkg.pnpm.overrides.zod = '4.5.0'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, '\t'));"
+                  pnpm install --no-frozen-lockfile
+                  node -e "const v = require('zod/package.json').version; if (v !== '4.5.0') { console.error('Expected zod 4.5.0, got ' + v); process.exit(1); }"
+
+            - name: Type-check and test the packages that use Zod
+              run: >-
+                  pnpm turbo check-types test:all
+                  --filter=@schema-engine/registry
+                  --filter=@schema-engine/actions
+                  --filter=@schema-engine/layout
+                  --filter=@schema-engine/forms
+                  --filter=@schema-engine/forms-react
+                  --filter=@schema-engine/forms-radiant
+
     storybook:
         name: Storybook
         runs-on: ubuntu-latest

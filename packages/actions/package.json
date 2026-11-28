@@ -61,6 +61,6 @@
 		"tsc-alias": "^1.8.16",
 		"typescript": "catalog:",
 		"vitest": "catalog:",
-		"zod": "^4.0.17"
+		"zod": "^4.5.0"
 	}
 }

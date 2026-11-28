@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
-import type { JSONSchemaObject, JSONSchemaTarget } from '@/lib/standard-json-schema';
+import type { JSONSchemaTarget } from '@schema-engine/registry';
+import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import { createExportConversion } from '@/lib/export-schema';
 
 /**
@@ -23,7 +24,7 @@ export function generateZodJSONSchemaCollection(
 		io?: 'input' | 'output';
 	},
 ): JSONSchemaObject {
-	const target = options?.target || 'draft-2020-12';
+	const target = options?.target ?? 'draft-2020-12';
 	const io = options?.io || 'input';
 	const uri = options?.uri || ((id: string) => `#/definitions/${id}`);
 	const conversion = createExportConversion({
@@ -32,7 +33,12 @@ export function generateZodJSONSchemaCollection(
 		placement: { kind: 'collection', uri, registry: metadataRegistry },
 	});
 	return conversion.finish(
-		z.toJSONSchema(metadataRegistry, { target, io, uri, override: conversion.override }) as JSONSchemaObject,
+		z.toJSONSchema(metadataRegistry, {
+			target,
+			io,
+			uri,
+			override: conversion.override,
+		}) as JSONSchemaObject,
 	);
 }
 
@@ -76,7 +82,7 @@ export function generateZodJSONSchemaDocument(
 		io?: 'input' | 'output';
 	},
 ): JSONSchemaObject {
-	const target = options?.target || 'draft-2020-12';
+	const target = options?.target ?? 'draft-2020-12';
 	const io = options?.io || 'input';
 	const conversion = createExportConversion({ io, target, placement: { kind: 'document' } });
 	const schema = conversion.finish(

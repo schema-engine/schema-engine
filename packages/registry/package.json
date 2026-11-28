@@ -66,7 +66,7 @@
 		"typescript": "catalog:",
 		"vitest": "catalog:",
 		"yaml": "2.9.1",
-		"zod": "^4.0.17"
+		"zod": "^4.5.0"
 	},
 	"peerDependencies": {
 		"yaml": "^2.8.0"

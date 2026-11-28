@@ -1,4 +1,4 @@
-import { isPlainObject, type JSONSchemaObject } from './standard.js';
+import { assertJSONSchemaTarget, isPlainObject, type JSONSchemaObject, type JSONSchemaTarget } from './standard.js';
 
 /** Where the JSON Schema being written keeps its definitions. */
 export type JSONSchemaPlacement =
@@ -120,7 +120,7 @@ function withoutRootAnchor(schema: JSONSchemaObject): JSONSchemaObject {
 }
 
 /** The keyword a document keeps its definitions under, as Zod writes it for the target. */
-export const definitionsKeyword = (target: string): '$defs' | 'definitions' =>
+export const definitionsKeyword = (target: JSONSchemaTarget): '$defs' | 'definitions' =>
 	target === 'draft-2020-12' ? '$defs' : 'definitions';
 
 /**
@@ -138,6 +138,7 @@ export interface JSONSchemaEmbedder {
  * Create the embedder for one JSON Schema being written.
  *
  * @param target - The target the schema is written for
+ * @throws {Error} When `target` is not one of the four {@link JSONSchemaTarget}s, before anything is embedded
  * @param placement - Whether it is one document or a collection of entries
  *
  * @remarks
@@ -158,7 +159,8 @@ export interface JSONSchemaEmbedder {
  * Only the schema's root resource is rewritten. A schema with its own `$id`, and any subschema that sets one, resolves
  * its pointers and anchors against that and is left as it is.
  */
-export function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPlacement): JSONSchemaEmbedder {
+export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JSONSchemaPlacement): JSONSchemaEmbedder {
+	assertJSONSchemaTarget(target);
 	const keyword = definitionsKeyword(target);
 	const hoisted: Record<string, JSONSchemaObject> = {};
 	let count = 0;
@@ -258,7 +260,7 @@ export interface HoistedDefinitions {
  * against the ones it already holds. A schema with an `$id` of its own is a resource that resolves itself, so it is
  * kept as it is.
  */
-export function hoistDefinitions(own: JSONSchemaObject, owner: string, target: string): HoistedDefinitions {
+export function hoistDefinitions(own: JSONSchemaObject, owner: string, target: JSONSchemaTarget): HoistedDefinitions {
 	const keyword = definitionsKeyword(target);
 	const body = withoutSchemaKeyword(own);
 	if (startsResource(body)) return { definition: body, nested: {} };

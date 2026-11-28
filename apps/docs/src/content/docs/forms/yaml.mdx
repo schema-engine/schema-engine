@@ -81,11 +81,11 @@ The engine generates that schema from what it has registered:
 import { writeFile } from 'node:fs/promises';
 import { engine } from './engine';
 
-const schema = engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' });
+const schema = engine.generateFormConfigSchema({ io: 'input', target: 'draft-07' });
 await writeFile('contact.schema.json', JSON.stringify(schema, null, 2));
 ```
 
-The schema is generated from the authored side (`io: 'input'`, the default), so fields with defaults stay optional. Use `target: 'draft-7'` because the YAML language server
+The schema is generated from the authored side (`io: 'input'`, the default), so fields with defaults stay optional. Use `target: 'draft-07'` because the YAML language server
 only learned JSON Schema 2019-09 and 2020-12 in version 1.20.0; an editor extension that bundles an older server
 reads the schema as draft-07, which every version supports. Then name the schema at the top of the YAML file:
 

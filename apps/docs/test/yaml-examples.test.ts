@@ -100,9 +100,9 @@ test('the documented merge-key example is a valid form that shares the first fie
 
 test('the documented schema generator input exists on the engine', () => {
 	expect(codeAfter('## Editor autocomplete', 'typescript')).toContain(
-		"engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' })",
+		"engine.generateFormConfigSchema({ io: 'input', target: 'draft-07' })",
 	);
-	expect(engine.generateFormConfigSchema({ io: 'input', target: 'draft-7' })).toMatchObject({
+	expect(engine.generateFormConfigSchema({ io: 'input', target: 'draft-07' })).toMatchObject({
 		$schema: 'http://json-schema.org/draft-07/schema#',
 		type: 'object',
 	});

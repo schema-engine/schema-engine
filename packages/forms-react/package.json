@@ -96,14 +96,14 @@
 		"typescript": "catalog:",
 		"vitest": "catalog:",
 		"vitest-browser-react": "^2.3.0",
-		"zod": "^4.0.17"
+		"zod": "^4.5.0"
 	},
 	"peerDependencies": {
 		"@schema-engine/forms": "workspace:^",
 		"@schema-engine/layout": "workspace:^",
 		"react": "^19",
 		"react-dom": "^19",
-		"zod": "^4.0.17"
+		"zod": "^4.5.0"
 	},
 	"dependencies": {
 		"@ecopages/logger": "^0.2.3",

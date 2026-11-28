@@ -338,18 +338,20 @@ interface ExportTreeSchemaOptions {
 	readonly accepts?: readonly string[];
 	/** Which shape of each schema to write. Default `'input'`, the authored shape. */
 	readonly io?: 'input' | 'output';
-	/** The JSON Schema dialect. Default `'draft-2020-12'`. */
-	readonly target?: JSONSchemaTarget;
+	/** The JSON Schema dialect. Default `'draft-2020-12'`. Any other value throws before a schema is read. */
+	readonly target?: 'draft-2020-12' | 'draft-07';
 	/** Writes one registration's schema as JSON Schema, or returns `undefined`. Default: its `~standard.jsonSchema`. */
 	readonly resolve?: (
 		schema: StandardSchemaV1,
-		context: { io: 'input' | 'output'; target: JSONSchemaTarget },
+		context: { io: 'input' | 'output'; target: 'draft-2020-12' | 'draft-07' },
 	) => JSONSchemaObject | undefined;
 }
 
 type JSONSchemaObject = Record<string, unknown>;
-type JSONSchemaTarget = StandardJSONSchemaV1.Target;
+type JSONSchemaTarget = 'draft-2020-12' | 'draft-07' | 'draft-04' | 'openapi-3.0';
 ```
+
+`JSONSchemaTarget` is the closed set of Standard JSON Schema names that the registry's APIs take. `exportTreeSchema` writes two of them, `'draft-2020-12'` and `'draft-07'`, and throws an `Error` for any other `target` (a misspelling, `'openapi-3.0'`, Zod's older spelling of draft-07) before it reads a schema, instead of writing a document without `$schema`.
 
 Writes the JSON Schema of a whole tree of registrations, composed at the JSON Schema level, independent of the validator. `lookup` is a registry of either kind or a list of registries; when two list a `$type`, the first wins. The result is `{ $schema, $defs, anyOf }`: one definition per `$type` under `$defs` (`definitions` for a `'draft-07'` target), and the root as the union of `accepts`, or of every `$type`. A `$ref` writes the `$type` as a JSON Pointer token: `~` as `~0`, `/` as `~1`, and the rest percent-encoded.
 
@@ -492,7 +494,15 @@ type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
 ```typescript
 function readStandardJSONSchema(schema: unknown): StandardJSONSchemaV1.Converter | undefined;
 
-function createJSONSchemaEmbedder(target: string, placement: JSONSchemaPlacement): JSONSchemaEmbedder;
+function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JSONSchemaPlacement): JSONSchemaEmbedder;
+
+function assertJSONSchemaTarget(target: string): asserts target is JSONSchemaTarget;
+
+function replaceChildSlot(
+	definition: JSONSchemaObject,
+	path: { readonly $type: string; readonly keys: readonly string[] },
+	union: JSONSchemaObject,
+): void;
 
 type JSONSchemaPlacement =
 	{ readonly kind: 'document' } | { readonly kind: 'collection'; readonly uri: (id: string) => string };
@@ -505,7 +515,11 @@ interface JSONSchemaEmbedder {
 }
 ```
 
-`createJSONSchemaEmbedder` embeds schemas that were written as documents of their own into one JSON Schema being written: it drops `$schema`, moves a schema whose `$ref`s point into itself to where they resolve (the document's definitions under `embedded-<n>`, or a collection entry of its own at `uri(id)`) and renames each anchor under that key. A schema with an `$id` of its own resolves itself and is kept as it is.
+`createJSONSchemaEmbedder` embeds schemas that were written as documents of their own into one JSON Schema being written: it drops `$schema`, moves a schema whose `$ref`s point into itself to where they resolve (the document's definitions under `embedded-<n>`, or a collection entry of its own at `uri(id)`) and renames each anchor under that key. A schema with an `$id` of its own resolves itself and is kept as it is. It takes any of the four `JSONSchemaTarget`s and throws an `Error` for any other string.
+
+`assertJSONSchemaTarget` throws the same `Error` for a string that is not a `JSONSchemaTarget`, and narrows it to one otherwise. Use it for the `target` of a Standard JSON Schema converter's options, which the Standard type leaves open.
+
+`replaceChildSlot` is the step `exportTreeSchema` takes for each child path, for code that writes a JSON Schema of its own. It replaces, in place, the slot that `path.keys` names in the JSON Schema of a registration (`definition`), and only the slot: an array gets `items: union` (and `union` at each tuple position), an object becomes `union`, and an open slot becomes `{ anyOf: [union, { type: 'array', items: union }] }`. `required`, list bounds, annotations and sibling keys stay. Each place takes its own copy of `union`, which you write with the `$ref`s of your document. A slot it cannot reach (behind `allOf`, a `$ref` or a union, inside a schema with an `$id` of its own, or not declared) throws a `RegistryError` with code `'unreachable-child-path'`. Checking that the names in `union` are registered is the caller's, as it is in `exportTreeSchema`.
 
 ### Fall back to Standard JSON Schema
 

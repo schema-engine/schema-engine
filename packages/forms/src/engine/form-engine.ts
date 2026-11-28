@@ -6,6 +6,7 @@ import { ComponentType } from './component-type';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { JSONSchemaTarget } from '@schema-engine/registry';
 import * as z from 'zod/mini';
 import type { FormEngineSchemaArtifacts } from './schema-artifacts';
 import {
@@ -399,8 +400,16 @@ export class FormEngine<
 		return this.schemaArtifacts.metadataRegistry;
 	}
 
+	/**
+	 * The JSON Schema of every registration, one entry each, for a tool that takes a collection of schemas.
+	 *
+	 * @remarks
+	 * `target` is a Standard JSON Schema name (`'draft-2020-12'`, the default, `'draft-07'`, `'draft-04'` or
+	 * `'openapi-3.0'`). Any other value throws before a schema is converted, as it does for
+	 * {@link FormEngine.generateFormConfigSchema} and {@link FormEngine.generateActionConfigSchema}.
+	 */
 	generateJSONSchemaCollection(options?: {
-		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
+		target?: JSONSchemaTarget;
 		uri?: (id: string) => string;
 		io?: 'input' | 'output';
 	}) {
@@ -419,18 +428,18 @@ export class FormEngine<
 	 * {@link FormEngine.generateActionConfigSchema}: the export describes what authors write, and an element
 	 * schema that pipes a transform (Radiant's `input-otp`) has no JSON Schema for its output side, so
 	 * `io: 'output'` throws for an engine that registers one.
+	 *
+	 * `target` is a Standard JSON Schema name: `'draft-2020-12'` (the default), `'draft-07'`, `'draft-04'` or
+	 * `'openapi-3.0'`. Any other value throws before a schema is converted.
 	 */
-	generateFormConfigSchema(options?: {
-		target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
-		io?: 'input' | 'output';
-	}) {
+	generateFormConfigSchema(options?: { target?: JSONSchemaTarget; io?: 'input' | 'output' }) {
 		return this.schemaArtifacts.jsonSchema.generateFormConfig(options);
 	}
 
 	generateActionConfigSchema(
 		actionType: string,
 		options?: {
-			target?: 'draft-4' | 'draft-7' | 'draft-2020-12' | 'openapi-3.0';
+			target?: JSONSchemaTarget;
 			io?: 'input' | 'output';
 		},
 	) {
