@@ -5,5 +5,5 @@
  * and comprehensive error handling for Form Engine.
  */
 
-export * from './cache';
-export * from './handler';
+export * from './cache.js';
+export * from './handler.js';

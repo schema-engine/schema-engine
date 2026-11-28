@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/logger.js';
 
 interface GTMEvent extends Record<string, unknown> {
 	event: string;

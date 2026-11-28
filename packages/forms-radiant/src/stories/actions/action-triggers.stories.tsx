@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { ActionTriggersDemo } from './action-triggers.demo';
-import { realtimeDashboardPlay } from './action-triggers.play';
+import { ActionTriggersDemo } from './action-triggers.demo.js';
+import { realtimeDashboardPlay } from './action-triggers.play.js';
 
 const meta = {
 	title: 'Capabilities/Actions',

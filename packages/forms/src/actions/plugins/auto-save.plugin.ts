@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '@/types';
+import type { BuilderActionRuntimeContext, BuilderActionRegistration, BuilderActionConfig } from '@/types/index.js';
 
 /**
  * Storage Interface for Auto-Save Plugin

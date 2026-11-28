@@ -1,1 +1,1 @@
-export { createRadiantFormEngine } from './builder-registry';
+export { createRadiantFormEngine } from './builder-registry.js';

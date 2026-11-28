@@ -1,21 +1,21 @@
-import { globalFetch, withCsrf, type CsrfPolicy, type FormFetch } from '@/lib/form-fetch';
-import type { FormIssueFormatter } from '@/state-container/types';
+import { globalFetch, withCsrf, type CsrfPolicy, type FormFetch } from '@/lib/form-fetch.js';
+import type { FormIssueFormatter } from '@/state-container/types.js';
 import { assertStandardSchema, createRegistry, RegistryError } from '@schema-engine/registry';
-import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '@/types/registration';
+import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '@/types/registration.js';
 import type {
 	ActionRegistrationConstraint,
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
-} from '@/builder/types.utils';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
-import { FormEngine } from '@/engine/form-engine';
-import { ComponentType } from '@/engine/component-type';
-import { createActionExportSchemaMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts';
-import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog';
-import { logger } from '@/lib/logger';
-import { ELEMENT_CHILDREN_KEY } from '@/lib/element-children';
-import { withExportedRules } from '@/lib/exported-rules';
-import { withActionEnvelope } from '@/lib/exported-action-envelope';
+} from '@/builder/types.utils.js';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types.js';
+import { FormEngine } from '@/engine/form-engine.js';
+import { ComponentType } from '@/engine/component-type.js';
+import { createActionExportSchemaMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts.js';
+import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog.js';
+import { logger } from '@/lib/logger.js';
+import { ELEMENT_CHILDREN_KEY } from '@/lib/element-children.js';
+import { withExportedRules } from '@/lib/exported-rules.js';
+import { withActionEnvelope } from '@/lib/exported-action-envelope.js';
 import {
 	assertAxesNotReserved,
 	createAppearanceSchema,
@@ -27,13 +27,13 @@ import {
 	type LayoutInput,
 	type LayoutTheme,
 } from '@schema-engine/layout';
-import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
-import { createFormConfigShape } from '@/schemas/form-config-shape';
+import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes.js';
+import { createFormConfigShape } from '@/schemas/form-config-shape.js';
 import * as z from 'zod/mini';
-import { resolveExportSchema } from '@/lib/export-schema';
-import { createExportedRecipeView } from '@/lib/exported-recipe-view';
-import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
-import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation';
+import { resolveExportSchema } from '@/lib/export-schema.js';
+import { createExportedRecipeView } from '@/lib/exported-recipe-view.js';
+import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol.js';
+import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation/index.js';
 
 /**
  * Rejects an element registration that states no `kind`, a container that breaks the child path rule, and an input that
@@ -311,10 +311,15 @@ function registerSchemaMetadata(
  * Rejects an axis a registration declares that the layout theme's axis registry does not hold, so a
  * typo such as `'sise'` fails the build instead of silently making the axis unsupported.
  */
-function assertDeclaredAxes(owner: string, axes: readonly string[] | undefined, layout: LayoutTheme): void {
+function assertDeclaredAxes(
+	owner: string,
+	axes: readonly string[] | undefined,
+	layout: LayoutTheme,
+	createError: (message: string) => Error,
+): void {
 	for (const axis of axes ?? []) {
 		if (!layout.appearance.has(axis)) {
-			throw new Error(
+			throw createError(
 				`${owner} declares unknown appearance axis '${axis}'. Declared axes: ${layout.appearance.keys().join(', ')}. Add it with createFormEngine({ layout: { appearance: [...builtInAxes, defineAxis({ $type: '${axis}', ... })] } }).`,
 			);
 		}
@@ -383,11 +388,16 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	});
 
 	for (const element of elementRegistry.all()) {
-		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout);
+		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout, Error);
 	}
 	for (const recipe of recipeRegistry.all()) {
 		for (const [slot, axes] of Object.entries(recipe.appearanceAxes ?? {})) {
-			assertDeclaredAxes(`Recipe '${recipe.$type}' slot '${slot}'`, axes, layout);
+			assertDeclaredAxes(
+				`Recipe '${recipe.$type}' slot '${slot}'`,
+				axes,
+				layout,
+				(message) => new RegistryError('invalid-declaration', message, { kind: 'Recipe', $type: recipe.$type }),
+			);
 		}
 	}
 

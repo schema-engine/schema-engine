@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { toFieldArrayValue, type FieldArrayValue } from '@schema-engine/forms/state-container';
-import { useContainerSelector, useFormStateContext } from './context';
+import { useContainerSelector, useFormStateContext } from './context.js';
 
 /**
  * The rows of the array at `name` and the commands that change them.

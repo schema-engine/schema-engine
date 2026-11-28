@@ -1,7 +1,7 @@
 import type { AppearanceInput, GridLayoutConfig } from '@schema-engine/layout';
 import type { ActionConfigBase } from '@schema-engine/actions';
-import type { StepConstraint } from '../schemas/base-field';
-import type { ActionArguments } from '../types/registration';
+import type { StepConstraint } from '../schemas/base-field.js';
+import type { ActionArguments } from '../types/registration.js';
 
 /**
  * Discriminated union of `{ $type }` plus the registered config for each key.

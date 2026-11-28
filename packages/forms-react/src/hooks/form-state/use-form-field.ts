@@ -3,11 +3,11 @@ import type { ChangeEvent, CSSProperties } from 'react';
 import { mergeControlProps, createDefaultValidationRegistry, type ValidationRegistry } from '@schema-engine/forms';
 import { issueText, selectFieldState, selectValue } from '@schema-engine/forms/state-container';
 import { getGridItemVariables } from '@schema-engine/layout';
-import { isElementRequired } from '@/hooks/is-element-required';
-import { useOptionalFormEngine } from '@/hooks/use-form-context';
-import { logger } from '@/lib/logger';
-import { useContainerSelector, useFormStateContext } from './context';
-import type { ControlledFormField, FormField, FormFieldConfig, FormFieldOptions, FormFieldStatus } from './types';
+import { isElementRequired } from '@/hooks/is-element-required.js';
+import { useOptionalFormEngine } from '@/hooks/use-form-context.js';
+import { logger } from '@/lib/logger.js';
+import { useContainerSelector, useFormStateContext } from './context.js';
+import type { ControlledFormField, FormField, FormFieldConfig, FormFieldOptions, FormFieldStatus } from './types.js';
 
 let fallbackValidationRegistry: ValidationRegistry | undefined;
 

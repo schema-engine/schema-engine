@@ -20,6 +20,7 @@ import type { DebounceScope } from '../lib/debounce.js';
 import { REPORTED_TEXT, ValidationSuperseded, ValidationUnavailable } from '../schemas/validation/errors.js';
 import * as z from 'zod/mini';
 
+/** The read-only element shape used to resolve participation and validate values. */
 export interface ValidationElement {
 	readonly name?: string;
 	readonly id?: string;
@@ -31,6 +32,7 @@ export interface ValidationElement {
 	readonly disabled?: boolean;
 }
 export type ValidationElementTree = ReadonlyArray<ValidationElement>;
+/** The read-only step shape used by the form state container and value validation. */
 export interface ValidationStep {
 	readonly id?: string;
 	readonly elements: readonly ValidationElement[];

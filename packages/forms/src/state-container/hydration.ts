@@ -1,7 +1,7 @@
-import { isPlainObject } from '@/lib/is-plain-object';
-import type { IdTree, RowNode } from './row-ids';
-import type { FormStateHydration, FormStateSnapshot } from './types';
-import { createMap, isStructural, join, toInternalRecord, type NullMap } from './value-tree';
+import { isPlainObject } from '@/lib/is-plain-object.js';
+import type { IdTree, RowNode } from './row-ids.js';
+import type { FormStateHydration, FormStateSnapshot } from './types.js';
+import { createMap, isStructural, join, toInternalRecord, type NullMap } from './value-tree.js';
 
 /** What a client needs of a server's snapshot to start from the same state: its values and row ids, both plain and serializable. */
 export const toHydration = (snapshot: FormStateSnapshot): FormStateHydration => ({

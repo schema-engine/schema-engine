@@ -30,9 +30,7 @@
  *   (`childPath`) accepts (`key`).
  * - `'definition-name-clash'`: {@link exportTreeSchema}, or the JSON Schema embedder it writes through, found that a
  *   definition a schema brought along (`key`, brought by `$type`) takes the name of a `$type` or of another definition.
- * - `'invalid-declaration'`: a domain package refuses what a registration declares, other than its `childPaths`. Forms
- *   throws it for an element that states no `kind`, an input that declares neither `value` nor `childPaths`, and a
- *   container that declares a `value`.
+ * - `'invalid-declaration'`: a domain package refuses a declaration of a registration other than its child paths.
  */
 export type RegistryErrorCode =
 	| 'invalid-schema'

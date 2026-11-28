@@ -1,1 +1,1 @@
-export * from './shared/form-story';
+export * from './shared/form-story.js';

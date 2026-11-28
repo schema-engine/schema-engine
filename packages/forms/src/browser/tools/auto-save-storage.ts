@@ -1,5 +1,5 @@
-import type { AutoSaveStorage } from '../../actions/plugins/auto-save.plugin';
-import type { BrowserStorage } from './gdpr-consent';
+import type { AutoSaveStorage } from '../../actions/plugins/auto-save.plugin.js';
+import type { BrowserStorage } from './gdpr-consent.js';
 
 const trackedDraftKeysStorageKey = '__schema_engine_auto_save_draft_keys__';
 

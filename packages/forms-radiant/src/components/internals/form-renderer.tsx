@@ -6,9 +6,9 @@ import {
 	type FormEngineRuntime as CoreFormEngine,
 	isNormalizedFormConfig,
 } from '@schema-engine/forms';
-import { FormInstance } from '@/components/form-instance';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { FormRendererElement, type FormRendererProps } from './form-renderer.script';
+import { FormInstance } from '@/components/form-instance.js';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
+import { FormRendererElement, type FormRendererProps } from './form-renderer.script.js';
 
 export { FormRendererElement, type FormRendererProps };
 

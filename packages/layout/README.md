@@ -10,6 +10,8 @@ pnpm add @schema-engine/layout zod
 
 The grid and axis schemas use `zod/mini`, so `zod` is a peer dependency. A recipe's slot schemas take any [Standard Schema](https://standardschema.dev/) that validates synchronously (Zod, Valibot, or one you write); the spec's view schema, `spec.schema`, is a Standard Schema too, so validate with `safeParseStandardSchema` from `@schema-engine/registry`, not `.parse`.
 
+`createRecipeRegistry` throws `RegistryError` for an invalid winning recipe. A protocol violation or a mismatch between the declared slots and `slotSchemas` uses `'invalid-declaration'`. A recipe or slot schema that does not implement Standard Schema uses `'invalid-schema'`.
+
 ## Example
 
 ```ts

@@ -1,11 +1,11 @@
 import type { ContainerKind } from '../types/registration.js';
 import { isPlainObject } from './is-plain-object.js';
 import type { DeepReadonly } from './deep-readonly.js';
-import type { FormActionConfig, FormConfig, FormStep, FormValidationModes } from '@/schemas/form-config';
-import type { ElementConfig } from '@/schemas/field-config';
-import type { BaseField } from '@/schemas/base-field';
+import type { FormActionConfig, FormConfig, FormStep, FormValidationModes } from '@/schemas/form-config.js';
+import type { ElementConfig } from '@/schemas/field-config.js';
+import type { BaseField } from '@/schemas/base-field.js';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { FormValues } from '@/runtime/types';
+import type { FormValues } from '@/runtime/types.js';
 import type { ParsedActionSequence } from '@schema-engine/actions';
 
 const NORMALIZED_FORM_CONFIG = Symbol.for('@schema-engine/forms.normalized-form-config');

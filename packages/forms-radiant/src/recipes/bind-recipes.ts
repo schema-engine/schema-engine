@@ -17,9 +17,9 @@ import {
 	StepIndicatorsBlock,
 	WizardActionsBlock,
 	FormActionsBlock,
-} from '@/components/blocks';
-import { CardShell, HeroShell, SidebarShell, SplitScreenShell, StackShell } from '@/components/shells';
-import type { RadiantRecipePayload } from './types';
+} from '@/components/blocks/index.js';
+import { CardShell, HeroShell, SidebarShell, SplitScreenShell, StackShell } from '@/components/shells/index.js';
+import type { RadiantRecipePayload } from './types.js';
 
 /**
  * Binds a recipe spec to Radiant components, requiring exactly the slots the spec declares.

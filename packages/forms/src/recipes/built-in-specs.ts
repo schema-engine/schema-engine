@@ -1,4 +1,4 @@
-import { defineRecipeSpec } from './define-recipe-spec';
+import { defineRecipeSpec } from './define-recipe-spec.js';
 import {
 	CardShellConfigSchema,
 	FormActionsConfigSchema,
@@ -9,7 +9,7 @@ import {
 	StepHeaderConfigSchema,
 	StepIndicatorsConfigSchema,
 	WizardActionsConfigSchema,
-} from './slot-schemas';
+} from './slot-schemas.js';
 
 const MINIMAL_ACTIONS = { variant: 'minimal', showStepCounter: false } as const;
 const CARD_SHELL_AXES = ['size', 'surface'] as const;

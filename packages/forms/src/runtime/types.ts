@@ -1,13 +1,13 @@
 import type { ParsedActionSequence } from '@schema-engine/actions';
-import type { FormEngineRuntime } from '@/engine/form-engine';
-import type { FormActionConfig, SubmissionActionResult } from '@/runtime/submission-lifecycle';
-import type { FormStepState, StepNavigationMode } from '@/engine/step-machine';
-import type { ValidationStep } from '@/engine/value-validation';
-import type { SubmissionSchema } from '@/engine/submission-schema';
-import type { FormFetch } from '@/lib/form-fetch';
-import type { FormActionTrigger } from '@/actions';
-import type { DefaultValuesOf } from '@/builder/form-values';
-import type { ValuesBrand } from '@/lib/normalized-form-config';
+import type { FormEngineRuntime } from '@/engine/form-engine.js';
+import type { FormActionConfig, SubmissionActionResult } from '@/runtime/submission-lifecycle.js';
+import type { FormStepState, StepNavigationMode } from '@/engine/step-machine.js';
+import type { ValidationStep } from '@/engine/value-validation.js';
+import type { SubmissionSchema } from '@/engine/submission-schema.js';
+import type { FormFetch } from '@/lib/form-fetch.js';
+import type { FormActionTrigger } from '@/actions/index.js';
+import type { DefaultValuesOf } from '@/builder/form-values.js';
+import type { ValuesBrand } from '@/lib/normalized-form-config.js';
 import type {
 	FormStateContainer,
 	FormStateContainerConfig,
@@ -15,7 +15,7 @@ import type {
 	FormIssueFormatter,
 	FormStateHydration,
 	FormSubmissionIssue,
-} from '@/state-container/types';
+} from '@/state-container/types.js';
 
 /** The nested values of a form, as the container holds them and a submission hands them over. */
 export type FormValues = Readonly<Record<string, unknown>>;

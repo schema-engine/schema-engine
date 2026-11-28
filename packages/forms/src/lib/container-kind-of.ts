@@ -1,4 +1,4 @@
-import type { AnyElementRegistration, ContainerKind } from '@/types/registration';
+import type { AnyElementRegistration, ContainerKind } from '@/types/registration.js';
 
 /**
  * The container semantics an element registration declares: only an input can hold children, so a static element has none.

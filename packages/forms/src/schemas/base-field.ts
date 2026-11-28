@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
-import { HtmlAttributesSchema } from './html-attributes';
+import { HtmlAttributesSchema } from './html-attributes.js';
 import { AppearanceConfigSchema, ElementGridConfigSchema } from '@schema-engine/layout';
-import { BaseValidationRuleSchema } from './validation/';
+import { BaseValidationRuleSchema } from './validation/index.js';
 
 /**
  * Inline style: CSS custom properties only, keyed `--name`, with string or number values.

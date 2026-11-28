@@ -4,8 +4,8 @@
  * This module exports all type definitions used throughout the form engine.
  */
 
-export * from './categories';
-export * from './metadata';
-export * from './registration';
-export * from './define-element';
-export * from './actions';
+export * from './categories.js';
+export * from './metadata.js';
+export * from './registration.js';
+export * from './define-element.js';
+export * from './actions.js';

@@ -1,6 +1,6 @@
-import type { FieldParticipation, ValidationStep } from '@/engine/value-validation';
-import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
-import type { FieldArrayCommands } from './field-array';
+import type { FieldParticipation, ValidationStep } from '@/engine/value-validation.js';
+import type { ValidationRegistry } from '@/schemas/validation/validation-registry.js';
+import type { FieldArrayCommands } from './field-array.js';
 
 /**
  * The internal form state contract: what a form's state container owns, and what it leaves to others.

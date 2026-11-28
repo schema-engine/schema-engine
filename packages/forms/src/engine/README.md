@@ -1,52 +1,28 @@
 # Form engine validation utilities
 
-The engine exports reusable helpers for paths, effective rules, and validation.
-`validateFormValues` takes `ValidationElementTree`, and
-`collectStepFieldPaths` and `resolveParticipation` take `ValidationStep` (`id`, `elements` and `constraints`), all accepting structural read-only views or normalized snapshots.
+Import `validateFormValues`, `resolveParticipation`, `foldFieldParticipation`, `ValidationStep`
+and `ValidationElement` from `@schema-engine/forms`. A `ValidationStep` holds elements and can
+declare an id and constraints. A `ValidationElement` holds the fields the engine reads for
+validation and may contain child elements. The helpers accept these read-only shapes and
+normalized form snapshots.
 
-- `collectStepFieldPaths(step, values)` keeps container paths whole and expands
-  field templates for live array rows.
-- `effectiveRulesFor` merges authored rules with default rules registered for a
-  field type and adds a synthetic `required` rule when a conditional `require`
-  constraint holds. For example, `accountType` on `contacts.0.taxId` resolves to
-  `contacts.0.accountType`, so conditional rules use the current array row.
-- `validateFieldValue` validates one field against the full nested values tree
-  and its rendered path. It returns `{ issues, failures }`: `issues` has one entry for each rule the value
-  fails, in rule order, with the rule's `$type` as `type`, its `id` as `ruleId`, its options as `params`, a fallback
-  `message` and its `severity` (`'error'`, or `'warning'` for advice that never blocks); `superseded` is set when a rule's check was replaced by a later one before it ran (no result, not an issue); `failures` lists the
-  rules that could not run (a `FormValidationFailure` naming the path and rule), which say nothing of the value.
-- `validateFormValues` validates named fields, filters to `names` when supplied (an empty
-  list validates nothing), and returns `{ issues, failures }` by dotted path, each path with every rule it
-  fails. A field inside a fieldset or array whose `require` constraint holds is required, at any
-  depth; `effectiveRulesFor` and `validateFieldValue` take that as
-  `inheritedRequired`. A container's own `required` rule does not pass down. It skips the paths
-  that take no part (`resolveParticipation`, below). `planFormValidation` and `runValidationPlan` are its two
-  halves, for a caller that needs to know the planned paths before it runs.
-- `resolveParticipation(steps, values)` is the one rule for "does this field count": it returns
-  `{ excluded, skippedSteps, fields }`. A step its `show`/`hide` constraints hide is skipped and excludes the
-  fields it holds; a field hidden by a `show` or `hide` constraint, a disabled field (authored or by a
-  constraint) and everything inside them are excluded. Steps and fields resolve in order, in one pass that reads
-  show, disable and require against the values with whatever was excluded before absent, so a skipped step that
-  still holds `'yes'` cannot keep a later field shown or required. `fields` has the resulting `hidden`, `disabled` and
-  `required` of each path that has a constraint (`foldFieldParticipation` folds the ancestors in). It is the only
-  place constraints are evaluated for a form; the container keeps the result in its snapshot's `participation`.
-  `validateFormValues` and `planFormValidation` take the form's `steps`.
+- `validateFormValues({ steps, values, registry, debounceScope, names?, exactNames? })` returns issues
+  and failures by dotted path. Pass a debounce scope owned by the form. Omit `names` to validate
+  every named field that takes part, or pass paths to include them and their descendants. With
+  `exactNames`, only matching paths are validated. An empty list validates nothing. Each issue includes
+  the rule's type, severity and any authored id and message. A failure is a `FormValidationFailure`
+  that names the path and rule when a check could not run.
+- `resolveParticipation(steps, values)` returns `{ excluded, skippedSteps, fields }`. It excludes a
+  skipped step's fields, hidden or disabled fields and their descendants. It reads constraints in
+  order against the values that still take part. A `require` constraint on a container also applies
+  to the fields inside it.
+- `foldFieldParticipation(fields, path)` combines the field's state with its ancestors. Pass the
+  `fields` returned by `resolveParticipation`.
 
-For `validateFormValues`, omitted `names` validates every named field. A list validates only the
-requested paths and their descendants, or only those paths with `exactNames`; an empty list validates nothing.
+React and Radiant use these helpers through [the form runtime](../runtime/README.md), which owns
+wizard navigation, submission and action dispatch.
 
-React and Radiant delegate to these helpers through [`createFormRuntime`](../runtime/README.md), which owns the
-wizard's lock, the `step_leave` / `step_change` / `step_enter` order, the submission sequence and every action
-dispatch; none of them is a renderer's to call. `step-machine.ts` holds its pure part: step state by id
-(`startProgress`, `moveProgress`, `deriveStepStates`, `stepAfter`, `stepBefore`, `stepsWithErrors`), where only
-`visited` and `complete` are stored and `skipped` and `invalid` are derived.
-`collectStepActions(config, stepId)` gives the actions a trigger dispatches on the current step: the
-form's, then that step's (see [CONTEXT.md](../../../../CONTEXT.md#wizard-navigation)).
-`buildFormActionContext` takes `errors` and `touched` by dotted path, and the current step as its id, its
-position among the active steps and their number; the context carries `stepId`, `currentStep` and `totalSteps`. `validateFieldValue` and `validateFormValues`
-require a `debounceScope` owned by the form.
-
-The public usage examples are in [Engine and registrations](https://schema-engine.com/docs/forms/engine).
+See [Engine and registrations](https://schema-engine.com/docs/forms/engine) for usage examples.
 
 ## Form configuration validation
 
@@ -59,7 +35,7 @@ closest-union-branch choice), `grid-checks.ts` (named placement, areas and templ
 `{ success: false, issues }` with the same issues. Each issue is `{ message, path }`, plus `code` and `params` when a schema or the registry reported it, the path in config keys
 and indexes (`['steps', 0, 'elements', 2, 'grid', 'width']`, `[]` for the whole form). See
 [Form configuration errors](https://schema-engine.com/docs/forms/engine#form-configuration-errors) for the paths each check reports. Registration
-checks made at build time (`buildFormEngine`) are not form issues. Forms' own checks of an element (`assertElementDeclarations`) throw a `RegistryError` as well: `'invalid-child-paths'` for a `childPaths` forms does not read (on a static element, more than one path, a key other than `elements`, no `list: true`) and for `containerKind` without `childPaths`, and `'invalid-declaration'` for an element that states no `kind`, an input with neither `value` nor `childPaths`, and a container with a `value`. A recipe's slots throw a plain `Error` naming the registration. The registries the build creates with `createRegistry` throw a `RegistryError` too (`'invalid-schema'`, `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'` and `'duplicate-type'`).
+checks made at build time (`buildFormEngine`) are not form issues. Forms' own checks of an element (`assertElementDeclarations`) throw a `RegistryError` as well: `'invalid-child-paths'` for a `childPaths` forms does not read (on a static element, more than one path, a key other than `elements`, no `list: true`) and for `containerKind` without `childPaths`, and `'invalid-declaration'` for an element that states no `kind`, an input with neither `value` nor `childPaths`, and a container with a `value`. A recipe throws `RegistryError` with `kind: 'Recipe'` and its `$type`. The code is `'invalid-declaration'` for a protocol rule or a slot declaration the engine refuses, including a mismatch with `slotSchemas` or an unknown appearance axis. A slot schema that does not implement Standard Schema uses `'invalid-schema'`. The registries the build creates with `createRegistry` throw a `RegistryError` too (`'invalid-schema'`, `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'` and `'duplicate-type'`).
 
 ## Requests
 

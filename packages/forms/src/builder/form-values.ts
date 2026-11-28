@@ -1,5 +1,5 @@
-import type { FormValues } from '@/runtime/types';
-import type { ValueEntry } from './types.utils';
+import type { FormValues } from '@/runtime/types.js';
+import type { ValueEntry } from './types.utils.js';
 
 /**
  * The values a form submits, read from its literal config and the engine's value entries.

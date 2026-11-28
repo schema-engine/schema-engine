@@ -1,5 +1,5 @@
-export * from './types';
-export { defineRecipeSpec } from './define-recipe-spec';
-export { formRecipeProtocol } from './protocol';
-export * from './define-form-recipe';
-export * from './view-model';
+export * from './types.js';
+export { defineRecipeSpec } from './define-recipe-spec.js';
+export { formRecipeProtocol } from './protocol.js';
+export * from './define-form-recipe.js';
+export * from './view-model.js';

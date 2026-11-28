@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { asyncValidationCache } from './cache';
+import { asyncValidationCache } from './cache.js';
 import type { AsyncRule, ValidationContext } from '../types.js';
 import { isEmpty } from '../empty.js';
 import { REPORTED_TEXT, ValidationSuperseded, ValidationUnavailable } from '../errors.js';

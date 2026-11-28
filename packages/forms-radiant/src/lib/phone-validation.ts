@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import { PhoneRuleSchema, type PhoneRule, type ValidationRegistration } from '@schema-engine/forms';
-import { loadLibphonenumber } from './phone-number';
+import { loadLibphonenumber } from './phone-number.js';
 
 /**
  * Creates an asynchronous validator that loads phone metadata only when validation runs.

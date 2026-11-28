@@ -33,7 +33,7 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"build:lib": "turbo build:lib && turbo check-types && pnpm check:dist-types",
+		"build:lib": "turbo build:lib && turbo check-types && pnpm check:dist-types && pnpm check:dist-exports",
 		"build:lib:actions": "turbo run @schema-engine/actions#build:lib",
 		"build:lib:forms": "turbo run @schema-engine/forms#build:lib",
 		"build:lib:forms-react": "turbo run @schema-engine/forms-react#build:lib",
@@ -47,6 +47,7 @@
 		"version-packages": "changeset version && pnpm install --lockfile-only",
 		"release": "changeset publish",
 		"check:dist-types": "node scripts/check-dist-types.ts",
+		"check:dist-exports": "node scripts/check-dist-exports.ts",
 		"check-types:scripts": "pnpm --filter @schema-engine/scripts check-types",
 		"clean": "clear && pnpm dlx npkill -D -y && rm -rf pnpm-lock.yaml && pnpm install",
 		"commit": "better-commits",

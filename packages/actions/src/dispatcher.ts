@@ -7,7 +7,7 @@ import type {
 	AnyActionRegistration,
 	ParsedAction,
 	ParsedActionSequence,
-} from './types';
+} from './types.js';
 import type { NodeLookup } from '@schema-engine/registry';
 import { Logger } from '@ecopages/logger';
 

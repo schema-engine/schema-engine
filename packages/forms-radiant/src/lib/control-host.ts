@@ -1,7 +1,7 @@
 import { onUpdated, prop, RadiantElement } from '@ecopages/radiant';
 import { createEventListenerController } from '@ecopages/radiant-ui/controllers';
 import { announceControlConnect, registerFieldControl, type FieldControlAdapter } from '@ecopages/radiant-ui/form';
-import { emitControlChange, emitControlCommit } from './field-control';
+import { emitControlChange, emitControlCommit } from './field-control.js';
 
 type ControlValidity = ReturnType<NonNullable<FieldControlAdapter['validity']>>;
 

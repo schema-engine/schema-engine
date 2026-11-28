@@ -4,20 +4,20 @@ import { customElement, bindTo, onUpdated, prop, state, ref } from '@ecopages/ra
 import { FormAssociatedElement, type FormValue } from '@ecopages/radiant/form-associated-element';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules';
-import { emitControlChange, emitControlCommit } from '@/lib/field-control';
-import { registerHostControl } from '@/lib/control-host';
+import { isRenderedRequired } from '@/lib/field-rules.js';
+import { emitControlChange, emitControlCommit } from '@/lib/field-control.js';
+import { registerHostControl } from '@/lib/control-host.js';
 import { contextSelector } from '@ecopages/radiant/context';
 import { fieldAria, fieldContext, type FieldContextValue } from '@ecopages/radiant-ui/field';
-import { FieldGroup } from '../field-group';
+import { FieldGroup } from '../field-group.js';
 import {
 	createPatternMaskOptions,
 	getMaskedInputPlaceholder,
 	loadIMask,
 	parseUnmaskMode,
 	readMaskValue,
-} from '@/lib/mask-options';
-import type { MaskedInputFieldProps } from './form-masked-input.types';
+} from '@/lib/mask-options.js';
+import type { MaskedInputFieldProps } from './form-masked-input.types.js';
 
 /**
  * @remarks
@@ -69,7 +69,7 @@ export class SeMaskedInput extends FormAssociatedElement {
 
 	@ref() input!: HTMLInputElement | null;
 
-	private maskInstance: import('imask').InputMask<import('@/lib/mask-options').PatternMaskOptions> | null = null;
+	private maskInstance: import('imask').InputMask<import('@/lib/mask-options.js').PatternMaskOptions> | null = null;
 	private attachGeneration = 0;
 	private applyingValue = false;
 

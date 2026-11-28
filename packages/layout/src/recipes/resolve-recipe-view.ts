@@ -1,9 +1,14 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { safeParseStandardSchema } from '@schema-engine/registry';
-import { checkAppearance, mergeAppearance, pickSupportedAppearance, type SlotAppearanceAxes } from '../lib/appearance';
-import type { LayoutIssue } from '../lib/layout-issue';
-import type { LayoutTheme } from '../lib/layout-theme';
-import { mergeSlotDefaults } from './merge-slot-defaults';
+import {
+	checkAppearance,
+	mergeAppearance,
+	pickSupportedAppearance,
+	type SlotAppearanceAxes,
+} from '../lib/appearance.js';
+import type { LayoutIssue } from '../lib/layout-issue.js';
+import type { LayoutTheme } from '../lib/layout-theme.js';
+import { mergeSlotDefaults } from './merge-slot-defaults.js';
 
 /** Appearance picks a view inherits: the theme's vocabulary, and what the containing document picked. */
 export interface RecipeViewScope {

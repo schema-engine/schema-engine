@@ -1,14 +1,14 @@
-import type { FormTaggedConfig } from '@/schemas/form-config';
-import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
+import type { FormTaggedConfig } from '@/schemas/form-config.js';
+import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view.js';
 import { resolveRecipeView, type RecipeViewInput } from '@schema-engine/layout';
 import { safeParseNode, standardSchema, type NodeLookup, type StandardSchemaIssue } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { AnyRecipeRegistration } from '@/types/registration';
-import { logger } from '@/lib/logger';
-import type { AppearanceScope } from '@/lib/resolve-appearance';
-import { issueAt, isTaggedConfig, type FormValidationIssue } from './issues';
-import type { ValidateFormOptions } from './options';
-import { fromSchemaIssues } from './schema-issues';
+import type { AnyRecipeRegistration } from '@/types/registration.js';
+import { logger } from '@/lib/logger.js';
+import type { AppearanceScope } from '@/lib/resolve-appearance.js';
+import { issueAt, isTaggedConfig, type FormValidationIssue } from './issues.js';
+import type { ValidateFormOptions } from './options.js';
+import { fromSchemaIssues } from './schema-issues.js';
 
 /**
  * Form ids already warned about, per owner.

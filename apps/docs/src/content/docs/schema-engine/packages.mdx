@@ -17,14 +17,14 @@ Schema Engine is a set of packages that build on each other. Install the ones th
 
 ## What each package does
 
-| Package                        | What it is for                                                                                                                                                                                |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@schema-engine/registry`      | `yaml` `^2.8.0`, optional, needed only for `@schema-engine/registry/yaml`                                                                                                                     |
-| `@schema-engine/actions`       | None                                                                                                                                                                                          |
-| `@schema-engine/layout`        | `zod` `^4.5.0`                                                                                                                                                                                |
-| `@schema-engine/forms`         | `zod` `^4.5.0`                                                                                                                                                                                |
-| `@schema-engine/forms-react`   | `@schema-engine/forms`, `@schema-engine/layout`, `react` `^19`, `react-dom` `^19`, `zod` `^4.5.0`                                                                                             |
-| `@schema-engine/forms-radiant` | `@schema-engine/forms`, `@schema-engine/layout`, `@ecopages/jsx` `>=0.12.0`, `@ecopages/radiant` `>=0.12.0`, `@ecopages/signals` `>=0.12.0`, `@ecopages/radiant-ui` `>=0.6.2`, `zod` `^4.5.0` |
+| Package                        | What it is for                                                                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `@schema-engine/registry`      | Registries of registrations keyed by `$type`, and YAML documents with line-accurate errors (`/yaml`) |
+| `@schema-engine/actions`       | Registered actions, and a dispatcher that runs them in sequence and in parallel groups               |
+| `@schema-engine/layout`        | Domain-neutral grid, named appearance, themes and the recipe protocol                                |
+| `@schema-engine/forms`         | The forms domain: the engine, fields, validation, constraints, steps, form state and submission      |
+| `@schema-engine/forms-react`   | The React renderer for forms: `FormRenderer`, hooks and the field primitives                         |
+| `@schema-engine/forms-radiant` | The Radiant renderer for forms: custom elements, form controls and the registrations it ships        |
 
 `@schema-engine/actions` depends on the registry. `@schema-engine/forms` depends on the registry, actions and layout, so installing it brings them in.
 

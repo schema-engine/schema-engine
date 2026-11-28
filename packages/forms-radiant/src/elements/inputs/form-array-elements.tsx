@@ -6,10 +6,10 @@ import { RuiFieldError } from '@ecopages/radiant-ui/field';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { MapItems } from '@ecopages/jsx/client';
 import { computed, peek, state as createState, type State } from '@ecopages/signals';
-import { FormElements } from '@/components/internals/form-elements';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { formEngineContext } from '@/components/provider';
-import type { ArrayElementsProps } from './form-array-elements.types';
+import { FormElements } from '@/components/internals/form-elements.js';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
+import { formEngineContext } from '@/components/provider.js';
+import type { ArrayElementsProps } from './form-array-elements.types.js';
 import {
 	arrayItemScope,
 	createArrayRowDefault,
@@ -26,11 +26,11 @@ import {
 	type FormIssueFormatter,
 	type FormStateContainer,
 } from '@schema-engine/forms/state-container';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { isRenderedRequired, withContainerState } from '@/lib/field-rules';
-import { RequiredMarker } from '../field-group';
-import { mergeFieldGridHost } from '@/hooks/grid-styles';
-import { ChildGrid } from '@/components/internals/child-grid';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context.js';
+import { isRenderedRequired, withContainerState } from '@/lib/field-rules.js';
+import { RequiredMarker } from '../field-group.js';
+import { mergeFieldGridHost } from '@/hooks/grid-styles.js';
+import { ChildGrid } from '@/components/internals/child-grid.js';
 import { GRID_ITEM_CLASS, getAppearanceAttributes } from '@schema-engine/layout';
 
 function TrashIcon() {

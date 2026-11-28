@@ -1,15 +1,15 @@
 import type { CheckChildPaths } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { ElementMetadata } from './metadata';
+import type { ElementMetadata } from './metadata.js';
 import type {
 	ContainerKind,
 	ElementChildPaths,
 	InputRegistration,
 	StaticRegistration,
 	ValueDeclaration,
-} from './registration';
-import type { NormalizedElementConfig } from '@/lib/normalized-form-config';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
+} from './registration.js';
+import type { NormalizedElementConfig } from '@/lib/normalized-form-config.js';
+import type { ValidationRegistrationConstraint } from '@/schemas/validation/types.js';
 import type { AppearanceAxisList } from '@schema-engine/layout';
 
 type InferOutput<TSchema> = TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : never;

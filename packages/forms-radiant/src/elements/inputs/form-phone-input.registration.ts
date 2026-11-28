@@ -1,5 +1,5 @@
-import { radiantElements } from '../radiant-elements';
-import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
+import { radiantElements } from '../radiant-elements.js';
+import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation.js';
 
 export { createRadiantPhoneValidationRegistration };
 

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
-import { createValidationFieldPlay } from '@/stories/shared/field-plays';
+import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story.js';
+import { createValidationFieldPlay } from '@/stories/shared/field-plays.js';
 import { expect, within } from 'storybook/test';
-import { playClearSelection, playSelectOption } from '@/stories/shared/play';
+import { playClearSelection, playSelectOption } from '@/stories/shared/play.js';
 
-import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr.js';
 
 const languages = [
 	{ label: 'JavaScript', value: 'js' },

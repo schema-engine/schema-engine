@@ -1,7 +1,7 @@
 import { ActionDispatcher } from '@schema-engine/actions';
 import type { ActionDispatchInput } from '@schema-engine/actions';
-import type { FormActionTrigger } from '@/actions';
-import { buildFormActionContext, collectStepActions } from '@/engine/form-action-context';
+import type { FormActionTrigger } from '@/actions/index.js';
+import { buildFormActionContext, collectStepActions } from '@/engine/form-action-context.js';
 import {
 	activeStepIds,
 	deriveStepStates,
@@ -12,27 +12,27 @@ import {
 	stepsWithErrors,
 	type FormStepState,
 	type StepProgress,
-} from '@/engine/step-machine';
+} from '@/engine/step-machine.js';
 import {
 	runSubmissionLifecycle,
 	type FormActionConfig,
 	type SubmissionActionResult,
-} from '@/runtime/submission-lifecycle';
-import { collectStepFieldPaths } from '@/engine/value-validation';
-import { collectInitialValues, flattenStepElements } from '@/lib/field-scope';
-import { logger } from '@/lib/logger';
-import { DEFAULT_NOT_CHECKED, issuePath, type SubmissionSchema } from '@/engine/submission-schema';
-import { omitPaths } from '@/lib/omit-paths';
-import { getNormalizedFormValues } from '@/lib/normalized-form-config';
+} from '@/runtime/submission-lifecycle.js';
+import { collectStepFieldPaths } from '@/engine/value-validation.js';
+import { collectInitialValues, flattenStepElements } from '@/lib/field-scope.js';
+import { logger } from '@/lib/logger.js';
+import { DEFAULT_NOT_CHECKED, issuePath, type SubmissionSchema } from '@/engine/submission-schema.js';
+import { omitPaths } from '@/lib/omit-paths.js';
+import { getNormalizedFormValues } from '@/lib/normalized-form-config.js';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { createFormStateContainer } from '@/state-container/create-form-state-container';
+import { createFormStateContainer } from '@/state-container/create-form-state-container.js';
 import type {
 	FormStateSnapshot,
 	FormSubmissionIssue,
 	FormSubmitResult,
 	FormValidateResult,
-} from '@/state-container/types';
-import type { BuilderActionBaseContext } from '@/types';
+} from '@/state-container/types.js';
+import type { BuilderActionBaseContext } from '@/types/index.js';
 import {
 	isSubmissionBusy,
 	type CreateFormRuntimeOptions,
@@ -43,7 +43,7 @@ import {
 	type FormValues,
 	type NavigationOutcome,
 	type SubmitOutcome,
-} from './types';
+} from './types.js';
 
 const NO_FAILURES: readonly FormSubmissionIssue[] = Object.freeze([]);
 const IDLE: FormSubmissionState = Object.freeze({ status: 'idle', failures: NO_FAILURES, submitCount: 0 });

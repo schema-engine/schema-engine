@@ -1,7 +1,7 @@
 import { expect, within } from 'storybook/test';
-import { queryDeep } from '@/stories/shared/dom-utils';
-import { whenInteractive } from '@/stories/shared/storybook-ssr';
-import { getFieldControl } from '@/stories/shared/play';
+import { queryDeep } from '@/stories/shared/dom-utils.js';
+import { whenInteractive } from '@/stories/shared/storybook-ssr.js';
+import { getFieldControl } from '@/stories/shared/play.js';
 
 /**
  * Finds the grid container that lays out the current step's elements.

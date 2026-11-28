@@ -5,14 +5,14 @@
  * The conformance suite is not exported here: it is test tooling, so it has its own entry,
  * `@schema-engine/forms/testing`.
  */
-export { createFormStateContainer } from './create-form-state-container';
-export { toFieldArrayValue } from './field-array';
-export { toHydration } from './hydration';
-export type { FieldArrayCommands, FieldArrayValue } from './field-array';
-export { issueText } from './issue-text';
-export { selectFieldState, selectValue } from './selectors';
-export type { FormFieldState } from './selectors';
-export { FORM_ROOT } from './types';
+export { createFormStateContainer } from './create-form-state-container.js';
+export { toFieldArrayValue } from './field-array.js';
+export { toHydration } from './hydration.js';
+export type { FieldArrayCommands, FieldArrayValue } from './field-array.js';
+export { issueText } from './issue-text.js';
+export { selectFieldState, selectValue } from './selectors.js';
+export type { FormFieldState } from './selectors.js';
+export { FORM_ROOT } from './types.js';
 export type {
 	FormIssueFormatter,
 	FormReValidateMode,
@@ -33,4 +33,4 @@ export type {
 	FormStateWarning,
 	FormValidationMode,
 	NativeValidity,
-} from './types';
+} from './types.js';

@@ -1,5 +1,5 @@
 import type { StoryContext } from 'storybook/internal/types';
-import { whenInteractive } from '@/stories/shared/storybook-ssr';
+import { whenInteractive } from '@/stories/shared/storybook-ssr.js';
 import {
 	clickSubmit,
 	expectFieldError,
@@ -9,7 +9,7 @@ import {
 	playFieldFocusAndType,
 	playSelectOption,
 	playSliderToValue,
-} from './play';
+} from './play.js';
 
 function readControlValue(input: HTMLElement): string {
 	return 'value' in input ? String((input as HTMLInputElement).value) : '';

@@ -10,52 +10,59 @@
  * (`/state-container`, `/recipes`, `/csrf`, `/server-errors`, `/browser`, `/testing`, `/agent-tool`).
  */
 
-export { autoSavePlugin } from './actions/plugins/auto-save.plugin';
-export type { AutoSaveAction, AutoSavePluginConfig, AutoSaveStorage } from './actions/plugins/auto-save.plugin';
-export { formResetPlugin } from './actions/plugins/form-reset.plugin';
-export type { FormResetAction, FormResetPluginConfig } from './actions/plugins/form-reset.plugin';
-export { formSubmitPlugin } from './actions/plugins/form-submit.plugin';
-export type { FormSubmitAction, FormSubmitPluginConfig } from './actions/plugins/form-submit.plugin';
-export { SubmitActionRegistration } from './actions/plugins/form-submit.registration';
-export { gtmPlugin } from './actions/plugins/gtm.plugin';
-export type { GTMEventAction, GTMPluginConfig, GTMTrackerInterface } from './actions/plugins/gtm.plugin';
-export { notificationPlugin } from './actions/plugins/notification.plugin';
-export type { NotificationAction, NotificationPluginConfig } from './actions/plugins/notification.plugin';
-export { NotificationActionRegistration } from './actions/plugins/notification.registration';
-export { FormActionTriggerSchema } from './actions/triggers';
-export type { FormActionTrigger } from './actions/triggers';
-export type { ActionExecutionResult, FormActionConfig } from './actions/types';
-export type { DefaultValuesOf, ValuesOf } from './builder/form-values';
+export { autoSavePlugin } from './actions/plugins/auto-save.plugin.js';
+export type { AutoSaveAction, AutoSavePluginConfig, AutoSaveStorage } from './actions/plugins/auto-save.plugin.js';
+export { formResetPlugin } from './actions/plugins/form-reset.plugin.js';
+export type { FormResetAction, FormResetPluginConfig } from './actions/plugins/form-reset.plugin.js';
+export { formSubmitPlugin } from './actions/plugins/form-submit.plugin.js';
+export type { FormSubmitAction, FormSubmitPluginConfig } from './actions/plugins/form-submit.plugin.js';
+export { SubmitActionRegistration } from './actions/plugins/form-submit.registration.js';
+export { gtmPlugin } from './actions/plugins/gtm.plugin.js';
+export type { GTMEventAction, GTMPluginConfig, GTMTrackerInterface } from './actions/plugins/gtm.plugin.js';
+export { notificationPlugin } from './actions/plugins/notification.plugin.js';
+export type { NotificationAction, NotificationPluginConfig } from './actions/plugins/notification.plugin.js';
+export { NotificationActionRegistration } from './actions/plugins/notification.registration.js';
+export { FormActionTriggerSchema } from './actions/triggers.js';
+export type { FormActionTrigger } from './actions/triggers.js';
+export type { ActionExecutionResult, FormActionConfig } from './actions/types.js';
+export type { DefaultValuesOf, ValuesOf } from './builder/form-values.js';
 export type {
 	ActionRegistrationConstraint,
 	ElementRegistrationConstraint,
 	EngineOutputMaps,
 	RecipeRegistrationConstraint,
 	ValueEntry,
-} from './builder/types.utils';
-export { createFormEngine } from './engine/create-form-engine';
+} from './builder/types.utils.js';
+export { createFormEngine } from './engine/create-form-engine.js';
 export type {
 	CreateFormEngineOptions,
 	ExtendFormEngineOptions,
 	FormEngineFromOptions,
-} from './engine/create-form-engine';
-export type { FormActionContextFormState } from './engine/form-action-context';
-export type { FormEngine } from './engine/form-engine';
-export type { FormEngineRuntime } from './engine/form-engine';
-export type { FormStepState, StepNavigationMode } from './engine/step-machine';
-export type { SubmissionSchema, SubmissionSchemaConfig } from './engine/submission-schema';
+} from './engine/create-form-engine.js';
+export type { FormActionContextFormState } from './engine/form-action-context.js';
+export type { FormEngine } from './engine/form-engine.js';
+export type { FormEngineRuntime } from './engine/form-engine.js';
+export type { FormStepState, StepNavigationMode } from './engine/step-machine.js';
+export type { SubmissionSchema, SubmissionSchemaConfig } from './engine/submission-schema.js';
 export {
 	FormValidationFailure,
 	foldFieldParticipation,
 	resolveParticipation,
 	validateFormValues,
-} from './engine/value-validation';
-export type { FieldParticipation, Participation, ValidationIssue, ValidationSeverity } from './engine/value-validation';
-export { createDebounceScope } from './lib/debounce';
-export type { DebounceScope } from './lib/debounce';
-export type { DeepReadonly } from './lib/deep-readonly';
-export { elementChildrenSchema, getElementChildren } from './lib/element-children';
-export type { ElementChildrenInput, ElementChildrenOutput } from './lib/element-children';
+} from './engine/value-validation.js';
+export type {
+	FieldParticipation,
+	Participation,
+	ValidationElement,
+	ValidationIssue,
+	ValidationSeverity,
+	ValidationStep,
+} from './engine/value-validation.js';
+export { createDebounceScope } from './lib/debounce.js';
+export type { DebounceScope } from './lib/debounce.js';
+export type { DeepReadonly } from './lib/deep-readonly.js';
+export { elementChildrenSchema, getElementChildren } from './lib/element-children.js';
+export type { ElementChildrenInput, ElementChildrenOutput } from './lib/element-children.js';
 export {
 	applyFieldOverlay,
 	arrayItemScope,
@@ -68,29 +75,29 @@ export {
 	objectFieldScope,
 	seedArrayRows,
 	usesScalarArrayItem,
-} from './lib/field-scope';
-export type { FieldOverlay, FieldScope } from './lib/field-scope';
-export type { FormFetch } from './lib/form-fetch';
-export { gridTrackItems } from './lib/grid-track-items';
-export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from './lib/form-view';
+} from './lib/field-scope.js';
+export type { FieldOverlay, FieldScope } from './lib/field-scope.js';
+export type { FormFetch } from './lib/form-fetch.js';
+export { gridTrackItems } from './lib/grid-track-items.js';
+export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from './lib/form-view.js';
 export {
 	getElementContainerKind,
 	isNormalizedElementConfig,
 	isNormalizedFormConfig,
-} from './lib/normalized-form-config';
+} from './lib/normalized-form-config.js';
 export type {
 	FormConfigView,
 	NormalizedElementConfig,
 	NormalizedFormConfig,
 	ValuesBrand,
-} from './lib/normalized-form-config';
-export { getValueAtPath, setValueAtPath } from './lib/path-values';
-export type { FormValidationIssue, FormValidationResult } from './lib/validate-form/issues';
-export { FormValidationError } from './lib/validate-form/validation-error';
-export type { ActionRegistry, ElementRegistry, RecipeRegistry } from './registries';
-export { createFormRuntime, defaultNavigate } from './runtime/create-form-runtime';
-export type { SubmissionActionResult } from './runtime/submission-lifecycle';
-export { isSubmissionBusy } from './runtime/types';
+} from './lib/normalized-form-config.js';
+export { getValueAtPath, setValueAtPath } from './lib/path-values.js';
+export type { FormValidationIssue, FormValidationResult } from './lib/validate-form/issues.js';
+export { FormValidationError } from './lib/validate-form/validation-error.js';
+export type { ActionRegistry, ElementRegistry, RecipeRegistry } from './registries/index.js';
+export { createFormRuntime, defaultNavigate } from './runtime/create-form-runtime.js';
+export type { SubmissionActionResult } from './runtime/submission-lifecycle.js';
+export { isSubmissionBusy } from './runtime/types.js';
 export type {
 	CreateFormRuntimeOptions,
 	FormRuntime,
@@ -106,14 +113,14 @@ export type {
 	NavigationOutcome,
 	SubmissionStatus,
 	SubmitOutcome,
-} from './runtime/types';
-export { BaseFieldSchema } from './schemas/base-field';
-export type { BaseField, BaseFieldInput, ConstraintLogic, StepConstraint } from './schemas/base-field';
-export type { ElementConfig, ElementId, GetElementConfig } from './schemas/field-config';
-export type { FormConfig, FormStep, FormViewConfig } from './schemas/form-config';
-export { mergeControlProps } from './schemas/html-attributes';
-export { ValidationRuleError, ValidationSuperseded, ValidationUnavailable } from './schemas/validation/errors';
-export { ValidationPresets } from './schemas/validation/presets';
+} from './runtime/types.js';
+export { BaseFieldSchema } from './schemas/base-field.js';
+export type { BaseField, BaseFieldInput, ConstraintLogic, StepConstraint } from './schemas/base-field.js';
+export type { ElementConfig, ElementId, GetElementConfig } from './schemas/field-config.js';
+export type { FormConfig, FormStep, FormViewConfig } from './schemas/form-config.js';
+export { mergeControlProps } from './schemas/html-attributes.js';
+export { ValidationRuleError, ValidationSuperseded, ValidationUnavailable } from './schemas/validation/errors.js';
+export { ValidationPresets } from './schemas/validation/presets.js';
 export {
 	AsyncRuleSchema,
 	Base64RuleSchema,
@@ -144,7 +151,7 @@ export {
 	UrlRuleSchema,
 	UuidRuleSchema,
 	ValidationRuleSchema,
-} from './schemas/validation/types';
+} from './schemas/validation/types.js';
 export type {
 	AsyncRule,
 	Base64Rule,
@@ -180,19 +187,19 @@ export type {
 	ValidationRegistrationConstraint,
 	ValidationRule,
 	ValidationScope,
-} from './schemas/validation/types';
-export { createValidationContext, getValidationRulesForElement, isFieldRequired } from './schemas/validation/utils';
-export type { ValidationContextInput } from './schemas/validation/utils';
-export { createDefaultValidationRegistry, createValidationRegistry } from './schemas/validation/validation-registry';
+} from './schemas/validation/types.js';
+export { createValidationContext, getValidationRulesForElement, isFieldRequired } from './schemas/validation/utils.js';
+export type { ValidationContextInput } from './schemas/validation/utils.js';
+export { createDefaultValidationRegistry, createValidationRegistry } from './schemas/validation/validation-registry.js';
 export type {
 	RuleCheck,
 	ValidationRegistry,
 	ValidationRegistryOptions,
-} from './schemas/validation/validation-registry';
-export type { BuilderActionBaseContext, BuilderActionRuntimeContext } from './types/actions';
-export { defineInput, defineStatic } from './types/define-element';
-export type { ElementRenderProps } from './types/define-element';
-export type { ElementMetadata } from './types/metadata';
+} from './schemas/validation/validation-registry.js';
+export type { BuilderActionBaseContext, BuilderActionRuntimeContext } from './types/actions.js';
+export { defineInput, defineStatic } from './types/define-element.js';
+export type { ElementRenderProps } from './types/define-element.js';
+export type { ElementMetadata } from './types/metadata.js';
 export type {
 	AnyActionRegistration,
 	AnyElementRegistration,
@@ -206,4 +213,4 @@ export type {
 	RecipeRegistration,
 	StaticRegistration,
 	ValueDeclaration,
-} from './types/registration';
+} from './types/registration.js';

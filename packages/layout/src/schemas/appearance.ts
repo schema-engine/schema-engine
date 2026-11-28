@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { AxisRegistry } from '@/lib/appearance';
+import type { AxisRegistry } from '@/lib/appearance.js';
 
 /**
  * A pick of named appearance values, one per axis: `{ size: 'compact' }`.

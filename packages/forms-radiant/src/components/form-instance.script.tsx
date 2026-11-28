@@ -22,17 +22,17 @@ import {
 	type SubmissionActionResult,
 } from '@schema-engine/forms';
 import type { FormIssueFormatter, FormStateHydration, FormSubmissionIssue } from '@schema-engine/forms/state-container';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { formEngineContext } from '@/components/provider';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context.js';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
+import { formEngineContext } from '@/components/provider.js';
 import '@ecopages/radiant-ui/form';
 import type { RuiFormElement, RuiFormSubmitContext } from '@ecopages/radiant-ui/form';
-import { createFormMeta, initialSteps, type FormMeta } from '@/lib/instance-view';
-import { logger } from '@/lib/logger';
-import { replaceFormData } from '@/lib/native-form-data';
+import { createFormMeta, initialSteps, type FormMeta } from '@/lib/instance-view.js';
+import { logger } from '@/lib/logger.js';
+import { replaceFormData } from '@/lib/native-form-data.js';
 import { csrfFieldFor } from '@schema-engine/forms/csrf';
-import { syncCsrfField } from '@/lib/csrf-field';
-import { instanceCallbacks } from '@/lib/instance-callbacks';
+import { syncCsrfField } from '@/lib/csrf-field.js';
+import { instanceCallbacks } from '@/lib/instance-callbacks.js';
 
 const MISSING_ENGINE_MESSAGE =
 	'The form is in use without a FormEngine, so the engine validation rules and actions do not run. Assign `engine` to the enclosing `se-form-renderer`, or pass `engine` to `FormRenderer`.';

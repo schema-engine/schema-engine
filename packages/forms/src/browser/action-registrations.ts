@@ -1,11 +1,11 @@
-import { autoSavePlugin, AutoSaveActionSchema, type AutoSaveStorage } from '../actions/plugins/auto-save.plugin';
-import { formResetPlugin, FormResetActionSchema } from '../actions/plugins/form-reset.plugin';
-import { gtmPlugin, GTMEventActionSchema } from '../actions/plugins/gtm.plugin';
-import { logger } from '@/lib/logger';
-import type { BuilderActionRegistration } from '@/types';
-import { GDPRConsent, type GDPRConsentTool } from './tools/gdpr-consent';
-import { GTMTracker } from './tools/gtm-tracker';
-import { localStorageAutoSaveStorage } from './tools/auto-save-storage';
+import { autoSavePlugin, AutoSaveActionSchema, type AutoSaveStorage } from '../actions/plugins/auto-save.plugin.js';
+import { formResetPlugin, FormResetActionSchema } from '../actions/plugins/form-reset.plugin.js';
+import { gtmPlugin, GTMEventActionSchema } from '../actions/plugins/gtm.plugin.js';
+import { logger } from '@/lib/logger.js';
+import type { BuilderActionRegistration } from '@/types/index.js';
+import { GDPRConsent, type GDPRConsentTool } from './tools/gdpr-consent.js';
+import { GTMTracker } from './tools/gtm-tracker.js';
+import { localStorageAutoSaveStorage } from './tools/auto-save-storage.js';
 
 export interface BrowserActionRegistrationsOptions {
 	storage?: AutoSaveStorage;

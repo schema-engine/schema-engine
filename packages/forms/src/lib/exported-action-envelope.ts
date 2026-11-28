@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { FormActionTriggerSchema } from '@/actions/triggers';
+import { FormActionTriggerSchema } from '@/actions/triggers.js';
 
 /**
  * Adds the keys the engine owns to an action schema for a JSON Schema export.

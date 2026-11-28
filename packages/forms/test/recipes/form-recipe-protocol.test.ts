@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { RegistryError } from '@schema-engine/registry';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineFormRecipe } from '@/recipes/define-form-recipe';
 import { defineRecipeSpec } from '@/recipes/define-recipe-spec';
@@ -42,8 +43,15 @@ describe('the forms recipe protocol', () => {
 
 	test('names the recipe and the rule when the engine builds a hand-written recipe that breaks a rule', () => {
 		const invalid = { ...defineFormRecipe(cardSpec, {}), $type: 'odd-card', slots: ['progress' as const] };
-		expect(() => createFormEngine({ recipes: [invalid] })).toThrow(
-			/Recipe 'odd-card' breaks rule 'single-step-has-no-progress'/,
+		const build = () => createFormEngine({ recipes: [invalid] });
+		expect(build).toThrow(RegistryError);
+		expect(build).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'odd-card',
+				message: expect.stringContaining("Recipe 'odd-card' breaks rule 'single-step-has-no-progress'"),
+			}),
 		);
 	});
 

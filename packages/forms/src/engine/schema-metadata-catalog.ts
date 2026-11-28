@@ -1,5 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { ComponentType } from './component-type';
+import type { ComponentType } from './component-type.js';
 
 /**
  * Metadata entry for a registered component schema.

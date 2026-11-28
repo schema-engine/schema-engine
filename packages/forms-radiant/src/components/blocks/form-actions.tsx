@@ -4,8 +4,8 @@ import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { isSubmissionBusy } from '@schema-engine/forms';
 import { type FormActionsConfig } from '@schema-engine/forms/recipes/built-in';
-import type { RecipeSlotContext } from '@/recipes/types';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context';
+import type { RecipeSlotContext } from '../../recipes/types.js';
+import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context.js';
 
 /**
  * Submit-only action bar for single-step recipes.

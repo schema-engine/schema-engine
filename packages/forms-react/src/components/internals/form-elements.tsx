@@ -6,7 +6,7 @@ import {
 	composeFieldName,
 	type NormalizedElementConfig,
 } from '@schema-engine/forms';
-import { FormElement } from './field-renderer';
+import { FormElement } from './field-renderer.js';
 
 export interface FormElementsProps {
 	elements: ReadonlyArray<NormalizedElementConfig>;

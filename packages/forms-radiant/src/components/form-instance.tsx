@@ -7,14 +7,14 @@ import type {
 	FormEngineRuntime as CoreFormEngine,
 } from '@schema-engine/forms';
 import { getViewRecipe } from '@schema-engine/forms/recipes';
-import { RecipeRenderer } from '@/components/internals/recipe-renderer';
-import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell';
-import type { FormAction, FormSubmitContext } from '@/adapters/types';
-import { feedInstanceCallbacks, type InstanceCallbacks } from '@/lib/instance-callbacks';
+import { RecipeRenderer } from '@/components/internals/recipe-renderer.js';
+import { collectFormInitialValues, ConfiguredRuiForm } from '@/adapters/radiant/rui-form-shell.js';
+import type { FormAction, FormSubmitContext } from '@/adapters/types.js';
+import { feedInstanceCallbacks, type InstanceCallbacks } from '@/lib/instance-callbacks.js';
 import { createFormStateContainer, toHydration, type FormStateHydration } from '@schema-engine/forms/state-container';
 
 /** Registers `<se-form-instance>` when this view is imported. */
-import { FormInstanceElement } from './form-instance.script';
+import { FormInstanceElement } from './form-instance.script.js';
 
 export { FormInstanceElement };
 

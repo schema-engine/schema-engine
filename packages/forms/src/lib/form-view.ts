@@ -1,4 +1,4 @@
-import type { FormConfigView } from '@/lib/normalized-form-config';
+import type { FormConfigView } from '@/lib/normalized-form-config.js';
 
 /** Default `view.$type` for multi-step forms that omit `view`; see `createFormEngine({ defaultWizardRecipe })`. */
 export const DEFAULT_WIZARD_RECIPE = 'bare-controls';

@@ -5,7 +5,7 @@ import { afterAll, describe, expect, test } from 'vitest';
 import { exportedSymbolNames, symbolsFromOtherPackages } from '../../../test-utils/entry-exports';
 
 /**
- * Tests of the `test-utils/entry-exports.ts` helper that every package's `entry-points` test relies on.
+ * Tests of the entry export checks run by the build gate.
  *
  * @remarks
  * A guard that passes when it cannot see what it guards is worse than none, so each case here is a way the guard

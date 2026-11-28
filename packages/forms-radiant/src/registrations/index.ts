@@ -1,23 +1,23 @@
-import { InputElementRegistration } from '@/elements/inputs/form-input.registration';
-import { TextareaElementRegistration } from '@/elements/inputs/form-textarea.registration';
-import { NumberElementRegistration } from '@/elements/inputs/form-number.registration';
-import { SelectElementRegistration } from '@/elements/inputs/form-select.registration';
-import { CheckboxElementRegistration } from '@/elements/inputs/form-checkbox.registration';
-import { CheckboxGroupElementRegistration } from '@/elements/inputs/form-checkbox-group.registration';
-import { SwitchElementRegistration } from '@/elements/inputs/form-switch.registration';
-import { RadioElementRegistration } from '@/elements/inputs/form-radio.registration';
-import { SliderElementRegistration } from '@/elements/inputs/form-slider.registration';
-import { ComboboxElementRegistration } from '@/elements/inputs/form-combobox.registration';
-import { DropZoneElementRegistration } from '@/elements/inputs/form-drop-zone.registration';
-import { FieldSetRegistration } from '@/elements/inputs/form-fieldset.registration';
-import { InputOTPElementRegistration } from '@/elements/inputs/form-input-otp.registration';
-import { PhoneInputElementRegistration } from '@/elements/inputs/form-phone-input.registration';
-import { MaskedInputElementRegistration } from '@/elements/inputs/form-masked-input.registration';
-import { ArrayElementRegistration } from '@/elements/inputs/form-array-elements.registration';
-import { SubmitButtonElementRegistration } from '@/elements/actions/submit-button.registration';
-import { SubmissionAlertElementRegistration } from '@/elements/content/form-submission-alert.registration';
+import { InputElementRegistration } from '@/elements/inputs/form-input.registration.js';
+import { TextareaElementRegistration } from '@/elements/inputs/form-textarea.registration.js';
+import { NumberElementRegistration } from '@/elements/inputs/form-number.registration.js';
+import { SelectElementRegistration } from '@/elements/inputs/form-select.registration.js';
+import { CheckboxElementRegistration } from '@/elements/inputs/form-checkbox.registration.js';
+import { CheckboxGroupElementRegistration } from '@/elements/inputs/form-checkbox-group.registration.js';
+import { SwitchElementRegistration } from '@/elements/inputs/form-switch.registration.js';
+import { RadioElementRegistration } from '@/elements/inputs/form-radio.registration.js';
+import { SliderElementRegistration } from '@/elements/inputs/form-slider.registration.js';
+import { ComboboxElementRegistration } from '@/elements/inputs/form-combobox.registration.js';
+import { DropZoneElementRegistration } from '@/elements/inputs/form-drop-zone.registration.js';
+import { FieldSetRegistration } from '@/elements/inputs/form-fieldset.registration.js';
+import { InputOTPElementRegistration } from '@/elements/inputs/form-input-otp.registration.js';
+import { PhoneInputElementRegistration } from '@/elements/inputs/form-phone-input.registration.js';
+import { MaskedInputElementRegistration } from '@/elements/inputs/form-masked-input.registration.js';
+import { ArrayElementRegistration } from '@/elements/inputs/form-array-elements.registration.js';
+import { SubmitButtonElementRegistration } from '@/elements/actions/submit-button.registration.js';
+import { SubmissionAlertElementRegistration } from '@/elements/content/form-submission-alert.registration.js';
 
-export * from './elements';
+export * from './elements.js';
 
 /**
  * Every element registration of the package, in registration order.

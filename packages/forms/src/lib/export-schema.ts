@@ -6,9 +6,9 @@ import {
 	type JSONSchemaPlacement,
 } from '@schema-engine/registry/json-schema';
 import type { JSONSchemaTarget } from '@schema-engine/registry';
-import type { JSONSchemaObject } from '@/lib/standard-json-schema';
-import { isZodType } from '@/lib/is-zod-type';
-import { logger } from '@/lib/logger';
+import type { JSONSchemaObject } from '@/lib/standard-json-schema.js';
+import { isZodType } from '@/lib/is-zod-type.js';
+import { logger } from '@/lib/logger.js';
 
 /**
  * How the JSON Schema export reads one registration's schema.

@@ -1,5 +1,5 @@
 import type { NativeValidity } from '@schema-engine/forms/state-container';
-import { fieldText } from '../field-text';
+import { fieldText } from '../field-text.js';
 
 /** The elements the browser validates and holds a value for. */
 export type NativeControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;

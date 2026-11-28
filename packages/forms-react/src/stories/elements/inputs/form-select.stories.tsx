@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui';
-import { showsDefaultOptionLabelPlay, showsPickedOptionLabelPlay } from './form-select.play';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { StoryWrapper } from '@/stories/shared/story-wrapper.js';
+import { defineStoryForm, getEngine, ValidationPresets } from '@/stories/shared/form-builder.ui.js';
+import { showsDefaultOptionLabelPlay, showsPickedOptionLabelPlay } from './form-select.play.js';
 
 const baseUIEngine = getEngine();
 

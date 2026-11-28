@@ -14,12 +14,12 @@ import {
 } from '@ecopages/radiant-ui/select';
 import { RuiTagGroup } from '@ecopages/radiant-ui/tag-group';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules';
-import { ChoiceHost, type ChoiceValue } from '@/lib/choice-host';
-import { choiceControlOptions, choiceKeys, serializeChoiceValue } from '@/lib/choice-value';
-import { registerHostControl } from '@/lib/control-host';
-import { FieldGroup } from '../field-group';
-import type { SelectFieldProps } from './form-select.types';
+import { isRenderedRequired } from '@/lib/field-rules.js';
+import { ChoiceHost, type ChoiceValue } from '@/lib/choice-host.js';
+import { choiceControlOptions, choiceKeys, serializeChoiceValue } from '@/lib/choice-value.js';
+import { registerHostControl } from '@/lib/control-host.js';
+import { FieldGroup } from '../field-group.js';
+import type { SelectFieldProps } from './form-select.types.js';
 
 /** The selector of the control's own ARIA target: where the field paints its label, description and state. */
 const ARIA_TARGET = '[data-select-trigger]';

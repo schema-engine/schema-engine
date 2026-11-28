@@ -1,5 +1,5 @@
 import type { FormActionTrigger, FormValues, SubmissionActionResult } from '@schema-engine/forms';
-import type { FormAction, FormSubmitContext } from '@/adapters/types';
+import type { FormAction, FormSubmitContext } from '@/adapters/types.js';
 
 /** The callbacks of an application's `FormRenderer`, as a form instance calls them. */
 export interface InstanceCallbacks<TValues extends FormValues = FormValues> {

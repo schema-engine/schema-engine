@@ -5,4 +5,4 @@
  * the main entry has none, so a server that only compiles a theme needs no DOM lib.
  */
 
-export { findSubgridChainBreaks } from './subgrid-chain';
+export { findSubgridChainBreaks } from './subgrid-chain.js';

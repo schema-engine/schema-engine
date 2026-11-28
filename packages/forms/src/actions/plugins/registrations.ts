@@ -14,5 +14,5 @@
  * ```
  */
 
-export * from './form-submit.registration';
-export * from './notification.registration';
+export * from './form-submit.registration.js';
+export * from './notification.registration.js';

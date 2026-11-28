@@ -1,6 +1,6 @@
 import { RuiButton } from '@ecopages/radiant-ui/button';
 import { mergeControlProps } from '@schema-engine/forms';
-import type { SubmitButtonProps } from './submit-button.types';
+import type { SubmitButtonProps } from './submit-button.types.js';
 
 export function SubmitButton({ label, disabled, onClick, className, id, name, htmlAttributes }: SubmitButtonProps) {
 	return (

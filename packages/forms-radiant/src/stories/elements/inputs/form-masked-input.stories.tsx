@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
-import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story';
+import { fieldFormConfig, formRendererMeta } from '@/stories/shared/form-story.js';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-import { queryDeep } from '@/stories/shared/dom-utils';
+import { queryDeep } from '@/stories/shared/dom-utils.js';
 
-import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr.js';
 
 const ibanMask = 'aa00 0000 0000 000000';
 const ibanPlaceholder = 'ES12 4311 2144 214423';

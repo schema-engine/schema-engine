@@ -1,6 +1,7 @@
 import {
 	assertStandardSchema,
 	createRegistry,
+	RegistryError,
 	type BaseRegistration,
 	type CreateRegistryOptions,
 	type ReadOnlyRegistry,
@@ -82,7 +83,7 @@ export function defineRecipeProtocol<const TSlot extends string, const TKind ext
 /**
  * Checks a recipe against its protocol: the kind and every slot must be declared, then each rule runs.
  *
- * @throws {Error} Naming the recipe, and the rule when one fails
+ * @throws {RegistryError} Code `'invalid-declaration'`, naming the recipe and the rule when one fails
  *
  * @remarks
  * Runs in `defineProtocolRecipeSpec` for an early failure and in {@link createRecipeRegistry} for each winning
@@ -97,22 +98,31 @@ export function assertRecipeRules<TSlot extends string, TKind extends string>(
 ): void {
 	const kinds: readonly string[] = protocol.kinds;
 	const slots: readonly string[] = protocol.slots;
+	const details = { kind: 'Recipe', $type: recipe.$type };
 	if (!kinds.includes(recipe.kind)) {
-		throw new Error(
+		throw new RegistryError(
+			'invalid-declaration',
 			`Recipe '${recipe.$type}' has kind '${recipe.kind}', which the protocol does not declare (kinds: ${protocol.kinds.join(', ')}).`,
+			details,
 		);
 	}
 	for (const slot of recipe.slots) {
 		if (!slots.includes(slot)) {
-			throw new Error(
+			throw new RegistryError(
+				'invalid-declaration',
 				`Recipe '${recipe.$type}' declares slot '${slot}', which the protocol does not declare (slots: ${protocol.slots.join(', ')}).`,
+				details,
 			);
 		}
 	}
 	for (const rule of protocol.rules) {
 		const problem = rule.check(recipe as RecipeShape<TSlot, TKind>);
 		if (problem !== undefined) {
-			throw new Error(`Recipe '${recipe.$type}' breaks rule '${rule.name}': ${problem}.`);
+			throw new RegistryError(
+				'invalid-declaration',
+				`Recipe '${recipe.$type}' breaks rule '${rule.name}': ${problem}.`,
+				details,
+			);
 		}
 	}
 }
@@ -120,7 +130,7 @@ export function assertRecipeRules<TSlot extends string, TKind extends string>(
 /**
  * Checks that the slot schemas a registration carries are exactly its declared slots, each a Standard Schema.
  *
- * @throws {Error} Naming the recipe, its kind and `$type`
+ * @throws {RegistryError} Code `'invalid-declaration'` for a mismatch and `'invalid-schema'` for a slot without a Standard Schema
  *
  * @remarks
  * A registration without `slotSchemas` passes: a hand-written one need not state them.
@@ -132,19 +142,27 @@ function assertSlotSchemas(
 	const { slotSchemas } = recipe;
 	if (slotSchemas === undefined) return;
 	const context = `${kind} '${recipe.$type}' slotSchemas`;
+	const details = { kind, $type: recipe.$type };
 	const listed = Object.keys(slotSchemas).filter((slot) => slotSchemas[slot] !== undefined);
 	const missing = recipe.slots.filter((slot) => !listed.includes(slot));
 	const extra = listed.filter((slot) => !recipe.slots.includes(slot));
 	if (missing.length > 0 || extra.length > 0) {
-		throw new Error(
+		throw new RegistryError(
+			'invalid-declaration',
 			`${context} must list exactly the recipe's slots (${recipe.slots.join(', ') || 'none'}): ${[
 				...missing.map((slot) => `'${slot}' has no schema`),
 				...extra.map((slot) => `'${slot}' is not a declared slot`),
 			].join(', ')}.`,
+			details,
 		);
 	}
 	for (const slot of listed) {
-		assertStandardSchema(slotSchemas[slot], `${context}.${slot}`);
+		try {
+			assertStandardSchema(slotSchemas[slot], `${context}.${slot}`);
+		} catch (error) {
+			if (!(error instanceof Error)) throw error;
+			throw new RegistryError('invalid-schema', error.message, details);
+		}
 	}
 }
 
@@ -153,8 +171,8 @@ function assertSlotSchemas(
  *
  * @param options - The registry options, such as the `hint` of an unregistered `$type`
  *
- * @throws {Error} Naming the recipe when a winning registration breaks the protocol, has no Standard Schema, or
- * carries `slotSchemas` that differ from its slots or are not Standard Schemas
+ * @throws {RegistryError} Code `'invalid-declaration'` for a winning recipe that breaks the protocol or whose
+ * `slotSchemas` differ from its slots and `'invalid-schema'` for a recipe or slot without a Standard Schema
  *
  * @remarks
  * Only the winning registration of each `$type` is checked, the same as the registry's schema check: a

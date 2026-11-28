@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FormRenderer } from '@/components/internals/form-renderer';
-import { defineStoryForm, getEngine } from '@/stories/shared/form-builder.ui';
-import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { autoFitColumnsPlay, columnSpansPlay, rowAndColumnGapPlay, twoColumnsPerRowPlay } from './grid.play';
+import { FormRenderer } from '@/components/internals/form-renderer.js';
+import { defineStoryForm, getEngine } from '@/stories/shared/form-builder.ui.js';
+import { StoryWrapper } from '@/stories/shared/story-wrapper.js';
+import { autoFitColumnsPlay, columnSpansPlay, rowAndColumnGapPlay, twoColumnsPerRowPlay } from './grid.play.js';
 
 const engine = getEngine();
 

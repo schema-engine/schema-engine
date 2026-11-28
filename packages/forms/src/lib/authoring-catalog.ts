@@ -1,6 +1,6 @@
-import type { AnyRecipeRegistration } from '@/types/registration';
-import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
-import type { RecipeDescriptor, ViewCatalog } from '@/recipes/types';
+import type { AnyRecipeRegistration } from '@/types/registration.js';
+import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view.js';
+import type { RecipeDescriptor, ViewCatalog } from '@/recipes/types.js';
 
 function recipeToDescriptor(recipe: AnyRecipeRegistration, viewSchema?: Record<string, unknown>): RecipeDescriptor {
 	return {

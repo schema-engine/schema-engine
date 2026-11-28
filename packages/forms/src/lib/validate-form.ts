@@ -1,43 +1,43 @@
-import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config';
-import { formConfigEnvelopeSchema } from '@/schemas/form-config';
+import type { FormConfig, FormConfigEnvelope, FormTaggedConfig } from '@/schemas/form-config.js';
+import { formConfigEnvelopeSchema } from '@/schemas/form-config.js';
 import { safeParseStandardSchema } from '@schema-engine/registry';
 import {
 	markNormalizedFormConfig,
 	getNormalizedFormOwner,
 	type NormalizedElementConfig,
 	type NormalizedFormConfig,
-} from '@/lib/normalized-form-config';
-import { stepGrid } from '@/lib/form-view';
-import { walkNamedElements } from '@/lib/field-scope';
-import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
+} from '@/lib/normalized-form-config.js';
+import { stepGrid } from '@/lib/form-view.js';
+import { walkNamedElements } from '@/lib/field-scope.js';
+import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys.js';
 import { getDefaultLayoutTheme } from '@schema-engine/layout';
-import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
-import { fieldPlacementIssues, templateIssues, type PlacedElement } from './validate-form/grid-checks';
+import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance.js';
+import { fieldPlacementIssues, templateIssues, type PlacedElement } from './validate-form/grid-checks.js';
 import {
 	issueAt,
 	type FormValidationIssue,
 	type FormValidationResult,
 	type ParseResult,
 	type Path,
-} from './validate-form/issues';
-import type { ValidateFormOptions } from './validate-form/options';
+} from './validate-form/issues.js';
+import type { ValidateFormOptions } from './validate-form/options.js';
 import {
 	brandElementTree,
 	parseElementList,
 	parseElementNode,
 	placedFromRetained,
-} from './validate-form/parse-elements';
-import { parseOwnerActions } from './validate-form/parse-owner-actions';
-import { parseView } from './validate-form/parse-view';
-import { stepStructureIssues } from './validate-form/step-checks';
-import { fromSchemaIssues } from './validate-form/schema-issues';
-import { FormValidationError } from './validate-form/validation-error';
+} from './validate-form/parse-elements.js';
+import { parseOwnerActions } from './validate-form/parse-owner-actions.js';
+import { parseView } from './validate-form/parse-view.js';
+import { stepStructureIssues } from './validate-form/step-checks.js';
+import { fromSchemaIssues } from './validate-form/schema-issues.js';
+import { FormValidationError } from './validate-form/validation-error.js';
 
-export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config';
-export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from '@/lib/form-view';
-export type { FormValidationIssue, FormValidationResult } from './validate-form/issues';
-export type { ValidateFormOptions } from './validate-form/options';
-export { FormValidationError } from './validate-form/validation-error';
+export type { FormConfigView, NormalizedElementConfig, NormalizedFormConfig } from '@/lib/normalized-form-config.js';
+export { DEFAULT_WIZARD_RECIPE, assertFormEngine, getRenderableSteps, stepGrid } from '@/lib/form-view.js';
+export type { FormValidationIssue, FormValidationResult } from './validate-form/issues.js';
+export type { ValidateFormOptions } from './validate-form/options.js';
+export { FormValidationError } from './validate-form/validation-error.js';
 
 /**
  * Validate a single element against its registration schema, including nested child elements of a container.

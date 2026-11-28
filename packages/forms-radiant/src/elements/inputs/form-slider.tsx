@@ -4,10 +4,10 @@ import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopag
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiSlider } from '@ecopages/radiant-ui/slider';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules';
-import { ControlHost, registerHostControl } from '@/lib/control-host';
-import { FieldGroup } from '../field-group';
-import type { SliderFieldProps } from './form-slider.types';
+import { isRenderedRequired } from '@/lib/field-rules.js';
+import { ControlHost, registerHostControl } from '@/lib/control-host.js';
+import { FieldGroup } from '../field-group.js';
+import type { SliderFieldProps } from './form-slider.types.js';
 
 /** The selector of the control's own ARIA target: where the field paints its label, description and state. */
 const ARIA_TARGET = '[data-thumb="value"]';

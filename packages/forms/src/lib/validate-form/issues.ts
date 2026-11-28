@@ -1,5 +1,5 @@
-import type { FormTaggedConfig } from '@/schemas/form-config';
-import { ELEMENT_CHILDREN_KEY } from '@/lib/element-children';
+import type { FormTaggedConfig } from '@/schemas/form-config.js';
+import { ELEMENT_CHILDREN_KEY } from '@/lib/element-children.js';
 
 /**
  * One problem found while validating a form, shaped like a Standard Schema issue.

@@ -1,24 +1,24 @@
 import { bindRegistry } from '@schema-engine/registry';
 import { defaultElementContracts, type ElementBindings } from '@schema-engine/forms/default-elements';
-import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation';
-import { SubmitButton } from './actions/submit-button';
-import { FormSubmissionAlert } from './content/form-submission-alert';
-import { FormArrayElements } from './inputs/form-array-elements';
-import { FormCheckboxGroup } from './inputs/form-checkbox-group';
-import { FormCheckbox } from './inputs/form-checkbox';
-import { FormCombobox } from './inputs/form-combobox';
-import { FormDropZone } from './inputs/form-drop-zone';
-import { FormFieldSet } from './inputs/form-fieldset';
-import { FormInputOTP } from './inputs/form-input-otp';
-import { FormInput } from './inputs/form-input';
-import { FormMaskedInput } from './inputs/form-masked-input';
-import { FormNumber } from './inputs/form-number';
-import { FormPhoneInput } from './inputs/form-phone-input';
-import { FormRadio } from './inputs/form-radio';
-import { FormSelect } from './inputs/form-select';
-import { FormSlider } from './inputs/form-slider';
-import { FormSwitch } from './inputs/form-switch';
-import { FormTextarea } from './inputs/form-textarea';
+import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation.js';
+import { SubmitButton } from './actions/submit-button.js';
+import { FormSubmissionAlert } from './content/form-submission-alert.js';
+import { FormArrayElements } from './inputs/form-array-elements.js';
+import { FormCheckboxGroup } from './inputs/form-checkbox-group.js';
+import { FormCheckbox } from './inputs/form-checkbox.js';
+import { FormCombobox } from './inputs/form-combobox.js';
+import { FormDropZone } from './inputs/form-drop-zone.js';
+import { FormFieldSet } from './inputs/form-fieldset.js';
+import { FormInputOTP } from './inputs/form-input-otp.js';
+import { FormInput } from './inputs/form-input.js';
+import { FormMaskedInput } from './inputs/form-masked-input.js';
+import { FormNumber } from './inputs/form-number.js';
+import { FormPhoneInput } from './inputs/form-phone-input.js';
+import { FormRadio } from './inputs/form-radio.js';
+import { FormSelect } from './inputs/form-select.js';
+import { FormSlider } from './inputs/form-slider.js';
+import { FormSwitch } from './inputs/form-switch.js';
+import { FormTextarea } from './inputs/form-textarea.js';
 
 /**
  * Every element of the package: the contracts of `@schema-engine/forms/default-elements` with the Radiant component of each.

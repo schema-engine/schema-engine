@@ -7,7 +7,7 @@ import {
 	type RegistryIssue,
 	type StandardSchemaIssue,
 } from '@schema-engine/registry';
-import type { ActionConfigBase, ParsedAction, ParsedActionSequence } from './types';
+import type { ActionConfigBase, ParsedAction, ParsedActionSequence } from './types.js';
 
 /** What a domain tells {@link parseActions} about the entries it accepts. */
 export interface ParseActionsOptions {

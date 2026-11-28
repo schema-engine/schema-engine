@@ -1,5 +1,5 @@
-import type { Node, Tree } from './state-tree';
-import { createMap, isStructural, type NullMap } from './value-tree';
+import type { Node, Tree } from './state-tree.js';
+import { createMap, isStructural, type NullMap } from './value-tree.js';
 
 function nodeOf(self: true | undefined, children: Node<true>['children']): Tree<true> {
 	return self === undefined && children === undefined

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { parseRegistration } from '../utils/parse-registration';
+import { safeParseStandardSchema } from '@schema-engine/registry';
 import {
 	CardRecipe,
 	CardWizardRecipe,
@@ -9,48 +9,48 @@ import {
 
 describe('recipe view schemas accept partial slot config', () => {
 	test('card with shell only', () => {
-		expect(() =>
-			parseRegistration(CardRecipe.schema, {
+		expect(
+			safeParseStandardSchema(CardRecipe.schema, {
 				$type: 'card',
 				shell: { appearance: { size: 'default' } },
 			}),
-		).not.toThrow();
+		).toMatchObject({ success: true });
 	});
 
 	test('split-screen with shell only', () => {
-		expect(() =>
-			parseRegistration(SplitScreenRecipe.schema, {
+		expect(
+			safeParseStandardSchema(SplitScreenRecipe.schema, {
 				$type: 'split-screen',
 				shell: { sideContent: 'Welcome', sidePlacement: 'left' },
 			}),
-		).not.toThrow();
+		).toMatchObject({ success: true });
 	});
 
 	test('card-wizard with shell only', () => {
-		expect(() =>
-			parseRegistration(CardWizardRecipe.schema, {
+		expect(
+			safeParseStandardSchema(CardWizardRecipe.schema, {
 				$type: 'card-wizard',
 				shell: { appearance: { size: 'default' } },
 			}),
-		).not.toThrow();
+		).toMatchObject({ success: true });
 	});
 
 	test('wizard with progress only', () => {
-		expect(() =>
-			parseRegistration(WizardRecipe.schema, {
+		expect(
+			safeParseStandardSchema(WizardRecipe.schema, {
 				$type: 'wizard',
 				progress: { showStepNumbers: true, showStepTitles: true },
 			}),
-		).not.toThrow();
+		).toMatchObject({ success: true });
 	});
 
 	test('rejects $type inside shell config', () => {
-		expect(() =>
-			parseRegistration(CardRecipe.schema, {
+		expect(
+			safeParseStandardSchema(CardRecipe.schema, {
 				$type: 'card',
 				// @ts-expect-error -- slot config rejects $type at compile time too
 				shell: { $type: 'card', appearance: { size: 'default' } },
 			}),
-		).toThrow();
+		).toMatchObject({ success: false });
 	});
 });

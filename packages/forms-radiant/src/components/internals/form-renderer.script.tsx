@@ -11,9 +11,9 @@ import type {
 	FormActionTrigger,
 	SubmissionActionResult,
 } from '@schema-engine/forms';
-import type { FormAction, FormSubmitContext } from '@/adapters/types';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine';
-import { formEngineContext, type FormEngineContextValue } from '../provider';
+import type { FormAction, FormSubmitContext } from '@/adapters/types.js';
+import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
+import { formEngineContext, type FormEngineContextValue } from '../provider.js';
 
 /**
  * Props of the Radiant `FormRenderer` view.

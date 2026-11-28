@@ -1,7 +1,7 @@
-import type { ConstraintLogic } from '../schemas';
-import { getValueAtPath } from '@/lib/path-values';
-import { resolveFieldRef } from '@/lib/field-ref';
-import { isEmpty } from '@/schemas/validation/empty';
+import type { ConstraintLogic } from '../schemas/index.js';
+import { getValueAtPath } from '@/lib/path-values.js';
+import { resolveFieldRef } from '@/lib/field-ref.js';
+import { isEmpty } from '@/schemas/validation/empty.js';
 
 /**
  * Result from evaluating constraint logic

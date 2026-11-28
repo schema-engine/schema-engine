@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { StoryWrapper } from '@/stories/shared/story-wrapper';
-import { submitFormHandler } from '../msw/submit-form';
-import { getEngine } from '@/stories/shared/form-builder.ui';
-import { InteractiveActionDemo } from './action-triggers.demo';
-import { realtimeDashboardPlay } from './action-triggers.play';
+import { StoryWrapper } from '@/stories/shared/story-wrapper.js';
+import { submitFormHandler } from '../msw/submit-form.js';
+import { getEngine } from '@/stories/shared/form-builder.ui.js';
+import { InteractiveActionDemo } from './action-triggers.demo.js';
+import { realtimeDashboardPlay } from './action-triggers.play.js';
 
 const simpleEngine = getEngine();
 

@@ -1,2 +1,2 @@
-export { formInstanceContext, type FormInstanceContextValue } from './form-instance-context';
-export { formEngineContext, type FormEngineContextValue } from '@/components/provider';
+export { formInstanceContext, type FormInstanceContextValue } from './form-instance-context.js';
+export { formEngineContext, type FormEngineContextValue } from '@/components/provider.js';

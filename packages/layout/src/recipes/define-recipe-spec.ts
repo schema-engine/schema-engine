@@ -1,9 +1,9 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { formatIssuePath, safeParseStandardSchema, standardSchema } from '@schema-engine/registry';
-import type { AppearanceAxisList, SlotAppearanceAxes } from '../lib/appearance';
-import { assertRecipeRules, type RecipeProtocol } from './protocol';
-import { unknownViewKeyMessage } from './resolve-recipe-view';
-import type { RecipeMetadata, RecipeSlotDefaults, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from './types';
+import type { AppearanceAxisList, SlotAppearanceAxes } from '../lib/appearance.js';
+import { assertRecipeRules, type RecipeProtocol } from './protocol.js';
+import { unknownViewKeyMessage } from './resolve-recipe-view.js';
+import type { RecipeMetadata, RecipeSlotDefaults, ProtocolRecipeSlotSchemas, ProtocolRecipeSpec } from './types.js';
 
 type Flat<T> = { [K in keyof T]: T[K] };
 

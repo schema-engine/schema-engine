@@ -3,6 +3,7 @@ import * as z from 'zod/mini';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { BaseFieldSchema } from '@/schemas/base-field';
 import { builtInAxes, createLayoutTheme, defineAxis, getDefaultLayoutTheme } from '@schema-engine/layout';
+import { RegistryError } from '@schema-engine/registry';
 import { defineInput } from '@/types';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { cardSpec, cardWizardSpec } from '@/recipes/built-in-specs';
@@ -238,8 +239,17 @@ describe('registration axis declarations', () => {
 			}),
 			{},
 		);
-		expect(() => createFormEngine({ recipes: [typo] })).toThrowError(
-			/typo-card.*shell.*unknown appearance axis 'surfce'/s,
+		const build = () => createFormEngine({ recipes: [typo] });
+		expect(build).toThrow(RegistryError);
+		expect(build).toThrow(
+			expect.objectContaining({
+				code: 'invalid-declaration',
+				kind: 'Recipe',
+				$type: 'typo-card',
+				message: expect.stringContaining(
+					"Recipe 'typo-card' slot 'shell' declares unknown appearance axis 'surfce'",
+				),
+			}),
 		);
 	});
 

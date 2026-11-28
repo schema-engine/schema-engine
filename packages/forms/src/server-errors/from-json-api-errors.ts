@@ -1,4 +1,4 @@
-import { FORM_ROOT, type FormStateErrorsInput } from '@/state-container/types';
+import { FORM_ROOT, type FormStateErrorsInput } from '@/state-container/types.js';
 import {
 	groupByPath,
 	isRecord,
@@ -8,7 +8,7 @@ import {
 	serializableParams,
 	ServerErrorsInputError,
 	textOf,
-} from './shared';
+} from './shared.js';
 
 /** The members of a JSON Pointer that locate an attribute in a JSON:API resource, which are not part of a field's path. */
 const ATTRIBUTES = ['data', 'attributes'];

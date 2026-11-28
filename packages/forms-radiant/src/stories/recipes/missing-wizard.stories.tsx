@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@ecopages/storybook-radiant-vite';
 import { createFormEngine } from '@schema-engine/forms';
-import { schemaFormRegistrations } from '@/registrations';
-import { formRendererMeta, renderFormStory } from '@/stories/shared/form-story';
-import { getFieldControl, getSubmitButton } from '@/stories/shared/play';
+import { schemaFormRegistrations } from '@/registrations/index.js';
+import { formRendererMeta, renderFormStory } from '@/stories/shared/form-story.js';
+import { getFieldControl, getSubmitButton } from '@/stories/shared/play.js';
 import { expect, waitFor } from 'storybook/test';
 import type { StoryContext } from 'storybook/internal/types';
 
-import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr';
+import { isStaticSsrPreview } from '@/stories/shared/storybook-ssr.js';
 
 const noRecipeEngine = createFormEngine({ elements: schemaFormRegistrations });
 

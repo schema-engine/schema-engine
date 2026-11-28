@@ -6,8 +6,8 @@ import {
 	type FormStateSnapshot,
 	type FormSubmissionIssue,
 } from '@schema-engine/forms/state-container';
-import { useFormStateContext, type FormStateContextValue } from './context';
-import type { FormContextValue } from './types';
+import { useFormStateContext, type FormStateContextValue } from './context.js';
+import type { FormContextValue } from './types.js';
 
 type FormStateKey = keyof FormContextValue['formState'];
 
