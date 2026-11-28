@@ -3,8 +3,6 @@ import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { RecipeSlot, ViewModel, ViewNavigation } from '@schema-engine/forms/recipes';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 
-export type { ViewModel as ViewContextValue, ViewNavigation, ViewStep } from '@schema-engine/forms/recipes';
-
 const ViewContext = createContext<ViewModel | null>(null);
 
 export function ViewProvider({ children, value }: { children: ReactNode; value: ViewModel }) {

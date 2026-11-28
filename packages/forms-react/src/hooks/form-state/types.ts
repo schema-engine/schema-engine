@@ -5,7 +5,7 @@ import type {
 	FormActionConfig,
 	DefaultValuesOf,
 	FormActionTrigger,
-	FormSubmissionState as SubmissionState,
+	FormSubmissionState,
 	FormSubmitHelpers,
 	FormValues,
 	NormalizedFormConfig,
@@ -13,7 +13,6 @@ import type {
 } from '@schema-engine/forms';
 import type { RequiredFlagSource } from '@/hooks/is-element-required';
 import type {
-	FieldArrayValue,
 	FormIssueFormatter,
 	FormStateError,
 	FormStateIssue,
@@ -21,8 +20,6 @@ import type {
 	FormValidateResult,
 } from '@schema-engine/forms/state-container';
 import type { ChangeEvent, CSSProperties, ReactNode, RefCallback } from 'react';
-
-export type { FormSubmitHelpers, FormValues };
 
 /**
  * What `useFormContext` returns: the commands over the form and a lazily tracked `formState`.
@@ -57,7 +54,7 @@ export interface FormContextValue {
 		/** Whether no error from any source is recorded. Cheap, and no proof that the values are valid. */
 		isValid: boolean;
 		/** The one submission state: the status (`validating` while it is checked, `submitting` once it passed and its actions and `onSubmit` run), the failures as issues worded by `formatIssue`, and the submissions that ended, whether they passed or failed validation. */
-		submission: SubmissionState;
+		submission: FormSubmissionState;
 	};
 }
 
@@ -167,8 +164,6 @@ export interface ControlledFormField extends FormFieldElement {
 export interface FormFieldOptions {
 	controlled?: boolean;
 }
-
-export type { FieldArrayValue };
 
 /**
  * An action of a normalized form config, as the registrations of the engine type it: frozen, like the config.

@@ -97,7 +97,6 @@ export { getValueAtPath, setValueAtPath } from './lib/path-values';
 export { validateRegistrationConfig } from './lib/standard-schema';
 export type { FormValidationIssue, FormValidationResult } from './lib/validate-form/issues';
 export type { ValidateFormOptions } from './lib/validate-form/options';
-export { formatIssuePath } from '@schema-engine/registry';
 export { FormValidationError } from './lib/validate-form/validation-error';
 export type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from './registries';
 export { createFormRuntime, defaultNavigate } from './runtime/create-form-runtime';

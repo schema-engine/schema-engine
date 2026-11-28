@@ -1,5 +1,4 @@
 export type { FormMeta } from '@/lib/instance-view';
-export { defineRecipeSpec } from '@schema-engine/forms/recipes';
 export { defineRecipe } from './bind-recipes';
 export type {
 	FormShellComponent,
@@ -20,4 +19,3 @@ export {
 	SplitScreenWizardRecipe,
 	radiantRecipes,
 } from './bind-recipes';
-export { DEFAULT_WIZARD_RECIPE } from '@schema-engine/forms';

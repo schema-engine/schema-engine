@@ -10,7 +10,7 @@ import type {
 	AnyActionRegistration as ActionsAnyActionRegistration,
 } from '@schema-engine/actions';
 import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
-import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
+import type { AppearanceAxisList, RecipeMetadata, SlotAppearanceAxes } from '@schema-engine/layout';
 
 /**
  * Input element registration - form inputs, selects, checkboxes, and interactive elements.
@@ -118,7 +118,7 @@ export type RecipeRegistration<
 		kind: import('@/recipes/types').RecipeKind;
 		slots: import('@/recipes/types').RecipeSlot[];
 		schema: TSchema;
-		metadata: import('@/recipes/types').RecipeMetadata;
+		metadata: RecipeMetadata;
 		slotDefaults?: Partial<Record<import('@/recipes/types').RecipeSlot, Record<string, unknown>>>;
 		/** Appearance axes each slot supports; see {@link import('@/recipes/types').RecipeSpec.appearanceAxes}. */
 		appearanceAxes?: SlotAppearanceAxes<import('@/recipes/types').RecipeSlot>;
