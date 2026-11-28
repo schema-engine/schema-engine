@@ -137,6 +137,13 @@ const withLabel = (label: unknown) => ({
 	],
 });
 
+const withChild = (child: unknown) => ({ $type: 'tab', elements: [child] });
+
+const inForm = (child: unknown) => ({
+	id: 'form',
+	steps: [{ id: 'step', title: 'Step', elements: [withChild(child)] }],
+});
+
 const uri = (id: string) => `https://example.test/schemas/${id}.json`;
 
 /** What a call throws, so the test can read the error's code and details. */
@@ -254,30 +261,56 @@ describe('a Standard JSON Schema container that sets an $id of its own', () => {
 		expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'tabs', childPath: ['elements'] });
 	});
 
-	test('is typed in a collection, where the references are absolute and its entry keeps its own $id', () => {
-		const collection = engine.generateJSONSchemaCollection({ uri }) as unknown as {
-			schemas: Record<string, { $id: string; properties: { elements: { items: unknown } } }>;
-		};
-		const entry = collection.schemas['element:tabs']!;
+	test('cannot be typed in a collection either, since its slot is inside a resource of its own', () => {
+		const error = thrown(() => engine.generateJSONSchemaCollection({ uri }));
 
-		expect(entry.$id).toBe('https://example.test/tabs');
-		expect(entry.properties.elements.items).toEqual({ anyOf: [{ $ref: uri('element:tab') }] });
+		expect(error).toBeInstanceOf(RegistryError);
+		expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'tabs', childPath: ['elements'] });
+	});
+});
+
+describe('an element whose Standard JSON Schema sets an $id of its own, held by a container', () => {
+	const leaf = {
+		$type: 'leaf',
+		kind: 'static',
+		schema: exporting({
+			$id: 'https://example.test/leaf',
+			type: 'object',
+			properties: { $type: { const: 'leaf' }, label: { $ref: '#/$defs/label' } },
+			required: ['$type'],
+			$defs: { label: { type: 'string' } },
+		}),
+		metadata: { name: 'Leaf', category: 'content' },
+		render: () => null,
+	} as ElementRegistrationConstraint;
+	const engine = createFormEngine({ elements: [tab, leaf, text] });
+
+	test('is referred to from the collection by its URI, and keeps its own base for its own references', () => {
+		const collection = engine.generateJSONSchemaCollection({ uri }) as unknown as {
+			schemas: Record<string, object>;
+		};
+		const accepts = compileCollectionEntry(collection, uri('element:tab'));
+
+		expect(accepts(withChild({ $type: 'leaf', label: 'x' }))).toBe(true);
+		expect(accepts(withChild({ $type: 'leaf', label: 1 }))).toBe(false);
+		expect(accepts(withChild({ $type: 'other' }))).toBe(false);
 	});
 
-	test('does not borrow the definition of another element through a $ref of its own', () => {
-		const crossing = tabs(
-			exporting({
-				$id: 'https://example.test/tabs',
-				$ref: '#/$defs/element:tab',
-				$defs: { 'element:tab': { type: 'object' } },
-			}),
-		);
-		const crossed = createFormEngine({ elements: [crossing, tab, text] });
+	test.each(['draft-2020-12', 'draft-07'] as const)('is referred to from a collection for %s', (target) => {
+		const collection = engine.generateJSONSchemaCollection({ uri, target }) as unknown as {
+			schemas: Record<string, object>;
+		};
+		const accepts = compileCollectionEntry(collection, uri('element:tab'), target);
 
-		expect(thrown(() => crossed.generateFormConfigSchema())).toMatchObject({
-			code: 'unreachable-child-path',
-			$type: 'tabs',
-		});
+		expect(accepts(withChild({ $type: 'leaf', label: 'x' }))).toBe(true);
+		expect(accepts(withChild({ $type: 'leaf', label: 1 }))).toBe(false);
+	});
+
+	test('is referred to from the document by its definition', () => {
+		const accepts = compileDocument(engine.generateFormConfigSchema());
+
+		expect(accepts(inForm({ $type: 'leaf', label: 'x' }))).toBe(true);
+		expect(accepts(inForm({ $type: 'leaf', label: 1 }))).toBe(false);
 	});
 });
 

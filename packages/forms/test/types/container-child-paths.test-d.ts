@@ -40,6 +40,16 @@ defineInput(
 	},
 );
 
+// A container declares its child path with list: true, which the type requires.
+defineInput({
+	$type: 'group',
+	schema: groupSchema,
+	// @ts-expect-error -- the child path of a container is { keys: ['elements'], list: true }
+	childPaths: [{ keys: ['elements'] }],
+	metadata: { name: 'Group', category: 'input' },
+	render: () => null,
+});
+
 // A container declares no value: its value is its children's.
 defineInput({
 	$type: 'group',
