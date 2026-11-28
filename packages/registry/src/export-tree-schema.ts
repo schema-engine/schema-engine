@@ -153,10 +153,11 @@ function unreachableSlot($type: string, keys: readonly string[]): RegistryError 
  * A schema that was written as a document of its own is moved into the document by
  * {@link createJSONSchemaEmbedder}, and every local pointer follows. Its `$defs` are lifted to the top as
  * `<owner>.<name>` (`page.address` for the `address` definition of `page`), and each anchor is renamed
- * `<owner part>-<name>`. Both write the owner so that two owners never write the same name: in a lifted name each `.`
+ * `<owner part>.<name>`. Both write the owner so that two owners never write the same name: in a lifted name each `.`
  * and `_` of the `$type` is `_2e_` and `_5f_` (`a.b` with `c` is `a_2e_b.c`, `a` with `b.c` is `a.b.c`), and in an anchor
- * the owner part is `o` and the `$type` with every character outside `[A-Za-z0-9.]` written as `_<hex>_`
- * (`ui/button` with `x` is `oui_2f_button-x`). A name that is still taken, by a `$type` say, is an error, since the two
+ * the owner part is `o` and the `$type` with every character outside `[A-Za-z0-9-]` written as `_<hex>_`
+ * (`ui/button` with `x` is `oui_2f_button.x`, `my-card` with `x` is `omy-card.x`). The anchors it renames are `$anchor`,
+ * `$dynamicAnchor`, a draft-07 `$id: '#name'` and a draft-04 `id: '#name'`. A name that is still taken, by a `$type` say, is an error, since the two
  * definitions could not both stay. A name in a `$ref` is a JSON Pointer token (`~` as `~0`, `/` as `~1`) and
  * percent-encoded for the URI fragment.
  */

@@ -39,6 +39,45 @@ describe('definitionsKeyword', () => {
 	});
 });
 
+describe('JSONSchemaEmbedder.embed', () => {
+	const declaring = {
+		type: 'object',
+		properties: { here: { id: '#node', type: 'string' }, there: { $ref: '#node' } },
+	};
+
+	describe('Scenario: Two embedded draft-04 schemas declare the same id fragment', () => {
+		it('gives each one its own, and its references follow', () => {
+			const embedder = createJSONSchemaEmbedder('draft-04', document);
+
+			const first = embedder.embed(declaring);
+			const second = embedder.embed(declaring);
+
+			expect(first.properties).toEqual({
+				here: { id: '#embedded-1-node', type: 'string' },
+				there: { $ref: '#embedded-1-node' },
+			});
+			expect(second.properties).toEqual({
+				here: { id: '#embedded-2-node', type: 'string' },
+				there: { $ref: '#embedded-2-node' },
+			});
+		});
+
+		it('leaves an id of a target that does not write fragments there as it is', () => {
+			const embedder = createJSONSchemaEmbedder('draft-07', document);
+			expect(embedder.embed(declaring)).toEqual(declaring);
+		});
+
+		it('renames the id fragments of a definition under its owner', () => {
+			const embedder = createJSONSchemaEmbedder('draft-04', document);
+
+			expect(embedder.embedDefinition(declaring, 'node').properties).toEqual({
+				here: { id: '#onode.node', type: 'string' },
+				there: { $ref: '#onode.node' },
+			});
+		});
+	});
+});
+
 describe('JSONSchemaEmbedder.embedDefinition', () => {
 	describe('Scenario: A schema that refers into itself stays at its own definition in a document', () => {
 		it('rewrites # and the pointers into its own definitions, and lifts the definitions it brought along', () => {
@@ -116,10 +155,14 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
 			embedder.embed({ type: 'object', properties: { next: { $ref: '#' } } });
 
-			expect(thrownBy(() => embedder.finish({ $defs: { 'embedded-1': {} } }))).toMatchObject({
+			const error = thrownBy(() => embedder.finish({ $defs: { 'embedded-1': {} } }));
+
+			expect(error).toMatchObject({
 				code: 'definition-name-clash',
 				key: 'embedded-1',
+				message: "A schema embed hoisted as 'embedded-1' takes the name of a definition of the export.",
 			});
+			expect((error as RegistryError).$type).toBeUndefined();
 		});
 
 		it('keeps owners whose lifted names would join to the same text apart, and both resolve under Ajv', () => {
@@ -160,12 +203,12 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 			});
 
 			expect(first.properties).toMatchObject({
-				a: { $anchor: 'oelement_3a_a-b-c' },
-				b: { $ref: '#oelement_3a_a-b-c' },
+				a: { $anchor: 'oelement_3a_a.b-c' },
+				b: { $ref: '#oelement_3a_a.b-c' },
 			});
 			expect(second.properties).toMatchObject({
-				a: { $anchor: 'oelement_3a_a_2d_b-c' },
-				b: { $ref: '#oelement_3a_a_2d_b-c' },
+				a: { $anchor: 'oelement_3a_a-b.c' },
+				b: { $ref: '#oelement_3a_a-b.c' },
 			});
 			const validate = new Ajv2020({ strict: false }).compile(written);
 			expect([validate({ a: 'x', b: 'y' }), validate({ a: 1, b: 2 }), validate({ a: 1, b: 'y' })]).toEqual([
@@ -173,6 +216,21 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 				true,
 				false,
 			]);
+		});
+
+		it.each([
+			['my-card', 'omy-card.x'],
+			['element:phone-input', 'oelement_3a_phone-input.x'],
+			['ui/button', 'oui_2f_button.x'],
+			['a.b', 'oa_2e_b.x'],
+			['my_card', 'omy_5f_card.x'],
+		])('writes the anchor x of owner %j as %s', (owner, anchor) => {
+			const embedder = createJSONSchemaEmbedder('draft-2020-12', document);
+
+			const definition = embedder.embedDefinition({ type: 'object', properties: { a: { $anchor: 'x' } } }, owner);
+
+			expect(definition.properties).toEqual({ a: { $anchor: anchor } });
+			expect(anchor).toMatch(/^[A-Za-z][-A-Za-z0-9._]*$/);
 		});
 
 		it('renames an anchor under the name of the definition', () => {
@@ -184,7 +242,7 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 
 			expect(definition).toEqual({
 				type: 'object',
-				properties: { a: { $anchor: 'obox-node', type: 'string' }, b: { $ref: '#obox-node' } },
+				properties: { a: { $anchor: 'obox.node', type: 'string' }, b: { $ref: '#obox.node' } },
 			});
 		});
 	});

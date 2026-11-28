@@ -476,12 +476,12 @@ describe('exportTreeSchema', () => {
 			const document = exportTreeSchema(anchored);
 
 			expect(properties(document, 'one')).toEqual({
-				a: { $anchor: 'oone-node', type: 'string' },
-				b: { $ref: '#oone-node' },
+				a: { $anchor: 'oone.node', type: 'string' },
+				b: { $ref: '#oone.node' },
 			});
 			expect(properties(document, 'two')).toEqual({
-				a: { $anchor: 'otwo-node', type: 'number' },
-				b: { $ref: '#otwo-node' },
+				a: { $anchor: 'otwo.node', type: 'number' },
+				b: { $ref: '#otwo.node' },
 			});
 			const validate = compileJSONSchema(document);
 			expect(validate({ a: 'x', b: 'y' })).toBe(true);
@@ -996,7 +996,7 @@ describe('exportTreeSchema', () => {
 			expect(() => compileJSONSchema(document)).not.toThrow();
 		});
 
-		it('writes the owner as o and its characters, with every one outside [A-Za-z0-9.] as _<hex>_', () => {
+		it('writes the owner as o and its characters, with every one outside [A-Za-z0-9-] as _<hex>_', () => {
 			const document = exportTreeSchema(
 				createRegistry('Node', [
 					handWritten({ type: 'object', properties: { a: { $anchor: 'node' } } }, undefined, 'my_button.v2'),
@@ -1005,9 +1005,9 @@ describe('exportTreeSchema', () => {
 				]),
 			);
 
-			expect(properties(document, 'my_button.v2').a).toEqual({ $anchor: 'omy_5f_button.v2-node' });
-			expect(properties(document, 'ui-button').a).toEqual({ $anchor: 'oui_2d_button-node' });
-			expect(properties(document, 'ui/button').a).toEqual({ $anchor: 'oui_2f_button-node' });
+			expect(properties(document, 'my_button.v2').a).toEqual({ $anchor: 'omy_5f_button_2e_v2.node' });
+			expect(properties(document, 'ui-button').a).toEqual({ $anchor: 'oui-button.node' });
+			expect(properties(document, 'ui/button').a).toEqual({ $anchor: 'oui_2f_button.node' });
 		});
 
 		it('gives two owners whose joined anchors would match distinct anchors, each reference to its own', () => {
@@ -1023,12 +1023,12 @@ describe('exportTreeSchema', () => {
 			);
 
 			expect(properties(document, 'a')).toEqual({
-				a: { $anchor: 'oa-b-c', type: 'string' },
-				b: { $ref: '#oa-b-c' },
+				a: { $anchor: 'oa.b-c', type: 'string' },
+				b: { $ref: '#oa.b-c' },
 			});
 			expect(properties(document, 'a-b')).toEqual({
-				a: { $anchor: 'oa_2d_b-c', type: 'number' },
-				b: { $ref: '#oa_2d_b-c' },
+				a: { $anchor: 'oa-b.c', type: 'number' },
+				b: { $ref: '#oa-b.c' },
 			});
 			const validate = compileJSONSchema(document);
 			expect(validate({ a: 'x', b: 'y' })).toBe(true);
@@ -1064,7 +1064,7 @@ describe('exportTreeSchema', () => {
 					const { a } = properties(document, $type, target) as { a: { $anchor?: string; $id?: string } };
 					return a.$anchor ?? a.$id!.slice(1);
 				});
-				expect(declared).toEqual(['oui_2f_button-x', 'oui_5f_2f_5f_button-x', 'oui_2d_button-x']);
+				expect(declared).toEqual(['oui_2f_button.x', 'oui_5f_2f_5f_button.x', 'oui-button.x']);
 				expect(new Set(declared).size).toBe(3);
 				for (const [index, $type] of owners.entries()) {
 					expect(properties(document, $type, target).b).toEqual({ $ref: `#${declared[index]}` });
