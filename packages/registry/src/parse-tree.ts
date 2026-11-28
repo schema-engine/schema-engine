@@ -1,6 +1,6 @@
 import { safeParseNode, type NodeLookup, type ParseOptions, type RegistryIssue } from './parse-node.js';
 import { RegistryError } from './registry-error.js';
-import type { Accepted, CheckLookup, NodeData, TreeRegistration } from './tree-types.js';
+import type { Accepted, AcceptedOf, CheckLookup, NodeData, TreeRegistration } from './tree-types.js';
 import type { StandardSchemaIssue } from './standard-schema.js';
 import type { ChildPath } from './types.js';
 
@@ -42,21 +42,6 @@ type ParsedChildren<TAll extends TreeRegistration, TPaths> = TPaths extends read
 /** What {@link safeParseTree} returns: the tree of a document with no issue, or every issue found. */
 export type SafeParseTreeResult<TAll extends TreeRegistration, TRoot extends TreeRegistration = TAll> =
 	{ success: true; tree: ParsedNode<TAll, TRoot> } | { success: false; issues: RegistryIssue[] };
-
-/**
- * The registrations of a union that may answer one of the names `TName`: every one whose `$type` overlaps them.
- *
- * @remarks
- * A literal `$type` overlaps when it is one of the names, a union of literals when any member is, and a widened
- * `$type` (`string`, as `BaseRegistration` has) or a missing one always does, since it may hold any name at run time.
- */
-type AcceptedOf<TAll extends TreeRegistration, TName> = TAll extends { $type: infer TType }
-	? string extends TType
-		? TAll
-		: [Extract<TType, TName>] extends [never]
-			? never
-			: TAll
-	: TAll;
 
 /**
  * The registrations a root may be: those `accepts` names, but only when the options type has `accepts`, not when it

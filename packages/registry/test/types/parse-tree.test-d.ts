@@ -218,6 +218,44 @@ describe('a registration whose output declares no $type', () => {
 	});
 });
 
+describe('a child path accepts', () => {
+	const panel = {
+		$type: 'panel',
+		schema: z.object({ $type: z.literal('panel'), controls: z.array(z.unknown()) }),
+		metadata: { name: 'Panel' },
+		childPaths: [{ keys: ['controls'], accepts: ['knob'] }],
+	} as const satisfies BaseRegistration;
+
+	it('keeps a registration whose $type is a union that names the accepted type', () => {
+		const either = {
+			$type: 'knob' as 'knob' | 'slider',
+			schema: z.object({ $type: z.enum(['knob', 'slider']), steps: z.number() }),
+			metadata: { name: 'Either' },
+		} satisfies BaseRegistration;
+		const result = safeParseTree(createRegistry('Panel', [panel, either]), {}, { accepts: ['panel'] });
+		if (!result.success) return;
+
+		const control = result.tree.data.controls[0]!;
+		expectTypeOf(control).not.toBeNever();
+		expectTypeOf(control.$type).toEqualTypeOf<'knob' | 'slider'>();
+		expectTypeOf(control.steps).toEqualTypeOf<number>();
+	});
+
+	it('keeps a registration whose $type is widened to string', () => {
+		const widget = {
+			$type: 'knob' as string,
+			schema: z.object({ $type: z.string(), steps: z.number() }),
+			metadata: { name: 'Widget' },
+		} satisfies BaseRegistration;
+		const result = safeParseTree(createRegistry('Panel', [panel, widget]), {}, { accepts: ['panel'] });
+		if (!result.success || !('controls' in result.tree.data)) return;
+
+		const control = result.tree.data.controls[0]!;
+		expectTypeOf(control).not.toBeNever();
+		expectTypeOf(control.steps).toEqualTypeOf<number>();
+	});
+});
+
 describe('widened declarations', () => {
 	it('give data of unknown, with no error and no blow-up', () => {
 		const wideReg: BaseRegistration = {

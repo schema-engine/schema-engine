@@ -116,11 +116,26 @@ export type CheckLookup<T extends TreeRegistration> = ([Exclude<AcceptedNames<T>
 	: { readonly acceptsUnknownType: Exclude<AcceptedNames<T>, T['$type']> }) &
 	([WithoutType<T>] extends [never] ? unknown : { readonly schemaOutputWithoutType: WithoutType<T> });
 
-/** The registrations a child path accepts: those named by its `accepts`, or all without one. */
+/**
+ * The registrations of a union that may answer one of the names `TName`: every one whose `$type` overlaps them.
+ *
+ * @remarks
+ * A literal `$type` overlaps when it is one of the names, a union of literals when any member is, and a widened
+ * `$type` (`string`, as `BaseRegistration` has) or a missing one always does, since it may hold any name at run time.
+ */
+export type AcceptedOf<TAll extends TreeRegistration, TName> = TAll extends { $type: infer TType }
+	? string extends TType
+		? TAll
+		: [Extract<TType, TName>] extends [never]
+			? never
+			: TAll
+	: TAll;
+
+/** The registrations a child path accepts: those {@link AcceptedOf} its `accepts`, or all without one. */
 export type Accepted<TAll extends TreeRegistration, TPath> = TPath extends {
 	readonly accepts: readonly (infer TName)[];
 }
-	? Extract<TAll, { $type: TName }>
+	? AcceptedOf<TAll, TName>
 	: TAll;
 
 /**
