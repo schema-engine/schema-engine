@@ -19,7 +19,13 @@ const packages = [...new Set(sources.references.map(({ package: pkg }) => pkg))]
 const NEEDS_NO_AGENT_DOCS: Readonly<Record<string, Readonly<Record<string, string>>>> = {};
 
 /** APIs a package removed or renamed, which no reference may still describe. */
-const REMOVED_APIS = ['useFormInstanceActions', 'useChildGridProps', 'mergeChildrenGridHost'] as const;
+const REMOVED_APIS = [
+	'useFormInstanceActions',
+	'useChildGridProps',
+	'mergeChildrenGridHost',
+	'SubmissionState',
+	'ViewContextValue',
+] as const;
 
 const referenceText = (pkg: string) =>
 	sources.references

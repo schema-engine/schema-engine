@@ -24,6 +24,10 @@ const exportsByPackage = new Map<string, Map<string, EntrySymbol[]>>();
  * names the same declaration as the original, so a symbol exported under the same name from two entries
  * is found whichever file declares it. Building the TypeScript program is the whole cost, so it is built once
  * per package and every check in a test file reads the same result.
+ *
+ * It throws instead of reporting less than the package exports: for a package with no entry it can read, an exports
+ * entry it cannot map, an entry file that is missing, and a re-export whose module or name does not resolve. A missing or
+ * stale `dist` of a sibling package is the last case, so the checks run after `build:lib`.
  */
 function exportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 	const cached = exportsByPackage.get(packageDir);
@@ -33,18 +37,55 @@ function exportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 	return symbols;
 }
 
+type ExportsTarget = string | { readonly [condition: string]: unknown };
+
+const JS_FILE = /\.[cm]?[jt]s$/;
+const DIST_JS_FILE = /^\.\/dist\/.+\.js$/;
+
+/**
+ * The source file of the entry an `exports` key names, or `undefined` for a target that is not JavaScript (`./package.json`, a stylesheet).
+ *
+ * @remarks
+ * A string target and the `import` condition are read; `types` is only the declaration of the same file. A JavaScript
+ * file under any other condition, outside `./dist/` or with another extension would be skipped without a word if it
+ * were ignored, and a guard that skips an entry guards nothing, so it throws.
+ */
+function entrySource(packageDir: string, key: string, target: ExportsTarget): string | undefined {
+	const conditions = typeof target === 'string' ? { import: target } : target;
+	const files = Object.entries(conditions)
+		.filter(([condition]) => condition !== 'types')
+		.flatMap(([condition, file]) =>
+			typeof file === 'string' && !JS_FILE.test(file) ? [] : [[condition, file] as const],
+		);
+	if (files.length === 0) return undefined;
+	const file = conditions.import;
+	if (typeof file !== 'string' || !DIST_JS_FILE.test(file) || files.some(([condition]) => condition !== 'import')) {
+		throw new Error(
+			`The helper cannot map the exports entry '${key}' of ${packageDir}: it reads \`import\` as './dist/<path>.js' and no other JavaScript condition.`,
+		);
+	}
+	return path.join(packageDir, 'src', file.slice('./dist/'.length).replace(/\.js$/, '.ts'));
+}
+
+/** The re-exports of a source file that name a module, with the specifier they name. */
+function reExports(source: ts.SourceFile): ts.ExportDeclaration[] {
+	return source.statements.filter(
+		(statement): statement is ts.ExportDeclaration =>
+			ts.isExportDeclaration(statement) && statement.moduleSpecifier !== undefined,
+	);
+}
+
 function readExportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 	const manifest = JSON.parse(readFileSync(path.join(packageDir, 'package.json'), 'utf8')) as {
-		exports?: Record<string, string | { import?: string }>;
+		exports?: Record<string, ExportsTarget>;
 		module?: string;
 	};
 	const exportMap = manifest.exports ?? { '.': { import: `./${manifest.module}` } };
 	const entries = Object.entries(exportMap).flatMap(([key, target]) => {
-		const file = typeof target === 'string' ? undefined : target.import;
-		return file?.startsWith('./dist/') && file.endsWith('.js')
-			? [[key, path.join(packageDir, 'src', file.slice('./dist/'.length).replace(/\.js$/, '.ts'))] as const]
-			: [];
+		const file = entrySource(packageDir, key, target);
+		return file === undefined ? [] : [[key, file] as const];
 	});
+	if (entries.length === 0) throw new Error(`The package at ${packageDir} has no entry to read in its manifest.`);
 	const configFile = ts.readConfigFile(path.join(packageDir, 'tsconfig.json'), (file) => ts.sys.readFile(file));
 	const { options } = ts.parseJsonConfigFileContent(configFile.config, ts.sys, packageDir);
 	const program = ts.createProgram(
@@ -52,6 +93,25 @@ function readExportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 		{ ...options, noEmit: true },
 	);
 	const checker = program.getTypeChecker();
+	const unresolved: string[] = [];
+	for (const source of program.getSourceFiles()) {
+		const relativeFile = path.relative(packageDir, source.fileName);
+		if (
+			source.isDeclarationFile ||
+			relativeFile.startsWith('..') ||
+			relativeFile.split(path.sep).includes('node_modules')
+		)
+			continue;
+		for (const { moduleSpecifier } of reExports(source)) {
+			if (
+				moduleSpecifier &&
+				ts.isStringLiteral(moduleSpecifier) &&
+				!checker.getSymbolAtLocation(moduleSpecifier)
+			) {
+				unresolved.push(`${relativeFile}: the module '${moduleSpecifier.text}' does not resolve`);
+			}
+		}
+	}
 	const symbols = new Map<string, EntrySymbol[]>();
 	for (const [key, file] of entries) {
 		const source = program.getSourceFile(file);
@@ -61,7 +121,11 @@ function readExportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 			key,
 			checker.getExportsOfModule(moduleSymbol).map((exported) => {
 				const target = exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
-				const declaration = target.declarations?.[0]?.getSourceFile().fileName ?? 'unknown';
+				const declaration = target.declarations?.[0]?.getSourceFile().fileName;
+				if (declaration === undefined) {
+					unresolved.push(`${key}: '${exported.name}' does not resolve to a declaration`);
+					return { declaration: 'unknown', isOwn: false, exportedAs: exported.name, isValue: false };
+				}
 				const relative = path.relative(packageDir, declaration);
 				const typeOnly =
 					exported.declarations?.some((node) => ts.isTypeOnlyImportOrExportDeclaration(node)) ?? false;
@@ -72,6 +136,11 @@ function readExportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 					isValue: !typeOnly && (target.flags & ts.SymbolFlags.Value) !== 0,
 				};
 			}),
+		);
+	}
+	if (unresolved.length > 0) {
+		throw new Error(
+			`The entries of ${packageDir} re-export what does not resolve, so what they export cannot be checked (a package the entries re-export from may need \`build:lib\` first):\n${unresolved.join('\n')}`,
 		);
 	}
 	return symbols;

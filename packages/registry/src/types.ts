@@ -40,8 +40,8 @@ export type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
  * role, tag or category, and `metadata` decides nothing. Adding a leaf to `[...defaults, custom]` means overriding each
  * container that should take it. Without `accepts`, the slot puts no limit on the `$type`, so any `$type` the lookup
  * answers is accepted. The parent's schema keeps the slot opaque (`z.array(z.unknown())`, `z.unknown()`). A tool that
- * reads child paths does not decide what a slot takes: it checks a document with `safeParseTree` or
- * `exportTreeSchema`.
+ * reads child paths does not decide what a slot takes: it checks a document with `safeParseTree`, or validates it
+ * against the JSON Schema that `exportTreeSchema` writes.
  */
 export interface ChildPath {
 	/** The keys from the node to the slot, for example `['engine', 'controls']` for `node.engine.controls`. */
