@@ -1,7 +1,7 @@
-import { containerKindOf } from '@/lib/container-kind-of.js';
-import { getElementChildren } from '@/lib/element-children.js';
-import { getElementName } from '@/lib/field-scope.js';
-import { resolveFieldRef } from '@/lib/field-ref.js';
+import { containerKindOf } from '../container-kind-of.js';
+import { getElementChildren } from '../element-children.js';
+import { getElementName } from '../field-scope.js';
+import { resolveFieldRef } from '../field-ref.js';
 import { issueAt, type FormValidationIssue } from './issues.js';
 import type { ValidateFormOptions } from './options.js';
 

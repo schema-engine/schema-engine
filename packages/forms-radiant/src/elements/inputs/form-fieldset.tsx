@@ -1,11 +1,11 @@
 import { GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, elementIsSubgrid, getAppearanceAttributes } from '@schema-engine/layout';
-import { FormElements } from '@/components/internals/form-elements.js';
-import { mergeFieldGridHost } from '@/hooks/grid-styles.js';
-import { ChildGrid } from '@/components/internals/child-grid.js';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
+import { FormElements } from '../../components/internals/form-elements.js';
+import { mergeFieldGridHost } from '../../hooks/grid-styles.js';
+import { ChildGrid } from '../../components/internals/child-grid.js';
+import { resolveFormEngine } from '../../contexts/resolve-form-engine.js';
 import type { FieldSetProps } from './form-fieldset.types.js';
 import { objectFieldScope } from '@schema-engine/forms';
-import { withContainerState } from '@/lib/field-rules.js';
+import { withContainerState } from '../../lib/field-rules.js';
 import './form-fieldset.css';
 
 /**

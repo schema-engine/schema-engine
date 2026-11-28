@@ -1,4 +1,4 @@
-import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '@/schemas/grid.js';
+import type { GridBreakpointConfig, GridOffsetName, GridWidthName } from '../schemas/grid.js';
 import type { LayoutIssue } from './layout-issue.js';
 
 /**

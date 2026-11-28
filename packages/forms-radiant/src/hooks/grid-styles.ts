@@ -1,5 +1,5 @@
 import { getDefaultLayoutTheme, getGridItemVariables, type ElementGridConfig } from '@schema-engine/layout';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
+import { resolveFormEngine } from '../contexts/resolve-form-engine.js';
 
 type HostStyle = Record<string, string | number | undefined>;
 

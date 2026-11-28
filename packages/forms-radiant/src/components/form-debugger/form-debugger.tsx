@@ -1,12 +1,12 @@
-import { FormController } from '@/adapters/radiant/controller/index.js';
+import { FormController } from '../../adapters/radiant/controller/index.js';
 import './form-debugger.css';
 import { customElement, prop, RadiantElement, state } from '@ecopages/radiant';
 import { contextSelector } from '@ecopages/radiant/context';
 import type { JSX_PROPS } from '@ecopages/jsx';
 import { RuiBadge } from '@ecopages/radiant-ui/badge';
 import { RuiButton } from '@ecopages/radiant-ui/button';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context.js';
-import { deriveFormSteps, deriveNavigation, type FormMeta } from '@/lib/instance-view.js';
+import { formInstanceContext, type FormInstanceContextValue } from '../../contexts/form-instance-context.js';
+import { deriveFormSteps, deriveNavigation, type FormMeta } from '../../lib/instance-view.js';
 import { isSubmissionBusy } from '@schema-engine/forms';
 import type { ViewNavigation, ViewStep } from '@schema-engine/forms/recipes';
 import type { FormStateSnapshot } from '@schema-engine/forms/state-container';

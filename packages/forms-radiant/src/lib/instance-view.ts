@@ -5,7 +5,7 @@ import {
 	type ViewNavigation,
 	type ViewStep,
 } from '@schema-engine/forms/recipes';
-import type { FormInstanceContextValue } from '@/contexts/form-instance-context.js';
+import type { FormInstanceContextValue } from '../contexts/form-instance-context.js';
 
 /** Serializable form chrome without field definitions, rules, or defaults. */
 export interface FormMeta {

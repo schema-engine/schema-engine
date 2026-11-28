@@ -3,8 +3,8 @@
  */
 
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@/schemas/base-field.js';
-import { elementChildrenSchema } from '@/lib/element-children.js';
+import { BaseFieldSchema } from '../schemas/base-field.js';
+import { elementChildrenSchema } from '../lib/element-children.js';
 import { defineInputContract } from './define-contract.js';
 
 export const ArrayElementConfigSchema = z.extend(BaseFieldSchema, {

@@ -1,5 +1,5 @@
 import { parseActions, type ParsedActionSequence } from '@schema-engine/actions';
-import { FormActionTriggerSchema } from '@/actions/triggers.js';
+import { FormActionTriggerSchema } from '../../actions/triggers.js';
 import type { FormValidationIssue, Path } from './issues.js';
 import type { ValidateFormOptions } from './options.js';
 import { fromSchemaIssues } from './schema-issues.js';

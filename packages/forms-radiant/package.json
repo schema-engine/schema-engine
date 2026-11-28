@@ -36,7 +36,7 @@
 	"scripts": {
 		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
 		"build:files": "node ./build.ts",
-		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+		"build:types": "tsc -p tsconfig.build.json",
 		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "vitest run --project unit --project browser",
@@ -81,7 +81,6 @@
 		"nitro": "^3.0.260311-beta",
 		"playwright": "^1.61.1",
 		"storybook": "^10.6.9",
-		"tsc-alias": "^1.8.16",
 		"typescript": "catalog:",
 		"vite": "^8.0.0",
 		"vitest": "catalog:",

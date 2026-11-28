@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types.js';
+import type { ValidationRegistrationConstraint } from '../schemas/validation/types.js';
 import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
-import type { ContainerKind } from '@/types/registration.js';
+import type { ContainerKind } from '../types/registration.js';
 import type { ChildPath } from '@schema-engine/registry';
 
 /** Coerce inferred registration maps into the engine generic constraint. */

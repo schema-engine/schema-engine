@@ -17,8 +17,8 @@ import {
 	StepIndicatorsBlock,
 	WizardActionsBlock,
 	FormActionsBlock,
-} from '@/components/blocks/index.js';
-import { CardShell, HeroShell, SidebarShell, SplitScreenShell, StackShell } from '@/components/shells/index.js';
+} from '../components/blocks/index.js';
+import { CardShell, HeroShell, SidebarShell, SplitScreenShell, StackShell } from '../components/shells/index.js';
 import type { RadiantRecipePayload } from './types.js';
 
 /**

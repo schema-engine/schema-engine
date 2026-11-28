@@ -2,11 +2,11 @@ import * as z from 'zod/mini';
 import type { ValidationScope, ValidationRule, BaseValidationRule } from './types.js';
 import type { BaseField } from '../base-field.js';
 import type { ValidationRegistry } from './validation-registry.js';
-import { walkLeafFields } from '@/lib/field-scope.js';
-import { resolveFieldRef } from '@/lib/field-ref.js';
-import { getValueAtPath } from '@/lib/path-values.js';
-import { createDebounceScope } from '@/lib/debounce.js';
-import type { DebounceScope } from '@/lib/debounce.js';
+import { walkLeafFields } from '../../lib/field-scope.js';
+import { resolveFieldRef } from '../../lib/field-ref.js';
+import { getValueAtPath } from '../../lib/path-values.js';
+import { createDebounceScope } from '../../lib/debounce.js';
+import type { DebounceScope } from '../../lib/debounce.js';
 
 type ValidationRuleType = ValidationRule | BaseValidationRule;
 

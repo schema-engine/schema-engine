@@ -15,8 +15,8 @@
  */
 
 import { formSubmitPlugin, FormSubmitActionSchema } from './form-submit.plugin.js';
-import { logger } from '@/lib/logger.js';
-import type { BuilderActionRegistration } from '@/types/index.js';
+import { logger } from '../../lib/logger.js';
+import type { BuilderActionRegistration } from '../../types/index.js';
 
 /**
  * Default Submit Action Registration

@@ -1,7 +1,7 @@
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { contextSelector } from '@ecopages/radiant/context';
 import { customElement, prop, RadiantElement } from '@ecopages/radiant';
-import type { FormMeta } from '@/lib/instance-view.js';
+import type { FormMeta } from '../../lib/instance-view.js';
 import { getAppearanceAttributes } from '@schema-engine/layout';
 import { getSlotConfig } from '@schema-engine/forms/recipes';
 import {
@@ -10,8 +10,8 @@ import {
 	SidebarShellConfigSchema,
 	SplitScreenShellConfigSchema,
 } from '@schema-engine/forms/recipes/built-in';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context.js';
-import { deriveInitialInstance } from '@/lib/instance-view.js';
+import { formInstanceContext, type FormInstanceContextValue } from '../../contexts/form-instance-context.js';
+import { deriveInitialInstance } from '../../lib/instance-view.js';
 import type { FormShellProps } from '../../recipes/types.js';
 import './card-shell.css';
 import './hero-shell.css';

@@ -4,9 +4,9 @@ import type {
 	GridLayoutConfig,
 	GridOffsetName,
 	GridWidthName,
-} from '@/schemas/grid.js';
-import type { DeepReadonly } from '@/lib/deep-readonly.js';
-import { GridGapTokens } from '@/schemas/grid.js';
+} from '../schemas/grid.js';
+import type { DeepReadonly } from './deep-readonly.js';
+import { GridGapTokens } from '../schemas/grid.js';
 import {
 	areasTemplateValue,
 	BREAKPOINT_ORDER,
@@ -19,7 +19,7 @@ import {
 	type CascadeSlot,
 	type GridBreakpointToken,
 	type NamedPlacement,
-} from '@/lib/grid-placement.js';
+} from './grid-placement.js';
 
 /**
  * Maps authored grid values to theme-scoped CSS variables.

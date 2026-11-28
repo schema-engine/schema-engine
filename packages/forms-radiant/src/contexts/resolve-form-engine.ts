@@ -1,7 +1,7 @@
 import { ContextSubscriptionRequestEvent } from '@ecopages/radiant/context';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms';
-import { formEngineContext } from '@/components/provider.js';
-import { peekOwningFormEngine } from '@/contexts/form-engine-owner.js';
+import { formEngineContext } from '../components/provider.js';
+import { peekOwningFormEngine } from './form-engine-owner.js';
 
 /**
  * Reads `formEngineContext` from the nearest provider above the host.

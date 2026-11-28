@@ -1,8 +1,8 @@
-import type { AnyElementRegistration } from '@/types/registration.js';
-import type { ActionRegistry, ElementRegistry, RecipeRegistry } from '@/registries/index.js';
+import type { AnyElementRegistration } from '../../types/registration.js';
+import type { ActionRegistry, ElementRegistry, RecipeRegistry } from '../../registries/index.js';
 import type { LayoutTheme } from '@schema-engine/layout';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { RuleCheck } from '@/schemas/validation/index.js';
+import type { RuleCheck } from '../../schemas/validation/index.js';
 
 export type ElementRegistration = AnyElementRegistration;
 

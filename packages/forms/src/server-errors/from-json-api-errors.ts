@@ -1,4 +1,4 @@
-import { FORM_ROOT, type FormStateErrorsInput } from '@/state-container/types.js';
+import { FORM_ROOT, type FormStateErrorsInput } from '../state-container/types.js';
 import {
 	groupByPath,
 	isRecord,

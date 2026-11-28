@@ -8,8 +8,8 @@ import type {
 	StaticRegistration,
 	ValueDeclaration,
 } from './registration.js';
-import type { NormalizedElementConfig } from '@/lib/normalized-form-config.js';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types.js';
+import type { NormalizedElementConfig } from '../lib/normalized-form-config.js';
+import type { ValidationRegistrationConstraint } from '../schemas/validation/types.js';
 import type { AppearanceAxisList } from '@schema-engine/layout';
 
 type InferOutput<TSchema> = TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : never;

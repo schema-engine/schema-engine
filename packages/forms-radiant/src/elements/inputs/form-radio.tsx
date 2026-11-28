@@ -4,10 +4,10 @@ import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopag
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiRadioGroup } from '@ecopages/radiant-ui/radio-group';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules.js';
-import { ChoiceHost, type ChoiceValue } from '@/lib/choice-host.js';
-import { choiceControlOptions, choiceKeys, choiceValueOf } from '@/lib/choice-value.js';
-import { registerHostControl } from '@/lib/control-host.js';
+import { isRenderedRequired } from '../../lib/field-rules.js';
+import { ChoiceHost, type ChoiceValue } from '../../lib/choice-host.js';
+import { choiceControlOptions, choiceKeys, choiceValueOf } from '../../lib/choice-value.js';
+import { registerHostControl } from '../../lib/control-host.js';
 import { FieldGroup } from '../field-group.js';
 import type { RadioFieldProps } from './form-radio.types.js';
 

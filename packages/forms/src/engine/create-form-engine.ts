@@ -1,5 +1,5 @@
-import type { CsrfPolicy, FormFetch } from '@/lib/form-fetch.js';
-import type { FormIssueFormatter } from '@/state-container/types.js';
+import type { CsrfPolicy, FormFetch } from '../lib/form-fetch.js';
+import type { FormIssueFormatter } from '../state-container/types.js';
 import { buildFormEngine } from './build-form-engine.js';
 import type {
 	MergedRegistrationMap,
@@ -10,7 +10,7 @@ import type {
 	RecipeRegistrationConstraint,
 	ActionRegistrationConstraint,
 	ValidationRegistrationConstraint,
-} from '@/builder/types.utils.js';
+} from '../builder/types.utils.js';
 import type { FormEngine } from './form-engine.js';
 import type { SchemaMetadataCatalog } from './schema-metadata-catalog.js';
 import type { LayoutAxes, LayoutInput } from '@schema-engine/layout';

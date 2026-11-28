@@ -75,10 +75,6 @@ await buildLib({
 		...entryDirs.flatMap((dir) => [`${dir}/**/*.ts`, `${dir}/**/*.tsx`, `${dir}/**/*.css`]),
 	],
 	exclude: ['.stories.', '.play.', '.test.'],
-	aliases: [
-		{ prefix: '@/components/ui', dir: path.join(cwd, '../../registry/ui-stubs') },
-		{ prefix: '@', dir: path.join(cwd, 'src') },
-	],
 	plugins: [postcssPlugin],
 	onEnd: generateGlobalCSS,
 });

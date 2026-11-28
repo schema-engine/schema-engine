@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@/schemas/base-field.js';
+import { BaseFieldSchema } from '../schemas/base-field.js';
 import { defineStaticContract } from './define-contract.js';
 
 export const SubmissionAlertExtensionSchema = z.object({

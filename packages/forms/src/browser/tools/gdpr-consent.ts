@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger.js';
+import { logger } from '../../lib/logger.js';
 import { getAutoSaveDraftStorageKey } from '../../actions/plugins/auto-save.plugin.js';
 import { clearTrackedAutoSaveDrafts, createLocalStorageAutoSaveStorage } from './auto-save-storage.js';
 

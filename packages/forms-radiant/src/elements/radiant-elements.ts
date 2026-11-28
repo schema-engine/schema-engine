@@ -1,6 +1,6 @@
 import { bindRegistry } from '@schema-engine/registry';
 import { defaultElementContracts, type ElementBindings } from '@schema-engine/forms/default-elements';
-import { createRadiantPhoneValidationRegistration } from '@/lib/phone-validation.js';
+import { createRadiantPhoneValidationRegistration } from '../lib/phone-validation.js';
 import { SubmitButton } from './actions/submit-button.js';
 import { FormSubmissionAlert } from './content/form-submission-alert.js';
 import { FormArrayElements } from './inputs/form-array-elements.js';

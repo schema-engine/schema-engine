@@ -5,7 +5,7 @@ import {
 	replaceChildSlot,
 	startsResource,
 } from '@schema-engine/registry/json-schema';
-import type { JSONSchemaObject } from '@/lib/standard-json-schema.js';
+import type { JSONSchemaObject } from '../lib/standard-json-schema.js';
 import { ComponentType } from './component-type.js';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog.js';
 

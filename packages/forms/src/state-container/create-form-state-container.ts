@@ -7,18 +7,18 @@ import {
 	type Participation,
 	runValidationPlan,
 	type ValidationIssue,
-} from '@/engine/value-validation.js';
-import { createDebounceScope } from '@/lib/debounce.js';
-import { resolveFieldRef } from '@/lib/field-ref.js';
-import { logger } from '@/lib/logger.js';
-import { frozenCopy } from '@/lib/frozen-copy.js';
-import { getValueAtPath } from '@/lib/path-values.js';
-import { isReservedPathKey } from '@/lib/reserved-path-keys.js';
+} from '../engine/value-validation.js';
+import { createDebounceScope } from '../lib/debounce.js';
+import { resolveFieldRef } from '../lib/field-ref.js';
+import { logger } from '../lib/logger.js';
+import { frozenCopy } from '../lib/frozen-copy.js';
+import { getValueAtPath } from '../lib/path-values.js';
+import { isReservedPathKey } from '../lib/reserved-path-keys.js';
 import {
 	buildDependencyIndex,
 	shouldSurfaceDependentError,
 	type DependencyIndex,
-} from '@/schemas/validation/dependencies.js';
+} from '../schemas/validation/dependencies.js';
 import { dirtyTree } from './dirty.js';
 import { readHydration } from './hydration.js';
 import type { FieldArrayCommands } from './field-array.js';
@@ -34,7 +34,7 @@ import {
 } from './row-ids.js';
 import { submittedTree, submittedValues, toFormPath, type SubmissionRecord } from './submission.js';
 import { createRunTracker } from './stale-results.js';
-import { buildSubmissionShape } from '@/lib/submission-shape.js';
+import { buildSubmissionShape } from '../lib/submission-shape.js';
 import {
 	clearAround,
 	clearAt,

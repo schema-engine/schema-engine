@@ -7,7 +7,7 @@ import {
 	RuiNumberFieldSteppers,
 } from '@ecopages/radiant-ui/number-field';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules.js';
+import { isRenderedRequired } from '../../lib/field-rules.js';
 import { FieldGroup } from '../field-group.js';
 import type { NumberFieldProps } from './form-number.types.js';
 

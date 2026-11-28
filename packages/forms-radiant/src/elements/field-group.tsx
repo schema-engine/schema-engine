@@ -1,4 +1,4 @@
-import { FormField } from '@/elements/form-field.js';
+import { FormField } from './form-field.js';
 import type { JsxRenderable } from '@ecopages/jsx';
 import { RuiFieldDescription, RuiFieldError } from '@ecopages/radiant-ui/field';
 import { RuiLabel } from '@ecopages/radiant-ui/label';

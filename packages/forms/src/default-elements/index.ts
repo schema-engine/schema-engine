@@ -1,7 +1,7 @@
 import { createRegistry, type BaseRegistration, type ReadOnlyRegistry } from '@schema-engine/registry';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type { WithNormalizedChildren } from '@/types/define-element.js';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types.js';
+import type { WithNormalizedChildren } from '../types/define-element.js';
+import type { ValidationRegistrationConstraint } from '../schemas/validation/types.js';
 import { ArrayElementContract } from './array-elements.js';
 import { CheckboxElementContract } from './checkbox.js';
 import { CheckboxGroupElementContract } from './checkbox-group.js';

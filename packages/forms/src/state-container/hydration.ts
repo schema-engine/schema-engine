@@ -1,4 +1,4 @@
-import { isPlainObject } from '@/lib/is-plain-object.js';
+import { isPlainObject } from '../lib/is-plain-object.js';
 import type { IdTree, RowNode } from './row-ids.js';
 import type { FormStateHydration, FormStateSnapshot } from './types.js';
 import { createMap, isStructural, join, toInternalRecord, type NullMap } from './value-tree.js';

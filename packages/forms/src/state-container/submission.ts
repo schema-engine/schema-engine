@@ -1,9 +1,9 @@
-import { isPathExcluded } from '@/engine/value-validation.js';
-import { frozenCopy } from '@/lib/frozen-copy.js';
+import { isPathExcluded } from '../engine/value-validation.js';
+import { frozenCopy } from '../lib/frozen-copy.js';
 import type { IdTree } from './row-ids.js';
-import { getValueAtPath } from '@/lib/path-values.js';
+import { getValueAtPath } from '../lib/path-values.js';
 import { join, toInternalRecord, toPlainRecord, type NullMap } from './value-tree.js';
-import { pickDeclared, type ObjectShape } from '@/lib/submission-shape.js';
+import { pickDeclared, type ObjectShape } from '../lib/submission-shape.js';
 
 /**
  * What the container keeps of one `submit()`: the values it is about, and how its validation ended.

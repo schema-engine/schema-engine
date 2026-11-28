@@ -6,8 +6,8 @@ import {
 	getGridItemVariables,
 	type ElementGridConfig,
 } from '@schema-engine/layout';
-import { FieldHostContext } from '@/contexts/field-constraint-context.js';
-import { useLayoutThemeId } from '@/hooks/use-form-context.js';
+import { FieldHostContext } from '../contexts/field-constraint-context.js';
+import { useLayoutThemeId } from './use-form-context.js';
 
 export interface FieldHostProps {
 	className: string;

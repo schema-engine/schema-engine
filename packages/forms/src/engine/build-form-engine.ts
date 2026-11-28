@@ -1,21 +1,21 @@
-import { globalFetch, withCsrf, type CsrfPolicy, type FormFetch } from '@/lib/form-fetch.js';
-import type { FormIssueFormatter } from '@/state-container/types.js';
+import { globalFetch, withCsrf, type CsrfPolicy, type FormFetch } from '../lib/form-fetch.js';
+import type { FormIssueFormatter } from '../state-container/types.js';
 import { assertStandardSchema, createRegistry, RegistryError } from '@schema-engine/registry';
-import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '@/types/registration.js';
+import type { AnyElementRegistration, AnyRecipeRegistration, AnyActionRegistration } from '../types/registration.js';
 import type {
 	ActionRegistrationConstraint,
 	ElementRegistrationConstraint,
 	RecipeRegistrationConstraint,
-} from '@/builder/types.utils.js';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types.js';
-import { FormEngine } from '@/engine/form-engine.js';
-import { ComponentType } from '@/engine/component-type.js';
-import { createActionExportSchemaMap, createFormEngineSchemaArtifacts } from '@/engine/schema-artifacts.js';
-import { SchemaMetadataCatalog } from '@/engine/schema-metadata-catalog.js';
-import { logger } from '@/lib/logger.js';
-import { ELEMENT_CHILDREN_KEY } from '@/lib/element-children.js';
-import { withExportedRules } from '@/lib/exported-rules.js';
-import { withActionEnvelope } from '@/lib/exported-action-envelope.js';
+} from '../builder/types.utils.js';
+import type { ValidationRegistrationConstraint } from '../schemas/validation/types.js';
+import { FormEngine } from './form-engine.js';
+import { ComponentType } from './component-type.js';
+import { createActionExportSchemaMap, createFormEngineSchemaArtifacts } from './schema-artifacts.js';
+import { SchemaMetadataCatalog } from './schema-metadata-catalog.js';
+import { logger } from '../lib/logger.js';
+import { ELEMENT_CHILDREN_KEY } from '../lib/element-children.js';
+import { withExportedRules } from '../lib/exported-rules.js';
+import { withActionEnvelope } from '../lib/exported-action-envelope.js';
 import {
 	assertAxesNotReserved,
 	createAppearanceSchema,
@@ -27,13 +27,13 @@ import {
 	type LayoutInput,
 	type LayoutTheme,
 } from '@schema-engine/layout';
-import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes.js';
-import { createFormConfigShape } from '@/schemas/form-config-shape.js';
+import { RENDERER_DATA_ATTRIBUTES } from '../lib/renderer-data-attributes.js';
+import { createFormConfigShape } from '../schemas/form-config-shape.js';
 import * as z from 'zod/mini';
-import { resolveExportSchema } from '@/lib/export-schema.js';
-import { createExportedRecipeView } from '@/lib/exported-recipe-view.js';
-import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol.js';
-import { createDefaultValidationRegistry, type ValidationRegistry } from '@/schemas/validation/index.js';
+import { resolveExportSchema } from '../lib/export-schema.js';
+import { createExportedRecipeView } from '../lib/exported-recipe-view.js';
+import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '../recipes/protocol.js';
+import { createDefaultValidationRegistry, type ValidationRegistry } from '../schemas/validation/index.js';
 
 /**
  * Rejects an element registration that states no `kind`, a container that breaks the child path rule, and an input that

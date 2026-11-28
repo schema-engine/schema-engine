@@ -5,11 +5,11 @@ import {
 	isFieldRequired,
 } from '@schema-engine/forms';
 import { renderRegisteredElement } from './render-registered-element.js';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
-import { peekOwningParticipation } from '@/contexts/form-engine-owner.js';
-import { constraintsFromParticipation, standaloneConstraints } from '@/lib/participation-snapshot.js';
+import { resolveFormEngine } from '../../contexts/resolve-form-engine.js';
+import { peekOwningParticipation } from '../../contexts/form-engine-owner.js';
+import { constraintsFromParticipation, standaloneConstraints } from '../../lib/participation-snapshot.js';
 import type { ConstraintEvaluationContext } from './render-registered-element.js';
-import { mergeFieldGridHost } from '@/hooks/grid-styles.js';
+import { mergeFieldGridHost } from '../../hooks/grid-styles.js';
 import { ConstraintElement } from './constraint-element.js';
 import { GRID_ITEM_CLASS, GRID_SUBGRID_CLASS, elementIsSubgrid } from '@schema-engine/layout';
 

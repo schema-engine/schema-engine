@@ -1,7 +1,7 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { GRID_CLASS, GRID_SUBGRID_CLASS, getDefaultLayoutTheme, getGridVariables } from '@schema-engine/layout';
 import { gridTrackItems, type FormEngineRuntime as FormEngine } from '@schema-engine/forms';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
+import { resolveFormEngine } from '../../contexts/resolve-form-engine.js';
 import { GridContainer } from './grid-container.js';
 
 interface ChildGridBaseProps {

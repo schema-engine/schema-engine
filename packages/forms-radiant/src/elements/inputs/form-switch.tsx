@@ -1,6 +1,6 @@
 import { RuiSwitch } from '@ecopages/radiant-ui/switch';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules.js';
+import { isRenderedRequired } from '../../lib/field-rules.js';
 import { FieldGroup } from '../field-group.js';
 import type { SwitchFieldProps } from './form-switch.types.js';
 

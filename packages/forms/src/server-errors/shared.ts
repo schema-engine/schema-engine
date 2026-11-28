@@ -1,6 +1,6 @@
-import { isPlainObject } from '@/lib/is-plain-object.js';
-import { isReservedPathKey } from '@/lib/reserved-path-keys.js';
-import { FORM_ROOT, type FormStateErrorInput, type FormStateErrorsInput } from '@/state-container/types.js';
+import { isPlainObject } from '../lib/is-plain-object.js';
+import { isReservedPathKey } from '../lib/reserved-path-keys.js';
+import { FORM_ROOT, type FormStateErrorInput, type FormStateErrorsInput } from '../state-container/types.js';
 
 /**
  * Thrown by the server error helpers for input whose shape they do not recognise, or that names a path no field can have.

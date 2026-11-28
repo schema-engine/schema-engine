@@ -4,10 +4,10 @@ import { fieldAriaBindings, fieldContext, type FieldContextValue } from '@ecopag
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
 import { RuiCheckboxGroup } from '@ecopages/radiant-ui/checkbox-group';
 import { isFieldRequired } from '@schema-engine/forms';
-import { isRenderedRequired } from '@/lib/field-rules.js';
-import { ChoiceHost, type ChoiceValue } from '@/lib/choice-host.js';
-import { choiceControlOptions, choiceKeys, serializeChoiceValue } from '@/lib/choice-value.js';
-import { registerHostControl } from '@/lib/control-host.js';
+import { isRenderedRequired } from '../../lib/field-rules.js';
+import { ChoiceHost, type ChoiceValue } from '../../lib/choice-host.js';
+import { choiceControlOptions, choiceKeys, serializeChoiceValue } from '../../lib/choice-value.js';
+import { registerHostControl } from '../../lib/control-host.js';
 import { FieldGroup } from '../field-group.js';
 import type { CheckboxGroupFieldProps } from './form-checkbox-group.types.js';
 

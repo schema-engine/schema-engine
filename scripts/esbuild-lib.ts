@@ -1,9 +1,6 @@
-import { copyFileSync, existsSync, globSync, lstatSync } from 'node:fs';
+import { copyFileSync, existsSync, globSync } from 'node:fs';
 import path from 'node:path';
 import { build, context, type BuildOptions, type Plugin } from 'esbuild';
-
-const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.css', '.json'];
-type Alias = { prefix: string; dir: string };
 
 interface BuildLibOptions {
 	cwd?: string;
@@ -14,56 +11,8 @@ interface BuildLibOptions {
 	splitting?: boolean;
 	minify?: boolean;
 	external?: string[];
-	aliases?: Alias[];
 	plugins?: Plugin[];
 	onEnd?: () => void | Promise<void>;
-}
-
-function resolveAliasTarget(absoluteBase: string): string | null {
-	if (existsSync(absoluteBase) && lstatSync(absoluteBase).isFile()) {
-		return absoluteBase;
-	}
-
-	for (const ext of EXTENSIONS) {
-		const withExt = `${absoluteBase}${ext}`;
-		if (existsSync(withExt) && lstatSync(withExt).isFile()) {
-			return withExt;
-		}
-	}
-
-	for (const ext of EXTENSIONS) {
-		const indexFile = path.join(absoluteBase, `index${ext}`);
-		if (existsSync(indexFile) && lstatSync(indexFile).isFile()) {
-			return indexFile;
-		}
-	}
-
-	return null;
-}
-
-function aliasPlugin(aliases: Alias[]): Plugin {
-	const ordered = [...aliases].sort((a, b) => b.prefix.length - a.prefix.length);
-
-	return {
-		name: 'workspace-alias',
-		setup(buildApi) {
-			buildApi.onResolve({ filter: /^@/ }, (args) => {
-				for (const { prefix, dir } of ordered) {
-					if (args.path !== prefix && !args.path.startsWith(`${prefix}/`)) {
-						continue;
-					}
-
-					const rest = args.path === prefix ? '' : args.path.slice(prefix.length + 1);
-					const resolved = resolveAliasTarget(rest ? path.join(dir, rest) : dir);
-					if (resolved) {
-						return { path: resolved };
-					}
-				}
-
-				return null;
-			});
-		},
-	};
 }
 
 function collectEntryPoints(cwd: string, patterns: string[], exclude: string[]): string[] {
@@ -107,7 +56,7 @@ export async function buildLib(options: BuildLibOptions): Promise<void> {
 		throw new Error(`No entry points matched ${options.entryGlobs.join(', ')}`);
 	}
 
-	const plugins = [...(options.aliases?.length ? [aliasPlugin(options.aliases)] : []), ...(options.plugins ?? [])];
+	const plugins = [...(options.plugins ?? [])];
 
 	const onEnd = options.onEnd;
 	if (onEnd) {

@@ -1,5 +1,5 @@
-import type { FieldParticipation, ValidationStep } from '@/engine/value-validation.js';
-import type { ValidationRegistry } from '@/schemas/validation/validation-registry.js';
+import type { FieldParticipation, ValidationStep } from '../engine/value-validation.js';
+import type { ValidationRegistry } from '../schemas/validation/validation-registry.js';
 import type { FieldArrayCommands } from './field-array.js';
 
 /**

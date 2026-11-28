@@ -1,12 +1,12 @@
-import { issuePath } from '@/engine/submission-schema.js';
-import { logger } from '@/lib/logger.js';
-import { isPlainObject } from '@/lib/is-plain-object.js';
-import { buildSubmissionShape, type SubmissionShape } from '@/lib/submission-shape.js';
-import type { JSONSchemaObject } from '@/lib/standard-json-schema.js';
-import type { FormRuntime, SubmitOutcome } from '@/runtime/index.js';
-import { issueText } from '@/state-container/issue-text.js';
-import { FORM_ROOT } from '@/state-container/types.js';
-import type { FormStateIssue, FormSubmissionIssue } from '@/state-container/types.js';
+import { issuePath } from '../engine/submission-schema.js';
+import { logger } from '../lib/logger.js';
+import { isPlainObject } from '../lib/is-plain-object.js';
+import { buildSubmissionShape, type SubmissionShape } from '../lib/submission-shape.js';
+import type { JSONSchemaObject } from '../lib/standard-json-schema.js';
+import type { FormRuntime, SubmitOutcome } from '../runtime/index.js';
+import { issueText } from '../state-container/issue-text.js';
+import { FORM_ROOT } from '../state-container/types.js';
+import type { FormStateIssue, FormSubmissionIssue } from '../state-container/types.js';
 
 /** What the page hands `execute` besides the input. */
 interface AgentToolExecuteOptions {

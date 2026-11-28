@@ -1,7 +1,7 @@
-import type { FormFetch } from '@/lib/form-fetch.js';
+import type { FormFetch } from '../lib/form-fetch.js';
 import type { FormActionTrigger } from '../actions/triggers.js';
 import type { ActionRuntimeContext } from '@schema-engine/actions';
-import type { FormStateError, FormValidateResult } from '@/state-container/types.js';
+import type { FormStateError, FormValidateResult } from '../state-container/types.js';
 
 /**
  * Base action context for the builder pattern.

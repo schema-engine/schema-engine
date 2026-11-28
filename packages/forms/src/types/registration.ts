@@ -9,7 +9,7 @@ import type {
 	ActionConfigBase,
 	AnyActionRegistration as ActionsAnyActionRegistration,
 } from '@schema-engine/actions';
-import type { ValidationRegistrationConstraint } from '@/schemas/validation/types.js';
+import type { ValidationRegistrationConstraint } from '../schemas/validation/types.js';
 import type { AppearanceAxisList, RecipeMetadata, SlotAppearanceAxes } from '@schema-engine/layout';
 
 /**
@@ -129,20 +129,20 @@ export type RecipeRegistration<
 > = Brand<
 	{
 		$type: TType;
-		kind: import('@/recipes/types.js').RecipeKind;
-		slots: import('@/recipes/types.js').RecipeSlot[];
+		kind: import('../recipes/types.js').RecipeKind;
+		slots: import('../recipes/types.js').RecipeSlot[];
 		schema: TSchema;
 		metadata: RecipeMetadata;
-		slotDefaults?: Partial<Record<import('@/recipes/types.js').RecipeSlot, Record<string, unknown>>>;
-		/** Appearance axes each slot supports; see {@link import('@/recipes/types').RecipeSpec.appearanceAxes}. */
-		appearanceAxes?: SlotAppearanceAxes<import('@/recipes/types.js').RecipeSlot>;
+		slotDefaults?: Partial<Record<import('../recipes/types.js').RecipeSlot, Record<string, unknown>>>;
+		/** Appearance axes each slot supports; see {@link import('../recipes/types.js').RecipeSpec.appearanceAxes}. */
+		appearanceAxes?: SlotAppearanceAxes<import('../recipes/types.js').RecipeSlot>;
 		/**
 		 * The schema of each declared slot; see {@link import('@schema-engine/layout').ProtocolRecipeRegistration.slotSchemas}.
 		 *
 		 * @remarks
 		 * The JSON Schema export reads it to list each slot. A registration written by hand may leave it out.
 		 */
-		slotSchemas?: Readonly<Partial<Record<import('@/recipes/types.js').RecipeSlot, StandardSchemaV1>>>;
+		slotSchemas?: Readonly<Partial<Record<import('../recipes/types.js').RecipeSlot, StandardSchemaV1>>>;
 		/** Adapter render payload (shell + slot components). */
 		render: TRender;
 	},

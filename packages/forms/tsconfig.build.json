@@ -7,10 +7,7 @@
 		"outDir": "./dist",
 		"noEmit": false,
 		"declaration": true,
-		"emitDeclarationOnly": true,
-		"paths": {
-			"@/*": ["./src/*"]
-		}
+		"emitDeclarationOnly": true
 	},
 	"include": ["src"],
 	"exclude": ["**/*.test.ts", "**/*.test.tsx"]

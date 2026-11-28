@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@/schemas/base-field.js';
+import { BaseFieldSchema } from '../schemas/base-field.js';
 import { defineInputContract } from './define-contract.js';
 
 export const SwitchFieldExtensionSchema = z.object({

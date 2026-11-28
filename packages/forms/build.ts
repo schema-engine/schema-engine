@@ -7,7 +7,6 @@ const cwd = path.dirname(fileURLToPath(import.meta.url));
 await buildLib({
 	cwd,
 	entryGlobs: ['src/**/*.ts'],
-	aliases: [{ prefix: '@', dir: path.join(cwd, 'src') }],
 	external: ['@schema-engine/actions', '@schema-engine/layout', '@schema-engine/registry', 'zod/mini'],
 	/**
 	 * Keep shared modules (especially the validation registry singleton) as one

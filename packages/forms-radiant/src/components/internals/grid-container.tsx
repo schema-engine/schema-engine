@@ -1,7 +1,7 @@
 import type { JsxRenderable } from '@ecopages/jsx';
 import { GRID_CONTAINER_CLASS, getDefaultLayoutTheme } from '@schema-engine/layout';
 import type { FormEngineRuntime as FormEngine } from '@schema-engine/forms';
-import { resolveFormEngine } from '@/contexts/resolve-form-engine.js';
+import { resolveFormEngine } from '../../contexts/resolve-form-engine.js';
 
 /**
  * Wraps one grid in the element a `query: 'container'` layout theme measures its breakpoints against.

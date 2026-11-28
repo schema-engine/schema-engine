@@ -1,4 +1,4 @@
-import type { FormValues } from '@/runtime/types.js';
+import type { FormValues } from '../runtime/types.js';
 import type { ValueEntry } from './types.utils.js';
 
 /**

@@ -4,8 +4,8 @@ import type {
 	DefineElementRegistration,
 	InputValueDeclaration,
 	ResolvedInputDeclaration,
-} from '@/types/define-element.js';
-import type { ContainerKind, ElementChildPaths, InputRegistration, StaticRegistration } from '@/types/registration.js';
+} from '../types/define-element.js';
+import type { ContainerKind, ElementChildPaths, InputRegistration, StaticRegistration } from '../types/registration.js';
 
 /**
  * An input element without the part a renderer adds: its `$type`, schema, value declaration, container kind,

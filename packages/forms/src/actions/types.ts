@@ -1,5 +1,5 @@
 import type { ActionConfigBase, ActionExecutionResult as GenericActionExecutionResult } from '@schema-engine/actions';
-import type { ActionArguments } from '@/types/registration.js';
+import type { ActionArguments } from '../types/registration.js';
 
 /** Action configs accepted by an engine's registered action map. */
 export type FormActionConfig<TActions extends Record<string, unknown> = Record<string, unknown>> =

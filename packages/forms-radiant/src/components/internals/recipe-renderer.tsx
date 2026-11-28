@@ -11,11 +11,11 @@ import {
 } from '@schema-engine/forms';
 import type { RecipeSlot } from '@schema-engine/forms/recipes';
 import type { RadiantRecipeAdapterPayload } from '../../recipes/types.js';
-import { createFormMeta } from '@/lib/instance-view.js';
+import { createFormMeta } from '../../lib/instance-view.js';
 import { FormElements } from './form-elements.js';
 import { GridContainer } from './grid-container.js';
-import { collectFormInitialValues } from '@/adapters/radiant/rui-form-shell.js';
-import { FormStep } from '@/components/form-step.js';
+import { collectFormInitialValues } from '../../adapters/radiant/rui-form-shell.js';
+import { FormStep } from '../form-step.js';
 
 function LayoutThemeStyle({ themeId, css }: { themeId: string; css: string }): JsxRenderable {
 	return jsx('style', { 'data-se-theme-css': themeId, children: css });

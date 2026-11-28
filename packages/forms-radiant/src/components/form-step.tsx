@@ -1,7 +1,7 @@
 import { customElement, bindTo, onUpdated, prop, RadiantElement, state } from '@ecopages/radiant';
 import { onContextUpdate } from '@ecopages/radiant/context';
 import type { JSX_PROPS, JsxRenderable } from '@ecopages/jsx';
-import { formInstanceContext, type FormInstanceContextValue } from '@/contexts/form-instance-context.js';
+import { formInstanceContext, type FormInstanceContextValue } from '../contexts/form-instance-context.js';
 import { getAppearanceAttributes, type AppearanceSelection } from '@schema-engine/layout';
 
 /**

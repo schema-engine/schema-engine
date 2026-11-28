@@ -1,9 +1,9 @@
 import type React from 'react';
-import { useFormEngine } from '@/hooks/index.js';
-import { useContainerSelector } from '@/hooks/form-state/context.js';
+import { useFormEngine } from '../../hooks/index.js';
+import { useContainerSelector } from '../../hooks/form-state/context.js';
 import { applyFieldOverlay, type NormalizedElementConfig, isNormalizedElementConfig } from '@schema-engine/forms';
 import { selectFieldState } from '@schema-engine/forms/state-container';
-import { FieldHostContext } from '@/contexts/field-constraint-context.js';
+import { FieldHostContext } from '../../contexts/field-constraint-context.js';
 import { ElementError } from './element-error.js';
 
 export interface FormElementProps {

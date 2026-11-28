@@ -1,5 +1,5 @@
 import type { ReadOnlyRegistry } from '@schema-engine/registry';
-import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration.js';
+import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '../types/registration.js';
 
 /** The engine's read-only store of element registrations. */
 export type ElementRegistry = ReadOnlyRegistry<AnyElementRegistration>;

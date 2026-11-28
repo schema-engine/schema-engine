@@ -1,5 +1,5 @@
 import type { JsxRenderable } from '@ecopages/jsx';
-import type { FormMeta } from '@/lib/instance-view.js';
+import type { FormMeta } from '../lib/instance-view.js';
 import type { FormShellLayout, RecipeRenderPayload, RecipeSlot, RecipeSlotSchemas } from '@schema-engine/forms/recipes';
 
 /** Serializable render inputs handed to recipe slot factories. */

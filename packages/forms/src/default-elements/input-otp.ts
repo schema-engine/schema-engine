@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
-import { BaseFieldSchema } from '@/schemas/base-field.js';
-import type { BaseValidationRule } from '@/schemas/validation/types.js';
+import { BaseFieldSchema } from '../schemas/base-field.js';
+import type { BaseValidationRule } from '../schemas/validation/types.js';
 import { defineInputContract } from './define-contract.js';
 
 export const InputOTPFieldExtensionSchema = z.object({

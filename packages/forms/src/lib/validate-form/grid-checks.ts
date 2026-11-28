@@ -1,7 +1,7 @@
-import type { FormTaggedConfig } from '@/schemas/form-config.js';
-import type { ContainerKind } from '@/types/registration.js';
-import { getElementChildren } from '@/lib/element-children.js';
-import { placedTrackItems, type PlacedItem } from '@/lib/grid-track-items.js';
+import type { FormTaggedConfig } from '../../schemas/form-config.js';
+import type { ContainerKind } from '../../types/registration.js';
+import { getElementChildren } from '../element-children.js';
+import { placedTrackItems, type PlacedItem } from '../grid-track-items.js';
 import {
 	areaNames,
 	areaTemplateIssues,

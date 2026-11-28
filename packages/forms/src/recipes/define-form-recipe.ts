@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { bindRecipe } from '@schema-engine/layout';
-import type { RecipeRegistration } from '@/types/index.js';
+import type { RecipeRegistration } from '../types/index.js';
 import type { RecipeSlotSchemas, RecipeSpec } from './types.js';
 
 /**

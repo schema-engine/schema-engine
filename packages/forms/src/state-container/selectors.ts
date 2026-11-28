@@ -1,5 +1,5 @@
-import { foldFieldParticipation } from '@/engine/value-validation.js';
-import { getValueAtPath } from '@/lib/path-values.js';
+import { foldFieldParticipation } from '../engine/value-validation.js';
+import { getValueAtPath } from '../lib/path-values.js';
 import type { FormStateError, FormStateSnapshot, FormStateWarning } from './types.js';
 
 /** What is known about one field, after `getFieldState` of React Hook Form. */

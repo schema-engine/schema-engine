@@ -1,4 +1,4 @@
-export type { FormMeta } from '@/lib/instance-view.js';
+export type { FormMeta } from '../lib/instance-view.js';
 export { defineRecipe } from './bind-recipes.js';
 export type {
 	FormShellComponent,
