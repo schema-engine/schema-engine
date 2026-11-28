@@ -54,6 +54,17 @@ const note = defineStatic({
 const formWith = (elements: unknown[]) => ({ id: 'tree', steps: [{ id: 'main', title: 'Main', elements }] });
 const leaf = (name: string, extra: Record<string, unknown> = {}) => ({ $type: 'field', id: name, name, ...extra });
 
+/** The error `createFormEngine` throws for these elements, which a test branches on by `code`. */
+function buildError(elements: readonly object[]): RegistryError {
+	try {
+		createFormEngine({ elements: elements as never });
+	} catch (error) {
+		if (error instanceof RegistryError) return error;
+		throw error;
+	}
+	throw new Error('Expected createFormEngine to throw a RegistryError');
+}
+
 describe('container child paths: the build', () => {
 	test('a container is an input that declares childPaths, and its value is its children', () => {
 		expect(() => createFormEngine({ elements: [field, group] })).not.toThrow();
@@ -68,7 +79,12 @@ describe('container child paths: the build', () => {
 			metadata: { name: 'Hand', category: 'input' },
 			render: () => null,
 		} as const;
-		expect(() => createFormEngine({ elements: [handWritten] })).toThrow(/Element 'hand'.*childPaths/);
+		expect(buildError([handWritten])).toMatchObject({
+			code: 'invalid-child-paths',
+			kind: 'Element',
+			$type: 'hand',
+			message: expect.stringMatching(/Element 'hand'.*childPaths/),
+		});
 	});
 
 	test('a container that declares a value is rejected, since its value is its children', () => {
@@ -81,7 +97,12 @@ describe('container child paths: the build', () => {
 			metadata: { name: 'Greedy', category: 'input' },
 			render: () => null,
 		} as const;
-		expect(() => createFormEngine({ elements: [withValue] })).toThrow(/Element 'greedy'.*value/);
+		expect(buildError([withValue])).toMatchObject({
+			code: 'invalid-declaration',
+			kind: 'Element',
+			$type: 'greedy',
+			message: expect.stringMatching(/Element 'greedy'.*value/),
+		});
 	});
 
 	test.each([
@@ -98,7 +119,12 @@ describe('container child paths: the build', () => {
 			metadata: { name: 'Odd', category: 'input' },
 			render: () => null,
 		} as const;
-		expect(() => createFormEngine({ elements: [odd] })).toThrow(message);
+		expect(buildError([odd])).toMatchObject({
+			code: 'invalid-child-paths',
+			kind: 'Element',
+			$type: 'odd',
+			message: expect.stringMatching(message),
+		});
 	});
 
 	test('a static element cannot declare childPaths', () => {
@@ -110,7 +136,13 @@ describe('container child paths: the build', () => {
 			metadata: { name: 'Frame', category: 'content' },
 			render: () => null,
 		} as const;
-		expect(() => createFormEngine({ elements: [staticWithChildren] })).toThrow(/Element 'frame'.*only an input/);
+		expect(buildError([staticWithChildren])).toMatchObject({
+			code: 'invalid-child-paths',
+			kind: 'Element',
+			$type: 'frame',
+			childPath: ['elements'],
+			message: expect.stringMatching(/Element 'frame'.*only an input/),
+		});
 	});
 
 	test('a container with no childPaths that declares elements is named in the build error', () => {
@@ -121,7 +153,12 @@ describe('container child paths: the build', () => {
 			metadata: { name: 'Forgotten', category: 'input' },
 			render: () => null,
 		} as const;
-		expect(() => createFormEngine({ elements: [forgotten] })).toThrow(/Element 'forgotten'.*childPaths/);
+		expect(buildError([forgotten])).toMatchObject({
+			code: 'invalid-declaration',
+			kind: 'Element',
+			$type: 'forgotten',
+			message: expect.stringMatching(/Element 'forgotten'.*childPaths/),
+		});
 	});
 });
 

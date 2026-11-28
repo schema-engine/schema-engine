@@ -2,7 +2,7 @@
 '@schema-engine/forms': minor
 ---
 
-`FormEngine` exposes its registries as readonly properties, and the 13 methods that read them are removed. `engine.elements`, `engine.recipes`, `engine.actions` and `engine.validations` are the read-only registries the engine already held (`ElementRegistry`, `RecipeRegistry`, `ActionRegistrationRegistry` and `ValidationRegistry`), so each has `get`, `has`, `all`, `keys`, `size` and `kind`.
+`FormEngine` exposes its registries as readonly properties, and the 13 methods that read them are removed. `engine.elements`, `engine.recipes`, `engine.actions` and `engine.validations` are the read-only registries the engine already held (`ElementRegistry`, `RecipeRegistry`, `ActionRegistry` and `ValidationRegistry`), so each has `get`, `has`, `all`, `keys`, `size` and `kind`.
 
 | Before                                                   | After                                                    |
 | -------------------------------------------------------- | -------------------------------------------------------- |
@@ -16,7 +16,7 @@
 
 `engine.elements`, `engine.recipes` and `engine.actions` carry the hint of an unregistered `$type` (`Register it with createFormEngine({ actions: [...] }).`), so `parseActions(engine.actions, input)` reports it.
 
-`getViewRecipe(engine, config)` from `@schema-engine/forms/recipes` takes `{ readonly recipes: RecipeRegistry }` instead of `{ getRecipe(id) }`: a `FormEngine` still works, and a hand-written `{ getRecipe }` adapter breaks. The exported `ValidateFormOptions` renames `getRecipe`, `getElement` and `getAction` to `recipes`, `elements` and `actions`, each a registry.
+`getViewRecipe(engine, config)` from `@schema-engine/forms/recipes` takes `{ readonly recipes: RecipeRegistry }` instead of `{ getRecipe(id) }`: a `FormEngine` still works, and a hand-written `{ getRecipe }` adapter breaks.
 
 `engine.actions` is a lookup the actions package takes as it is: `ActionDispatcher` and `parseActions` no longer take the engine itself, but its registry.
 

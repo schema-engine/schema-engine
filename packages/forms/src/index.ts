@@ -50,14 +50,7 @@ export {
 	resolveParticipation,
 	validateFormValues,
 } from './engine/value-validation';
-export type {
-	FieldParticipation,
-	Participation,
-	ValidationElementTree,
-	ValidationIssue,
-	ValidationSeverity,
-	ValidationStep,
-} from './engine/value-validation';
+export type { FieldParticipation, Participation, ValidationIssue, ValidationSeverity } from './engine/value-validation';
 export { createDebounceScope } from './lib/debounce';
 export type { DebounceScope } from './lib/debounce';
 export type { DeepReadonly } from './lib/deep-readonly';
@@ -84,8 +77,6 @@ export {
 	getElementContainerKind,
 	isNormalizedElementConfig,
 	isNormalizedFormConfig,
-	markNormalizedElementConfig,
-	markNormalizedFormConfig,
 } from './lib/normalized-form-config';
 export type {
 	FormConfigView,
@@ -94,11 +85,9 @@ export type {
 	ValuesBrand,
 } from './lib/normalized-form-config';
 export { getValueAtPath, setValueAtPath } from './lib/path-values';
-export { validateRegistrationConfig } from './lib/standard-schema';
 export type { FormValidationIssue, FormValidationResult } from './lib/validate-form/issues';
-export type { ValidateFormOptions } from './lib/validate-form/options';
 export { FormValidationError } from './lib/validate-form/validation-error';
-export type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from './registries';
+export type { ActionRegistry, ElementRegistry, RecipeRegistry } from './registries';
 export { createFormRuntime, defaultNavigate } from './runtime/create-form-runtime';
 export type { SubmissionActionResult } from './runtime/submission-lifecycle';
 export { isSubmissionBusy } from './runtime/types';
@@ -123,7 +112,7 @@ export type { BaseField, BaseFieldInput, ConstraintLogic, StepConstraint } from 
 export type { ElementConfig, ElementId, GetElementConfig } from './schemas/field-config';
 export type { FormConfig, FormStep, FormViewConfig } from './schemas/form-config';
 export { mergeControlProps } from './schemas/html-attributes';
-export { ValidationSuperseded, ValidationUnavailable } from './schemas/validation/errors';
+export { ValidationRuleError, ValidationSuperseded, ValidationUnavailable } from './schemas/validation/errors';
 export { ValidationPresets } from './schemas/validation/presets';
 export {
 	AsyncRuleSchema,

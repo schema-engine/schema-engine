@@ -12,7 +12,7 @@ order: 7
 
 - **Move every package together.** The six packages share one version, so upgrade each one you use to 0.6 in one step.
 - **Update `zod` to `^4.5.0`.** The peer range of the forms, layout, Forms React and Forms Radiant packages was `^4.0.17`. Zod before 4.2.0 has no Standard JSON Schema target names, and the JSON Schema export of the forms engine needs 4.5.0.
-- **List the packages you import.** `@schema-engine/forms` depends on the registry, actions and layout packages, `@schema-engine/forms-radiant` on actions and registry, and `@schema-engine/actions` on the registry. A project that imports one of them directly lists it in its own `package.json`. An actions-only project adds the registry, because actions are built with `createRegistry` from it now.
+- **List the packages you import.** `@schema-engine/forms` depends on the registry, actions and layout packages, `@schema-engine/forms-radiant` on the registry, and `@schema-engine/actions` on the registry. A project that imports one of them directly lists it in its own `package.json`. An actions-only project adds the registry, because actions are built with `createRegistry` from it now.
 - **Let the compiler find the rest.** Most changes are type errors: a child path that is not an object, a container without `list: true`, a method that no longer exists, a misspelled JSON Schema target. Fix those first, then run your tests for the changes that only throw at run time (see the end of this page).
 
 ```bash
@@ -259,7 +259,7 @@ export function parseFromStore(input: unknown) {
 
 ### The engine exposes its registries
 
-`engine.elements`, `engine.recipes`, `engine.actions` and `engine.validations` are the read-only registries the engine holds, and the 13 methods that read them are removed. `all()` and `keys()` return frozen arrays, where the old `getAll*()` and `get*Ids()` returned copies, so copy one (`[...engine.elements.all()]`) before sorting it. See [Engine and registrations](/docs/forms/engine#what-the-engine-registers).
+`engine.elements`, `engine.recipes`, `engine.actions` and `engine.validations` are the read-only registries the engine holds (the forms types `ElementRegistry`, `RecipeRegistry` and `ActionRegistry`, and `ValidationRegistry`), and the 13 methods that read them are removed. `all()` and `keys()` return frozen arrays, where the old `getAll*()` and `get*Ids()` returned copies, so copy one (`[...engine.elements.all()]`) before sorting it. See [Engine and registrations](/docs/forms/engine#what-the-engine-registers).
 
 | Before                                                   | After                                                    |
 | -------------------------------------------------------- | -------------------------------------------------------- |
@@ -282,7 +282,7 @@ export const dispatcher = new ActionDispatcher(engine.actions);
 export const recipe = getViewRecipe(engine, { id: 'contact' });
 ```
 
-- `getViewRecipe(engine, config)` takes `{ readonly recipes: RecipeRegistry }`: a `FormEngine` still works, and a hand-written `{ getRecipe }` adapter breaks. The exported `ValidateFormOptions` renames `getRecipe`, `getElement` and `getAction` to `recipes`, `elements` and `actions`, each a registry.
+- `getViewRecipe(engine, config)` takes `{ readonly recipes: RecipeRegistry }`: a `FormEngine` still works, and a hand-written `{ getRecipe }` adapter breaks.
 - An unregistered `$type` reports the engine's hint (`Register it with createFormEngine({ actions: [...] }).`) through `parseActions(engine.actions, input)`.
 - A test that replaced a method with `vi.spyOn(engine, 'getAction')` registers the action it needs with `createFormEngine({ actions: [...] })` instead: the registries are frozen.
 

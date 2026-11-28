@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { validateRegistrationConfig } from '@schema-engine/forms';
+import { parseRegistration } from '../utils/parse-registration';
 import {
 	CardRecipe,
 	CardWizardRecipe,
@@ -10,7 +10,7 @@ import {
 describe('recipe view schemas accept partial slot config', () => {
 	test('card with shell only', () => {
 		expect(() =>
-			validateRegistrationConfig(CardRecipe.schema, {
+			parseRegistration(CardRecipe.schema, {
 				$type: 'card',
 				shell: { appearance: { size: 'default' } },
 			}),
@@ -19,7 +19,7 @@ describe('recipe view schemas accept partial slot config', () => {
 
 	test('split-screen with shell only', () => {
 		expect(() =>
-			validateRegistrationConfig(SplitScreenRecipe.schema, {
+			parseRegistration(SplitScreenRecipe.schema, {
 				$type: 'split-screen',
 				shell: { sideContent: 'Welcome', sidePlacement: 'left' },
 			}),
@@ -28,7 +28,7 @@ describe('recipe view schemas accept partial slot config', () => {
 
 	test('card-wizard with shell only', () => {
 		expect(() =>
-			validateRegistrationConfig(CardWizardRecipe.schema, {
+			parseRegistration(CardWizardRecipe.schema, {
 				$type: 'card-wizard',
 				shell: { appearance: { size: 'default' } },
 			}),
@@ -37,7 +37,7 @@ describe('recipe view schemas accept partial slot config', () => {
 
 	test('wizard with progress only', () => {
 		expect(() =>
-			validateRegistrationConfig(WizardRecipe.schema, {
+			parseRegistration(WizardRecipe.schema, {
 				$type: 'wizard',
 				progress: { showStepNumbers: true, showStepTitles: true },
 			}),
@@ -46,7 +46,7 @@ describe('recipe view schemas accept partial slot config', () => {
 
 	test('rejects $type inside shell config', () => {
 		expect(() =>
-			validateRegistrationConfig(CardRecipe.schema, {
+			parseRegistration(CardRecipe.schema, {
 				$type: 'card',
 				// @ts-expect-error -- slot config rejects $type at compile time too
 				shell: { $type: 'card', appearance: { size: 'default' } },

@@ -59,7 +59,7 @@ closest-union-branch choice), `grid-checks.ts` (named placement, areas and templ
 `{ success: false, issues }` with the same issues. Each issue is `{ message, path }`, plus `code` and `params` when a schema or the registry reported it, the path in config keys
 and indexes (`['steps', 0, 'elements', 2, 'grid', 'width']`, `[]` for the whole form). See
 [Form configuration errors](https://schema-engine.com/docs/forms/engine#form-configuration-errors) for the paths each check reports. Registration
-checks made at build time (`buildFormEngine`) are not form issues. Forms' own (an element's child path, a static element with `childPaths`, a recipe's slots) throw a plain `Error` naming the registration, and the registries the build creates with `createRegistry` throw a `RegistryError` (`'invalid-schema'`, `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'` and `'duplicate-type'`).
+checks made at build time (`buildFormEngine`) are not form issues. Forms' own checks of an element (`assertElementDeclarations`) throw a `RegistryError` as well: `'invalid-child-paths'` for a `childPaths` forms does not read (on a static element, more than one path, a key other than `elements`, no `list: true`) and for `containerKind` without `childPaths`, and `'invalid-declaration'` for an element that states no `kind`, an input with neither `value` nor `childPaths`, and a container with a `value`. A recipe's slots throw a plain `Error` naming the registration. The registries the build creates with `createRegistry` throw a `RegistryError` too (`'invalid-schema'`, `'invalid-child-paths'`, `'duplicate-child-path'`, `'nested-child-path'` and `'duplicate-type'`).
 
 ## Requests
 

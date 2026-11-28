@@ -8,4 +8,4 @@ export type ElementRegistry = ReadOnlyRegistry<AnyElementRegistration>;
 export type RecipeRegistry = ReadOnlyRegistry<AnyRecipeRegistration>;
 
 /** The engine's read-only store of action registrations. */
-export type ActionRegistrationRegistry = ReadOnlyRegistry<AnyActionRegistration>;
+export type ActionRegistry = ReadOnlyRegistry<AnyActionRegistration>;

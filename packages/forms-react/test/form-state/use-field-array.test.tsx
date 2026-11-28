@@ -4,21 +4,21 @@ import { useEffect } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import { selectFieldState, type FieldArrayValue, type FormStateContainer } from '@schema-engine/forms/state-container';
 import { useFieldArray, useFormField } from '@/hooks/form-state';
-import { markNormalizedElementConfig } from '@schema-engine/forms';
+import { createFormEngine } from '@schema-engine/forms';
+import { ArrayElementRegistration } from '@/components/schema-engine/forms/inputs/form-array-elements.registration';
+import { InputElementRegistration } from '@/components/schema-engine/forms/inputs/form-input.registration';
 import { ContainerHarness, createTestContainer } from '../utils/container-harness';
 
-const contacts = markNormalizedElementConfig(
-	{
-		$type: 'arrayElements',
-		name: 'contacts',
-		rules: [{ $type: 'minItems', value: 3, message: 'Add three' }],
-		elements: [
-			{ $type: 'input', name: 'email', rules: [{ $type: 'required', message: 'Required' }] },
-			{ $type: 'input', name: 'label' },
-		],
-	},
-	'array',
-);
+const engine = createFormEngine({ elements: [InputElementRegistration, ArrayElementRegistration] });
+const contacts = engine.validateElement({
+	$type: 'arrayElements',
+	name: 'contacts',
+	rules: [{ $type: 'minItems', value: 3, message: 'Add three' }],
+	elements: [
+		{ $type: 'input', name: 'email', rules: [{ $type: 'required', message: 'Required' }] },
+		{ $type: 'input', name: 'label' },
+	],
+});
 
 function Row({ path }: { path: string }) {
 	const { defaultValue, error, fieldProps } = useFormField({ $type: 'input', name: path, id: path });

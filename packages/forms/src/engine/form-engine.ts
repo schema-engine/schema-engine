@@ -1,7 +1,7 @@
 import type { CsrfPolicy, FormFetch } from '@/lib/form-fetch';
 import type { FormIssueFormatter } from '@/state-container/types';
 import type { AnyRecipeRegistration } from '@/types/registration';
-import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
+import type { ActionRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
 import { ComponentType } from './component-type';
 import { logger } from '@/lib/logger';
 import type { StandardJSONSchemaV1 } from '@/lib/standard-json-schema';
@@ -52,7 +52,7 @@ export * from './component-type';
 export interface EngineRegistries {
 	elements: ElementRegistry;
 	recipes: RecipeRegistry;
-	actions: ActionRegistrationRegistry;
+	actions: ActionRegistry;
 	schemaArtifacts: FormEngineSchemaArtifacts;
 	layout: LayoutTheme;
 	validationRegistry: ValidationRegistry;
@@ -106,7 +106,7 @@ export class FormEngine<
 	 * It is a lookup the actions package reads: `new ActionDispatcher(engine.actions)` and
 	 * `parseActions(engine.actions, input)` take it as it is.
 	 */
-	readonly actions: ActionRegistrationRegistry;
+	readonly actions: ActionRegistry;
 
 	/** The registered validation rules, read-only, which also checks a rule of an element with `check`. */
 	readonly validations: ValidationRegistry;
