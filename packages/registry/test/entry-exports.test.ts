@@ -39,7 +39,10 @@ function fixturePackage(exportsMap: unknown, sources: Record<string, string>): s
 	const other = path.join(dir, 'node_modules', '@fixture', 'other');
 	mkdirSync(other, { recursive: true });
 	writeFileSync(path.join(other, 'package.json'), JSON.stringify({ name: '@fixture/other', types: './index.d.ts' }));
-	writeFileSync(path.join(other, 'index.d.ts'), 'export declare const owned: number;\n');
+	writeFileSync(
+		path.join(other, 'index.d.ts'),
+		'export declare const owned: number;\nexport interface OtherType {\n\treadonly other: true;\n}\n',
+	);
 	return dir;
 }
 
@@ -103,6 +106,49 @@ describe('symbolsFromOtherPackages', () => {
 	test('throws for a package that has no entry to read', () => {
 		const dir = fixturePackage({ './package.json': './package.json', './index.css': './dist/index.css' }, {});
 		expect(() => symbolsFromOtherPackages(dir)).toThrow(/no entry/i);
+	});
+
+	test('reads an entry that names only a declaration file', () => {
+		const dir = fixturePackage(
+			{ ...index, './types': { types: './dist/types.d.ts' } },
+			{
+				'index.ts': 'export const own = 1;\n',
+				'types.ts': "export { missing } from '@fixture/not-installed';\n",
+			},
+		);
+		expect(() => symbolsFromOtherPackages(dir)).toThrow(/not-installed/);
+	});
+
+	test('lists what a declaration-only entry exports', () => {
+		const dir = fixturePackage(
+			{ ...index, './types': { types: './dist/types.d.ts' } },
+			{ 'index.ts': 'export const own = 1;\n', 'types.ts': "export type { OtherType } from '@fixture/other';\n" },
+		);
+		expect(symbolsFromOtherPackages(dir)).toEqual([expect.stringContaining('OtherType')]);
+	});
+
+	test('throws for a declaration-only entry the helper cannot map', () => {
+		const dir = fixturePackage(
+			{ ...index, './types': { types: './lib/types.d.ts' } },
+			{ 'index.ts': 'export const own = 1;\n' },
+		);
+		expect(() => symbolsFromOtherPackages(dir)).toThrow(/cannot map/i);
+	});
+
+	test('fails for a re-export that does not resolve in a declaration file of the package', () => {
+		const dir = fixturePackage(index, {
+			'index.ts': "export type * from './inner';\n",
+			'inner.d.ts': "export type * from '@fixture/not-installed';\n",
+		});
+		expect(() => symbolsFromOtherPackages(dir)).toThrow(/not-installed/);
+	});
+
+	test('lists a type another package declares that a declaration file of the package re-exports', () => {
+		const dir = fixturePackage(index, {
+			'index.ts': "export type * from './inner';\n",
+			'inner.d.ts': "export type { OtherType } from '@fixture/other';\n",
+		});
+		expect(symbolsFromOtherPackages(dir)).toEqual([expect.stringContaining('OtherType')]);
 	});
 
 	test('skips an entry that is not JavaScript', () => {

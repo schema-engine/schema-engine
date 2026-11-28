@@ -41,30 +41,43 @@ type ExportsTarget = string | { readonly [condition: string]: unknown };
 
 const JS_FILE = /\.[cm]?[jt]s$/;
 const DIST_JS_FILE = /^\.\/dist\/.+\.js$/;
+const DIST_DECLARATION_FILE = /^\.\/dist\/.+\.d\.ts$/;
 
 /**
- * The source file of the entry an `exports` key names, or `undefined` for a target that is not JavaScript (`./package.json`, a stylesheet).
+ * The source file of the entry an `exports` key names, or `undefined` for a target that is neither JavaScript nor a declaration file (`./package.json`, a stylesheet).
  *
  * @remarks
- * A string target and the `import` condition are read; `types` is only the declaration of the same file. A JavaScript
- * file under any other condition, outside `./dist/` or with another extension would be skipped without a word if it
- * were ignored, and a guard that skips an entry guards nothing, so it throws.
+ * A string target and the `import` condition are read as `./dist/<path>.js`. An entry that names only `types` is read
+ * as `./dist/<path>.d.ts`, and both map to `src/<path>.ts`. A JavaScript file under any other condition, a file
+ * outside `./dist/` or with another extension would be skipped without a word if it were ignored, and a guard that
+ * skips an entry guards nothing, so it throws.
  */
 function entrySource(packageDir: string, key: string, target: ExportsTarget): string | undefined {
 	const conditions = typeof target === 'string' ? { import: target } : target;
+	const cannotMap = (reason: string) =>
+		new Error(`The helper cannot map the exports entry '${key}' of ${packageDir}: ${reason}.`);
 	const files = Object.entries(conditions)
 		.filter(([condition]) => condition !== 'types')
 		.flatMap(([condition, file]) =>
 			typeof file === 'string' && !JS_FILE.test(file) ? [] : [[condition, file] as const],
 		);
-	if (files.length === 0) return undefined;
-	const file = conditions.import;
-	if (typeof file !== 'string' || !DIST_JS_FILE.test(file) || files.some(([condition]) => condition !== 'import')) {
-		throw new Error(
-			`The helper cannot map the exports entry '${key}' of ${packageDir}: it reads \`import\` as './dist/<path>.js' and no other JavaScript condition.`,
-		);
+	if (files.length > 0) {
+		const file = conditions.import;
+		if (
+			typeof file !== 'string' ||
+			!DIST_JS_FILE.test(file) ||
+			files.some(([condition]) => condition !== 'import')
+		) {
+			throw cannotMap("it reads `import` as './dist/<path>.js' and no other JavaScript condition");
+		}
+		return path.join(packageDir, 'src', file.slice('./dist/'.length).replace(/\.js$/, '.ts'));
 	}
-	return path.join(packageDir, 'src', file.slice('./dist/'.length).replace(/\.js$/, '.ts'));
+	const { types } = conditions;
+	if (types === undefined) return undefined;
+	if (typeof types !== 'string' || !DIST_DECLARATION_FILE.test(types)) {
+		throw cannotMap("it reads `types` as './dist/<path>.d.ts'");
+	}
+	return path.join(packageDir, 'src', types.slice('./dist/'.length).replace(/\.d\.ts$/, '.ts'));
 }
 
 /** The re-exports of a source file that name a module, with the specifier they name. */
@@ -96,12 +109,7 @@ function readExportsByEntry(packageDir: string): Map<string, EntrySymbol[]> {
 	const unresolved: string[] = [];
 	for (const source of program.getSourceFiles()) {
 		const relativeFile = path.relative(packageDir, source.fileName);
-		if (
-			source.isDeclarationFile ||
-			relativeFile.startsWith('..') ||
-			relativeFile.split(path.sep).includes('node_modules')
-		)
-			continue;
+		if (relativeFile.startsWith('..') || relativeFile.split(path.sep).includes('node_modules')) continue;
 		for (const { moduleSpecifier } of reExports(source)) {
 			if (
 				moduleSpecifier &&
