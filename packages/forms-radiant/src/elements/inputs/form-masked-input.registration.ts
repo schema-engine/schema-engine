@@ -1,3 +1,8 @@
-import { radiantElements } from '../radiant-elements.js';
+import { defineInput } from '@schema-engine/forms';
+import { MaskedInputElementContract } from '@schema-engine/forms/default-elements';
+import { FormMaskedInput } from './form-masked-input.js';
 
-export const MaskedInputElementRegistration = radiantElements.get('masked-input');
+export const MaskedInputElementRegistration = defineInput({
+	...MaskedInputElementContract,
+	render: FormMaskedInput,
+});

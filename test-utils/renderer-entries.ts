@@ -115,7 +115,7 @@ export function consumerResolve(packageDir: string, specifier: string): Consumer
 export interface PublishedBundle {
 	/** The bundled code, with one copy of every module of the package that the entry reaches. */
 	readonly code: string;
-	/** The path of every input file the entry reaches that has bytes in the output, relative to the package folder. */
+	/** The path of every input file with bytes in an output file, relative to the package folder. */
 	readonly inputs: string[];
 }
 
@@ -127,7 +127,7 @@ export interface PublishedBundle {
  *
  * @remarks
  * The package's dependencies and peer dependencies stay external, so the bundle holds the package's own modules and the
- * names of the custom elements it defines. Stylesheets load as empty. The bundle is one file, so `bytesInOutput` of an input is its share.
+ * names of the custom elements it defines. Stylesheets load as empty. An input counts when any output file holds bytes of it.
  * An empty `tsconfigRaw` keeps esbuild from reading the package's `tsconfig.json`, whose `paths` map the package's own name to
  * `src` and would bundle the source instead of what is published.
  */
@@ -154,14 +154,21 @@ export async function bundlePublishedEntry(packageDir: string, source: string): 
 		metafile: true,
 		logLevel: 'silent',
 	});
-	return { code: result.outputFiles[0]?.text ?? '', inputs: inputsInOutput(result.metafile) };
+	return { code: result.outputFiles.map((file) => file.text).join('\n'), inputs: inputsInOutput(result.metafile) };
 }
 
+/**
+ * The inputs with bytes in any output file, not `metafile.inputs`, which also lists the modules the bundler scanned and then
+ * tree-shook away, so it would fail a correct bundle.
+ */
 function inputsInOutput(metafile: Metafile): string[] {
-	const [output] = Object.values(metafile.outputs);
-	return Object.entries(output?.inputs ?? {})
-		.filter(([file, { bytesInOutput }]) => bytesInOutput > 0 && !file.startsWith('<stdin>'))
-		.map(([file]) => file);
+	const files = new Set<string>();
+	for (const output of Object.values(metafile.outputs)) {
+		for (const [file, { bytesInOutput }] of Object.entries(output.inputs)) {
+			if (bytesInOutput > 0 && !file.startsWith('<stdin>')) files.add(file);
+		}
+	}
+	return [...files];
 }
 
 /**
@@ -179,5 +186,5 @@ export async function bundlePublishedStyles(packageDir: string, source: string):
 		metafile: true,
 		logLevel: 'silent',
 	});
-	return { code: result.outputFiles[0]?.text ?? '', inputs: inputsInOutput(result.metafile) };
+	return { code: result.outputFiles.map((file) => file.text).join('\n'), inputs: inputsInOutput(result.metafile) };
 }

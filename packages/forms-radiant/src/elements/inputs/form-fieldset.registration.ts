@@ -1,3 +1,8 @@
-import { radiantElements } from '../radiant-elements.js';
+import { defineInput } from '@schema-engine/forms';
+import { FieldSetContract } from '@schema-engine/forms/default-elements';
+import { FormFieldSet } from './form-fieldset.js';
 
-export const FieldSetRegistration = radiantElements.get('fieldSet');
+export const FieldSetRegistration = defineInput({
+	...FieldSetContract,
+	render: FormFieldSet,
+});

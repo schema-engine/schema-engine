@@ -1,8 +1,8 @@
 import type { FormConfig } from '@schema-engine/forms';
-import { radiantElements } from '@/elements/radiant-elements';
+import { schemaFormRegistrations } from '@/registrations';
 import { createRadiantFormEngine } from '@/registries';
 
-const engine = createRadiantFormEngine({ elements: radiantElements.all() });
+const engine = createRadiantFormEngine({ elements: schemaFormRegistrations });
 
 /**
  * The normalized config of an authored one, which the Radiant engine validates, for helpers that take a normalized

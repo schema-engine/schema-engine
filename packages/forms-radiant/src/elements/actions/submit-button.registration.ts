@@ -1,3 +1,8 @@
-import { radiantElements } from '../radiant-elements.js';
+import { defineStatic } from '@schema-engine/forms';
+import { SubmitButtonElementContract } from '@schema-engine/forms/default-elements';
+import { SubmitButton } from './submit-button.js';
 
-export const SubmitButtonElementRegistration = radiantElements.get('submit');
+export const SubmitButtonElementRegistration = defineStatic({
+	...SubmitButtonElementContract,
+	render: SubmitButton,
+});

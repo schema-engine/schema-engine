@@ -1,3 +1,8 @@
-import { radiantElements } from '../radiant-elements.js';
+import { defineInput } from '@schema-engine/forms';
+import { InputOTPElementContract } from '@schema-engine/forms/default-elements';
+import { FormInputOTP } from './form-input-otp.js';
 
-export const InputOTPElementRegistration = radiantElements.get('input-otp');
+export const InputOTPElementRegistration = defineInput({
+	...InputOTPElementContract,
+	render: FormInputOTP,
+});

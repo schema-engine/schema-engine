@@ -83,6 +83,44 @@ describe('a bundle of the published package', () => {
 		for (const tag of BUILT_IN_RECIPE_TAGS) expect(bundle.code, tag).toContain(tag);
 	});
 
+	test('one registration loads only its own element, with no phone, mask or drop-zone code', async () => {
+		const bundle = await bundlePublishedEntry(
+			packageDir,
+			`import { InputElementRegistration } from '@schema-engine/forms-radiant/registrations'; console.log(InputElementRegistration);`,
+		);
+		expect(bundle.inputs).toContain('dist/elements/inputs/form-input.js');
+		for (const unwanted of [
+			'libphonenumber-js',
+			'imask',
+			'dist/lib/phone-number.js',
+			'dist/lib/mask-options.js',
+			'dist/elements/inputs/form-phone-input.js',
+			'dist/elements/inputs/form-masked-input.js',
+			'dist/elements/inputs/form-drop-zone.js',
+		]) {
+			expect(
+				bundle.inputs.filter((file) => file.includes(unwanted)),
+				unwanted,
+			).toEqual([]);
+		}
+		for (const tag of ['se-phone-input', 'se-masked-input', 'se-drop-zone']) {
+			expect(bundle.code, tag).not.toContain(tag);
+		}
+	});
+
+	test('the registrations of the root hold every element, so the check above can fail', async () => {
+		const bundle = await bundlePublishedEntry(
+			packageDir,
+			`import { schemaFormRegistrations } from '@schema-engine/forms-radiant'; console.log(schemaFormRegistrations);`,
+		);
+		for (const element of ['form-phone-input', 'form-masked-input', 'form-drop-zone']) {
+			expect(bundle.inputs, element).toContain(`dist/elements/inputs/${element}.js`);
+		}
+		for (const tag of ['se-phone-input', 'se-masked-input', 'se-drop-zone']) {
+			expect(bundle.code, tag).toContain(tag);
+		}
+	});
+
 	test('everything the root exports holds no debugger', async () => {
 		const bundle = await bundlePublishedEntry(packageDir, `export * from '@schema-engine/forms-radiant';`);
 		expect(bundle.code).toContain('se-phone-input');

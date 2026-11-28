@@ -1,3 +1,8 @@
-import { radiantElements } from '../radiant-elements.js';
+import { defineInput } from '@schema-engine/forms';
+import { SelectElementContract } from '@schema-engine/forms/default-elements';
+import { FormSelect } from './form-select.js';
 
-export const SelectElementRegistration = radiantElements.get('select');
+export const SelectElementRegistration = defineInput({
+	...SelectElementContract,
+	render: FormSelect,
+});

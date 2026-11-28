@@ -7,17 +7,6 @@ import { buildLib } from '@schema-engine/scripts/esbuild-lib';
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const outputDir = path.join(cwd, 'dist');
 
-const entryDirs = [
-	'src/adapters',
-	'src/components',
-	'src/contexts',
-	'src/elements',
-	'src/hooks',
-	'src/registries',
-	'src/registrations',
-	'src/lib',
-];
-
 /**
  * Drops CSS from the JS graph so Node can import the published package.
  * Hosts load first-party rules from `index.css`; Radiant UI styles stay in the app.
@@ -48,15 +37,8 @@ mkdirSync(outputDir, { recursive: true });
 
 await buildLib({
 	cwd,
-	entryGlobs: [
-		'src/index.ts',
-		'src/index.css',
-		'src/debugger.css',
-		'src/primitives.ts',
-		'src/*.ts',
-		'src/*.tsx',
-		...entryDirs.flatMap((dir) => [`${dir}/**/*.ts`, `${dir}/**/*.tsx`]),
-	],
-	exclude: ['.stories.', '.play.', '.test.', '.d.ts'],
+	entryGlobs: ['src/index.css', 'src/debugger.css'],
+	exclude: ['.stories.', '.play.', '.test.', '.d.ts', '/stories/'],
 	plugins: [cssStubPlugin()],
+	preserveModules: true,
 });

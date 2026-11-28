@@ -1,3 +1,8 @@
-import { radiantElements } from '../radiant-elements.js';
+import { defineInput } from '@schema-engine/forms';
+import { TextareaElementContract } from '@schema-engine/forms/default-elements';
+import { FormTextarea } from './form-textarea.js';
 
-export const TextareaElementRegistration = radiantElements.get('textarea');
+export const TextareaElementRegistration = defineInput({
+	...TextareaElementContract,
+	render: FormTextarea,
+});

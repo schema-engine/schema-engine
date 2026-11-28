@@ -1,3 +1,8 @@
-import { radiantElements } from '../radiant-elements.js';
+import { defineInput } from '@schema-engine/forms';
+import { NumberElementContract } from '@schema-engine/forms/default-elements';
+import { FormNumber } from './form-number.js';
 
-export const NumberElementRegistration = radiantElements.get('number');
+export const NumberElementRegistration = defineInput({
+	...NumberElementContract,
+	render: FormNumber,
+});

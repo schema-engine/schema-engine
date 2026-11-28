@@ -1,3 +1,8 @@
-import { radiantElements } from '../radiant-elements.js';
+import { defineInput } from '@schema-engine/forms';
+import { DropZoneElementContract } from '@schema-engine/forms/default-elements';
+import { FormDropZone } from './form-drop-zone.js';
 
-export const DropZoneElementRegistration = radiantElements.get('drop-zone');
+export const DropZoneElementRegistration = defineInput({
+	...DropZoneElementContract,
+	render: FormDropZone,
+});
