@@ -1,5 +1,5 @@
 import { RegistryError, type ChildPath, type JSONSchemaTarget } from '@schema-engine/registry';
-import { replaceChildSlot } from '@schema-engine/registry/json-schema';
+import { definitionRef, replaceChildSlot, resolveLocalRef } from '@schema-engine/registry/json-schema';
 import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import { ComponentType } from './component-type';
 import { SchemaMetadataCatalog } from './schema-metadata-catalog';
@@ -50,14 +50,50 @@ function childSlotsOf(elements: readonly ChildSlotOwner[]): ChildSlot[] {
 	);
 }
 
-/** A JSON Pointer reference token: `~` and `/` escaped, then written for a URI fragment, keeping the `:` of an id. */
-function pointerToken(id: string): string {
-	return encodeURIComponent(id.replaceAll('~', '~0').replaceAll('/', '~1')).replaceAll('%3A', ':');
-}
-
 function missingDefinition(slot: ChildSlot, where: string): Error {
 	return new Error(
 		`The JSON Schema export holds no definition '${slot.definitionId}' of '${slot.$type}' in ${where}, so its children cannot be typed.`,
+	);
+}
+
+/**
+ * The schema of a container as its definition holds it: the definition itself, or what it refers to when it is only
+ * a reference.
+ *
+ * @remarks
+ * A Standard JSON Schema schema that refers into itself is moved by the embedder to a definition of its own
+ * (`embedded-1`), and the element's definition is then that reference with the catalog annotations beside it. The slot
+ * is in the schema the reference names. A reference that does not resolve in the document is left for
+ * `replaceChildSlot` to report as an unreachable slot.
+ */
+function schemaOf(document: JSONSchemaObject, definition: JSONSchemaObject): JSONSchemaObject {
+	const seen = new Set<JSONSchemaObject>();
+	let current = definition;
+	while (typeof current.$ref === 'string' && !seen.has(current)) {
+		seen.add(current);
+		const next = resolveLocalRef(document, current.$ref);
+		if (next === undefined) break;
+		current = next;
+	}
+	return current;
+}
+
+/**
+ * Whether a schema sets an `$id` that makes it a resource of its own, which a draft-07 fragment (`#node`) does not.
+ *
+ * @remarks
+ * A reference written inside such a schema resolves against that `$id`, not against the document, so the slot is not
+ * where the document's references reach.
+ */
+function startsResource(schema: JSONSchemaObject): boolean {
+	return typeof schema.$id === 'string' && !schema.$id.startsWith('#');
+}
+
+function unreachable(slot: ChildSlot): RegistryError {
+	return new RegistryError(
+		'unreachable-child-path',
+		`The JSON Schema of '${slot.$type}' sets an $id of its own, so the export cannot reach the child path '${slot.keys.join('.')}': a $ref written there resolves against that $id, not against the document.`,
+		{ $type: slot.$type, childPath: slot.keys },
 	);
 }
 
@@ -66,15 +102,16 @@ function missingDefinition(slot: ChildSlot, where: string): Error {
  *
  * @param document - The converted form config, which lists each element under its catalog id in its definitions
  * @param elements - Every element registration of the engine
- * @param target - The target the document was written for, which decides the keyword of its definitions
+ * @param target - The target the document was written for, which decides where its definitions are
  * @throws {RegistryError} Code `'unknown-accepted-type'` when a child path accepts an element no registration declares,
  * and `'unreachable-child-path'` when a container's `elements` is not where its JSON Schema declares it (nullable,
- * or behind `allOf`, a union or a reference)
+ * or behind `allOf`, a union or a reference) or its schema sets an `$id` of its own
  *
  * @remarks
  * Done after the schema is converted, so a container is typed the same whichever library wrote its schema, and
  * whatever wraps `elements` (`optional`, `default`, `readonly`): they are the same array in JSON Schema. The slot is
- * replaced by `replaceChildSlot`, as `exportTreeSchema` does it, so `required`, list bounds and annotations stay.
+ * replaced by `replaceChildSlot`, as `exportTreeSchema` does it, so `required`, list bounds and annotations stay. A
+ * container holds its children as a list, so an open slot becomes a list.
  */
 export function composeDocumentChildSlots(
 	document: JSONSchemaObject,
@@ -82,14 +119,15 @@ export function composeDocumentChildSlots(
 	target: JSONSchemaTarget,
 ): void {
 	const slots = childSlotsOf(elements);
-	const keyword = target === 'draft-2020-12' ? '$defs' : 'definitions';
 	for (const slot of slots) {
-		const definition: JSONSchemaObject | undefined = document[keyword]?.[slot.definitionId];
-		if (definition === undefined) throw missingDefinition(slot, `'${keyword}'`);
+		const definition = resolveLocalRef(document, definitionRef(target, slot.definitionId));
+		if (definition === undefined) throw missingDefinition(slot, 'the definitions of the document');
+		const schema = schemaOf(document, definition);
+		if (startsResource(schema)) throw unreachable(slot);
 		const union = {
-			anyOf: slot.accepted.map((name) => ({ $ref: `#/${keyword}/${pointerToken(elementDefinitionId(name))}` })),
+			anyOf: slot.accepted.map((name) => ({ $ref: definitionRef(target, elementDefinitionId(name)) })),
 		};
-		replaceChildSlot(definition, slot, union);
+		replaceChildSlot(schema, slot, union, { openSlot: 'list' });
 	}
 }
 
@@ -99,12 +137,12 @@ export function composeDocumentChildSlots(
  * @param collection - The converted collection, which lists each element as the entry of its catalog id
  * @param elements - Every element registration of the engine
  * @param uri - How the collection refers to an entry, as it was written
- * @throws {RegistryError} The codes of {@link composeDocumentChildSlots}
+ * @throws {RegistryError} The codes of {@link composeDocumentChildSlots}, except that an entry's own `$id` is no
+ * obstacle
  *
  * @remarks
- * An entry's `$id` is its own address, and the references written here are absolute, so none resolves against it. The
- * slot is read from the entry without its `$id`, which `replaceChildSlot` takes for a schema that resolves its
- * references against itself, and the entry keeps its `$schema` and `$id` in front.
+ * An entry's `$id` is its own address, and a reference is written the way Zod refers from one entry of the collection to
+ * another, by `uri`, so it does not resolve against that `$id`.
  */
 export function composeCollectionChildSlots(
 	collection: JSONSchemaObject,
@@ -116,13 +154,7 @@ export function composeCollectionChildSlots(
 	for (const slot of slots) {
 		const entry = entries[slot.definitionId];
 		if (entry === undefined) throw missingDefinition(slot, 'the collection');
-		const { $schema, $id, ...definition } = entry;
 		const union = { anyOf: slot.accepted.map((name) => ({ $ref: uri(elementDefinitionId(name)) })) };
-		replaceChildSlot(definition, slot, union);
-		entries[slot.definitionId] = {
-			...($schema === undefined ? {} : { $schema }),
-			...($id === undefined ? {} : { $id }),
-			...definition,
-		};
+		replaceChildSlot(entry, slot, union, { openSlot: 'list' });
 	}
 }

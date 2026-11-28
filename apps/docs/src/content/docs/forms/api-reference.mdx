@@ -127,6 +127,8 @@ A renderer that draws every element binds the whole registry with `bindRegistry`
 
 `FormEngine` retrieves registered elements, recipes, and actions; validates
 form configuration; and generates JSON Schema and authoring catalog artifacts.
+It is a type: `createFormEngine` is the one way to make an engine, and the class and its constructor are not exported.
+To check an object a renderer received, use `assertFormEngine`.
 `defineForm` and `validateForm` return `NormalizedFormConfig`. Use
 `validateElement` for a standalone field that is not already inside a form.
 

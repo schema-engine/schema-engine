@@ -4,6 +4,7 @@ import * as v from 'valibot';
 import * as classic from 'zod';
 import { describe, expect, test } from 'vitest';
 import * as z from 'zod/mini';
+import * as api from '@/index';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { elementChildrenSchema } from '@/lib/element-children';
 import type { ElementRegistrationConstraint } from '@/builder/types.utils';
@@ -126,6 +127,16 @@ const formWithChild = (child: Record<string, unknown>) => ({
 	steps: [{ ...validForm.steps[0], elements: [{ $type: 'tabs', elements: [child] }] }],
 });
 
+const withLabel = (label: unknown) => ({
+	...validForm,
+	steps: [
+		{
+			...validForm.steps[0],
+			elements: [{ $type: 'tabs', label, elements: [{ $type: 'tab', elements: [] }] }],
+		},
+	],
+});
+
 const uri = (id: string) => `https://example.test/schemas/${id}.json`;
 
 /** What a call throws, so the test can read the error's code and details. */
@@ -161,11 +172,11 @@ describe.each(providers)('the children of a container written as %s', (_label, c
 		});
 	});
 
-	describe('in a collection', () => {
-		const collection = engine.generateJSONSchemaCollection({ uri }) as unknown as {
+	describe.each(['draft-2020-12', 'draft-07'] as const)('in a collection for %s', (target) => {
+		const collection = engine.generateJSONSchemaCollection({ uri, target }) as unknown as {
 			schemas: Record<string, object>;
 		};
-		const accepts = compileCollectionEntry(collection, uri('element:tabs'));
+		const accepts = compileCollectionEntry(collection, uri('element:tabs'), target);
 
 		test('accepts the element it lists', () => {
 			expect(accepts({ $type: 'tabs', elements: [{ $type: 'tab', elements: [] }] })).toBe(true);
@@ -184,6 +195,80 @@ describe.each(providers)('the children of a container written as %s', (_label, c
 
 		expect(accepts(validForm)).toBe(true);
 		expect(accepts(formWithChild({ $type: 'text' }))).toBe(false);
+	});
+});
+
+describe('a Standard JSON Schema container that refers to a definition of its own', () => {
+	const labelled = tabs(
+		exporting({
+			type: 'object',
+			properties: {
+				$type: { const: 'tabs' },
+				label: { $ref: '#/$defs/label' },
+				elements: { type: 'array', items: anyChild },
+			},
+			required: ['$type'],
+			$defs: { label: { type: 'string' } },
+		}),
+	);
+	const engine = createFormEngine({ elements: [labelled, tab, text] });
+
+	test('types its children in the document, where the converter moves the schema to a definition of its own', () => {
+		const accepts = compileDocument(engine.generateFormConfigSchema());
+
+		expect(accepts(validForm)).toBe(true);
+		expect(accepts(formWithChild({ $type: 'text' }))).toBe(false);
+	});
+
+	test('keeps the definition it refers to', () => {
+		const accepts = compileDocument(engine.generateFormConfigSchema());
+		expect([accepts(withLabel('x')), accepts(withLabel(1))]).toEqual([true, false]);
+	});
+
+	test('types its children in the collection', () => {
+		const collection = engine.generateJSONSchemaCollection({ uri }) as unknown as {
+			schemas: Record<string, object>;
+		};
+		const accepts = compileCollectionEntry(collection, uri('element:tabs'));
+
+		expect(accepts({ $type: 'tabs', elements: [{ $type: 'tab', elements: [] }] })).toBe(true);
+		expect(accepts({ $type: 'tabs', elements: [{ $type: 'text' }] })).toBe(false);
+	});
+});
+
+describe('the children of a container are a list whatever its schema leaves open', () => {
+	const open = createFormEngine({
+		elements: [tabs(exporting(tabsObject({ description: 'Anything' }))), tab, text],
+	});
+	const list = { description: 'Anything', type: 'array', items: { anyOf: [{ $ref: '#/$defs/element:tab' }] } };
+
+	test('an open slot of a Standard JSON Schema container is an array in the document', () => {
+		const document = open.generateFormConfigSchema() as unknown as {
+			$defs: Record<string, { properties: Record<string, unknown> }>;
+		};
+
+		expect(document.$defs['element:tabs']!.properties.elements).toEqual(list);
+	});
+
+	test('and in the collection', () => {
+		const collection = open.generateJSONSchemaCollection({ uri }) as unknown as {
+			schemas: Record<string, { properties: Record<string, unknown> }>;
+		};
+
+		expect(collection.schemas['element:tabs']!.properties.elements).toEqual({
+			...list,
+			items: { anyOf: [{ $ref: uri('element:tab') }] },
+		});
+	});
+
+	test('so a single child object is not accepted where a list goes', () => {
+		const accepts = compileDocument(open.generateFormConfigSchema());
+		const single = {
+			...validForm,
+			steps: [{ ...validForm.steps[0], elements: [{ $type: 'tabs', elements: { $type: 'tab', elements: [] } }] }],
+		};
+
+		expect(accepts(single)).toBe(false);
 	});
 });
 
@@ -336,5 +421,11 @@ describe('the engine no longer exposes its schema internals', () => {
 		'getActionConfigStandardSchema',
 	])('keeps %s', (name) => {
 		expect(typeof (engine as unknown as Record<string, unknown>)[name]).toBe('function');
+	});
+});
+
+describe('createFormEngine is the one way to make an engine', () => {
+	test('FormEngine is a type of the package, not a class to construct', () => {
+		expect('FormEngine' in api).toBe(false);
 	});
 });

@@ -154,6 +154,8 @@ export const GroupRegistration = defineInput({
 });
 ```
 
+The children of a container are a list. A container whose schema lets `elements` be a single object (a union with one child, say) is an issue at its `elements` key when a form writes the object, since no step check or renderer reads children from anything but a list.
+
 Add `accepts` to limit what the container takes: `childPaths: [{ keys: ['elements'], accepts: ['tab'] }]` makes an element of any other `$type` a `registry/not-accepted` issue at its `$type`. Without it the container takes every element of the engine.
 
 Forms fixes the key. Value paths, field scopes, grids and the submission shape all read `elements`, so a container declares one child path, `['elements']`, and `createFormEngine` throws for any other. Only an input can be a container: an element made with `defineStatic` declares no `childPaths`, and an element without them that holds `elements` in a form is an issue at its `elements` key. A container works the same whichever library wrote its schema, Zod or any other Standard Schema, since the child path is data.

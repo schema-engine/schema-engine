@@ -501,8 +501,8 @@ from the document to a container to an item or slot, a closer pick winning. A go
 `size` and `surface` are built in. The catalog and the JSON Schema export list each axis and its
 values, so `appearance.size` on a form and its steps is an enum in an editor. An element's and a
 recipe slot's `appearance` lists only the axes its registration declares, closed, so an undeclared
-axis is rejected there as it is by validation. The children of a container element (a fieldset or an
-array row) are typed in the export as the union of every element's schema, so they get the same
+axis is rejected there as it is by validation. The children of a container element (any input that declares
+`childPaths`) are typed in the export by what its `accepts` lists (every element without it), so they get the same
 closed `appearance`; a lazy element schema keeps its own `appearance`, which validation still checks.
 
 ## Appearance ownership

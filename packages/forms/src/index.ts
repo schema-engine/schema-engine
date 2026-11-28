@@ -40,7 +40,7 @@ export type {
 	FormEngineFromOptions,
 } from './engine/create-form-engine';
 export type { FormActionContextFormState } from './engine/form-action-context';
-export { FormEngine } from './engine/form-engine';
+export type { FormEngine } from './engine/form-engine';
 export type { FormEngineRuntime } from './engine/form-engine';
 export type { FormStepState, StepNavigationMode } from './engine/step-machine';
 export type { SubmissionSchema, SubmissionSchemaConfig } from './engine/submission-schema';

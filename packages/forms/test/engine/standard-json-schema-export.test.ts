@@ -235,7 +235,31 @@ describe('a schema the export cannot read is listed as an open object', () => {
 		expect(config).toContain('"const":"ping"');
 		const rules = open.generateJSONSchemaCollection().schemas as unknown as Record<string, unknown>;
 		expect(JSON.stringify(rules['validation-rule'])).toContain('"const":"even"');
-		expect(open.generateActionConfigSchema('ping')).toBeUndefined();
+	});
+
+	test('an element and an action are a definition of the document and an entry of the collection', () => {
+		const document = open.generateFormConfigSchema() as unknown as { $defs: Record<string, JSONSchema> };
+		const entries = open.generateJSONSchemaCollection().schemas as unknown as Record<string, JSONSchema>;
+
+		for (const id of ['element:widget', 'element:note', 'action:ping']) {
+			expect(document.$defs[id]).toBeDefined();
+			expect(entries[id]).toBeDefined();
+		}
+		expect(document.$defs['action:ping']).toMatchObject({ properties: { $type: { const: 'ping' } } });
+	});
+
+	test('an action is referred to by its definition in the form config, not listed inline', () => {
+		const document = open.generateFormConfigSchema() as unknown as { properties: { actions: unknown } };
+		const actions = JSON.stringify(document.properties.actions);
+
+		expect(actions).toContain('#/$defs/action:ping');
+		expect(actions).not.toContain('"const"');
+	});
+
+	test('an open action has an action config schema by its $type, as one that exports itself has', () => {
+		const document = open.generateActionConfigSchema('ping') as unknown as { $defs: Record<string, JSONSchema> };
+
+		expect(document.$defs['action:ping']).toMatchObject({ properties: { $type: { const: 'ping' } } });
 	});
 });
 

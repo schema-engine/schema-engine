@@ -30,7 +30,6 @@ import {
 import { RENDERER_DATA_ATTRIBUTES } from '@/lib/renderer-data-attributes';
 import { createFormConfigShape } from '@/schemas/form-config-shape';
 import * as z from 'zod/mini';
-import { isZodType } from '@/lib/is-zod-type';
 import { resolveExportSchema } from '@/lib/export-schema';
 import { createExportedRecipeView } from '@/lib/exported-recipe-view';
 import { assertDefaultWizardRecipe, createFormRecipeRegistry } from '@/recipes/protocol';
@@ -109,20 +108,13 @@ function createUnionSchema(schemas: z.ZodMiniType[]): z.ZodMiniType {
 type ExportRegistration = {
 	$type: string;
 	schema: unknown;
-	exportSchema: unknown;
+	exportSchema: z.ZodMiniType;
 	metadata: { name: string; description?: string; category?: string };
 };
 
-/**
- * JSON Schema / authoring union. A registration the export can read keeps its export schema.
- * One it cannot read contributes a literal `$type` envelope
- * so mixed engines do not silently drop supported types.
- */
+/** The union of what the export lists the registrations of one kind by, for the form config. */
 function createRegistrationSchema(registrations: ExportRegistration[]): z.ZodMiniType {
-	const parts = registrations.map((registration) =>
-		isZodType(registration.exportSchema) ? registration.exportSchema : createOpenEnvelope(registration.$type),
-	);
-	return createUnionSchema(parts);
+	return createUnionSchema(registrations.map((registration) => registration.exportSchema));
 }
 
 /**
@@ -130,9 +122,10 @@ function createRegistrationSchema(registrations: ExportRegistration[]): z.ZodMin
  * `appearance` it may pick when it has one, and the key of its children when it holds any.
  *
  * @remarks
- * A container's slot is an optional list with open items, which the export then types by what the container accepts
- * (see `composeDocumentChildSlots`). Forms reads `elements` only as a list, whatever the container's
- * `containerKind`, so the slot is a list for both kinds.
+ * Every registration kind is listed this way, so each is a definition of the document and an entry of the collection
+ * like one that exports itself, and a container's slot can be typed there. The slot is an optional list with open
+ * items, which the export then types by what the container accepts (see `composeDocumentChildSlots`), since forms
+ * reads `elements` only as a list, whatever the container's `containerKind`, and reports an issue for anything else.
  */
 function createOpenEnvelope($type: string, appearance?: z.ZodMiniType, holdsChildren = false): z.ZodMiniType {
 	return z.looseObject({
@@ -150,7 +143,7 @@ function createOpenEnvelope($type: string, appearance?: z.ZodMiniType, holdsChil
  * any library; see {@link createExportedRecipeView}. One without them (written by hand) is read from its own schema
  * by {@link resolveExportSchema}, and listed by its `$type` alone when the export cannot read it.
  */
-function exportedRecipeView(recipe: AnyRecipeRegistration, layout: LayoutTheme): unknown {
+function exportedRecipeView(recipe: AnyRecipeRegistration, layout: LayoutTheme): z.ZodMiniType {
 	const slotAxes: Readonly<Record<string, readonly string[] | undefined>> = recipe.appearanceAxes ?? {};
 	if (recipe.slotSchemas) {
 		const view = createExportedRecipeView(recipe.$type, recipe.slotSchemas, (slot) =>
@@ -160,7 +153,7 @@ function exportedRecipeView(recipe: AnyRecipeRegistration, layout: LayoutTheme):
 	}
 	const source = resolveExportSchema(recipe.schema, () => createOpenEnvelope(recipe.$type));
 	if (source.kind === 'zod') return withSlotAppearanceAxes(source.schema, layout.appearance, recipe.appearanceAxes);
-	return source.kind === 'standard' ? source.schema : recipe.schema;
+	return source.kind === 'standard' ? source.schema : createOpenEnvelope(recipe.$type);
 }
 
 /**
@@ -184,47 +177,42 @@ function toExportRegistrations(
 	layout: LayoutTheme,
 	ruleSchema?: z.ZodMiniType,
 ): ExportRegistration[] {
-	return Array.from(registrations, (registration) => {
-		const exported: ExportRegistration = {
-			$type: registration.$type,
-			schema: registration.schema,
-			exportSchema: registration.schema,
-			metadata: registration.metadata,
-		};
-		if (componentType === ComponentType.Recipe) {
-			exported.exportSchema = exportedRecipeView(registration as AnyRecipeRegistration, layout);
-			return exported;
-		}
-		const openEnvelope = () => {
-			if (componentType !== ComponentType.Element) return createOpenEnvelope(registration.$type);
-			const element = registration as AnyElementRegistration;
-			return createOpenEnvelope(
-				element.$type,
-				createAppearanceSchema(layout.appearance, element.appearanceAxes ?? []),
-				element.childPaths !== undefined,
-			);
-		};
-		const source = resolveExportSchema(registration.schema, openEnvelope);
-		if (source.kind === 'standard') {
-			exported.exportSchema = source.schema;
-			return exported;
-		}
-		if (source.kind === 'open') {
-			if (componentType === ComponentType.Element) exported.exportSchema = openEnvelope();
-			return exported;
-		}
-		if (componentType === ComponentType.Element) {
-			const withAppearance = withAppearanceAxes(
-				registration.schema,
-				layout.appearance,
-				(registration as AnyElementRegistration).appearanceAxes,
-			);
-			exported.exportSchema = ruleSchema ? withExportedRules(withAppearance, ruleSchema) : withAppearance;
-		} else {
-			exported.exportSchema = withActionEnvelope(registration.schema, registration.$type);
-		}
-		return exported;
-	});
+	return Array.from(registrations, (registration) => ({
+		$type: registration.$type,
+		schema: registration.schema,
+		exportSchema: exportSchemaOf(registration, componentType, layout, ruleSchema),
+		metadata: registration.metadata,
+	}));
+}
+
+/** The schema the export lists one registration by, see {@link toExportRegistrations}. */
+function exportSchemaOf(
+	registration: AnyElementRegistration | AnyRecipeRegistration | AnyActionRegistration,
+	componentType: ComponentType,
+	layout: LayoutTheme,
+	ruleSchema?: z.ZodMiniType,
+): z.ZodMiniType {
+	if (componentType === ComponentType.Recipe)
+		return exportedRecipeView(registration as AnyRecipeRegistration, layout);
+	const openEnvelope = () => {
+		if (componentType !== ComponentType.Element) return createOpenEnvelope(registration.$type);
+		const element = registration as AnyElementRegistration;
+		return createOpenEnvelope(
+			element.$type,
+			createAppearanceSchema(layout.appearance, element.appearanceAxes ?? []),
+			element.childPaths !== undefined,
+		);
+	};
+	const source = resolveExportSchema(registration.schema, openEnvelope);
+	if (source.kind === 'standard') return source.schema;
+	if (source.kind === 'open') return openEnvelope();
+	if (componentType !== ComponentType.Element) return withActionEnvelope(registration.schema, registration.$type);
+	const withAppearance = withAppearanceAxes(
+		registration.schema,
+		layout.appearance,
+		(registration as AnyElementRegistration).appearanceAxes,
+	);
+	return ruleSchema ? withExportedRules(withAppearance, ruleSchema) : withAppearance;
 }
 
 /** The id the JSON Schema export defines the rule union by, so each element refers to it. */
@@ -402,7 +390,7 @@ export function buildFormEngine(lists: FormEngineRegistrationLists) {
 		[ComponentType.Action, exportedActions],
 	] as const) {
 		for (const item of exported) {
-			if (item.exportSchema !== item.schema && isZodType(item.exportSchema)) {
+			if (item.exportSchema !== item.schema) {
 				exportSchemas.set(SchemaMetadataCatalog.entryId(componentType, item.$type), item.exportSchema);
 			}
 		}
