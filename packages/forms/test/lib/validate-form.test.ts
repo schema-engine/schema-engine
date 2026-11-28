@@ -141,6 +141,7 @@ describe('validateFormConfig', () => {
 			render: () => null,
 		});
 		const group = defineInput({
+			childPaths: [{ keys: ['elements'] }],
 			$type: 'group',
 			containerKind: 'object',
 			schema: z.looseObject({
@@ -800,6 +801,7 @@ describe('validateFormConfig', () => {
 				{
 					$type: 'group',
 					kind: 'input',
+					childPaths: [{ keys: ['elements'] }],
 					schema: groupSchema,
 					metadata: { name: 'Group', category: 'input' },
 					render: () => null,

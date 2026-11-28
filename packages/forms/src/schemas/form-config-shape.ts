@@ -10,11 +10,11 @@ export const TypedConfigEnvelopeSchema = z.looseObject({
 	$type: z.string().check(z.minLength(1)),
 });
 
-export function createFormStepSchema<TAppearance extends z.ZodMiniType = typeof AppearanceConfigSchema>(parts: {
-	elements: z.ZodMiniType;
-	actions: z.ZodMiniType;
-	appearance?: TAppearance;
-}) {
+export function createFormStepSchema<
+	TElements extends z.ZodMiniType,
+	TActions extends z.ZodMiniType,
+	TAppearance extends z.ZodMiniType = typeof AppearanceConfigSchema,
+>(parts: { elements: TElements; actions: TActions; appearance?: TAppearance }) {
 	return z.object({
 		id: z.string(),
 		title: z.string(),
@@ -45,14 +45,14 @@ export function createFormStepSchema<TAppearance extends z.ZodMiniType = typeof 
  *
  * @remarks `appearance` is the schema of a pick on the form and its steps. It defaults to an open
  * record of axis names to values; an engine passes the schema of its theme's axes, so the JSON
- * Schema export lists them.
+ * Schema export lists them. The parts keep their own types, so the shape is typed by what each caller injects.
  */
-export function createFormConfigShape<TAppearance extends z.ZodMiniType = typeof AppearanceConfigSchema>(parts: {
-	elements: z.ZodMiniType;
-	view: z.ZodMiniType;
-	actions: z.ZodMiniType;
-	appearance?: TAppearance;
-}) {
+export function createFormConfigShape<
+	TElements extends z.ZodMiniType,
+	TView extends z.ZodMiniType,
+	TActions extends z.ZodMiniType,
+	TAppearance extends z.ZodMiniType = typeof AppearanceConfigSchema,
+>(parts: { elements: TElements; view: TView; actions: TActions; appearance?: TAppearance }) {
 	return z.object({
 		id: z.string().check(z.describe('Unique identifier for the form')),
 		title: z.optional(z.string()).check(z.describe('Display title of the form')),

@@ -23,8 +23,10 @@ Register components through `createFormEngine({ elements, recipes, actions })`.
 Per-engine typing comes from the registration tuples you pass, not from these
 runtime registries.
 
-Input and static registrations may declare `containerKind: 'object' | 'array'`.
-The [engine](../engine/README.md#schema-artifacts-and-extension) preserves this
-metadata during normalization; it is independent of the widget name.
+An input registration is a container when it declares `childPaths: [{ keys: ['elements'] }]`, the registry's own
+syntax (`accepts` limits the `$type`s it takes), and it may declare `containerKind: 'object' | 'array'` beside it
+to say how its children make its value. A static registration declares neither.
+The [engine](../engine/README.md#schema-artifacts-and-extension) preserves `containerKind`
+during normalization; it is independent of the widget name.
 Runtime registries use the documented `AnyElementRegistration`,
 `AnyRecipeRegistration` and `AnyActionRegistration` existential aliases.

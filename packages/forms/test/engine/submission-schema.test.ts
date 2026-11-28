@@ -32,6 +32,7 @@ const select = defineInput({
 });
 
 const fieldSet = defineInput({
+	childPaths: [{ keys: ['elements'] }],
 	$type: 'fieldSet',
 	schema: z.extend(BaseFieldSchema, {
 		$type: z.literal('fieldSet'),
@@ -42,6 +43,7 @@ const fieldSet = defineInput({
 });
 
 const rows = defineInput({
+	childPaths: [{ keys: ['elements'] }],
 	$type: 'rows',
 	containerKind: 'array',
 	schema: z.extend(BaseFieldSchema, {
@@ -433,18 +435,18 @@ describe('createFormEngine', () => {
 		);
 	});
 
-	test('a container kind is no escape for a Zod schema that declares no elements', () => {
+	test('a container kind is no container: it needs childPaths beside it', () => {
 		expect(() => createFormEngine({ elements: [handWritten({ containerKind: 'object' })] })).toThrow(
-			/Element 'hand' is an input that declares no value.*declares `elements` in its schema/,
+			/Element 'hand' sets containerKind without childPaths/,
 		);
 	});
 
-	test('a schema that is not Zod cannot be read for elements, so a container kind stands in', () => {
+	test('a schema that is not Zod is a container by its childPaths, with no value', () => {
 		const opaque: StandardSchemaV1 = {
 			'~standard': { version: 1, vendor: 'test', validate: (value) => ({ value }) },
 		};
 		expect(() =>
-			createFormEngine({ elements: [handWritten({ schema: opaque, containerKind: 'object' })] }),
+			createFormEngine({ elements: [handWritten({ schema: opaque, childPaths: [{ keys: ['elements'] }] })] }),
 		).not.toThrow();
 		expect(() => createFormEngine({ elements: [handWritten({ schema: opaque })] })).toThrow(
 			/Element 'hand' is an input that declares no value/,

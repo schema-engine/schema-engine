@@ -330,8 +330,9 @@ Show/hide or enable/disable fields based on conditions:
 
 ## Array Elements
 
-Array registrations declare `containerKind: 'array'`; the engine uses this
-metadata to seed normalized defaults independently of the widget name.
+Array registrations declare `childPaths: [{ keys: ['elements'] }]` and `containerKind: 'array'` (the copied item spreads
+`ArrayElementContract`, which has both); the engine uses the container kind to seed normalized defaults independently of
+the widget name.
 Add appends `createArrayRowDefault` from `@schema-engine/forms`, the same row
 value the Radiant renderer builds. Whether rows are scalar is decided from the
 live form values, as in Radiant. A disabled array disables its add and remove

@@ -112,8 +112,21 @@ The layout theme (`getLayout()`: grid vocabulary, appearance axes held in a regi
 from `@standard-schema/spec` and keeps the existing forms vendor, schema ids
 and input/output documents.
 
-Container registrations declare `containerKind: 'array'` (or `'object'`).
-Normalization stores that metadata on the frozen element without adding JSON
+Container registrations declare `childPaths: [{ keys: ['elements'] }]` (forms fixes the key; `createFormEngine` throws for any other
+child path, for more than one and for one on a `static` element) and, for rows, `containerKind: 'array'` (`'object'` is the default).
+`value` is required exactly when there is no `childPaths`. The element walk of `validateForm` is the registry's `safeParseTree`,
+one call per top-level element over an internal lookup that runs each schema without the element's `appearance`, so children are read
+as authored with the registry's slot rules (a parent schema that drops, renames, resizes or defaults `elements` to a non-empty list is a
+`RegistryError` `'schema-breaks-child-path'`, a reorder is ignored, and `accepts` gives `registry/not-accepted`). A pass over the returned tree
+then runs the checks forms adds: reserved names, rules, grid and appearance, which it reads from the authored node at `ParsedNode.path`.
+The pass runs on the tree from either branch of the result (`data` on success, the partial tree's `output` on failure), so one call reports every
+issue: the registry's first, then forms' (rules, name, grid, appearance), parent before children, document order, and a node's children are
+checked whether or not it had an issue. Placement, step constraints and the payload check read a retained tree built from the registry's `children`
+only (`RetainedElement`), which keeps an element with an issue of its own and cannot hold a cycle or a rejected node; `items` is the clean trees, for
+normalization only. The envelope leaves a step's elements and the form's and steps' actions as they arrived (`z.unknown()`), so a top-level element without a `$type` is that
+element's `registry/missing-type` issue and a cycle is reported at its first repeat. An
+element without `childPaths` that holds `elements` is an issue at its `elements` key; its children are not checked, its other checks still run and its retained config has no `elements`.
+Normalization stores the container kind on the frozen element without adding JSON
 keys. `collectFieldDefaults`, `collectInitialValues`, `createArrayRowDefault`
 and `walkNamedElements` detect arrays by the metadata rather than a widget `$type`. A new row
 starts from `createArrayRowDefault`: child `defaultValue`s with the container's

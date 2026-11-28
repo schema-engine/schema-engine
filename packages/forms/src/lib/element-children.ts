@@ -6,8 +6,9 @@ export const ELEMENT_CHILDREN_KEY = 'elements' as const;
 /**
  * Child-element contract for container schemas.
  *
- * The parent schema only requires `$type` on each child. The engine recursively
- * validates children against its registrations after the parent schema succeeds.
+ * The parent schema only requires `$type` on each child. A container also declares
+ * `childPaths: [{ keys: ['elements'] }]`, and the engine validates each child against its
+ * registrations through that path, as the author wrote it, after the parent schema succeeds.
  */
 export const elementChildrenSchema = z.array(z.looseObject({ $type: z.string() }));
 
@@ -22,6 +23,12 @@ export function getElementChildren(config: object): unknown[] | undefined {
 
 export function withElementChildren<T extends object>(config: T, children: unknown[]): T {
 	return { ...config, [ELEMENT_CHILDREN_KEY]: children };
+}
+
+/** A copy of a config without its `elements`, for an element that declares no child path and so holds none. */
+export function withoutElementChildren<T extends object>(config: T): Omit<T, typeof ELEMENT_CHILDREN_KEY> {
+	const { [ELEMENT_CHILDREN_KEY]: _children, ...rest } = config as T & { [ELEMENT_CHILDREN_KEY]?: unknown };
+	return rest;
 }
 
 function isMiniSchema(schema: z.core.$ZodType): schema is z.ZodMiniType {
@@ -52,9 +59,9 @@ function isPrefaultSchema(schema: z.ZodMiniType): schema is z.ZodMiniPrefault {
  * @remarks
  * Finds the array a schema holds under {@link ELEMENT_CHILDREN_KEY}, looking through a pipe (its input)
  * and a prefault (its inner schema), and replaces its item schema; the array's own checks, such as a
- * minimum length, stay. Any other schema comes back as it is, so an `elements` array wrapped in `optional`, `nullable`, `default` or `readonly` keeps loose children in the export. Validation checks the children of any
- * element that has an `elements` array, so this keeps the export from lagging behind it. The result is
- * for export only: parse with the original.
+ * minimum length, stay. Any other schema comes back as it is, so an `elements` array wrapped in `optional`, `nullable`, `default` or `readonly` keeps loose children in the export. Validation checks the children of every container (an input that declares `childPaths`) through that path, but the export does not read
+ * `childPaths` yet: it still composes by this Zod introspection, so a container whose `elements` is wrapped, or whose schema is not
+ * Zod, exports loose children, and an `accepts` limit is not in the export. The result is for export only: parse with the original.
  */
 export function withExportedChildren(schema: z.ZodMiniType, child: z.ZodMiniType): z.ZodMiniType {
 	if (isObjectSchema(schema)) {
@@ -76,18 +83,4 @@ export function withExportedChildren(schema: z.ZodMiniType, child: z.ZodMiniType
 		return next === innerType ? schema : z.prefault(next, defaultValue);
 	}
 	return schema;
-}
-
-/**
- * Whether a registration schema declares an `elements` array of children, or `undefined` when it cannot say.
- *
- * @remarks Reads a Zod schema as {@link withExportedChildren} does, through a pipe and a prefault. Any other Standard Schema is opaque, so a container written with one declares a `containerKind`.
- */
-export function declaresChildren(schema: unknown): boolean | undefined {
-	if (typeof schema !== 'object' || schema === null || !('_zod' in schema)) return undefined;
-	const mini = schema as z.ZodMiniType;
-	if (isObjectSchema(mini)) return ELEMENT_CHILDREN_KEY in mini._zod.def.shape;
-	if (isPipeSchema(mini)) return declaresChildren(mini._zod.def.in);
-	if (isPrefaultSchema(mini)) return declaresChildren(mini._zod.def.innerType);
-	return false;
 }

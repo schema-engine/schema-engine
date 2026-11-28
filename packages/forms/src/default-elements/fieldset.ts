@@ -19,6 +19,7 @@ export type FieldSetInput = z.input<typeof FieldSetConfigSchema>;
 /** The contract of the `fieldset` element: what every renderer of it agrees on. */
 export const FieldSetContract = defineInputContract({
 	$type: 'fieldSet',
+	childPaths: [{ keys: ['elements'] }],
 	appearanceAxes: ['size'],
 	schema: FieldSetConfigSchema,
 	metadata: {

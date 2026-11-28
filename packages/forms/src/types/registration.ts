@@ -23,6 +23,7 @@ import type { AppearanceAxisList, RecipeMetadata, SlotAppearanceAxes } from '@sc
  * @template TProps - Framework-specific props (must accept schema output)
  * @template TValue - Schema of the value the control writes, as {@link ValueDeclaration} returns it
  * @template TKind - The `containerKind` the registration declares, which the form's values type reads
+ * @template TChildPaths - The `childPaths` the registration declares: present exactly when it is a container
  */
 export type InputRegistration<
 	TType extends string = string,
@@ -30,12 +31,23 @@ export type InputRegistration<
 	TProps = TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : unknown,
 	TValue extends StandardSchemaV1 = StandardSchemaV1,
 	TKind extends ContainerKind | undefined = ContainerKind | undefined,
+	TChildPaths extends ElementChildPaths | undefined = ElementChildPaths | undefined,
 > = {
 	$type: TType;
 	/** Set by `defineInput`: an input holds a value, or is a container whose value is its children's. See {@link ElementKind}. */
 	kind: 'input';
 	schema: TSchema;
+	/**
+	 * How the children of a container make its value: `'object'` (the default) or `'array'` rows.
+	 *
+	 * @remarks Meaningful only with `childPaths`; the engine rejects it without them.
+	 */
 	containerKind?: TKind;
+	/**
+	 * Where this element holds its children, which makes it a container: `[{ keys: ['elements'] }]`, with `accepts`
+	 * to limit the `$type`s it takes. See {@link ElementChildPaths}.
+	 */
+	childPaths?: TChildPaths;
 	/**
 	 * Appearance axes this element supports (`['size']`); undeclared axes fail validation on it.
 	 *
@@ -49,7 +61,7 @@ export type InputRegistration<
 	 * The value this element's control writes, as a schema of its configured instance.
 	 *
 	 * @remarks
-	 * Required by `defineInput` exactly when the schema output has no `elements`: a container declares none,
+	 * Required by `defineInput` exactly when there is no `childPaths`: a container declares none,
 	 * since the engine composes its value from its children. The engine checks each submission against it,
 	 * and `createFormEngine` rejects an input that has none. See {@link ValueDeclaration}.
 	 */
@@ -74,7 +86,7 @@ export type ValueDeclaration<TConfig = never, TValue extends StandardSchemaV1 = 
  *
  * @remarks
  * The two helpers build the same kind of object otherwise, so the kind is the one thing that says whether the
- * element holds a value: an `input` must declare `value` unless its schema declares `elements`, and a `static`
+ * element holds a value: an `input` must declare `value` unless it declares `childPaths`, and a `static`
  * element declares none, whatever its metadata says. A registration written by hand states its `kind`, and the
  * engine rejects one that does not.
  */
@@ -92,6 +104,8 @@ export type StaticRegistration<
 	/** Set by `defineStatic`: a static element holds no value. See {@link ElementKind}. */
 	kind: 'static';
 	schema: TSchema;
+	/** A static element holds no children: only an input can be a container. `createFormEngine` rejects one that sets it. */
+	childPaths?: undefined;
 	/**
 	 * Appearance axes this element supports (`['size']`); undeclared axes fail validation on it.
 	 *
@@ -181,8 +195,22 @@ export type BuilderActionRegistration<
 	schema: TSchema;
 };
 
-/** Determines how named child fields compose their value paths. */
+/** Whether the named children of a container make an object or a list of rows. */
 export type ContainerKind = 'object' | 'array';
+
+/**
+ * The one child path an element container declares: its children are under `elements`.
+ *
+ * @remarks
+ * The registry's own syntax (`ChildPath`), narrowed to the key forms reads. The key is fixed because value paths,
+ * field scopes, grids and the submission shape all read `elements`; widening it later is additive. `accepts` is a
+ * closed list of the `$type`s the container takes: an element outside it is a `registry/not-accepted` issue at its
+ * `$type`. The schema still declares `elements` (`elementChildrenSchema` is its schema), and only an input can be a
+ * container.
+ */
+export type ElementChildPaths = readonly [
+	{ readonly keys: readonly ['elements']; readonly accepts?: readonly string[] },
+];
 
 /**
  * @remarks Runtime storage erases each registration's schema and render props;

@@ -197,6 +197,7 @@ const groupSchema = z.object({
 const groupElement = defineInput({
 	$type: 'group',
 	schema: groupSchema,
+	childPaths: [{ keys: ['elements'] }],
 	metadata: { name: 'Group', category: 'input' },
 	render: () => null,
 });

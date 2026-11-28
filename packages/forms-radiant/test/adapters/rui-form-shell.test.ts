@@ -100,6 +100,7 @@ describe('Radiant form initial values', () => {
 	test('seeds a custom array registration to minItems', () => {
 		const repeater = defineInput({
 			$type: 'repeater',
+			childPaths: [{ keys: ['elements'] }],
 			containerKind: 'array',
 			schema: z.extend(ArrayElementConfigSchema, { $type: z.literal('repeater') }),
 			metadata: { name: 'Repeater', category: 'input' },

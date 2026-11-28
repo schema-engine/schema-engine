@@ -32,6 +32,7 @@ const plain = defineInput({
 const fieldset = defineInput({
 	$type: 'fieldset',
 	schema: fieldSetSchema,
+	childPaths: [{ keys: ['elements'] }],
 	containerKind: 'object',
 	appearanceAxes: ['size', 'surface'],
 	metadata: { name: 'Fieldset', category: 'input' },

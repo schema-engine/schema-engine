@@ -34,6 +34,7 @@ describe('numeric span validation', () => {
 		render: () => null,
 	});
 	const group = defineInput({
+		childPaths: [{ keys: ['elements'] }],
 		$type: 'group',
 		containerKind: 'object',
 		schema: z.looseObject({
@@ -54,6 +55,12 @@ describe('numeric span validation', () => {
 		expect(result.issues).toHaveLength(1);
 		return result.issues[0]!;
 	};
+	/** Every issue of a form, as `{ path, message }`, in the order they are reported. */
+	const issuesOf = (form: unknown) => {
+		const result = engine.safeValidateForm(form);
+		if (result.success) throw new Error('Expected the form to be rejected.');
+		return result.issues.map(({ path, message }) => ({ path, message }));
+	};
 
 	test('spans under a numeric grid, also per breakpoint, are accepted', () => {
 		const form = formWith(
@@ -67,15 +74,33 @@ describe('numeric span validation', () => {
 		expect(() => engine.validateForm(form)).not.toThrow();
 	});
 
+	const spanWith = (key: string) => ({
+		path: ['steps', 0, 'elements', 0, 'grid', key],
+		message: `Field 'lonely' sets grid 'span' and '${key}'; a span is a placement of its own, so use 'span' or one of 'width', 'offset', 'column' and 'area' in a breakpoint, not together.`,
+	});
+	/** A field that failed its own check still counts for the step, so the step reports what its placement breaks too. */
+	const widthBesideColumns = {
+		path: ['grid', 'columns'],
+		message: `Form grid sets 'columns' but Field 'lonely' uses 'width' or 'offset'; a grid uses areas, widths or columns.`,
+	};
+
 	test.each([
-		['width', { width: 'half' }],
-		['offset', { offset: 'quarter' }],
-		['column', { column: 2 }],
-		['area', { area: 'a' }],
-	])('a field that sets span and %s in one slot is rejected at that key', (key, extra) => {
-		const issue = only(formWith([field('lonely', { span: 2, ...extra })], { columns: 4 }));
-		expect(issue.path).toEqual(['steps', 0, 'elements', 0, 'grid', key]);
-		expect(issue.message).toMatch(new RegExp(`'lonely'.*'span' and '${key}'`));
+		['width', { width: 'half' }, [spanWith('width'), widthBesideColumns]],
+		['offset', { offset: 'quarter' }, [spanWith('offset'), widthBesideColumns]],
+		['column', { column: 2 }, [spanWith('column')]],
+		[
+			'area',
+			{ area: 'a' },
+			[
+				spanWith('area'),
+				{
+					path: ['steps', 0, 'elements', 0, 'grid', 'area'],
+					message: `Field 'lonely' sets grid 'area' but the form grid has no 'areas'.`,
+				},
+			],
+		],
+	])('a field that sets span and %s in one slot is rejected at that key', (_key, extra, expected) => {
+		expect(issuesOf(formWith([field('lonely', { span: 2, ...extra })], { columns: 4 }))).toEqual(expected);
 	});
 
 	test('span in one slot and a width in another is accepted', () => {

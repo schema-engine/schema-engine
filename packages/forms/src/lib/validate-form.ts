@@ -14,7 +14,6 @@ import { getDefaultLayoutTheme } from '@schema-engine/layout';
 import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
 import { fieldPlacementIssues, templateIssues, type PlacedElement } from './validate-form/grid-checks';
 import {
-	childPath,
 	issueAt,
 	type FormValidationIssue,
 	type FormValidationResult,
@@ -22,7 +21,12 @@ import {
 	type Path,
 } from './validate-form/issues';
 import type { ValidateFormOptions } from './validate-form/options';
-import { brandElementTree, parseElementList, parseElementNode } from './validate-form/parse-elements';
+import {
+	brandElementTree,
+	parseElementList,
+	parseElementNode,
+	placedFromRetained,
+} from './validate-form/parse-elements';
 import { parseOwnerActions } from './validate-form/parse-owner-actions';
 import { parseView } from './validate-form/parse-view';
 import { stepStructureIssues } from './validate-form/step-checks';
@@ -36,7 +40,7 @@ export type { ValidateFormOptions } from './validate-form/options';
 export { FormValidationError } from './validate-form/validation-error';
 
 /**
- * Validate a single element against its registration schema, including nested child elements.
+ * Validate a single element against its registration schema, including nested child elements of a container.
  * Use this before rendering a field that is not already part of a {@link NormalizedFormConfig}.
  * The normalized marker is applied only after this element and its children succeed.
  *
@@ -73,7 +77,10 @@ export function validateFormConfig(config: unknown, options: ValidateFormOptions
  *
  * @remarks
  * A malformed envelope (the form's own shape) stops the deeper checks, so it comes back on its own;
- * once the envelope parses, the issues of every element, action, grid and view are reported together.
+ * once the envelope parses, the issues of every element, action, grid and view are reported together. For one
+ * top-level element the order is the registry's issues (its schemas), then forms' own (rules, reserved name, grid,
+ * appearance), parent before children, in document order: every node whose own schema passed is checked, and its
+ * children are checked whether or not it had an issue.
  * Still throws for a misuse of the API, such as a registration whose Standard Schema is async.
  */
 export function safeValidateFormConfig(
@@ -111,6 +118,7 @@ export function safeValidateFormConfig(
 	issues.push(...formAppearance.issues);
 
 	const placed: PlacedElement[][] = [];
+	const retainedSteps: Array<{ id: string; elements: object[]; constraints?: ReadonlyArray<{ field: string }> }> = [];
 	const steps = envelope.steps.map((step, stepIndex) => {
 		const stepPath: Path = ['steps', stepIndex];
 		const stepAppearance = resolveAppearance(step.appearance, formAppearance.childScope, {
@@ -127,23 +135,24 @@ export function safeValidateFormConfig(
 		);
 		const actions = parseOwnerActions(step.actions, options, stepPath);
 		issues.push(...elements.issues, ...actions.issues);
-		placed.push(
-			elements.byIndex.flatMap((element, index) =>
-				element ? [{ element, path: childPath(stepPath, index) }] : [],
-			),
-		);
+		placed.push(elements.retained.map(placedFromRetained));
+		retainedSteps.push({
+			id: step.id,
+			elements: elements.retained.map(({ config }) => config),
+			constraints: step.constraints,
+		});
 		return {
 			...withAppearance(step, stepAppearance.selection),
-			elements: elements.items ?? step.elements,
+			elements: elements.items,
 			actions: actions.items ?? step.actions,
 		};
 	});
 
-	issues.push(...stepStructureIssues(steps, options.elements));
+	issues.push(...stepStructureIssues(retainedSteps, options.elements));
 	issues.push(
 		...payloadIssues(
 			envelope.payload,
-			steps.flatMap((step) => step.elements),
+			retainedSteps.flatMap((step) => step.elements),
 		),
 	);
 
@@ -232,5 +241,5 @@ function payloadIssues(
 function parseEnvelope(config: unknown): ParseResult<FormConfigEnvelope> {
 	const result = safeParseStandardSchema(formConfigEnvelopeSchema, config);
 	if (!result.success) return { ok: false, issues: fromSchemaIssues(result.error.issues, []) };
-	return { ok: true, data: result.data as FormConfigEnvelope };
+	return { ok: true, data: result.data };
 }

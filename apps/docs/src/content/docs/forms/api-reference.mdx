@@ -86,6 +86,7 @@ import { defineInput, elementChildrenSchema } from '@schema-engine/forms';
 export const FieldSetRegistration = defineInput({
 	$type: 'fieldSet',
 	schema: FieldSetConfigSchema,
+	childPaths: [{ keys: ['elements'] }],
 	metadata: { name: 'FieldSet', category: 'input' },
 	render: FormFieldSet,
 });
@@ -93,12 +94,13 @@ export const FieldSetRegistration = defineInput({
 
 An input declares what its control writes with `value`, a function of the configured element that returns a Standard
 Schema (`value: ({ options }) => z.literal(options.map((option) => option.value))`). `defineInput` requires it, except
-on a container (a schema that declares `elements`; `containerKind` may sit beside it), whose value is its children's, and `createFormEngine` rejects an input that has none. `defineStatic` has none. The two helpers set a `kind` (`'input'` or `'static'`) on the registration, which is what the engine reads, not the element's `metadata.category`; a registration written by hand states its `kind`.
+on a container (an input that declares `childPaths: [{ keys: ['elements'] }]`, with `accepts` to limit its children; `containerKind` may sit beside it), whose value is its children's, and `createFormEngine` rejects an input that has neither `value` nor `childPaths`. `defineStatic` has none. The two helpers set a `kind` (`'input'` or `'static'`) on the registration, which is what the engine reads, not the element's `metadata.category`; a registration written by hand states its `kind`.
 See [Submitted values](/docs/forms/form-state#submitted-values).
 
-`defineInput` keeps the concrete schema type. Container schemas should use
-`elementChildrenSchema` for `elements`; the engine validates those children
-against its registrations. The render function then receives frozen,
+`defineInput` keeps the concrete schema type. A container schema declares `elements` with
+`elementChildrenSchema`, and the registration declares `childPaths`; the engine validates those children
+against its registrations, as authored, with the registry's `safeParseTree`
+([Register a container](/docs/forms/engine#register-a-container)). The render function then receives frozen,
 normalized children, not authoring JSON.
 
 ## Default element contracts
