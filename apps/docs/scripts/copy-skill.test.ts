@@ -61,26 +61,22 @@ test('replaces what an earlier copy left, so a deleted reference is not served',
 	expect(await filesUnder(join(output, 'skill'))).not.toContain(join('reference', 'stale.md'));
 });
 
-test('refuses a reference name two packages ship, and a router outside the registry package', async () => {
+test('refuses a reference name two packages ship', async () => {
 	const packages = await scratch();
 	await write(join(packages, 'registry', 'skill', 'SKILL.md'));
 	await write(join(packages, 'actions', 'skill', 'reference', 'shared.md'));
 	await write(join(packages, 'forms', 'skill', 'reference', 'shared.md'));
 	await expect(findSkillSources(packages)).rejects.toThrow('shared.md is shipped by actions and by forms');
-
-	await rm(join(packages, 'forms'), { recursive: true });
-	await rm(join(packages, 'actions', 'skill', 'reference'), { recursive: true });
-	await write(join(packages, 'actions', 'skill', 'SKILL.md'), '# Another router');
-	await expect(findSkillSources(packages)).rejects.toThrow('router lives in packages/registry only');
 });
 
-test('accepts the copy of the router a package build makes', async () => {
+test('serves the router of the registry package, whatever copy of it another package holds, even a stale one', async () => {
 	const packages = await scratch();
-	await write(join(packages, 'registry', 'skill', 'SKILL.md'));
-	await write(join(packages, 'actions', 'skill', 'SKILL.md'));
+	await write(join(packages, 'registry', 'skill', 'SKILL.md'), '# The router');
+	await write(join(packages, 'actions', 'skill', 'SKILL.md'), '# A router an earlier build copied');
 	await write(join(packages, 'actions', 'skill', 'reference', 'actions.md'));
 
 	const sources = await findSkillSources(packages);
 
 	expect(sources.references.map(({ name }) => name)).toEqual(['actions.md']);
+	expect(sources.router).toBe(join(packages, 'registry', 'skill', 'SKILL.md'));
 });

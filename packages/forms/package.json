@@ -18,9 +18,6 @@
 		"url": "git+https://github.com/schema-engine/schema-engine.git",
 		"directory": "packages/forms"
 	},
-	"engines": {
-		"node": "^24.22.0 || >=26.0.0"
-	},
 	"homepage": "https://schema-engine.com/docs/forms/overview",
 	"publishConfig": {
 		"access": "public"
@@ -36,7 +33,7 @@
 	"scripts": {
 		"build:lib": "pnpm clean && pnpm build:files && pnpm build:types",
 		"build:files": "node ./build.ts",
-		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+		"build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && node ../../scripts/resolve-declaration-specifiers.ts dist",
 		"watch:lib": "node ./build.ts --watch",
 		"clean": "rm -rf ./dist",
 		"test:all": "vitest run",

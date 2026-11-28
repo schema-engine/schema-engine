@@ -367,9 +367,6 @@ importers:
       '@ecopages/logger':
         specifier: ^0.2.3
         version: 0.2.3(typescript@5.9.3)
-      '@schema-engine/actions':
-        specifier: workspace:^
-        version: link:../actions
       '@schema-engine/registry':
         specifier: workspace:^
         version: link:../registry

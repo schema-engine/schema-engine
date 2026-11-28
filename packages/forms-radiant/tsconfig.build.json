@@ -23,8 +23,5 @@
 		"**/*.stories.ts",
 		"**/*.stories.tsx",
 		"**/*.play.ts"
-	],
-	"tsc-alias": {
-		"resolveFullPaths": true
-	}
+	]
 }

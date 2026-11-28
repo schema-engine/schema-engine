@@ -56,6 +56,8 @@ pnpm turbo check-types --filter=@schema-engine/forms-react
 
 Turbo caches `test:all` and `check-types` results. Add `--force` to run them again regardless of the cache.
 
+Turbo runs each package's `clean` (it removes `dist`) before its `build:lib`, whether the build then runs or is restored from the cache, so `dist` never holds a file the current source does not produce. `pnpm check:dist-types` (the last step of `pnpm build:lib`) type-checks the built declarations of every package with `skipLibCheck: false`, under `node16` and `bundler` module resolution, through a consumer that imports every typed entry of the `exports` maps.
+
 Never skip the hook with `--no-verify` or `HUSKY=0`. If it fails, the failure is real or it is a bug in the hook: fix it or file an issue.
 
 ## Storybook

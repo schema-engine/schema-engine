@@ -1,8 +1,11 @@
 {
 	"$schema": "https://turborepo.com/schema.json",
 	"tasks": {
+		"clean": {
+			"cache": false
+		},
 		"build:lib": {
-			"dependsOn": ["^build:lib"],
+			"dependsOn": ["clean", "^build:lib"],
 			"inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/registry/skill/SKILL.md"],
 			"outputs": ["dist/**", "skill/SKILL.md"]
 		},
