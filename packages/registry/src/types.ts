@@ -36,15 +36,17 @@ export type Brand<T, TBrand> = T & { readonly [__brand]?: TBrand };
  * @remarks
  * Plain data, so a registration stays serializable. `keys` is relative to the node and holds no indexes, which is why
  * it is not called `path`: a `path` in this package is an absolute document path with indexes. The value there is one
- * node or an array of nodes. `accepts` is a closed list: adding a leaf to `[...defaults, custom]` means overriding
- * each container that should take it. Without `accepts`, any `$type` the lookup answers is accepted, which an open
- * vocabulary needs. The parent's schema keeps the slot opaque (`z.array(z.unknown())`, `z.unknown()`), and `accepts`
- * is the only way to restrict it.
+ * node or an array of nodes. `accepts` is a closed list of `$type`s, the only way to restrict a slot: it reads no
+ * role, tag or category, and `metadata` decides nothing. Adding a leaf to `[...defaults, custom]` means overriding each
+ * container that should take it. Without `accepts`, the slot puts no limit on the `$type`, so any `$type` the lookup
+ * answers is accepted. The parent's schema keeps the slot opaque (`z.array(z.unknown())`, `z.unknown()`). A tool that
+ * reads child paths does not decide what a slot takes: it checks a document with `safeParseTree` or
+ * `exportTreeSchema`.
  */
 export interface ChildPath {
 	/** The keys from the node to the slot, for example `['engine', 'controls']` for `node.engine.controls`. */
 	readonly keys: readonly string[];
-	/** The `$type`s allowed at the slot, at least one when present. Absent: any `$type` the lookup answers. */
+	/** The `$type`s allowed at the slot, at least one when present. Absent: `accepts` puts no limit on the `$type`. */
 	readonly accepts?: readonly string[];
 }
 
