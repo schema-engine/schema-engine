@@ -54,6 +54,39 @@ type UndeclaredChildPaths<T> = T extends {
 			: never
 	: never;
 
+/** The type a schema output has at `TKeys`, or `unknown` when the keys are widened or name nothing it declares. */
+type SlotAt<T, TKeys> = TKeys extends readonly [infer THead extends string, ...infer TRest]
+	? THead extends keyof NonNullable<T>
+		? TRest extends readonly []
+			? NonNullable<T>[THead]
+			: SlotAt<NonNullable<T>[THead], TRest>
+		: unknown
+	: unknown;
+
+/** Whether a slot type may hold a list: an array (optional or nullable), or a type that says nothing. */
+type HoldsList<TSlot> = unknown extends TSlot
+	? true
+	: [NonNullable<TSlot>] extends [never]
+		? true
+		: [NonNullable<TSlot>] extends [readonly unknown[]]
+			? true
+			: false;
+
+/** The child paths that set `list` over a slot the schema output types as no array, as `{ $type, keys }`. */
+type ListPathsNotArrays<T> = T extends {
+	$type: infer TType;
+	schema: infer TSchema extends StandardSchemaV1;
+	readonly childPaths: readonly (infer TPath)[];
+}
+	? unknown extends StandardSchemaV1.InferOutput<TSchema>
+		? never
+		: TPath extends { readonly keys: infer TKeys; readonly list: true }
+			? HoldsList<SlotAt<StandardSchemaV1.InferOutput<TSchema>, TKeys>> extends true
+				? never
+				: { $type: TType; keys: TKeys }
+			: never
+	: never;
+
 /**
  * The properties of a child path entry other than `keys`, `accepts` and `list`, as `{ $type, property }`.
  *
@@ -73,7 +106,8 @@ type UnknownChildPathProperties<T> = T extends { $type: infer TType; readonly ch
  * What `createRegistry` intersects with its `registrations` parameter, so a child path the schema does not declare is
  * an error that names it: `Property 'childPathNotInSchema' is missing`, with the `$type` and the keys. A child path
  * entry with a property other than `keys`, `accepts` and `list` is `childPathUnknownProperty`, with the `$type` and the
- * property.
+ * property. A child path that sets `list` over a slot the schema types as no array (an object, a string) is
+ * `listPathNotAnArray`, with the `$type` and the keys, since the walk and the export would refuse every value there.
  *
  * @remarks
  * `unknown` when every path is declared and well formed, which is the identity of an intersection. A schema whose
@@ -85,7 +119,8 @@ export type CheckChildPaths<T> = ([UndeclaredChildPaths<T>] extends [never]
 	: { readonly childPathNotInSchema: UndeclaredChildPaths<T> }) &
 	([UnknownChildPathProperties<T>] extends [never]
 		? unknown
-		: { readonly childPathUnknownProperty: UnknownChildPathProperties<T> });
+		: { readonly childPathUnknownProperty: UnknownChildPathProperties<T> }) &
+	([ListPathsNotArrays<T>] extends [never] ? unknown : { readonly listPathNotAnArray: ListPathsNotArrays<T> });
 
 type AcceptedNames<T extends TreeRegistration> = T extends { readonly childPaths: readonly (infer TPath)[] }
 	? TPath extends { readonly accepts: readonly (infer TName)[] }

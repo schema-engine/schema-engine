@@ -696,6 +696,27 @@ describe('exportTreeSchema', () => {
 			expect((error as Error).message).toContain(`'${keys.join('.')}'`);
 		});
 
+		it('makes a slot that declares only array keywords a list, so an object is rejected as safeParseTree does', () => {
+			const nodes = createRegistry('Node', [
+				{
+					$type: 'box',
+					schema: jsonSchemaOf({ type: 'object', properties: { kids: { items: {} } } }),
+					metadata,
+					childPaths: [{ keys: ['kids'], accepts: ['leaf'], list: true }],
+				} as BaseRegistration,
+				{
+					$type: 'leaf',
+					schema: jsonSchemaOf({ type: 'object', properties: { $type: { const: 'leaf' } } }),
+					metadata,
+				} as BaseRegistration,
+			]);
+			const accepts = compileJSONSchema(exportTreeSchema(nodes, { accepts: ['box'] }));
+			const leaf = { $type: 'leaf' };
+
+			expect(accepts({ kids: [leaf] })).toBe(true);
+			expect(accepts({ kids: leaf })).toBe(false);
+		});
+
 		it('writes an open slot of a list path as a list, where a path without list takes a child or a list', () => {
 			const nodes = (list: true | undefined) =>
 				createRegistry('Node', [

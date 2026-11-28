@@ -103,6 +103,24 @@ describe('replaceChildSlot', () => {
 			expect(definition.properties).toEqual({ kids: { type: 'array', items: union } });
 		});
 
+		it('requires an array of a slot that declares only array keywords, so an object is no list', () => {
+			const definition = listed({ type: 'object', properties: { kids: { items: {}, minItems: 1 } } });
+
+			expect(definition.properties).toEqual({ kids: { type: 'array', items: union, minItems: 1 } });
+		});
+
+		it('leaves a slot that declares only array keywords as it is when the path does not say list', () => {
+			const definition = slot({ type: 'object', properties: { kids: { items: {} } } });
+
+			expect(definition.properties).toEqual({ kids: { items: union } });
+		});
+
+		it('throws unreachable-child-path for a slot whose type is not array', () => {
+			const error = thrown(() => listed({ type: 'object', properties: { kids: { type: 'string', items: {} } } }));
+
+			expect(error).toMatchObject({ code: 'unreachable-child-path', $type: 'box', childPath: ['kids'] });
+		});
+
 		it('replaces the items of an array as it does without list', () => {
 			const definition = listed({
 				type: 'object',

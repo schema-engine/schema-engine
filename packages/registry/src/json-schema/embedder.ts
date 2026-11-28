@@ -140,8 +140,10 @@ export interface JSONSchemaEmbedder {
 	 * definition lifted to the document as `name.<its name>`, and anchors are renamed under `name`, as
 	 * {@link hoistDefinitions} does. In a collection the entry is its own resource, so the schema is kept as it is, with
 	 * its own definitions, without `$schema`, and a draft-07 root `$id: '#node'` is dropped with its references turned
-	 * into `#`, since the entry is addressed by the `$id` the collection gives it. A schema with an `$id` of its own is
-	 * kept as it is.
+	 * into `#`, since the entry is addressed by the `$id` the collection gives it. A schema with an `$id` of its own is a
+	 * resource that keeps its base: in a document it is kept as it is, and in a collection the entry is a reference to
+	 * it with the schema beside it under the name, so the entry keeps the collection's URI and the schema keeps its
+	 * `$id`.
 	 */
 	embedDefinition(own: JSONSchemaObject, name: string): JSONSchemaObject;
 	/** Adds the definitions `embed` and `embedDefinition` moved to the finished document or collection, in place. */
@@ -205,7 +207,11 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 			return { $ref: ref };
 		},
 		embedDefinition(own, name) {
-			if (placement.kind === 'collection') return withoutRootAnchor(withoutSchemaKeyword(own));
+			if (placement.kind === 'collection') {
+				const entry = withoutRootAnchor(withoutSchemaKeyword(own));
+				if (!startsResource(entry)) return entry;
+				return { $ref: entry.$id, [keyword]: { [name]: entry } };
+			}
 			const { definition, nested } = hoistDefinitions(own, name, target);
 			Object.assign(hoisted, nested);
 			return definition;

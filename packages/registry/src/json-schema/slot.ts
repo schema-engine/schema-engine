@@ -24,7 +24,9 @@ const SLOT_ANNOTATIONS = ['title', 'description', 'default', 'examples', 'deprec
  * object (`type: 'object'` or `properties`) becomes the union, and an open slot (no keyword but annotations) becomes the
  * union or a list of it, matching a child or a list of children. A path that sets `list` holds a list and never one
  * node, so its open slot becomes an array of the union, and an object slot is unreachable, since the schema would refuse
- * the list the document holds. Annotations of the slot are kept. A slot inside a
+ * the list the document holds. An array slot of such a path that declares only array keywords (`items`) gets
+ * `type: 'array'`, so an object is refused as the walk refuses it, and one whose `type` is another is unreachable.
+ * Annotations of the slot are kept. A slot inside a
  * schema with an `$id` of its own cannot be reached: a `$ref` there resolves against that `$id`, not against the
  * document. That holds for each schema between the definition and the slot. The definition's own root is the caller's
  * to check, since only the caller knows whether the references it writes resolve against that root: a collection entry
@@ -86,6 +88,10 @@ export function replaceChildSlot(
 		SLOT_ANNOTATIONS.filter((key) => key in slot).map((key) => [key, slot[key]]),
 	);
 	if (slot.type === 'array' || 'items' in slot || 'prefixItems' in slot) {
+		if (list === true) {
+			if (slot.type !== undefined && slot.type !== 'array') throw unreachable();
+			slot.type = 'array';
+		}
 		const tupleItems = Array.isArray(slot.items);
 		const rest = tupleItems ? 'additionalItems' : 'items';
 		if (Array.isArray(slot.prefixItems)) slot.prefixItems = slot.prefixItems.map(copy);

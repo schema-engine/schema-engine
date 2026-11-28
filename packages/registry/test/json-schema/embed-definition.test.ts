@@ -116,6 +116,43 @@ describe('JSONSchemaEmbedder.embedDefinition', () => {
 			expect(embedder.finish({ schemas: {} })).toEqual({ schemas: {} });
 		});
 
+		it('writes a schema with an $id of its own as a reference to it, so the entry keeps the collection URI', () => {
+			const embedder = createJSONSchemaEmbedder('draft-2020-12', { kind: 'collection', uri });
+			const resource = {
+				$schema: 'https://json-schema.org/draft/2020-12/schema',
+				$id: 'https://example.test/leaf',
+				type: 'object',
+				properties: { label: { $ref: '#/$defs/label' } },
+				$defs: { label: { type: 'string' } },
+			};
+
+			const entry = embedder.embedDefinition(resource, 'element:leaf');
+
+			expect(entry).toEqual({
+				$ref: 'https://example.test/leaf',
+				$defs: { 'element:leaf': { ...resource, $schema: undefined } },
+			});
+			expect(entry).not.toHaveProperty('$id');
+		});
+
+		it('is resolved by Ajv from another entry through the collection URI, with the schema keeping its own base', () => {
+			const embedder = createJSONSchemaEmbedder('draft-2020-12', { kind: 'collection', uri });
+			const entry = embedder.embedDefinition(
+				{
+					$id: 'https://example.test/leaf',
+					type: 'object',
+					properties: { label: { $ref: '#/$defs/label' } },
+					$defs: { label: { type: 'string' } },
+				},
+				'leaf',
+			);
+			const ajv = new Ajv2020({ strict: false });
+			ajv.addSchema({ ...entry, $id: uri('leaf') });
+			const validate = ajv.compile({ $ref: uri('leaf') });
+
+			expect([validate({ label: 'x' }), validate({ label: 1 })]).toEqual([true, false]);
+		});
+
 		it('turns a draft-07 root $id fragment into #, since the entry is addressed by its assigned $id', () => {
 			const embedder = createJSONSchemaEmbedder('draft-07', { kind: 'collection', uri });
 
