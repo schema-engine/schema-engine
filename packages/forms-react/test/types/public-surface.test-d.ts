@@ -7,6 +7,11 @@ void [root.FormEngineProvider, root.FormRenderer, useFormContext, useFormWizard,
 type RootExports = typeof import('@schema-engine/forms-react');
 type AssertNotExported<Key extends PropertyKey> = Key extends keyof RootExports ? false : true;
 
-const absentRootExports: [AssertNotExported<'useFormContext'>, AssertNotExported<'FormElements'>] = [true, true];
+const absentRootExports: [
+	AssertNotExported<'useFormContext'>,
+	AssertNotExported<'FormElements'>,
+	AssertNotExported<'FormEngineContext'>,
+	AssertNotExported<'createFormEngineContextValue'>,
+] = [true, true, true, true];
 
 void absentRootExports;

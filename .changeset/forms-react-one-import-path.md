@@ -2,7 +2,7 @@
 '@schema-engine/forms-react': minor
 ---
 
-Each export has one import path: `@schema-engine/forms-react/hooks` and `@schema-engine/forms-react/contexts` no longer re-export what `@schema-engine/forms` declares, and `SubmissionState` and `ViewContextValue`, which renamed two of those, are gone.
+Each export has one import path: `@schema-engine/forms-react/hooks` and `@schema-engine/forms-react/contexts` (which the renderer entry layout then removes) no longer re-export what `@schema-engine/forms` declares, and `SubmissionState` and `ViewContextValue`, which renamed two of those, are gone.
 
 | Before (from `@schema-engine/forms-react/hooks`)                                                                                   | After                                                      |
 | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -16,7 +16,7 @@ Each export has one import path: `@schema-engine/forms-react/hooks` and `@schema
 | `ViewContextValue` (type)                           | `ViewModel` from `@schema-engine/forms/recipes`    |
 | `ViewNavigation`, `ViewStep` (types)                | the same names from `@schema-engine/forms/recipes` |
 
-`ViewProvider` stays on `@schema-engine/forms-react/contexts`, and the hooks stay on `@schema-engine/forms-react/hooks`. A copied shadcn `form-submission-alert.tsx` imports `FORM_ROOT` from `@schema-engine/forms/state-container`: run `shadcn add` for the item again, or change the import by hand.
+The hooks stay on `@schema-engine/forms-react/hooks`, and `ViewProvider` is on `@schema-engine/forms-react/primitives`. A copied shadcn `form-submission-alert.tsx` imports `FORM_ROOT` from `@schema-engine/forms/state-container`: run `shadcn add` for the item again, or change the import by hand.
 
 ```ts
 // before

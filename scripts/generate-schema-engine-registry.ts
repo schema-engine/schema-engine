@@ -627,12 +627,25 @@ const TRACKED_NPM_DEPENDENCIES = [
 	'imask',
 ];
 
-const PUBLIC_FORMS_REACT_IMPORTS = new Set([
-	'@schema-engine/forms-react',
-	'@schema-engine/forms-react/contexts',
-	'@schema-engine/forms-react/hooks',
-	'@schema-engine/forms-react/primitives',
-]);
+/**
+ * The specifiers a registry copy may import from `@schema-engine/forms-react`: the JavaScript entries of its `exports` map.
+ *
+ * @remarks
+ * Read from the package manifest, so an entry the package adds or drops is public or refused here without a second list to edit.
+ */
+const PUBLIC_FORMS_REACT_IMPORTS = publicEntrySpecifiers(join(root, 'packages/forms-react/package.json'));
+
+function publicEntrySpecifiers(manifestPath: string): Set<string> {
+	const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+		name: string;
+		exports: Record<string, string | { import?: string }>;
+	};
+	return new Set(
+		Object.entries(manifest.exports)
+			.filter(([key, target]) => key !== './package.json' && typeof target === 'object' && target.import)
+			.map(([key]) => (key === '.' ? manifest.name : `${manifest.name}${key.slice(1)}`)),
+	);
+}
 
 function expectedFromImports(imports: string[], base: Base) {
 	const registryDependencies = new Set<string>();

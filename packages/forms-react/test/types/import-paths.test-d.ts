@@ -1,6 +1,6 @@
 /**
- * Compile-time checks of the symbols that moved to their owner in the one-import-path change, for the two entries of
- * this package that lost them: `@schema-engine/forms-react/hooks` and `@schema-engine/forms-react/contexts`. The old
+ * Compile-time checks of the symbols that moved to their owner in the one-import-path change, for the entry of
+ * this package that lost them: `@schema-engine/forms-react/hooks`. The removed `/contexts` entry is checked in `test/consumer`, which resolves the way an app does. The old
  * paths of the other packages are checked in the `test/types/import-paths.test-d.ts` of `@schema-engine/forms-radiant`.
  *
  * Each moved name is imported at its owner, and each old path is read with `@ts-expect-error`, which fails when the
@@ -62,9 +62,3 @@ export type HooksFormSubmitHelpers = import('@schema-engine/forms-react/hooks').
 export type HooksSubmissionStatus = import('@schema-engine/forms-react/hooks').SubmissionStatus;
 // @ts-expect-error `SubmissionState` was `FormSubmissionState` of `@schema-engine/forms` under another name.
 export type HooksSubmissionState = import('@schema-engine/forms-react/hooks').SubmissionState;
-// @ts-expect-error `ViewContextValue` was `ViewModel` of `@schema-engine/forms/recipes` under another name.
-export type ContextsViewContextValue = import('@schema-engine/forms-react/contexts').ViewContextValue;
-// @ts-expect-error `ViewNavigation` is exported by `@schema-engine/forms/recipes` alone.
-export type ContextsViewNavigation = import('@schema-engine/forms-react/contexts').ViewNavigation;
-// @ts-expect-error `ViewStep` is exported by `@schema-engine/forms/recipes` alone.
-export type ContextsViewStep = import('@schema-engine/forms-react/contexts').ViewStep;
