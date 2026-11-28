@@ -353,6 +353,12 @@ export function definitionRef(target: JSONSchemaTarget, name: string): string {
 	return `#/${definitionsKeyword(target)}/${pointerToken(name)}`;
 }
 
+const isDefinitionsKeyword = (keyword: string): boolean => keyword === '$defs' || keyword === 'definitions';
+
+/**
+ * A pointer reference token as the document it points into names it: percent-decoded, since a URI fragment is
+ * percent-decoded before it is read as a JSON Pointer (RFC 6901, section 6), then with `~1` and `~0` unescaped.
+ */
 function unescapedToken(token: string): string {
 	return decodeURIComponent(token).replaceAll('~1', '/').replaceAll('~0', '~');
 }
@@ -397,7 +403,7 @@ function hoistDefinitions(own: JSONSchemaObject, owner: string, target: JSONSche
 			if (pointer === '#') return place(owner);
 			const tokens = pointer.slice(2).split('/');
 			const [head, name, ...rest] = tokens;
-			if ((head === '$defs' || head === 'definitions') && name !== undefined) {
+			if (head !== undefined && isDefinitionsKeyword(unescapedToken(head)) && name !== undefined) {
 				return [place(nameOf(unescapedToken(name))), ...rest].join('/');
 			}
 			return `${place(owner)}/${tokens.join('/')}`;
