@@ -1,7 +1,7 @@
 {
 	"name": "@schema-engine/actions",
 	"type": "module",
-	"version": "0.5.2",
+	"version": "0.6.0",
 	"description": "Registered actions that run from plain data: serializable workflows of sequential and parallel steps, checked before they run",
 	"keywords": [
 		"schema-engine",
