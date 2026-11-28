@@ -1,5 +1,5 @@
 import { createRecipeRegistry, defineRecipeProtocol, type KindOf, type SlotOf } from '@schema-engine/layout';
-import type { ReadOnlyRegistry } from '@schema-engine/registry';
+import type { CreateRegistryOptions, ReadOnlyRegistry } from '@schema-engine/registry';
 import { DEFAULT_WIZARD_RECIPE } from '@/lib/form-view';
 import type { AnyRecipeRegistration } from '@/types/registration';
 
@@ -40,8 +40,9 @@ export type RecipeSlot = SlotOf<typeof formRecipeProtocol>;
 /** Builds the forms `Recipe` registry, running {@link formRecipeProtocol}'s rules on each winning registration. */
 export function createFormRecipeRegistry(
 	recipes: readonly AnyRecipeRegistration[],
+	options?: CreateRegistryOptions,
 ): ReadOnlyRegistry<AnyRecipeRegistration> {
-	return createRecipeRegistry(formRecipeProtocol, recipes);
+	return createRecipeRegistry(formRecipeProtocol, recipes, options);
 }
 
 /**

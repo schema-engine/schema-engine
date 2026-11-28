@@ -333,10 +333,16 @@ function resolveLayout(layout: LayoutInput | undefined): LayoutTheme {
  */
 export function buildFormEngine(lists: FormEngineRegistrationLists) {
 	const layout = resolveLayout(lists.layout);
-	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[]);
+	const elementRegistry = createRegistry('Element', (lists.elements ?? []) as readonly AnyElementRegistration[], {
+		hint: 'Register it with createFormEngine({ elements: [...] }).',
+	});
 	for (const registration of lists.elements ?? []) assertValueDeclared(registration);
-	const recipeRegistry = createFormRecipeRegistry((lists.recipes ?? []) as readonly AnyRecipeRegistration[]);
-	const actionRegistry = createRegistry('Action', (lists.actions ?? []) as readonly AnyActionRegistration[]);
+	const recipeRegistry = createFormRecipeRegistry((lists.recipes ?? []) as readonly AnyRecipeRegistration[], {
+		hint: 'Register it with createFormEngine({ recipes: [...] }).',
+	});
+	const actionRegistry = createRegistry('Action', (lists.actions ?? []) as readonly AnyActionRegistration[], {
+		hint: 'Register it with createFormEngine({ actions: [...] }).',
+	});
 
 	for (const element of elementRegistry.all()) {
 		assertDeclaredAxes(`Element '${element.$type}'`, element.appearanceAxes, layout);

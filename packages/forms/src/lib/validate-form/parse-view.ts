@@ -36,7 +36,7 @@ function recipeLookup(
 			const recipe = recipes.get(type);
 			return recipe && { schema: viewSchema(recipe, stepCount, appearance) };
 		},
-		hint: 'Register it with createFormEngine({ recipes: [...] }).',
+		hint: recipes.hint,
 	};
 }
 

@@ -211,6 +211,24 @@ describe('createMutableRegistry', () => {
 		});
 	});
 
+	describe('Scenario: The hint option is the hint of the registry as a lookup', () => {
+		it('is on the registry and ends the message of an unregistered $type', () => {
+			const registry = createMutableRegistry<BaseRegistration>('Plugin', {
+				hint: 'Register it with plugins.register.',
+			});
+
+			expect(registry.hint).toBe('Register it with plugins.register.');
+			expect(safeParseNode(registry, { $type: 'missing' })).toMatchObject({
+				success: false,
+				issues: [{ message: "No registration for $type 'missing'. Register it with plugins.register." }],
+			});
+		});
+
+		it('is absent without the option', () => {
+			expect(build().hint).toBeUndefined();
+		});
+	});
+
 	describe('Scenario: The registry package has no logger', () => {
 		it('lists no @ecopages/logger dependency', () => {
 			const manifest = JSON.parse(

@@ -17,13 +17,7 @@ export function parseOwnerActions(
 	ownerPath: Path,
 ): { issues: FormValidationIssue[]; items?: ParsedActionSequence } {
 	if (!items) return { issues: [] };
-	const result = parseActions(
-		{ ...options.actions, hint: 'Register it with createFormEngine({ actions: [...] }).' },
-		items,
-		{
-			triggers: FormActionTriggerSchema.options,
-		},
-	);
+	const result = parseActions(options.actions, items, { triggers: FormActionTriggerSchema.options });
 	if (!result.success) return { issues: fromSchemaIssues(result.issues, [...ownerPath, 'actions']) };
 	return { issues: [], items: result.data };
 }

@@ -209,13 +209,12 @@ export interface ActionRegistration<
  * A registry holds actions of many config shapes, so the config type is an existential placeholder: `any` is the one
  * type every `ActionRegistration<TConfig, ...>` is assignable to, whatever its `TConfig`. Use it as the type of a
  * `createMutableRegistry<AnyActionRegistration<Context, Trigger>>('Action')`, which a single `ActionRegistration<TConfig>`
- * could not type.
+ * could not type. The `$type` stays a `string`: with `any` as the config, `TConfig['$type']` would be `any`.
  */
-export type AnyActionRegistration<TBaseContext = unknown, TTrigger = string> = ActionRegistration<
-	any,
-	TBaseContext,
-	TTrigger
->;
+export type AnyActionRegistration<TBaseContext = unknown, TTrigger = string> = Omit<
+	ActionRegistration<any, TBaseContext, TTrigger>,
+	'$type'
+> & { readonly $type: string };
 
 /** Input for trigger-based sequential dispatch. */
 export interface ActionDispatchInput<

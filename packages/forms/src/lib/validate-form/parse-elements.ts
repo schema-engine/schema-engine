@@ -1,20 +1,15 @@
 import type { FormTaggedConfig } from '@/schemas/form-config';
 import type { ElementConfig } from '@/schemas/field-config';
-import { safeParseNode, type NodeLookup } from '@schema-engine/registry';
+import { safeParseNode } from '@schema-engine/registry';
 import { markNormalizedElementConfig, type NormalizedElementConfig } from '@/lib/normalized-form-config';
 import { getElementChildren, withElementChildren } from '@/lib/element-children';
 import { resolveAppearance, withAppearance, type AppearanceScope } from '@/lib/resolve-appearance';
 import { areaPlacementIssue, namedPlacementIssue, spanIssue, subgridIssue } from './grid-checks';
 import { childPath, isTaggedConfig, issueAt, type FormValidationIssue, type Path } from './issues';
-import type { ElementRegistration, ValidateFormOptions } from './options';
+import type { ValidateFormOptions } from './options';
 import { fromSchemaIssues } from './schema-issues';
 import { containerKindOf } from '@/lib/container-kind-of';
 import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
-
-/** Finds an element by `$type` for `safeParseNode`, and says where to register one nothing answers. */
-function elementLookup(elementRegistry: ValidateFormOptions['elements']): NodeLookup<ElementRegistration> {
-	return { ...elementRegistry, hint: 'Register it with createFormEngine({ elements: [...] }).' };
-}
 
 /**
  * Holds each rule of an element to its registration, and replaces it with the rule as the registration parses it.
@@ -84,7 +79,7 @@ export function parseElementNode(
 		authoredAppearance = taggedAppearance;
 		node = withoutAppearance;
 	}
-	const parsed = safeParseNode(elementLookup(elementRegistry), node, { path });
+	const parsed = safeParseNode(elementRegistry, node, { path });
 	if (!parsed.success) {
 		return { issues: fromSchemaIssues(parsed.issues, []) };
 	}

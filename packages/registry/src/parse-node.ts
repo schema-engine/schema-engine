@@ -20,7 +20,8 @@ export interface NodeLookup<TRegistration extends Pick<BaseRegistration, 'schema
 	 * A sentence that follows the message of a `$type` `get` does not answer, such as where to register it.
 	 *
 	 * @remarks
-	 * The message is `No registration for $type 'x'.`, a space and the hint.
+	 * The message is `No registration for $type 'x'.`, a space and the hint. A registry built with the `hint` option
+	 * has it.
 	 */
 	hint?: string;
 }

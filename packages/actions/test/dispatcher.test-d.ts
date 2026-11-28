@@ -1,4 +1,5 @@
 import { createMutableRegistry, createRegistry } from '@schema-engine/registry';
+import { expectTypeOf } from 'vitest';
 import * as z from 'zod/mini';
 import { ActionDispatcher } from '../src/dispatcher';
 import { parseActions } from '../src/parse-actions';
@@ -66,3 +67,6 @@ void mutableDispatcher.dispatch({ actions, trigger: 'submit', context: { formId:
 void mutableDispatcher.dispatch({ actions, trigger: 'submit', context: { formId: 1 } });
 // @ts-expect-error the trigger is not one of the Trigger the registry fixes
 void mutableDispatcher.dispatch({ actions, trigger: 'launch', context: { formId: 'checkout' } });
+
+declare const anyAction: AnyActionRegistration<Context, Trigger>;
+expectTypeOf(anyAction.$type).toEqualTypeOf<string>();

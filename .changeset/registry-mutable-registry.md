@@ -27,4 +27,6 @@ plugins.all();
 plugins.keys();
 ```
 
+`createRegistry` and `createMutableRegistry` take a `hint` option, exposed as the optional `hint` of a registry, so a registry is a `NodeLookup` with its hint: the sentence that ends the message of an unregistered `$type`, such as where to register it.
+
 The lookup types are one set: `ReadOnlyRegistry`, `MutableRegistry`, `NodeLookup` (find one registration, what `safeParseNode` and `safeParseTree` take) and `ExportLookup` (list them all, what `exportTreeSchema` takes). A registry of either kind is all of them.

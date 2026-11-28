@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import * as z from 'zod/mini';
+import { parseActions } from '@schema-engine/actions';
+import { safeParseNode } from '@schema-engine/registry';
 import { createFormEngine } from '@/engine/create-form-engine';
 import { defineFormRecipe, defineRecipeSpec } from '@/recipes';
 import { defineInput } from '@/types';
@@ -182,6 +184,29 @@ describe('engine registries', () => {
 			expect(Object.isFrozen(engine.elements.all())).toBe(true);
 			expect(Object.isFrozen(engine.recipes.keys())).toBe(true);
 			expect(Object.isFrozen(engine.actions.all())).toBe(true);
+		});
+
+		test('each carries the hint of an unregistered $type, so a lookup reports where to register it', () => {
+			expect(engine.elements.hint).toBe('Register it with createFormEngine({ elements: [...] }).');
+			expect(engine.recipes.hint).toBe('Register it with createFormEngine({ recipes: [...] }).');
+			expect(parseActions(engine.actions, [{ id: 'a', $type: 'missing' }])).toMatchObject({
+				success: false,
+				issues: [
+					{
+						message:
+							"No registration for $type 'missing'. Register it with createFormEngine({ actions: [...] }).",
+					},
+				],
+			});
+			expect(safeParseNode(engine.elements, { $type: 'missing' })).toMatchObject({
+				success: false,
+				issues: [
+					{
+						message:
+							"No registration for $type 'missing'. Register it with createFormEngine({ elements: [...] }).",
+					},
+				],
+			});
 		});
 
 		test.each([

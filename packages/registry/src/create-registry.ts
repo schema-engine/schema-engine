@@ -11,6 +11,15 @@ import type { BaseRegistration } from './types.js';
 export interface ReadOnlyRegistry<TRegistration extends BaseRegistration = BaseRegistration> {
 	/** Label used in errors, for example `Element`. */
 	readonly kind: string;
+	/**
+	 * A sentence that follows the message of a `$type` the registry does not answer, such as where to register it.
+	 * Set by the `hint` option; absent without it.
+	 *
+	 * @remarks
+	 * It is the `hint` of {@link NodeLookup}, so a registry is a lookup with its hint, and `safeParseNode`,
+	 * `safeParseTree` and every function that takes a lookup report it.
+	 */
+	readonly hint?: string;
 	/** Number of distinct `$type` keys. */
 	readonly size: number;
 	get(key: string): TRegistration | undefined;
@@ -135,6 +144,8 @@ function duplicateTypeError(kind: string, type: string): RegistryError {
 
 /** Options of {@link createRegistry} and {@link createMutableRegistry}. */
 export interface CreateRegistryOptions {
+	/** The `hint` of the registry, see {@link ReadOnlyRegistry.hint}. */
+	readonly hint?: string;
 	/**
 	 * What a second registration of one `$type` does: replace the first (`'override'`, the default) or fail the build
 	 * (`'error'`).
@@ -200,6 +211,7 @@ export function createRegistry<const TRegistration extends BaseRegistration>(
 
 	return Object.freeze({
 		kind,
+		...(options.hint === undefined ? {} : { hint: options.hint }),
 		size: entries.size,
 		get: (key: string) => entries.get(key),
 		has: (key: string) => entries.has(key),
@@ -253,6 +265,7 @@ export function createMutableRegistry<TRegistration extends BaseRegistration = B
 
 	return Object.freeze({
 		kind,
+		...(options.hint === undefined ? {} : { hint: options.hint }),
 		get size() {
 			return entries.size;
 		},

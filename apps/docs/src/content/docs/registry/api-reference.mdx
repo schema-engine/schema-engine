@@ -19,10 +19,11 @@ function createRegistry<const TRegistration extends BaseRegistration>(
 
 interface CreateRegistryOptions {
 	readonly duplicates?: 'override' | 'error';
+	readonly hint?: string;
 }
 ```
 
-Builds a frozen, read-only registry. By default (`duplicates: 'override'`) a later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. With `duplicates: 'error'` a repeated `$type` throws a [`RegistryError`](#registryerror) (`'duplicate-type'`) `<kind> '<$type>' is registered twice.` before any schema is checked; use it for a catalog where a repeat is always a mistake. Throws `'invalid-schema'`, `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).`, when a winning registration's schema is not a Standard Schema; an overridden registration is not checked. The registry stores a frozen shallow copy of each winner and leaves the objects you passed untouched.
+Builds a frozen, read-only registry. `options.hint` is a sentence that ends the message of a `$type` the registry does not answer, such as where to register it; it is the registry's [`hint`](#readonlyregistry), so `safeParseNode`, `safeParseTree` and `parseActions` report it. By default (`duplicates: 'override'`) a later registration with the same `$type` replaces an earlier one without a warning and keeps its first position. With `duplicates: 'error'` a repeated `$type` throws a [`RegistryError`](#registryerror) (`'duplicate-type'`) `<kind> '<$type>' is registered twice.` before any schema is checked; use it for a catalog where a repeat is always a mistake. Throws `'invalid-schema'`, `<kind> '<$type>' schema must implement Standard Schema (~standard.validate).`, when a winning registration's schema is not a Standard Schema; an overridden registration is not checked. The registry stores a frozen shallow copy of each winner and leaves the objects you passed untouched.
 
 It also checks each winner's [`childPaths`](#childpath) as data and in the types. At run time, each entry must be an object with only `keys` and `accepts`; `keys` a non-empty list of non-empty strings; `accepts`, when present, a non-empty list of non-empty names without repeats, or it throws `'invalid-child-paths'`. Two entries with the same keys are `'duplicate-child-path'`, and a path that runs through another is `'nested-child-path'`. Paths are compared key by key, so `['a.b']` and `['a', 'b']` are two paths. No check asks whether an `accepts` name is registered: a registry is not always a document's whole vocabulary, so [`safeParseTree`](#safeparsetree) checks the names against the lookup it gets, in the types. In the types, a registration whose schema output does not declare a key of a child path is an error that names it (`Property 'childPathNotInSchema' is missing`, with the `$type` and the keys), and so is an entry with a property other than `keys` and `accepts`, such as `accept` (`childPathUnknownProperty`, with the `$type` and the property). A key that a loose schema allows only through its index signature does not count as declared, and a schema whose output type cannot be read (`unknown`, a plain `StandardSchemaV1`) is not checked. The parent schema declares every child key, so the exported JSON Schema shows the whole node.
 
@@ -31,6 +32,7 @@ It also checks each winner's [`childPaths`](#childpath) as data and in the types
 | Member     | Returns                      | Description                              |
 | ---------- | ---------------------------- | ---------------------------------------- |
 | `kind`     | `string`                     | The label used in errors                 |
+| `hint`     | `string \| undefined`        | The `hint` option, when one was given    |
 | `size`     | `number`                     | Count of distinct `$type` keys           |
 | `get(key)` | `TRegistration \| undefined` | Gets a registration by `$type`           |
 | `has(key)` | `boolean`                    | Checks if the key exists                 |
@@ -410,7 +412,7 @@ Builds an empty registry for registrations that arrive at runtime, such as a plu
 
 `register` throws a [`RegistryError`](#registryerror) with the codes and messages of `createRegistry`: `'invalid-schema'` for a schema that is not a Standard Schema, and `'invalid-child-paths'`, `'duplicate-child-path'` or `'nested-child-path'` for malformed [`childPaths`](#childpath). The registry is unchanged when `register` throws. In the types, `register` reports a child path the schema does not declare as `childPathNotInSchema` and an unknown child path property as `childPathUnknownProperty`, as `createRegistry` does. An `accepts` name may be a `$type` that is not registered yet: the vocabulary is open, and `safeParseTree` reports a node it cannot find as an issue.
 
-A repeated `$type` replaces the earlier registration without a warning and keeps its first position. With `{ duplicates: 'error' }` it throws `'duplicate-type'`, and the first registration stays. The registry logs nothing: call `has` before `register` to warn about an override. The key is always `$type`.
+`createMutableRegistry` takes the same `options`: `hint` is the registry's `hint`. A repeated `$type` replaces the earlier registration without a warning and keeps its first position. With `{ duplicates: 'error' }` it throws `'duplicate-type'`, and the first registration stays. The registry logs nothing: call `has` before `register` to warn about an override. The key is always `$type`.
 
 ## Types
 
