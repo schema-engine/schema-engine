@@ -45,7 +45,7 @@ function registryElementTypes(): string[] {
 }
 
 describe('the validation rules the docs list', () => {
-	const registered = createFormEngine({ elements: [] }).getValidationRegistry();
+	const registered = createFormEngine({ elements: [] }).validations;
 
 	test('the count the pages state is the number of rules the engine registers', () => {
 		for (const page of ['forms/overview', 'forms/validation', 'forms/getting-started']) {

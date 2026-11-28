@@ -32,9 +32,9 @@ import { textRegistration } from './engine';
 
 export const appEngine = createFormEngine({ elements: [textRegistration], validations: [postalCode] });
 
-export const elementTypes = appEngine.getAllElements().map(({ $type }) => $type);
+export const elementTypes = appEngine.elements.all().map(({ $type }) => $type);
 
-export const ruleTypes = appEngine.getValidationRegistry().keys();
+export const ruleTypes = appEngine.validations.keys();
 ```
 
 Registrations are stored by `$type`, and a later one replaces an earlier one with no warning, so a list ending in your own replaces a built-in. A schema that is not a Standard Schema (no `~standard.validate`) throws at build, naming the kind and the `$type`. The registries are read-only and frozen, and the objects you passed are left untouched, so there is no `register` or `clear` after the build. A registry of your own, outside a form engine, is in `registry.md`.
@@ -43,7 +43,7 @@ Every registration is `{ $type, schema, metadata }` (an element also has a `kind
 
 The engine builds four registries from `createFormEngine`: `elements` (`defineInput` for a field, `defineStatic` for display-only content), `recipes`, `actions` and `validations`. `elements` and `recipes` are for the renderer, `actions` for the runtime and `validations` for the container. Authors supply the schema's input and renderers receive its output, so register elements with `defineInput` (which also takes the `value` the control writes) and `defineStatic`, which keep the two apart.
 
-The engine lists what it holds with `getAllElements()`, `getAllRecipes()` and `getAllActions()`, looks one up with `getElement($type)`, `getRecipe($type)` and `getAction($type)`, and exposes its rules as `getValidationRegistry()`, itself a read-only registry. `engine.generateFormConfigSchema()` exports a JSON Schema of the form config for editors, agents and other tools. The export reads the schema of every registration (element, action, rule and recipe slot) the same way: a Zod schema (classic or Mini) through the Zod converter, any other schema that sets `~standard.jsonSchema` as what its `input()` or `output()` returns (ArkType does; Valibot and Effect Schema do not without an adapter), and any other schema as an open object listed by its `$type` or, for a recipe slot, its appearance axes. A hand-written schema exports exactly when it adds `~standard.jsonSchema`. The export drops that schema's `$schema`, moves a recursive one (a root `$ref` with `$defs`) to where its references resolve, and lists it by its shape when its converter throws for the target (ArkType for `openapi-3.0`). The engine never changes after it is built: `engine.extend({ ... })` returns a new one.
+The engine exposes what it holds as four read-only registries, `engine.elements`, `engine.recipes`, `engine.actions` and `engine.validations`, each with `get($type)`, `has($type)`, `all()`, `keys()`, `size` and `kind` (`all()` and `keys()` return frozen arrays). `engine.actions` is a lookup the actions package takes as it is: `new ActionDispatcher(engine.actions)`. `engine.generateFormConfigSchema()` exports a JSON Schema of the form config for editors, agents and other tools. The export reads the schema of every registration (element, action, rule and recipe slot) the same way: a Zod schema (classic or Mini) through the Zod converter, any other schema that sets `~standard.jsonSchema` as what its `input()` or `output()` returns (ArkType does; Valibot and Effect Schema do not without an adapter), and any other schema as an open object listed by its `$type` or, for a recipe slot, its appearance axes. A hand-written schema exports exactly when it adds `~standard.jsonSchema`. The export drops that schema's `$schema`, moves a recursive one (a root `$ref` with `$defs`) to where its references resolve, and lists it by its shape when its converter throws for the target (ArkType for `openapi-3.0`). The engine never changes after it is built: `engine.extend({ ... })` returns a new one.
 
 ### Registering a widget
 
@@ -107,7 +107,7 @@ A hidden or disabled field, and every field of a skipped step, takes no part: it
 
 ## Container
 
-`createFormStateContainer({ config, registry, defaults?, snapshot? })` builds the state of a form with no framework. `config` is the normalized form and `registry` is `engine.getValidationRegistry()`. The runtime and both renderers build theirs for you; build one directly for a server check, a script or a renderer of your own.
+`createFormStateContainer({ config, registry, defaults?, snapshot? })` builds the state of a form with no framework. `config` is the normalized form and `registry` is `engine.validations`. The runtime and both renderers build theirs for you; build one directly for a server check, a script or a renderer of your own.
 
 ```ts title="forms/container.ts"
 import { createFormStateContainer } from '@schema-engine/forms/state-container';
@@ -115,7 +115,7 @@ import { contactForm } from './contact-form';
 import { engine } from './engine';
 
 export function createContactContainer() {
-	return createFormStateContainer({ config: contactForm, registry: engine.getValidationRegistry() });
+	return createFormStateContainer({ config: contactForm, registry: engine.validations });
 }
 
 export async function submitContact(name: string, email: string) {

@@ -76,7 +76,7 @@ describe('a rule type registered with the engine, used in the rules of an elemen
 		const config = engine.validateForm(formWith([{ $type: 'postalCode', country: 'ca', id: 'zip-format' }]));
 		const container = createFormStateContainer({
 			config,
-			registry: engine.getValidationRegistry(),
+			registry: engine.validations,
 			defaults: { zip: 'not a code' },
 		});
 
@@ -214,7 +214,7 @@ describe('a rule whose registration describes its options with a plain object', 
 	test('keeps a warning a warning when the container runs it', async () => {
 		const container = createFormStateContainer({
 			config: zipEngine.validateForm(formWith([authored])),
-			registry: zipEngine.getValidationRegistry(),
+			registry: zipEngine.validations,
 			defaults: { zip: 'abc' },
 		});
 

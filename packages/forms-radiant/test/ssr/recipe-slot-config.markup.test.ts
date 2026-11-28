@@ -30,7 +30,7 @@ test('each block receives only its own slot config', () => {
 	});
 
 	const html = withRadiantServerCustomElementRenderBridge(() =>
-		renderToString(RecipeRenderer({ config, engine, recipe: engine.getRecipe('blocks') }), { mode: 'plain' }),
+		renderToString(RecipeRenderer({ config, engine, recipe: engine.recipes.get('blocks') }), { mode: 'plain' }),
 	);
 
 	const header = html.match(/<se-step-header[^>]*>/)?.[0] ?? '';

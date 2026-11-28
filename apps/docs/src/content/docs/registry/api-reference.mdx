@@ -239,7 +239,7 @@ export function describeNode(node: unknown): string {
 
 `accepts` is checked before the lookup, so a `$type` outside the list is not accepted whether or not it is registered, and the issue names what would fit; an accepted `$type` nothing registers stays `registry/unregistered-type`.
 
-`hint` is optional: a sentence that follows the message of a `$type` `get` does not answer, such as where to register it. With `hint: 'Register it with defineBadge.'`, an unregistered `chip` is `No registration for $type 'chip'. Register it with defineBadge.`. `kind` is the registry's label, which `createRegistry` registries have; `safeParseTree` names it in the `RegistryError` it throws.
+`hint` is optional: a sentence that follows the message of a `$type` `get` does not answer, such as where to register it. With `hint: 'Register it with defineBadge.'`, an unregistered `chip` is `No registration for $type 'chip'. Register it with defineBadge.`. `kind` is the registry's label, the one used in errors, which a registry of either kind has; `safeParseTree` names it in the `RegistryError` it throws.
 
 `unregisteredTypeMessage(type, hint?)` writes that message, for a caller that has to throw for the same case instead of returning an issue.
 

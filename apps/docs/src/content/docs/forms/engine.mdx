@@ -59,7 +59,7 @@ Duplicate `$type` values follow last-wins semantics, with no warning, so `[...de
 
 ### What the engine registers
 
-`createFormEngine` builds one read-only registry per kind, from the lists you pass:
+`createFormEngine` builds one read-only registry per kind, from the lists you pass, and the engine exposes them as `engine.elements`, `engine.recipes`, `engine.actions` and `engine.validations`. Each has `get($type)`, `has($type)`, `all()`, `keys()`, `size` and `kind`, and `all()` and `keys()` return frozen arrays. `engine.actions` goes straight to `new ActionDispatcher(engine.actions)` and `parseActions(engine.actions, input)`:
 
 | You pass                        | Registry label | Registration                               | Metadata entry id |
 | ------------------------------- | -------------- | ------------------------------------------ | ----------------- |
@@ -255,7 +255,7 @@ The `{ message, path }` shape is a Standard Schema issue, so a YAML loader or an
 
 ## The catalog
 
-The engine records a metadata entry for every element, recipe, action and axis it builds. An entry is `{ id, title, description, componentType, category }`, and its `id` is `<componentType>:<$type>`. `engine.getSchemaCatalog()` returns these entries: they are the metadata the JSON Schema export and the authoring catalog read, so an editor completes a registration you added. They are not the registrations. To list what the engine has registered, use `engine.getAllElements()`, `getAllRecipes()` and `getAllActions()`, and `engine.getValidationRegistry()` for the rules.
+The engine records a metadata entry for every element, recipe, action and axis it builds. An entry is `{ id, title, description, componentType, category }`, and its `id` is `<componentType>:<$type>`. `engine.getSchemaCatalog()` returns these entries: they are the metadata the JSON Schema export and the authoring catalog read, so an editor completes a registration you added. They are not the registrations. To list what the engine has registered, use `engine.elements.all()`, `engine.recipes.all()` and `engine.actions.all()`, and `engine.validations` for the rules.
 
 ```ts
 import { engine } from './engine';
@@ -263,12 +263,12 @@ import { engine } from './engine';
 const catalog = engine.getSchemaCatalog();
 
 export const title = catalog.get('axis:tone')?.title; // 'Tone'
-export const registeredRecipes = engine.getAllRecipes().map((recipe) => recipe.$type);
+export const registeredRecipes = engine.recipes.all().map((recipe) => recipe.$type);
 
 export const jsonSchema = engine.generateFormConfigSchema({ io: 'input' }); // lists the registered $types
 ```
 
-The registration's `metadata.name` is the title, and `metadata.description` and `metadata.category` follow. Validation rules are held in their own registry (`engine.getValidationRegistry()`) and are not catalog entries.
+The registration's `metadata.name` is the title, and `metadata.description` and `metadata.category` follow. Validation rules are held in their own registry (`engine.validations`) and are not catalog entries.
 
 ## Where to go next
 

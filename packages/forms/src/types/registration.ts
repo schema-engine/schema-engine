@@ -4,7 +4,11 @@ import type { ElementMetadata } from './metadata';
 import type { WithNormalizedChildren } from './define-element';
 import type { BuilderActionBaseContext } from './actions.js';
 import type { FormActionTrigger } from '../actions/triggers';
-import type { ActionRegistration, ActionConfigBase } from '@schema-engine/actions';
+import type {
+	ActionRegistration,
+	ActionConfigBase,
+	AnyActionRegistration as ActionsAnyActionRegistration,
+} from '@schema-engine/actions';
 import type { ValidationRegistrationConstraint } from '@/schemas/validation/types';
 import type { AppearanceAxisList, SlotAppearanceAxes } from '@schema-engine/layout';
 
@@ -190,4 +194,4 @@ export type AnyElementRegistration = InputRegistration<string, any, any> | Stati
 export type AnyRecipeRegistration = RecipeRegistration<string, any>;
 
 /** @remarks Runtime action storage erases concrete configuration output checked at registration time. */
-export type AnyActionRegistration = BuilderActionRegistration<string, any>;
+export type AnyActionRegistration = ActionsAnyActionRegistration<BuilderActionBaseContext, FormActionTrigger>;

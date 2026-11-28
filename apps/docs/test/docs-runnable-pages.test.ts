@@ -192,7 +192,7 @@ describe('forms/getting-started', () => {
 	test('the overview rule count is the number of registered rules', () => {
 		const engine = formsPackage.createFormEngine({ elements: [] });
 		const overview = readPage('forms/overview');
-		expect(overview).toContain(`the ${engine.getValidationRegistry().size} validation rules`);
+		expect(overview).toContain(`the ${engine.validations.size} validation rules`);
 	});
 });
 

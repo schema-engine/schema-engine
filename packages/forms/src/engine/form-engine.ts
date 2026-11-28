@@ -1,6 +1,6 @@
 import type { CsrfPolicy, FormFetch } from '@/lib/form-fetch';
 import type { FormIssueFormatter } from '@/state-container/types';
-import type { AnyActionRegistration, AnyElementRegistration, AnyRecipeRegistration } from '@/types/registration';
+import type { AnyRecipeRegistration } from '@/types/registration';
 import type { ActionRegistrationRegistry, ElementRegistry, RecipeRegistry } from '@/registries';
 import { ComponentType } from './component-type';
 import { logger } from '@/lib/logger';
@@ -81,7 +81,6 @@ export class FormEngine<
 	private readonly registries: EngineRegistries;
 	private readonly schemaArtifacts: FormEngineSchemaArtifacts;
 	private readonly layout: LayoutTheme;
-	private readonly validationRegistry: ValidationRegistry;
 	private readonly submissionSchemas = new WeakMap<object, SubmissionSchema>();
 
 	/**
@@ -89,6 +88,27 @@ export class FormEngine<
 	 * with the CSRF policy applied. Bindings and actions use it (`context.fetch`) so no one remembers a token.
 	 */
 	readonly fetch: FormFetch;
+
+	/**
+	 * The registered elements, read-only. `elements.get(id)` finds one, and `all()` and `keys()` list them in
+	 * first-registration order, as frozen arrays.
+	 */
+	readonly elements: ElementRegistry;
+
+	/** The registered view recipes, read-only, with the read side of {@link FormEngine.elements}. */
+	readonly recipes: RecipeRegistry;
+
+	/**
+	 * The registered actions, read-only, with the read side of {@link FormEngine.elements}.
+	 *
+	 * @remarks
+	 * It is a lookup the actions package reads: `new ActionDispatcher(engine.actions)` and
+	 * `parseActions(engine.actions, input)` take it as it is.
+	 */
+	readonly actions: ActionRegistrationRegistry;
+
+	/** The registered validation rules, read-only, which also checks a rule of an element with `check`. */
+	readonly validations: ValidationRegistry;
 
 	/**
 	 * @remarks
@@ -115,45 +135,16 @@ export class FormEngine<
 		this.fetch = registries.fetch;
 		this.schemaArtifacts = registries.schemaArtifacts;
 		this.layout = registries.layout;
-		this.validationRegistry = registries.validationRegistry;
+		this.elements = registries.elements;
+		this.recipes = registries.recipes;
+		this.actions = registries.actions;
+		this.validations = registries.validationRegistry;
 
 		logger.debug('FormEngine initialized', {
 			elements: this.registries.elements.size,
 			recipes: this.registries.recipes.size,
 			actions: this.registries.actions.size,
 		});
-	}
-
-	getElement(id: string): AnyElementRegistration | undefined {
-		return this.registries.elements.get(id);
-	}
-
-	getAllElements(): AnyElementRegistration[] {
-		return [...this.registries.elements.all()];
-	}
-
-	getElementIds(): string[] {
-		return [...this.registries.elements.keys()];
-	}
-
-	hasElement(id: string): boolean {
-		return this.registries.elements.has(id);
-	}
-
-	getRecipe(id: string): AnyRecipeRegistration | undefined {
-		return this.registries.recipes.get(id);
-	}
-
-	getAllRecipes(): AnyRecipeRegistration[] {
-		return [...this.registries.recipes.all()];
-	}
-
-	getRecipeIds(): string[] {
-		return [...this.registries.recipes.keys()];
-	}
-
-	hasRecipe(id: string): boolean {
-		return this.registries.recipes.has(id);
 	}
 
 	/**
@@ -180,39 +171,19 @@ export class FormEngine<
 		return this.registries.csrf;
 	}
 
-	getValidationRegistry(): ValidationRegistry {
-		return this.validationRegistry;
-	}
-
-	getAction(id: string): AnyActionRegistration | undefined {
-		return this.registries.actions.get(id);
-	}
-
-	getAllActions(): AnyActionRegistration[] {
-		return [...this.registries.actions.all()];
-	}
-
-	getActionTypes(): string[] {
-		return [...this.registries.actions.keys()];
-	}
-
-	hasAction(id: string): boolean {
-		return this.registries.actions.has(id);
-	}
-
 	getSummary() {
 		return {
 			elements: {
 				count: this.registries.elements.size,
-				ids: this.getElementIds(),
+				ids: [...this.elements.keys()],
 			},
 			recipes: {
 				count: this.registries.recipes.size,
-				ids: this.getRecipeIds(),
+				ids: [...this.recipes.keys()],
 			},
 			actions: {
 				count: this.registries.actions.size,
-				types: this.getActionTypes(),
+				types: [...this.actions.keys()],
 			},
 		};
 	}
@@ -286,11 +257,11 @@ export class FormEngine<
 		return {
 			values,
 			owner: this,
-			getRecipe: (id: string) => this.getRecipe(id),
+			recipes: this.recipes,
 			defaultWizardRecipe: this.registries.defaultWizardRecipe,
-			getElement: (id: string) => this.getElement(id),
-			getAction: (id: string) => this.getAction(id),
-			checkRule: (rule: { $type: string }) => this.validationRegistry.check(rule),
+			elements: this.elements,
+			actions: this.actions,
+			checkRule: (rule: { $type: string }) => this.validations.check(rule),
 			axes: this.layout.axes,
 		};
 	}
@@ -346,10 +317,7 @@ export class FormEngine<
 	submissionSchema(config: SubmissionSchemaConfig): SubmissionSchema {
 		const known = this.submissionSchemas.get(config);
 		if (known) return known;
-		const created = createSubmissionSchema(config, {
-			getElement: (id) => this.getElement(id),
-			validationRegistry: this.validationRegistry,
-		});
+		const created = createSubmissionSchema(config, { elements: this.elements, validations: this.validations });
 		this.submissionSchemas.set(config, created);
 		return created;
 	}
@@ -361,14 +329,14 @@ export class FormEngine<
 	 */
 	validateElement(config: unknown): NormalizedElementConfig<TOutputs['elements']> {
 		return validateElementConfig(config, {
-			getElement: (id) => this.getElement(id),
-			checkRule: (rule) => this.validationRegistry.check(rule),
+			elements: this.elements,
+			checkRule: (rule) => this.validations.check(rule),
 			axes: this.layout.axes,
 		}) as unknown as NormalizedElementConfig<TOutputs['elements']>;
 	}
 
 	describeRecipe($type: string): RecipeDescriptor {
-		const recipe = this.getRecipe($type);
+		const recipe = this.recipes.get($type);
 		if (!recipe) {
 			throw new Error(`Unknown recipe '${$type}'. Register it with createFormEngine({ recipes: [...] }).`);
 		}
@@ -376,7 +344,7 @@ export class FormEngine<
 	}
 
 	describeViewCatalog(): ViewCatalog {
-		return describeViewCatalogFromRecipes(this.getAllRecipes(), (r) => this.generateRecipeViewSchema(r));
+		return describeViewCatalogFromRecipes(this.recipes.all(), (r) => this.generateRecipeViewSchema(r));
 	}
 
 	getAuthoringInstructions(): string {
@@ -492,9 +460,9 @@ export class FormEngine<
 		TAppearance
 	> {
 		return buildFormEngine({
-			elements: [...this.getAllElements(), ...(options?.elements ?? [])],
-			recipes: [...this.getAllRecipes(), ...(options?.recipes ?? [])],
-			actions: [...this.getAllActions(), ...(options?.actions ?? [])],
+			elements: [...this.elements.all(), ...(options?.elements ?? [])],
+			recipes: [...this.recipes.all(), ...(options?.recipes ?? [])],
+			actions: [...this.actions.all(), ...(options?.actions ?? [])],
 			validations: [...this.registries.validations, ...(options?.validations ?? [])],
 			catalog: options?.catalog ?? this.schemaArtifacts.metadataCatalog,
 			layout: this.layout,

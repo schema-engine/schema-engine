@@ -13,14 +13,16 @@ import { fromSchemaIssues } from './schema-issues';
  */
 export function parseOwnerActions(
 	items: Array<FormTaggedConfig | FormTaggedConfig[]> | undefined,
-	options: Pick<ValidateFormOptions, 'getAction'>,
+	options: Pick<ValidateFormOptions, 'actions'>,
 	ownerPath: Path,
 ): { issues: FormValidationIssue[]; items?: ParsedActionSequence } {
 	if (!items) return { issues: [] };
 	const result = parseActions(
-		{ get: options.getAction, hint: 'Register it with createFormEngine({ actions: [...] }).' },
+		{ ...options.actions, hint: 'Register it with createFormEngine({ actions: [...] }).' },
 		items,
-		{ triggers: FormActionTriggerSchema.options },
+		{
+			triggers: FormActionTriggerSchema.options,
+		},
 	);
 	if (!result.success) return { issues: fromSchemaIssues(result.issues, [...ownerPath, 'actions']) };
 	return { issues: [], items: result.data };

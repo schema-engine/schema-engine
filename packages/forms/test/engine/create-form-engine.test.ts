@@ -31,9 +31,9 @@ const noteElement = defineInput({
 describe('createFormEngine', () => {
 	test('creates an empty engine by default', () => {
 		const engine = createFormEngine();
-		expect(engine.getElementIds()).toEqual([]);
-		expect(engine.getRecipeIds()).toEqual([]);
-		expect(engine.getActionTypes()).toEqual([]);
+		expect(engine.elements.keys()).toEqual([]);
+		expect(engine.recipes.keys()).toEqual([]);
+		expect(engine.actions.keys()).toEqual([]);
 	});
 
 	test('registers elements, recipes, and actions from options', () => {
@@ -52,8 +52,8 @@ describe('createFormEngine', () => {
 			recipes: [cardRecipe],
 		});
 
-		expect(engine.hasElement('note')).toBe(true);
-		expect(engine.hasRecipe('card')).toBe(true);
+		expect(engine.elements.has('note')).toBe(true);
+		expect(engine.recipes.has('card')).toBe(true);
 	});
 
 	test('rejects a hand-written wizard registration without an actions slot', () => {
@@ -79,7 +79,7 @@ describe('createFormEngine', () => {
 			render: {},
 		} as const;
 
-		expect(createFormEngine({ recipes: [wizard] }).hasRecipe('hand-wizard')).toBe(true);
+		expect(createFormEngine({ recipes: [wizard] }).recipes.has('hand-wizard')).toBe(true);
 	});
 
 	test('rejects a hand-written single-step registration with a progress slot', () => {
@@ -113,7 +113,7 @@ describe('createFormEngine', () => {
 
 		const engine = createFormEngine({ elements: [first, second] });
 
-		expect(engine.getElement('note')?.metadata.name).toBe('Second note');
+		expect(engine.elements.get('note')?.metadata.name).toBe('Second note');
 	});
 
 	test('registers element validations on the engine validation registry', () => {
@@ -145,7 +145,7 @@ describe('createFormEngine', () => {
 		});
 
 		const engine = createFormEngine({ elements: [phoneElement] });
-		const registry = engine.getValidationRegistry();
+		const registry = engine.validations;
 
 		expect(registry.has('phone')).toBe(true);
 		expect(getValidationRulesForElement({ $type: 'phone-input' }, registry)).toEqual([{ $type: 'phone' }]);
@@ -184,8 +184,8 @@ describe('createFormEngine', () => {
 		const engineA = createFormEngine({ elements: [leakElement] });
 		const engineB = createFormEngine({ elements: [] });
 
-		expect(engineA.getValidationRegistry().has('custom-leak-test')).toBe(true);
-		expect(engineB.getValidationRegistry().has('custom-leak-test')).toBe(false);
+		expect(engineA.validations.has('custom-leak-test')).toBe(true);
+		expect(engineB.validations.has('custom-leak-test')).toBe(false);
 	});
 });
 
@@ -208,9 +208,9 @@ describe('FormEngine.extend', () => {
 			elements: [textareaElement],
 		});
 
-		expect(base.hasElement('textarea')).toBe(false);
-		expect(extended.hasElement('note')).toBe(true);
-		expect(extended.hasElement('textarea')).toBe(true);
+		expect(base.elements.has('textarea')).toBe(false);
+		expect(extended.elements.has('note')).toBe(true);
+		expect(extended.elements.has('textarea')).toBe(true);
 	});
 
 	test('preserves the layout theme and its stylesheet', () => {
@@ -242,7 +242,7 @@ test('extend preserves an explicitly supplied metadata catalog', () => {
 	expect(after.schemas).toHaveProperty('custom:metadata', before.schemas['custom:metadata']);
 	expect(after.schemas).toHaveProperty('element:note');
 	expect(catalog.getRegisteredSchemas()).toHaveLength(1);
-	expect(extended.hasElement('note')).toBe(true);
+	expect(extended.elements.has('note')).toBe(true);
 });
 
 test('a supplied catalog is copied and gains every registration entry', () => {

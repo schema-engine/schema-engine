@@ -46,7 +46,7 @@ export function FormElement({ config, name, id, instanceId, className, style }: 
 
 	const { $type } = config;
 
-	const elementRegistration = engine.getElement($type);
+	const elementRegistration = engine.elements.get($type);
 
 	if (!elementRegistration) {
 		return (

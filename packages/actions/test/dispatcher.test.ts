@@ -4,7 +4,7 @@ import { parsed } from './parsed';
 import { ActionDispatcher } from '../src/dispatcher';
 import { Logger } from '@ecopages/logger';
 import { createMutableRegistry } from '@schema-engine/registry';
-import type { ActionRegistration, ActionConfigBase } from '../src/types';
+import type { ActionRegistration, ActionConfigBase, AnyActionRegistration } from '../src/types';
 
 type TestTrigger = 'submit' | 'change';
 
@@ -248,4 +248,41 @@ test('an action with no registration is reported with its id and the kind of the
 		registry: 'Action',
 	});
 	error.mockRestore();
+});
+
+test('one mutable registry holds actions of different configs and the dispatcher runs both', async () => {
+	interface AuditConfig extends ActionConfigBase<'audit'> {
+		note: string;
+	}
+	interface PingConfig extends ActionConfigBase<'ping'> {
+		url: string;
+	}
+	const registry = createMutableRegistry<AnyActionRegistration<TestContext, TestTrigger>>('Action');
+	registry.register({
+		$type: 'audit',
+		schema: z.object({ note: z.string() }),
+		metadata: { name: 'Audit', defaultTriggers: ['submit'] },
+		execute: ({ config }: { config: AuditConfig }) => ({ success: true, data: config.note }),
+	});
+	registry.register({
+		$type: 'ping',
+		schema: z.object({ url: z.string() }),
+		metadata: { name: 'Ping', defaultTriggers: ['submit'] },
+		execute: ({ config }: { config: PingConfig }) => ({ success: true, data: config.url }),
+	});
+	const dispatcher = new ActionDispatcher(registry);
+
+	expect(
+		await dispatcher.dispatch({
+			actions: parsed([
+				{ id: 'a', $type: 'audit', note: 'checked' },
+				{ id: 'b', $type: 'ping', url: '/health' },
+			]),
+			trigger: 'submit',
+			context: { id: 'ctx' },
+		}),
+	).toMatchObject([
+		{ actionId: 'a', data: 'checked' },
+		{ actionId: 'b', data: '/health' },
+	]);
 });

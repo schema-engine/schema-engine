@@ -47,7 +47,7 @@ test('the documented IBAN rule accepts a valid IBAN and rejects a changed digit 
 	expect(isValidIban('DE89370400440532013000')).toBe(true);
 	expect(isValidIban('GB82 WEST 1234 5698 7654 33')).toBe(false);
 	expect(isValidIban('not an iban')).toBe(false);
-	const schema = engine.getValidationRegistry().createSchema({ $type: 'iban' }, createValidationContext());
+	const schema = engine.validations.createSchema({ $type: 'iban' }, createValidationContext());
 	expect(schema?.safeParse('GB82 WEST 1234 5698 7654 32').success).toBe(true);
 	expect(schema?.safeParse('GB82 WEST 1234 5698 7654 33').success).toBe(false);
 });
@@ -75,12 +75,13 @@ test('the documented username rule reports a taken name, and a failed request is
 	const exports: Record<string, unknown> = {};
 	runInThisRealm(example('## A custom async rule'), exports, (name: string) => modules[name]);
 	const { engine } = exports as { engine: ReturnType<typeof createFormEngine> };
-	const registration = engine.getValidationRegistry().get('uniqueUsername');
+	const registration = engine.validations.get('uniqueUsername');
 	if (!registration) throw new Error('uniqueUsername is not registered');
 	const check = (fetch: FormFetch) => {
-		const schema = createFormEngine({ validations: [registration], fetch })
-			.getValidationRegistry()
-			.createSchema({ $type: 'uniqueUsername' }, createValidationContext());
+		const schema = createFormEngine({ validations: [registration], fetch }).validations.createSchema(
+			{ $type: 'uniqueUsername' },
+			createValidationContext(),
+		);
 		if (!schema) throw new Error('uniqueUsername is not registered');
 		return schema.safeParseAsync('ada');
 	};
@@ -126,7 +127,7 @@ test('the documented form uses a registered rule in the rules of an element, and
 	};
 	const rule = { $type: 'postalCode', country: 'ca', message: 'Enter a Canadian postal code' };
 	expect(form.steps[0]?.elements[0]?.rules).toEqual([rule]);
-	const registry = engine.getValidationRegistry();
+	const registry = engine.validations;
 	expect(registry.getRuleParams(rule)).toEqual({ country: 'ca' });
 	expect(registry.getRuleMessage(rule, 'text the schema reported')).toBe('Enter a Canadian postal code');
 	expect(registry.getRuleMessage({ $type: 'postalCode' }, 'text the schema reported')).toBeUndefined();
@@ -197,7 +198,7 @@ function runPattern(heading: string, index = 0): Record<string, any> {
 
 test('the confirm password rule reads its sibling through the context and declares what it reads', () => {
 	const { engine } = runPattern('## Rules that read other fields');
-	const registry = engine.getValidationRegistry();
+	const registry = engine.validations;
 	const parse = (value: unknown) =>
 		registry
 			.createSchema(

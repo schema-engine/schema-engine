@@ -1,6 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type { FormConfigView } from '@/lib/normalized-form-config';
 import { stepAfter, stepBefore, type FormStepState } from '@/engine/step-machine';
+import type { RecipeRegistry } from '@/registries';
 import type { AnyRecipeRegistration } from '@/types/registration';
 import { readSlotConfig, type RecipeViewModel } from '@schema-engine/layout';
 import type { RecipeKind, RecipeSlot } from './types';
@@ -74,11 +75,11 @@ export function getSlotConfig<TSchema extends StandardSchemaV1>(
  * loudly instead of rendering without chrome.
  */
 export function getViewRecipe(
-	engine: { getRecipe(id: string): AnyRecipeRegistration | undefined },
+	engine: { readonly recipes: RecipeRegistry },
 	config: { id: string; view?: { $type: string } },
 ): AnyRecipeRegistration | undefined {
 	if (!config.view) return undefined;
-	const recipe = engine.getRecipe(config.view.$type);
+	const recipe = engine.recipes.get(config.view.$type);
 	if (!recipe) {
 		throw new Error(`Form '${config.id}' uses view '${config.view.$type}' but the engine has no such recipe.`);
 	}

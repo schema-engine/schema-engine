@@ -196,13 +196,11 @@ export function createFormRuntime<TAction extends FormActionConfig, TValues exte
 	const defaults = withoutMismatchedDefaults(derivedSchema, options.defaults ?? {});
 	const container = createFormStateContainer({
 		config,
-		registry: engine.getValidationRegistry(),
+		registry: engine.validations,
 		defaults: collectInitialValues(flattenStepElements(config.steps), defaults),
 		snapshot: options.snapshot,
 	});
-	const dispatcher = new ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>({
-		get: (type) => engine.getAction(type),
-	});
+	const dispatcher = new ActionDispatcher<BuilderActionBaseContext, FormActionTrigger>(engine.actions);
 	const mountedAt = Date.now();
 	const mode = config.navigation ?? 'linear';
 	const firstStep = config.steps[0]?.id ?? '';

@@ -39,7 +39,7 @@ An unregistered `$type` reads `No registration for $type '<type>'. Register it i
 
 ```typescript
 class ActionDispatcher<TBaseContext = unknown, TTrigger = string> {
-	constructor(registry: NodeLookup<ActionRegistration<any, TBaseContext, TTrigger>>);
+	constructor(registry: NodeLookup<AnyActionRegistration<TBaseContext, TTrigger>>);
 
 	dispatch<TConfig extends ActionConfigBase>(
 		input: ActionDispatchInput<TConfig, TBaseContext, TTrigger>,
@@ -76,6 +76,12 @@ interface ActionRegistration<
 Zod Mini, Zod, Valibot, and Effect Schema values implement Standard Schema and remain valid `schema` values.
 
 `execute` receives an `ActionRuntimeContext`: the caller-provided `TBaseContext` enriched with `config`, `trigger` and `signal` by the dispatcher.
+
+```typescript
+type AnyActionRegistration<TBaseContext = unknown, TTrigger = string> = ActionRegistration<any, TBaseContext, TTrigger>;
+```
+
+`AnyActionRegistration` is an action registration of any config shape. It types a registry that holds actions of several configs, such as `createMutableRegistry<AnyActionRegistration<Context, Trigger>>('Action')`, and it is the registration type `ActionDispatcher` takes.
 
 ## ActionRuntimeContext
 

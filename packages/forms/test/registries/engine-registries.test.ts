@@ -60,8 +60,8 @@ describe('engine registries', () => {
 				actions: [logAction, logAction],
 			});
 
-			expect(engine.getElement('note')?.metadata.name).toBe('Override');
-			expect(engine.getAllElements()).toHaveLength(1);
+			expect(engine.elements.get('note')?.metadata.name).toBe('Override');
+			expect(engine.elements.all()).toHaveLength(1);
 			expect(JSON.stringify(spy.mock.calls)).not.toContain('Overriding');
 		});
 	});
@@ -96,9 +96,9 @@ describe('engine registries', () => {
 		test('freezes the registrations the engine stores', () => {
 			const engine = createFormEngine({ elements: [noteElement], recipes: [cardRecipe], actions: [logAction] });
 
-			expect(Object.isFrozen(engine.getElement('note'))).toBe(true);
-			expect(Object.isFrozen(engine.getRecipe('card'))).toBe(true);
-			expect(Object.isFrozen(engine.getAction('log'))).toBe(true);
+			expect(Object.isFrozen(engine.elements.get('note'))).toBe(true);
+			expect(Object.isFrozen(engine.recipes.get('card'))).toBe(true);
+			expect(Object.isFrozen(engine.actions.get('log'))).toBe(true);
 		});
 
 		test('leaves the registrations it was given assignable, but the engine uses its build-time snapshot', async () => {
@@ -113,9 +113,9 @@ describe('engine registries', () => {
 			const spy = vi.spyOn(action, 'execute');
 			action.metadata = { name: 'Renamed', defaultTriggers: ['form_submit'] };
 
-			await engine.getAction('log')?.execute(context);
+			await engine.actions.get('log')?.execute(context);
 			expect(spy).not.toHaveBeenCalled();
-			expect(engine.getAction('log')?.metadata.name).toBe('Log');
+			expect(engine.actions.get('log')?.metadata.name).toBe('Log');
 		});
 
 		test('uses a spy installed before the engine is built', async () => {
@@ -126,7 +126,9 @@ describe('engine registries', () => {
 			const spy = vi.spyOn(action, 'execute');
 			const engine = createFormEngine({ actions: [action] });
 
-			await engine.getAction('log')?.execute({} as BuilderActionRuntimeContext<z.output<typeof logActionSchema>>);
+			await engine.actions
+				.get('log')
+				?.execute({} as BuilderActionRuntimeContext<z.output<typeof logActionSchema>>);
 
 			expect(spy).toHaveBeenCalledTimes(1);
 		});
@@ -135,9 +137,9 @@ describe('engine registries', () => {
 			const base = createFormEngine({ elements: [noteElement] });
 			const extended = base.extend({ actions: [logAction] });
 
-			expect(base.hasAction('log')).toBe(false);
-			expect(extended.hasAction('log')).toBe(true);
-			expect(extended.hasElement('note')).toBe(true);
+			expect(base.actions.has('log')).toBe(false);
+			expect(extended.actions.has('log')).toBe(true);
+			expect(extended.elements.has('note')).toBe(true);
 		});
 	});
 
@@ -151,13 +153,53 @@ describe('engine registries', () => {
 		test('the same recipe overridden later by a valid one builds', () => {
 			const engine = createFormEngine({ recipes: [invalidRecipe as never, validRecipe] });
 
-			expect(engine.getRecipe('card')?.metadata.name).toBe('Valid card');
+			expect(engine.recipes.get('card')?.metadata.name).toBe('Valid card');
 		});
 
 		test('an overridden recipe with a non-Standard Schema schema builds', () => {
 			const engine = createFormEngine({ recipes: [{ ...cardRecipe, schema: {} } as never, validRecipe] });
 
-			expect(engine.getRecipeIds()).toEqual(['card']);
+			expect(engine.recipes.keys()).toEqual(['card']);
+		});
+	});
+
+	describe('Scenario: The engine exposes its registries as properties', () => {
+		const engine = createFormEngine({ elements: [noteElement], recipes: [cardRecipe], actions: [logAction] });
+
+		test('each is a read-only registry with its kind', () => {
+			expect([engine.elements.kind, engine.recipes.kind, engine.actions.kind, engine.validations.kind]).toEqual([
+				'Element',
+				'Recipe',
+				'Action',
+				'Validation',
+			]);
+			expect(engine.elements.keys()).toEqual(['note']);
+			expect(engine.recipes.has('card')).toBe(true);
+			expect(engine.actions.get('log')?.metadata.name).toBe('Log');
+		});
+
+		test('all() and keys() return frozen arrays', () => {
+			expect(Object.isFrozen(engine.elements.all())).toBe(true);
+			expect(Object.isFrozen(engine.recipes.keys())).toBe(true);
+			expect(Object.isFrozen(engine.actions.all())).toBe(true);
+		});
+
+		test.each([
+			'getElement',
+			'getAllElements',
+			'getElementIds',
+			'hasElement',
+			'getRecipe',
+			'getAllRecipes',
+			'getRecipeIds',
+			'hasRecipe',
+			'getAction',
+			'getAllActions',
+			'getActionTypes',
+			'hasAction',
+			'getValidationRegistry',
+		])('has no %s method', (name) => {
+			expect(engine).not.toHaveProperty(name);
 		});
 	});
 });

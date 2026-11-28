@@ -31,7 +31,7 @@ const render = (view: Record<string, unknown>) => {
 		steps: [{ id: 'one', title: 'One', elements: [] }],
 	});
 	return withRadiantServerCustomElementRenderBridge(() =>
-		renderToString(RecipeRenderer({ config, engine, recipe: engine.getRecipe('valibot-header') }), {
+		renderToString(RecipeRenderer({ config, engine, recipe: engine.recipes.get('valibot-header') }), {
 			mode: 'plain',
 		}),
 	);

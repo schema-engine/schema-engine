@@ -3,8 +3,8 @@ import type {
 	ActionDispatchInput,
 	ActionDispatchResult,
 	ActionExecutionResult,
-	ActionRegistration,
 	ActionSequenceEntry,
+	AnyActionRegistration,
 	ParsedAction,
 	ParsedActionSequence,
 } from './types';
@@ -26,13 +26,6 @@ function isGroup<T extends ActionConfigBase>(entry: ActionSequenceEntry<T>): ent
 function isCancellation(error: unknown, signal: AbortSignal): boolean {
 	return signal.aborted && error instanceof Error && error.name === 'AbortError';
 }
-
-/**
- * @remarks
- * A registry holds actions of many config shapes, so the config type is an existential placeholder: `any` is the one
- * type every `ActionRegistration<TConfig, ...>` is assignable to, whatever its `TConfig`.
- */
-type AnyActionRegistration<TBaseContext, TTrigger> = ActionRegistration<any, TBaseContext, TTrigger>;
 
 type ActionMatch<TBaseContext, TTrigger> =
 	{ runs: false } | { runs: true; registration: AnyActionRegistration<TBaseContext, TTrigger> | undefined };

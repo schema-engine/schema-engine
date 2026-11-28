@@ -3,7 +3,7 @@ import { contactForm } from './contact-form';
 import { engine } from './engine';
 
 export function createContactContainer() {
-	return createFormStateContainer({ config: contactForm, registry: engine.getValidationRegistry() });
+	return createFormStateContainer({ config: contactForm, registry: engine.validations });
 }
 
 export async function submitContact(name: string, email: string) {

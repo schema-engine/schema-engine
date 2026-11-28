@@ -13,7 +13,7 @@ import type { JSONSchemaObject } from '@/lib/standard-json-schema';
 import type { ValidationRegistry } from '@/schemas/validation/validation-registry';
 import { getValidationRulesForElement, isFieldRequired } from '@/schemas/validation/utils';
 import type { BaseValidationRule } from '@/schemas/validation/types';
-import type { AnyElementRegistration } from '@/types/registration';
+import type { ElementRegistry } from '@/registries';
 
 /**
  * The submitted values of a form, as a Standard Schema, and as a Standard JSON Schema where its value schemas can say so.
@@ -43,8 +43,8 @@ export interface SubmissionSchema<TValues = Readonly<Record<string, unknown>>>
 
 /** What the composer needs of an engine: the element registrations and the validation rules. */
 export interface SubmissionSchemaSource {
-	getElement(id: string): AnyElementRegistration | undefined;
-	readonly validationRegistry: ValidationRegistry;
+	readonly elements: ElementRegistry;
+	readonly validations: ValidationRegistry;
 }
 
 /** What it reads of the form config: its steps and its payload. */
@@ -92,7 +92,7 @@ function requiredOf(shape: SubmissionShape, source: SubmissionSchemaSource, insi
 		isFieldRequired(
 			getValidationRulesForElement(
 				element as { $type?: string; rules?: readonly BaseValidationRule[] },
-				source.validationRegistry,
+				source.validations,
 			),
 		);
 	return ruled || inside;
@@ -107,7 +107,7 @@ function describeElement(element: ShapeElement | undefined): { description?: str
 
 function leafOf(shape: Extract<SubmissionShape, { kind: 'field' }>, source: SubmissionSchemaSource): Node {
 	const { element } = shape;
-	const registration = element.$type ? source.getElement(element.$type) : undefined;
+	const registration = element.$type ? source.elements.get(element.$type) : undefined;
 	const schema = registration && 'value' in registration ? registration.value?.(element as never) : undefined;
 	if (schema === undefined) return { kind: 'any' };
 	return {

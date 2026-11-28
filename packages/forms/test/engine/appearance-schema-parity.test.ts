@@ -153,7 +153,7 @@ describe('the JSON Schema and validation accept the same appearance picks', () =
 			});
 
 			test('exactly the declared axes are accepted', () => {
-				const declared = engine.getElement($type)?.appearanceAxes ?? [];
+				const declared = engine.elements.get($type)?.appearanceAxes ?? [];
 				const allowed = Object.keys(axes).filter(
 					(axis) =>
 						accepted(formWith({ $type, id: 'a', name: 'a', appearance: { [axis]: axes[axis][0] } }))

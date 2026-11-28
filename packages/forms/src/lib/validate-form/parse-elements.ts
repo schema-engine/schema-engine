@@ -12,8 +12,8 @@ import { containerKindOf } from '@/lib/container-kind-of';
 import { ENGINE_KEY_PREFIX, isReservedPathKey } from '@/lib/reserved-path-keys';
 
 /** Finds an element by `$type` for `safeParseNode`, and says where to register one nothing answers. */
-function elementLookup(getElement: ValidateFormOptions['getElement']): NodeLookup<ElementRegistration> {
-	return { get: getElement, hint: 'Register it with createFormEngine({ elements: [...] }).' };
+function elementLookup(elementRegistry: ValidateFormOptions['elements']): NodeLookup<ElementRegistration> {
+	return { ...elementRegistry, hint: 'Register it with createFormEngine({ elements: [...] }).' };
 }
 
 /**
@@ -61,7 +61,7 @@ type ParsedElement = { issues: FormValidationIssue[]; item?: undefined } | { iss
 
 export function parseElementNode(
 	item: unknown,
-	getElement: ValidateFormOptions['getElement'],
+	elementRegistry: ValidateFormOptions['elements'],
 	checkRule: ValidateFormOptions['checkRule'],
 	path: Path,
 	appearance: AppearanceScope,
@@ -84,7 +84,7 @@ export function parseElementNode(
 		authoredAppearance = taggedAppearance;
 		node = withoutAppearance;
 	}
-	const parsed = safeParseNode(elementLookup(getElement), node, { path });
+	const parsed = safeParseNode(elementLookup(elementRegistry), node, { path });
 	if (!parsed.success) {
 		return { issues: fromSchemaIssues(parsed.issues, []) };
 	}
@@ -131,7 +131,7 @@ export function parseElementNode(
 	for (let index = 0; index < children.length; index += 1) {
 		const parsedChild = parseElementNode(
 			children[index],
-			getElement,
+			elementRegistry,
 			checkRule,
 			childPath(path, index),
 			childScope,
@@ -154,7 +154,7 @@ export function parseElementNode(
  */
 export function parseElementList(
 	items: unknown[] | undefined,
-	getElement: ValidateFormOptions['getElement'],
+	elementRegistry: ValidateFormOptions['elements'],
 	checkRule: ValidateFormOptions['checkRule'],
 	parentPath: Path,
 	appearance: AppearanceScope,
@@ -165,7 +165,13 @@ export function parseElementList(
 	const byIndex: Array<FormTaggedConfig | undefined> = [];
 	const issues: FormValidationIssue[] = [];
 	for (let index = 0; index < items.length; index += 1) {
-		const parsed = parseElementNode(items[index], getElement, checkRule, childPath(parentPath, index), appearance);
+		const parsed = parseElementNode(
+			items[index],
+			elementRegistry,
+			checkRule,
+			childPath(parentPath, index),
+			appearance,
+		);
 		issues.push(...parsed.issues);
 		byIndex.push(parsed.item);
 		if (parsed.item) next.push(parsed.item);
@@ -175,14 +181,17 @@ export function parseElementList(
 
 export function brandElementTree(
 	config: FormTaggedConfig,
-	getElement: ValidateFormOptions['getElement'],
+	elementRegistry: ValidateFormOptions['elements'],
 ): NormalizedElementConfig {
 	const children = getElementChildren(config);
 	const next = children
 		? withElementChildren(
 				config,
-				children.map((child) => brandElementTree(child as FormTaggedConfig, getElement)),
+				children.map((child) => brandElementTree(child as FormTaggedConfig, elementRegistry)),
 			)
 		: config;
-	return markNormalizedElementConfig(next as unknown as ElementConfig, containerKindOf(getElement(config.$type)));
+	return markNormalizedElementConfig(
+		next as unknown as ElementConfig,
+		containerKindOf(elementRegistry.get(config.$type)),
+	);
 }

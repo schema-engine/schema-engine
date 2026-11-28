@@ -26,7 +26,7 @@ describe('the contact form config', () => {
 
 	test('a support request must carry a ticket in the documented shape, and another subject does not', async () => {
 		const config = reactEngine.validateForm(contactForm);
-		const container = createFormStateContainer({ config, registry: reactEngine.getValidationRegistry() });
+		const container = createFormStateContainer({ config, registry: reactEngine.validations });
 
 		for (const [name, value] of Object.entries({ ...values, subject: 'support' })) container.setValue(name, value);
 		expect((await container.validate()).outcome).toBe('invalid');

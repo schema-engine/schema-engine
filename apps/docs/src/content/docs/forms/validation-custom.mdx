@@ -237,7 +237,7 @@ const postalCode = {
 	handler: () => z.string().check(z.regex(/^\d{5}(?:-\d{4})?$/)),
 } as const;
 
-const registry = createFormEngine({ validations: [postalCode] }).getValidationRegistry();
+const registry = createFormEngine({ validations: [postalCode] }).validations;
 
 describe('postalCode', () => {
 	const schema = registry.createSchema({ $type: 'postalCode' }, createValidationContext());
@@ -266,7 +266,7 @@ The engine's validation registry is read-only. It lists what is registered but h
 ```ts title="registry-status.ts"
 import { engine } from './iban';
 
-const validationRegistry = engine.getValidationRegistry();
+const validationRegistry = engine.validations;
 
 export const hasIban = validationRegistry.has('iban');
 export const types = validationRegistry.keys();

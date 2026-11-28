@@ -16,11 +16,11 @@ describe('Multiple engines type isolation', () => {
 			elements: [InputElementRegistration, TextareaElementRegistration],
 		});
 
-		expect(engine.hasElement('input')).toBe(true);
-		expect(engine.hasElement('textarea')).toBe(true);
-		expect(engine.hasElement('checkbox')).toBe(false);
-		expect(engine.hasElement('select')).toBe(false);
-		expect(engine.hasRecipe('card')).toBe(false);
+		expect(engine.elements.has('input')).toBe(true);
+		expect(engine.elements.has('textarea')).toBe(true);
+		expect(engine.elements.has('checkbox')).toBe(false);
+		expect(engine.elements.has('select')).toBe(false);
+		expect(engine.recipes.has('card')).toBe(false);
 	});
 
 	test('should create an engine with different components', () => {
@@ -33,10 +33,10 @@ describe('Multiple engines type isolation', () => {
 			],
 		});
 
-		expect(engine.hasElement('input')).toBe(true);
-		expect(engine.hasElement('checkbox')).toBe(true);
-		expect(engine.hasElement('select')).toBe(true);
-		expect(engine.hasRecipe('wizard')).toBe(false);
+		expect(engine.elements.has('input')).toBe(true);
+		expect(engine.elements.has('checkbox')).toBe(true);
+		expect(engine.elements.has('select')).toBe(true);
+		expect(engine.recipes.has('wizard')).toBe(false);
 	});
 
 	test('should create two independent engines', () => {
@@ -45,13 +45,13 @@ describe('Multiple engines type isolation', () => {
 			elements: [TextareaElementRegistration, CheckboxElementRegistration],
 		});
 
-		expect(engine1.hasElement('input')).toBe(true);
-		expect(engine1.hasElement('textarea')).toBe(false);
-		expect(engine1.hasElement('checkbox')).toBe(false);
+		expect(engine1.elements.has('input')).toBe(true);
+		expect(engine1.elements.has('textarea')).toBe(false);
+		expect(engine1.elements.has('checkbox')).toBe(false);
 
-		expect(engine2.hasElement('input')).toBe(false);
-		expect(engine2.hasElement('textarea')).toBe(true);
-		expect(engine2.hasElement('checkbox')).toBe(true);
+		expect(engine2.elements.has('input')).toBe(false);
+		expect(engine2.elements.has('textarea')).toBe(true);
+		expect(engine2.elements.has('checkbox')).toBe(true);
 	});
 
 	test('should allow retrieving registered components', () => {
@@ -59,29 +59,29 @@ describe('Multiple engines type isolation', () => {
 			elements: [InputElementRegistration, CheckboxElementRegistration],
 		});
 
-		expect(engine.getElement('input')?.$type).toBe('input');
-		expect(engine.getElement('checkbox')?.$type).toBe('checkbox');
-		expect(engine.getElement('textarea')).toBeUndefined();
-		expect(engine.getRecipe('card')).toBeUndefined();
+		expect(engine.elements.get('input')?.$type).toBe('input');
+		expect(engine.elements.get('checkbox')?.$type).toBe('checkbox');
+		expect(engine.elements.get('textarea')).toBeUndefined();
+		expect(engine.recipes.get('card')).toBeUndefined();
 	});
 
 	test('headless createFormEngine does not register React recipes', () => {
 		const engine = createFormEngine();
 
-		expect(engine.hasElement('input')).toBe(false);
-		expect(engine.hasRecipe('card')).toBe(false);
-		expect(engine.getRecipe('card')).toBeUndefined();
+		expect(engine.elements.has('input')).toBe(false);
+		expect(engine.recipes.has('card')).toBe(false);
+		expect(engine.recipes.get('card')).toBeUndefined();
 	});
 
 	test('should not share element registrations between engines', () => {
 		const engine1 = createFormEngine({ elements: [InputElementRegistration] });
 		const engine2 = createFormEngine({ elements: [TextareaElementRegistration] });
 
-		expect(engine1.hasElement('input')).toBe(true);
-		expect(engine1.hasElement('textarea')).toBe(false);
+		expect(engine1.elements.has('input')).toBe(true);
+		expect(engine1.elements.has('textarea')).toBe(false);
 
-		expect(engine2.hasElement('input')).toBe(false);
-		expect(engine2.hasElement('textarea')).toBe(true);
+		expect(engine2.elements.has('input')).toBe(false);
+		expect(engine2.elements.has('textarea')).toBe(true);
 	});
 });
 
@@ -91,9 +91,9 @@ describe('Type safety verification', () => {
 			elements: [InputElementRegistration, CheckboxElementRegistration],
 		});
 
-		expect(engine.hasElement('input')).toBe(true);
-		expect(engine.hasElement('checkbox')).toBe(true);
-		expect(engine.hasElement('radio')).toBe(false);
-		expect(engine.hasElement('switch')).toBe(false);
+		expect(engine.elements.has('input')).toBe(true);
+		expect(engine.elements.has('checkbox')).toBe(true);
+		expect(engine.elements.has('radio')).toBe(false);
+		expect(engine.elements.has('switch')).toBe(false);
 	});
 });

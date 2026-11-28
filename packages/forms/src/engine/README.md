@@ -133,9 +133,9 @@ Standard Schema`). Later duplicates replace earlier registrations without a
 warning. A registration overridden later in the list is skipped by every build
 check (schema, recipe slots, declared axes). The registries and the copies they
 store are frozen and the registration objects you pass stay untouched, so
-`FormEngine` shares its registries with engines built by `extend` without copying, and its lookup
-methods serve renderers and action dispatch. The `getAll*` and `get*Ids` methods
-return fresh arrays.
+`FormEngine` shares its registries with engines built by `extend` without copying. It exposes them as the
+readonly properties `elements`, `recipes`, `actions` and `validations`, which serve renderers and action
+dispatch (`new ActionDispatcher(engine.actions)`). Their `all()` and `keys()` return frozen arrays.
 
 The validation registry is built from the built-in rules, then the `validations` of each winning
 element in the element registry's order (a replaced `$type` keeps its first position, so for

@@ -202,6 +202,21 @@ export interface ActionRegistration<
 	execute: ActionHandler<TConfig, TBaseContext, TTrigger, TData>;
 }
 
+/**
+ * An action registration of any config shape, for a registry that holds actions of several configs.
+ *
+ * @remarks
+ * A registry holds actions of many config shapes, so the config type is an existential placeholder: `any` is the one
+ * type every `ActionRegistration<TConfig, ...>` is assignable to, whatever its `TConfig`. Use it as the type of a
+ * `createMutableRegistry<AnyActionRegistration<Context, Trigger>>('Action')`, which a single `ActionRegistration<TConfig>`
+ * could not type.
+ */
+export type AnyActionRegistration<TBaseContext = unknown, TTrigger = string> = ActionRegistration<
+	any,
+	TBaseContext,
+	TTrigger
+>;
+
 /** Input for trigger-based sequential dispatch. */
 export interface ActionDispatchInput<
 	TConfig extends ActionConfigBase = ActionConfigBase,

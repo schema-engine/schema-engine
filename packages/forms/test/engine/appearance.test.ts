@@ -209,7 +209,7 @@ describe('registration axis declarations', () => {
 
 		const built = createFormEngine({ elements: [typo, fixed] });
 
-		expect(built.getElement('typo')?.metadata.name).toBe('Fixed');
+		expect(built.elements.get('typo')?.metadata.name).toBe('Fixed');
 		expect(() => createFormEngine({ elements: [fixed, typo] })).toThrowError(/unknown appearance axis 'sise'/);
 	});
 

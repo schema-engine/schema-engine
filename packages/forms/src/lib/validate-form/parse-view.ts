@@ -27,13 +27,13 @@ const warnedMissingWizardRecipe = new WeakMap<object, Set<string>>();
  * `$type`. Its issues are relative to the view.
  */
 function recipeLookup(
-	getRecipe: ValidateFormOptions['getRecipe'],
+	recipes: ValidateFormOptions['recipes'],
 	stepCount: number,
 	appearance: AppearanceScope,
 ): NodeLookup<{ schema: StandardSchemaV1 }> {
 	return {
 		get(type) {
-			const recipe = getRecipe(type);
+			const recipe = recipes.get(type);
 			return recipe && { schema: viewSchema(recipe, stepCount, appearance) };
 		},
 		hint: 'Register it with createFormEngine({ recipes: [...] }).',
@@ -71,17 +71,17 @@ function viewSchema(recipe: AnyRecipeRegistration, stepCount: number, appearance
 export function parseView(
 	authored: FormTaggedConfig | undefined,
 	form: { id: string; stepCount: number },
-	options: Pick<ValidateFormOptions, 'getRecipe' | 'defaultWizardRecipe' | 'owner'>,
+	options: Pick<ValidateFormOptions, 'recipes' | 'defaultWizardRecipe' | 'owner'>,
 	appearance: AppearanceScope,
 ): { issues: FormValidationIssue[]; view?: FormTaggedConfig } {
-	const { getRecipe } = options;
+	const { recipes } = options;
 	const stepCount = form.stepCount;
 	let view = authored;
 	if (!view) {
 		if (stepCount === 0) return { issues: [issueAt(['steps'], 'Form must have at least one step.')] };
 		if (stepCount < 2) return { issues: [] };
 		const defaultRecipe = options.defaultWizardRecipe ?? DEFAULT_WIZARD_RECIPE;
-		if (!getRecipe(defaultRecipe)) {
+		if (!recipes.get(defaultRecipe)) {
 			const warned = warnedMissingWizardRecipe.get(options.owner) ?? new Set<string>();
 			warnedMissingWizardRecipe.set(options.owner, warned);
 			if (warned.has(form.id)) return { issues: [] };
@@ -94,7 +94,7 @@ export function parseView(
 		view = { $type: defaultRecipe };
 	}
 
-	const parsed = safeParseNode(recipeLookup(getRecipe, form.stepCount, appearance), view, { path: ['view'] });
+	const parsed = safeParseNode(recipeLookup(recipes, form.stepCount, appearance), view, { path: ['view'] });
 	if (!parsed.success) return { issues: fromSchemaIssues(parsed.issues, []) };
 	return { issues: [], view: isTaggedConfig(parsed.data) ? parsed.data : view };
 }
