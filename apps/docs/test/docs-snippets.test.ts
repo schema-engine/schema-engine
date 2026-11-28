@@ -293,6 +293,12 @@ describe('docs snippets', () => {
 				using: "import type { CSSProperties } from 'react';\nexport const style: CSSProperties = { docsOnly: 'a' };",
 				own: "import type { CSSProperties } from 'react';\nexport const own: CSSProperties = { docsOnly: 'a' };",
 			},
+			{
+				kind: 'a triple-slash library reference',
+				declaring: '/// <reference lib="es2023.array" />\nexport {};',
+				using: 'export const sorted = [2, 1].toSorted();',
+				own: '/// <reference lib="es2023.array" />\nexport const own = [2, 1].toSorted();',
+			},
 		])('a page with $kind', ({ declaring, using, own }) => {
 			test('does not reach the other pages of the program', () => {
 				const failures = checkSiteSnippets([

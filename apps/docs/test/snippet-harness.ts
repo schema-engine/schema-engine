@@ -277,13 +277,17 @@ function pageFiles({ text, app }: SitePage): {
  * Whether a file adds to the global scope of the program that holds it.
  *
  * @remarks
- * A script file (no import or export) declares globals, a `declare global` block extends them, and a
- * `declare module '<name>'` in a module file augments a module that every other file sees too.
+ * A script file (no import or export) declares globals, a `declare global` block extends them, a
+ * `declare module '<name>'` in a module file augments a module that every other file sees too, and a triple-slash
+ * reference (`lib`, `types` or `path`) loads declarations into the whole program.
  */
 function addsToGlobalScope(name: string, text: string): boolean {
 	const source = ts.createSourceFile(name, text, ts.ScriptTarget.ES2022, false);
 	return (
 		!ts.isExternalModule(source) ||
+		source.libReferenceDirectives.length > 0 ||
+		source.typeReferenceDirectives.length > 0 ||
+		source.referencedFiles.length > 0 ||
 		source.statements.some(
 			(statement) =>
 				ts.isModuleDeclaration(statement) &&
