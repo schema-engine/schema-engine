@@ -56,6 +56,8 @@ export const addressForm = addressEngine.defineForm({
 
 `type` names the problem for a program: a rule's type (`minLength`), a native flag (`typeMismatch`) or the server's code. `source` is `validation`, `native` or `server`. `ruleId` is the rule's `id`. `params` are the serializable numbers and names a text is built from (`{ minLength: 3 }`, under the constraint's own name). `message` is the author's, the server's or the control's text, and may be absent: the schema library's generic text is never used.
 
+These fields are those of a field's validation issue. An issue about the form config (what `engine.safeValidateForm` returns, a `FormValidationError`) is another shape: `path`, `message` and, when a schema or the registry reported it, `code` and `params`. The registry's issues carry a namespaced `code` (`registry/unregistered-type` with `params.received`, `registry/not-accepted` with `expected` and `received`, `registry/not-an-object`, `registry/missing-type`).
+
 An error at a path is the issue to show plus `all`, a never-empty list in this order: what the server said, then each failing rule in authored order, then what the platform's own control reports. Errors are never inherited: an error on `contacts` is not an error on `contacts.0.email`. The form's own error is at `FORM_ROOT`.
 
 ## Native facts

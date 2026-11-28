@@ -51,7 +51,7 @@ A widget is a registration, `defineInput({ $type, schema, metadata, value, rende
 
 ## Config
 
-Authors supply schema input, so defaults stay optional; renderers receive schema output. `defineForm` and `validateForm` run one pipeline and throw a `FormValidationError` on an invalid form; `engine.safeValidateForm(json)` returns `{ success, data | issues }` with the config `path` of each issue; `formatIssuePath(path)` from `@schema-engine/registry` writes a path as `steps[0].elements[2].name`. A step needs an `id` and a `title`.
+Authors supply schema input, so defaults stay optional; renderers receive schema output. `defineForm` and `validateForm` run one pipeline and throw a `FormValidationError` on an invalid form; `engine.safeValidateForm(json)` returns `{ success, data | issues }` with the config `path` of each issue; `formatIssuePath(path)` from `@schema-engine/registry` writes a path as `steps[0].elements[2].name`. An issue a schema reported has a `code` and `params` (`too_small` with `{ minimum: 3 }`), and so does one the registry creates, with a namespaced code (`registry/unregistered-type` with `params.received`, `registry/not-accepted` with `expected` and `received`, `registry/not-an-object`, `registry/missing-type`), so an editor can localize either; an issue the engine finds itself has neither. A step needs an `id` and a `title`.
 
 ```ts title="forms/contact-form.ts"
 import { engine } from './engine';
