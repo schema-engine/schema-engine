@@ -42,6 +42,15 @@ describe('a consumer of the published package', () => {
 		});
 	});
 
+	test('bundles the built dist, not the source the tsconfig paths map the package name to', async () => {
+		const { inputs } = await bundlePublishedEntry(
+			packageDir,
+			`export * from '@schema-engine/forms-react/primitives';`,
+		);
+		expect(inputs.length).toBeGreaterThan(0);
+		expect(inputs.filter((file) => !file.startsWith('dist/'))).toEqual([]);
+	});
+
 	test('bundles the debugger only when it imports the debugger entry', async () => {
 		const root = await bundlePublishedEntry(packageDir, `export * from '@schema-engine/forms-react';`);
 		const debug = await bundlePublishedEntry(packageDir, `export * from '@schema-engine/forms-react/debugger';`);

@@ -38,9 +38,10 @@ describe('the renderer entry layout', () => {
 		for (const name of RENDERER_AUTHOR_CONTRACT) expect(root).not.toContain(name);
 	});
 
-	test('/primitives holds the author contract and the view provider', () => {
-		const primitives = entryExportNames(packageDir, './primitives');
-		expect(primitives).toEqual(expect.arrayContaining([...RENDERER_AUTHOR_CONTRACT, 'ViewProvider']));
+	test('/primitives holds the author contract, the React payload types and the view provider, nothing else', () => {
+		expect(entryExportNames(packageDir, './primitives')).toEqual(
+			[...RENDERER_AUTHOR_CONTRACT, 'FormElementProps', 'ReactRecipeAdapterPayload', 'ViewProvider'].toSorted(),
+		);
 	});
 
 	test('/debugger holds the debugger and its props, nothing else', () => {

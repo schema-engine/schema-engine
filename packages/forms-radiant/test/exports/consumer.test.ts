@@ -53,6 +53,18 @@ describe('a consumer of the published package', () => {
 });
 
 describe('a bundle of the published package', () => {
+	test('reads the built dist, not the source the tsconfig paths map the package name to', async () => {
+		const script = await bundlePublishedEntry(
+			packageDir,
+			`export * from '@schema-engine/forms-radiant/primitives';`,
+		);
+		const styles = await bundlePublishedStyles(packageDir, `@import '@schema-engine/forms-radiant/index.css';`);
+		for (const { inputs } of [script, styles]) {
+			expect(inputs.length).toBeGreaterThan(0);
+			expect(inputs.filter((file) => !file.startsWith('dist/'))).toEqual([]);
+		}
+	});
+
 	test('binding a recipe loads no built-in shell or block, no debugger and no input host', async () => {
 		const bundle = await bundlePublishedEntry(
 			packageDir,
@@ -85,7 +97,7 @@ describe('a bundle of the published package', () => {
 	test('index.css holds no debugger rule and debugger.css holds it', async () => {
 		const app = await bundlePublishedStyles(packageDir, `@import '@schema-engine/forms-radiant/index.css';`);
 		const debug = await bundlePublishedStyles(packageDir, `@import '@schema-engine/forms-radiant/debugger.css';`);
-		expect(app).not.toContain('.se-form-debugger');
-		expect(debug).toContain('.se-form-debugger');
+		expect(app.code).not.toContain('.se-form-debugger');
+		expect(debug.code).toContain('.se-form-debugger');
 	});
 });

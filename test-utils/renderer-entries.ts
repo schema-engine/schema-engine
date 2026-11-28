@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { build } from 'esbuild';
+import { build, type Metafile } from 'esbuild';
 
 /** The entries every renderer package exports, with the same meaning in each (see CONTEXT.md, Renderer entries). */
 export const SHARED_RENDERER_ENTRIES = ['.', './package.json', './primitives', './debugger', './debugger.css'] as const;
@@ -128,6 +128,8 @@ export interface PublishedBundle {
  * @remarks
  * The package's dependencies and peer dependencies stay external, so the bundle holds the package's own modules and the
  * names of the custom elements it defines. Stylesheets load as empty. The bundle is one file, so `bytesInOutput` of an input is its share.
+ * An empty `tsconfigRaw` keeps esbuild from reading the package's `tsconfig.json`, whose `paths` map the package's own name to
+ * `src` and would bundle the source instead of what is published.
  */
 export async function bundlePublishedEntry(packageDir: string, source: string): Promise<PublishedBundle> {
 	const manifest = JSON.parse(readFileSync(path.join(packageDir, 'package.json'), 'utf8')) as {
@@ -140,6 +142,8 @@ export async function bundlePublishedEntry(packageDir: string, source: string): 
 	);
 	const result = await build({
 		stdin: { contents: source, resolveDir: packageDir, sourcefile: 'consumer-entry.ts', loader: 'ts' },
+		absWorkingDir: packageDir,
+		tsconfigRaw: {},
 		bundle: true,
 		write: false,
 		format: 'esm',
@@ -150,24 +154,30 @@ export async function bundlePublishedEntry(packageDir: string, source: string): 
 		metafile: true,
 		logLevel: 'silent',
 	});
-	const [output] = Object.values(result.metafile.outputs);
-	const inputs = Object.entries(output?.inputs ?? {})
-		.filter(([, { bytesInOutput }]) => bytesInOutput > 0)
+	return { code: result.outputFiles[0]?.text ?? '', inputs: inputsInOutput(result.metafile) };
+}
+
+function inputsInOutput(metafile: Metafile): string[] {
+	const [output] = Object.values(metafile.outputs);
+	return Object.entries(output?.inputs ?? {})
+		.filter(([file, { bytesInOutput }]) => bytesInOutput > 0 && !file.startsWith('<stdin>'))
 		.map(([file]) => file);
-	return { code: result.outputFiles[0]?.text ?? '', inputs };
 }
 
 /**
- * Bundles a stylesheet source the way an app's bundler reads the published package, and returns the resulting CSS.
+ * Bundles a stylesheet source the way an app's bundler reads the published package; `code` is the resulting CSS.
  *
  * @param source - The stylesheet, for example `@import '@schema-engine/forms-radiant/index.css';`
  */
-export async function bundlePublishedStyles(packageDir: string, source: string): Promise<string> {
+export async function bundlePublishedStyles(packageDir: string, source: string): Promise<PublishedBundle> {
 	const result = await build({
 		stdin: { contents: source, resolveDir: packageDir, sourcefile: 'consumer-entry.css', loader: 'css' },
+		absWorkingDir: packageDir,
+		tsconfigRaw: {},
 		bundle: true,
 		write: false,
+		metafile: true,
 		logLevel: 'silent',
 	});
-	return result.outputFiles[0]?.text ?? '';
+	return { code: result.outputFiles[0]?.text ?? '', inputs: inputsInOutput(result.metafile) };
 }
