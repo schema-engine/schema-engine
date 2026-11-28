@@ -513,7 +513,12 @@ function replaceChildSlot(
 	definition: JSONSchemaObject,
 	path: { readonly $type: string; readonly keys: readonly string[] },
 	union: JSONSchemaObject,
+	options?: { readonly openSlot?: 'child-or-list' | 'list' },
 ): void;
+
+function definitionRef(target: JSONSchemaTarget, name: string): string;
+
+function resolveLocalRef(document: JSONSchemaObject, ref: string): JSONSchemaObject | undefined;
 
 type JSONSchemaPlacement =
 	{ readonly kind: 'document' } | { readonly kind: 'collection'; readonly uri: (id: string) => string };
@@ -530,7 +535,9 @@ interface JSONSchemaEmbedder {
 
 `assertJSONSchemaTarget` throws the same `Error` for a string that is not a `JSONSchemaTarget`, and narrows it to one otherwise. Use it for the `target` of a Standard JSON Schema converter's options, which the Standard type leaves open.
 
-`replaceChildSlot` is the step `exportTreeSchema` takes for each child path, for code that writes a JSON Schema of its own. It replaces, in place, the slot that `path.keys` names in the JSON Schema of a registration (`definition`), and only the slot: an array gets `items: union` (and `union` at each tuple position), an object becomes `union`, and an open slot becomes `{ anyOf: [union, { type: 'array', items: union }] }`. `required`, list bounds, annotations and sibling keys stay. Each place takes its own copy of `union`, which you write with the `$ref`s of your document. A slot it cannot reach (behind `allOf`, a `$ref` or a union, inside a schema with an `$id` of its own, or not declared) throws a `RegistryError` with code `'unreachable-child-path'`. Checking that the names in `union` are registered is the caller's, as it is in `exportTreeSchema`.
+`replaceChildSlot` is the step `exportTreeSchema` takes for each child path, for code that writes a JSON Schema of its own. It replaces, in place, the slot that `path.keys` names in the JSON Schema of a registration (`definition`), and only the slot: an array gets `items: union` (and `union` at each tuple position), an object becomes `union`, and an open slot becomes `{ anyOf: [union, { type: 'array', items: union }] }`, or with `{ openSlot: 'list' }` `{ type: 'array', items: union }` for a registration that holds its children as a list only. `required`, list bounds, annotations and sibling keys stay. Each place takes its own copy of `union`, which you write with the `$ref`s of your document. A slot it cannot reach (behind `allOf`, a `$ref` or a union, inside a schema with an `$id` of its own between the definition and the slot, or not declared) throws a `RegistryError` with code `'unreachable-child-path'`. The `$id` of the definition's own root is the caller's to check, since only the caller knows whether the references it writes resolve against it: `exportTreeSchema` throws for it, and a collection entry, whose `$id` is its address, is not an obstacle. Checking that the names in `union` are registered is the caller's, as it is in `exportTreeSchema`.
+
+`definitionRef(target, name)` writes the `$ref` to the definition of `name`: `#/$defs/<name>` for `'draft-2020-12'`, `#/definitions/<name>` for every other target, with the name as a JSON Pointer token (`~` as `~0`, `/` as `~1`) and percent-encoded only for what a URI fragment does not allow, so `:`, `@` and the sub-delimiters stay as written (`#/$defs/element:tab`, `#/$defs/ui~1button`, `#/$defs/my%20type`). Use it for every reference to a definition, so a name with any character resolves. `resolveLocalRef(document, ref)` is its reading side: it returns the schema a local reference names in a document, or `undefined`.
 
 ### Fall back to Standard JSON Schema
 

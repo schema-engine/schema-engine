@@ -85,6 +85,36 @@ describe('replaceChildSlot', () => {
 		});
 	});
 
+	describe('Scenario: An open slot is written as a list when the registration holds a list', () => {
+		it('becomes an array of the union with openSlot list, and keeps its annotations', () => {
+			const definition: JSONSchemaObject = { type: 'object', properties: { kids: { title: 'Kids' } } };
+
+			replaceChildSlot(definition, { $type: 'box', keys: ['kids'] }, union, { openSlot: 'list' });
+
+			expect(definition.properties).toEqual({ kids: { title: 'Kids', type: 'array', items: union } });
+		});
+
+		it('does not change a slot that is not open', () => {
+			const definition: JSONSchemaObject = { type: 'object', properties: { kids: { type: 'array', items: {} } } };
+
+			replaceChildSlot(definition, { $type: 'box', keys: ['kids'] }, union, { openSlot: 'list' });
+
+			expect(definition.properties).toEqual({ kids: { type: 'array', items: union } });
+		});
+	});
+
+	describe("Scenario: The definition's own root is the caller's to check", () => {
+		it('replaces the slot of a definition whose root sets an $id, as a collection entry does', () => {
+			const definition = slot({
+				$id: 'https://example.com/box',
+				type: 'object',
+				properties: { kids: { type: 'array', items: {} } },
+			});
+
+			expect(definition.properties).toEqual({ kids: { type: 'array', items: union } });
+		});
+	});
+
 	describe('Scenario: A slot the walk cannot reach throws', () => {
 		it.each([
 			['behind a $ref', { type: 'object', properties: { kids: { $ref: '#/$defs/list' } } }],
@@ -99,8 +129,13 @@ describe('replaceChildSlot', () => {
 				{ type: 'object', properties: { kids: { type: 'object', properties: {}, nullable: true } } },
 			],
 			[
-				'inside a schema with an $id of its own',
-				{ type: 'object', $id: 'https://example.com/box', properties: { kids: {} } },
+				'inside a schema with an $id of its own, between the definition and the slot',
+				{
+					type: 'object',
+					properties: {
+						aside: { $id: 'https://example.com/aside', type: 'object', properties: { kids: {} } },
+					},
+				},
 			],
 		])('throws RegistryError unreachable-child-path for a slot %s', (_name, definition) => {
 			const error = thrown(() => slot(definition));

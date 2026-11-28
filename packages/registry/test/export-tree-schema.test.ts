@@ -542,11 +542,13 @@ describe('exportTreeSchema', () => {
 	});
 
 	describe('Scenario: A $type is a JSON Pointer token in a $ref', () => {
-		it('escapes ~ and / and percent-encodes the rest of the fragment', () => {
+		it('escapes ~ and / and percent-encodes only what a URI fragment does not allow', () => {
 			const nodes = createRegistry('Node', [
 				handWritten({ type: 'object' }, undefined, 'ui/button'),
 				handWritten({ type: 'object' }, undefined, 'a~b'),
 				handWritten({ type: 'object' }, undefined, 'my type'),
+				handWritten({ type: 'object' }, undefined, 'element:tab'),
+				handWritten({ type: 'object' }, undefined, 'user@host'),
 			]);
 			const document = exportTreeSchema(nodes);
 
@@ -554,8 +556,16 @@ describe('exportTreeSchema', () => {
 				{ $ref: '#/$defs/ui~1button' },
 				{ $ref: '#/$defs/a~0b' },
 				{ $ref: '#/$defs/my%20type' },
+				{ $ref: '#/$defs/element:tab' },
+				{ $ref: '#/$defs/user@host' },
 			]);
-			expect(Object.keys(document.$defs as object)).toEqual(['ui/button', 'a~b', 'my type']);
+			expect(Object.keys(document.$defs as object)).toEqual([
+				'ui/button',
+				'a~b',
+				'my type',
+				'element:tab',
+				'user@host',
+			]);
 			expectEveryReferenceToResolve(document);
 			expect(compileJSONSchema(document)({})).toBe(true);
 		});

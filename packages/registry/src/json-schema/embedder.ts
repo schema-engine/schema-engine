@@ -1,4 +1,10 @@
-import { assertJSONSchemaTarget, isPlainObject, type JSONSchemaObject, type JSONSchemaTarget } from './standard.js';
+import {
+	assertJSONSchemaTarget,
+	getOwn,
+	isPlainObject,
+	type JSONSchemaObject,
+	type JSONSchemaTarget,
+} from './standard.js';
 
 /** Where the JSON Schema being written keeps its definitions. */
 export type JSONSchemaPlacement =
@@ -181,7 +187,7 @@ export function createJSONSchemaEmbedder(target: JSONSchemaTarget, placement: JS
 				};
 				return { $ref: ref };
 			}
-			const ref = `#/${keyword}/${key}`;
+			const ref = definitionRef(target, key);
 			const rewritten = rewriteResource(body, {
 				pointer: pointsIntoItself ? (pointer) => `${ref}${pointer.slice(1)}` : undefined,
 				anchor: (name) => `${key}-${name}`,
@@ -223,9 +229,62 @@ function anchorOwner(owner: string): string {
 	return written;
 }
 
-/** A JSON Pointer reference token, written for a URI fragment: `~` and `/` escaped, then percent-encoded. */
+/**
+ * A JSON Pointer reference token, written for a URI fragment: `~` and `/` escaped, then percent-encoded for what a
+ * fragment does not allow.
+ *
+ * @remarks
+ * RFC 3986 lets a fragment hold the `pchar` characters raw, so `:`, `@` and the sub-delimiters (`$&+,;=` and `!'()*`)
+ * stay as they are and a name like `element:tab` reads as written.
+ */
 export function pointerToken(name: string): string {
-	return encodeURIComponent(name.replaceAll('~', '~0').replaceAll('/', '~1'));
+	return encodeURIComponent(name.replaceAll('~', '~0').replaceAll('/', '~1')).replaceAll(
+		/%(?:24|26|2B|2C|3A|3B|3D|40)/g,
+		decodeURIComponent,
+	);
+}
+
+/**
+ * The `$ref` to the definition of a name in a document written for a target: `#/$defs/<name>` for `'draft-2020-12'`,
+ * `#/definitions/<name>` for every other target, with the name written as a JSON Pointer token.
+ *
+ * @param target - The target the document is written for, which decides the keyword of its definitions
+ * @param name - The key of the definition, for example `'ui/button'`
+ *
+ * @remarks
+ * A name holds any character. `~` and `/` are escaped as the pointer syntax requires, and what a URI fragment does not
+ * allow (a space, `%`, `#`, `?`) is percent-encoded, so a tool that resolves the reference finds the key whatever the
+ * name is.
+ */
+export function definitionRef(target: JSONSchemaTarget, name: string): string {
+	return `#/${definitionsKeyword(target)}/${pointerToken(name)}`;
+}
+
+/**
+ * The schema a local reference (`#` or `#/...`) points at in a document, or `undefined` when it is not a local pointer
+ * or names nothing there.
+ *
+ * @param document - The document the reference is written in
+ * @param ref - A `$ref` as {@link definitionRef} writes it, or any local JSON Pointer in URI fragment form
+ *
+ * @remarks
+ * The reading side of {@link definitionRef}: it undoes the escaping of `~` and `/` and the percent-encoding, so a
+ * name resolves to the key it was written for. Only own properties are read.
+ */
+export function resolveLocalRef(document: JSONSchemaObject, ref: string): JSONSchemaObject | undefined {
+	if (!isLocalPointer(ref)) return undefined;
+	let node: unknown = document;
+	if (ref !== '#') {
+		for (const token of ref.slice(2).split('/')) {
+			if (!isPlainObject(node)) return undefined;
+			try {
+				node = getOwn(node, unescapedToken(token));
+			} catch {
+				return undefined;
+			}
+		}
+	}
+	return isPlainObject(node) ? node : undefined;
 }
 
 function unescapedToken(token: string): string {
@@ -261,11 +320,10 @@ export interface HoistedDefinitions {
  * kept as it is.
  */
 export function hoistDefinitions(own: JSONSchemaObject, owner: string, target: JSONSchemaTarget): HoistedDefinitions {
-	const keyword = definitionsKeyword(target);
 	const body = withoutSchemaKeyword(own);
 	if (startsResource(body)) return { definition: body, nested: {} };
 	const nameOf = (name: string) => `${owner}.${name}`;
-	const place = (name: string) => `#/${keyword}/${pointerToken(name)}`;
+	const place = (name: string) => definitionRef(target, name);
 	const rewritten = rewriteResource(body, {
 		pointer(pointer) {
 			if (pointer === '#') return place(owner);
