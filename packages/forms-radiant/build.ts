@@ -57,7 +57,6 @@ await buildLib({
 		...entryDirs.flatMap((dir) => [`${dir}/**/*.ts`, `${dir}/**/*.tsx`]),
 	],
 	exclude: ['.stories.', '.play.', '.test.', '.d.ts'],
-	splitting: true,
 	aliases: [{ prefix: '@', dir: path.join(cwd, 'src') }],
 	plugins: [cssStubPlugin()],
 });

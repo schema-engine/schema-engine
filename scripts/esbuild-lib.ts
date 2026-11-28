@@ -132,7 +132,7 @@ export async function buildLib(options: BuildLibOptions): Promise<void> {
 		format: 'esm',
 		platform: 'browser',
 		target: 'es2022',
-		splitting: options.splitting ?? false,
+		splitting: options.splitting ?? true,
 		minify: watch ? false : (options.minify ?? false),
 		sourcemap: 'external',
 		packages: 'external',
